@@ -10,6 +10,8 @@ def get_current_version():
 
 
 def get_new_version(current_version, level_bump):
+    if not level_bump:
+        return current_version
     return getattr(semver, 'bump_{0}'.format(level_bump))(current_version)
 
 

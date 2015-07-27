@@ -27,8 +27,9 @@ class EvaluateVersionBumpTest(TestCase):
         with mock.patch('semantic_release.history.get_commit_log', lambda: PATCH_COMMIT_MESSAGES):
             self.assertEqual(evaluate_version_bump('0.0.0'), 'patch')
 
+    def test_nothing_if_no_tag(self):
         with mock.patch('semantic_release.history.get_commit_log', lambda: ['', '...']):
-            self.assertEqual(evaluate_version_bump('0.0.0'), 'patch')
+            self.assertIsNone(evaluate_version_bump('0.0.0'))
 
     def test_force(self):
         self.assertEqual(evaluate_version_bump('0.0.0', 'major'), 'major')

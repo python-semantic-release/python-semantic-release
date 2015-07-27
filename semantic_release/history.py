@@ -11,7 +11,7 @@ LEVELS = {
 def evaluate_version_bump(current_version, force=None):
     if force:
         return force
-    bump = 'patch'
+    bump = None
 
     changes = []
 
