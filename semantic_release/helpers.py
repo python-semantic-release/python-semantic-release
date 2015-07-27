@@ -52,3 +52,9 @@ def get_commit_log():
     repo = Repository('.git')
     for commit in repo.walk(repo.head.target):
         yield commit.message
+
+
+def commit_new_version(version):
+    add = run('git add {}'.format(load_config().get('version_variable').split(':')[0]), hide=True)
+    if add.ok:
+        run('git commit -m "{}"'.format(version), hide=True)
