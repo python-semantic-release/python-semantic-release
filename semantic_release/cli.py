@@ -12,13 +12,13 @@ def main(command, **kwargs):
 
 
 def version(**kwargs):
-    print('Creating new version..')
+    click.echo('Creating new version..')
     current_version = get_current_version()
-    print('Current version: {0}'.format(current_version))
+    click.echo('Current version: {0}'.format(current_version))
     level_bump = evaluate_version_bump(kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
     set_new_version(new_version)
-    print('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
+    click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
 
 
 if __name__ == '__main__':
