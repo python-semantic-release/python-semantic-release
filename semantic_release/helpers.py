@@ -1,4 +1,5 @@
 from invoke import run
+import semver
 
 
 def get_current_version():
@@ -10,7 +11,7 @@ def evaluate_version_bump(force):
 
 
 def get_new_version(current_version, level_bump):
-    return current_version
+    return getattr(semver, 'bump_{0}'.format(level_bump))(current_version)
 
 
 def set_new_version(current_version):
