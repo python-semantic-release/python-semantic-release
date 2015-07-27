@@ -9,6 +9,7 @@ PATCH = ':bug: Fix the annoying bug'
 ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
 PATCH_COMMIT_MESSAGES = [PATCH, PATCH]
+MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, '1.1.0', MAJOR]
 
 
 class EvaluateVersionBumpTest(TestCase):
@@ -33,3 +34,8 @@ class EvaluateVersionBumpTest(TestCase):
         self.assertEqual(evaluate_version_bump('0.0.0', 'major'), 'major')
         self.assertEqual(evaluate_version_bump('0.0.0', 'minor'), 'minor')
         self.assertEqual(evaluate_version_bump('0.0.0', 'patch'), 'patch')
+
+    def test_should_account_for_commits_earlier_than_last_commit(self):
+        with mock.patch('semantic_release.history.get_commit_log',
+                        lambda: MAJOR_LAST_RELEASE_MINOR_AFTER):
+            self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
