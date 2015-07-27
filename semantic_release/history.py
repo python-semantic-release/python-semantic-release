@@ -1,4 +1,5 @@
-from semantic_release.helpers import get_commit_log, load_config
+from semantic_release.git_helpers import get_commit_log
+from semantic_release.helpers import load_config
 
 LEVELS = {
     1: 'patch',
