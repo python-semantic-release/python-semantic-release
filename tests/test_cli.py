@@ -53,6 +53,7 @@ class CLITests(TestCase):
         mock_version.assert_called_once()
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'patch')
 
+    @mock.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
     @mock.patch('semantic_release.cli.commit_new_version')
     @mock.patch('semantic_release.cli.set_new_version')
     def test_noop_mode(self, mock_set_new, mock_commit_new):

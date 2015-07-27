@@ -50,7 +50,7 @@ def load_config():
 
 def get_commit_log():
     repo = Repo('.git')
-    for commit in repo.heads.master.commit.tree:
+    for commit in repo.iter_commits():
         yield commit.message
 
 
