@@ -24,7 +24,7 @@ Options:
 
 ### Commands
 
-* `version` - Create a new release. Will change the version and commit it.
+* `version` - Create a new release. Will change the version, commit it and tag it.
 
 ### Configuration
 All configuration described here belongs in `setup.cfg` in a section: `semantic-release`.
