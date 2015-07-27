@@ -3,8 +3,8 @@ import os
 import re
 
 import semver
+from git import Repo
 from invoke import run
-from pygit2 import Repository
 
 DEFAULTS = {
     'major_tag': ':boom:',
@@ -49,8 +49,8 @@ def load_config():
 
 
 def get_commit_log():
-    repo = Repository('.git')
-    for commit in repo.walk(repo.head.target):
+    repo = Repo('.git')
+    for commit in repo.heads.master.commit.tree:
         yield commit.message
 
 

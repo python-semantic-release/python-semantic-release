@@ -31,7 +31,7 @@ setup(
         'click==4.1',
         'semver==2.2.0',
         'invoke==0.10.1',
-        'pygit2==0.22.1',
+        'GitPython==1.0.1',
     ],
     entry_points='''
         [console_scripts]
