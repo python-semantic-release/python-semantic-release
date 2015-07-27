@@ -1,4 +1,4 @@
-# python-semantic-release [![Build status][build-badge]][last-build] [![Coverage status][coverage-badge]][last-build]
+# python-semantic-release [![Build status](https://github.com/relekang/python-semantic-release.svg)][last-build] [![Coverage status](https://ci.frigg.io/relekang/python-semantic-release/coverage.svg)][last-build]
 
 Automatic semantic versioning for python projects
 
@@ -28,6 +28,4 @@ to meet what you want them to be. The different tags are listed below with their
 * **Upgrade dependency:** `:arrow_up:` :arrow_up: (will trigger minor version change)
 
 
-[build-badge]: https://ci.frigg.io/relekang/python-semantic-release.svg
-[coverage-badge]: https://ci.frigg.io/relekang/python-semantic-release/coverage.svg
 [last-build]: https://ci.frigg.io/relekang/python-semantic-release/last/
