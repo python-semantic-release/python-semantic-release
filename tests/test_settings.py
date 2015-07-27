@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from semantic_release.settings import load_config
 
 
@@ -10,4 +11,3 @@ class ConfigTests(TestCase):
         self.assertIn('major_tag', config)
         self.assertIn('minor_tag', config)
         self.assertIn('patch_tag', config)
-

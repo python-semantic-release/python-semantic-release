@@ -1,6 +1,6 @@
 import click
-from semantic_release.git_helpers import commit_new_version
 
+from semantic_release.git_helpers import commit_new_version, tag_new_version
 from semantic_release.helpers import get_current_version, get_new_version, set_new_version
 from semantic_release.history import evaluate_version_bump
 
@@ -47,6 +47,7 @@ def version(**kwargs):
 
     set_new_version(new_version)
     commit_new_version(new_version)
+    tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
 
 

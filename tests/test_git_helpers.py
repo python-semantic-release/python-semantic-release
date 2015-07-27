@@ -1,6 +1,8 @@
 from unittest import TestCase, mock
+
 from invoke.runner import Result
-from semantic_release.git_helpers import get_commit_log, commit_new_version
+
+from semantic_release.git_helpers import commit_new_version, get_commit_log
 
 
 class GetCommitLogTest(TestCase):

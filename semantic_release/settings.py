@@ -16,5 +16,3 @@ def load_config():
     settings.update(DEFAULTS)
     settings.update(config._sections['semantic_release'])
     return settings
-
-
