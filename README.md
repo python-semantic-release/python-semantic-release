@@ -2,8 +2,6 @@
 
 Automatic semantic versioning for python projects
 
-> **This is not usable, yet.**
-
 ## Install
 ```
 pip install python-semantic-release
