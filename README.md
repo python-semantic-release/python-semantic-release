@@ -28,7 +28,5 @@ to meet what you want them to be. The different tags are listed below with their
 * **Major change:** `major_tag = :boom:` :boom:
 * **Minor change:** `minor_tag = :sparkles:` :sparkles:
 * **Patch change:** `patch_tag = :bug:` :bug:
-* **Upgrade dependency:** `:arrow_up:` :arrow_up: (will trigger minor version change)
-
 
 [last-build]: https://ci.frigg.io/relekang/python-semantic-release/last/
