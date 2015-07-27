@@ -27,7 +27,13 @@ setup(
     long_description=_read_long_description(),
     packages=find_packages(exclude='tests'),
     license='MIT',
-    install_requires=[],
+    install_requires=[
+        'click==4.1',
+    ],
+    entry_points='''
+        [console_scripts]
+        semantic-release=semantic_release.cli:handle
+    ''',
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python',
