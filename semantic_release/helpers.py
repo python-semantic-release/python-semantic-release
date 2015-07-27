@@ -1,5 +1,5 @@
-from invoke import run
 import semver
+from invoke import run
 
 
 def get_current_version():
