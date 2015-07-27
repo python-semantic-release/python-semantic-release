@@ -13,7 +13,19 @@ pip install python-semantic-release
 The general idea is to have some sort of tag in commit messages that indicates certain types of changes.
 If a commit message lack a tag it is ignored. Running release can be run locally or from a CI service.
 
-Creating a new release: `$ semantic-release version`
+```
+Usage: semantic-release [OPTIONS] COMMAND
+
+Options:
+  --major  Force major version.
+  --minor  Force minor version.
+  --patch  Force patch version.
+  --help   Show this message and exit.
+```
+
+### Commands
+
+* `version` - Create a new release. Will change the version and commit it.
 
 ### Configuration
 All configuration described here belongs in `setup.cfg` in a section: `semantic-release`.

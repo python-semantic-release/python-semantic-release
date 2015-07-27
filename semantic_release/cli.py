@@ -7,9 +7,9 @@ from semantic_release.history import evaluate_version_bump
 
 @click.command()
 @click.argument('command')
-@click.option('--major', 'force_level', flag_value='major')
-@click.option('--minor', 'force_level', flag_value='minor')
-@click.option('--patch', 'force_level', flag_value='patch')
+@click.option('--major', 'force_level', flag_value='major', help='Force major version.')
+@click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.')
+@click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.')
 def main(command, **kwargs):
     globals()[command](**kwargs)
 
