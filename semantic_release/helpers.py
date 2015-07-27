@@ -6,8 +6,10 @@ def get_current_version():
     return run('python setup.py --version', hide=True).stdout.strip()
 
 
-def evaluate_version_bump(force):
-    pass
+def evaluate_version_bump(force=None):
+    if force:
+        return force
+    return 'patch'
 
 
 def get_new_version(current_version, level_bump):

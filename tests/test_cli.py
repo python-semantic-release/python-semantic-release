@@ -26,3 +26,24 @@ class CLITests(TestCase):
         mock_current_version.assert_called_once_with()
         mock_evaluate_bump.assert_called_once_with(None)
         mock_new_version.assert_called_once_with('1.2.3', 'major')
+
+    @mock.patch('semantic_release.cli.version')
+    def test_force_major(self, mock_version):
+        result = self.runner.invoke(main, ['version', '--major'])
+        self.assertEqual(result.exit_code, 0)
+        mock_version.assert_called_once()
+        self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'major')
+
+    @mock.patch('semantic_release.cli.version')
+    def test_force_minor(self, mock_version):
+        result = self.runner.invoke(main, ['version', '--minor'])
+        self.assertEqual(result.exit_code, 0)
+        mock_version.assert_called_once()
+        self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'minor')
+
+    @mock.patch('semantic_release.cli.version')
+    def test_force_patch(self, mock_version):
+        result = self.runner.invoke(main, ['version', '--patch'])
+        self.assertEqual(result.exit_code, 0)
+        mock_version.assert_called_once()
+        self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'patch')

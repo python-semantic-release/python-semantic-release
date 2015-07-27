@@ -6,7 +6,9 @@ from semantic_release.helpers import (evaluate_version_bump, get_current_version
 
 @click.command()
 @click.argument('command')
-@click.option('--force-level')
+@click.option('--major', 'force_level', flag_value='major')
+@click.option('--minor', 'force_level', flag_value='minor')
+@click.option('--patch', 'force_level', flag_value='patch')
 def main(command, **kwargs):
     globals()[command](**kwargs)
 
