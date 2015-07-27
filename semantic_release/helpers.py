@@ -1,3 +1,4 @@
+import configparser
 import semver
 from invoke import run
 
@@ -18,3 +19,10 @@ def get_new_version(current_version, level_bump):
 
 def set_new_version(current_version):
     return True
+
+
+def load_config():
+    config = configparser.ConfigParser()
+    with open(os.path.join(os.getcwd(), 'setup.cfg')) as f:
+        config.read_file(f)
+    return config._sections['semantic_release']
