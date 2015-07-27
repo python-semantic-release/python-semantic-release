@@ -18,6 +18,7 @@ Options:
   --major  Force major version.
   --minor  Force minor version.
   --patch  Force patch version.
+  --noop   No-operations mode, finds the new version number without changing it.
   --help   Show this message and exit.
 ```
 

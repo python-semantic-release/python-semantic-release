@@ -10,6 +10,8 @@ from semantic_release.history import evaluate_version_bump
 @click.option('--major', 'force_level', flag_value='major', help='Force major version.')
 @click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.')
 @click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.')
+@click.option('--noop', is_flag=True,
+              help='No-operations mode, finds the new version number without changing it.')
 def main(command, **kwargs):
     """
     Routes to the correct cli function. Looks up the command
@@ -30,6 +32,15 @@ def version(**kwargs):
     click.echo('Current version: {0}'.format(current_version))
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
+
+    if kwargs['noop'] is True:
+        click.echo('{} Should have bumped from {} to {}.'.format(
+            click.style('No operation mode.', fg='yellow'),
+            current_version,
+            new_version
+        ))
+        return
+
     set_new_version(new_version)
     commit_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))

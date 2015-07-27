@@ -52,3 +52,11 @@ class CLITests(TestCase):
         self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once()
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'patch')
+
+    @mock.patch('semantic_release.cli.commit_new_version')
+    @mock.patch('semantic_release.cli.set_new_version')
+    def test_noop_mode(self, mock_set_new, mock_commit_new):
+        result = self.runner.invoke(main, ['version', '--noop'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertFalse(mock_set_new.called)
+        self.assertFalse(mock_commit_new.called)
