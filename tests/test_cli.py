@@ -61,3 +61,19 @@ class CLITests(TestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertFalse(mock_set_new.called)
         self.assertFalse(mock_commit_new.called)
+
+    @mock.patch('semantic_release.cli.commit_new_version')
+    @mock.patch('semantic_release.cli.set_new_version')
+    @mock.patch('semantic_release.cli.get_new_version', return_value='1.2.3')
+    @mock.patch('semantic_release.cli.evaluate_version_bump', return_value=None)
+    @mock.patch('semantic_release.cli.get_current_version', return_value='1.2.3')
+    def test_version_no_change(self, mock_current_version, mock_evaluate_bump,
+                                                   mock_new_version, mock_set_new_version,
+                                                   mock_commit_new_version):
+        result = self.runner.invoke(main, ['version'])
+        self.assertEqual(result.exit_code, 0)
+        mock_current_version.assert_called_once_with()
+        mock_evaluate_bump.assert_called_once_with('1.2.3', None)
+        mock_new_version.assert_called_once_with('1.2.3', None)
+        self.assertFalse(mock_set_new_version.called)
+        self.assertFalse(mock_commit_new_version.called)

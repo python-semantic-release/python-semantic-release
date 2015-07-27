@@ -33,6 +33,10 @@ def version(**kwargs):
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
 
+    if new_version == current_version:
+        click.echo(click.style('No release will be made.', fg='yellow'))
+        return
+
     if kwargs['noop'] is True:
         click.echo('{} Should have bumped from {} to {}.'.format(
             click.style('No operation mode.', fg='yellow'),
