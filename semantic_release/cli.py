@@ -11,10 +11,20 @@ from semantic_release.history import evaluate_version_bump
 @click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.')
 @click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.')
 def main(command, **kwargs):
+    """
+    Routes to the correct cli function. Looks up the command
+    in the global scope and calls the function.
+    :param command: String with the name of the function to call
+    :param kwargs: All click options.
+    """
     globals()[command](**kwargs)
 
 
 def version(**kwargs):
+    """
+    Detects the new version according to git log and semver. Writes the new version
+    number and commits it(unless the noop-option is True.
+    """
     click.echo('Creating new version..')
     current_version = get_current_version()
     click.echo('Current version: {0}'.format(current_version))
