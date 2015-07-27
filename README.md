@@ -6,7 +6,7 @@ Automatic semantic versioning for python projects
 
 ## Install
 ```
-pip install semantic-release
+pip install python-semantic-release
 ```
 
 ## Usage
