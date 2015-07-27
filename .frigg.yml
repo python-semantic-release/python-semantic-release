@@ -1,5 +1,5 @@
 setup_tasks:
- - apt-get install libgit2-0
+ - apt-get update && apt-get install libgit2-0
 
 tasks:
  - tox -e flake8
