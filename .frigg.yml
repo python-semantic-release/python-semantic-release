@@ -1,6 +1,3 @@
-setup_tasks:
- - apt-get update && apt-get install -y libgit2-0 libgit2-dev python3-cffi
-
 tasks:
  - tox -e flake8
  - tox -e isort
