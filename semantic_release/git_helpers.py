@@ -18,3 +18,7 @@ def commit_new_version(version):
 
 def tag_new_version(version):
     return run('git tag v{} HEAD'.format(version), hide=True)
+
+
+def push_new_version():
+    return run('git ps && git ps --tags', hide=True)

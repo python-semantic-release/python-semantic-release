@@ -1,7 +1,8 @@
 import click
 
-from semantic_release.git_helpers import commit_new_version, tag_new_version
-from semantic_release.helpers import get_current_version, get_new_version, set_new_version
+from semantic_release.git_helpers import commit_new_version, push_new_version, tag_new_version
+from semantic_release.helpers import (get_current_version, get_new_version, set_new_version,
+                                      upload_to_pypi)
 from semantic_release.history import evaluate_version_bump
 
 
@@ -35,7 +36,7 @@ def version(**kwargs):
 
     if new_version == current_version:
         click.echo(click.style('No release will be made.', fg='yellow'))
-        return
+        return False
 
     if kwargs['noop'] is True:
         click.echo('{} Should have bumped from {} to {}.'.format(
@@ -43,12 +44,25 @@ def version(**kwargs):
             current_version,
             new_version
         ))
-        return
+        return False
 
     set_new_version(new_version)
     commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
+    return True
+
+
+def publish(**kwargs):
+    """
+    Runs the version task before pushing to git and uploading to pypi.
+    """
+    if version(**kwargs):
+        push_new_version()
+        upload_to_pypi()
+        click.echo(click.style('New release published', 'green'))
+    else:
+        click.echo('Version failed, no release will be published.')
 
 
 if __name__ == '__main__':

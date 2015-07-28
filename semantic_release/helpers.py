@@ -10,6 +10,10 @@ def get_current_version():
     return run('python setup.py --version', hide=True).stdout.strip()
 
 
+def upload_to_pypi(dists='bdist_wheel'):
+    return run('python setup.py {} upload && rm -rf build dist'.format(dists))
+
+
 def get_new_version(current_version, level_bump):
     if not level_bump:
         return current_version

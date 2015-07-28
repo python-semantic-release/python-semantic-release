@@ -83,3 +83,23 @@ class CLITests(TestCase):
         self.assertFalse(mock_set_new_version.called)
         self.assertFalse(mock_commit_new_version.called)
         self.assertFalse(mock_tag_new_version.called)
+
+    @mock.patch('semantic_release.cli.upload_to_pypi')
+    @mock.patch('semantic_release.cli.push_new_version')
+    @mock.patch('semantic_release.cli.version', return_value=False)
+    def test_publish_should_do_nothing(self, mock_version, mock_push, mock_upload):
+        result = self.runner.invoke(main, ['publish'])
+        self.assertEqual(result.exit_code, 0)
+        mock_version.assert_called_once()
+        self.assertFalse(mock_push.called)
+        self.assertFalse(mock_upload.called)
+
+    @mock.patch('semantic_release.cli.upload_to_pypi')
+    @mock.patch('semantic_release.cli.push_new_version')
+    @mock.patch('semantic_release.cli.version', return_value=True)
+    def test_publish_should_call_functions(self, mock_version, mock_push, mock_upload):
+        result = self.runner.invoke(main, ['publish'])
+        self.assertEqual(result.exit_code, 0)
+        mock_version.assert_called_once()
+        mock_push.assert_called_once()
+        mock_upload.assert_called_once()
