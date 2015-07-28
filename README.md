@@ -27,6 +27,18 @@ Options:
 * `version` - Create a new release. Will change the version, commit it and tag it.
 * `publish` - Runs version before pushing to git and uploading to pypi.
 
+### Running commands from setup.py
+Add the following to your setup.py and you will be able to run `python setup.py <command>`
+as you woul `semantic-release <command>`.
+
+```python
+try:
+    from semantic_release import setup_hook
+    setup_hook(sys.argv)
+except ImportError:
+    pass
+```
+
 ### Configuration
 All configuration described here belongs in `setup.cfg` in a section: `semantic-release`.
 

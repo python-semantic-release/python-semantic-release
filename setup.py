@@ -1,5 +1,6 @@
 import re
 from setuptools import find_packages, setup
+import sys
 
 
 def _read_long_description():
@@ -16,6 +17,12 @@ with open('semantic_release/__init__.py', 'r') as fd:
         fd.read(),
         re.MULTILINE
     ).group(1)
+
+try:
+    from semantic_release import setup_hook
+    setup_hook(sys.argv)
+except ImportError:
+    pass
 
 setup(
     name='python-semantic-release',
