@@ -21,4 +21,4 @@ def tag_new_version(version):
 
 
 def push_new_version():
-    return run('git ps && git ps --tags', hide=True)
+    return run('git push && git push --tags', hide=True)
