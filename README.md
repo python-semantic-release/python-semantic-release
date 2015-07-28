@@ -6,6 +6,7 @@ Automatic semantic versioning for python projects
 ```
 pip install python-semantic-release
 ```
+This project currently supports only Python 3.
 
 ## Usage
 The general idea is to have some sort of tag in commit messages that indicates certain types of changes.
