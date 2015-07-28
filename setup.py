@@ -36,9 +36,10 @@ setup(
     license='MIT',
     install_requires=[
         'click==4.1',
-        'semver==2.2.0',
+        'gitpython==1.0.1',
         'invoke==0.10.1',
-        'GitPython==1.0.1',
+        'semver==2.2.0',
+        'wheel'
     ],
     entry_points='''
         [console_scripts]
