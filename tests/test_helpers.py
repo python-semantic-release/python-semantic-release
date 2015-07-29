@@ -1,7 +1,7 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import semantic_release
-from semantic_release.helpers import get_current_version, get_new_version
+from semantic_release.helpers import get_current_version, get_new_version, upload_to_pypi
 
 
 class GetCurrentVersionTests(TestCase):
@@ -31,3 +31,16 @@ class GetNewVersionTests(TestCase):
 
     def test_None_bump(self):
         self.assertEqual(get_new_version('1.0.0', None), '1.0.0')
+
+
+class PypiTests(TestCase):
+
+    @mock.patch('semantic_release.helpers.run')
+    def test_upload_without_arguments(self, mock_run):
+        upload_to_pypi()
+        mock_run.assert_called_once_with('python setup.py bdist_wheel upload && rm -rf build dist')
+
+    @mock.patch('semantic_release.helpers.run')
+    def test_upload_with_arguments(self, mock_run):
+        upload_to_pypi(dists='sdist')
+        mock_run.assert_called_once_with('python setup.py sdist upload && rm -rf build dist')
