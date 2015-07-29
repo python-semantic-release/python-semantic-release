@@ -4,9 +4,10 @@ Automatic semantic versioning for python projects
 
 ## Install
 ```
-pip install python-semantic-release
+pip3 install python-semantic-release
 ```
-This project currently supports only Python 3.
+
+Python 2 is currently not supported. See [#10] for more information.
 
 ## Usage
 The general idea is to have some sort of tag in commit messages that indicates certain types of changes.
@@ -55,3 +56,4 @@ to meet what you want them to be. The different tags are listed below with their
 * **Patch change:** `patch_tag = :bug:` :bug:
 
 [last-build]: https://ci.frigg.io/relekang/python-semantic-release/last/
+[#10]: https://github.com/relekang/python-semantic-release/issues/10
