@@ -1,6 +1,6 @@
 # python-semantic-release [![Build status](https://ci.frigg.io/relekang/python-semantic-release.svg)][last-build] [![Coverage status](https://ci.frigg.io/relekang/python-semantic-release/coverage.svg)][last-build]
 
-Automatic semantic versioning for python projects
+Automatic semantic versioning for python projects. [This blogpost explains in more detail][blogpost]
 
 ## Install
 ```
@@ -57,3 +57,4 @@ to meet what you want them to be. The different tags are listed below with their
 
 [last-build]: https://ci.frigg.io/relekang/python-semantic-release/last/
 [#10]: https://github.com/relekang/python-semantic-release/issues/10
+[blogpost]: http://rolflekang.com/python-semantic-release/
