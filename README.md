@@ -1,6 +1,6 @@
 # python-semantic-release [![Build status](https://ci.frigg.io/relekang/python-semantic-release.svg)][last-build] [![Coverage status](https://ci.frigg.io/relekang/python-semantic-release/coverage.svg)][last-build]
 
-Automatic semantic versioning for python projects. [This blogpost explains in more detail][blogpost]
+Automatic semantic versioning for python projects. [This blogpost explains in more detail][blogpost].
 
 ## Install
 ```
