@@ -1,7 +1,7 @@
 from git import Repo
 from invoke import run
 
-from semantic_release.settings import load_config
+from semantic_release.settings import config
 
 
 def get_commit_log():
@@ -20,7 +20,8 @@ def commit_new_version(version):
 
     :param version: The version number to be used in the commit message
     """
-    add = run('git add {}'.format(load_config().get('version_variable').split(':')[0]), hide=True)
+    command = 'git add {}'.format(config.get('semantic_release', 'version_variable').split(':')[0])
+    add = run(command, hide=True)
     if add.ok:
         run('git commit -m "{}"'.format(version), hide=True)
 

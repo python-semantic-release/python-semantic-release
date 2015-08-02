@@ -1,13 +1,18 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 
-from semantic_release.settings import load_config
+from semantic_release.settings import config
 
 
 class ConfigTests(TestCase):
+    def test_config(self):
+        self.assertEqual(
+            config.get('semantic_release', 'version_variable'),
+            'semantic_release/__init__.py:__version__'
+        )
 
-    def test_load_config(self):
-        config = load_config()
-        self.assertIn('version_variable', config)
-        self.assertIn('major_tag', config)
-        self.assertIn('minor_tag', config)
-        self.assertIn('patch_tag', config)
+    @mock.patch('os.getcwd', '/tmp/')
+    def test_defaults(self):
+        self.assertEqual(config.get('semantic_release', 'major_tag'), ':boom:')
+        self.assertEqual(config.get('semantic_release', 'minor_tag'), ':sparkles:')
+        self.assertEqual(config.get('semantic_release', 'patch_tag'), ':bug:')
+        self.assertTrue(config.getboolean('semantic_release', 'ignore_untagged_commits'))

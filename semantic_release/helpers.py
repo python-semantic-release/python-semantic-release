@@ -4,7 +4,7 @@ import semver
 from invoke import run
 from twine.commands import upload as twine_upload
 
-from semantic_release.settings import load_config
+from semantic_release.settings import config
 
 
 def get_current_version():
@@ -49,7 +49,7 @@ def set_new_version(new_version):
     :param new_version: The new version number as a string.
     :return: `True` if it succeeded.
     """
-    filename, variable = load_config().get('version_variable').split(':')
+    filename, variable = config.get('semantic_release', 'version_variable').split(':')
     variable = variable.strip()
     with open(filename, mode='r') as fr:
         content = fr.read()
