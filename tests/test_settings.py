@@ -15,4 +15,4 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get('semantic_release', 'major_tag'), ':boom:')
         self.assertEqual(config.get('semantic_release', 'minor_tag'), ':sparkles:')
         self.assertEqual(config.get('semantic_release', 'patch_tag'), ':bug:')
-        self.assertTrue(config.getboolean('semantic_release', 'ignore_untagged_commits'))
+        self.assertFalse(config.getboolean('semantic_release', 'patch_without_tag'))

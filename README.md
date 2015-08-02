@@ -46,6 +46,8 @@ All configuration described here belongs in `setup.cfg` in a section: `semantic-
 
 `version_variable` - The filename and variable name of where the version number is stored, e.g.
                      `semantic_release/__init__.py:__version__`.
+`patch_without_tag` - If set to true semantic-release will create a new release even if there is
+                      no tag in any commits since last release. Default: false.
 
 #### Tags
 There are a set of tags used to evaluate the changes from commit messages. They can be configured

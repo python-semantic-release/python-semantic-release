@@ -5,6 +5,7 @@ from semantic_release.history import evaluate_version_bump
 MAJOR = ':boom: Breaking changes'
 MINOR = ':sparkles: Add awesome feature'
 PATCH = ':bug: Fix the annoying bug'
+NO_TAG = 'Fix docs'
 
 ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
@@ -40,3 +41,24 @@ class EvaluateVersionBumpTest(TestCase):
         with mock.patch('semantic_release.history.get_commit_log',
                         lambda: MAJOR_LAST_RELEASE_MINOR_AFTER):
             self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
+
+    @mock.patch('semantic_release.history.config.getboolean', lambda *x: True)
+    @mock.patch('semantic_release.history.get_commit_log', lambda: [NO_TAG])
+    def test_should_patch_without_tagged_commits(self):
+        self.assertEqual(evaluate_version_bump('1.1.0'), 'patch')
+
+    @mock.patch('semantic_release.history.config.getboolean', lambda *x: False)
+    @mock.patch('semantic_release.history.get_commit_log', lambda: [NO_TAG])
+    def test_should_return_none_without_tagged_commits(self):
+        self.assertIsNone(evaluate_version_bump('1.1.0'))
+
+    @mock.patch('semantic_release.history.get_commit_log', lambda: [])
+    def test_should_return_none_without_commits(self):
+        """
+        Make sure that we do not release if there are no commits since last release.
+        """
+        with mock.patch('semantic_release.history.config.getboolean', lambda *x: True):
+            self.assertIsNone(evaluate_version_bump('1.1.0'))
+
+        with mock.patch('semantic_release.history.config.getboolean', lambda *x: False):
+            self.assertIsNone(evaluate_version_bump('1.1.0'))

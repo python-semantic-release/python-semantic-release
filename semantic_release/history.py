@@ -19,9 +19,11 @@ def evaluate_version_bump(current_version, force=None):
     """
     if force:
         return force
+
     bump = None
 
     changes = []
+    commit_count = 0
 
     for commit_message in get_commit_log():
         if current_version in commit_message:
@@ -32,7 +34,10 @@ def evaluate_version_bump(current_version, force=None):
             changes.append(2)
         elif config.get('semantic_release','patch_tag') in commit_message:
             changes.append(1)
+        commit_count += 1
 
     if len(changes):
         bump = LEVELS[max(changes)]
+    if config.getboolean('semantic_release', 'patch_without_tag') and commit_count:
+        bump = 'patch'
     return bump
