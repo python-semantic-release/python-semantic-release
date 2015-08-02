@@ -2,6 +2,7 @@ import re
 
 import semver
 from invoke import run
+from twine.commands import upload as twine_upload
 
 from semantic_release.settings import load_config
 
@@ -11,7 +12,10 @@ def get_current_version():
 
 
 def upload_to_pypi(dists='bdist_wheel'):
-    return run('python setup.py {} upload && rm -rf build dist'.format(dists))
+    run('python setup.py {}'.format(dists))
+    twine_upload.upload(dists=['dist/*'], repository='pypi', sign=False, identity=None,
+                        username=None, password=None, comment=None, sign_with='gpg')
+    run('rm -rf build dist')
 
 
 def get_new_version(current_version, level_bump):

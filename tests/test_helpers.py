@@ -5,13 +5,11 @@ from semantic_release.helpers import get_current_version, get_new_version, uploa
 
 
 class GetCurrentVersionTests(TestCase):
-
     def test_should_return_correct_version(self):
         self.assertEqual(get_current_version(), semantic_release.__version__)
 
 
 class GetNewVersionTests(TestCase):
-
     def test_major_bump(self):
         self.assertEqual(get_new_version('0.0.0', 'major'), '1.0.0')
         self.assertEqual(get_new_version('0.1.0', 'major'), '1.0.0')
@@ -34,13 +32,31 @@ class GetNewVersionTests(TestCase):
 
 
 class PypiTests(TestCase):
-
     @mock.patch('semantic_release.helpers.run')
-    def test_upload_without_arguments(self, mock_run):
+    @mock.patch('twine.commands.upload.upload')
+    def test_upload_without_arguments(self, mock_upload, mock_run):
         upload_to_pypi()
-        mock_run.assert_called_once_with('python setup.py bdist_wheel upload && rm -rf build dist')
+        self.assertEqual(
+            mock_run.call_args_list,
+            [mock.call('python setup.py bdist_wheel'), mock.call('rm -rf build dist')]
+        )
+        mock_upload.assert_called_once_with(
+            dists=['dist/*'],
+            repository='pypi',
+            sign=False,
+            identity=None,
+            username=None,
+            password=None,
+            comment=None,
+            sign_with='gpg'
+        )
 
     @mock.patch('semantic_release.helpers.run')
-    def test_upload_with_arguments(self, mock_run):
+    @mock.patch('twine.commands.upload.upload')
+    def test_upload_with_arguments(self, mock_upload, mock_run):
         upload_to_pypi(dists='sdist')
-        mock_run.assert_called_once_with('python setup.py sdist upload && rm -rf build dist')
+        self.assertEqual(
+            mock_run.call_args_list,
+            [mock.call('python setup.py sdist'), mock.call('rm -rf build dist')]
+        )
+        self.assertTrue(mock_upload.called)
