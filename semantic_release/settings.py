@@ -11,6 +11,7 @@ DEFAULTS = {
 def load_config():
     """
     Loads the configuration from setup.cfg in the current directory.
+
     :return: A dict with the semantic-release configuration.
     """
     config = configparser.ConfigParser()

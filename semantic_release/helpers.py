@@ -10,6 +10,7 @@ from semantic_release.settings import load_config
 def get_current_version():
     """
     Finds the current version of the package in the current working directory.
+
     :return: A string with the version number.
     """
     return run('python setup.py --version', hide=True).stdout.strip()
@@ -18,6 +19,7 @@ def get_current_version():
 def upload_to_pypi(dists='bdist_wheel'):
     """
     Creates the wheel and uploads to pypi with twine.
+
     :param dists: The dists string passed to setup.py. Default: 'bdist_wheel'
     """
     run('python setup.py {}'.format(dists))
@@ -29,6 +31,7 @@ def upload_to_pypi(dists='bdist_wheel'):
 def get_new_version(current_version, level_bump):
     """
     Calculates the next version based on the given bump level with semver.
+
     :param current_version: The version the package has now.
     :param level_bump: The level of the version number that should be bumped. Should be a `'major'`,
                        `'minor'` or `'patch'`.
@@ -42,6 +45,7 @@ def get_new_version(current_version, level_bump):
 def set_new_version(new_version):
     """
     Replaces the version number in the correct place and writes the changed file to disk.
+
     :param new_version: The new version number as a string.
     :return: `True` if it succeeded.
     """

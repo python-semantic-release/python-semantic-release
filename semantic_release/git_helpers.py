@@ -17,6 +17,7 @@ def commit_new_version(version):
     """
     Commits the file containing the version number variable with the version number as the commit
     message.
+
     :param version: The version number to be used in the commit message
     """
     add = run('git add {}'.format(load_config().get('version_variable').split(':')[0]), hide=True)
@@ -27,6 +28,7 @@ def commit_new_version(version):
 def tag_new_version(version):
     """
     Creates a new tag with the version number prefixed with v.
+
     :param version: The version number used in the tag as a string.
     """
     return run('git tag v{} HEAD'.format(version), hide=True)
