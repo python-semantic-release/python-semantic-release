@@ -51,9 +51,12 @@ def version(**kwargs):
         return False
 
     if config.getboolean('semantic_release', 'check_build_status'):
+        click.echo('Checking build status..')
         owner, name = get_repository_owner_and_name()
         if not check_build_status(owner, name, get_current_head_hash()):
+            click.echo(click.style('The build has failed', 'red'))
             return False
+        click.echo(click.style('The build was a success, continuing the release', 'green'))
 
     set_new_version(new_version)
     commit_new_version(new_version)
