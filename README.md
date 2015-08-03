@@ -4,10 +4,8 @@ Automatic semantic versioning for python projects. [This blogpost explains in mo
 
 ## Install
 ```
-pip3 install python-semantic-release
+pip install python-semantic-release
 ```
-
-Python 2 is currently not supported. See [#10] for more information.
 
 ## Usage
 The general idea is to have some sort of tag in commit messages that indicates certain types of changes.

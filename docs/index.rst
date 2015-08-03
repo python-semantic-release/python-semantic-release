@@ -10,11 +10,7 @@ Install
 
 ::
 
-    pip3 install python-semantic-release
-
-Python 2 is currently not supported. See
-`#10 <https://github.com/relekang/python-semantic-release/issues/10>`__
-for more information.
+    pip install python-semantic-release
 
 Usage
 -----

@@ -1,6 +1,10 @@
-import configparser
 import os
 from os import getcwd
+
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 
 def _config():

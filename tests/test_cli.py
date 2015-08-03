@@ -1,9 +1,10 @@
-from unittest import mock
 from unittest.case import TestCase
 
 from click.testing import CliRunner
 
 from semantic_release.cli import main
+
+from . import mock
 
 
 class CLITests(TestCase):

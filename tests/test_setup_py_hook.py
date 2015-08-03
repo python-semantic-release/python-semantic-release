@@ -1,6 +1,8 @@
-from unittest import TestCase, mock
+from unittest import TestCase
 
 from semantic_release import setup_hook
+
+from . import mock
 
 
 class SetupPyHookTests(TestCase):

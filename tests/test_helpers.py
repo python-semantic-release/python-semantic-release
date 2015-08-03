@@ -1,7 +1,9 @@
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import semantic_release
 from semantic_release.helpers import get_current_version, get_new_version, upload_to_pypi
+
+from . import mock
 
 
 class GetCurrentVersionTests(TestCase):

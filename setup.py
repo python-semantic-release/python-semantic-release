@@ -24,11 +24,6 @@ try:
 except ImportError:
     pass
 
-if sys.version_info[0] == 2:
-    print('Python 2 is currently not supported. '
-          'See https://github.com/relekang/python-semantic-release/issues/10')
-    exit(1)
-
 setup(
     name='python-semantic-release',
     version=version,
@@ -54,6 +49,9 @@ setup(
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
     ]
 )
