@@ -16,6 +16,7 @@ class CLITests(TestCase):
         self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once()
 
+    @mock.patch('semantic_release.cli.config.getboolean', lambda *x: False)
     @mock.patch('semantic_release.cli.tag_new_version')
     @mock.patch('semantic_release.cli.commit_new_version')
     @mock.patch('semantic_release.cli.set_new_version')
