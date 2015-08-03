@@ -15,7 +15,7 @@ class ConfigTests(TestCase):
     @mock.patch('semantic_release.settings.getcwd', return_value='/tmp/')
     def test_defaults(self, mock_getcwd):
         config = _config()
-        mock_getcwd.assert_called_once()
+        mock_getcwd.assert_called_once_with()
         self.assertEqual(config.get('semantic_release', 'major_tag'), ':boom:')
         self.assertEqual(config.get('semantic_release', 'minor_tag'), ':sparkles:')
         self.assertEqual(config.get('semantic_release', 'patch_tag'), ':bug:')
