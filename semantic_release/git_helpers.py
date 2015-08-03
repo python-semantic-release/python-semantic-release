@@ -33,7 +33,7 @@ def get_current_head_hash():
 
     :return: a string with the commit hash.
     """
-    return Repo('.git').head.commit.name_rev
+    return Repo('.git').head.commit.name_rev.split(' ')[0]
 
 
 def commit_new_version(version):
