@@ -84,6 +84,46 @@ class CLITests(TestCase):
         self.assertFalse(mock_commit_new_version.called)
         self.assertFalse(mock_tag_new_version.called)
 
+    @mock.patch('semantic_release.cli.config.getboolean', lambda *x: True)
+    @mock.patch('semantic_release.cli.check_build_status', return_value=False)
+    @mock.patch('semantic_release.cli.tag_new_version')
+    @mock.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
+    @mock.patch('semantic_release.cli.commit_new_version')
+    @mock.patch('semantic_release.cli.set_new_version')
+    def test_version_check_build_status_fails(self, mock_set_new, mock_commit_new,
+                                              mock_tag_new_version, mock_check_build_status):
+        result = self.runner.invoke(main, ['version'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue(mock_check_build_status.called)
+        self.assertFalse(mock_set_new.called)
+        self.assertFalse(mock_commit_new.called)
+        self.assertFalse(mock_tag_new_version.called)
+
+    @mock.patch('semantic_release.cli.config.getboolean', lambda *x: True)
+    @mock.patch('semantic_release.cli.check_build_status', return_value=True)
+    @mock.patch('semantic_release.cli.tag_new_version')
+    @mock.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
+    @mock.patch('semantic_release.cli.commit_new_version')
+    @mock.patch('semantic_release.cli.set_new_version')
+    def test_version_check_build_status_succeeds(self, mock_set_new, mock_commit_new,
+                                                 mock_tag_new_version, mock_check_build_status):
+        result = self.runner.invoke(main, ['version'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue(mock_check_build_status.called)
+        self.assertTrue(mock_set_new.called)
+        self.assertTrue(mock_commit_new.called)
+        self.assertTrue(mock_tag_new_version.called)
+
+    @mock.patch('semantic_release.cli.config.getboolean', lambda *x: False)
+    @mock.patch('semantic_release.cli.check_build_status')
+    @mock.patch('semantic_release.cli.tag_new_version', None)
+    @mock.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
+    @mock.patch('semantic_release.cli.commit_new_version', None)
+    @mock.patch('semantic_release.cli.set_new_version', None)
+    def test_version_check_build_status_not_called_if_disabled(self, mock_check_build_status):
+        self.runner.invoke(main, ['version'])
+        self.assertFalse(mock_check_build_status.called)
+
     @mock.patch('semantic_release.cli.upload_to_pypi')
     @mock.patch('semantic_release.cli.push_new_version')
     @mock.patch('semantic_release.cli.version', return_value=False)

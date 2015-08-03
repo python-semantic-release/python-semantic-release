@@ -1,4 +1,5 @@
 import re
+
 from git import Repo
 from invoke import run
 
@@ -24,6 +25,7 @@ def get_repository_owner_and_name():
     parts = re.search(r'([^/:]+)/([^/]+).git$', url)
 
     return parts.group(1), parts.group(2)
+
 
 def get_current_head_hash():
     """

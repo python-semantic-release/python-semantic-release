@@ -68,6 +68,9 @@ version number is stored, e.g.
 ``semantic_release/__init__.py:__version__``. ``patch_without_tag`` - If
 set to true semantic-release will create a new release even if there is
 no tag in any commits since last release. Default: false.
+``check_build_status`` - If set to true the status of the head commit
+will be checked and a release will only be created if the status is
+success.
 
 Tags
 ^^^^

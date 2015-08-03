@@ -1,6 +1,9 @@
-pytest
+# test-tools
 coverage
+pytest
+responses==0.4.0
 
+# requirements - should be the same as in setup.py
 click==4.1
 gitpython==1.0.1
 invoke==0.10.1

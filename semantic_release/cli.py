@@ -1,9 +1,13 @@
 import click
 
-from semantic_release.git_helpers import commit_new_version, push_new_version, tag_new_version
+from semantic_release.git_helpers import (commit_new_version, get_current_head_hash,
+                                          get_repository_owner_and_name, push_new_version,
+                                          tag_new_version)
 from semantic_release.helpers import (get_current_version, get_new_version, set_new_version,
                                       upload_to_pypi)
 from semantic_release.history import evaluate_version_bump
+from semantic_release.hvcs import check_build_status
+from semantic_release.settings import config
 
 
 @click.command()
@@ -45,6 +49,11 @@ def version(**kwargs):
             new_version
         ))
         return False
+
+    if config.getboolean('semantic_release', 'check_build_status'):
+        owner, name = get_repository_owner_and_name()
+        if not check_build_status(owner, name, get_current_head_hash()):
+            return False
 
     set_new_version(new_version)
     commit_new_version(new_version)

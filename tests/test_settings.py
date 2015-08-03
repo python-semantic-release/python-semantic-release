@@ -16,3 +16,5 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get('semantic_release', 'minor_tag'), ':sparkles:')
         self.assertEqual(config.get('semantic_release', 'patch_tag'), ':bug:')
         self.assertFalse(config.getboolean('semantic_release', 'patch_without_tag'))
+        self.assertFalse(config.getboolean('semantic_release', 'check_build_status'))
+        self.assertEqual(config.get('semantic_release', 'hvcs'), 'github')
