@@ -22,3 +22,9 @@ Since python-semantic-release is released with python-semantic-release we need t
 level tags in the commit message. They are listed below. If you are unsure which tag is appropriate
 just ask or take a guess. If we think it should be something else or there is a pull-request without
 tags we will help out in adding or changing them.
+
+Release schedule
+~~~~~~~~~~~~~~~~
+
+This package should be released by itself every half hour. Thus, if there is changes tagged with
+major, minor or patch a new release will be published xx:00 and xx:30.
