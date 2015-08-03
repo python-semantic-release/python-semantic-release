@@ -3,7 +3,8 @@ from unittest import TestCase, mock
 from invoke.runner import Result
 
 from semantic_release.git_helpers import (commit_new_version, get_commit_log, push_new_version,
-                                          tag_new_version, get_repository_owner_and_name)
+                                          tag_new_version, get_repository_owner_and_name,
+                                          get_current_head_hash)
 
 
 class GitHelpersTests(TestCase):
@@ -34,3 +35,7 @@ class GitHelpersTests(TestCase):
     def test_get_repository_owner_and_name(self):
         self.assertEqual(get_repository_owner_and_name()[0], 'relekang')
         self.assertEqual(get_repository_owner_and_name()[1], 'python-semantic-release')
+
+    @mock.patch('git.objects.commit.Commit.name_rev', 'commit-hash')
+    def test_get_current_head_hash(self):
+        self.assertEqual(get_current_head_hash(), 'commit-hash')

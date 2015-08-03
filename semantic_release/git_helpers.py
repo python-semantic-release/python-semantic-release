@@ -17,12 +17,21 @@ def get_commit_log():
 def get_repository_owner_and_name():
     """
     Checks the origin remote to get the owner and name of the remote repository.
+
     :return: a tuple of the owner and name
     """
     url = Repo('.git').remote('origin').url
     parts = re.search(r'([^/:]+)/([^/]+).git$', url)
 
     return parts.group(1), parts.group(2)
+
+def get_current_head_hash():
+    """
+    Gets the commit hash of the current HEAD.
+
+    :return: a string with the commit hash.
+    """
+    return Repo('.git').head.commit.name_rev
 
 
 def commit_new_version(version):
