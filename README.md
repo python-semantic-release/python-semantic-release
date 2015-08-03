@@ -49,7 +49,7 @@ All configuration described here belongs in `setup.cfg` in a section: `semantic-
 `patch_without_tag` - If set to true semantic-release will create a new release even if there is
                       no tag in any commits since last release. Default: false.
 `check_build_status` - If set to true the status of the head commit will be checked and a release
-                       will only be created if the status is success.
+                       will only be created if the status is success. Default: false.
 
 #### Tags
 There are a set of tags used to evaluate the changes from commit messages. They can be configured
