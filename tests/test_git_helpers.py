@@ -3,7 +3,7 @@ from unittest import TestCase, mock
 from invoke.runner import Result
 
 from semantic_release.git_helpers import (commit_new_version, get_commit_log, push_new_version,
-                                          tag_new_version)
+                                          tag_new_version, get_repository_owner_and_name)
 
 
 class GitHelpersTests(TestCase):
@@ -30,3 +30,7 @@ class GitHelpersTests(TestCase):
     def test_push_new_version(self, mock_run):
         push_new_version()
         mock_run.assert_called_with('git push && git push --tags', hide=True)
+
+    def test_get_repository_owner_and_name(self):
+        self.assertEqual(get_repository_owner_and_name()[0], 'relekang')
+        self.assertEqual(get_repository_owner_and_name()[1], 'python-semantic-release')

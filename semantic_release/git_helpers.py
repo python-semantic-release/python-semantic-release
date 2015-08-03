@@ -1,3 +1,4 @@
+import re
 from git import Repo
 from invoke import run
 
@@ -11,6 +12,17 @@ def get_commit_log():
     repo = Repo('.git')
     for commit in repo.iter_commits():
         yield commit.message
+
+
+def get_repository_owner_and_name():
+    """
+    Checks the origin remote to get the owner and name of the remote repository.
+    :return: a tuple of the owner and name
+    """
+    url = Repo('.git').remote('origin').url
+    parts = re.search(r'([^/:]+)/([^/]+).git$', url)
+
+    return parts.group(1), parts.group(2)
 
 
 def commit_new_version(version):

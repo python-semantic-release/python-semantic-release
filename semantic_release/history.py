@@ -32,7 +32,7 @@ def evaluate_version_bump(current_version, force=None):
             changes.append(3)
         elif config.get('semantic_release', 'minor_tag') in commit_message:
             changes.append(2)
-        elif config.get('semantic_release','patch_tag') in commit_message:
+        elif config.get('semantic_release', 'patch_tag') in commit_message:
             changes.append(1)
         commit_count += 1
 
