@@ -1,10 +1,12 @@
 import json
-from unittest import TestCase, mock
+from unittest import TestCase
 
 import responses
 
 from semantic_release.errors import ImproperConfigurationError
 from semantic_release.hvcs import Github, check_build_status, get_hvcs
+
+from . import mock
 
 
 class HCVSHelperTests(TestCase):

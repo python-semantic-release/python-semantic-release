@@ -1,6 +1,8 @@
-from unittest import TestCase, mock
+from unittest import TestCase
 
 from semantic_release.history import evaluate_version_bump
+
+from . import mock
 
 MAJOR = ':boom: Breaking changes'
 MINOR = ':sparkles: Add awesome feature'
