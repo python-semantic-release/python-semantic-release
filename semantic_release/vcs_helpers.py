@@ -3,7 +3,7 @@ import re
 from git import Repo
 from invoke import run
 
-from semantic_release.settings import config
+from .settings import config
 
 
 def get_commit_log():

@@ -1,7 +1,7 @@
 import requests
 
-from semantic_release.errors import ImproperConfigurationError
-from semantic_release.settings import config
+from .errors import ImproperConfigurationError
+from .settings import config
 
 
 class Github(object):

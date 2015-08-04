@@ -1,13 +1,11 @@
 import click
 
-from semantic_release.vcs_helpers import (commit_new_version, get_current_head_hash,
-                                          get_repository_owner_and_name, push_new_version,
-                                          tag_new_version)
-from semantic_release.helpers import (get_current_version, get_new_version, set_new_version,
-                                      upload_to_pypi)
-from semantic_release.history import evaluate_version_bump
-from semantic_release.hvcs import check_build_status
-from semantic_release.settings import config
+from .history import evaluate_version_bump, get_current_version, get_new_version, set_new_version
+from .hvcs import check_build_status
+from .pypi import upload_to_pypi
+from .settings import config
+from .vcs_helpers import (commit_new_version, get_current_head_hash, get_repository_owner_and_name,
+                          push_new_version, tag_new_version)
 
 
 @click.command()
