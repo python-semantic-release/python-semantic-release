@@ -38,6 +38,6 @@ class GitHelpersTests(TestCase):
         self.assertEqual(get_repository_owner_and_name()[0], 'relekang')
         self.assertEqual(get_repository_owner_and_name()[1], 'python-semantic-release')
 
-    @mock.patch('git.objects.commit.Commit.name_rev', 'commit-hash')
+    @mock.patch('git.objects.commit.Commit.name_rev', 'commit-hash branch-name')
     def test_get_current_head_hash(self):
         self.assertEqual(get_current_head_hash(), 'commit-hash')
