@@ -1,5 +1,5 @@
 Contributors
 ------------
 
-Rolf Erik Lekang (@relekang)
-Jannis Leidel (@jezdez)
+* Rolf Erik Lekang (@relekang)
+* Jannis Leidel (@jezdez)
