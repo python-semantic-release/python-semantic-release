@@ -1,4 +1,4 @@
-from semantic_release.git_helpers import get_commit_log
+from semantic_release.vcs_helpers import get_commit_log
 from semantic_release.helpers import config
 
 LEVELS = {
