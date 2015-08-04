@@ -37,6 +37,7 @@ Documentation Contents:
    :maxdepth: 2
 
    Quickstart <readme>
+   Automatic releases <automatic-releases>
    API docs <api/semantic_release>
    Contributors <contributors>
 
