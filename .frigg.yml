@@ -1,9 +1,9 @@
 tasks:
  - tox -e py27-flake8
  - tox -e py27-isort
- - tox -e py27-tests
  - tox -e py34-flake8
  - tox -e py34-isort
+ - tox -e py27-tests
  - tox -e py34-tests
  - coverage report && coverage xml
 
