@@ -7,7 +7,7 @@ this package can be found below. Using a CI is the recommended approach.
 
 Publish with CI
 ~~~~~~~~~~~~~~~
-Add `python setup.py publish` as an after success task on your preferred Continuous Integration
+Add ``python setup.py publish`` as an after success task on your preferred Continuous Integration
 service. Ensure that you have configured the CI so that it can upload to pypi and push to git and
 it should be ready to role.
 
@@ -30,7 +30,7 @@ that runs the cronjob has push access to the repository and upload access to pyp
     pip install python-semantic-release
 
 3. Clone the repositories you want to have scheduled publishing.
-3. Put the following in `publish`::
+3. Put the following in ``publish``::
 
     VENV=semantic_release/bin
 

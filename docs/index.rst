@@ -38,6 +38,7 @@ Documentation Contents:
 
    Quickstart <readme>
    Automatic releases <automatic-releases>
+   Configuration <configuration>
    API docs <api/semantic_release>
    Contributors <contributors>
 
