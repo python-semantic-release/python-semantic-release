@@ -1,7 +1,9 @@
 # test-tools
 coverage
 pytest
+pytest-xdist
 responses==0.4.0
+
 
 # requirements - should be the same as in setup.py
 click==4.1
