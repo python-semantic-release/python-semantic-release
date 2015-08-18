@@ -6,10 +6,8 @@ re_parser = re.compile(
     r'(?P<type>feat|fix|docs|style|refactor|test|chore)'
     r'\((?P<scope>[\w _\-]+)\): '
     r'(?P<subject>[^\n]+)'
-    r'(?:\n\n'
-    r'(?P<body>[^\n]+))?'
-    r'(?:\n\n'
-    r'(?P<footer>[^\n]+))?'
+    r'(:?\n\n(?P<text>.+))?',
+    re.DOTALL
 )
 
 TYPES = {
@@ -37,10 +35,7 @@ def parse_commit_message(message):
 
     parsed = re_parser.match(message)
     level_bump = 0
-    if parsed.group('body') and 'BREAKING CHANGE' in parsed.group('body'):
-        level_bump = 3
-
-    if parsed.group('footer') and 'BREAKING CHANGE' in parsed.group('footer'):
+    if parsed.group('text') and 'BREAKING CHANGE' in parsed.group('text'):
         level_bump = 3
 
     if parsed.group('type') == 'feat':
@@ -49,9 +44,17 @@ def parse_commit_message(message):
     if parsed.group('type') == 'fix':
         level_bump = max([level_bump, 1])
 
+    text = parsed.group('text')
+    body = ''
+    footer = ''
+    if text:
+        body = text.split('\n\n')[0]
+        if len(text.split('\n\n')) == 2:
+            footer = text.split('\n\n')[1]
+
     return (
         level_bump,
         TYPES[parsed.group('type')],
         parsed.group('scope'),
-        (parsed.group('subject'), parsed.group('body'), parsed.group('footer'))
+        (parsed.group('subject'), body.replace('\n', ' '), footer.replace('\n', ' '))
     )
