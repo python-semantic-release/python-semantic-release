@@ -1,12 +1,14 @@
+from ..errors import UnknownCommitMessageStyle
+from ..settings import current_commit_parser
 from ..settings import config
 from ..vcs_helpers import get_commit_log
-
 
 LEVELS = {
     1: 'patch',
     2: 'minor',
     3: 'major',
 }
+
 
 def evaluate_version_bump(current_version, force=None):
     """
@@ -28,17 +30,19 @@ def evaluate_version_bump(current_version, force=None):
     for commit_message in get_commit_log():
         if current_version in commit_message:
             break
-        if config.get('semantic_release', 'major_tag') in commit_message:
-            changes.append(3)
-        elif config.get('semantic_release', 'minor_tag') in commit_message:
-            changes.append(2)
-        elif config.get('semantic_release', 'patch_tag') in commit_message:
-            changes.append(1)
+
+        try:
+            message = current_commit_parser()(commit_message)
+            changes.append(message[0])
+        except UnknownCommitMessageStyle:
+            pass
+
         commit_count += 1
 
     if len(changes):
-        bump = LEVELS[max(changes)]
+        level = max(changes)
+        if level in LEVELS:
+            bump = LEVELS[level]
     if config.getboolean('semantic_release', 'patch_without_tag') and commit_count:
         bump = 'patch'
     return bump
-

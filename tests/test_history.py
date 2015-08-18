@@ -5,10 +5,11 @@ from semantic_release.history import evaluate_version_bump, get_current_version,
 
 from . import mock
 
-MAJOR = ':boom: Breaking changes'
-MINOR = ':sparkles: Add awesome feature'
-PATCH = ':bug: Fix the annoying bug'
-NO_TAG = 'Fix docs'
+MAJOR = 'feat(x): Add super-feature\n\nBREAKING CHANGE: Uses super-feature as default instead of ' \
+        'dull-feature.'
+MINOR = 'feat(x): Add non-breaking super-feature'
+PATCH = 'fix(x): Fix bug in super-feature'
+NO_TAG = 'docs(x): Add documentation for super-feature'
 
 ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
