@@ -16,16 +16,16 @@ class AngularCommitParserTests(TestCase):
     def test_parser_return_correct_bump_level(self):
         self.assertEqual(
             angular_parser('feat(parsers): Add new parser pattern\n\nBREAKING CHANGE:')[0],
-            1
+            3
         )
         self.assertEqual(
             angular_parser('feat(parsers): Add new parser pattern\n\n'
                            'New pattern is awesome\n\nBREAKING CHANGE:')[0],
-            1
+            3
         )
         self.assertEqual(angular_parser('feat(parser): Add emoji parser')[0], 2)
-        self.assertEqual(angular_parser('fix(parser): Fix regex in angular parser')[0], 2)
-        self.assertEqual(angular_parser('test(parser): Add a test for angular parser')[0], 4)
+        self.assertEqual(angular_parser('fix(parser): Fix regex in angular parser')[0], 1)
+        self.assertEqual(angular_parser('test(parser): Add a test for angular parser')[0], 0)
 
     def test_parser_return_type_from_commit_message(self):
         self.assertEqual(angular_parser('feat(parser): ...')[1], 'feature')
@@ -58,7 +58,7 @@ class AngularCommitParserTests(TestCase):
 
     def test_parser_return_text_from_commit_message(self):
         self.assertEqual(
-            angular_parser('fix(parser): Fix regex in angular parser\n\n{}'.format(self.text))[3][1],
+            angular_parser('fix(parser): Fix regex in an parser\n\n{}'.format(self.text))[3][1],
             self.text
         )
 

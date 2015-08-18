@@ -36,18 +36,18 @@ def parse_commit_message(message):
         )
 
     parsed = re_parser.match(message)
-    level_bump = 4
+    level_bump = 0
     if parsed.group('body') and 'BREAKING CHANGE' in parsed.group('body'):
-        level_bump = 1
+        level_bump = 3
 
     if parsed.group('footer') and 'BREAKING CHANGE' in parsed.group('footer'):
-        level_bump = 1
+        level_bump = 3
 
     if parsed.group('type') == 'feat':
-        level_bump = min([level_bump, 2])
+        level_bump = max([level_bump, 2])
 
     if parsed.group('type') == 'fix':
-        level_bump = min([level_bump, 2])
+        level_bump = max([level_bump, 1])
 
     return (
         level_bump,
