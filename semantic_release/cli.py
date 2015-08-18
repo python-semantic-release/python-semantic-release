@@ -3,6 +3,7 @@ import click
 from .history import evaluate_version_bump, get_current_version, get_new_version, set_new_version
 from .hvcs import check_build_status
 from .pypi import upload_to_pypi
+from .history.logs import generate_changelog, CHANGELOG_SECTIONS
 from .settings import config
 from .vcs_helpers import (commit_new_version, get_current_head_hash, get_repository_owner_and_name,
                           push_new_version, tag_new_version)
@@ -62,6 +63,21 @@ def version(**kwargs):
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
     return True
 
+def changelog(**kwargs):
+    """
+    Generates the changelog since the last release.
+    """
+    current_version = get_current_version()
+    log = generate_changelog(current_version)
+    for section in CHANGELOG_SECTIONS:
+        if len(log[section]) == 0:
+            continue
+
+        click.echo(section.capitalize())
+        click.echo(''.join(['-' for i in range(len(section))]))
+        for item in log[section]:
+            click.echo('  - {}'.format(item))
+        click.echo('\n')
 
 def publish(**kwargs):
     """

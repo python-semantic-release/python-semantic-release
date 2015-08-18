@@ -145,3 +145,9 @@ class CLITests(TestCase):
         mock_version.assert_called_once_with(noop=False, force_level=None)
         mock_push.assert_called_once_with()
         mock_upload.assert_called_once_with()
+
+    @mock.patch('semantic_release.cli.changelog', return_value=True)
+    def test_changelog_should_call_functions(self, mock_changelog):
+        result = self.runner.invoke(main, ['changelog'])
+        self.assertEqual(result.exit_code, 0)
+        mock_changelog.assert_called_once_with(noop=False, force_level=None)

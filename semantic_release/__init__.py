@@ -7,6 +7,6 @@ def setup_hook(argv):
 
     :param argv: sys.argv
     """
-    if len(argv) > 1 and argv[1] in ['version', 'publish']:
+    if len(argv) > 1 and argv[1] in ['version', 'publish', 'changelog']:
         from semantic_release.cli import main
         main()
