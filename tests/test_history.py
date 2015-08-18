@@ -4,12 +4,17 @@ import semantic_release
 from semantic_release.history import evaluate_version_bump, get_current_version, get_new_version
 
 from . import mock
+from semantic_release.history.logs import generate_changelog
 
 MAJOR = 'feat(x): Add super-feature\n\nBREAKING CHANGE: Uses super-feature as default instead of ' \
         'dull-feature.'
+MAJOR2 = 'feat(x): Add super-feature\n\nSome explanation\n\n' \
+         'BREAKING CHANGE: Uses super-feature as default instead of ' \
+         'dull-feature.'
 MINOR = 'feat(x): Add non-breaking super-feature'
 PATCH = 'fix(x): Fix bug in super-feature'
 NO_TAG = 'docs(x): Add documentation for super-feature'
+UNKNOWN_STYLE = 'random commits are the worst'
 
 ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
@@ -66,6 +71,29 @@ class EvaluateVersionBumpTest(TestCase):
 
         with mock.patch('semantic_release.history.config.getboolean', lambda *x: False):
             self.assertIsNone(evaluate_version_bump('1.1.0'))
+
+class GenerateChangelogTests(TestCase):
+
+    def test_should_generate_all_sections(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda: ALL_KINDS_OF_COMMIT_MESSAGES + [MAJOR2, UNKNOWN_STYLE]):
+            changelog = generate_changelog('0.0.0')
+            self.assertIn('feature', changelog)
+            self.assertIn('fix', changelog)
+            self.assertIn('documentation', changelog)
+            self.assertIn('breaking', changelog)
+            self.assertGreater(len(changelog['feature']), 0)
+            self.assertGreater(len(changelog['fix']), 0)
+            self.assertGreater(len(changelog['breaking']), 0)
+
+    def test_should_only_read_until_given_version(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda: MAJOR_LAST_RELEASE_MINOR_AFTER):
+            changelog = generate_changelog('1.1.0')
+            self.assertGreater(len(changelog['feature']), 0)
+            self.assertEqual(len(changelog['fix']), 0)
+            self.assertEqual(len(changelog['documentation']), 0)
+            self.assertEqual(len(changelog['breaking']), 0)
 
 
 class GetCurrentVersionTests(TestCase):

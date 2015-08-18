@@ -1,3 +1,4 @@
+import re
 from ..errors import UnknownCommitMessageStyle
 from ..settings import current_commit_parser
 from ..settings import config
@@ -8,6 +9,10 @@ LEVELS = {
     2: 'minor',
     3: 'major',
 }
+
+CHANGELOG_SECTIONS = ['feature', 'fix', 'breaking', 'documentation']
+
+re_breaking = re.compile('BREAKING CHANGE: (.*)')
 
 
 def evaluate_version_bump(current_version, force=None):
@@ -46,3 +51,33 @@ def evaluate_version_bump(current_version, force=None):
     if config.getboolean('semantic_release', 'patch_without_tag') and commit_count:
         bump = 'patch'
     return bump
+
+
+def generate_changelog(version):
+    """
+    Generates a changelog for the given version.
+
+    :param version: a version string
+    :return: a dict with different changelog sections
+    """
+
+    changes = {'feature': [], 'fix': [], 'documentation': [], 'refactor': [], 'breaking': []}
+
+    for commit_message in get_commit_log():
+        if version in commit_message:
+            break
+
+        try:
+            message = current_commit_parser()(commit_message)
+            changes[message[1]].append(message[3][0])
+
+            if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
+                changes['breaking'].append(re_breaking.match(message[3][1]).group(1))
+
+            if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
+                changes['breaking'].append(re_breaking.match(message[3][2]).group(1))
+
+        except UnknownCommitMessageStyle:
+            pass
+
+    return changes
