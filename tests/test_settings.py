@@ -1,6 +1,8 @@
 from unittest import TestCase
+from semantic_release.errors import ImproperConfigurationError
+from semantic_release.history import parser_angular
 
-from semantic_release.settings import _config
+from semantic_release.settings import _config, current_commit_parser
 
 from . import mock
 
@@ -24,3 +26,14 @@ class ConfigTests(TestCase):
         self.assertFalse(config.getboolean('semantic_release', 'patch_without_tag'))
         self.assertFalse(config.getboolean('semantic_release', 'check_build_status'))
         self.assertEqual(config.get('semantic_release', 'hvcs'), 'github')
+
+    @mock.patch('semantic_release.settings.config.get', lambda *x: 'nonexistent.parser')
+    def test_current_commit_parser_should_raise_error_if_parser_module_do_not_exist(self):
+        self.assertRaises(ImproperConfigurationError, current_commit_parser)
+
+    @mock.patch('semantic_release.settings.config.get', lambda *x: 'semantic_release.not_a_parser')
+    def test_current_commit_parser_should_raise_error_if_parser_do_not_exist(self):
+        self.assertRaises(ImproperConfigurationError, current_commit_parser)
+
+    def test_current_commit_parser_should_return_correct_parser(self):
+        self.assertEqual(current_commit_parser(), parser_angular.parse_commit_message)

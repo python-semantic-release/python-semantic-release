@@ -4,7 +4,9 @@ import semver
 from invoke import run
 
 from ..settings import config
-from .logs import evaluate_version_bump
+from .logs import evaluate_version_bump  # noqa
+
+from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 
 
 def get_current_version():
