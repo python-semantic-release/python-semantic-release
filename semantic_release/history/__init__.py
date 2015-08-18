@@ -3,8 +3,8 @@ import re
 import semver
 from invoke import run
 
-from .settings import config
-from .vcs_helpers import get_commit_log
+from ..settings import config
+from ..vcs_helpers import get_commit_log
 
 LEVELS = {
     1: 'patch',
