@@ -8,5 +8,6 @@ class SemanticReleaseBaseError(Exception):
 class ImproperConfigurationError(SemanticReleaseBaseError):
     pass
 
+
 class UnknownCommitMessageStyle(SemanticReleaseBaseError):
     pass

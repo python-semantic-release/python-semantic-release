@@ -2,9 +2,9 @@ from unittest import TestCase
 
 import semantic_release
 from semantic_release.history import evaluate_version_bump, get_current_version, get_new_version
+from semantic_release.history.logs import generate_changelog
 
 from . import mock
-from semantic_release.history.logs import generate_changelog
 
 MAJOR = 'feat(x): Add super-feature\n\nBREAKING CHANGE: Uses super-feature as default instead of ' \
         'dull-feature.'
@@ -34,7 +34,8 @@ class EvaluateVersionBumpTest(TestCase):
             self.assertEqual(evaluate_version_bump('0.0.0'), 'minor')
 
     def test_patch(self):
-        with mock.patch('semantic_release.history.logs.get_commit_log', lambda: PATCH_COMMIT_MESSAGES):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda: PATCH_COMMIT_MESSAGES):
             self.assertEqual(evaluate_version_bump('0.0.0'), 'patch')
 
     def test_nothing_if_no_tag(self):
@@ -71,6 +72,7 @@ class EvaluateVersionBumpTest(TestCase):
 
         with mock.patch('semantic_release.history.config.getboolean', lambda *x: False):
             self.assertIsNone(evaluate_version_bump('1.1.0'))
+
 
 class GenerateChangelogTests(TestCase):
 

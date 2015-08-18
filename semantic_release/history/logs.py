@@ -1,7 +1,7 @@
 import re
+
 from ..errors import UnknownCommitMessageStyle
-from ..settings import current_commit_parser
-from ..settings import config
+from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
 
 LEVELS = {

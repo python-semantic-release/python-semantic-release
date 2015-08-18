@@ -20,6 +20,7 @@ TYPES = {
     'chore': 'chore',
 }
 
+
 def parse_commit_message(message):
     """
     Parses a commit message according to the angular commit guidelines specification.

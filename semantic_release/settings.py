@@ -20,6 +20,7 @@ def _config():
 
 config = _config()
 
+
 def current_commit_parser():
     try:
         parts = config.get('semantic_release', 'commit_parser').split('.')
@@ -27,4 +28,3 @@ def current_commit_parser():
         return getattr(importlib.import_module(module), parts[-1])
     except (ImportError, AttributeError) as error:
         raise ImproperConfigurationError('Unable to import parser "{}"'.format(error))
-
