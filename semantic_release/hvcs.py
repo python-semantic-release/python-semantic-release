@@ -7,26 +7,60 @@ from .settings import config
 
 
 class Github(object):
+    DOMAIN = 'https://api.github.com'
 
     @staticmethod
     def token():
         return os.environ.get('GH_TOKEN')
 
     @staticmethod
-    def check_build_status(owner, repository, ref):
-        url = 'https://api.github.com/repos/{owner}/{repo}/commits/{ref}/status'
-        response = requests.get(url.format(owner=owner, repo=repository, ref=ref))
+    def check_build_status(owner, repo, ref):
+        url = '{domain}/repos/{owner}/{repo}/commits/{ref}/status'
+        response = requests.get(
+            url.format(domain=Github.DOMAIN, owner=owner, repo=repo, ref=ref)
+        )
         return response.json()['state'] == 'success'
 
     @classmethod
-    def post_release_changelog(cls, owner, repository, version, changelog):
-        url = 'https://api.github.com/repos/{owner}/{repo}/releases?access_token={token}'
+    def post_release_changelog(cls, owner, repo, version, changelog):
+        url = '{domain}/repos/{owner}/{repo}/releases?access_token={token}'
         tag = 'v{0}'.format(version)
         response = requests.post(
-            url.format(owner=owner, repo=repository, token=Github.token()),
+            url.format(
+                domain=Github.DOMAIN,
+                owner=owner,
+                repo=repo,
+                token=Github.token()
+            ),
             json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
         )
-        return response.status_code == 201, response.json()
+        status, payload = response.status_code == 201, response.json()
+
+        if not status:
+            url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}?access_token={token}'
+            response = requests.get(
+                url.format(
+                    domain=Github.DOMAIN,
+                    owner=owner,
+                    repo=repo,
+                    token=Github.token(),
+                    tag=tag
+                ),
+            )
+            release_id = response.json()['id']
+            url = '{domain}/repos/{owner}/{repo}/releases/{id}?access_token={token}'
+            response = requests.post(
+                url.format(
+                    domain=Github.DOMAIN,
+                    owner=owner,
+                    repo=repo,
+                    token=Github.token(),
+                    id=release_id
+                ),
+                json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
+            )
+            status, payload = response.status_code == 200, response.json()
+        return status, payload
 
 
 def get_hvcs():
