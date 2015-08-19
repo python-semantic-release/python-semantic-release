@@ -82,17 +82,18 @@ def changelog(**kwargs):
             click.echo(' - {}'.format(item))
         click.echo('\n')
 
-    if not kwargs.get('noop') and kwargs.get('post') and check_token():
-        owner, name = get_repository_owner_and_name()
-        click.echo('Updating changelog')
-        post_changelog(
-            owner,
-            name,
-            current_version,
-            markdown_changelog(current_version, log, header=False)
-        )
-    else:
-        click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
+    if not kwargs.get('noop') and kwargs.get('post'):
+        if check_token():
+            owner, name = get_repository_owner_and_name()
+            click.echo('Updating changelog')
+            post_changelog(
+                owner,
+                name,
+                current_version,
+                markdown_changelog(current_version, log, header=False)
+            )
+        else:
+            click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
 
 
 def publish(**kwargs):
