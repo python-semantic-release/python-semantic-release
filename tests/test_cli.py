@@ -14,8 +14,8 @@ class CLITests(TestCase):
     @mock.patch('semantic_release.cli.version')
     def test_main_should_call_correct_function(self, mock_version):
         result = self.runner.invoke(main, ['version'])
-        self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once_with(noop=False, force_level=None)
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.config.getboolean', lambda *x: False)
     @mock.patch('semantic_release.cli.tag_new_version')
@@ -28,34 +28,34 @@ class CLITests(TestCase):
                                                    mock_new_version, mock_set_new_version,
                                                    mock_commit_new_version, mock_tag_new_version):
         result = self.runner.invoke(main, ['version'])
-        self.assertEqual(result.exit_code, 0)
         mock_current_version.assert_called_once_with()
         mock_evaluate_bump.assert_called_once_with('1.2.3', None)
         mock_new_version.assert_called_once_with('1.2.3', 'major')
         mock_set_new_version.assert_called_once_with('2.0.0')
         mock_commit_new_version.assert_called_once_with('2.0.0')
         mock_tag_new_version.assert_called_once_with('2.0.0')
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.version')
     def test_force_major(self, mock_version):
         result = self.runner.invoke(main, ['version', '--major'])
-        self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once_with(noop=False, force_level='major')
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'major')
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.version')
     def test_force_minor(self, mock_version):
         result = self.runner.invoke(main, ['version', '--minor'])
-        self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once_with(noop=False, force_level='minor')
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'minor')
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.version')
     def test_force_patch(self, mock_version):
         result = self.runner.invoke(main, ['version', '--patch'])
-        self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once_with(noop=False, force_level='patch')
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'patch')
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.tag_new_version')
     @mock.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
@@ -63,10 +63,10 @@ class CLITests(TestCase):
     @mock.patch('semantic_release.cli.set_new_version')
     def test_noop_mode(self, mock_set_new, mock_commit_new, mock_tag_new_version):
         result = self.runner.invoke(main, ['version', '--noop'])
-        self.assertEqual(result.exit_code, 0)
         self.assertFalse(mock_set_new.called)
         self.assertFalse(mock_commit_new.called)
         self.assertFalse(mock_tag_new_version.called)
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.tag_new_version')
     @mock.patch('semantic_release.cli.commit_new_version')
@@ -78,13 +78,13 @@ class CLITests(TestCase):
                                mock_new_version, mock_set_new_version,
                                mock_commit_new_version, mock_tag_new_version):
         result = self.runner.invoke(main, ['version'])
-        self.assertEqual(result.exit_code, 0)
         mock_current_version.assert_called_once_with()
         mock_evaluate_bump.assert_called_once_with('1.2.3', None)
         mock_new_version.assert_called_once_with('1.2.3', None)
         self.assertFalse(mock_set_new_version.called)
         self.assertFalse(mock_commit_new_version.called)
         self.assertFalse(mock_tag_new_version.called)
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.config.getboolean', lambda *x: True)
     @mock.patch('semantic_release.cli.check_build_status', return_value=False)
@@ -95,11 +95,11 @@ class CLITests(TestCase):
     def test_version_check_build_status_fails(self, mock_set_new, mock_commit_new,
                                               mock_tag_new_version, mock_check_build_status):
         result = self.runner.invoke(main, ['version'])
-        self.assertEqual(result.exit_code, 0)
         self.assertTrue(mock_check_build_status.called)
         self.assertFalse(mock_set_new.called)
         self.assertFalse(mock_commit_new.called)
         self.assertFalse(mock_tag_new_version.called)
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.config.getboolean', lambda *x: True)
     @mock.patch('semantic_release.cli.check_build_status', return_value=True)
@@ -110,11 +110,11 @@ class CLITests(TestCase):
     def test_version_check_build_status_succeeds(self, mock_set_new, mock_commit_new,
                                                  mock_tag_new_version, mock_check_build_status):
         result = self.runner.invoke(main, ['version'])
-        self.assertEqual(result.exit_code, 0)
         self.assertTrue(mock_check_build_status.called)
         self.assertTrue(mock_set_new.called)
         self.assertTrue(mock_commit_new.called)
         self.assertTrue(mock_tag_new_version.called)
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.config.getboolean', lambda *x: False)
     @mock.patch('semantic_release.cli.check_build_status')
