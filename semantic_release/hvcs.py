@@ -1,4 +1,5 @@
 import os
+
 import requests
 
 from .errors import ImproperConfigurationError
@@ -46,3 +47,20 @@ def check_build_status(owner, repository, ref):
     :return: A boolean with the build status
     """
     return get_hvcs().check_build_status(owner, repository, ref)
+
+
+def post_changelog(owner, repository, version, changelog):
+    """
+    Posts the changelog to the current hcvs release API
+
+    :param owner: The owner of the repository
+    :param repository: The repository name
+    :param version: A string with the new version
+    :param changelog: A string with the changelog in correct format
+    :return: a tuple with successtatus and payload from hvcs
+    """
+    return get_hvcs().post_release_changelog(owner, repository, version, changelog)
+
+
+def check_token():
+    return get_hvcs().token() is not None

@@ -4,7 +4,7 @@ from unittest import TestCase
 import responses
 
 from semantic_release.errors import ImproperConfigurationError
-from semantic_release.hvcs import Github, check_build_status, get_hvcs
+from semantic_release.hvcs import Github, check_build_status, check_token, get_hvcs
 
 from . import mock
 
@@ -21,6 +21,14 @@ class HCVSHelperTests(TestCase):
     def test_check_build_status(self, mock_github_helper):
         check_build_status('owner', 'name', 'ref')
         mock_github_helper.assert_called_once_with('owner', 'name', 'ref')
+
+    @mock.patch('semantic_release.hvcs.Github.token', lambda: 'token')
+    def test_check_token_should_return_true(self):
+        self.assertTrue(check_token())
+
+    @mock.patch('semantic_release.hvcs.Github.token', lambda: None)
+    def test_check_token_should_return_false(self):
+        self.assertFalse(check_token())
 
 
 class GithubCheckBuildStatusTests(TestCase):
@@ -67,6 +75,7 @@ class GithubCheckBuildStatusTests(TestCase):
         self.assertTrue(Github.check_build_status('relekang', 'rmoq',
                                                   '6dcb09b5b57875f334f61aebed695e2e4193db5e'))
 
+
 class GithubReleaseTests(TestCase):
     url = 'https://api.github.com/repos/relekang/rmoq/releases'
 
@@ -103,4 +112,3 @@ class GithubReleaseTests(TestCase):
             content_type='application/json'
         )
         self.assertFalse(Github.post_release_changelog('relekang', 'rmoq', '1.0.0', 'text')[0])
-

@@ -1,8 +1,8 @@
 import click
 
 from .history import evaluate_version_bump, get_current_version, get_new_version, set_new_version
-from .history.logs import CHANGELOG_SECTIONS, generate_changelog
-from .hvcs import check_build_status
+from .history.logs import CHANGELOG_SECTIONS, generate_changelog, markdown_changelog
+from .hvcs import check_build_status, check_token, post_changelog
 from .pypi import upload_to_pypi
 from .settings import config
 from .vcs_helpers import (commit_new_version, get_current_head_hash, get_repository_owner_and_name,
@@ -85,12 +85,28 @@ def publish(**kwargs):
     """
     Runs the version task before pushing to git and uploading to pypi.
     """
+    current_version = get_current_version()
+    click.echo('Current version: {0}'.format(current_version))
+    level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
+    new_version = get_new_version(current_version, level_bump)
     if version(**kwargs):
         push_new_version()
         upload_to_pypi()
+        owner, name = get_repository_owner_and_name()
+        if check_token():
+            click.echo('Updating changelog')
+            post_changelog(
+                owner,
+                name,
+                new_version,
+                markdown_changelog(new_version, generate_changelog(new_version), header=False)
+            )
+        else:
+            click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
+
         click.echo(click.style('New release published', 'green'))
     else:
-        click.echo('Version failed, no release will be published.')
+        click.echo('Version failed, no release will be published.', err=True)
 
 
 if __name__ == '__main__':

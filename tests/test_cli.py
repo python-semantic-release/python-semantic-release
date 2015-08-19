@@ -126,25 +126,32 @@ class CLITests(TestCase):
         self.runner.invoke(main, ['version'])
         self.assertFalse(mock_check_build_status.called)
 
+    @mock.patch('semantic_release.cli.post_changelog')
     @mock.patch('semantic_release.cli.upload_to_pypi')
     @mock.patch('semantic_release.cli.push_new_version')
     @mock.patch('semantic_release.cli.version', return_value=False)
-    def test_publish_should_do_nothing(self, mock_version, mock_push, mock_upload):
+    def test_publish_should_do_nothing(self, mock_version, mock_push, mock_upload, mock_log):
         result = self.runner.invoke(main, ['publish'])
-        self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once_with(noop=False, force_level=None)
         self.assertFalse(mock_push.called)
         self.assertFalse(mock_upload.called)
+        self.assertFalse(mock_log.called)
+        self.assertEqual(result.exit_code, 0)
 
+    @mock.patch('semantic_release.cli.post_changelog')
     @mock.patch('semantic_release.cli.upload_to_pypi')
     @mock.patch('semantic_release.cli.push_new_version')
     @mock.patch('semantic_release.cli.version', return_value=True)
-    def test_publish_should_call_functions(self, mock_version, mock_push, mock_upload):
+    @mock.patch('semantic_release.cli.markdown_changelog', lambda *x, **y: 'CHANGES')
+    @mock.patch('semantic_release.cli.get_new_version', lambda *x: '2.0.0')
+    @mock.patch('semantic_release.cli.check_token', lambda: True)
+    def test_publish_should_call_functions(self, mock_version, mock_push, mock_upload, mock_log):
         result = self.runner.invoke(main, ['publish'])
-        self.assertEqual(result.exit_code, 0)
         mock_version.assert_called_once_with(noop=False, force_level=None)
         mock_push.assert_called_once_with()
         mock_upload.assert_called_once_with()
+        mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
+        self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.changelog', return_value=True)
     def test_changelog_should_call_functions(self, mock_changelog):
