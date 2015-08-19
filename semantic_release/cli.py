@@ -1,6 +1,7 @@
 import click
 
-from .history import evaluate_version_bump, get_current_version, get_new_version, set_new_version
+from .history import (evaluate_version_bump, get_current_version, get_new_version,
+                      get_previous_version, set_new_version)
 from .history.logs import CHANGELOG_SECTIONS, generate_changelog, markdown_changelog
 from .hvcs import check_build_status, check_token, post_changelog
 from .pypi import upload_to_pypi
@@ -14,6 +15,7 @@ from .vcs_helpers import (commit_new_version, get_current_head_hash, get_reposit
 @click.option('--major', 'force_level', flag_value='major', help='Force major version.')
 @click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.')
 @click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.')
+@click.option('--post', is_flag=True, help='Post changelog.')
 @click.option('--noop', is_flag=True,
               help='No-operations mode, finds the new version number without changing it.')
 def main(command, **kwargs):
@@ -69,7 +71,7 @@ def changelog(**kwargs):
     Generates the changelog since the last release.
     """
     current_version = get_current_version()
-    log = generate_changelog(current_version)
+    log = generate_changelog(get_previous_version(current_version), current_version)
     for section in CHANGELOG_SECTIONS:
         if len(log[section]) == 0:
             continue
@@ -79,6 +81,18 @@ def changelog(**kwargs):
         for item in log[section]:
             click.echo(' - {}'.format(item))
         click.echo('\n')
+
+    if not kwargs.get('noop') and kwargs.get('post') and check_token():
+        owner, name = get_repository_owner_and_name()
+        click.echo('Updating changelog')
+        post_changelog(
+            owner,
+            name,
+            current_version,
+            markdown_changelog(current_version, log, header=False)
+        )
+    else:
+        click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
 
 
 def publish(**kwargs):
