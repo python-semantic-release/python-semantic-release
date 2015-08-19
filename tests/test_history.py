@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import semantic_release
 from semantic_release.history import evaluate_version_bump, get_current_version, get_new_version
-from semantic_release.history.logs import generate_changelog
+from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
 
@@ -75,7 +75,6 @@ class EvaluateVersionBumpTest(TestCase):
 
 
 class GenerateChangelogTests(TestCase):
-
     def test_should_generate_all_sections(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
                         lambda: ALL_KINDS_OF_COMMIT_MESSAGES + [MAJOR2, UNKNOWN_STYLE]):
@@ -135,3 +134,58 @@ class GetNewVersionTests(TestCase):
 
     def test_None_bump(self):
         self.assertEqual(get_new_version('1.0.0', None), '1.0.0')
+
+
+class MarkdownChangelogTests(TestCase):
+    def test_should_output_all_sections(self):
+        markdown = markdown_changelog('0', {
+            'refactor': ['Refactor super-feature'],
+            'breaking': ['Uses super-feature as default instead of dull-feature.'],
+            'feature': ['Add non-breaking super-feature', 'Add super-feature'],
+            'fix': ['Fix bug in super-feature'],
+            'documentation': ['Document super-feature']
+        })
+        self.assertEqual(
+            markdown,
+            '\n'
+            '### Feature\n'
+            '* Add non-breaking super-feature\n'
+            '* Add super-feature\n'
+            '\n'
+            '### Fix\n'
+            '* Fix bug in super-feature\n'
+            '\n'
+            '### Breaking\n'
+            '* Uses super-feature as default instead of dull-feature.\n'
+            '\n'
+            '### Documentation\n'
+            '* Document super-feature\n'
+        )
+
+    def test_should_not_include_empty_sections(self):
+        self.assertEqual(
+            markdown_changelog(
+                '1.0.1',
+                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+            ),
+            ''
+        )
+
+    def test_should_output_heading(self):
+        self.assertIn(
+            '## v1.0.1\n',
+            markdown_changelog(
+                '1.0.1',
+                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                header=True
+            )
+        )
+
+    def test_should_not_output_heading(self):
+        self.assertNotIn(
+            'v1.0.1',
+            markdown_changelog(
+                '1.0.1',
+                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+            )
+        )

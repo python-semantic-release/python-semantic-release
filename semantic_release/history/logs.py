@@ -84,3 +84,28 @@ def generate_changelog(version):
             pass
 
     return changes
+
+
+def markdown_changelog(version, changelog, header=False):
+    """
+    Generates a markdown version of the changelog. Takes a parsed changelog dict from
+    generate_changelog.
+
+    :param version: A string with the version number.
+    :param changelog: A dict from generate_changelog.
+    :param header: A boolean that decides whether a header should be included or not.
+    :return: The markdown formatted changelog.
+    """
+    output = ''
+    if header:
+        output += '## v{0}\n'.format(version)
+
+    for section in CHANGELOG_SECTIONS:
+        if len(changelog[section]) == 0:
+            continue
+
+        output += '\n### {0}\n'.format(section.capitalize())
+        for item in changelog[section]:
+            output += '* {0}\n'.format(item)
+
+    return output
