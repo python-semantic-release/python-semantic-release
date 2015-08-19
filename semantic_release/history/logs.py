@@ -53,7 +53,7 @@ def evaluate_version_bump(current_version, force=None):
     return bump
 
 
-def generate_changelog(version):
+def generate_changelog(from_version, to_version=None):
     """
     Generates a changelog for the given version.
 
@@ -63,8 +63,16 @@ def generate_changelog(version):
 
     changes = {'feature': [], 'fix': [], 'documentation': [], 'refactor': [], 'breaking': []}
 
+    found_the_release = to_version is None
+
     for commit_message in get_commit_log():
-        if version in commit_message:
+        if not found_the_release:
+            if to_version and to_version not in commit_message:
+                continue
+            else:
+                found_the_release = True
+
+        if from_version is not None and from_version in commit_message:
             break
 
         try:

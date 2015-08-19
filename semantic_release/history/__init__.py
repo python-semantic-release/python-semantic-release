@@ -4,6 +4,7 @@ import semver
 from invoke import run
 
 from ..settings import config
+from ..vcs_helpers import get_commit_log
 from .logs import evaluate_version_bump  # noqa
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
@@ -30,6 +31,21 @@ def get_new_version(current_version, level_bump):
     if not level_bump:
         return current_version
     return getattr(semver, 'bump_{0}'.format(level_bump))(current_version)
+
+def get_previous_version(version):
+    """
+    Returns the version prior to the given version.
+
+    :param version: A string with the version number.
+    """
+    found_version = False
+    for commit_message in get_commit_log():
+        if version in commit_message:
+            found_version = True
+        if found_version:
+            if re.match(r'\d+.\d+.\d+', commit_message):
+                return commit_message.replace('v', '')
+
 
 
 def set_new_version(new_version):
