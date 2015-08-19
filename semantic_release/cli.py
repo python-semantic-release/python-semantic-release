@@ -77,7 +77,7 @@ def changelog(**kwargs):
         click.echo(section.capitalize())
         click.echo(''.join(['-' for i in range(len(section))]))
         for item in log[section]:
-            click.echo('  - {}'.format(item))
+            click.echo(' - {}'.format(item))
         click.echo('\n')
 
 
