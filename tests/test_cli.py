@@ -14,7 +14,7 @@ class CLITests(TestCase):
     @mock.patch('semantic_release.cli.version')
     def test_main_should_call_correct_function(self, mock_version):
         result = self.runner.invoke(main, ['version'])
-        mock_version.assert_called_once_with(noop=False, force_level=None)
+        mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
         self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.config.getboolean', lambda *x: False)
@@ -39,21 +39,21 @@ class CLITests(TestCase):
     @mock.patch('semantic_release.cli.version')
     def test_force_major(self, mock_version):
         result = self.runner.invoke(main, ['version', '--major'])
-        mock_version.assert_called_once_with(noop=False, force_level='major')
+        mock_version.assert_called_once_with(noop=False, post=False, force_level='major')
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'major')
         self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.version')
     def test_force_minor(self, mock_version):
         result = self.runner.invoke(main, ['version', '--minor'])
-        mock_version.assert_called_once_with(noop=False, force_level='minor')
+        mock_version.assert_called_once_with(noop=False, post=False, force_level='minor')
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'minor')
         self.assertEqual(result.exit_code, 0)
 
     @mock.patch('semantic_release.cli.version')
     def test_force_patch(self, mock_version):
         result = self.runner.invoke(main, ['version', '--patch'])
-        mock_version.assert_called_once_with(noop=False, force_level='patch')
+        mock_version.assert_called_once_with(noop=False, post=False, force_level='patch')
         self.assertEqual(mock_version.call_args_list[0][1]['force_level'], 'patch')
         self.assertEqual(result.exit_code, 0)
 
@@ -132,7 +132,7 @@ class CLITests(TestCase):
     @mock.patch('semantic_release.cli.version', return_value=False)
     def test_publish_should_do_nothing(self, mock_version, mock_push, mock_upload, mock_log):
         result = self.runner.invoke(main, ['publish'])
-        mock_version.assert_called_once_with(noop=False, force_level=None)
+        mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
         self.assertFalse(mock_push.called)
         self.assertFalse(mock_upload.called)
         self.assertFalse(mock_log.called)
@@ -147,7 +147,7 @@ class CLITests(TestCase):
     @mock.patch('semantic_release.cli.check_token', lambda: True)
     def test_publish_should_call_functions(self, mock_version, mock_push, mock_upload, mock_log):
         result = self.runner.invoke(main, ['publish'])
-        mock_version.assert_called_once_with(noop=False, force_level=None)
+        mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
         mock_push.assert_called_once_with()
         mock_upload.assert_called_once_with()
         mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
@@ -157,4 +157,4 @@ class CLITests(TestCase):
     def test_changelog_should_call_functions(self, mock_changelog):
         result = self.runner.invoke(main, ['changelog'])
         self.assertEqual(result.exit_code, 0)
-        mock_changelog.assert_called_once_with(noop=False, force_level=None)
+        mock_changelog.assert_called_once_with(noop=False, post=False, force_level=None)

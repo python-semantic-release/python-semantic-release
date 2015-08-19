@@ -78,6 +78,8 @@ class GithubCheckBuildStatusTests(TestCase):
 
 class GithubReleaseTests(TestCase):
     url = 'https://api.github.com/repos/relekang/rmoq/releases'
+    edit_url = 'https://api.github.com/repos/relekang/rmoq/releases/1'
+    get_url = 'https://api.github.com/repos/relekang/rmoq/releases/tags/v1.0.0'
 
     @responses.activate
     @mock.patch('semantic_release.hvcs.Github.token', lambda: 'super-token')
@@ -107,6 +109,20 @@ class GithubReleaseTests(TestCase):
         responses.add(
             responses.POST,
             self.url,
+            status=400,
+            body='{}',
+            content_type='application/json'
+        )
+        responses.add(
+            responses.GET,
+            self.get_url,
+            status=200,
+            body='{"id": 1}',
+            content_type='application/json'
+        )
+        responses.add(
+            responses.POST,
+            self.edit_url,
             status=400,
             body='{}',
             content_type='application/json'
