@@ -32,6 +32,7 @@ def get_new_version(current_version, level_bump):
         return current_version
     return getattr(semver, 'bump_{0}'.format(level_bump))(current_version)
 
+
 def get_previous_version(version):
     """
     Returns the version prior to the given version.
@@ -45,7 +46,6 @@ def get_previous_version(version):
         if found_version:
             if re.match(r'\d+.\d+.\d+', commit_message):
                 return commit_message.replace('v', '')
-
 
 
 def set_new_version(new_version):
