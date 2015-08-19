@@ -66,3 +66,41 @@ class GithubCheckBuildStatusTests(TestCase):
         )
         self.assertTrue(Github.check_build_status('relekang', 'rmoq',
                                                   '6dcb09b5b57875f334f61aebed695e2e4193db5e'))
+
+class GithubReleaseTests(TestCase):
+    url = 'https://api.github.com/repos/relekang/rmoq/releases'
+
+    @responses.activate
+    @mock.patch('semantic_release.hvcs.Github.token', lambda: 'super-token')
+    def test_should_post_changelog(self):
+        def request_callback(request):
+            payload = json.loads(request.body)
+            self.assertEqual(payload['tag_name'], 'v1.0.0')
+            self.assertEqual(payload['body'], 'text')
+            self.assertEqual(payload['draft'], False)
+            self.assertEqual(payload['prerelease'], False)
+            self.assertIn('?access_token=super-token', request.url)
+
+            return 201, {}, json.dumps({})
+
+        responses.add_callback(
+            responses.POST,
+            self.url,
+            callback=request_callback,
+            content_type='application/json'
+        )
+        status, payload = Github.post_release_changelog('relekang', 'rmoq', '1.0.0', 'text')
+        self.assertTrue(status)
+        self.assertEqual(payload, {})
+
+    @responses.activate
+    def test_should_return_false_status_if_it_failed(self):
+        responses.add(
+            responses.POST,
+            self.url,
+            status=400,
+            body='{}',
+            content_type='application/json'
+        )
+        self.assertFalse(Github.post_release_changelog('relekang', 'rmoq', '1.0.0', 'text')[0])
+
