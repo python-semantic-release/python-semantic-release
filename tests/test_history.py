@@ -97,6 +97,18 @@ class GenerateChangelogTests(TestCase):
             self.assertEqual(len(changelog['documentation']), 0)
             self.assertEqual(len(changelog['breaking']), 0)
 
+    def test_should_skip_style_changes(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda: PATCH_COMMIT_MESSAGES + ['style(x): change x']):
+            changelog = generate_changelog('0.0.0')
+            self.assertNotIn('style', changelog)
+
+    def test_should_skip_chore_changes(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda: PATCH_COMMIT_MESSAGES + ['chore(x): change x']):
+            changelog = generate_changelog('0.0.0')
+            self.assertNotIn('chore', changelog)
+
 
 class GetCurrentVersionTests(TestCase):
     def test_should_return_correct_version(self):

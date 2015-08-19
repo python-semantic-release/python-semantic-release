@@ -69,6 +69,9 @@ def generate_changelog(version):
 
         try:
             message = current_commit_parser()(commit_message)
+            if message[1] not in changes:
+                continue
+
             changes[message[1]].append(message[3][0])
 
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
