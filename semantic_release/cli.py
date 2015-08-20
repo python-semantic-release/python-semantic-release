@@ -110,11 +110,12 @@ def publish(**kwargs):
         owner, name = get_repository_owner_and_name()
         if check_token():
             click.echo('Updating changelog')
+            log = generate_changelog(current_version, new_version)
             post_changelog(
                 owner,
                 name,
                 new_version,
-                markdown_changelog(new_version, generate_changelog(new_version), header=False)
+                markdown_changelog(new_version, log, header=False)
             )
         else:
             click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
