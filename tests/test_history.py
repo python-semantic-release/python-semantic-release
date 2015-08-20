@@ -1,7 +1,8 @@
 from unittest import TestCase
 
 import semantic_release
-from semantic_release.history import evaluate_version_bump, get_current_version, get_new_version
+from semantic_release.history import (evaluate_version_bump, get_current_version, get_new_version,
+                                      get_previous_version)
 from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
@@ -112,6 +113,17 @@ class GenerateChangelogTests(TestCase):
 class GetCurrentVersionTests(TestCase):
     def test_should_return_correct_version(self):
         self.assertEqual(get_current_version(), semantic_release.__version__)
+
+
+class GetPreviousVersionTests(TestCase):
+
+    @mock.patch('semantic_release.history.get_commit_log', lambda: ['0.10.0', '0.9.0'])
+    def test_should_return_correct_version(self):
+        self.assertEqual(get_previous_version('0.10.0'), '0.9.0')
+
+    @mock.patch('semantic_release.history.get_commit_log', lambda: ['v0.10.0', 'v0.9.0'])
+    def test_should_return_correct_version_with_v(self):
+        self.assertEqual(get_previous_version('0.10.0'), '0.9.0')
 
 
 class GetNewVersionTests(TestCase):

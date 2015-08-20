@@ -43,9 +43,11 @@ def get_previous_version(version):
     for commit_message in get_commit_log():
         if version in commit_message:
             found_version = True
+            continue
+
         if found_version:
-            if re.match(r'\d+.\d+.\d+', commit_message):
-                return commit_message.replace('v', '')
+            if re.match(r'v?\d+.\d+.\d+', commit_message):
+                return commit_message.replace('v', '').strip()
 
 
 def set_new_version(new_version):
