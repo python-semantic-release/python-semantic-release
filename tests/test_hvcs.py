@@ -22,11 +22,11 @@ class HCVSHelperTests(TestCase):
         check_build_status('owner', 'name', 'ref')
         mock_github_helper.assert_called_once_with('owner', 'name', 'ref')
 
-    @mock.patch('semantic_release.hvcs.Github.token', lambda: 'token')
+    @mock.patch('semantic_release.hvcs.Github.token', 'token')
     def test_check_token_should_return_true(self):
         self.assertTrue(check_token())
 
-    @mock.patch('semantic_release.hvcs.Github.token', lambda: None)
+    @mock.patch('semantic_release.hvcs.Github.token', None)
     def test_check_token_should_return_false(self):
         self.assertFalse(check_token())
 
@@ -82,7 +82,7 @@ class GithubReleaseTests(TestCase):
     get_url = 'https://api.github.com/repos/relekang/rmoq/releases/tags/v1.0.0'
 
     @responses.activate
-    @mock.patch('semantic_release.hvcs.Github.token', lambda: 'super-token')
+    @mock.patch('semantic_release.hvcs.Github.token', 'super-token')
     def test_should_post_changelog(self):
         def request_callback(request):
             payload = json.loads(request.body)

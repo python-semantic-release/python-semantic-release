@@ -9,8 +9,8 @@ from .settings import config
 class Github(object):
     DOMAIN = 'https://api.github.com'
 
-    @staticmethod
-    def token():
+    @property
+    def token(self):
         return os.environ.get('GH_TOKEN')
 
     @staticmethod
@@ -30,7 +30,7 @@ class Github(object):
                 domain=Github.DOMAIN,
                 owner=owner,
                 repo=repo,
-                token=Github.token()
+                token=Github.token
             ),
             json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
         )
@@ -43,7 +43,7 @@ class Github(object):
                     domain=Github.DOMAIN,
                     owner=owner,
                     repo=repo,
-                    token=Github.token(),
+                    token=Github.token,
                     tag=tag
                 ),
             )
@@ -54,7 +54,7 @@ class Github(object):
                     domain=Github.DOMAIN,
                     owner=owner,
                     repo=repo,
-                    token=Github.token(),
+                    token=Github.token,
                     id=release_id
                 ),
                 json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
@@ -97,4 +97,4 @@ def post_changelog(owner, repository, version, changelog):
 
 
 def check_token():
-    return get_hvcs().token() is not None
+    return get_hvcs().token is not None
