@@ -34,9 +34,10 @@ Documentation Contents:
 =======================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    Quickstart <readme>
+   Parsing of commit logs <commit-log-parsing>
    Automatic releases <automatic-releases>
    Configuration <configuration>
    API docs <api/semantic_release>
