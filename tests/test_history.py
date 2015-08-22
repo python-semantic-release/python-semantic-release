@@ -144,7 +144,7 @@ class GetNewVersionTests(TestCase):
         self.assertEqual(get_new_version('0.1.0', 'patch'), '0.1.1')
         self.assertEqual(get_new_version('10.0.9', 'patch'), '10.0.10')
 
-    def test_None_bump(self):
+    def test_none_bump(self):
         self.assertEqual(get_new_version('1.0.0', None), '1.0.0')
 
 

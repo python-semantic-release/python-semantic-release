@@ -44,7 +44,7 @@ def evaluate_version_bump(current_version, force=None):
 
         commit_count += 1
 
-    if len(changes):
+    if changes:
         level = max(changes)
         if level in LEVELS:
             bump = LEVELS[level]

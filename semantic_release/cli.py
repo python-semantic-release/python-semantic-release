@@ -44,7 +44,7 @@ def version(**kwargs):
         return False
 
     if kwargs['noop'] is True:
-        click.echo('{} Should have bumped from {} to {}.'.format(
+        click.echo('{0} Should have bumped from {1} to {2}.'.format(
             click.style('No operation mode.', fg='yellow'),
             current_version,
             new_version
@@ -79,7 +79,7 @@ def changelog(**kwargs):
         click.echo(section.capitalize())
         click.echo(''.join(['-' for i in range(len(section))]))
         for item in log[section]:
-            click.echo(' - {}'.format(item))
+            click.echo(' - {0}'.format(item))
         click.echo('\n')
 
     if not kwargs.get('noop') and kwargs.get('post'):
