@@ -22,6 +22,7 @@ Options:
   --minor  Force minor version.
   --patch  Force patch version.
   --noop   No-operations mode, finds the new version number without changing it.
+  --post   If used with the changelog command, the changelog will be posted to the release api.
   --help   Show this message and exit.
 ```
 
@@ -29,6 +30,7 @@ Options:
 
 * `version` - Create a new release. Will change the version, commit it and tag it.
 * `publish` - Runs version before pushing to git and uploading to pypi.
+* `changelog` - Generates the changelog for the next release.
 
 ### Running commands from setup.py
 Add the following to your setup.py and you will be able to run `python setup.py <command>`
