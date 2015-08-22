@@ -1,4 +1,1 @@
-try:
-    from unittest import mock
-except ImportError:
-    import mock  # noqa
+import mock  # noqa
