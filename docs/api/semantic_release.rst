@@ -1,6 +1,13 @@
 semantic_release package
 ========================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    semantic_release.history
+
 Submodules
 ----------
 
@@ -16,14 +23,6 @@ semantic_release.errors module
 ------------------------------
 
 .. automodule:: semantic_release.errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-semantic_release.history module
--------------------------------
-
-.. automodule:: semantic_release.history
     :members:
     :undoc-members:
     :show-inheritance:
