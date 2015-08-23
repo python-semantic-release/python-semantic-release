@@ -30,7 +30,7 @@ class Github(object):
                 domain=Github.DOMAIN,
                 owner=owner,
                 repo=repo,
-                token=Github.token
+                token=Github().token
             ),
             json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
         )
@@ -43,7 +43,7 @@ class Github(object):
                     domain=Github.DOMAIN,
                     owner=owner,
                     repo=repo,
-                    token=Github.token,
+                    token=Github().token,
                     tag=tag
                 ),
             )
@@ -54,7 +54,7 @@ class Github(object):
                     domain=Github.DOMAIN,
                     owner=owner,
                     repo=repo,
-                    token=Github.token,
+                    token=Github().token,
                     id=release_id
                 ),
                 json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
@@ -91,10 +91,15 @@ def post_changelog(owner, repository, version, changelog):
     :param repository: The repository name
     :param version: A string with the new version
     :param changelog: A string with the changelog in correct format
-    :return: a tuple with successtatus and payload from hvcs
+    :return: a tuple with success status and payload from hvcs
     """
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
 
 
 def check_token():
-    return get_hvcs().token is not None
+    """
+    Checks whether there exists a token or not.
+
+    :return: A boolean telling if there is a token.
+    """
+    return get_hvcs()().token is not None

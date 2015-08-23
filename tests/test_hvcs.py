@@ -1,6 +1,7 @@
 import json
 from unittest import TestCase
 
+import pytest
 import responses
 
 from semantic_release.errors import ImproperConfigurationError
@@ -9,26 +10,29 @@ from semantic_release.hvcs import Github, check_build_status, check_token, get_h
 from . import mock
 
 
-class HCVSHelperTests(TestCase):
-    def test_get_hvcs_should_return_github(self):
-        self.assertEqual(get_hvcs(), Github)
+def test_get_hvcs_should_return_github():
+    assert(get_hvcs() == Github)
 
-    @mock.patch('semantic_release.hvcs.config.get', lambda *x: 'doesnotexist')
-    def test_get_hvcs_should_raise_improper_config(self):
-        self.assertRaises(ImproperConfigurationError, get_hvcs)
 
-    @mock.patch('semantic_release.hvcs.Github.check_build_status')
-    def test_check_build_status(self, mock_github_helper):
-        check_build_status('owner', 'name', 'ref')
-        mock_github_helper.assert_called_once_with('owner', 'name', 'ref')
+@mock.patch('semantic_release.hvcs.config.get', lambda *x: 'doesnotexist')
+def test_get_hvcs_should_raise_improper_config():
+    pytest.raises(ImproperConfigurationError, get_hvcs)
 
-    @mock.patch('semantic_release.hvcs.Github.token', 'token')
-    def test_check_token_should_return_true(self):
-        self.assertTrue(check_token())
 
-    @mock.patch('semantic_release.hvcs.Github.token', None)
-    def test_check_token_should_return_false(self):
-        self.assertFalse(check_token())
+@mock.patch('semantic_release.hvcs.Github.check_build_status')
+def test_check_build_status(mock_github_helper):
+    check_build_status('owner', 'name', 'ref')
+    mock_github_helper.assert_called_once_with('owner', 'name', 'ref')
+
+
+@mock.patch('os.environ', {'GH_TOKEN': 'token'})
+def test_check_token_should_return_true():
+    assert(check_token() is True)
+
+
+@mock.patch('os.environ', {})
+def test_check_token_should_return_false():
+    assert(check_token() is False)
 
 
 class GithubCheckBuildStatusTests(TestCase):
@@ -128,3 +132,8 @@ class GithubReleaseTests(TestCase):
             content_type='application/json'
         )
         self.assertFalse(Github.post_release_changelog('relekang', 'rmoq', '1.0.0', 'text')[0])
+
+
+def test_github_token():
+    with mock.patch('os.environ', {'GH_TOKEN': 'token'}):
+        assert(Github().token == 'token')
