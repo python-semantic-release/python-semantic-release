@@ -1,7 +1,7 @@
 import re
 
 from ..errors import UnknownCommitMessageStyle
-from ..history.parser_helpers import parse_text_block
+from .parser_helpers import parse_text_block
 
 re_parser = re.compile(
     r'(?P<type>feat|fix|docs|style|refactor|test|chore)'
