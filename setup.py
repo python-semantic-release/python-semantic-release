@@ -10,7 +10,6 @@ def _read_long_description():
     except Exception:
         return None
 
-version = ''
 with open('semantic_release/__init__.py', 'r') as fd:
     version = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
