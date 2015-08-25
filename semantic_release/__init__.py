@@ -1,6 +1,10 @@
 __version__ = '2.1.4'
 
 
+from .errors import (SemanticReleaseBaseError, ImproperConfigurationError,  # noqa
+                     UnknownCommitMessageStyleError)  # noqa
+
+
 def setup_hook(argv):
     """
     A hook to be used in setup.py to enable `python setup.py publish`.

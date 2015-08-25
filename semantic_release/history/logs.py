@@ -1,6 +1,6 @@
 import re
 
-from ..errors import UnknownCommitMessageStyle
+from ..errors import UnknownCommitMessageStyleError
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
 
@@ -39,7 +39,7 @@ def evaluate_version_bump(current_version, force=None):
         try:
             message = current_commit_parser()(commit_message)
             changes.append(message[0])
-        except UnknownCommitMessageStyle:
+        except UnknownCommitMessageStyleError:
             pass
 
         commit_count += 1
@@ -88,7 +88,7 @@ def generate_changelog(from_version, to_version=None):
             if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
                 changes['breaking'].append(re_breaking.match(message[3][2]).group(1))
 
-        except UnknownCommitMessageStyle:
+        except UnknownCommitMessageStyleError:
             pass
 
     return changes

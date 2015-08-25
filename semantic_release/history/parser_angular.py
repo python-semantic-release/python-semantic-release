@@ -1,6 +1,6 @@
 import re
 
-from ..errors import UnknownCommitMessageStyle
+from ..errors import UnknownCommitMessageStyleError
 from .parser_helpers import parse_text_block
 
 re_parser = re.compile(
@@ -31,7 +31,7 @@ def parse_commit_message(message):
     """
 
     if not re_parser.match(message):
-        raise UnknownCommitMessageStyle(
+        raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {}'.format(message)
         )
 

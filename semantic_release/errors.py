@@ -9,5 +9,5 @@ class ImproperConfigurationError(SemanticReleaseBaseError):
     pass
 
 
-class UnknownCommitMessageStyle(SemanticReleaseBaseError):
+class UnknownCommitMessageStyleError(SemanticReleaseBaseError):
     pass

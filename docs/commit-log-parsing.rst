@@ -35,6 +35,9 @@ To create a major release the body in the last item in the tuple must contain::
 
     BREAKING CHANGE: <explanation>
 
+If your parser does not recognise the commit style or in other words is unable
+to parse it then it should raise :py:class:`semantic_release.UnknownCommitMessageStyleError`.
+
 The parser can be set with the ``commit_parser`` configuration option. See :ref:`configuration`.
 
 .. _angular contributing guide: https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit

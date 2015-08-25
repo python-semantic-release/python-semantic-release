@@ -1,6 +1,6 @@
 import pytest
 
-from semantic_release.errors import UnknownCommitMessageStyle
+from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.history import angular_parser
 
 text = 'This is an long explanatory part of a commit message. It should give ' \
@@ -9,7 +9,7 @@ footer = 'Closes #400'
 
 
 def test_parser_raises_unknown_message_style():
-    pytest.raises(UnknownCommitMessageStyle, angular_parser, '')
+    pytest.raises(UnknownCommitMessageStyleError, angular_parser, '')
 
 
 def test_parser_return_correct_bump_level():

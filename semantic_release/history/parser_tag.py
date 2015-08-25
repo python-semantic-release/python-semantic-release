@@ -1,6 +1,6 @@
 import re
 
-from ..errors import UnknownCommitMessageStyle
+from ..errors import UnknownCommitMessageStyleError
 from ..settings import config
 from .parser_helpers import parse_text_block
 
@@ -25,7 +25,7 @@ def parse_commit_message(message):
     match = re_parser.match(message)
 
     if not match:
-        raise UnknownCommitMessageStyle(
+        raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {0}'.format(message)
         )
 
@@ -35,7 +35,7 @@ def parse_commit_message(message):
     elif config.get('semantic_release', 'fix_tag') in message:
         level = 'fix'
     else:
-        raise UnknownCommitMessageStyle(
+        raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {0}'.format(message)
         )
 
