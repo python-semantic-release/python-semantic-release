@@ -111,7 +111,7 @@ class GenerateChangelogTests(TestCase):
 
 
 def test_current_version_should_return_correct_version():
-    self.assertEqual(get_current_version(), semantic_release.__version__)
+    assert get_current_version() == semantic_release.__version__
 
 
 class GetPreviousVersionTests(TestCase):
