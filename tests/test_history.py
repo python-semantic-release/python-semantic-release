@@ -110,9 +110,8 @@ class GenerateChangelogTests(TestCase):
             self.assertNotIn('chore', changelog)
 
 
-class GetCurrentVersionTests(TestCase):
-    def test_should_return_correct_version(self):
-        self.assertEqual(get_current_version(), semantic_release.__version__)
+def test_current_version_should_return_correct_version():
+    self.assertEqual(get_current_version(), semantic_release.__version__)
 
 
 class GetPreviousVersionTests(TestCase):

@@ -1,7 +1,6 @@
 import re
 
 import semver
-from invoke import run
 
 from ..settings import config
 from ..vcs_helpers import get_commit_log
@@ -16,7 +15,14 @@ def get_current_version():
 
     :return: A string with the version number.
     """
-    return run('python setup.py --version', hide=True).stdout.strip()
+    filename, variable = config.get('semantic_release', 'version_variable').split(':')
+    variable = variable.strip()
+    with open(filename, 'r') as fd:
+        return re.search(
+            r'^{0}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(variable),
+            fd.read(),
+            re.MULTILINE
+        ).group(1)
 
 
 def get_new_version(current_version, level_bump):
