@@ -7,6 +7,7 @@ from ..vcs_helpers import get_commit_log
 from .logs import evaluate_version_bump  # noqa
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
+from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 
 
 def get_current_version():

@@ -20,9 +20,8 @@ class ConfigTests(TestCase):
     def test_defaults(self, mock_getcwd):
         config = _config()
         mock_getcwd.assert_called_once_with()
-        self.assertEqual(config.get('semantic_release', 'major_tag'), ':boom:')
         self.assertEqual(config.get('semantic_release', 'minor_tag'), ':sparkles:')
-        self.assertEqual(config.get('semantic_release', 'patch_tag'), ':bug:')
+        self.assertEqual(config.get('semantic_release', 'fix_tag'), ':nut_and_bolt:')
         self.assertFalse(config.getboolean('semantic_release', 'patch_without_tag'))
         self.assertFalse(config.getboolean('semantic_release', 'check_build_status'))
         self.assertEqual(config.get('semantic_release', 'hvcs'), 'github')

@@ -1,6 +1,7 @@
 import re
 
-from semantic_release.errors import UnknownCommitMessageStyle
+from ..errors import UnknownCommitMessageStyle
+from .parser_helpers import parse_text_block
 
 re_parser = re.compile(
     r'(?P<type>feat|fix|docs|style|refactor|test|chore)'
@@ -45,17 +46,11 @@ def parse_commit_message(message):
     if parsed.group('type') == 'fix':
         level_bump = max([level_bump, 1])
 
-    text = parsed.group('text')
-    body = ''
-    footer = ''
-    if text:
-        body = text.split('\n\n')[0]
-        if len(text.split('\n\n')) == 2:
-            footer = text.split('\n\n')[1]
+    body, footer = parse_text_block(parsed.group('text'))
 
     return (
         level_bump,
         TYPES[parsed.group('type')],
         parsed.group('scope'),
-        (parsed.group('subject'), body.replace('\n', ' '), footer.replace('\n', ' '))
+        (parsed.group('subject'), body, footer)
     )
