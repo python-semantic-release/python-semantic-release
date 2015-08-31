@@ -106,7 +106,9 @@ def publish(**kwargs):
     new_version = get_new_version(current_version, level_bump)
     if version(**kwargs):
         push_new_version()
-        upload_to_pypi()
+        if config.getboolean('semantic_release', 'upload_to_pypi'):
+            upload_to_pypi()
+
         owner, name = get_repository_owner_and_name()
         if check_token():
             click.echo('Updating changelog')

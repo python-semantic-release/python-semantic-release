@@ -22,3 +22,7 @@ All configuration described here belongs in ``setup.cfg`` in a section:
     If set to true the status of the head commit will be
     checked and a release will only be created if the status is success. Default: false.
 
+``upload_to_pypi``
+    If set to false the pypi uploading will be disabled. This can be useful to create
+    tag releases for none pypi projects.
+

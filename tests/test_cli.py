@@ -153,6 +153,18 @@ class CLITests(TestCase):
         mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
         self.assertEqual(result.exit_code, 0)
 
+    @mock.patch('semantic_release.cli.post_changelog', lambda *x: True)
+    @mock.patch('semantic_release.cli.upload_to_pypi')
+    @mock.patch('semantic_release.cli.push_new_version', lambda *x: True)
+    @mock.patch('semantic_release.cli.version', lambda: True)
+    @mock.patch('semantic_release.cli.markdown_changelog', lambda *x, **y: 'CHANGES')
+    @mock.patch('semantic_release.cli.get_new_version', lambda *x: '2.0.0')
+    @mock.patch('semantic_release.cli.check_token', lambda: True)
+    @mock.patch('semantic_release.cli.config.getboolean', lambda *x: False)
+    def test_publish_should_not_upload_to_pypi_if_option_is_false(self, mock_upload):
+        self.runner.invoke(main, ['publish'])
+        self.assertFalse(mock_upload.called)
+
     @mock.patch('semantic_release.cli.changelog', return_value=True)
     def test_changelog_should_call_functions(self, mock_changelog):
         result = self.runner.invoke(main, ['changelog'])

@@ -25,6 +25,7 @@ class ConfigTests(TestCase):
         self.assertFalse(config.getboolean('semantic_release', 'patch_without_tag'))
         self.assertFalse(config.getboolean('semantic_release', 'check_build_status'))
         self.assertEqual(config.get('semantic_release', 'hvcs'), 'github')
+        self.assertEqual(config.getboolean('semantic_release', 'upload_to_pypi'), True)
 
     @mock.patch('semantic_release.settings.config.get', lambda *x: 'nonexistent.parser')
     def test_current_commit_parser_should_raise_error_if_parser_module_do_not_exist(self):
