@@ -38,7 +38,7 @@ setup(
         'gitpython==1.0.1',
         'invoke==0.11.1',
         'semver==2.2.1',
-        'twine==1.5.0',
+        'twine==1.6.3',
         'wheel'
     ],
     entry_points='''
