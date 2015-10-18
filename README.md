@@ -1,9 +1,10 @@
-# python-semantic-release [![Build status](https://ci.frigg.io/relekang/python-semantic-release.svg)][last-build] [![Coverage status](https://ci.frigg.io/relekang/python-semantic-release/coverage.svg)][last-build]
+# python-semantic-release
 
+Automatic semantic versioning for python projects. This is an python implementation of the
+[semantic-release][] for js by Stephan Bönnemann. If you find this topic interesting you should
+check out his [talk from JSConf Budapest][semantic-release-talk].
 
-[![semantic-release][semantic-release-badge]](https://semantic-release.org) [![Join the chat at https://gitter.im/relekang/python-semantic-release][gitter-badge]][gitter-link] ![PyPI version][pypi-badge]
-
-Automatic semantic versioning for python projects. [This blogpost explains in more detail][blogpost].
+[![Build status][build-badge]][last-build] [![Coverage status][coverage-badge]][last-build] ![PyPI version][pypi-badge]
 
 ## Install
 ```
@@ -49,9 +50,12 @@ Configuration belong in `semantic_release` section of the setup.cfg file in your
 Details about configuration options can be found in [the configuration documentation][config-docs].
 
 [last-build]: https://ci.frigg.io/relekang/python-semantic-release/last/
+[build-badge]: https://ci.frigg.io/relekang/python-semantic-release.svg
+[coverage-badge]: https://ci.frigg.io/relekang/python-semantic-release/coverage.svg
 [pypi-badge]: https://badge.fury.io/py/python-semantic-release.svg
 [semantic-release-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
 [gitter-link]: https://gitter.im/relekang/python-semantic-release?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-[blogpost]: http://rolflekang.com/python-semantic-release/
+[semantic-release]: https://github.com/semantic-release/semantic-release
+[semantic-release-talk]: https://www.youtube.com/watch?v=tc2UgG5L7WM
 [config-docs]: http://python-semantic-release.readthedocs.org/en/latest/configuration.html
