@@ -34,11 +34,11 @@ setup(
     packages=find_packages(exclude='tests'),
     license='MIT',
     install_requires=[
-        'click==4.1',
+        'click==5.1',
         'gitpython==1.0.1',
-        'invoke==0.10.1',
-        'semver==2.2.0',
-        'twine==1.5.0',
+        'invoke==0.11.1',
+        'semver==2.2.1',
+        'twine==1.6.3',
         'wheel'
     ],
     entry_points='''
