@@ -34,7 +34,7 @@ setup(
     packages=find_packages(exclude='tests'),
     license='MIT',
     install_requires=[
-        'click==6.0',
+        'click==6.2',
         'gitpython==1.0.1',
         'invoke==0.11.1',
         'semver==2.2.1',
