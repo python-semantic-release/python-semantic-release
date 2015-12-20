@@ -17,6 +17,9 @@ with open('semantic_release/__init__.py', 'r') as fd:
         re.MULTILINE
     ).group(1)
 
+with open('requirements/base.txt', 'r') as fd:
+    requirements = fd.read().strip().split('\n')
+
 try:
     from semantic_release import setup_hook
     setup_hook(sys.argv)
@@ -33,14 +36,7 @@ setup(
     long_description=_read_long_description(),
     packages=find_packages(exclude='tests'),
     license='MIT',
-    install_requires=[
-        'click==5.1',
-        'gitpython==1.0.1',
-        'invoke==0.11.1',
-        'semver==2.2.1',
-        'twine==1.6.3',
-        'wheel'
-    ],
+    install_requires=requirements,
     entry_points='''
         [console_scripts]
         semantic-release=semantic_release.cli:main
