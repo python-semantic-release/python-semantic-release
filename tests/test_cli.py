@@ -149,7 +149,6 @@ class CLITests(TestCase):
         result = self.runner.invoke(main, ['publish'])
         mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
         mock_push.assert_called_once_with()
-        mock_upload.assert_called_once_with()
         mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
         self.assertEqual(result.exit_code, 0)
 

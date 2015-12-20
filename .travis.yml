@@ -1,14 +1,13 @@
 language: python
 python: 3.5
 env:
-- TOX_ENV=py35-flake8
-- TOX_ENV=py35-isort
-- TOX_ENV=py35-tests
-- TOX_ENV=py27-tests
 install:
 - pip install tox
 script:
-- tox -e $TOX_ENV
+- tox -e flake8
+- tox -e isort
+- tox -e py35-tests
+- tox -e py27-tests
 after_success:
 - pip install python-semantic-release
 - semantic-release publish
