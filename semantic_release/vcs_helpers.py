@@ -1,8 +1,9 @@
 import re
 
 from git import Repo
-from invoke import run
+from invoke import run, Failure
 
+from .errors import GitError
 from .settings import config
 
 
@@ -69,4 +70,10 @@ def push_new_version(gh_token=None, owner=None, name=None):
             token=gh_token,
             repo='github.com/{owner}/{name}.git'.format(owner=owner, name=name)
         )
-    return run(command, hide=True)
+    try:
+        return run(command, hide=True)
+    except Failure as error:
+        message = error.result
+        if gh_token:
+            message = message.replace(gh_token, '[GH_TOKEN]')
+        raise GitError(message)

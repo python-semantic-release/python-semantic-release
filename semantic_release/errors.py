@@ -11,3 +11,7 @@ class ImproperConfigurationError(SemanticReleaseBaseError):
 
 class UnknownCommitMessageStyleError(SemanticReleaseBaseError):
     pass
+
+
+class GitError(SemanticReleaseBaseError):
+    pass
