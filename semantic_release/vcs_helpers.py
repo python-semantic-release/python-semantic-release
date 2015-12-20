@@ -73,7 +73,7 @@ def push_new_version(gh_token=None, owner=None, name=None):
     try:
         return run(command, hide=True)
     except Failure as error:
-        message = error.result
+        message = str(error)
         if gh_token:
             message = message.replace(gh_token, '[GH_TOKEN]')
         raise GitError(message)

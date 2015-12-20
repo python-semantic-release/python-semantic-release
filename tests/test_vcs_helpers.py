@@ -12,7 +12,6 @@ from . import mock
 
 
 class GitHelpersTests(TestCase):
-
     def test_first_commit_is_not_initial_commit(self):
         self.assertNotEqual(next(get_commit_log()), 'Initial commit')
 
@@ -39,12 +38,6 @@ class GitHelpersTests(TestCase):
             hide=True
         )
 
-    @mock.patch('semantic_release.vcs_helpers.run', side_effect=Failure('output gh--token'))
-    def test_push_should_not_print_gh_token(self, mock_run):
-        with pytest.raises(GitError) as excinfo:
-            push_new_version(gh_token='gh--token')
-        assert 'gh--token' not in str(excinfo)
-
     def test_get_repository_owner_and_name(self):
         self.assertEqual(get_repository_owner_and_name()[0], 'relekang')
         self.assertEqual(get_repository_owner_and_name()[1], 'python-semantic-release')
@@ -52,3 +45,17 @@ class GitHelpersTests(TestCase):
     @mock.patch('git.objects.commit.Commit.name_rev', 'commit-hash branch-name')
     def test_get_current_head_hash(self):
         self.assertEqual(get_current_head_hash(), 'commit-hash')
+
+
+def test_push_should_not_print_gh_token(mocker):
+    result = Result(
+        command='s gh--token',
+        stderr='output gh--token',
+        stdout='output gh--token',
+        exited=1,
+        pty=True
+    )
+    mocker.patch('semantic_release.vcs_helpers.run', side_effect=Failure(result))
+    with pytest.raises(GitError) as excinfo:
+        push_new_version(gh_token='gh--token')
+    assert 'gh--token' not in str(excinfo)
