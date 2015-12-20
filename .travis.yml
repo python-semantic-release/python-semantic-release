@@ -1,6 +1,9 @@
 language: python
 python: 3.5
 env:
+  global:
+    - PYPI_USERNAME=relekang
+    - secure: "NY3yjXJrfiHk3MRIz/5nye4u8HqE6ez1q3pzg/AfXiBTAY1JSQ1PlfelrHBKLQDIHLwYFo5h6zLN7qVMOqLbjxab9nSpPgLXi2U9NQwn7PMHkMEwa3aVcdWx80MRT+ttEjkjHmoa7Q/VhPz7o5W5N7Vo7piREmj6OzK7v91LqDG3kTNFj+mWqe+iILb7CK+EyelpiQHUE4Q2uKsGjPMXMEsEuNjgOj1O35V+JvHBWUl/JbPFaiBWulB8yFKcsAqQDKN7C967tonsi2sDDVthLk/smmvXBkAzZUCPHpFTPhQPSYX+GlNMC2xQVQr4Bk5msszWx+0hP+Oi75eZsZaZaZga9+oGBGCqO5V0tAB9672IBLoz3uqgP8NEyb7PlwtpA/o7Fy9F0XiTx2DpMXJY74xjt4QHe4ezJLgXZjjapAC6nPUt7jEMP51fVe7bHd04C3P9QpH6nfBR+mHl8k3GI6Fk/1lCRfkFkMiLAkl/lNbEMwGwTc9vwXGHZ0ZGcAXw+H20750kPDPuTQeGz/XwSzDl27Y7+1UuLwF/To5QYqWlAuFoAu86OlXxMLVu5gqkjgpvOTJJWgb854RQ/+5G8u1lfFUE58SUq2VgG+F0R1T7zvsUN18GmBX5+geR3DcJ+Lci3+Own3xbOS/x1eLb8J/Frlr9b/jjCc8zSKpaWR0="
 install:
 - pip install tox
 script:
@@ -11,15 +14,5 @@ script:
 after_success:
 - git config --global user.name "semantic-release (via TravisCI)"
 - git config --global user.email "semantic-release@travis"
-- pip install python-semantic-release
+- python setup.py install
 - semantic-release publish
-deploy:
-  provider: pypi
-  user: relekang
-  password:
-    secure: "RJufhLsHY1xGmseSd8HYIuwC8pCrBC+X8LYl95t3gkNEM3g1Grs+Ak1hjADvrAmZuVTFdyv6hr36FYL1tEkc/o1w7JJ68DmQ3yXZ8tGQkeusTDPvmEZu2A3qPVlxXp9xHbqazWzXHjFOjm/LDJZl5ut4bnEMMZkhQrDDLHoaWteUYaWlQjPF+CYhG4WjqklVjfvS9gzvsfRKVQEZV5h8O5xgb9/ztoys+Lenxc0A7nTOyHTZyrwpnR33ZAjxw03SHeT2aOEdHbjpGISUXIikA03S3dVQINnN2iF29vR/uV49a80pBXrupFK1za81j/uS9j5rST3ip2CU9eybdVStJWIdydLBZ7GtdmYrRZO9RoCxhUVJKu64x4+8qfdj385rmxF2G/M0GQC0UrmOQ4BOrUdzbuwkIENY038RXo6WFCXjYBfZ6mlZ16RdsZ2Kojg1T/BoXfen9M087CHMDS81EHKVL6tls5l/++wFx6hmtYhXP18ewMcN+5l4u1iKnmIdlz2sTlRIUloW8FPXrLQUnCvPY0B+S/UzQWEAzji4NierqxxVWqA/Yc/Geqyr0chlRW856BCzWX1jLWT5D8xZDMLet02aO6tnoOmIBcby5GwcbZtKH1Avh6Xw4hXBUmcOdfX6Ls1RoB9sV6RybKtUcWZcx93Vny4Skrl7te50qc0="
-  on:
-    tags: true
-    repo: relekang/python-semantic-release
-    branch: master
-    distributions: "sdist bdist_wheel"
