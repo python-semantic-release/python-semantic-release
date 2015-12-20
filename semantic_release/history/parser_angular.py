@@ -5,7 +5,7 @@ from .parser_helpers import parse_text_block
 
 re_parser = re.compile(
     r'(?P<type>feat|fix|docs|style|refactor|test|chore)'
-    r'\((?P<scope>[\w _\-]+)\): '
+    r'(?:\((?P<scope>[\w _\-]+)\))?: '
     r'(?P<subject>[^\n]+)'
     r'(:?\n\n(?P<text>.+))?',
     re.DOTALL

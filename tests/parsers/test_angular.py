@@ -77,3 +77,8 @@ def test_parser_return_footer_from_commit_message():
         ==
         footer
     )
+
+
+def test_parser_should_accept_message_without_scope():
+    assert angular_parser('fix: superfix')[0] == 1
+    assert angular_parser('fix: superfix')[3][0] == 'superfix'
