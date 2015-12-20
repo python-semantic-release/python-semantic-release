@@ -1,7 +1,7 @@
 import re
 
 from git import Repo
-from invoke import run, Failure
+from invoke import Failure, run
 
 from .errors import GitError
 from .settings import config

@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from invoke import Result, Failure
 import pytest
-from semantic_release.errors import GitError
+from invoke import Failure, Result
 
+from semantic_release.errors import GitError
 from semantic_release.vcs_helpers import (commit_new_version, get_commit_log, get_current_head_hash,
                                           get_repository_owner_and_name, push_new_version,
                                           tag_new_version)
@@ -38,7 +38,7 @@ class GitHelpersTests(TestCase):
             'git push --follow-tags origin $(git rev-parse --abbrev-ref HEAD)',
             hide=True
         )
-        
+
     @mock.patch('semantic_release.vcs_helpers.run', side_effect=Failure('output gh--token'))
     def test_push_should_not_print_gh_token(self, mock_run):
         with pytest.raises(GitError) as excinfo:
