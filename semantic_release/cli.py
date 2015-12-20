@@ -75,7 +75,7 @@ def changelog(**kwargs):
     current_version = get_current_version()
     log = generate_changelog(get_previous_version(current_version), current_version)
     for section in CHANGELOG_SECTIONS:
-        if len(log[section]) == 0:
+        if not log[section]:
             continue
 
         click.echo(section.capitalize())

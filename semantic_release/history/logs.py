@@ -109,7 +109,7 @@ def markdown_changelog(version, changelog, header=False):
         output += '## v{0}\n'.format(version)
 
     for section in CHANGELOG_SECTIONS:
-        if len(changelog[section]) == 0:
+        if not changelog[section]:
             continue
 
         output += '\n### {0}\n'.format(section.capitalize())

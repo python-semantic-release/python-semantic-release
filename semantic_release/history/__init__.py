@@ -70,8 +70,8 @@ def set_new_version(new_version):
         content = fr.read()
 
     content = re.sub(
-        r'{} ?= ?["\']\d+\.\d+(?:\.\d+)?["\']'.format(variable),
-        '{} = \'{}\''.format(variable, new_version),
+        r'{0} ?= ?["\']\d+\.\d+(?:\.\d+)?["\']'.format(variable),
+        '{0} = \'{1}\''.format(variable, new_version),
         content
     )
 
