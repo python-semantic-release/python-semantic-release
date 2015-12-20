@@ -1,0 +1,24 @@
+language: python
+python: 3.5
+env:
+- TOX_ENV=py35-flake8
+- TOX_ENV=py35-isort
+- TOX_ENV=py35-tests
+- TOX_ENV=py27-tests
+install:
+- pip install tox
+script:
+- tox -e $TOX_ENV
+after_success:
+- pip install python-semantic-release
+- semantic-release publish
+deploy:
+  provider: pypi
+  user: relekang
+  password:
+    secure: kBR1JDyBvuB4DHqpqzW8Tl3uEg+Xb3YD29upEchLiohM7oXxQrk9OxvqYl+6MUGbQUzEXvG0y0C32R9/BoTOcJOBB88ejt5ACC8iNha6v6cizh7NVDi+yfrUuzUmdJCfvx2m0OukJHZDh+SYTcEDT9mR468G/Loo769ej5qgXnb3iNPvMe8ReSI6+JjQlALe9OFRTI0KeXzniYXVIbmU84jAU9nXguAFqcSUGnTkfa73R+GJwFKO1Eo0e3yZYWcOvUdnZkJ6+YsRyE5Y0ttGr04OjGu/QnSGctBsNyoAnmjtVaGMr6NnW7SgA7uI5Gve4mB6JG/5nmrJiGzbOISMGTPHSTToDnG0QhhOYSdbZS9cPLkf6YPsRbbl74W9Ue9yhs1UB6LWIa85mJYE1dA3ODQDkUvAfAe+4ZghAAcdU9DihFjc5hipaBaNFz35u/bX4/fN/+rp5QOpxor5VVhDQPFiWWvYBgikggF1MYgy3OymW5Ht0aMmKrYuXAKeXMOJgSfNjsc4OyMXUO3+msPaARzNFZtTw6Y44sQUh5owJHVgEdTAHdSd2MTKo4R0Soc4oxhh/8OaBNRhQ3ZgtlQGYhTMfkudoXFuTUnPIwikGj50iYP/1DaxPmYx71fcU9pPB1MeeukxCQILN3YKRYUn5qf5eWzQr96qWAZBh19clQY=
+  on:
+    tags: true
+    repo: relekang/python-semantic-release
+    branch: master
+    distributions: "sdist bdist_wheel"
