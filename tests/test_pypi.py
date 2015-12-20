@@ -12,7 +12,7 @@ class PypiTests(TestCase):
         upload_to_pypi()
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call('python setup.py bdist_wheel'), mock.call('rm -rf build dist')]
+            [mock.call('python setup.py sdist bdist_wheel'), mock.call('rm -rf build dist')]
         )
         mock_upload.assert_called_once_with(
             dists=['dist/*'],

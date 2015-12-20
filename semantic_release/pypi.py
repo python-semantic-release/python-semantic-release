@@ -2,7 +2,7 @@ from invoke import run
 from twine.commands import upload as twine_upload
 
 
-def upload_to_pypi(dists='bdist_wheel'):
+def upload_to_pypi(dists='sdist bdist_wheel'):
     """
     Creates the wheel and uploads to pypi with twine.
 
