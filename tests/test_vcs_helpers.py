@@ -32,7 +32,10 @@ class GitHelpersTests(TestCase):
     @mock.patch('semantic_release.vcs_helpers.run')
     def test_push_new_version(self, mock_run):
         push_new_version()
-        mock_run.assert_called_with('git push && git push --tags', hide=True)
+        mock_run.assert_called_with(
+            'git push --follow-tags origin $(git rev-parse --abbrev-ref HEAD)',
+            hide=True
+        )
 
     def test_get_repository_owner_and_name(self):
         self.assertEqual(get_repository_owner_and_name()[0], 'relekang')

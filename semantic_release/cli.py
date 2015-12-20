@@ -1,3 +1,5 @@
+import os
+
 import click
 
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
@@ -104,12 +106,18 @@ def publish(**kwargs):
     click.echo('Current version: {0}'.format(current_version))
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
+    owner, name = get_repository_owner_and_name()
+
     if version(**kwargs):
-        push_new_version()
+        push_new_version(
+            gh_token=os.environ.get('GH_TOKEN'),
+            owner=owner,
+            name=name
+        )
+
         if config.getboolean('semantic_release', 'upload_to_pypi'):
             upload_to_pypi()
 
-        owner, name = get_repository_owner_and_name()
         if check_token():
             click.echo('Updating changelog')
             log = generate_changelog(current_version, new_version)

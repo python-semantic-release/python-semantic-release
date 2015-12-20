@@ -58,8 +58,15 @@ def tag_new_version(version):
     return run('git tag v{} HEAD'.format(version), hide=True)
 
 
-def push_new_version():
+def push_new_version(gh_token=None, owner=None, name=None):
     """
     Runs git push and git push --tags
     """
-    return run('git push && git push --tags', hide=True)
+    command = 'git push --follow-tags origin $(git rev-parse --abbrev-ref HEAD)'
+    if gh_token:
+        command = 'git push --follow-tags "https://{token}@{repo}" {branch}'.format(
+            branch='$(git rev-parse --abbrev-ref HEAD)',
+            token=gh_token,
+            repo='github.com/{owner}/{name}.git'.format(owner=owner, name=name)
+        )
+    return run(command, hide=True)
