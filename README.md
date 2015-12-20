@@ -35,7 +35,7 @@ Options:
 
 ### Running commands from setup.py
 Add the following to your setup.py and you will be able to run `python setup.py <command>`
-as you woul `semantic-release <command>`.
+as you would `semantic-release <command>`.
 
 ```python
 try:

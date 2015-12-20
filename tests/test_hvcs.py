@@ -5,7 +5,7 @@ import pytest
 import responses
 
 from semantic_release.errors import ImproperConfigurationError
-from semantic_release.hvcs import check_build_status, check_token, get_hvcs, Github
+from semantic_release.hvcs import Github, check_build_status, check_token, get_hvcs
 
 from . import mock
 

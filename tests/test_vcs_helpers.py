@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from invoke.runner import Result
+from invoke import Result
 
 from semantic_release.vcs_helpers import (commit_new_version, get_commit_log, get_current_head_hash,
                                           get_repository_owner_and_name, push_new_version,
@@ -15,7 +15,7 @@ class GitHelpersTests(TestCase):
         self.assertNotEqual(next(get_commit_log()), 'Initial commit')
 
     @mock.patch('semantic_release.vcs_helpers.run',
-                return_value=Result(stdout='', stderr='', pty='', exited=0))
+                return_value=Result(command='', stdout='', stderr='', pty='', exited=0))
     def test_add_and_commit(self, mock_run):
         commit_new_version('1.0.0')
         self.assertEqual(
