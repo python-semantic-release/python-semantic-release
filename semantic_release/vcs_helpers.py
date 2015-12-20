@@ -63,10 +63,10 @@ def push_new_version(gh_token=None, owner=None, name=None):
     """
     Runs git push and git push --tags
     """
-    command = 'git push --follow-tags origin $(git rev-parse --abbrev-ref HEAD)'
+    command = 'git push --follow-tags origin master'
     if gh_token:
         command = 'git push --follow-tags "https://{token}@{repo}" {branch}'.format(
-            branch='$(git rev-parse --abbrev-ref HEAD)',
+            branch='master',
             token=gh_token,
             repo='github.com/{owner}/{name}.git'.format(owner=owner, name=name)
         )
