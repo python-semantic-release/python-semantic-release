@@ -17,8 +17,6 @@ def upload_to_pypi(dists='sdist bdist_wheel', username=None, password=None):
         username=username,
         password=password,
         comment=None,
-        sign_with='gpg',
-        config_file=None,
-        skip_existing=True,
+        sign_with='gpg'
     )
     run('rm -rf build dist')
