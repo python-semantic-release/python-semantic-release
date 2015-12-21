@@ -57,7 +57,9 @@ def generate_changelog(from_version, to_version=None):
     """
     Generates a changelog for the given version.
 
-    :param version: a version string
+    :param from_version: The last version not in the changelog. The changelog
+                         will be generated from the commit after this one.
+    :param to_version: The last version in the changelog.
     :return: a dict with different changelog sections
     """
 
