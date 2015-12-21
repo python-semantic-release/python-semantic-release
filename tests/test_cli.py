@@ -1,10 +1,16 @@
 from unittest.case import TestCase
 
+import pytest
 from click.testing import CliRunner
 
 from semantic_release.cli import main
 
 from . import mock
+
+
+@pytest.fixture
+def runner():
+    return CliRunner()
 
 
 class CLITests(TestCase):
@@ -138,20 +144,6 @@ class CLITests(TestCase):
         self.assertFalse(mock_log.called)
         self.assertEqual(result.exit_code, 0)
 
-    @mock.patch('semantic_release.cli.post_changelog')
-    @mock.patch('semantic_release.cli.upload_to_pypi')
-    @mock.patch('semantic_release.cli.push_new_version')
-    @mock.patch('semantic_release.cli.version', return_value=True)
-    @mock.patch('semantic_release.cli.markdown_changelog', lambda *x, **y: 'CHANGES')
-    @mock.patch('semantic_release.cli.get_new_version', lambda *x: '2.0.0')
-    @mock.patch('semantic_release.cli.check_token', lambda: True)
-    def test_publish_should_call_functions(self, mock_version, mock_push, mock_upload, mock_log):
-        result = self.runner.invoke(main, ['publish'])
-        mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
-        assert mock_push.called
-        mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
-        self.assertEqual(result.exit_code, 0)
-
     @mock.patch('semantic_release.cli.post_changelog', lambda *x: True)
     @mock.patch('semantic_release.cli.upload_to_pypi')
     @mock.patch('semantic_release.cli.push_new_version', lambda *x: True)
@@ -169,3 +161,21 @@ class CLITests(TestCase):
         result = self.runner.invoke(main, ['changelog'])
         self.assertEqual(result.exit_code, 0)
         mock_changelog.assert_called_once_with(noop=False, post=False, force_level=None)
+
+
+def test_publish_should_call_functions(mocker, runner):
+    mock_push = mocker.patch('semantic_release.cli.push_new_version')
+    mock_version = mocker.patch('semantic_release.cli.version', return_value=True)
+    mock_log = mocker.patch('semantic_release.cli.post_changelog')
+    mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
+    mock_pypi = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mocker.patch('semantic_release.cli.markdown_changelog', lambda *x, **y: 'CHANGES')
+    mocker.patch('semantic_release.cli.get_new_version', lambda *x: '2.0.0')
+    mocker.patch('semantic_release.cli.check_token', lambda: True)
+    result = runner.invoke(main, ['publish'])
+    assert result.exit_code == 0
+    assert mock_ci_check.called
+    assert mock_push.called
+    assert mock_pypi.called
+    mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
+    mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')

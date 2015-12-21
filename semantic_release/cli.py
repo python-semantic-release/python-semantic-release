@@ -2,6 +2,8 @@ import os
 
 import click
 
+from semantic_release import ci_checks
+
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
 from .history.logs import CHANGELOG_SECTIONS, generate_changelog, markdown_changelog
@@ -107,6 +109,8 @@ def publish(**kwargs):
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
     owner, name = get_repository_owner_and_name()
+
+    ci_checks.check('master')
 
     if version(**kwargs):
         push_new_version(
