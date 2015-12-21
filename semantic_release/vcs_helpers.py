@@ -65,14 +65,19 @@ def tag_new_version(version):
 def push_new_version(gh_token=None, owner=None, name=None):
     """
     Runs git push and git push --tags
+    :param gh_token: Github token used to push.
+    :param owner: Organisation or user that owns the repository.
+    :param name: Name of repository.
     """
-    command = 'git push --follow-tags origin master'
+    server = 'origin'
     if gh_token:
-        command = 'git push --follow-tags "https://{token}@{repo}" {branch}'.format(
-            branch='master',
+        server = '"https://{token}@{repo}"'.format(
             token=gh_token,
             repo='github.com/{owner}/{name}.git'.format(owner=owner, name=name)
         )
+
+    command = 'git push {0} master && git push --tags {0} master'.format(server)
+
     try:
         return run(command, hide=True)
     except Failure as error:

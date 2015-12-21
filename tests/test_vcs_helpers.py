@@ -34,7 +34,7 @@ class GitHelpersTests(TestCase):
     def test_push_new_version(self, mock_run):
         push_new_version()
         mock_run.assert_called_with(
-            'git push --follow-tags origin master',
+            'git push origin master && git push --tags origin master',
             hide=True
         )
 
