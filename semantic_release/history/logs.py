@@ -32,7 +32,7 @@ def evaluate_version_bump(current_version, force=None):
     changes = []
     commit_count = 0
 
-    for commit_message in get_commit_log():
+    for commit_message in get_commit_log('v{0}'.format(current_version)):
         if current_version in commit_message:
             break
 
@@ -65,7 +65,11 @@ def generate_changelog(from_version, to_version=None):
 
     found_the_release = to_version is None
 
-    for commit_message in get_commit_log():
+    rev = None
+    if from_version:
+        rev = 'v{0}'.format(from_version)
+
+    for commit_message in get_commit_log(rev):
         if not found_the_release:
             if to_version and to_version not in commit_message:
                 continue

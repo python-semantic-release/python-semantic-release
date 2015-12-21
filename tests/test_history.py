@@ -26,21 +26,22 @@ MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, '1.1.0', MAJOR]
 class EvaluateVersionBumpTest(TestCase):
     def test_major(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: ALL_KINDS_OF_COMMIT_MESSAGES):
+                        lambda *a, **kw: ALL_KINDS_OF_COMMIT_MESSAGES):
             self.assertEqual(evaluate_version_bump('0.0.0'), 'major')
 
     def test_minor(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: MINOR_AND_PATCH_COMMIT_MESSAGES):
+                        lambda *a, **kw: MINOR_AND_PATCH_COMMIT_MESSAGES):
             self.assertEqual(evaluate_version_bump('0.0.0'), 'minor')
 
     def test_patch(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: PATCH_COMMIT_MESSAGES):
+                        lambda *a, **kw: PATCH_COMMIT_MESSAGES):
             self.assertEqual(evaluate_version_bump('0.0.0'), 'patch')
 
     def test_nothing_if_no_tag(self):
-        with mock.patch('semantic_release.history.logs.get_commit_log', lambda: ['', '...']):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda *a, **kw: ['', '...']):
             self.assertIsNone(evaluate_version_bump('0.0.0'))
 
     def test_force(self):
@@ -50,20 +51,20 @@ class EvaluateVersionBumpTest(TestCase):
 
     def test_should_account_for_commits_earlier_than_last_commit(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: MAJOR_LAST_RELEASE_MINOR_AFTER):
+                        lambda *a, **kw: MAJOR_LAST_RELEASE_MINOR_AFTER):
             self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
 
     @mock.patch('semantic_release.history.config.getboolean', lambda *x: True)
-    @mock.patch('semantic_release.history.logs.get_commit_log', lambda: [NO_TAG])
+    @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [NO_TAG])
     def test_should_patch_without_tagged_commits(self):
         self.assertEqual(evaluate_version_bump('1.1.0'), 'patch')
 
     @mock.patch('semantic_release.history.config.getboolean', lambda *x: False)
-    @mock.patch('semantic_release.history.logs.get_commit_log', lambda: [NO_TAG])
+    @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [NO_TAG])
     def test_should_return_none_without_tagged_commits(self):
         self.assertIsNone(evaluate_version_bump('1.1.0'))
 
-    @mock.patch('semantic_release.history.logs.get_commit_log', lambda: [])
+    @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [])
     def test_should_return_none_without_commits(self):
         """
         Make sure that we do not release if there are no commits since last release.
@@ -78,7 +79,7 @@ class EvaluateVersionBumpTest(TestCase):
 class GenerateChangelogTests(TestCase):
     def test_should_generate_all_sections(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: ALL_KINDS_OF_COMMIT_MESSAGES + [MAJOR2, UNKNOWN_STYLE]):
+                        lambda *a, **k: ALL_KINDS_OF_COMMIT_MESSAGES + [MAJOR2, UNKNOWN_STYLE]):
             changelog = generate_changelog('0.0.0')
             self.assertIn('feature', changelog)
             self.assertIn('fix', changelog)
@@ -90,7 +91,7 @@ class GenerateChangelogTests(TestCase):
 
     def test_should_only_read_until_given_version(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: MAJOR_LAST_RELEASE_MINOR_AFTER):
+                        lambda *a, **k: MAJOR_LAST_RELEASE_MINOR_AFTER):
             changelog = generate_changelog('1.1.0')
             self.assertGreater(len(changelog['feature']), 0)
             self.assertEqual(len(changelog['fix']), 0)
@@ -99,13 +100,13 @@ class GenerateChangelogTests(TestCase):
 
     def test_should_skip_style_changes(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: PATCH_COMMIT_MESSAGES + ['style(x): change x']):
+                        lambda *a, **k: PATCH_COMMIT_MESSAGES + ['style(x): change x']):
             changelog = generate_changelog('0.0.0')
             self.assertNotIn('style', changelog)
 
     def test_should_skip_chore_changes(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda: PATCH_COMMIT_MESSAGES + ['chore(x): change x']):
+                        lambda *a, **kw: PATCH_COMMIT_MESSAGES + ['chore(x): change x']):
             changelog = generate_changelog('0.0.0')
             self.assertNotIn('chore', changelog)
 

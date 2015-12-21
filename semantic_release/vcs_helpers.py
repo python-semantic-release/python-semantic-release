@@ -7,12 +7,15 @@ from .errors import GitError
 from .settings import config
 
 
-def get_commit_log():
+def get_commit_log(from_rev=None):
     """
     Yields all commit messages from last to first.
     """
     repo = Repo('.git')
-    for commit in repo.iter_commits():
+    rev = None
+    if from_rev:
+        rev = '...{from_rev}'.format(from_rev=from_rev)
+    for commit in repo.iter_commits(rev):
         yield commit.message
 
 
