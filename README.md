@@ -4,7 +4,7 @@ Automatic semantic versioning for python projects. This is an python implementat
 [semantic-release][] for js by Stephan Bönnemann. If you find this topic interesting you should
 check out his [talk from JSConf Budapest][semantic-release-talk].
 
-[![Build status][build-badge]][last-build] [![Coverage status][coverage-badge]][last-build] ![PyPI version][pypi-badge]
+[![Build status][build-badge]][last-build] ![PyPI version][pypi-badge]
 
 ## Install
 ```
@@ -49,9 +49,8 @@ except ImportError:
 Configuration belong in `semantic_release` section of the setup.cfg file in your project.
 Details about configuration options can be found in [the configuration documentation][config-docs].
 
-[last-build]: https://ci.frigg.io/relekang/python-semantic-release/last/
-[build-badge]: https://ci.frigg.io/relekang/python-semantic-release.svg
-[coverage-badge]: https://ci.frigg.io/relekang/python-semantic-release/coverage.svg
+[last-build]: https://travis-ci.org/relekang/python-semantic-release
+[build-badge]: https://travis-ci.org/relekang/python-semantic-release.svg?branch=master
 [pypi-badge]: https://badge.fury.io/py/python-semantic-release.svg
 [semantic-release-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
