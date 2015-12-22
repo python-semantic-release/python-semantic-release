@@ -1,17 +1,17 @@
 import re
 
-from git import Repo
-from invoke import Failure, run
+from git import GitCommandError, Repo
 
 from .errors import GitError
 from .settings import config
+
+repo = Repo('.git')
 
 
 def get_commit_log(from_rev=None):
     """
     Yields all commit messages from last to first.
     """
-    repo = Repo('.git')
     rev = None
     if from_rev:
         rev = '...{from_rev}'.format(from_rev=from_rev)
@@ -25,7 +25,7 @@ def get_repository_owner_and_name():
 
     :return: a tuple of the owner and name
     """
-    url = Repo('.git').remote('origin').url
+    url = repo.remote('origin').url
     parts = re.search(r'([^/:]+)/([^/]+).git$', url)
 
     return parts.group(1), parts.group(2)
@@ -37,7 +37,7 @@ def get_current_head_hash():
 
     :return: a string with the commit hash.
     """
-    return Repo('.git').head.commit.name_rev.split(' ')[0]
+    return repo.head.commit.name_rev.split(' ')[0]
 
 
 def commit_new_version(version):
@@ -47,10 +47,8 @@ def commit_new_version(version):
 
     :param version: The version number to be used in the commit message
     """
-    command = 'git add {}'.format(config.get('semantic_release', 'version_variable').split(':')[0])
-    add = run(command, hide=True)
-    if add.ok:
-        run('git commit -m "{}"'.format(version), hide=True)
+    repo.git.add(config.get('semantic_release', 'version_variable').split(':')[0])
+    return repo.git.commit(m=version)
 
 
 def tag_new_version(version):
@@ -59,7 +57,7 @@ def tag_new_version(version):
 
     :param version: The version number used in the tag as a string.
     """
-    return run('git tag v{} HEAD'.format(version), hide=True)
+    return repo.git.tag('-a', 'v{0}'.format(version), m='v{0}'.format(version))
 
 
 def push_new_version(gh_token=None, owner=None, name=None):
@@ -76,11 +74,10 @@ def push_new_version(gh_token=None, owner=None, name=None):
             repo='github.com/{owner}/{name}.git'.format(owner=owner, name=name)
         )
 
-    command = 'git push {0} master && git push --tags {0} master'.format(server)
-
     try:
-        return run(command, hide=True)
-    except Failure as error:
+        repo.git.push(server, 'master')
+        repo.git.push('--tags', server, 'master')
+    except GitCommandError as error:
         message = str(error)
         if gh_token:
             message = message.replace(gh_token, '[GH_TOKEN]')

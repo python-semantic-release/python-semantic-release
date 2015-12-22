@@ -1,7 +1,5 @@
-from unittest import TestCase
-
 import pytest
-from invoke import Failure, Result
+from git import GitCommandError
 
 from semantic_release.errors import GitError
 from semantic_release.vcs_helpers import (commit_new_version, get_commit_log, get_current_head_hash,
@@ -11,51 +9,49 @@ from semantic_release.vcs_helpers import (commit_new_version, get_commit_log, ge
 from . import mock
 
 
-class GitHelpersTests(TestCase):
-    def test_first_commit_is_not_initial_commit(self):
-        self.assertNotEqual(next(get_commit_log()), 'Initial commit')
+@pytest.fixture
+def mock_git(mocker):
+    return mocker.patch('semantic_release.vcs_helpers.repo.git')
 
-    @mock.patch('semantic_release.vcs_helpers.run',
-                return_value=Result(command='', stdout='', stderr='', pty='', exited=0))
-    def test_add_and_commit(self, mock_run):
-        commit_new_version('1.0.0')
-        self.assertEqual(
-            mock_run.call_args_list,
-            [mock.call('git add semantic_release/__init__.py', hide=True),
-             mock.call('git commit -m "1.0.0"', hide=True)]
-        )
 
-    @mock.patch('semantic_release.vcs_helpers.run')
-    def test_tag_new_version(self, mock_run):
-        tag_new_version('1.0.0')
-        mock_run.assert_called_with('git tag v1.0.0 HEAD', hide=True)
+def test_first_commit_is_not_initial_commit():
+    assert next(get_commit_log()) != 'Initial commit'
 
-    @mock.patch('semantic_release.vcs_helpers.run')
-    def test_push_new_version(self, mock_run):
-        push_new_version()
-        mock_run.assert_called_with(
-            'git push origin master && git push --tags origin master',
-            hide=True
-        )
 
-    def test_get_repository_owner_and_name(self):
-        self.assertEqual(get_repository_owner_and_name()[0], 'relekang')
-        self.assertEqual(get_repository_owner_and_name()[1], 'python-semantic-release')
+def test_add_and_commit(mock_git):
+    commit_new_version('1.0.0')
+    mock_git.add.assert_called_once_with('semantic_release/__init__.py')
+    mock_git.commit.assert_called_once_with(m='1.0.0')
 
-    @mock.patch('git.objects.commit.Commit.name_rev', 'commit-hash branch-name')
-    def test_get_current_head_hash(self):
-        self.assertEqual(get_current_head_hash(), 'commit-hash')
+
+def test_tag_new_version(mock_git):
+    tag_new_version('1.0.0')
+    mock_git.tag.assert_called_with('-a', 'v1.0.0', m='v1.0.0')
+
+
+def test_push_new_version(mock_git):
+    push_new_version()
+    mock_git.push.assert_has_calls([
+        mock.call('origin', 'master'),
+        mock.call('--tags', 'origin', 'master'),
+    ])
+
+
+def test_get_repository_owner_and_name():
+    assert get_repository_owner_and_name()[0] == 'relekang'
+    assert get_repository_owner_and_name()[1] == 'python-semantic-release'
+
+
+def test_get_current_head_hash(mocker):
+    mocker.patch('git.objects.commit.Commit.name_rev', 'commit-hash branch-name')
+    assert get_current_head_hash() == 'commit-hash'
 
 
 def test_push_should_not_print_gh_token(mocker):
-    result = Result(
-        command='s gh--token',
-        stderr='output gh--token',
-        stdout='output gh--token',
-        exited=1,
-        pty=True
-    )
-    mocker.patch('semantic_release.vcs_helpers.run', side_effect=Failure(result))
+    mock_git = mocker.patch('semantic_release.vcs_helpers.repo.git')
+    mock_git.configure_mock(**{
+        'push.side_effect': GitCommandError('gh--token', 1, b'gh--token', b'gh--token')
+    })
     with pytest.raises(GitError) as excinfo:
         push_new_version(gh_token='gh--token')
     assert 'gh--token' not in str(excinfo)
