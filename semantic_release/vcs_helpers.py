@@ -69,7 +69,7 @@ def push_new_version(gh_token=None, owner=None, name=None):
     """
     server = 'origin'
     if gh_token:
-        server = '"https://{token}@{repo}"'.format(
+        server = 'https://{token}@{repo}'.format(
             token=gh_token,
             repo='github.com/{owner}/{name}.git'.format(owner=owner, name=name)
         )
