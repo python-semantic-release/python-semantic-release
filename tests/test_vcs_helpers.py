@@ -2,9 +2,9 @@ import pytest
 from git import GitCommandError
 
 from semantic_release.errors import GitError
-from semantic_release.vcs_helpers import (commit_new_version, get_commit_log, get_current_head_hash,
-                                          get_repository_owner_and_name, push_new_version,
-                                          tag_new_version)
+from semantic_release.vcs_helpers import (checkout, commit_new_version, get_commit_log,
+                                          get_current_head_hash, get_repository_owner_and_name,
+                                          push_new_version, tag_new_version)
 
 from . import mock
 
@@ -54,3 +54,8 @@ def test_push_should_not_print_gh_token(mock_git):
     with pytest.raises(GitError) as excinfo:
         push_new_version(gh_token='gh--token')
     assert 'gh--token' not in str(excinfo)
+
+
+def test_checkout_should_checkout_correct_branch(mock_git):
+    checkout('a-branch')
+    mock_git.checkout.assert_called_once_with('a-branch')

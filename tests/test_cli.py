@@ -165,6 +165,7 @@ def test_publish_should_do_nothing_when_version_fails(mocker, runner):
 
 def test_publish_should_call_functions(mocker, runner):
     mock_push = mocker.patch('semantic_release.cli.push_new_version')
+    mock_checkout = mocker.patch('semantic_release.cli.checkout')
     mock_version = mocker.patch('semantic_release.cli.version', return_value=True)
     mock_log = mocker.patch('semantic_release.cli.post_changelog')
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
@@ -179,6 +180,7 @@ def test_publish_should_call_functions(mocker, runner):
     assert mock_pypi.called
     mock_version.assert_called_once_with(noop=False, post=False, force_level=None)
     mock_log.assert_called_once_with('relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
+    mock_checkout.assert_called_once_with('master')
 
 
 def test_changelog_should_call_functions(mocker, runner):

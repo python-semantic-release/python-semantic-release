@@ -82,3 +82,12 @@ def push_new_version(gh_token=None, owner=None, name=None):
         if gh_token:
             message = message.replace(gh_token, '[GH_TOKEN]')
         raise GitError(message)
+
+
+def checkout(branch):
+    """
+    Checkout the given branch in the local repository.
+
+    :param branch: The branch to checkout.
+    """
+    return repo.git.checkout(branch)
