@@ -15,9 +15,6 @@ script:
 - tox -e py35-tests
 - tox -e py27-tests
 after_success:
-- git config --global user.name "semantic-release (via TravisCI)"
-- git config --global user.email "semantic-release@travis"
 - pip install pandoc
-- git checkout master
 - python setup.py install
 - semantic-release publish
