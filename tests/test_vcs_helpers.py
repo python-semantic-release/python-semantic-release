@@ -21,7 +21,7 @@ def test_first_commit_is_not_initial_commit():
 def test_add_and_commit(mock_git):
     commit_new_version('1.0.0')
     mock_git.add.assert_called_once_with('semantic_release/__init__.py')
-    mock_git.commit.assert_called_once_with(m='1.0.0')
+    mock_git.commit.assert_called_once_with(m='1.0.0', author="semantic-release <semantic-release>")
 
 
 def test_tag_new_version(mock_git):
@@ -47,8 +47,7 @@ def test_get_current_head_hash(mocker):
     assert get_current_head_hash() == 'commit-hash'
 
 
-def test_push_should_not_print_gh_token(mocker):
-    mock_git = mocker.patch('semantic_release.vcs_helpers.repo.git')
+def test_push_should_not_print_gh_token(mock_git):
     mock_git.configure_mock(**{
         'push.side_effect': GitCommandError('gh--token', 1, b'gh--token', b'gh--token')
     })

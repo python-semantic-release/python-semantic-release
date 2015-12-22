@@ -48,7 +48,7 @@ def commit_new_version(version):
     :param version: The version number to be used in the commit message
     """
     repo.git.add(config.get('semantic_release', 'version_variable').split(':')[0])
-    return repo.git.commit(m=version)
+    return repo.git.commit(m=version, author="semantic-release <semantic-release>")
 
 
 def tag_new_version(version):
