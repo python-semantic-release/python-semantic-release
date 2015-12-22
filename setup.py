@@ -5,10 +5,11 @@ import sys
 
 def _read_long_description():
     try:
-        import pypandoc
-        return pypandoc.convert('README.md', 'rst', format='markdown')
+        with open('readme.rst') as fd:
+            return fd.read()
     except Exception:
         return None
+
 
 with open('semantic_release/__init__.py', 'r') as fd:
     version = re.search(
@@ -22,6 +23,7 @@ with open('requirements/base.txt', 'r') as fd:
 
 try:
     from semantic_release import setup_hook
+
     setup_hook(sys.argv)
 except ImportError:
     pass
