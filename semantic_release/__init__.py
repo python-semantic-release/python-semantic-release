@@ -1,4 +1,4 @@
-__version__ = '3.3.3'
+__version__ = '3.4.0'
 
 
 from .errors import (SemanticReleaseBaseError, ImproperConfigurationError,  # noqa
