@@ -1,5 +1,5 @@
-python-semantic-release |Build status| |Coverage status|
-========================================================
+python-semantic-release
+=======================
 
 Automatic semantic versioning for python projects. This is an python
 implementation of the
@@ -39,14 +39,9 @@ Documentation Contents:
 .. toctree::
    :maxdepth: 1
 
-   Quickstart <readme>
+   Quickstart <../readme>
    Parsing of commit logs <commit-log-parsing>
    Automatic releases <automatic-releases/index>
    Configuration <configuration>
    API docs <api/semantic_release>
    Contributors <contributors>
-
-.. |Build status| image:: https://ci.frigg.io/relekang/python-semantic-release.svg
-                  :target: https://ci.frigg.io/relekang/python-semantic-release/last/
-.. |Coverage status| image:: https://ci.frigg.io/relekang/python-semantic-release/coverage.svg
-                  :target: https://ci.frigg.io/relekang/python-semantic-release/last/
