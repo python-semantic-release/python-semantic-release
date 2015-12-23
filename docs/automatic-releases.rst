@@ -5,11 +5,40 @@ The key point with using this package is to automate your releases and stop worr
 version numbers. Different approaches to automatic releases and publishing with the help of
 this package can be found below. Using a CI is the recommended approach.
 
+
+Environment checks
+~~~~~~~~~~~~~~~~~~
+On publish, a few environment checks will run. Below are descriptions of what the different checks
+do and under what condition they will run.
+
+travis
+^^^^^^
+*Condition:* Environment variable ``TRAVIS`` is ``'true'``
+
+Checks for travis to ensure that the build is not a pull-request and on the master branch.
+The branch check, checks against the branch that travis said it checked out, not the current
+branch.
+
 Publish with CI
 ~~~~~~~~~~~~~~~
-Add ``python setup.py publish`` as an after success task on your preferred Continuous Integration
-service. Ensure that you have configured the CI so that it can upload to pypi and push to git and
-it should be ready to role.
+Add ``python setup.py publish`` or ``semantic-release publish`` as an after success task on your
+preferred Continuous Integration service. Ensure that you have configured the CI so that it can
+upload to pypi and push to git and it should be ready to role.
+
+Configuring pypi upload
+^^^^^^^^^^^^^^^^^^^^^^^
+In order to upload to pypi python-semantic-release needs credentials to an account that
+have access to the given package. Either by being logged in through a pip configuration file
+or through environment variables. The latter is most often preferable in an CI environment.
+You will need to set ``PYPI_USERNAME`` and ``PYPI_PASSWORD``. Make sure that you mark it
+as a secret on your CI service so that your password will be left out of the build logs.
+
+Configuring push to Github
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to push to Github and post the changelog to Github the environment variable
+``GH_TOKEN`` has to be set. It needs access to the ``public_repo`` scope for public repositories
+and ``repo`` for private repositories.
+
 
 Publish with cronjobs
 ~~~~~~~~~~~~~~~~~~~~~
