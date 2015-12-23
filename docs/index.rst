@@ -1,9 +1,12 @@
 python-semantic-release |Build status| |Coverage status|
 ========================================================
 
-Automatic semantic versioning for python projects. `This blogpost
-explains in more
-detail <http://rolflekang.com/python-semantic-release/>`__.
+Automatic semantic versioning for python projects. This is an python
+implementation of the
+`semantic-release <https://github.com/semantic-release/semantic-release>`__
+for js by Stephan Bönnemann. If you find this topic interesting you
+should check out his `talk from JSConf
+Budapest <https://www.youtube.com/watch?v=tc2UgG5L7WM>`__.
 
 Install
 -------
