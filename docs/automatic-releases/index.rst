@@ -40,6 +40,11 @@ In order to push to Github and post the changelog to Github the environment vari
 and ``repo`` for private repositories.
 
 
+Step-by-Step guides
+^^^^^^^^^^^^^^^^^^^
+* :doc:`travis`
+
+
 Publish with cronjobs
 ~~~~~~~~~~~~~~~~~~~~~
 
