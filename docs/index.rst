@@ -38,7 +38,7 @@ Documentation Contents:
 
    Quickstart <readme>
    Parsing of commit logs <commit-log-parsing>
-   Automatic releases <automatic-releases>
+   Automatic releases <automatic-releases/index>
    Configuration <configuration>
    API docs <api/semantic_release>
    Contributors <contributors>
