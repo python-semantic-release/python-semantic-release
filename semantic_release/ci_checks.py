@@ -24,7 +24,7 @@ def checker(func):
 
 
 @checker
-def travis(branch='master'):
+def travis(branch):
     """
     Performs necessary checks to ensure that the travis build is one
     that should create releases.
@@ -35,7 +35,20 @@ def travis(branch='master'):
     assert os.environ.get('TRAVIS_PULL_REQUEST') == 'false'
 
 
-def check(branch):
+@checker
+def semaphore(branch):
+    """
+    Performs necessary checks to ensure that the semaphore build is successful,
+    on the correct branch and not a pull-request.
+
+    :param branch:  The branch the environment should be running against.
+    """
+    assert os.environ.get('BRANCH_NAME') == branch
+    assert os.environ.get('PULL_REQUEST_NUMBER') is None
+    assert os.environ.get('SEMAPHORE_THREAD_RESULT') != 'failed'
+
+
+def check(branch='master'):
     """
     Detects the current CI environment, if any, and performs necessary
     environment checks.
@@ -45,3 +58,5 @@ def check(branch):
 
     if os.environ.get('TRAVIS') == 'true':
         return travis(branch)
+    elif os.environ.get('SEMAPHORE') == 'true':
+        return semaphore(branch)

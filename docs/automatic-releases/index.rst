@@ -11,11 +11,19 @@ Environment checks
 On publish, a few environment checks will run. Below are descriptions of what the different checks
 do and under what condition they will run.
 
+semaphore
+^^^^^^^^^
+*Condition:* Environment variable ``SEMAPHORE`` is ``'true'``
+
+Checks for semaphore to ensure that the build is not a pull-request and on the correct branch.
+The branch check, checks against the branch that semaphore said it checked out, not the current
+branch. It also checks that the thread state is not failure.
+
 travis
 ^^^^^^
 *Condition:* Environment variable ``TRAVIS`` is ``'true'``
 
-Checks for travis to ensure that the build is not a pull-request and on the master branch.
+Checks for travis to ensure that the build is not a pull-request and on the correct branch.
 The branch check, checks against the branch that travis said it checked out, not the current
 branch.
 
