@@ -48,6 +48,18 @@ def semaphore(branch):
     assert os.environ.get('SEMAPHORE_THREAD_RESULT') != 'failed'
 
 
+@checker
+def frigg(branch):
+    """
+    Performs necessary checks to ensure that the frigg build is one
+    that should create releases.
+
+    :param branch: The branch the environment should be running against.
+    """
+    assert os.environ.get('FRIGG_BUILD_BRANCH') == branch
+    assert not os.environ.get('FRIGG_PULL_REQUEST')
+
+
 def check(branch='master'):
     """
     Detects the current CI environment, if any, and performs necessary
@@ -60,3 +72,5 @@ def check(branch='master'):
         return travis(branch)
     elif os.environ.get('SEMAPHORE') == 'true':
         return semaphore(branch)
+    elif os.environ.get('FRIGG') == 'true':
+        return frigg(branch)

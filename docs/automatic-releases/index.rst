@@ -11,6 +11,14 @@ Environment checks
 On publish, a few environment checks will run. Below are descriptions of what the different checks
 do and under what condition they will run.
 
+frigg
+^^^^^
+*Condition:* Environment variable ``FRIGG`` is ``'true'``
+
+Checks for frigg to ensure that the build is not a pull-request and on the correct branch.
+The branch check, checks against the branch that frigg said it checked out, not the current
+branch.
+
 semaphore
 ^^^^^^^^^
 *Condition:* Environment variable ``SEMAPHORE`` is ``'true'``
