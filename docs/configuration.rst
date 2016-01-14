@@ -4,7 +4,7 @@ Configuration
 -------------
 
 All configuration described here belongs in ``setup.cfg`` in a section:
-``semantic-release``.
+``semantic_release``.
 
 ``version_variable``
     The filename and variable name of where the
