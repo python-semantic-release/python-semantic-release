@@ -24,5 +24,5 @@ All configuration described here belongs in ``setup.cfg`` in a section:
 
 ``upload_to_pypi``
     If set to false the pypi uploading will be disabled. This can be useful to create
-    tag releases for none pypi projects.
+    tag releases for non-pypi projects.
 
