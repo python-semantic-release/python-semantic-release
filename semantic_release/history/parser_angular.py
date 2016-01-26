@@ -4,7 +4,7 @@ from ..errors import UnknownCommitMessageStyleError
 from .parser_helpers import parse_text_block
 
 re_parser = re.compile(
-    r'(?P<type>feat|fix|docs|style|refactor|test|chore)'
+    r'(?P<type>feat|feature|fix|docs|style|refactor|test|chore)'
     r'(?:\((?P<scope>[\w _\-]+)\))?: '
     r'(?P<subject>[^\n]+)'
     r'(:?\n\n(?P<text>.+))?',
@@ -13,6 +13,7 @@ re_parser = re.compile(
 
 TYPES = {
     'feat': 'feature',
+    'feature': 'feature',
     'fix': 'fix',
     'test': 'test',
     'docs': 'documentation',
