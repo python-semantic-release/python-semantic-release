@@ -64,8 +64,8 @@ def version(**kwargs):
             return False
         click.echo(click.style('The build was a success, continuing the release', 'green'))
 
-    set_new_version(new_version)
-    commit_new_version(new_version)
+    # set_new_version(new_version)
+    # commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
     return True
