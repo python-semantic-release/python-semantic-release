@@ -3,7 +3,7 @@ import re
 import semver
 
 from ..settings import config
-from ..vcs_helpers import get_commit_log
+from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
@@ -13,17 +13,15 @@ from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 def get_current_version():
     """
     Finds the current version of the package in the current working directory.
+    Check tags rather than config file. return 0.0.0 if fails
 
     :return: A string with the version number.
     """
-    filename, variable = config.get('semantic_release', 'version_variable').split(':')
-    variable = variable.strip()
-    with open(filename, 'r') as fd:
-        return re.search(
-            r'^{0}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(variable),
-            fd.read(),
-            re.MULTILINE
-        ).group(1)
+    version = get_last_version()
+    if version:
+        return version
+    else:
+        return '0.0.0'
 
 
 def get_new_version(current_version, level_bump):

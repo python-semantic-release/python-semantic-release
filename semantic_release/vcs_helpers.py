@@ -19,6 +19,23 @@ def get_commit_log(from_rev=None):
         yield commit.message
 
 
+def get_last_version():
+    '''
+    return last version from repo tags
+
+    :return: a string contains version number
+    '''
+    tags = len(repo.tags)
+    for i in range(tags - 1, -1, -1):
+        if re.match('v\d+\.\d+\.\d+', repo.tags[i].name):
+            return repo.tags[i].name[1:]
+
+
+def get_version_from_tag(tag_name):
+    for i in repo.tags:
+        if i.name == tag_name:
+            return i.commit.hexsha
+
 def get_repository_owner_and_name():
     """
     Checks the origin remote to get the owner and name of the remote repository.
@@ -47,7 +64,8 @@ def commit_new_version(version):
 
     :param version: The version number to be used in the commit message
     """
-    repo.git.add(config.get('semantic_release', 'version_variable').split(':')[0])
+    repo.git.add(
+        config.get('semantic_release', 'version_variable').split(':')[0])
     return repo.git.commit(m=version, author="semantic-release <semantic-release>")
 
 
