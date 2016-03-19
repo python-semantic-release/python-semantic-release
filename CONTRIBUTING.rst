@@ -25,8 +25,8 @@ pull-request without tags we will help out in adding or changing them.
 
 .. _angular commit guidelins: https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit
 
-Release schedule
-~~~~~~~~~~~~~~~~
+Releases
+~~~~~~~~
 
-This package should be released by itself every half hour. Thus, if there is changes tagged with
-major, minor or patch a new release will be published xx:00 and xx:30.
+This package is released by python-semantic-release on each master build, thus if there are changes
+that should result in a new release it will happen if the build is green.
