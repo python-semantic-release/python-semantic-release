@@ -8,7 +8,7 @@ for js by Stephan Bönnemann. If you find this topic interesting you
 should check out his `talk from JSConf
 Budapest <https://www.youtube.com/watch?v=tc2UgG5L7WM>`__.
 
-|Build status| |PyPI version|
+|Build status| |Coverage status| |PyPI version|
 
 Install
 -------
@@ -68,6 +68,8 @@ file in your project. Details about configuration options can be found
 in `the configuration
 documentation <http://python-semantic-release.readthedocs.org/en/latest/configuration.html>`__.
 
-.. |Build status| image:: https://travis-ci.org/relekang/python-semantic-release.svg?branch=master
-   :target: https://travis-ci.org/relekang/python-semantic-release
+.. |Build status| image:: https://ci.frigg.io/relekang/python-semantic-release.svg?branch=master
+   :target: https://ci.frigg.io/relekang/python-semantic-release
+.. |Coverage status| image:: https://ci.frigg.io/relekang/python-semantic-release/coverage.svg?branch=master
+  :target: https://ci.frigg.io/relekang/python-semantic-release
 .. |PyPI version| image:: https://badge.fury.io/py/python-semantic-release.svg
