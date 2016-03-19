@@ -3,7 +3,7 @@ tasks:
  - tox -e isort
  - tox -e py27-tests
  - tox -e py34-tests
- - coverage report && coverage xml
+ - tox -e coverage 
 
 coverage:
  parser: python
