@@ -27,23 +27,20 @@ def test_parser_return_type_from_commit_message():
 
 def test_parser_return_subject_from_commit_message():
     assert (
-        tag_parser(':sparkles: Add emoji parser')[3][0]
-        ==
+        tag_parser(':sparkles: Add emoji parser')[3][0] ==
         'Add emoji parser'
     )
 
 
 def test_parser_return_text_from_commit_message():
     assert (
-        tag_parser(':nut_and_bolt: Fix regex in an parser\n\n{}'.format(text))[3][1]
-        ==
+        tag_parser(':nut_and_bolt: Fix regex in an parser\n\n{}'.format(text))[3][1] ==
         text
     )
 
 
 def test_parser_return_footer_from_commit_message():
+    commit = ':nut_and_bolt: Fix env \n\n{t[text]}\n\n{t[footer]}'.format(t=globals())
     assert (
-        tag_parser(':nut_and_bolt: Fix env \n\n{t[text]}\n\n{t[footer]}'.format(t=globals()))[3][2]
-        ==
-        footer
+        tag_parser(commit)[3][2] == footer
     )

@@ -19,8 +19,7 @@ def test_parser_return_correct_bump_level():
     )
     assert(
         angular_parser('feat(parsers): Add new parser pattern\n\n'
-                       'New pattern is awesome\n\nBREAKING CHANGE:')[0]
-        ==
+                       'New pattern is awesome\n\nBREAKING CHANGE:')[0] ==
         3
     )
     assert angular_parser('feat(parser): Add emoji parser')[0] == 2
@@ -47,35 +46,30 @@ def test_parser_return_scope_from_commit_message():
 
 def test_parser_return_subject_from_commit_message():
     assert(
-        angular_parser('feat(parser): Add emoji parser')[3][0]
-        ==
+        angular_parser('feat(parser): Add emoji parser')[3][0] ==
         'Add emoji parser'
     )
     assert(
-        angular_parser('fix(parser): Fix regex in angular parser')[3][0]
-        ==
+        angular_parser('fix(parser): Fix regex in angular parser')[3][0] ==
         'Fix regex in angular parser'
     )
     assert(
-        angular_parser('test(parser): Add a test for angular parser')[3][0]
-        ==
+        angular_parser('test(parser): Add a test for angular parser')[3][0] ==
         'Add a test for angular parser'
     )
 
 
 def test_parser_return_text_from_commit_message():
     assert(
-        angular_parser('fix(parser): Fix regex in an parser\n\n{}'.format(text))[3][1]
-        ==
+        angular_parser('fix(parser): Fix regex in an parser\n\n{}'.format(text))[3][1] ==
         text
     )
 
 
 def test_parser_return_footer_from_commit_message():
+    commit = 'fix(tox): Fix env \n\n{t[text]}\n\n{t[footer]}'.format(t=globals())
     assert(
-        angular_parser('fix(tox): Fix env \n\n{t[text]}\n\n{t[footer]}'.format(t=globals()))[3][2]
-        ==
-        footer
+        angular_parser(commit)[3][2] == footer
     )
 
 
