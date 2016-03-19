@@ -2,8 +2,8 @@ tasks:
   tests:
     - tox -e flake8
     - tox -e isort
-    - tox -e py27-tests
-    - tox -e py34-tests
+    - tox -e py2-tests
+    - tox -e py3-tests
     - tox -e coverage
   after_success:
     - git config --global user.name "semantic-release"
