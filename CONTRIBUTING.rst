@@ -18,10 +18,12 @@ question on `gitter`_ and someone will help you out.
 Commit messages
 ~~~~~~~~~~~~~~~
 
-Since python-semantic-release is released with python-semantic-release we need the change
-level tags in the commit message. They are listed below. If you are unsure which tag is appropriate
-just ask or take a guess. If we think it should be something else or there is a pull-request without
-tags we will help out in adding or changing them.
+Since python-semantic-release is released with python-semantic-release we need the commit messages
+to adhere to the `angular commit guidelines`_. If you are unsure how to describe the change correctly
+Just try and ask in your pr, or ask on gitter. If we think it should be something else or there is a
+pull-request without tags we will help out in adding or changing them.
+
+.. _angular commit guidelins: https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit
 
 Release schedule
 ~~~~~~~~~~~~~~~~
