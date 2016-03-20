@@ -22,27 +22,36 @@ def parse_commit_message(message):
     :return: A tuple of (level to bump, type of change, scope of change, a tuple with descriptions)
     """
 
-    match = re_parser.match(message)
+    parsed = re_parser.match(message)
 
-    if not match:
+    if not parsed:
         raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {0}'.format(message)
         )
 
+    subject = parsed.group('subject')
+
     if config.get('semantic_release', 'minor_tag') in message:
         level = 'feature'
+        level_bump = 2
+        if subject:
+            subject = subject.replace(config.get('semantic_release', 'minor_tag'.format(level)), '')
 
     elif config.get('semantic_release', 'fix_tag') in message:
         level = 'fix'
+        level_bump = 1
+        if subject:
+            subject = subject.replace(config.get('semantic_release', 'fix_tag'.format(level)), '')
+
     else:
         raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {0}'.format(message)
         )
 
-    subject = match.group('subject')
-    if subject:
-        subject = subject.replace(config.get('semantic_release', '{0}_tag'.format(level)), '')
+    if parsed.group('text') and 'BREAKING CHANGE' in parsed.group('text'):
+        level = 'breaking'
+        level_bump = 3
 
-    body, footer = parse_text_block(match.group('text'))
+    body, footer = parse_text_block(parsed.group('text'))
 
-    return level, level, None, (subject.strip(), body.strip(), footer.strip())
+    return level_bump, level, None, (subject.strip(), body.strip(), footer.strip())
