@@ -137,6 +137,7 @@ def test_version_check_build_status_not_called_if_disabled(mocker, runner):
 
 def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker, runner):
     mock_upload = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mocker.patch('semantic_release.cli.checkout')
     mocker.patch('semantic_release.cli.post_changelog', lambda *x: True)
     mocker.patch('semantic_release.cli.push_new_version', lambda *x: True)
     mocker.patch('semantic_release.cli.version', lambda: True)
@@ -150,6 +151,7 @@ def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker, runner):
 
 def test_publish_should_do_nothing_when_version_fails(mocker, runner):
     mock_log = mocker.patch('semantic_release.cli.post_changelog')
+    mocker.patch('semantic_release.cli.checkout')
     mock_upload = mocker.patch('semantic_release.cli.upload_to_pypi')
     mock_push = mocker.patch('semantic_release.cli.push_new_version')
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
