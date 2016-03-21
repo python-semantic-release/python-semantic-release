@@ -35,6 +35,14 @@ Checks for travis to ensure that the build is not a pull-request and on the corr
 The branch check, checks against the branch that travis said it checked out, not the current
 branch.
 
+CircleCI
+^^^^^^^^
+*Condition:* Environment variable ``CIRCLECI`` is ``'true'``
+
+Checks for circle-ci to ensure that the build is not a pull-request and on the correct branch.
+The branch check, checks against the branch that circle-ci said it checked out, not the current
+branch.
+
 Publish with CI
 ~~~~~~~~~~~~~~~
 Add ``python setup.py publish`` or ``semantic-release publish`` as an after success task on your
