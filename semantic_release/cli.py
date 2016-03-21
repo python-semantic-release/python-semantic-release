@@ -1,4 +1,5 @@
 import os
+import sys
 
 import click
 
@@ -13,23 +14,23 @@ from .settings import config
 from .vcs_helpers import (checkout, commit_new_version, get_current_head_hash,
                           get_repository_owner_and_name, push_new_version, tag_new_version)
 
+_common_options = [
+    click.option('--major', 'force_level', flag_value='major', help='Force major version.'),
+    click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.'),
+    click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.'),
+    click.option('--post', is_flag=True, help='Post changelog.'),
+    click.option('--noop', is_flag=True,
+                 help='No-operations mode, finds the new version number without changing it.')
+]
 
-@click.command()
-@click.argument('command')
-@click.option('--major', 'force_level', flag_value='major', help='Force major version.')
-@click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.')
-@click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.')
-@click.option('--post', is_flag=True, help='Post changelog.')
-@click.option('--noop', is_flag=True,
-              help='No-operations mode, finds the new version number without changing it.')
-def main(command, **kwargs):
+
+def common_options(func):
     """
-    Routes to the correct cli function. Looks up the command
-    in the global scope and calls the function.
-    :param command: String with the name of the function to call
-    :param kwargs: All click options.
+    Decorator that adds all the options in _common_options
     """
-    globals()[command](**kwargs)
+    for option in reversed(_common_options):
+        func = option(func)
+    return func
 
 
 def version(**kwargs):
@@ -143,5 +144,43 @@ def publish(**kwargs):
         click.echo('Version failed, no release will be published.', err=True)
 
 
+#
+# Making the CLI commands.
+# We have a level of indirection to the logical commands
+# so we can successfully mock them during testing
+#
+
+@click.group()
+@common_options
+def main(**kwargs):
+    pass
+
+
+@main.command(name='publish', help=publish.__doc__)
+@common_options
+def cmd_publish(**kwargs):
+    return publish(**kwargs)
+
+
+@main.command(name='changelog', help=changelog.__doc__)
+@common_options
+def cmd_changelog(**kwargs):
+    return changelog(**kwargs)
+
+
+@main.command(name='version', help=version.__doc__)
+@common_options
+def cmd_version(**kwargs):
+    return version(**kwargs)
+
+
 if __name__ == '__main__':
-    main()
+    #
+    # Allow options to come BEFORE commands,
+    # we simply sort them behind the command instead.
+    #
+    # This will have to be removed if there are ever global options
+    # that are not valid for a subcommand.
+    #
+    args = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith('--') else -1)
+    main(args=args)
