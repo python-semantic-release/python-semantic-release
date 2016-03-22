@@ -25,16 +25,17 @@ def get_last_version():
 
     :return: a string contains version number
     '''
-    tags = len(repo.tags)
-    for i in range(tags - 1, -1, -1):
-        if re.match('v\d+\.\d+\.\d+', repo.tags[i].name):
-            return repo.tags[i].name[1:]
+    for i in sorted(repo.tags, key=lambda x: x.commit.committed_date,
+                    reverse=True):
+        if re.match('v\d+\.\d+\.\d+', i.name):
+            return i.name[1:]
 
 
 def get_version_from_tag(tag_name):
     for i in repo.tags:
         if i.name == tag_name:
             return i.commit.hexsha
+
 
 def get_repository_owner_and_name():
     """
