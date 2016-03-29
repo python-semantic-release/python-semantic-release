@@ -31,18 +31,32 @@ def evaluate_version_bump(current_version, force=None):
 
     changes = []
     commit_count = 0
-    # we have to first find our the version hash tagged correspondingly
-    version_hash = get_version_from_tag('v{0}'.format(current_version))
-    for commit_message in get_commit_log(version_hash):
-        # since changed the version as tag, it won't show up in commit message
-        # so we could simply get all commits in this version
-        try:
-            message = current_commit_parser()(commit_message)
-            changes.append(message[0])
-        except UnknownCommitMessageStyleError:
-            pass
 
-        commit_count += 1
+    if (config.has_option('semantic_release', 'versioning_by_tag')
+            and config.getboolean('semantic_release', 'versioning_by_tag')):
+        # we have to first find our the version hash tagged correspondingly
+        version_hash = get_version_from_tag('v{0}'.format(current_version))
+        for commit_message in get_commit_log(version_hash):
+            # since changed the version as tag, it won't show up in commit message
+            # so we could simply get all commits in this version
+            try:
+                message = current_commit_parser()(commit_message)
+                changes.append(message[0])
+            except UnknownCommitMessageStyleError:
+                pass
+
+            commit_count += 1
+    else:
+        for commit_message in get_commit_log('v{0}'.format(current_version)):
+            if current_version in commit_message:
+                break
+            try:
+                message = current_commit_parser()(commit_message)
+                changes.append(message[0])
+            except UnknownCommitMessageStyleError:
+                pass
+
+            commit_count += 1
 
     if changes:
         level = max(changes)
@@ -63,7 +77,8 @@ def generate_changelog(from_version, to_version=None):
     :return: a dict with different changelog sections
     """
 
-    changes = {'feature': [], 'fix': [], 'documentation': [], 'refactor': [], 'breaking': []}
+    changes = {'feature': [], 'fix': [],
+               'documentation': [], 'refactor': [], 'breaking': []}
 
     found_the_release = to_version is None
 
@@ -89,10 +104,12 @@ def generate_changelog(from_version, to_version=None):
             changes[message[1]].append(message[3][0])
 
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
-                changes['breaking'].append(re_breaking.match(message[3][1]).group(1))
+                changes['breaking'].append(
+                    re_breaking.match(message[3][1]).group(1))
 
             if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
-                changes['breaking'].append(re_breaking.match(message[3][2]).group(1))
+                changes['breaking'].append(
+                    re_breaking.match(message[3][2]).group(1))
 
         except UnknownCommitMessageStyleError:
             pass

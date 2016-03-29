@@ -10,7 +10,7 @@ from .parser_angular import parse_commit_message as angular_parser  # noqa isort
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 
 
-def get_current_version():
+def get_current_version_by_tag():
     """
     Finds the current version of the package in the current working directory.
     Check tags rather than config file. return 0.0.0 if fails
@@ -22,6 +22,24 @@ def get_current_version():
         return version
     else:
         return '0.0.0'
+
+
+def get_current_version_by_config_file():
+    filename, variable = config.get('semantic_release',
+                                    'version_variable').split(':')
+    variable = variable.strip()
+    with open(filename, 'r') as fd:
+        return re.search(
+            r'^{0}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(variable),
+            fd.read(),
+            re.MULTILINE
+        ).group(1)
+
+if (config.has_option('semantic_release', 'versioning_by_tag')
+        and config.getboolean('semantic_release', 'versioning_by_tag')):
+    get_current_version = get_current_version_by_tag
+else:
+    get_current_version = get_current_version_by_config_file
 
 
 def get_new_version(current_version, level_bump):
@@ -62,7 +80,8 @@ def set_new_version(new_version):
     :param new_version: The new version number as a string.
     :return: `True` if it succeeded.
     """
-    filename, variable = config.get('semantic_release', 'version_variable').split(':')
+    filename, variable = config.get(
+        'semantic_release', 'version_variable').split(':')
     variable = variable.strip()
     with open(filename, mode='r') as fr:
         content = fr.read()

@@ -64,8 +64,12 @@ def version(**kwargs):
             return False
         click.echo(click.style('The build was a success, continuing the release', 'green'))
 
-    # set_new_version(new_version)
-    # commit_new_version(new_version)
+    # the default behavour for versioning is commit
+    # using tag when it is explicitly configed
+    if not (config.has_option('semantic_release', 'versioning_by_tag')
+        and config.getboolean('semantic_release', 'versioning_by_tag')):
+        set_new_version(new_version)
+        commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
     return True
