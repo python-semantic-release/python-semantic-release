@@ -38,7 +38,7 @@ def test_push_new_version(mock_git):
 
 
 def test_get_repository_owner_and_name():
-    assert get_repository_owner_and_name()[0] == 'KenMercusLai'
+    assert get_repository_owner_and_name()[0] == 'relekang'
     assert get_repository_owner_and_name()[1] == 'python-semantic-release'
 
 

@@ -242,7 +242,7 @@ def test_publish_should_call_functions(mocker, runner):
     mock_version.assert_called_once_with(
         noop=False, post=False, force_level=None)
     mock_log.assert_called_once_with(
-        'KenMercusLai', 'python-semantic-release', '2.0.0', 'CHANGES')
+        u'relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
     mock_checkout.assert_called_once_with('master')
 
 
