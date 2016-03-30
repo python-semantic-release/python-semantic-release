@@ -32,8 +32,8 @@ def evaluate_version_bump(current_version, force=None):
     changes = []
     commit_count = 0
 
-    if (config.has_option('semantic_release', 'versioning_by_tag')
-            and config.getboolean('semantic_release', 'versioning_by_tag')):
+    if (config.has_option('semantic_release', 'versioning_by_tag') and
+            config.getboolean('semantic_release', 'versioning_by_tag')):
         # we have to first find our the version hash tagged correspondingly
         version_hash = get_version_from_tag('v{0}'.format(current_version))
         for commit_message in get_commit_log(version_hash):

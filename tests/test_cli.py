@@ -48,9 +48,6 @@ def test_version_by_tag_should_call_correct_functions(mocker, runner):
     mocker.patch('semantic_release.cli.config.getboolean', config_file_path)
     mocker.patch('semantic_release.cli.config.has_option', lambda *x: True)
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
-    mock_commit_new_version = mocker.patch(
-        'semantic_release.cli.commit_new_version')
-    mock_set_new_version = mocker.patch('semantic_release.cli.set_new_version')
     mock_new_version = mocker.patch(
         'semantic_release.cli.get_new_version', return_value='2.0.0')
     mock_evaluate_bump = mocker.patch('semantic_release.cli.evaluate_version_bump',
@@ -160,6 +157,7 @@ def test_version_by_commit_check_build_status_succeeds(mocker, runner):
     assert mock_tag_new_version.called
     assert result.exit_code == 0
 
+
 def test_version_by_tag_check_build_status_succeeds(mocker, runner):
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: True)
     mocker.patch('semantic_release.cli.config.has_option', lambda *x: True)
@@ -168,8 +166,6 @@ def test_version_by_tag_check_build_status_succeeds(mocker, runner):
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
     mocker.patch(
         'semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
-    mock_commit_new = mocker.patch('semantic_release.cli.commit_new_version')
-    mock_set_new = mocker.patch('semantic_release.cli.set_new_version')
     result = runner.invoke(main, ['version'])
     assert mock_check_build_status.called
     assert mock_tag_new_version.called
