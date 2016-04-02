@@ -41,12 +41,11 @@ def test_version_by_commit_should_call_correct_functions(mocker, runner):
 
 
 def test_version_by_tag_should_call_correct_functions(mocker, runner):
-    def config_file_path(*args):
-        if args[0] == 'semantic_release' and args[1] == 'versioning_by_tag':
-            return True
-        return False
-    mocker.patch('semantic_release.cli.config.getboolean', config_file_path)
-    mocker.patch('semantic_release.cli.config.has_option', lambda *x: True)
+    # def config_file_path(*args):
+    #     if args[0] == 'semantic_release' and args[1] == 'version_source':
+    #         return True
+    #     return False
+    # mocker.patch('semantic_release.cli.config.getboolean', config_file_path)
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
     mock_new_version = mocker.patch(
         'semantic_release.cli.get_new_version', return_value='2.0.0')

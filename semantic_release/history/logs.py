@@ -2,7 +2,7 @@ import re
 
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config, current_commit_parser
-from ..vcs_helpers import get_commit_log, get_version_from_tag
+from ..vcs_helpers import get_commit_log
 
 LEVELS = {
     1: 'patch',
@@ -32,31 +32,17 @@ def evaluate_version_bump(current_version, force=None):
     changes = []
     commit_count = 0
 
-    if (config.has_option('semantic_release', 'versioning_by_tag') and
-            config.getboolean('semantic_release', 'versioning_by_tag')):
-        # we have to first find our the version hash tagged correspondingly
-        version_hash = get_version_from_tag('v{0}'.format(current_version))
-        for commit_message in get_commit_log(version_hash):
-            # since changed the version as tag, it won't show up in commit message
-            # so we could simply get all commits in this version
-            try:
-                message = current_commit_parser()(commit_message)
-                changes.append(message[0])
-            except UnknownCommitMessageStyleError:
-                pass
+    for commit_message in get_commit_log('v{0}'.format(current_version)):
+        if (current_version in commit_message and
+                config.get('semantic_release', 'version_source') == 'commit'):
+            break
+        try:
+            message = current_commit_parser()(commit_message)
+            changes.append(message[0])
+        except UnknownCommitMessageStyleError:
+            pass
 
-            commit_count += 1
-    else:
-        for commit_message in get_commit_log('v{0}'.format(current_version)):
-            if current_version in commit_message:
-                break
-            try:
-                message = current_commit_parser()(commit_message)
-                changes.append(message[0])
-            except UnknownCommitMessageStyleError:
-                pass
-
-            commit_count += 1
+        commit_count += 1
 
     if changes:
         level = max(changes)

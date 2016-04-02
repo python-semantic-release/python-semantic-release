@@ -62,18 +62,13 @@ def version(**kwargs):
         if not check_build_status(owner, name, get_current_head_hash()):
             click.echo(click.style('The build has failed', 'red'))
             return False
-        click.echo(
-            click.style('The build was a success, continuing the release', 'green'))
+        click.echo(click.style('The build was a success, continuing the release', 'green'))
 
-    # the default behavour for versioning is commit
-    # using tag when it is explicitly configed
-    if not (config.has_option('semantic_release', 'versioning_by_tag') and
-            config.getboolean('semantic_release', 'versioning_by_tag')):
+    if config.get('semantic_release', 'version_source') == 'commit':
         set_new_version(new_version)
         commit_new_version(new_version)
     tag_new_version(new_version)
-    click.echo(
-        'Bumping with a {0} version to {1}.'.format(level_bump, new_version))
+    click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
     return True
 
 

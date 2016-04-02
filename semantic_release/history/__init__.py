@@ -35,8 +35,7 @@ def get_current_version_by_config_file():
             re.MULTILINE
         ).group(1)
 
-if (config.has_option('semantic_release', 'versioning_by_tag') and
-        config.getboolean('semantic_release', 'versioning_by_tag')):
+if config.get('semantic_release', 'version_source') == 'tag':
     get_current_version = get_current_version_by_tag
 else:
     get_current_version = get_current_version_by_config_file
