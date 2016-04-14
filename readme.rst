@@ -63,7 +63,7 @@ Add the following to your setup.py and you will be able to run
 Configuration
 ~~~~~~~~~~~~~
 
-Configuration belong in ``semantic_release`` section of the setup.cfg
+Configuration belongs in ``semantic_release`` section of the setup.cfg
 file in your project. Details about configuration options can be found
 in `the configuration
 documentation <http://python-semantic-release.readthedocs.org/en/latest/configuration.html>`__.
