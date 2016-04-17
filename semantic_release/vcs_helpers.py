@@ -5,7 +5,7 @@ from git import GitCommandError, Repo
 from .errors import GitError
 from .settings import config
 
-repo = Repo('.git')
+repo = Repo('.git', search_parent_directories=True)
 
 
 def get_commit_log(from_rev=None):
