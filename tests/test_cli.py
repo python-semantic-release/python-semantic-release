@@ -1,6 +1,7 @@
 import pytest
 from click.testing import CliRunner
 
+import semantic_release
 from semantic_release.cli import main
 
 
@@ -41,11 +42,15 @@ def test_version_by_commit_should_call_correct_functions(mocker, runner):
 
 
 def test_version_by_tag_should_call_correct_functions(mocker, runner):
-    # def config_file_path(*args):
-    #     if args[0] == 'semantic_release' and args[1] == 'version_source':
-    #         return True
-    #     return False
-    # mocker.patch('semantic_release.cli.config.getboolean', config_file_path)
+    orig = semantic_release.cli.config.get
+
+    def wrapped_config_get(*args):
+        if (len(args) >= 2 and
+                args[0] == 'semantic_release' and args[1] == 'version_source'):
+                return 'tag'
+        return orig(*args)
+    mocker.patch('semantic_release.cli.config.get', wrapped_config_get)
+    mocker.patch('semantic_release.cli.config.getboolean', lambda *x: False)
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
     mock_new_version = mocker.patch(
         'semantic_release.cli.get_new_version', return_value='2.0.0')
@@ -53,7 +58,6 @@ def test_version_by_tag_should_call_correct_functions(mocker, runner):
                                       return_value='major')
     mock_current_version = mocker.patch('semantic_release.cli.get_current_version',
                                         return_value='1.2.3')
-
     result = runner.invoke(main, ['version'])
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with('1.2.3', None)
@@ -158,8 +162,15 @@ def test_version_by_commit_check_build_status_succeeds(mocker, runner):
 
 
 def test_version_by_tag_check_build_status_succeeds(mocker, runner):
+    orig = semantic_release.cli.config.get
+
+    def wrapped_config_get(*args):
+        if (len(args) >= 2 and
+                args[0] == 'semantic_release' and args[1] == 'version_source'):
+                return 'tag'
+        return orig(*args)
+    mocker.patch('semantic_release.cli.config.get', wrapped_config_get)
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: True)
-    mocker.patch('semantic_release.cli.config.has_option', lambda *x: True)
     mock_check_build_status = mocker.patch('semantic_release.cli.check_build_status',
                                            return_value=True)
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
