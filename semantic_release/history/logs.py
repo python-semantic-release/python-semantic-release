@@ -33,9 +33,9 @@ def evaluate_version_bump(current_version, force=None):
     commit_count = 0
 
     for commit_message in get_commit_log('v{0}'.format(current_version)):
-        if current_version in commit_message:
+        if (current_version in commit_message and
+                config.get('semantic_release', 'version_source') == 'commit'):
             break
-
         try:
             message = current_commit_parser()(commit_message)
             changes.append(message[0])
@@ -63,7 +63,8 @@ def generate_changelog(from_version, to_version=None):
     :return: a dict with different changelog sections
     """
 
-    changes = {'feature': [], 'fix': [], 'documentation': [], 'refactor': [], 'breaking': []}
+    changes = {'feature': [], 'fix': [],
+               'documentation': [], 'refactor': [], 'breaking': []}
 
     found_the_release = to_version is None
 
@@ -89,10 +90,12 @@ def generate_changelog(from_version, to_version=None):
             changes[message[1]].append(message[3][0])
 
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
-                changes['breaking'].append(re_breaking.match(message[3][1]).group(1))
+                changes['breaking'].append(
+                    re_breaking.match(message[3][1]).group(1))
 
             if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
-                changes['breaking'].append(re_breaking.match(message[3][2]).group(1))
+                changes['breaking'].append(
+                    re_breaking.match(message[3][2]).group(1))
 
         except UnknownCommitMessageStyleError:
             pass

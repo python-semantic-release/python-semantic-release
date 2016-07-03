@@ -3,20 +3,30 @@ import re
 import semver
 
 from ..settings import config
-from ..vcs_helpers import get_commit_log
+from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 
 
-def get_current_version():
+def get_current_version_by_tag():
     """
     Finds the current version of the package in the current working directory.
+    Check tags rather than config file. return 0.0.0 if fails
 
     :return: A string with the version number.
     """
-    filename, variable = config.get('semantic_release', 'version_variable').split(':')
+    version = get_last_version()
+    if version:
+        return version
+    else:
+        return '0.0.0'
+
+
+def get_current_version_by_config_file():
+    filename, variable = config.get('semantic_release',
+                                    'version_variable').split(':')
     variable = variable.strip()
     with open(filename, 'r') as fd:
         return re.search(
@@ -24,6 +34,11 @@ def get_current_version():
             fd.read(),
             re.MULTILINE
         ).group(1)
+
+if config.get('semantic_release', 'version_source') == 'tag':
+    get_current_version = get_current_version_by_tag
+else:
+    get_current_version = get_current_version_by_config_file
 
 
 def get_new_version(current_version, level_bump):
@@ -64,7 +79,8 @@ def set_new_version(new_version):
     :param new_version: The new version number as a string.
     :return: `True` if it succeeded.
     """
-    filename, variable = config.get('semantic_release', 'version_variable').split(':')
+    filename, variable = config.get(
+        'semantic_release', 'version_variable').split(':')
     variable = variable.strip()
     with open(filename, mode='r') as fr:
         content = fr.read()

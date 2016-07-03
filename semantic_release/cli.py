@@ -64,8 +64,9 @@ def version(**kwargs):
             return False
         click.echo(click.style('The build was a success, continuing the release', 'green'))
 
-    set_new_version(new_version)
-    commit_new_version(new_version)
+    if config.get('semantic_release', 'version_source') == 'commit':
+        set_new_version(new_version)
+        commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
     return True
@@ -76,7 +77,8 @@ def changelog(**kwargs):
     Generates the changelog since the last release.
     """
     current_version = get_current_version()
-    log = generate_changelog(get_previous_version(current_version), current_version)
+    log = generate_changelog(
+        get_previous_version(current_version), current_version)
     for section in CHANGELOG_SECTIONS:
         if not log[section]:
             continue
@@ -98,7 +100,8 @@ def changelog(**kwargs):
                 markdown_changelog(current_version, log, header=False)
             )
         else:
-            click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
+            click.echo(
+                click.style('Missing token: cannot post changelog', 'red'), err=True)
 
 
 def publish(**kwargs):
@@ -137,7 +140,8 @@ def publish(**kwargs):
                 markdown_changelog(new_version, log, header=False)
             )
         else:
-            click.echo(click.style('Missing token: cannot post changelog', 'red'), err=True)
+            click.echo(
+                click.style('Missing token: cannot post changelog', 'red'), err=True)
 
         click.echo(click.style('New release published', 'green'))
     else:
