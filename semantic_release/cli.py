@@ -36,7 +36,7 @@ def common_options(func):
 def version(**kwargs):
     """
     Detects the new version according to git log and semver. Writes the new version
-    number and commits it(unless the noop-option is True.
+    number and commits it, unless the noop-option is True.
     """
     click.echo('Creating new version..')
     current_version = get_current_version()
