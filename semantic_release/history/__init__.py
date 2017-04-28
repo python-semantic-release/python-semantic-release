@@ -62,7 +62,7 @@ def get_previous_version(version):
     :param version: A string with the version number.
     """
     found_version = False
-    for commit_message in get_commit_log():
+    for _hash, commit_message in get_commit_log():
         if version in commit_message:
             found_version = True
             continue

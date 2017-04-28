@@ -32,7 +32,7 @@ def evaluate_version_bump(current_version, force=None):
     changes = []
     commit_count = 0
 
-    for commit_message in get_commit_log('v{0}'.format(current_version)):
+    for _hash, commit_message in get_commit_log('v{0}'.format(current_version)):
         if (current_version in commit_message and
                 config.get('semantic_release', 'version_source') == 'commit'):
             break
@@ -72,7 +72,7 @@ def generate_changelog(from_version, to_version=None):
     if from_version:
         rev = 'v{0}'.format(from_version)
 
-    for commit_message in get_commit_log(rev):
+    for _hash, commit_message in get_commit_log(rev):
         if not found_the_release:
             if to_version and to_version not in commit_message:
                 continue
@@ -87,7 +87,7 @@ def generate_changelog(from_version, to_version=None):
             if message[1] not in changes:
                 continue
 
-            changes[message[1]].append(message[3][0])
+            changes[message[1]].append((_hash, message[3][0]))
 
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
                 changes['breaking'].append(
@@ -123,6 +123,6 @@ def markdown_changelog(version, changelog, header=False):
 
         output += '\n### {0}\n'.format(section.capitalize())
         for item in changelog[section]:
-            output += '* {0}\n'.format(item)
+            output += '* {0} ({1})\n'.format(item[1], item[0])
 
     return output
