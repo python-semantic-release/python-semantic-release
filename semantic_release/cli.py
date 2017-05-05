@@ -4,6 +4,7 @@ import sys
 import click
 
 from semantic_release import ci_checks
+from semantic_release.errors import GitError
 
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
@@ -132,13 +133,17 @@ def publish(**kwargs):
 
         if check_token():
             click.echo('Updating changelog')
-            log = generate_changelog(current_version, new_version)
-            post_changelog(
-                owner,
-                name,
-                new_version,
-                markdown_changelog(new_version, log, header=False)
-            )
+            try:
+                log = generate_changelog(current_version, new_version)
+                post_changelog(
+                    owner,
+                    name,
+                    new_version,
+                    markdown_changelog(new_version, log, header=False)
+                )
+            except GitError:
+                click.echo(click.style('Posting changelog failed.', 'red'), err=True)
+
         else:
             click.echo(
                 click.style('Missing token: cannot post changelog', 'red'), err=True)
