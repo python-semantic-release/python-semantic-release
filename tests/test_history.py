@@ -7,20 +7,20 @@ from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
 
-MAJOR = 'feat(x): Add super-feature\n\nBREAKING CHANGE: Uses super-feature as default instead of ' \
-        'dull-feature.'
-MAJOR2 = 'feat(x): Add super-feature\n\nSome explanation\n\n' \
+MAJOR = ('221', 'feat(x): Add super-feature\n\nBREAKING CHANGE: Uses super-feature as default instead of ' \
+        'dull-feature.')
+MAJOR2 = ('222', 'feat(x): Add super-feature\n\nSome explanation\n\n' \
          'BREAKING CHANGE: Uses super-feature as default instead of ' \
-         'dull-feature.'
-MINOR = 'feat(x): Add non-breaking super-feature'
-PATCH = 'fix(x): Fix bug in super-feature'
-NO_TAG = 'docs(x): Add documentation for super-feature'
-UNKNOWN_STYLE = 'random commits are the worst'
+         'dull-feature.')
+MINOR = ('111', 'feat(x): Add non-breaking super-feature')
+PATCH = ('24', 'fix(x): Fix bug in super-feature')
+NO_TAG = ('191', 'docs(x): Add documentation for super-feature')
+UNKNOWN_STYLE = ('7', 'random commits are the worst')
 
 ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
 PATCH_COMMIT_MESSAGES = [PATCH, PATCH]
-MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, '1.1.0', MAJOR]
+MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, ('22', '1.1.0'), MAJOR]
 
 
 class EvaluateVersionBumpTest(TestCase):
@@ -41,7 +41,7 @@ class EvaluateVersionBumpTest(TestCase):
 
     def test_nothing_if_no_tag(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda *a, **kw: ['', '...']):
+                        lambda *a, **kw: [('', '...')]):
             self.assertIsNone(evaluate_version_bump('0.0.0'))
 
     def test_force(self):
@@ -100,13 +100,13 @@ class GenerateChangelogTests(TestCase):
 
     def test_should_skip_style_changes(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda *a, **k: PATCH_COMMIT_MESSAGES + ['style(x): change x']):
+                        lambda *a, **k: PATCH_COMMIT_MESSAGES + [('21', 'style(x): change x')]):
             changelog = generate_changelog('0.0.0')
             self.assertNotIn('style', changelog)
 
     def test_should_skip_chore_changes(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda *a, **kw: PATCH_COMMIT_MESSAGES + ['chore(x): change x']):
+                        lambda *a, **kw: PATCH_COMMIT_MESSAGES + [('23', 'chore(x): change x')]):
             changelog = generate_changelog('0.0.0')
             self.assertNotIn('chore', changelog)
 
@@ -117,11 +117,11 @@ def test_current_version_should_return_correct_version():
 
 class GetPreviousVersionTests(TestCase):
 
-    @mock.patch('semantic_release.history.get_commit_log', lambda: ['0.10.0', '0.9.0'])
+    @mock.patch('semantic_release.history.get_commit_log', lambda: [('211', '0.10.0'), ('13', '0.9.0')])
     def test_should_return_correct_version(self):
         self.assertEqual(get_previous_version('0.10.0'), '0.9.0')
 
-    @mock.patch('semantic_release.history.get_commit_log', lambda: ['v0.10.0', 'v0.9.0'])
+    @mock.patch('semantic_release.history.get_commit_log', lambda: [('211', '0.10.0'), ('13', '0.9.0')])
     def test_should_return_correct_version_with_v(self):
         self.assertEqual(get_previous_version('0.10.0'), '0.9.0')
 
@@ -151,27 +151,27 @@ class GetNewVersionTests(TestCase):
 class MarkdownChangelogTests(TestCase):
     def test_should_output_all_sections(self):
         markdown = markdown_changelog('0', {
-            'refactor': ['Refactor super-feature'],
-            'breaking': ['Uses super-feature as default instead of dull-feature.'],
-            'feature': ['Add non-breaking super-feature', 'Add super-feature'],
-            'fix': ['Fix bug in super-feature'],
-            'documentation': ['Document super-feature']
+            'refactor': [('12', 'Refactor super-feature')],
+            'breaking': [('21', 'Uses super-feature as default instead of dull-feature.')],
+            'feature': [('145', 'Add non-breaking super-feature'), ('134', 'Add super-feature')],
+            'fix': [('234', 'Fix bug in super-feature')],
+            'documentation': [('0', 'Document super-feature')]
         })
         self.assertEqual(
             markdown,
             '\n'
             '### Feature\n'
-            '* Add non-breaking super-feature\n'
-            '* Add super-feature\n'
+            '* Add non-breaking super-feature (145)\n'
+            '* Add super-feature (134)\n'
             '\n'
             '### Fix\n'
-            '* Fix bug in super-feature\n'
+            '* Fix bug in super-feature (234)\n'
             '\n'
             '### Breaking\n'
-            '* Uses super-feature as default instead of dull-feature.\n'
+            '* Uses super-feature as default instead of dull-feature. (21)\n'
             '\n'
             '### Documentation\n'
-            '* Document super-feature\n'
+            '* Document super-feature (0)\n'
         )
 
     def test_should_not_include_empty_sections(self):

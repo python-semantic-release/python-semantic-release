@@ -86,7 +86,7 @@ def changelog(**kwargs):
         click.echo(section.capitalize())
         click.echo(''.join(['-' for i in range(len(section))]))
         for item in log[section]:
-            click.echo(' - {0}'.format(item))
+            click.echo(' - {0} ({1})'.format(item[1], item[0]))
         click.echo('\n')
 
     if not kwargs.get('noop') and kwargs.get('post'):

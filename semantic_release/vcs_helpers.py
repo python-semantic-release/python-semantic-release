@@ -16,7 +16,7 @@ def get_commit_log(from_rev=None):
     if from_rev:
         rev = '...{from_rev}'.format(from_rev=from_rev)
     for commit in repo.iter_commits(rev):
-        yield commit.message
+        yield (commit.hexsha, commit.message)
 
 
 def get_last_version():
