@@ -35,10 +35,11 @@ def get_current_version_by_config_file():
             re.MULTILINE
         ).group(1)
 
-if config.get('semantic_release', 'version_source') == 'tag':
-    get_current_version = get_current_version_by_tag
-else:
-    get_current_version = get_current_version_by_config_file
+
+def get_current_version():
+    if config.get('semantic_release', 'version_source') == 'tag':
+        return get_current_version_by_tag()
+    return get_current_version_by_config_file()
 
 
 def get_new_version(current_version, level_bump):
@@ -62,7 +63,7 @@ def get_previous_version(version):
     :param version: A string with the version number.
     """
     found_version = False
-    for _hash, commit_message in get_commit_log():
+    for commit_hash, commit_message in get_commit_log():
         if version in commit_message:
             found_version = True
             continue

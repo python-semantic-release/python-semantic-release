@@ -20,13 +20,12 @@ def get_commit_log(from_rev=None):
 
 
 def get_last_version():
-    '''
+    """
     return last version from repo tags
 
     :return: a string contains version number
-    '''
-    for i in sorted(repo.tags, key=lambda x: x.commit.committed_date,
-                    reverse=True):
+    """
+    for i in sorted(repo.tags, key=lambda x: x.commit.committed_date, reverse=True):
         if re.match('v\d+\.\d+\.\d+', i.name):
             return i.name[1:]
 

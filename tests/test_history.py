@@ -7,11 +7,15 @@ from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
 
-MAJOR = ('221', 'feat(x): Add super-feature\n\nBREAKING CHANGE: Uses super-feature as default instead of ' \
-        'dull-feature.')
-MAJOR2 = ('222', 'feat(x): Add super-feature\n\nSome explanation\n\n' \
-         'BREAKING CHANGE: Uses super-feature as default instead of ' \
-         'dull-feature.')
+MAJOR = (
+    '221',
+    'feat(x): Add super-feature\n\n'
+    'BREAKING CHANGE: Uses super-feature as default instead of dull-feature.')
+MAJOR2 = (
+    '222',
+    'feat(x): Add super-feature\n\nSome explanation\n\n'
+    'BREAKING CHANGE: Uses super-feature as default instead of dull-feature.'
+)
 MINOR = ('111', 'feat(x): Add non-breaking super-feature')
 PATCH = ('24', 'fix(x): Fix bug in super-feature')
 NO_TAG = ('191', 'docs(x): Add documentation for super-feature')
@@ -117,11 +121,13 @@ def test_current_version_should_return_correct_version():
 
 class GetPreviousVersionTests(TestCase):
 
-    @mock.patch('semantic_release.history.get_commit_log', lambda: [('211', '0.10.0'), ('13', '0.9.0')])
+    @mock.patch('semantic_release.history.get_commit_log',
+                lambda: [('211', '0.10.0'), ('13', '0.9.0')])
     def test_should_return_correct_version(self):
         self.assertEqual(get_previous_version('0.10.0'), '0.9.0')
 
-    @mock.patch('semantic_release.history.get_commit_log', lambda: [('211', '0.10.0'), ('13', '0.9.0')])
+    @mock.patch('semantic_release.history.get_commit_log',
+                lambda: [('211', '0.10.0'), ('13', '0.9.0')])
     def test_should_return_correct_version_with_v(self):
         self.assertEqual(get_previous_version('0.10.0'), '0.9.0')
 

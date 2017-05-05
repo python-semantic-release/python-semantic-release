@@ -18,6 +18,7 @@ def _config():
     ])
     return parser
 
+
 config = _config()
 
 
