@@ -43,7 +43,6 @@ def version(**kwargs):
     click.echo('Current version: {0}'.format(current_version))
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
-    print('wat.')
 
     if new_version == current_version:
         click.echo(click.style('No release will be made.', fg='yellow'))
