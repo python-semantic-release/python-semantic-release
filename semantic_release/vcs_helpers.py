@@ -1,6 +1,6 @@
 import re
 
-from git import GitCommandError, Repo
+from git import GitCommandError, TagObject, Repo
 
 from .errors import GitError
 from .settings import config
@@ -19,14 +19,18 @@ def get_commit_log(from_rev=None):
         yield (commit.hexsha, commit.message)
 
 
-def get_last_version():
+def get_last_version(skipTags=[]):
     """
     return last version from repo tags
 
     :return: a string contains version number
     """
-    for i in sorted(repo.tags, key=lambda x: x.commit.committed_date, reverse=True):
+    for i in sorted(repo.tags, reverse=True, key=lambda x: x.tag.tagged_date
+                                                 if isinstance(x.commit,TagObject)
+                                                 else x.commit.committed_date):
         if re.match('v\d+\.\d+\.\d+', i.name):
+            if i.name in skipTags:
+                continue
             return i.name[1:]
 
 

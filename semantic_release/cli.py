@@ -78,8 +78,13 @@ def changelog(**kwargs):
     Generates the changelog since the last release.
     """
     current_version = get_current_version()
-    log = generate_changelog(
-        get_previous_version(current_version), current_version)
+    if current_version is None:
+        raise Exception("Unable to get the current verison."
+                        " Make sure semantic_release.version_variable "
+                        "is setup correctly")
+    previous_version = get_previous_version(current_version)
+
+    log = generate_changelog(previous_version,  current_version)
     for section in CHANGELOG_SECTIONS:
         if not log[section]:
             continue
