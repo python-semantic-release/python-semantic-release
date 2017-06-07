@@ -19,17 +19,22 @@ def get_commit_log(from_rev=None):
         yield (commit.hexsha, commit.message)
 
 
-def get_last_version(skipTags=[]):
+def get_last_version(skip_tags=None):
     """
     return last version from repo tags
 
     :return: a string contains version number
     """
-    for i in sorted(repo.tags, reverse=True, key=lambda x: x.tag.tagged_date
-                                                 if isinstance(x.commit,TagObject)
-                                                 else x.commit.committed_date):
+    skip_tags = skip_tags or []
+
+    def version_finder(x):
+        if isinstance(x.commit, TagObject):
+            return x.tag.tagged_date
+        return x.commit.committed_date
+
+    for i in sorted(repo.tags, reverse=True, key=version_finder):
         if re.match('v\d+\.\d+\.\d+', i.name):
-            if i.name in skipTags:
+            if i.name in skip_tags:
                 continue
             return i.name[1:]
 
