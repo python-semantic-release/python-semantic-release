@@ -12,8 +12,8 @@ install:
 script:
 - tox -e flake8
 - tox -e isort
-- tox -e py35-tests
-- tox -e py27-tests
+- tox -e py3-tests
+- tox -e py2-tests
 after_success:
 - git config --global user.name "semantic-release (via TravisCI)"
 - git config --global user.email "semantic-release@travis"
