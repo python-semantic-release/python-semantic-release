@@ -125,12 +125,6 @@ def publish(**kwargs):
             name=name
         )
 
-        if config.getboolean('semantic_release', 'upload_to_pypi'):
-            upload_to_pypi(
-                username=os.environ.get('PYPI_USERNAME'),
-                password=os.environ.get('PYPI_PASSWORD'),
-            )
-
         if check_token():
             click.echo('Updating changelog')
             try:
@@ -143,6 +137,12 @@ def publish(**kwargs):
                 )
             except GitError:
                 click.echo(click.style('Posting changelog failed.', 'red'), err=True)
+
+        if config.getboolean('semantic_release', 'upload_to_pypi'):
+            upload_to_pypi(
+                username=os.environ.get('PYPI_USERNAME'),
+                password=os.environ.get('PYPI_PASSWORD'),
+            )
 
         else:
             click.echo(
