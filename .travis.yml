@@ -1,0 +1,22 @@
+language: python
+python: 2.7
+env:
+  global:
+    - PYPI_USERNAME=relekang
+    - secure: "NY3yjXJrfiHk3MRIz/5nye4u8HqE6ez1q3pzg/AfXiBTAY1JSQ1PlfelrHBKLQDIHLwYFo5h6zLN7qVMOqLbjxab9nSpPgLXi2U9NQwn7PMHkMEwa3aVcdWx80MRT+ttEjkjHmoa7Q/VhPz7o5W5N7Vo7piREmj6OzK7v91LqDG3kTNFj+mWqe+iILb7CK+EyelpiQHUE4Q2uKsGjPMXMEsEuNjgOj1O35V+JvHBWUl/JbPFaiBWulB8yFKcsAqQDKN7C967tonsi2sDDVthLk/smmvXBkAzZUCPHpFTPhQPSYX+GlNMC2xQVQr4Bk5msszWx+0hP+Oi75eZsZaZaZga9+oGBGCqO5V0tAB9672IBLoz3uqgP8NEyb7PlwtpA/o7Fy9F0XiTx2DpMXJY74xjt4QHe4ezJLgXZjjapAC6nPUt7jEMP51fVe7bHd04C3P9QpH6nfBR+mHl8k3GI6Fk/1lCRfkFkMiLAkl/lNbEMwGwTc9vwXGHZ0ZGcAXw+H20750kPDPuTQeGz/XwSzDl27Y7+1UuLwF/To5QYqWlAuFoAu86OlXxMLVu5gqkjgpvOTJJWgb854RQ/+5G8u1lfFUE58SUq2VgG+F0R1T7zvsUN18GmBX5+geR3DcJ+Lci3+Own3xbOS/x1eLb8J/Frlr9b/jjCc8zSKpaWR0="
+addons:
+  apt_packages:
+    - pandoc
+install:
+- pip install tox
+script:
+- tox -e flake8
+- tox -e isort
+- tox -e py35-tests
+- tox -e py27-tests
+after_success:
+- git config --global user.name "semantic-release (via TravisCI)"
+- git config --global user.email "semantic-release@travis"
+- pip install pandoc
+- python setup.py install
+- semantic-release publish
