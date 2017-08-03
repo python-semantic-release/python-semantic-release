@@ -22,7 +22,12 @@ class PypiTests(TestCase):
             username=None,
             password=None,
             comment=None,
-            sign_with='gpg'
+            sign_with='gpg',
+            config_file='~/.pypirc',
+            skip_existing=False,
+            cert=None,
+            client_cert=None,
+            repository_url=None
         )
 
     @mock.patch('semantic_release.pypi.run')

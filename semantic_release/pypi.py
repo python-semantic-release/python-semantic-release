@@ -17,6 +17,11 @@ def upload_to_pypi(dists='sdist bdist_wheel', username=None, password=None):
         username=username,
         password=password,
         comment=None,
-        sign_with='gpg'
+        sign_with='gpg',
+        config_file='~/.pypirc',
+        skip_existing=False,
+        cert=None,
+        client_cert=None,
+        repository_url=None
     )
     run('rm -rf build dist')
