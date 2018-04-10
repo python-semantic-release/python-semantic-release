@@ -79,7 +79,7 @@ def changelog(**kwargs):
     """
     current_version = get_current_version()
     if current_version is None:
-        raise Exception("Unable to get the current version."
+        raise ImproperConfigurationError("Unable to get the current version."
                         " Make sure semantic_release.version_variable "
                         "is setup correctly")
     previous_version = get_previous_version(current_version)
