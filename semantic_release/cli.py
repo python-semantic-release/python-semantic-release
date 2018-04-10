@@ -120,8 +120,10 @@ def publish(**kwargs):
     """
     current_version = get_current_version()
     click.echo('Current version: {0}'.format(current_version))
-    if kwargs.get("retry"):
+    retry = kwargs.get("retry")
+    if retry:
         new_version = current_version
+        current_version = get_previous_version(current_version)
     else:
         level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
         new_version = get_new_version(current_version, level_bump)
@@ -141,7 +143,7 @@ def publish(**kwargs):
             upload_to_pypi(
                 username=os.environ.get('PYPI_USERNAME'),
                 password=os.environ.get('PYPI_PASSWORD'),
-                skip_existing=kwargs.get("retry")
+                skip_existing=retry,
             )
 
         if check_token():
