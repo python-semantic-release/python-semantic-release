@@ -1,6 +1,6 @@
 import re
 
-from git import GitCommandError, Repo, NoSuchPathError
+from git import GitCommandError, NoSuchPathError, Repo
 
 from .errors import GitError
 from .settings import config
