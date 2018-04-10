@@ -122,6 +122,8 @@ def publish(**kwargs):
     click.echo('Current version: {0}'.format(current_version))
     retry = kwargs.get("retry")
     if retry:
+        # The "new" version will actually be the current version, and the
+        # "current" version will be the previous version.
         new_version = current_version
         current_version = get_previous_version(current_version)
     else:
@@ -143,7 +145,7 @@ def publish(**kwargs):
             upload_to_pypi(
                 username=os.environ.get('PYPI_USERNAME'),
                 password=os.environ.get('PYPI_PASSWORD'),
-                skip_existing=retry,
+                skip_existing=retry,  # We're retrying, so we don't want errors for files that are already on PyPI.
             )
 
         if check_token():
