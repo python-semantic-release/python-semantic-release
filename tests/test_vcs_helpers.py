@@ -5,7 +5,6 @@ from semantic_release.errors import GitError
 from semantic_release.vcs_helpers import (checkout, commit_new_version, get_commit_log,
                                           get_current_head_hash, get_repository_owner_and_name,
                                           push_new_version, tag_new_version)
-
 from . import mock
 
 
