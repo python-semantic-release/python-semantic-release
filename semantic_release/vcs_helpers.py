@@ -1,17 +1,21 @@
 import re
 
-from git import GitCommandError, TagObject, Repo
+from git import GitCommandError, TagObject, NoSuchPathError, Repo
 
 from .errors import GitError
 from .settings import config
 
-repo = Repo('.git', search_parent_directories=True)
+try:
+    repo = Repo('.git', search_parent_directories=True)
+except NoSuchPathError:
+    repo = None
 
 
 def get_commit_log(from_rev=None):
     """
     Yields all commit messages from last to first.
     """
+
     rev = None
     if from_rev:
         rev = '...{from_rev}'.format(from_rev=from_rev)
@@ -51,6 +55,7 @@ def get_repository_owner_and_name():
 
     :return: a tuple of the owner and name
     """
+
     url = repo.remote('origin').url
     parts = re.search(r'([^/:]+)/([^/]+).git$', url)
 
@@ -63,6 +68,7 @@ def get_current_head_hash():
 
     :return: a string with the commit hash.
     """
+
     return repo.head.commit.name_rev.split(' ')[0]
 
 
@@ -73,8 +79,8 @@ def commit_new_version(version):
 
     :param version: The version number to be used in the commit message
     """
-    repo.git.add(
-        config.get('semantic_release', 'version_variable').split(':')[0])
+
+    repo.git.add(config.get('semantic_release', 'version_variable').split(':')[0])
     return repo.git.commit(m=version, author="semantic-release <semantic-release>")
 
 
@@ -84,6 +90,7 @@ def tag_new_version(version):
 
     :param version: The version number used in the tag as a string.
     """
+
     return repo.git.tag('-a', 'v{0}'.format(version), m='v{0}'.format(version))
 
 
@@ -94,6 +101,7 @@ def push_new_version(gh_token=None, owner=None, name=None):
     :param owner: Organisation or user that owns the repository.
     :param name: Name of repository.
     """
+
     server = 'origin'
     if gh_token:
         server = 'https://{token}@{repo}'.format(
@@ -117,4 +125,5 @@ def checkout(branch):
 
     :param branch: The branch to checkout.
     """
+
     return repo.git.checkout(branch)
