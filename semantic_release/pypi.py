@@ -2,7 +2,7 @@ from invoke import run
 from twine.commands import upload as twine_upload
 
 
-def upload_to_pypi(dists='sdist bdist_wheel', username=None, password=None):
+def upload_to_pypi(dists='sdist bdist_wheel', username=None, password=None, skip_existing=False):
     """
     Creates the wheel and uploads to pypi with twine.
 
@@ -19,7 +19,7 @@ def upload_to_pypi(dists='sdist bdist_wheel', username=None, password=None):
         comment=None,
         sign_with='gpg',
         config_file='~/.pypirc',
-        skip_existing=False,
+        skip_existing=skip_existing,
         cert=None,
         client_cert=None,
         repository_url=None

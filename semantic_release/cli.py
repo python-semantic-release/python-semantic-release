@@ -20,6 +20,7 @@ _common_options = [
     click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.'),
     click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.'),
     click.option('--post', is_flag=True, help='Post changelog.'),
+    click.option('--retry', is_flag=True, help='Retry the same release, do not bump.'),
     click.option('--noop', is_flag=True,
                  help='No-operations mode, finds the new version number without changing it.')
 ]
@@ -39,13 +40,17 @@ def version(**kwargs):
     Detects the new version according to git log and semver. Writes the new version
     number and commits it, unless the noop-option is True.
     """
-    click.echo('Creating new version..')
+    retry = kwargs.get("retry")
+    if retry:
+        click.echo('Retrying publication of the same version...')
+    else:
+        click.echo('Creating new version..')
     current_version = get_current_version()
     click.echo('Current version: {0}'.format(current_version))
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
 
-    if new_version == current_version:
+    if new_version == current_version and not retry:
         click.echo(click.style('No release will be made.', fg='yellow'))
         return False
 
@@ -64,6 +69,10 @@ def version(**kwargs):
             click.echo(click.style('The build has failed', 'red'))
             return False
         click.echo(click.style('The build was a success, continuing the release', 'green'))
+
+    if retry:
+        # No need to make changes to the repo, we're just retrying.
+        return True
 
     if config.get('semantic_release', 'version_source') == 'commit':
         set_new_version(new_version)
@@ -111,8 +120,15 @@ def publish(**kwargs):
     """
     current_version = get_current_version()
     click.echo('Current version: {0}'.format(current_version))
-    level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
-    new_version = get_new_version(current_version, level_bump)
+    retry = kwargs.get("retry")
+    if retry:
+        # The "new" version will actually be the current version, and the
+        # "current" version will be the previous version.
+        new_version = current_version
+        current_version = get_previous_version(current_version)
+    else:
+        level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
+        new_version = get_new_version(current_version, level_bump)
     owner, name = get_repository_owner_and_name()
 
     ci_checks.check('master')
@@ -129,6 +145,7 @@ def publish(**kwargs):
             upload_to_pypi(
                 username=os.environ.get('PYPI_USERNAME'),
                 password=os.environ.get('PYPI_PASSWORD'),
+                skip_existing=retry,  # We're retrying, so we don't want errors for files that are already on PyPI.
             )
 
         if check_token():

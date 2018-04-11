@@ -34,6 +34,7 @@ ignored. Running release can be run locally or from a CI service.
       --patch  Force patch version.
       --noop   No-operations mode, finds the new version number without changing it.
       --post   If used with the changelog command, the changelog will be posted to the release api.
+      --retry  Retry the same release, do not bump.
       --help   Show this message and exit.
 
 Commands
