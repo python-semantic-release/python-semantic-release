@@ -69,8 +69,11 @@ def get_previous_version(version):
             continue
 
         if found_version:
-            if re.match(r'v?\d+.\d+.\d+', commit_message):
-                return commit_message.replace('v', '').strip()
+            matches = re.match(r'v?(\d+.\d+.\d+)', commit_message)
+            if matches:
+                return matches.group(1).strip()
+
+    return get_last_version([version, 'v{}'.format(version)])
 
 
 def set_new_version(new_version):

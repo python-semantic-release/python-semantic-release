@@ -1,6 +1,6 @@
 import re
 
-from git import GitCommandError, NoSuchPathError, Repo
+from git import GitCommandError, TagObject, NoSuchPathError, Repo
 
 from .errors import GitError
 from .settings import config
@@ -23,15 +23,23 @@ def get_commit_log(from_rev=None):
         yield (commit.hexsha, commit.message)
 
 
-def get_last_version():
+def get_last_version(skip_tags=None):
     """
     return last version from repo tags
 
     :return: a string contains version number
     """
+    skip_tags = skip_tags or []
 
-    for i in sorted(repo.tags, key=lambda x: x.commit.committed_date, reverse=True):
+    def version_finder(x):
+        if isinstance(x.commit, TagObject):
+            return x.tag.tagged_date
+        return x.commit.committed_date
+
+    for i in sorted(repo.tags, reverse=True, key=version_finder):
         if re.match('v\d+\.\d+\.\d+', i.name):
+            if i.name in skip_tags:
+                continue
             return i.name[1:]
 
 
