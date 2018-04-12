@@ -31,6 +31,7 @@ ignored. Running release can be run locally or from a CI service.
       --minor  Force minor version.
       --patch  Force patch version.
       --noop   No-operations mode, finds the new version number without changing it.
+      --retry  Retry the same release, do not bump.
       --help   Show this message and exit.
 
 Documentation Contents:
