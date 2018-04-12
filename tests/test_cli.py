@@ -78,7 +78,7 @@ def test_force_major(mocker, runner):
 def test_force_minor(mocker, runner):
     mock_version = mocker.patch('semantic_release.cli.version')
     result = runner.invoke(main, ['version', '--minor'])
-    mock_version.assert_called_once_with( noop=False, post=False, force_level='minor', retry=False)
+    mock_version.assert_called_once_with(noop=False, post=False, force_level='minor', retry=False)
     assert mock_version.call_args_list[0][1]['force_level'] == 'minor'
     assert result.exit_code == 0
 
@@ -219,7 +219,7 @@ def test_publish_should_do_nothing_when_version_fails(mocker, runner):
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
     mock_version = mocker.patch('semantic_release.cli.version', return_value=False)
     result = runner.invoke(main, ['publish'])
-    mock_version.assert_called_once_with( noop=False, post=False, force_level=None, retry=False)
+    mock_version.assert_called_once_with(noop=False, post=False, force_level=None, retry=False)
     assert not mock_push.called
     assert not mock_upload.called
     assert not mock_log.called
