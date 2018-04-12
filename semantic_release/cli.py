@@ -4,7 +4,7 @@ import sys
 import click
 
 from semantic_release import ci_checks
-from semantic_release.errors import GitError
+from semantic_release.errors import GitError, ImproperConfigurationError
 
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
@@ -88,9 +88,11 @@ def changelog(**kwargs):
     """
     current_version = get_current_version()
     if current_version is None:
-        raise ImproperConfigurationError("Unable to get the current version."
-                        " Make sure semantic_release.version_variable "
-                        "is setup correctly")
+        raise ImproperConfigurationError(
+            "Unable to get the current version. "
+            "Make sure semantic_release.version_variable "
+            "is setup correctly"
+        )
     previous_version = get_previous_version(current_version)
 
     log = generate_changelog(previous_version,  current_version)

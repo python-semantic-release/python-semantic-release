@@ -1,6 +1,6 @@
 import re
 
-from git import GitCommandError, TagObject, NoSuchPathError, Repo
+from git import GitCommandError, NoSuchPathError, Repo, TagObject
 
 from .errors import GitError
 from .settings import config
