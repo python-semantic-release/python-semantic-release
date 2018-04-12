@@ -145,7 +145,8 @@ def publish(**kwargs):
             upload_to_pypi(
                 username=os.environ.get('PYPI_USERNAME'),
                 password=os.environ.get('PYPI_PASSWORD'),
-                skip_existing=retry,  # We're retrying, so we don't want errors for files that are already on PyPI.
+                # We are retrying, so we don't want errors for files that are already on PyPI.
+                skip_existing=retry,
             )
 
         if check_token():
