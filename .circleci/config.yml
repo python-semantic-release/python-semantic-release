@@ -1,40 +1,6 @@
 version: 2
 
 jobs:
-  flake8:
-    docker:
-      - image: circleci/python:3.6
-
-    steps:
-      - checkout
-      - run: sudo pip install tox
-      - restore_cache:
-         keys:
-           - v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
-      - run: tox --notest
-      - save_cache:
-         key: v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
-         paths:
-           - .tox
-      - run: tox -e flake8
-
-  isort:
-    docker:
-      - image: circleci/python:3.6
-
-    steps:
-      - checkout
-      - run: sudo pip install tox
-      - restore_cache:
-         keys:
-           - v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
-      - run: tox --notest
-      - save_cache:
-         key: v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
-         paths:
-           - .tox
-      - run: tox -e isort
-
   tests:
     docker:
       - image: circleci/python:3.6
@@ -50,15 +16,11 @@ jobs:
          key: v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
          paths:
            - .tox
-      - run: tox -e py2-tests
-      - run: tox -e py3-tests
-      - run: tox -e coverage
+      - run: tox
 
 workflows:
   version: 2
 
   build:
     jobs:
-      - flake8
-      - isort
       - tests

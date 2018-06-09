@@ -2,7 +2,10 @@
 
 # test-tools
 coverage
+isort
+flake8
 pytest
+pytest-cov
 pytest-xdist
 pytest-mock
 tox==2.3.1
