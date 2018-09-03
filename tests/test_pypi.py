@@ -24,7 +24,7 @@ class PypiTests(TestCase):
             comment=None,
             sign_with='gpg',
             config_file='~/.pypirc',
-            skip_existing=False,
+            skip_existing=True,
             cert=None,
             client_cert=None,
             repository_url=None
