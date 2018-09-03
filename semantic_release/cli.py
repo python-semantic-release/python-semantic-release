@@ -151,9 +151,7 @@ def publish(**kwargs):
         if config.getboolean('semantic_release', 'upload_to_pypi'):
             upload_to_pypi(
                 username=os.environ.get('PYPI_USERNAME'),
-                password=os.environ.get('PYPI_PASSWORD'),
-                # We are retrying, so we don't want errors for files that are already on PyPI.
-                skip_existing=retry,
+                password=os.environ.get('PYPI_PASSWORD')
             )
 
         if check_token():
