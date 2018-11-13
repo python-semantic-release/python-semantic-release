@@ -37,7 +37,7 @@ def get_last_version(skip_tags=None):
         return x.commit.committed_date
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
-        if re.match('v\d+\.\d+\.\d+', i.name):
+        if re.match(r'v\d+\.\d+\.\d+', i.name):
             if i.name in skip_tags:
                 continue
             return i.name[1:]

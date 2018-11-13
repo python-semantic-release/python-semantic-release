@@ -36,7 +36,7 @@ setup(
     author_email='me@rolflekang.com',
     description='Automatic semantic versioning for python projects',
     long_description=_read_long_description(),
-    packages=find_packages(exclude='tests'),
+    packages=find_packages(exclude=('tests', )),
     license='MIT',
     install_requires=requirements,
     entry_points='''
