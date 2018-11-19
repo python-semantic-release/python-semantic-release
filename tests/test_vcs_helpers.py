@@ -6,7 +6,7 @@ from semantic_release.vcs_helpers import (checkout, commit_new_version, get_comm
                                           get_current_head_hash, get_repository_owner_and_name,
                                           push_new_version, tag_new_version)
 
-from tests import mock
+from . import mock
 
 
 @pytest.fixture
