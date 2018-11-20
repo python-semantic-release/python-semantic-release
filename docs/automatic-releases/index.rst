@@ -55,7 +55,7 @@ Publish with CI
 ~~~~~~~~~~~~~~~
 Add ``python setup.py publish`` or ``semantic-release publish`` as an after success task on your
 preferred Continuous Integration service. Ensure that you have configured the CI so that it can
-upload to pypi and push to git and it should be ready to role.
+upload to pypi and push to git and it should be ready to roll.
 
 Configuring pypi upload
 ^^^^^^^^^^^^^^^^^^^^^^^
