@@ -1,5 +1,9 @@
+"""Commit parser helpers
+"""
+from typing import Tuple
 
-def parse_text_block(text):
+
+def parse_text_block(text: str) -> Tuple[str, str]:
     """
     This will take a text block and return a tuple with body and footer,
     where footer is defined as the last paragraph.

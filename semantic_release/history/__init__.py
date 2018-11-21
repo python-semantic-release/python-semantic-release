@@ -1,16 +1,18 @@
+"""History
+"""
 import re
-
+from typing import Optional
 import semver
 
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
-
+from ..errors import ImproperConfigurationError
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 
 
-def get_current_version_by_tag():
+def get_current_version_by_tag() -> str:
     """
     Finds the current version of the package in the current working directory.
     Check tags rather than config file. return 0.0.0 if fails
@@ -20,29 +22,42 @@ def get_current_version_by_tag():
     version = get_last_version()
     if version:
         return version
-    else:
-        return '0.0.0'
+    return '0.0.0'
 
 
-def get_current_version_by_config_file():
+def get_current_version_by_config_file() -> str:
+    """
+    Get current version from the version variable defined in the configuration
+
+    :return: A string with the current version number
+    :raises ImproperConfigurationError: if version variable cannot be parsed
+    """
     filename, variable = config.get('semantic_release',
                                     'version_variable').split(':')
     variable = variable.strip()
     with open(filename, 'r') as fd:
-        return re.search(
+        parts = re.search(
             r'^{0}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(variable),
             fd.read(),
             re.MULTILINE
-        ).group(1)
+        )
+        if not parts:
+            raise ImproperConfigurationError
+        return parts.group(1)
 
 
-def get_current_version():
+def get_current_version() -> str:
+    """
+    Get current version from tag or version variable, depending on configuration
+
+    :return: A string with the current version number
+    """
     if config.get('semantic_release', 'version_source') == 'tag':
         return get_current_version_by_tag()
     return get_current_version_by_config_file()
 
 
-def get_new_version(current_version, level_bump):
+def get_new_version(current_version: str, level_bump: str) -> str:
     """
     Calculates the next version based on the given bump level with semver.
 
@@ -56,11 +71,12 @@ def get_new_version(current_version, level_bump):
     return getattr(semver, 'bump_{0}'.format(level_bump))(current_version)
 
 
-def get_previous_version(version):
+def get_previous_version(version: str) -> Optional[str]:
     """
     Returns the version prior to the given version.
 
     :param version: A string with the version number.
+    :return: A string with the previous version number
     """
     found_version = False
     for commit_hash, commit_message in get_commit_log():
@@ -76,7 +92,7 @@ def get_previous_version(version):
     return get_last_version([version, 'v{}'.format(version)])
 
 
-def set_new_version(new_version):
+def set_new_version(new_version: str) -> bool:
     """
     Replaces the version number in the correct place and writes the changed file to disk.
 

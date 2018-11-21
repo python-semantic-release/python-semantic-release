@@ -1,4 +1,7 @@
+"""Parser tag
+"""
 import re
+from typing import Optional, Tuple
 
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config
@@ -11,14 +14,14 @@ re_parser = re.compile(
 )
 
 
-def parse_commit_message(message):
+def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[str, str, str]]:
     """
     Parses a commit message according to the 1.0 version of python-semantic-release. It expects
     a tag of some sort in the commit message and will use the rest of the first line as changelog
     content.
 
     :param message: A string of a commit message.
-    :raises semantic_release.UnknownCommitMessageStyle: If it does not recognise the commit style
+    :raises UnknownCommitMessageStyleError: If it does not recognise the commit style
     :return: A tuple of (level to bump, type of change, scope of change, a tuple with descriptions)
     """
 

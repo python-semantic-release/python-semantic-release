@@ -1,3 +1,5 @@
+"""Semantic Release
+"""
 __version__ = '3.11.2'
 
 
@@ -5,7 +7,7 @@ from .errors import (SemanticReleaseBaseError, ImproperConfigurationError,  # no
                      UnknownCommitMessageStyleError)  # noqa
 
 
-def setup_hook(argv):
+def setup_hook(argv: list):
     """
     A hook to be used in setup.py to enable `python setup.py publish`.
 

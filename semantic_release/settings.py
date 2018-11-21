@@ -1,6 +1,9 @@
+"""Settings
+"""
 import importlib
 import os
 from os import getcwd
+from typing import Callable
 
 from .errors import ImproperConfigurationError
 
@@ -22,7 +25,12 @@ def _config():
 config = _config()
 
 
-def current_commit_parser():
+def current_commit_parser() -> Callable:
+    """Current commit parser
+
+    :raises ImproperConfigurationError: if ImportError or AttributeError is raised
+    """
+
     try:
         parts = config.get('semantic_release', 'commit_parser').split('.')
         module = '.'.join(parts[:-1])

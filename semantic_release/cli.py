@@ -1,3 +1,5 @@
+"""CLI
+"""
 import os
 import sys
 
@@ -15,7 +17,7 @@ from .settings import config
 from .vcs_helpers import (checkout, commit_new_version, get_current_head_hash,
                           get_repository_owner_and_name, push_new_version, tag_new_version)
 
-_common_options = [
+COMMON_OPTIONS = [
     click.option('--major', 'force_level', flag_value='major', help='Force major version.'),
     click.option('--minor', 'force_level', flag_value='minor', help='Force minor version.'),
     click.option('--patch', 'force_level', flag_value='patch', help='Force patch version.'),
@@ -28,9 +30,9 @@ _common_options = [
 
 def common_options(func):
     """
-    Decorator that adds all the options in _common_options
+    Decorator that adds all the options in COMMON_OPTIONS
     """
-    for option in reversed(_common_options):
+    for option in reversed(COMMON_OPTIONS):
         func = option(func)
     return func
 
@@ -85,6 +87,7 @@ def version(**kwargs):
 def changelog(**kwargs):
     """
     Generates the changelog since the last release.
+    :raises ImproperConfigurationError: if there is no current version
     """
     current_version = get_current_version()
     if current_version is None:
@@ -95,7 +98,7 @@ def changelog(**kwargs):
         )
     previous_version = get_previous_version(current_version)
 
-    log = generate_changelog(previous_version,  current_version)
+    log = generate_changelog(previous_version, current_version)
     for section in CHANGELOG_SECTIONS:
         if not log[section]:
             continue
@@ -216,5 +219,5 @@ if __name__ == '__main__':
     # This will have to be removed if there are ever global options
     # that are not valid for a subcommand.
     #
-    args = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith('--') else -1)
-    main(args=args)
+    ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith('--') else -1)
+    main(args=ARGS)
