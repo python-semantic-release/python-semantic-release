@@ -1,14 +1,17 @@
+"""VCS Helpers
+"""
 import re
+from typing import Optional, Tuple
 
 from git import GitCommandError, NoSuchPathError, Repo, TagObject
 
-from .errors import GitError
+from .errors import GitError, HvcsRepoParseError
 from .settings import config
 
 try:
-    repo = Repo('.git', search_parent_directories=True)
+    REPO = Repo('.git', search_parent_directories=True)
 except NoSuchPathError:
-    repo = None
+    REPO = None
 
 
 def get_commit_log(from_rev=None):
@@ -19,11 +22,11 @@ def get_commit_log(from_rev=None):
     rev = None
     if from_rev:
         rev = '...{from_rev}'.format(from_rev=from_rev)
-    for commit in repo.iter_commits(rev):
+    for commit in REPO.iter_commits(rev):
         yield (commit.hexsha, commit.message)
 
 
-def get_last_version(skip_tags=None):
+def get_last_version(skip_tags=None) -> Optional[str]:
     """
     return last version from repo tags
 
@@ -36,43 +39,50 @@ def get_last_version(skip_tags=None):
             return x.tag.tagged_date
         return x.commit.committed_date
 
-    for i in sorted(repo.tags, reverse=True, key=version_finder):
+    for i in sorted(REPO.tags, reverse=True, key=version_finder):
         if re.match(r'v\d+\.\d+\.\d+', i.name):
             if i.name in skip_tags:
                 continue
             return i.name[1:]
 
 
-def get_version_from_tag(tag_name):
-    for i in repo.tags:
+def get_version_from_tag(tag_name: str) -> str:
+    """Get version from tag
+
+    :param tag_name: Name of the git tag (i.e. 'v1.0.0')
+    :return: sha1 hash of the commit
+    """
+    for i in REPO.tags:
         if i.name == tag_name:
             return i.commit.hexsha
 
 
-def get_repository_owner_and_name():
+def get_repository_owner_and_name() -> Tuple[str, str]:
     """
     Checks the origin remote to get the owner and name of the remote repository.
 
     :return: a tuple of the owner and name
+    :raises HvcsRepoParseError: if no regex matches are found in the repo url
     """
 
-    url = repo.remote('origin').url
+    url = REPO.remote('origin').url
     parts = re.search(r'([^/:]+)/([^/]+).git$', url)
-
+    if not parts:
+        raise HvcsRepoParseError
     return parts.group(1), parts.group(2)
 
 
-def get_current_head_hash():
+def get_current_head_hash() -> str:
     """
     Gets the commit hash of the current HEAD.
 
     :return: a string with the commit hash.
     """
 
-    return repo.head.commit.name_rev.split(' ')[0]
+    return REPO.head.commit.name_rev.split(' ')[0]
 
 
-def commit_new_version(version):
+def commit_new_version(version: str):
     """
     Commits the file containing the version number variable with the version number as the commit
     message.
@@ -82,26 +92,27 @@ def commit_new_version(version):
 
     commit_message = config.get('semantic_release', 'commit_message')
     message = '{0}\n\n{1}'.format(version, commit_message)
-    repo.git.add(config.get('semantic_release', 'version_variable').split(':')[0])
-    return repo.git.commit(m=message, author="semantic-release <semantic-release>")
+    REPO.git.add(config.get('semantic_release', 'version_variable').split(':')[0])
+    return REPO.git.commit(m=message, author="semantic-release <semantic-release>")
 
 
-def tag_new_version(version):
+def tag_new_version(version: str):
     """
     Creates a new tag with the version number prefixed with v.
 
     :param version: The version number used in the tag as a string.
     """
 
-    return repo.git.tag('-a', 'v{0}'.format(version), m='v{0}'.format(version))
+    return REPO.git.tag('-a', 'v{0}'.format(version), m='v{0}'.format(version))
 
 
-def push_new_version(gh_token=None, owner=None, name=None):
+def push_new_version(gh_token: str = None, owner: str = None, name: str = None):
     """
     Runs git push and git push --tags
     :param gh_token: Github token used to push.
     :param owner: Organisation or user that owns the repository.
     :param name: Name of repository.
+    :raises GitError: if GitCommandError is raised
     """
 
     server = 'origin'
@@ -112,8 +123,8 @@ def push_new_version(gh_token=None, owner=None, name=None):
         )
 
     try:
-        repo.git.push(server, 'master')
-        repo.git.push('--tags', server, 'master')
+        REPO.git.push(server, 'master')
+        REPO.git.push('--tags', server, 'master')
     except GitCommandError as error:
         message = str(error)
         if gh_token:
@@ -121,11 +132,11 @@ def push_new_version(gh_token=None, owner=None, name=None):
         raise GitError(message)
 
 
-def checkout(branch):
+def checkout(branch: str):
     """
     Checkout the given branch in the local repository.
 
     :param branch: The branch to checkout.
     """
 
-    return repo.git.checkout(branch)
+    return REPO.git.checkout(branch)

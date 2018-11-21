@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Custom Errors
+"""
 
 
 class SemanticReleaseBaseError(Exception):
@@ -18,4 +20,8 @@ class GitError(SemanticReleaseBaseError):
 
 
 class CiVerificationError(SemanticReleaseBaseError):
+    pass
+
+
+class HvcsRepoParseError(SemanticReleaseBaseError):
     pass

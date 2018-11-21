@@ -1,4 +1,7 @@
+"""Logs
+"""
 import re
+from typing import Optional
 
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config, current_commit_parser
@@ -15,7 +18,7 @@ CHANGELOG_SECTIONS = ['feature', 'fix', 'breaking', 'documentation']
 re_breaking = re.compile('BREAKING CHANGE: (.*)')
 
 
-def evaluate_version_bump(current_version, force=None):
+def evaluate_version_bump(current_version: str, force: str = None) -> Optional[str]:
     """
     Reads git log since last release to find out if should be a major, minor or patch release.
 
@@ -53,7 +56,7 @@ def evaluate_version_bump(current_version, force=None):
     return bump
 
 
-def generate_changelog(from_version, to_version=None):
+def generate_changelog(from_version: str, to_version: str = None) -> dict:
     """
     Generates a changelog for the given version.
 
@@ -63,8 +66,8 @@ def generate_changelog(from_version, to_version=None):
     :return: a dict with different changelog sections
     """
 
-    changes = {'feature': [], 'fix': [],
-               'documentation': [], 'refactor': [], 'breaking': []}
+    changes: dict = {'feature': [], 'fix': [],
+                     'documentation': [], 'refactor': [], 'breaking': []}
 
     found_the_release = to_version is None
 
@@ -90,12 +93,14 @@ def generate_changelog(from_version, to_version=None):
             changes[message[1]].append((_hash, message[3][0]))
 
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
-                changes['breaking'].append(
-                    re_breaking.match(message[3][1]).group(1))
+                parts = re_breaking.match(message[3][1])
+                if parts:
+                    changes['breaking'].append(parts.group(1))
 
             if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
-                changes['breaking'].append(
-                    re_breaking.match(message[3][2]).group(1))
+                parts = re_breaking.match(message[3][2])
+                if parts:
+                    changes['breaking'].append(parts.group(1))
 
         except UnknownCommitMessageStyleError:
             pass
@@ -103,7 +108,7 @@ def generate_changelog(from_version, to_version=None):
     return changes
 
 
-def markdown_changelog(version, changelog, header=False):
+def markdown_changelog(version: str, changelog: dict, header: bool = False) -> str:
     """
     Generates a markdown version of the changelog. Takes a parsed changelog dict from
     generate_changelog.

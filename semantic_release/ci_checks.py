@@ -1,14 +1,18 @@
+"""CI Checks
+"""
 import os
+from typing import Callable
 
 from semantic_release.errors import CiVerificationError
 
 
-def checker(func):
+def checker(func: Callable) -> Callable:
     """
     A decorator that will convert AssertionErrors into
     CiVerificationError.
 
     :param func: A function that will raise AssertionError
+    :return: The given function wrapped to raise a CiVerificationError on AssertionError
     """
 
     def func_wrapper(*args, **kwargs):
@@ -24,7 +28,7 @@ def checker(func):
 
 
 @checker
-def travis(branch):
+def travis(branch: str):
     """
     Performs necessary checks to ensure that the travis build is one
     that should create releases.
@@ -36,7 +40,7 @@ def travis(branch):
 
 
 @checker
-def semaphore(branch):
+def semaphore(branch: str):
     """
     Performs necessary checks to ensure that the semaphore build is successful,
     on the correct branch and not a pull-request.
@@ -49,7 +53,7 @@ def semaphore(branch):
 
 
 @checker
-def frigg(branch):
+def frigg(branch: str):
     """
     Performs necessary checks to ensure that the frigg build is one
     that should create releases.
@@ -61,7 +65,7 @@ def frigg(branch):
 
 
 @checker
-def circle(branch):
+def circle(branch: str):
     """
     Performs necessary checks to ensure that the circle build is one
     that should create releases.
@@ -73,7 +77,7 @@ def circle(branch):
 
 
 @checker
-def gitlab(branch):
+def gitlab(branch: str):
     """
     Performs necessary checks to ensure that the gitlab build is one
     that should create releases.
@@ -84,7 +88,7 @@ def gitlab(branch):
     # TODO - don't think there's a merge request indicator variable
 
 
-def check(branch='master'):
+def check(branch: str = 'master'):
     """
     Detects the current CI environment, if any, and performs necessary
     environment checks.
@@ -93,12 +97,12 @@ def check(branch='master'):
     """
 
     if os.environ.get('TRAVIS') == 'true':
-        return travis(branch)
+        travis(branch)
     elif os.environ.get('SEMAPHORE') == 'true':
-        return semaphore(branch)
+        semaphore(branch)
     elif os.environ.get('FRIGG') == 'true':
-        return frigg(branch)
+        frigg(branch)
     elif os.environ.get('CIRCLECI') == 'true':
-        return circle(branch)
+        circle(branch)
     elif os.environ.get('GITLAB_CI') == 'true':
-        return gitlab(branch)
+        gitlab(branch)
