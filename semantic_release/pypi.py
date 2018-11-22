@@ -16,6 +16,8 @@ def upload_to_pypi(
     :param dists: The dists string passed to setup.py. Default: 'bdist_wheel'
     :param username: PyPI account username string
     :param password: PyPI account password string
+    :param skip_existing: Continue uploading files if one already exists. (Only valid when
+         uploading to PyPI. Other implementations may not support this.)
     """
     if username is None or password is None:
         raise ImproperConfigurationError('Missing credentials for uploading')
