@@ -16,5 +16,12 @@ def upload_to_pypi(
     :param password: PyPI account password string
     """
     run('python setup.py {}'.format(dists))
-    run('twine upload -u {} -p {} {}'.format(username, password, '--skip-existing' if skip_existing else ''))
+    run(
+        'twine upload -u {} -p {} {} {}'.format(
+            username,
+            password,
+            '--skip-existing' if skip_existing else '',
+            'dist/*'
+        )
+    )
     run('rm -rf build dist')
