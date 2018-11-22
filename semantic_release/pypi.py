@@ -7,6 +7,7 @@ def upload_to_pypi(
         dists: str = 'sdist bdist_wheel',
         username: str = None,
         password: str = None,
+        skip_existing: bool = False
 ):
     """Creates the wheel and uploads to pypi with twine.
 
@@ -15,5 +16,5 @@ def upload_to_pypi(
     :param password: PyPI account password string
     """
     run('python setup.py {}'.format(dists))
-    run('twine upload -u {} -p {}'.format(username, password))
+    run('twine upload -u {} -p {} {}'.format(username, password, '--skip-existing' if skip_existing else ''))
     run('rm -rf build dist')
