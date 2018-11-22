@@ -44,9 +44,10 @@ def get_last_version(skip_tags=None) -> Optional[str]:
             if i.name in skip_tags:
                 continue
             return i.name[1:]
+    return None
 
 
-def get_version_from_tag(tag_name: str) -> str:
+def get_version_from_tag(tag_name: str) -> Optional[str]:
     """Get version from tag
 
     :param tag_name: Name of the git tag (i.e. 'v1.0.0')
@@ -55,6 +56,7 @@ def get_version_from_tag(tag_name: str) -> str:
     for i in REPO.tags:
         if i.name == tag_name:
             return i.commit.hexsha
+    return None
 
 
 def get_repository_owner_and_name() -> Tuple[str, str]:

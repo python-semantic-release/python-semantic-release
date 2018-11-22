@@ -18,6 +18,23 @@ jobs:
            - .tox
       - run: tox -e flake8
 
+  mypy:
+    docker:
+      - image: circleci/python:3.6
+
+    steps:
+      - checkout
+      - run: sudo pip install tox
+      - restore_cache:
+         keys:
+           - v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
+      - run: tox --notest
+      - save_cache:
+         key: v1-tox-{{ checksum "tox.ini" }}-{{ checksum "requirements/base.txt" }}-{{ checksum "requirements/dev.txt" }}
+         paths:
+           - .tox
+      - run: tox -e mypy
+
   isort:
     docker:
       - image: circleci/python:3.6
@@ -59,5 +76,6 @@ workflows:
   build:
     jobs:
       - flake8
+      - mypy
       - isort
       - tests

@@ -1,7 +1,7 @@
 """HVCS
 """
 import os
-from typing import Callable, Optional, Tuple
+from typing import Optional, Tuple
 
 import requests
 
@@ -9,13 +9,29 @@ from .errors import ImproperConfigurationError
 from .settings import config
 
 
-class Github(object):
+class Base(object):
+
+    @staticmethod
+    def token() -> Optional[str]:
+        raise NotImplementedError
+
+    @staticmethod
+    def check_build_status(owner: str, repo: str, ref: str) -> bool:
+        raise NotImplementedError
+
+    @classmethod
+    def post_release_changelog(
+            cls, owner: str, repo: str, version: str, changelog: str) -> Tuple[bool, dict]:
+        raise NotImplementedError
+
+
+class Github(Base):
     """Github helper class
     """
     DOMAIN = 'https://api.github.com'
 
-    @property
-    def token(self) -> Optional[str]:
+    @staticmethod
+    def token() -> Optional[str]:
         """Github token property
 
         :return: The Github token environment variable (GH_TOKEN) value
@@ -57,7 +73,7 @@ class Github(object):
                 domain=Github.DOMAIN,
                 owner=owner,
                 repo=repo,
-                token=Github().token
+                token=Github.token()
             ),
             json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
         )
@@ -70,7 +86,7 @@ class Github(object):
                     domain=Github.DOMAIN,
                     owner=owner,
                     repo=repo,
-                    token=Github().token,
+                    token=Github().token(),
                     tag=tag
                 ),
             )
@@ -81,7 +97,7 @@ class Github(object):
                     domain=Github.DOMAIN,
                     owner=owner,
                     repo=repo,
-                    token=Github().token,
+                    token=Github().token(),
                     id=release_id
                 ),
                 json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
@@ -90,7 +106,7 @@ class Github(object):
         return status, payload
 
 
-def get_hvcs() -> Callable:
+def get_hvcs() -> Base:
     """Get HVCS helper class
 
     :raises ImproperConfigurationError: if the hvcs option provided is not valid
@@ -133,4 +149,4 @@ def check_token() -> bool:
 
     :return: A boolean telling if there is a token.
     """
-    return get_hvcs()().token is not None
+    return get_hvcs().token() is not None

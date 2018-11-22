@@ -86,8 +86,8 @@ class GithubReleaseTests(TestCase):
     get_url = 'https://api.github.com/repos/relekang/rmoq/releases/tags/v1.0.0'
 
     @responses.activate
-    @mock.patch('semantic_release.hvcs.Github.token', 'super-token')
-    def test_should_post_changelog(self):
+    @mock.patch('semantic_release.hvcs.Github.token', return_value='super-token')
+    def test_should_post_changelog(self, mock_token):
         def request_callback(request):
             payload = json.loads(request.body)
             self.assertEqual(payload['tag_name'], 'v1.0.0')
@@ -136,4 +136,4 @@ class GithubReleaseTests(TestCase):
 
 def test_github_token():
     with mock.patch('os.environ', {'GH_TOKEN': 'token'}):
-        assert(Github().token == 'token')
+        assert(Github.token() == 'token')
