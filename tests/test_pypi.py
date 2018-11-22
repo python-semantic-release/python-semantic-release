@@ -16,7 +16,6 @@ class PypiTests(TestCase):
         )
         mock_upload.assert_called_once_with(
             dists=['dist/*'],
-            repository='pypi',
             sign=False,
             identity=None,
             username=None,

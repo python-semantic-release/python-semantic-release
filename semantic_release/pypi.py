@@ -21,7 +21,6 @@ def upload_to_pypi(
     run('python setup.py {}'.format(dists))
     twine_upload.upload(
         dists=['dist/*'],
-        repository='pypi',
         sign=False,
         identity=None,
         username=username,
