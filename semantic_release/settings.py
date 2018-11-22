@@ -1,16 +1,13 @@
 """Settings
 """
+
+import configparser
 import importlib
 import os
 from os import getcwd
 from typing import Callable
 
 from .errors import ImproperConfigurationError
-
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
 
 
 def _config():

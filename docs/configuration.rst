@@ -26,3 +26,6 @@ All configuration described here belongs in ``setup.cfg`` in a section:
     If set to false the pypi uploading will be disabled. This can be useful to create
     tag releases for non-pypi projects.
 
+``commit_message``
+    Long description to append to the version number. This can be useful to skip
+    pipelines in your CI tool

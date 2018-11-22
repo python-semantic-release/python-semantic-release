@@ -76,7 +76,19 @@ def circle(branch: str):
     assert not os.environ.get('CI_PULL_REQUEST')
 
 
-def check(branch: str = 'master'):
+@checker
+def gitlab(branch: str):
+    """
+    Performs necessary checks to ensure that the gitlab build is one
+    that should create releases.
+
+    :param branch: The branch the environment should be running against.
+    """
+    assert os.environ.get('CI_COMMIT_REF_NAME') == branch
+    # TODO - don't think there's a merge request indicator variable
+
+
+def check(branch: str='master'):
     """
     Detects the current CI environment, if any, and performs necessary
     environment checks.
@@ -92,3 +104,5 @@ def check(branch: str = 'master'):
         frigg(branch)
     elif os.environ.get('CIRCLECI') == 'true':
         circle(branch)
+    elif os.environ.get('GITLAB_CI') == 'true':
+        gitlab(branch)
