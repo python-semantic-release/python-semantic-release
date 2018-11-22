@@ -1,6 +1,7 @@
 """PyPI
 """
 from invoke import run
+from twine import settings
 from twine.commands import upload as twine_upload
 
 
@@ -20,17 +21,11 @@ def upload_to_pypi(
     """
     run('python setup.py {}'.format(dists))
     twine_upload.upload(
-        dists=['dist/*'],
-        sign=False,
-        identity=None,
-        username=username,
-        password=password,
-        comment=None,
-        sign_with='gpg',
-        config_file='~/.pypirc',
-        skip_existing=skip_existing,
-        cert=None,
-        client_cert=None,
-        repository_url=None
+        settings.Settings(
+            username=username,
+            password=password,
+            skip_existing=skip_existing,
+        ),
+        ['dist/*'],
     )
     run('rm -rf build dist')
