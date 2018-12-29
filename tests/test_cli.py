@@ -53,6 +53,7 @@ def test_version_by_tag_should_call_correct_functions(mocker, runner):
 
     mocker.patch('semantic_release.cli.config.get', wrapped_config_get)
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: False)
+    mock_set_new_version = mocker.patch('semantic_release.cli.set_new_version')
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
     mock_new_version = mocker.patch('semantic_release.cli.get_new_version', return_value='2.0.0')
     mock_evaluate_bump = mocker.patch('semantic_release.cli.evaluate_version_bump',
@@ -63,6 +64,7 @@ def test_version_by_tag_should_call_correct_functions(mocker, runner):
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with('1.2.3', None)
     mock_new_version.assert_called_once_with('1.2.3', 'major')
+    mock_set_new_version.assert_called_once_with('2.0.0')
     mock_tag_new_version.assert_called_once_with('2.0.0')
     assert result.exit_code == 0
 
