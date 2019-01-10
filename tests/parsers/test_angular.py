@@ -7,7 +7,6 @@ text = 'This is an long explanatory part of a commit message. It should give ' \
        'some insight to the fix this commit adds to the codebase.'
 footer = 'Closes #400'
 
-SPECIAL_CHARS = ('12', 'feat(x_y, y.z, & z-again(prime): the reckoning): Add support for chars: !@#$%^&*()_+')
 
 def test_parser_raises_unknown_message_style():
     pytest.raises(UnknownCommitMessageStyleError, angular_parser, '')
