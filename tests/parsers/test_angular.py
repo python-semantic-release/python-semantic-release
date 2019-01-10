@@ -7,9 +7,12 @@ text = 'This is an long explanatory part of a commit message. It should give ' \
        'some insight to the fix this commit adds to the codebase.'
 footer = 'Closes #400'
 
+SPECIAL_CHARS = ('12', 'feat(x_y, y.z, & z-again(prime): the reckoning): Add support for chars: !@#$%^&*()_+')
 
 def test_parser_raises_unknown_message_style():
     pytest.raises(UnknownCommitMessageStyleError, angular_parser, '')
+    pytest.raises(UnknownCommitMessageStyleError, angular_parser,
+                  'feat(parser\n): Add new parser pattern')
 
 
 def test_parser_return_correct_bump_level():
@@ -43,6 +46,11 @@ def test_parser_return_scope_from_commit_message():
     assert angular_parser('chore(a part): ...')[2] == 'a part'
     assert angular_parser('chore(a_part): ...')[2] == 'a_part'
     assert angular_parser('chore(a-part): ...')[2] == 'a-part'
+    assert angular_parser('chore(a.part): ...')[2] == 'a.part'
+    assert angular_parser('chore(a+part): ...')[2] == 'a+part'
+    assert angular_parser('chore(a&part): ...')[2] == 'a&part'
+    assert angular_parser('chore((part)): ...')[2] == '(part)'
+    assert angular_parser('chore((p):rt): ...')[2] == '(p):rt'
 
 
 def test_parser_return_subject_from_commit_message():
