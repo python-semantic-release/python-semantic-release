@@ -6,14 +6,6 @@ from typing import Tuple
 from ..errors import UnknownCommitMessageStyleError
 from .parser_helpers import parse_text_block
 
-re_parser = re.compile(
-    r'(?P<type>feat|fix|docs|style|refactor|test|chore)'
-    r'(?:\((?P<scope>[\w _\-]+)\))?: '
-    r'(?P<subject>[^\n]+)'
-    r'(:?\n\n(?P<text>.+))?',
-    re.DOTALL
-)
-
 TYPES = {
     'feat': 'feature',
     'fix': 'fix',
@@ -23,6 +15,14 @@ TYPES = {
     'refactor': 'refactor',
     'chore': 'chore',
 }
+
+re_parser = re.compile(
+    r'(?P<type>' + '|'.join(TYPES.keys()) + ')'
+    r'(?:\((?P<scope>[^\n]+)\))?: '
+    r'(?P<subject>[^\n]+)'
+    r'(:?\n\n(?P<text>.+))?',
+    re.DOTALL
+)
 
 
 def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, str]]:
