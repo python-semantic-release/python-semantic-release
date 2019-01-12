@@ -19,7 +19,7 @@ def upload_to_pypi(
     :param skip_existing: Continue uploading files if one already exists. (Only valid when
          uploading to PyPI. Other implementations may not support this.)
     """
-    if username is None or password is None:
+    if username is None or password is None or username == "" or password == "":
         raise ImproperConfigurationError('Missing credentials for uploading')
     run('python setup.py {}'.format(dists))
     run(
