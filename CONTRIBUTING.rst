@@ -9,11 +9,9 @@ If you want to contribute that is awesome. Remember to be nice to others in issu
 * Follow the import sorting guidelines (run isort).
 * Write tests for the cool things you create or fix.
 
-Unsure about something from that list or anything else? No worries, `open an issue`_ or ask a
-question on `gitter`_ and someone will help you out.
+Unsure about something from that list or anything else? No worries, `open an issue`_.
 
 .. _open an issue: https://github.com/relekang/python-semantic-release/issues/new
-.. _gitter: https://gitter.im/relekang/python-semantic-release
 
 Commit messages
 ~~~~~~~~~~~~~~~
