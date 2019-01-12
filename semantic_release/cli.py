@@ -10,7 +10,7 @@ from semantic_release.errors import GitError, ImproperConfigurationError
 
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
-from .history.logs import CHANGELOG_SECTIONS, generate_changelog, markdown_changelog
+from .history.logs import generate_changelog, markdown_changelog
 from .hvcs import check_build_status, check_token, post_changelog
 from .pypi import upload_to_pypi
 from .settings import config
@@ -99,15 +99,7 @@ def changelog(**kwargs):
     previous_version = get_previous_version(current_version)
 
     log = generate_changelog(previous_version, current_version)
-    for section in CHANGELOG_SECTIONS:
-        if not log[section]:
-            continue
-
-        click.echo(section.capitalize())
-        click.echo(''.join(['-' for i in range(len(section))]))
-        for item in log[section]:
-            click.echo(' - {0} ({1})'.format(item[1], item[0]))
-        click.echo('\n')
+    click.echo(markdown_changelog(current_version, log, header=False))
 
     if not kwargs.get('noop') and kwargs.get('post'):
         if check_token():
