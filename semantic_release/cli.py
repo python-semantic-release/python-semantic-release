@@ -181,11 +181,22 @@ def publish(**kwargs):
         click.echo('Version failed, no release will be published.', err=True)
 
 
+def filter_output_for_secrets(message):
+    output = message
+    username = os.environ.get('PYPI_USERNAME')
+    password = os.environ.get('PYPI_PASSWORD')
+    if username != '' and username is not None:
+        output = output.replace(username, '$PYPI_USERNAME')
+    if password != '' and password is not None:
+        output = output.replace(password, '$PYPI_PASSWORD')
+    return output
+
 #
 # Making the CLI commands.
 # We have a level of indirection to the logical commands
 # so we can successfully mock them during testing
 #
+
 
 @click.group()
 @common_options
@@ -196,19 +207,31 @@ def main(**kwargs):
 @main.command(name='publish', help=publish.__doc__)
 @common_options
 def cmd_publish(**kwargs):
-    return publish(**kwargs)
+    try:
+        return publish(**kwargs)
+    except Exception as error:
+        click.echo(click.style(filter_output_for_secrets(str(error)), 'red'), err=True)
+        exit(1)
 
 
 @main.command(name='changelog', help=changelog.__doc__)
 @common_options
 def cmd_changelog(**kwargs):
-    return changelog(**kwargs)
+    try:
+        return changelog(**kwargs)
+    except Exception as error:
+        click.echo(click.style(filter_output_for_secrets(str(error)), 'red'), err=True)
+        exit(1)
 
 
 @main.command(name='version', help=version.__doc__)
 @common_options
 def cmd_version(**kwargs):
-    return version(**kwargs)
+    try:
+        return version(**kwargs)
+    except Exception as error:
+        click.echo(click.style(filter_output_for_secrets(str(error)), 'red'), err=True)
+        exit(1)
 
 
 if __name__ == '__main__':
