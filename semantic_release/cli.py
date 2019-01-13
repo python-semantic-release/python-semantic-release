@@ -47,7 +47,13 @@ def version(**kwargs):
         click.echo('Retrying publication of the same version...')
     else:
         click.echo('Creating new version..')
-    current_version = get_current_version()
+
+    try:
+        current_version = get_current_version()
+    except GitError as e:
+        click.echo(click.style(str(e), 'red'), err=True)
+        return False
+
     click.echo('Current version: {0}'.format(current_version))
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)

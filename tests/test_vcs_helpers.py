@@ -11,7 +11,7 @@ from . import mock
 
 @pytest.fixture
 def mock_git(mocker):
-    return mocker.patch('semantic_release.vcs_helpers.REPO.git')
+    return mocker.patch('semantic_release.vcs_helpers.repo.git')
 
 
 def test_first_commit_is_not_initial_commit():
