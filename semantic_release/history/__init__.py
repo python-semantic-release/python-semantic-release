@@ -104,12 +104,13 @@ def set_new_version(new_version: str) -> bool:
     variable = variable.strip()
     with open(filename, mode='r') as fr:
         content = fr.read()
-
+        
     content = re.sub(
-        r'{0} ?= ?["\']\d+\.\d+(?:\.\d+)?["\']'.format(variable),
-        '{0} = \'{1}\''.format(variable, new_version),
-        content
+                r'({0} ?= ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable), 
+                r'\g<1>{0}\g<2>'.format(new_version)
+                , content
     )
+
 
     with open(filename, mode='w') as fw:
         fw.write(content)
