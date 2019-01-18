@@ -80,8 +80,8 @@ class EvaluateVersionBumpTest(TestCase):
             self.assertIsNone(evaluate_version_bump('1.1.0'))
 
     def test_version_bump_maintains_formatting(self):
-        self.assertEqual(replace_version_string('ver="1.2.3"','ver','1.2.4'), 'ver="1.2.4"')
-        self.assertEqual(replace_version_string("version = '1.2.3'",'version','1.2.4'), "version = '1.2.4'")
+        self.assertEqual(replace_version_string('ver="1.2.3"', 'ver', '1.2.4'), 'ver="1.2.4"')
+        self.assertEqual(replace_version_string("version = '1.2.3'", 'version', '1.2.4'), "version = '1.2.4'")
 
 
 class GenerateChangelogTests(TestCase):
