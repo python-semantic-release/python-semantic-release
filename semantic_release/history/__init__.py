@@ -91,6 +91,20 @@ def get_previous_version(version: str) -> Optional[str]:
 
     return get_last_version([version, 'v{}'.format(version)])
 
+def replace_version_string(content, variable, new_version):
+    """
+    Given the content of a file, finds the version string and updates it.
+
+    :param content: The file contents
+    :param variable: The version variable name as a string
+    :param new_version: The new version number as a string
+    :return: A string with the updated version number
+    """
+    return re.sub(
+        r'({0} ?= ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable),
+        r'\g<1>{0}\g<2>'.format(new_version),
+        content
+    )
 
 def set_new_version(new_version: str) -> bool:
     """
@@ -105,11 +119,7 @@ def set_new_version(new_version: str) -> bool:
     with open(filename, mode='r') as fr:
         content = fr.read()
 
-    content = re.sub(
-        r'({0} ?= ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable),
-        r'\g<1>{0}\g<2>'.format(new_version),
-        content
-    )
+    content = replace_version_string(content, variable, new_version)
 
     with open(filename, mode='w') as fw:
         fw.write(content)
