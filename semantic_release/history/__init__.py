@@ -91,6 +91,7 @@ def get_previous_version(version: str) -> Optional[str]:
 
     return get_last_version([version, 'v{}'.format(version)])
 
+
 def replace_version_string(content, variable, new_version):
     """
     Given the content of a file, finds the version string and updates it.
@@ -105,6 +106,7 @@ def replace_version_string(content, variable, new_version):
         r'\g<1>{0}\g<2>'.format(new_version),
         content
     )
+
 
 def set_new_version(new_version: str) -> bool:
     """
