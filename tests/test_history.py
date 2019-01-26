@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import semantic_release
 from semantic_release.history import (evaluate_version_bump, get_current_version, get_new_version,
-                                      get_previous_version)
+                                      get_previous_version, replace_version_string)
 from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
@@ -78,6 +78,13 @@ class EvaluateVersionBumpTest(TestCase):
 
         with mock.patch('semantic_release.history.config.getboolean', lambda *x: False):
             self.assertIsNone(evaluate_version_bump('1.1.0'))
+
+    def test_version_bump_maintains_formatting(self):
+        self.assertEqual(replace_version_string('ver="1.2.3"', 'ver', '1.2.4'), 'ver="1.2.4"')
+        self.assertEqual(replace_version_string(
+                        "version = '1.2.3'", 'version', '1.2.4'),
+                        "version = '1.2.4'"
+        )
 
 
 class GenerateChangelogTests(TestCase):
