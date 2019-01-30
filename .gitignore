@@ -29,6 +29,9 @@ var/
 *.manifest
 *.spec
 
+# PyCharm
+.idea
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

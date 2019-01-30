@@ -70,6 +70,19 @@ in `the configuration
 documentation <http://python-semantic-release.readthedocs.org/en/latest/configuration.html>`__.
 
 
+
+Development
+~~~~~~~~~~~
+
+Install this module and the development dependencies:
+
+::
+
+    python setup.py develop
+    pip install -r requirements/dev.txt
+
+
+
 .. |Build status| image:: https://circleci.com/gh/relekang/python-semantic-release.svg?style=svg
     :target: https://circleci.com/gh/relekang/python-semantic-release
 .. |PyPI version| image:: https://badge.fury.io/py/python-semantic-release.svg
