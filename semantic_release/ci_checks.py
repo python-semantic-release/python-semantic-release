@@ -88,6 +88,18 @@ def gitlab(branch: str):
     # TODO - don't think there's a merge request indicator variable
 
 
+@checker
+def bitbucket(branch: str):
+    """
+    Performs necessary checks to ensure that the bitbucket build is one
+    that should create releases.
+
+    :param branch: The branch the environment should be running against.
+    """
+    assert os.environ.get('BITBUCKET_BRANCH') == branch
+    assert not os.environ.get('BITBUCKET_PR_ID')
+
+
 def check(branch: str = 'master'):
     """
     Detects the current CI environment, if any, and performs necessary
@@ -95,7 +107,6 @@ def check(branch: str = 'master'):
 
     :param branch: The branch that should be the current branch.
     """
-
     if os.environ.get('TRAVIS') == 'true':
         travis(branch)
     elif os.environ.get('SEMAPHORE') == 'true':
@@ -106,3 +117,5 @@ def check(branch: str = 'master'):
         circle(branch)
     elif os.environ.get('GITLAB_CI') == 'true':
         gitlab(branch)
+    elif 'BITBUCKET_BUILD_NUMBER' in os.environ:
+        bitbucket(branch)
