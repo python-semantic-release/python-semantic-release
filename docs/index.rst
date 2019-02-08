@@ -34,6 +34,12 @@ ignored. Running release can be run locally or from a CI service.
       --retry  Retry the same release, do not bump.
       --help   Show this message and exit.
 
+    Commands:
+      changelog  Generates the changelog since the last...
+      publish    Runs the version task before pushing to git...
+      version    Detects the new version according to git log...
+
+
 Documentation Contents:
 =======================
 
@@ -41,6 +47,7 @@ Documentation Contents:
    :maxdepth: 1
 
    Quickstart <../readme>
+   Commands <commands>
    Parsing of commit logs <commit-log-parsing>
    Automatic releases <automatic-releases/index>
    Configuration <configuration>
