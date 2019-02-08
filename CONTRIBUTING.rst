@@ -21,7 +21,7 @@ to adhere to the `angular commit guidelines`_. If you are unsure how to describe
 Just try and ask in your pr, or ask on gitter. If we think it should be something else or there is a
 pull-request without tags we will help out in adding or changing them.
 
-.. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit
+.. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
 
 Releases
 ~~~~~~~~
