@@ -17,7 +17,7 @@ The commit message style is as follows::
     <footer>
 
 More information about the Angular commit message style can be found in the
-`angular contributing guide`_.
+`angular commit guidelines`_.
 
 Writing your own parser
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,4 +40,4 @@ to parse it then it should raise :py:class:`semantic_release.UnknownCommitMessag
 
 The parser can be set with the ``commit_parser`` configuration option. See :ref:`configuration`.
 
-.. _angular contributing guide: https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit
+.. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
