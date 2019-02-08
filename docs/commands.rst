@@ -7,7 +7,12 @@ Commands
 
 changelog
 ^^^^^^^^^
-When executed this command will generate/update ``CHANGELOG.txt``.
+When executed this command will print the changelog to stdout.
+
+If the option ``--post`` is used then the program will check if
+there is a authentication token configured for your vcs provider
+(`GH_TOKEN` for github) and it will be posted to the provider
+if supported.
 
 
 .. _cmd-publish:
@@ -22,14 +27,14 @@ Publish will do a sequence of things.
    it will create the wheel and upload to pypi using twine.
 #. If the environment variable ``GH_TOKEN`` (or equivalent for your
    vcs provider) is set then :ref:`cmd-changelog` will be executed and
-   the changelog will be posted to your vcs provider if that is supported.
+   the changelog will be posted to your vcs provider if supported.
 
 
 .. _cmd-version:
 
 version
 ^^^^^^^
-This will only figure out the new version number using
+This will figure out the new version number using
 :ref:`commit-log-parsing`, and commit + tag in git.
 
 This will not push anything to any remote. All changes
