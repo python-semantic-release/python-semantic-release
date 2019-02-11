@@ -4,6 +4,7 @@ import os
 import sys
 
 import click
+import ndebug
 
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
@@ -16,6 +17,8 @@ from .pypi import upload_to_pypi
 from .settings import config
 from .vcs_helpers import (checkout, commit_new_version, get_current_head_hash,
                           get_repository_owner_and_name, push_new_version, tag_new_version)
+
+debug = ndebug.create(__name__)
 
 COMMON_OPTIONS = [
     click.option('--major', 'force_level', flag_value='major', help='Force major version.'),
@@ -96,6 +99,8 @@ def changelog(**kwargs):
     :raises ImproperConfigurationError: if there is no current version
     """
     current_version = get_current_version()
+    debug('changelog got current_version', current_version)
+
     if current_version is None:
         raise ImproperConfigurationError(
             "Unable to get the current version. "
@@ -103,10 +108,12 @@ def changelog(**kwargs):
             "is setup correctly"
         )
     previous_version = get_previous_version(current_version)
+    debug('changelog got previous_version', previous_version)
 
     log = generate_changelog(previous_version, current_version)
     click.echo(markdown_changelog(current_version, log, header=False))
 
+    debug('noop={}, post={}'.format(kwargs.get('noop'), kwargs.get('post')))
     if not kwargs.get('noop') and kwargs.get('post'):
         if check_token():
             owner, name = get_repository_owner_and_name()
@@ -126,9 +133,11 @@ def publish(**kwargs):
     """
     Runs the version task before pushing to git and uploading to pypi.
     """
+
     current_version = get_current_version()
     click.echo('Current version: {0}'.format(current_version))
     retry = kwargs.get("retry")
+    debug('publish: retry=', retry)
     if retry:
         # The "new" version will actually be the current version, and the
         # "current" version will be the previous version.
@@ -183,10 +192,14 @@ def filter_output_for_secrets(message):
     output = message
     username = os.environ.get('PYPI_USERNAME')
     password = os.environ.get('PYPI_PASSWORD')
+    gh_token = os.environ.get('GH_TOKEN')
     if username != '' and username is not None:
         output = output.replace(username, '$PYPI_USERNAME')
     if password != '' and password is not None:
         output = output.replace(password, '$PYPI_PASSWORD')
+    if gh_token != '' and gh_token is not None:
+        output = output.replace(gh_token, '$GH_TOKEN')
+
     return output
 
 #
@@ -199,7 +212,19 @@ def filter_output_for_secrets(message):
 @click.group()
 @common_options
 def main(**kwargs):
-    pass
+    if debug.enabled:
+        debug('main args:', kwargs)
+        message = ''
+        for key in ['GH_TOKEN', 'PYPI_USERNAME', 'PYPI_PASSWORD']:
+            message += '{}="{}",'.format(key, os.environ.get(key))
+        debug('main env:', filter_output_for_secrets(message))
+
+        obj = {}
+        for key in ['check_build_status', 'commit_message', 'commit_parser', 'patch_without_tag',
+                    'upload_to_pypi', 'version_source']:
+            val = config.get('semantic_release', key)
+            obj[key] = val
+        debug('main config:', obj)
 
 
 @main.command(name='publish', help=publish.__doc__)

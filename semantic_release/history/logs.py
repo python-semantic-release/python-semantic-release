@@ -3,9 +3,13 @@
 import re
 from typing import Optional
 
+import ndebug
+
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
+
+debug = ndebug.create(__name__)
 
 LEVELS = {
     1: 'patch',
@@ -27,6 +31,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     :return: A string with either major, minor or patch if there should be a release. If no release
              is necessary None will be returned.
     """
+    debug('evaluate_version_bump("{}", "{}")'.format(current_version, force))
     if force:
         return force
 
@@ -38,11 +43,13 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     for _hash, commit_message in get_commit_log('v{0}'.format(current_version)):
         if (current_version in commit_message and
                 config.get('semantic_release', 'version_source') == 'commit'):
+            debug('found {} in "{}. breaking loop'.format(current_version, commit_message))
             break
         try:
             message = current_commit_parser()(commit_message)
             changes.append(message[0])
-        except UnknownCommitMessageStyleError:
+        except UnknownCommitMessageStyleError as err:
+            debug('ignored', err)
             pass
 
         commit_count += 1
@@ -65,7 +72,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :param to_version: The last version in the changelog.
     :return: a dict with different changelog sections
     """
-
+    debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
     changes: dict = {'feature': [], 'fix': [],
                      'documentation': [], 'refactor': [], 'breaking': []}
 
@@ -102,7 +109,8 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
                 if parts:
                     changes['breaking'].append(parts.group(1))
 
-        except UnknownCommitMessageStyleError:
+        except UnknownCommitMessageStyleError as err:
+            debug('Ignoring', err)
             pass
 
     return changes
@@ -118,6 +126,7 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     :param header: A boolean that decides whether a header should be included or not.
     :return: The markdown formatted changelog.
     """
+    debug('markdown_changelog(version="{}", header={}, changelog=...)'.format(version, header))
     output = ''
     if header:
         output += '## v{0}\n'.format(version)

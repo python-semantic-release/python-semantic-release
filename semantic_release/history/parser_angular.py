@@ -1,10 +1,13 @@
 """Angular commit style commit parser
 """
+import ndebug
 import re
 from typing import Tuple
 
 from ..errors import UnknownCommitMessageStyleError
 from .parser_helpers import parse_text_block
+
+debug = ndebug.create(__name__)
 
 TYPES = {
     'feat': 'feature',
@@ -50,7 +53,13 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
         level_bump = max([level_bump, 1])
 
     body, footer = parse_text_block(parsed.group('text'))
-
+    if debug.enabled:
+        debug('parse_commit_message -> ({}, {}, {}, {})'.format(
+            level_bump,
+            TYPES[parsed.group('type')],
+            parsed.group('scope'),
+            (parsed.group('subject'), body, footer)
+        ))
     return (
         level_bump,
         TYPES[parsed.group('type')],

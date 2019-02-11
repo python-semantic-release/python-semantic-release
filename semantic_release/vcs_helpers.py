@@ -4,6 +4,7 @@ import re
 from typing import Optional, Tuple
 
 from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
+import ndebug
 
 from .errors import GitError, HvcsRepoParseError
 from .settings import config
@@ -12,6 +13,8 @@ try:
     repo = Repo('.', search_parent_directories=True)
 except InvalidGitRepositoryError:
     repo = None
+
+debug = ndebug.create(__name__)
 
 
 def check_repo():
@@ -39,6 +42,7 @@ def get_last_version(skip_tags=None) -> Optional[str]:
     :return: A string contains version number.
     """
 
+    debug('get_last_version skip_tags=', skip_tags)
     check_repo()
     skip_tags = skip_tags or []
 
@@ -62,6 +66,7 @@ def get_version_from_tag(tag_name: str) -> Optional[str]:
     :return: sha1 hash of the commit
     """
 
+    debug('get_version_from_tag({})'.format(tag_name))
     check_repo()
     for i in repo.tags:
         if i.name == tag_name:
@@ -81,6 +86,7 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
     parts = re.search(r'([^/:]+)/([^/]+).git$', url)
     if not parts:
         raise HvcsRepoParseError
+    debug('get_repository_owner_and_name', parts)
     return parts.group(1), parts.group(2)
 
 

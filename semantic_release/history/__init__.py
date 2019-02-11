@@ -4,12 +4,16 @@ import re
 from typing import Optional
 import semver
 
+import ndebug
+
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
 from ..errors import ImproperConfigurationError
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
+
+debug = ndebug.create(__name__)
 
 
 def get_current_version_by_tag() -> str:
@@ -19,9 +23,11 @@ def get_current_version_by_tag() -> str:
 
     :return: A string with the version number.
     """
+    debug('get_current_version_by_tag')
     version = get_last_version()
     if version:
         return version
+    debug('no version found, will retun default')
     return '0.0.0'
 
 
@@ -32,9 +38,11 @@ def get_current_version_by_config_file() -> str:
     :return: A string with the current version number
     :raises ImproperConfigurationError: if version variable cannot be parsed
     """
+    debug('get_current_version_by_config_file')
     filename, variable = config.get('semantic_release',
                                     'version_variable').split(':')
     variable = variable.strip()
+    debug(filename, variable)
     with open(filename, 'r') as fd:
         parts = re.search(
             r'^{0}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(variable),
@@ -43,6 +51,7 @@ def get_current_version_by_config_file() -> str:
         )
         if not parts:
             raise ImproperConfigurationError
+        debug(parts)
         return parts.group(1)
 
 
@@ -66,6 +75,7 @@ def get_new_version(current_version: str, level_bump: str) -> str:
                        `'minor'` or `'patch'`.
     :return: A string with the next version number.
     """
+    debug('get_new_version("{}", "{}")'.format(current_version, level_bump))
     if not level_bump:
         return current_version
     return getattr(semver, 'bump_{0}'.format(level_bump))(current_version)
@@ -78,15 +88,19 @@ def get_previous_version(version: str) -> Optional[str]:
     :param version: A string with the version number.
     :return: A string with the previous version number
     """
+    debug('get_previous_version')
     found_version = False
     for commit_hash, commit_message in get_commit_log():
+        debug('checking commit {}'.format(commit_hash))
         if version in commit_message:
             found_version = True
+            debug('found_version in "{}"'.format(commit_message))
             continue
 
         if found_version:
             matches = re.match(r'v?(\d+.\d+.\d+)', commit_message)
             if matches:
+                debug('version matches', commit_message)
                 return matches.group(1).strip()
 
     return get_last_version([version, 'v{}'.format(version)])

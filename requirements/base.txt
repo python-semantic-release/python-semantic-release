@@ -5,3 +5,4 @@ semver~=2.2
 twine~=1.12
 requests~=2.21
 wheel
+ndebug~=0.1
