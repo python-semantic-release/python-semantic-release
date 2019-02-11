@@ -1,8 +1,9 @@
 """Angular commit style commit parser
 """
-import ndebug
 import re
 from typing import Tuple
+
+import ndebug
 
 from ..errors import UnknownCommitMessageStyleError
 from .parser_helpers import parse_text_block
