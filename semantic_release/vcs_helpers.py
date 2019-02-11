@@ -3,8 +3,8 @@
 import re
 from typing import Optional, Tuple
 
-from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
 import ndebug
+from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
 
 from .errors import GitError, HvcsRepoParseError
 from .settings import config
