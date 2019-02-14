@@ -51,5 +51,7 @@ Documentation Contents:
    Parsing of commit logs <commit-log-parsing>
    Automatic releases <automatic-releases/index>
    Configuration <configuration>
+   Environment Variables <envvars>
    API docs <api/semantic_release>
+   Troubleshooting <troubleshooting>
    Contributors <contributors>
