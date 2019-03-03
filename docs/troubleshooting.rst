@@ -42,7 +42,7 @@ For bash
 ::
 
     # '*' will show everything
-    $ DEBUG='*' sematic-release changelog
+    $ DEBUG='*' semantic-release changelog
     semantic-release changelog
     semantic_release:cli 'main args:' {'force_level': None, 'post': False, 'retry': False, 'noop': False} +0.0us
     semantic_release:cli 'main env:' 'GH_TOKEN="None",PYPI_USERNAME="None",PYPI_PASSWORD="None",' +2.0ms
