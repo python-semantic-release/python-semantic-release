@@ -176,10 +176,12 @@ def test_version_by_tag_check_build_status_succeeds(mocker, runner):
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: True)
     mock_check_build_status = mocker.patch('semantic_release.cli.check_build_status',
                                            return_value=True)
+    mock_set_new_version = mocker.patch('semantic_release.cli.set_new_version')
     mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
     mocker.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'major')
     result = runner.invoke(main, ['version'])
     assert mock_check_build_status.called
+    assert mock_set_new_version.called
     assert mock_tag_new_version.called
     assert result.exit_code == 0
 
