@@ -90,6 +90,6 @@ To test your modifications locally:
     tox
 
 
-.. |Build status| image:: https://circleci.com/gh/relekang/python-semantic-release.svg?style=svg
-    :target: https://circleci.com/gh/relekang/python-semantic-release
+.. |Build status| image:: https://circleci.com/gh/relekang/python-semantic-release/tree/master.svg?style=svg
+    :target: https://circleci.com/gh/relekang/python-semantic-release/tree/master
 .. |PyPI version| image:: https://badge.fury.io/py/python-semantic-release.svg
