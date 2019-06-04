@@ -3,8 +3,8 @@
 __version__ = '4.1.1'
 
 
-from .errors import (SemanticReleaseBaseError, ImproperConfigurationError,  # noqa
-                     UnknownCommitMessageStyleError)  # noqa
+from .errors import UnknownCommitMessageStyleError  # noqa; noqa
+from .errors import ImproperConfigurationError, SemanticReleaseBaseError
 
 
 def setup_hook(argv: list):
