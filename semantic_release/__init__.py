@@ -3,10 +3,6 @@
 __version__ = '4.1.1'
 
 
-from .errors import UnknownCommitMessageStyleError  # noqa; noqa
-from .errors import ImproperConfigurationError, SemanticReleaseBaseError
-
-
 def setup_hook(argv: list):
     """
     A hook to be used in setup.py to enable `python setup.py publish`.

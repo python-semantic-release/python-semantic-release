@@ -2,7 +2,7 @@
 """
 from invoke import run
 
-from semantic_release import ImproperConfigurationError
+from semantic_release.errors import ImproperConfigurationError
 
 
 def upload_to_pypi(
