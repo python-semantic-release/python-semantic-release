@@ -16,6 +16,11 @@ MAJOR2 = (
     'feat(x): Add super-feature\n\nSome explanation\n\n'
     'BREAKING CHANGE: Uses super-feature as default instead of dull-feature.'
 )
+MAJOR_MENTIONING_1_0_0 = (
+    '222',
+    'feat(x): Add super-feature\n\nSome explanation\n\n'
+    'BREAKING CHANGE: Uses super-feature as default instead of dull-feature from v1.0.0.'
+)
 MINOR = ('111', 'feat(x): Add non-breaking super-feature')
 PATCH = ('24', 'fix(x): Fix bug in super-feature')
 NO_TAG = ('191', 'docs(x): Add documentation for super-feature')
@@ -25,6 +30,7 @@ ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
 PATCH_COMMIT_MESSAGES = [PATCH, PATCH]
 MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, ('22', '1.1.0'), MAJOR]
+MAJOR_MENTIONING_LAST_VERSION = [MAJOR_MENTIONING_1_0_0, ('22', '1.0.0'), MAJOR]
 
 
 class EvaluateVersionBumpTest(TestCase):
@@ -58,6 +64,11 @@ class EvaluateVersionBumpTest(TestCase):
                         lambda *a, **kw: MAJOR_LAST_RELEASE_MINOR_AFTER):
             self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
 
+    def test_should_not_skip_commits_mentioning_other_commits(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda *a, **kw: MAJOR_MENTIONING_LAST_VERSION):
+            self.assertEqual(evaluate_version_bump('1.0.0'), 'major')
+
     @mock.patch('semantic_release.history.config.getboolean', lambda *x: True)
     @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [NO_TAG])
     def test_should_patch_without_tagged_commits(self):
@@ -82,8 +93,8 @@ class EvaluateVersionBumpTest(TestCase):
     def test_version_bump_maintains_formatting(self):
         self.assertEqual(replace_version_string('ver="1.2.3"', 'ver', '1.2.4'), 'ver="1.2.4"')
         self.assertEqual(replace_version_string(
-                        "version = '1.2.3'", 'version', '1.2.4'),
-                        "version = '1.2.4'"
+            "version = '1.2.3'", 'version', '1.2.4'),
+            "version = '1.2.4'"
         )
 
 
