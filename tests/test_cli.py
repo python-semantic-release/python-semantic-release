@@ -234,6 +234,8 @@ def test_publish_should_call_functions(mocker, runner):
     mock_log = mocker.patch('semantic_release.cli.post_changelog')
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
     mock_pypi = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mocker.patch('semantic_release.cli.get_repository_owner_and_name',
+                 return_value=('relekang', 'python-semantic-release'))
     mocker.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'feature')
     mocker.patch('semantic_release.cli.generate_changelog')
     mocker.patch('semantic_release.cli.markdown_changelog', lambda *x, **y: 'CHANGES')
