@@ -102,12 +102,12 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
                 parts = re_breaking.match(message[3][1])
                 if parts:
-                    changes['breaking'].append(parts.group(1))
+                    changes['breaking'].append((_hash, parts.group(1)))
 
             if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
                 parts = re_breaking.match(message[3][2])
                 if parts:
-                    changes['breaking'].append(parts.group(1))
+                    changes['breaking'].append((_hash, parts.group(1)))
 
         except UnknownCommitMessageStyleError as err:
             debug('Ignoring', err)

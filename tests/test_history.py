@@ -111,6 +111,14 @@ class GenerateChangelogTests(TestCase):
             self.assertGreater(len(changelog['fix']), 0)
             self.assertGreater(len(changelog['breaking']), 0)
 
+    def test_should_include_hash_in_section_contents(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda *a, **k: ALL_KINDS_OF_COMMIT_MESSAGES):
+            changelog = generate_changelog('0.0.0')
+            self.assertEqual(changelog['breaking'][0][0], MAJOR[0])
+            self.assertEqual(changelog['feature'][0][0], MINOR[0])
+            self.assertEqual(changelog['fix'][0][0], PATCH[0])
+
     def test_should_only_read_until_given_version(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
                         lambda *a, **k: MAJOR_LAST_RELEASE_MINOR_AFTER):
