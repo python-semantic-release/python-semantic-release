@@ -36,3 +36,6 @@ All configuration described here belongs in ``setup.cfg`` in a section:
 
 ``remove_dist``
     Flag for whether the dist folder should be removed after a release. Default: true
+
+``branch``
+    The branch to run releases from. Default: master

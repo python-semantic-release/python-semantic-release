@@ -148,14 +148,17 @@ def publish(**kwargs):
         new_version = get_new_version(current_version, level_bump)
     owner, name = get_repository_owner_and_name()
 
-    ci_checks.check('master')
-    checkout('master')
+    branch = config.get('semantic_release', 'branch')
+    debug('branch=', branch)
+    ci_checks.check(branch)
+    checkout(branch)
 
     if version(**kwargs):
         push_new_version(
             gh_token=os.environ.get('GH_TOKEN'),
             owner=owner,
-            name=name
+            name=name,
+            branch=branch
         )
 
         if config.getboolean('semantic_release', 'upload_to_pypi'):

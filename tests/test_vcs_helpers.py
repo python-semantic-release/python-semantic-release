@@ -40,6 +40,14 @@ def test_push_new_version(mock_git):
     ])
 
 
+def test_push_new_version_with_custom_branch(mock_git):
+    push_new_version(branch="release")
+    mock_git.push.assert_has_calls([
+        mock.call('origin', 'release'),
+        mock.call('--tags', 'origin', 'release'),
+    ])
+
+
 def test_get_repository_owner_and_name():
     assert get_repository_owner_and_name()[0] == 'relekang'
     assert get_repository_owner_and_name()[1] == 'python-semantic-release'
