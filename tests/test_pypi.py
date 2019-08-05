@@ -20,7 +20,7 @@ class PypiTests(TestCase):
         )
 
     @mock.patch('semantic_release.pypi.run')
-    def test_upload_without_arguments(self, mock_run):
+    def test_upload_without_removing_dist(self, mock_run):
         upload_to_pypi(username='username', password='password', remove_dist=False)
         self.assertEqual(
             mock_run.call_args_list,
