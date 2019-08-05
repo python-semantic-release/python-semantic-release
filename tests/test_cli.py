@@ -259,4 +259,5 @@ def test_changelog_should_call_functions(mocker, runner):
     mock_changelog = mocker.patch('semantic_release.cli.changelog', return_value=True)
     result = runner.invoke(main, ['changelog'])
     assert result.exit_code == 0
-    mock_changelog.assert_called_once_with(noop=False, post=False, force_level=None, retry=False)
+    mock_changelog.assert_called_once_with(
+        noop=False, post=False, force_level=None, retry=False, unreleased=False)

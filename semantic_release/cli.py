@@ -110,7 +110,10 @@ def changelog(**kwargs):
     previous_version = get_previous_version(current_version)
     debug('changelog got previous_version', previous_version)
 
-    log = generate_changelog(previous_version, current_version)
+    if kwargs['unreleased']:
+        log = generate_changelog(current_version, None)
+    else:
+        log = generate_changelog(previous_version, current_version)
     click.echo(markdown_changelog(current_version, log, header=False))
 
     debug('noop={}, post={}'.format(kwargs.get('noop'), kwargs.get('post')))
@@ -244,6 +247,10 @@ def cmd_publish(**kwargs):
 
 @main.command(name='changelog', help=changelog.__doc__)
 @common_options
+@click.option(
+    '--unreleased/--released',
+    help="Decides whether to show the released or unreleased changelog."
+)
 def cmd_changelog(**kwargs):
     try:
         return changelog(**kwargs)
