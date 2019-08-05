@@ -29,3 +29,10 @@ All configuration described here belongs in ``setup.cfg`` in a section:
 ``commit_message``
     Long description to append to the version number. This can be useful to skip
     pipelines in your CI tool
+
+``dist_path``
+    The relative path to the folder for dists configured for setuptools. This allows for
+    customized setuptools processes. Default dist.
+
+``remove_dist``
+    Flag for whether the dist folder should be removed after a release. Default: true
