@@ -21,7 +21,7 @@ def upload_to_pypi(
     """
     if username is None or password is None or username == "" or password == "":
         raise ImproperConfigurationError('Missing credentials for uploading')
-    run('rm -rf build dist')
+    run('rm -rf dist')
     run('python setup.py {}'.format(dists))
     run(
         'twine upload -u {} -p {} {} {}'.format(
@@ -31,4 +31,4 @@ def upload_to_pypi(
             'dist/*'
         )
     )
-    run('rm -rf build dist')
+    run('rm -rf dist')
