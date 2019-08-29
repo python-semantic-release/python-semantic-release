@@ -14,7 +14,7 @@ Used to check if Circle CI environment. See :ref:`automatic-checks`
 
 DEBUG
 ^^^^^
-Set to ``*`` to get a lot of debug information. 
+Set to ``*`` to get a lot of debug information.
 See :ref:`debug-usage` for more.
 
 .. _env-frigg:
@@ -41,6 +41,18 @@ and click on *Personal access token*.
 GITLAB_CI
 ^^^^^^^^^
 Used to check if Gitlab CI environment. See :ref:`automatic-checks`
+Automatically defined in a gitlab ci environment.
+
+GL_TOKEN
+^^^^^^^^
+A personal access token from gitlab. This is used for authenticating
+when pushing tags, publishing releases etc...
+
+CI_SERVER_HOST
+^^^^^^^^^^^^^^
+Host component of the GitLab instance URL, without protocol and port.
+Example: gitlab.example.com
+Automatically set in a gitlab ci environment (from version 12.1).
 
 
 .. _env-pypi_password:
