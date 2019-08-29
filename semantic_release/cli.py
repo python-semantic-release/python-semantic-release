@@ -14,7 +14,7 @@ from .history import (evaluate_version_bump, get_current_version, get_new_versio
 from .history.logs import generate_changelog, markdown_changelog
 from .hvcs import check_build_status, check_token, post_changelog
 from .pypi import upload_to_pypi
-from .settings import config
+from .settings import config, overload_configuration
 from .vcs_helpers import (checkout, commit_new_version, get_current_head_hash,
                           get_repository_owner_and_name, push_new_version, tag_new_version)
 
@@ -27,7 +27,10 @@ COMMON_OPTIONS = [
     click.option('--post', is_flag=True, help='Post changelog.'),
     click.option('--retry', is_flag=True, help='Retry the same release, do not bump.'),
     click.option('--noop', is_flag=True,
-                 help='No-operations mode, finds the new version number without changing it.')
+                 help='No-operations mode, finds the new version number without changing it.'),
+    click.option('--define', '-D', multiple=True,
+                 help='setting="value", override a configuration value'),
+    overload_configuration,
 ]
 
 
