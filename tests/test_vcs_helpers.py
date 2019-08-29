@@ -48,9 +48,18 @@ def test_push_new_version_with_custom_branch(mock_git):
     ])
 
 
-def test_get_repository_owner_and_name():
-    assert get_repository_owner_and_name()[0] == 'relekang'
-    assert get_repository_owner_and_name()[1] == 'python-semantic-release'
+@pytest.mark.parametrize("origin_url,expected_result", [
+    ("git@github.com:group/project.git", ("group", "project")),
+    ("git@gitlab.example.com:group/project.git", ("group", "project")),
+    ("git@gitlab.example.com:group/subgroup/project.git", ("group/subgroup", "project")),
+    ("https://github.com/group/project.git", ("group", "project")),
+    ("https://gitlab.example.com/group/subgroup/project.git", ("group/subgroup", "project")),
+])
+def test_get_repository_owner_and_name(mocker, origin_url, expected_result):
+    class FakeRemote:
+        url = origin_url
+    mocker.patch('git.repo.base.Repo.remote', return_value=FakeRemote())
+    assert get_repository_owner_and_name() == expected_result
 
 
 def test_get_current_head_hash(mocker):
