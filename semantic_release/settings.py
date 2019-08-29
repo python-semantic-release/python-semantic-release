@@ -3,6 +3,7 @@
 import configparser
 import importlib
 import os
+from functools import wraps
 from os import getcwd
 from typing import Callable
 
@@ -51,3 +52,19 @@ def current_commit_parser() -> Callable:
         return getattr(importlib.import_module(module), parts[-1])
     except (ImportError, AttributeError) as error:
         raise ImproperConfigurationError('Unable to import parser "{}"'.format(error))
+
+
+def overload_configuration(func):
+    """This decorator gets the content of the "define" array and edits "config"
+    according to the pairs of key/value.
+    """
+    @wraps(func)
+    def wrap(*args, **kwargs):
+        if 'define' in kwargs:
+            for defined_param in kwargs['define']:
+                pair = defined_param.split('=', maxsplit=1)
+                if len(pair) == 2:
+                    config['semantic_release'][str(pair[0])] = str(pair[1])
+        return func(*args, **kwargs)
+
+    return wrap

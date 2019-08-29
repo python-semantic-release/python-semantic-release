@@ -1,8 +1,11 @@
-import pytest
 from click.testing import CliRunner
 
 import semantic_release
 from semantic_release.cli import main
+
+from . import mock, pytest, reset_config
+
+assert reset_config
 
 
 @pytest.fixture
@@ -17,7 +20,8 @@ def test_main_should_call_correct_function(mocker, runner):
         noop=False,
         post=False,
         force_level=None,
-        retry=False
+        retry=False,
+        define=(),
     )
     assert result.exit_code == 0
 
@@ -72,7 +76,13 @@ def test_version_by_tag_should_call_correct_functions(mocker, runner):
 def test_force_major(mocker, runner):
     mock_version = mocker.patch('semantic_release.cli.version')
     result = runner.invoke(main, ['version', '--major'])
-    mock_version.assert_called_once_with(noop=False, post=False, force_level='major', retry=False)
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level='major',
+        retry=False,
+        define=(),
+    )
     assert mock_version.call_args_list[0][1]['force_level'] == 'major'
     assert result.exit_code == 0
 
@@ -80,7 +90,13 @@ def test_force_major(mocker, runner):
 def test_force_minor(mocker, runner):
     mock_version = mocker.patch('semantic_release.cli.version')
     result = runner.invoke(main, ['version', '--minor'])
-    mock_version.assert_called_once_with(noop=False, post=False, force_level='minor', retry=False)
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level='minor',
+        retry=False,
+        define=(),
+    )
     assert mock_version.call_args_list[0][1]['force_level'] == 'minor'
     assert result.exit_code == 0
 
@@ -88,7 +104,13 @@ def test_force_minor(mocker, runner):
 def test_force_patch(mocker, runner):
     mock_version = mocker.patch('semantic_release.cli.version')
     result = runner.invoke(main, ['version', '--patch'])
-    mock_version.assert_called_once_with(noop=False, post=False, force_level='patch', retry=False)
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level='patch',
+        retry=False,
+        define=(),
+    )
     assert mock_version.call_args_list[0][1]['force_level'] == 'patch'
     assert result.exit_code == 0
 
@@ -96,7 +118,13 @@ def test_force_patch(mocker, runner):
 def test_retry(mocker, runner):
     mock_version = mocker.patch('semantic_release.cli.version')
     result = runner.invoke(main, ['version', '--retry'])
-    mock_version.assert_called_once_with(noop=False, post=False, force_level=None, retry=True)
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=True,
+        define=(),
+    )
     assert result.exit_code == 0
 
 
@@ -223,7 +251,13 @@ def test_publish_should_do_nothing_when_version_fails(mocker, runner):
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
     mock_version = mocker.patch('semantic_release.cli.version', return_value=False)
     result = runner.invoke(main, ['publish'])
-    mock_version.assert_called_once_with(noop=False, post=False, force_level=None, retry=False)
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=False,
+        define=(),
+    )
     assert not mock_push.called
     assert not mock_upload.called
     assert not mock_log.called
@@ -250,7 +284,13 @@ def test_publish_should_call_functions(mocker, runner):
     assert mock_ci_check.called
     assert mock_push.called
     assert mock_pypi.called
-    mock_version.assert_called_once_with(noop=False, post=False, force_level=None, retry=False)
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=False,
+        define=(),
+    )
     mock_log.assert_called_once_with(u'relekang', 'python-semantic-release', '2.0.0', 'CHANGES')
     mock_checkout.assert_called_once_with('master')
 
@@ -260,4 +300,19 @@ def test_changelog_should_call_functions(mocker, runner):
     result = runner.invoke(main, ['changelog'])
     assert result.exit_code == 0
     mock_changelog.assert_called_once_with(
-        noop=False, post=False, force_level=None, retry=False, unreleased=False)
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=False,
+        unreleased=False,
+        define=(),
+    )
+
+
+def test_overload_by_cli(mocker, runner):
+    mock_open = mocker.patch('semantic_release.history.open',
+                             mock.mock_open(read_data='my_version_var = v1.2.3'))
+    runner.invoke(main, ['version', '--noop', '--patch', '-D',
+                         'version_variable=my_version_path:my_version_var'])
+
+    mock_open.assert_called_once_with('my_version_path', 'r')
