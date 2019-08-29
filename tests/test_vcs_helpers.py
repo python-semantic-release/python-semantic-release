@@ -67,13 +67,14 @@ def test_get_current_head_hash(mocker):
     assert get_current_head_hash() == 'commit-hash'
 
 
-def test_push_should_not_print_gh_token(mock_git):
+def test_push_should_not_print_auth_token(mock_git):
     mock_git.configure_mock(**{
-        'push.side_effect': GitCommandError('gh--token', 1, b'gh--token', b'gh--token')
+        'push.side_effect': GitCommandError('auth--token', 1, b'auth--token', b'auth--token')
     })
+    mock.patch('semantic_release.settings.config.ConfigParser.get', 'gitlab')
     with pytest.raises(GitError) as excinfo:
-        push_new_version(gh_token='gh--token')
-    assert 'gh--token' not in str(excinfo)
+        push_new_version(auth_token='auth--token')
+    assert 'auth--token' not in str(excinfo)
 
 
 def test_checkout_should_checkout_correct_branch(mock_git):

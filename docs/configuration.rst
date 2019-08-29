@@ -49,3 +49,7 @@ Moreover, those configuration values can be overloaded with the ``-D`` option, l
 
 ``branch``
     The branch to run releases from. Default: master
+
+``hvcs``
+    The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
+    Default: ``github``
