@@ -53,3 +53,7 @@ Moreover, those configuration values can be overloaded with the ``-D`` option, l
 ``hvcs``
     The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
     Default: ``github``
+
+``commit_version_number``
+    Whether or not to commit changes when bumping version.
+    Default: True if ``version_source`` is `tag`, False if ``version_source`` is `commit`.

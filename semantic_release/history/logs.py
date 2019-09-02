@@ -47,8 +47,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     commit_count = 0
 
     for _hash, commit_message in get_commit_log('v{0}'.format(current_version)):
-        if (commit_message.startswith(current_version) and
-                config.get('semantic_release', 'version_source') == 'commit'):
+        if commit_message.startswith(current_version):
             debug('"{}" is commit for {}. breaking loop'.format(commit_message, current_version))
             break
         try:

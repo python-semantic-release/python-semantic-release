@@ -96,7 +96,9 @@ def version(**kwargs):
         return True
 
     set_new_version(new_version)
-    if config.get('semantic_release', 'version_source') == 'commit':
+    if config.get('semantic_release', 'commit_version_number', fallback=(
+                config.get('semantic_release', 'version_source') == 'commit')
+            ):
         commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
