@@ -50,10 +50,42 @@ def test_version_by_commit_should_call_correct_functions(mocker, runner):
 def test_version_by_tag_should_call_correct_functions(mocker, runner):
     orig = semantic_release.cli.config.get
 
-    def wrapped_config_get(*args):
+    def wrapped_config_get(*args, **kwargs):
+        if (len(args) >= 2 and args[0] == 'semantic_release'
+                and args[1] == 'version_source'):
+            return 'tag'
+        elif (len(args) >= 2 and args[0] == 'semantic_release'
+                and args[1] == 'commit_version_number'):
+            return True
+        return orig(*args, **kwargs)
+
+    mocker.patch('semantic_release.cli.config.get', wrapped_config_get)
+    mocker.patch('semantic_release.cli.config.getboolean', lambda *x: False)
+    mock_set_new_version = mocker.patch('semantic_release.cli.set_new_version')
+    mock_tag_new_version = mocker.patch('semantic_release.cli.tag_new_version')
+    mock_commit_new_version = mocker.patch('semantic_release.cli.commit_new_version')
+    mock_new_version = mocker.patch('semantic_release.cli.get_new_version', return_value='2.0.0')
+    mock_evaluate_bump = mocker.patch('semantic_release.cli.evaluate_version_bump',
+                                      return_value='major')
+    mock_current_version = mocker.patch('semantic_release.cli.get_current_version',
+                                        return_value='1.2.3')
+    result = runner.invoke(main, ['version'])
+    mock_current_version.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with('1.2.3', None)
+    mock_new_version.assert_called_once_with('1.2.3', 'major')
+    mock_set_new_version.assert_called_once_with('2.0.0')
+    mock_commit_new_version.assert_called_once_with('2.0.0')
+    mock_tag_new_version.assert_called_once_with('2.0.0')
+    assert result.exit_code == 0
+
+
+def test_version_by_tag_with_commit_version_number_should_call_correct_functions(mocker, runner):
+    orig = semantic_release.cli.config.get
+
+    def wrapped_config_get(*args, **kwargs):
         if len(args) >= 2 and args[0] == 'semantic_release' and args[1] == 'version_source':
             return 'tag'
-        return orig(*args)
+        return orig(*args, **kwargs)
 
     mocker.patch('semantic_release.cli.config.get', wrapped_config_get)
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: False)
@@ -194,11 +226,10 @@ def test_version_by_commit_check_build_status_succeeds(mocker, runner):
 def test_version_by_tag_check_build_status_succeeds(mocker, runner):
     orig = semantic_release.cli.config.get
 
-    def wrapped_config_get(*args):
-        print(args)
+    def wrapped_config_get(*args, **kwargs):
         if len(args) >= 2 and args[0] == 'semantic_release' and args[1] == 'version_source':
             return 'tag'
-        return orig(*args)
+        return orig(*args, **kwargs)
 
     mocker.patch('semantic_release.cli.config.get', wrapped_config_get)
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: True)

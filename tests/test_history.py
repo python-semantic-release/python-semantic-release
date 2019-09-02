@@ -59,11 +59,6 @@ class EvaluateVersionBumpTest(TestCase):
         self.assertEqual(evaluate_version_bump('0.0.0', 'minor'), 'minor')
         self.assertEqual(evaluate_version_bump('0.0.0', 'patch'), 'patch')
 
-    def test_should_account_for_commits_earlier_than_last_commit(self):
-        with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda *a, **kw: MAJOR_LAST_RELEASE_MINOR_AFTER):
-            self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
-
     def test_should_not_skip_commits_mentioning_other_commits(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
                         lambda *a, **kw: MAJOR_MENTIONING_LAST_VERSION):
