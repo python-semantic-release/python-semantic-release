@@ -17,7 +17,13 @@ LEVELS = {
     3: 'major',
 }
 
-CHANGELOG_SECTIONS = ['feature', 'fix', 'breaking', 'documentation']
+CHANGELOG_SECTIONS = [
+    'feature',
+    'fix',
+    'breaking',
+    'documentation',
+    'performance',
+]
 
 re_breaking = re.compile('BREAKING CHANGE: (.*)')
 
@@ -73,8 +79,14 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :return: a dict with different changelog sections
     """
     debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
-    changes: dict = {'feature': [], 'fix': [],
-                     'documentation': [], 'refactor': [], 'breaking': []}
+    changes: dict = {
+        'feature': [],
+        'fix': [],
+        'documentation': [],
+        'refactor': [],
+        'breaking': [],
+        'performance': [],
+    }
 
     found_the_release = to_version is None
 
