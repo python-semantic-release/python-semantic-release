@@ -187,7 +187,8 @@ class MarkdownChangelogTests(TestCase):
             'breaking': [('21', 'Uses super-feature as default instead of dull-feature.')],
             'feature': [('145', 'Add non-breaking super-feature'), ('134', 'Add super-feature')],
             'fix': [('234', 'Fix bug in super-feature')],
-            'documentation': [('0', 'Document super-feature')]
+            'documentation': [('0', 'Document super-feature')],
+            'performance': [],
         })
         self.assertEqual(
             markdown,
@@ -210,7 +211,14 @@ class MarkdownChangelogTests(TestCase):
         self.assertEqual(
             markdown_changelog(
                 '1.0.1',
-                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                {
+                    'refactor': [],
+                    'breaking': [],
+                    'feature': [],
+                    'fix': [],
+                    'documentation': [],
+                    'performance': [],
+                },
             ),
             ''
         )
@@ -220,7 +228,14 @@ class MarkdownChangelogTests(TestCase):
             '## v1.0.1\n',
             markdown_changelog(
                 '1.0.1',
-                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                {
+                    'refactor': [],
+                    'breaking': [],
+                    'feature': [],
+                    'fix': [],
+                    'documentation': [],
+                    'performance': [],
+                },
                 header=True
             )
         )
@@ -230,6 +245,13 @@ class MarkdownChangelogTests(TestCase):
             'v1.0.1',
             markdown_changelog(
                 '1.0.1',
-                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                {
+                    'refactor': [],
+                    'breaking': [],
+                    'feature': [],
+                    'fix': [],
+                    'documentation': [],
+                    'performance': [],
+                },
             )
         )
