@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 
 import ndebug
 from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
+from git.exc import BadName
 
 from .errors import GitError, HvcsRepoParseError
 from .settings import config
@@ -32,7 +33,11 @@ def get_commit_log(from_rev=None):
     check_repo()
     rev = None
     if from_rev:
-        rev = '...{from_rev}'.format(from_rev=from_rev)
+        try:
+            repo.commit(from_rev)
+            rev = '...{from_rev}'.format(from_rev=from_rev)
+        except BadName:
+            debug('Reference {} does not exist, considering all log'.format(from_rev))
     for commit in repo.iter_commits(rev):
         yield (commit.hexsha, commit.message)
 
