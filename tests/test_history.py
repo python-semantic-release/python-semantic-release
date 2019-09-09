@@ -1,11 +1,13 @@
 from unittest import TestCase
 
 import semantic_release
-from semantic_release.history import (evaluate_version_bump, get_current_version, get_new_version,
-                                      get_previous_version, replace_version_string)
+from semantic_release.history import (evaluate_version_bump, get_current_version,
+                                      get_current_version_by_tag, get_new_version,
+                                      get_previous_version, replace_version_string, set_new_version)
 from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
+from .mocks import mock_version_file
 
 MAJOR = (
     '221',
@@ -140,6 +142,17 @@ def test_current_version_should_return_correct_version():
     assert get_current_version() == semantic_release.__version__
 
 
+@mock.patch('semantic_release.history.get_last_version', return_value='last_version')
+def test_current_version_should_return_git_version(mock_last_version):
+    assert 'last_version' == get_current_version_by_tag()
+
+
+@mock.patch('semantic_release.history.config.get', return_value='tag')
+@mock.patch('semantic_release.history.get_last_version', return_value=None)
+def test_current_version_should_return_default_version(mock_config, mock_last_version):
+    assert '0.0.0' == get_current_version()
+
+
 class GetPreviousVersionTests(TestCase):
 
     @mock.patch('semantic_release.history.get_commit_log',
@@ -250,3 +263,17 @@ class MarkdownChangelogTests(TestCase):
                 },
             )
         )
+
+
+@mock.patch('builtins.open', mock_version_file)
+@mock.patch('semantic_release.history.config.get', return_value='my_version_path:my_version_var')
+def test_set_version(mock_config):
+
+    set_new_version('X.Y.Z')
+
+    handle_open = mock_version_file()
+    mock_version_file.assert_any_call('my_version_path', mode='w')
+    mock_version_file.assert_any_call('my_version_path', mode='r')
+    handle_open.read.assert_called_once_with()
+    handle_open.write.assert_called_once_with('my_version_var = \'X.Y.Z\'')
+    mock_version_file.reset_mock()
