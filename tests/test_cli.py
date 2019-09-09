@@ -1,9 +1,11 @@
 from click.testing import CliRunner
 
 import semantic_release
-from semantic_release.cli import main
+from semantic_release.cli import changelog, main, publish, version
+from semantic_release.errors import GitError, ImproperConfigurationError
 
 from . import mock, pytest, reset_config
+from .mocks import mock_version_file
 
 assert reset_config
 
@@ -256,6 +258,32 @@ def test_version_check_build_status_not_called_if_disabled(mocker, runner):
     assert not mock_check_build_status.called
 
 
+def test_version_retry_and_giterror(mocker):
+    mocker.patch('semantic_release.cli.get_current_version',
+                 mock.Mock(side_effect=GitError()))
+
+    result = version(retry=True)
+
+    assert not result
+
+
+def test_version_retry(mocker):
+    mock_get_current = mocker.patch('semantic_release.cli.get_current_version',
+                                    return_value='current')
+    mock_evaluate_bump = mocker.patch('semantic_release.cli.evaluate_version_bump',
+                                      return_value='patch')
+    mock_get_new = mocker.patch('semantic_release.cli.get_new_version',
+                                return_value='new')
+    mocker.patch('semantic_release.cli.config.getboolean', lambda *x: False)
+
+    result = version(noop=False, retry=True, force_level=False)
+
+    assert result
+    mock_get_current.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with('current', False)
+    mock_get_new.assert_called_once_with('current', 'patch')
+
+
 def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker, runner):
     mocker.patch('semantic_release.cli.checkout')
     mocker.patch('semantic_release.cli.ci_checks.check')
@@ -326,6 +354,110 @@ def test_publish_should_call_functions(mocker, runner):
     mock_checkout.assert_called_once_with('master')
 
 
+def test_publish_retry_version_fail(mocker):
+    mock_get_current = mocker.patch('semantic_release.cli.get_current_version',
+                                    return_value='current')
+    mock_get_previous = mocker.patch('semantic_release.cli.get_previous_version',
+                                     return_value='previous')
+    mock_get_owner_name = mocker.patch('semantic_release.cli.get_repository_owner_and_name',
+                                       return_value=('owner', 'name'))
+    mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
+    mock_checkout = mocker.patch('semantic_release.cli.checkout')
+    mocker.patch('semantic_release.cli.config.get', lambda *x: 'my_branch')
+    mock_version = mocker.patch('semantic_release.cli.version', return_value=False)
+
+    publish(noop=False, retry=True, force_level=False)
+
+    mock_get_current.assert_called_once_with()
+    mock_get_previous.assert_called_once_with('current')
+    mock_get_owner_name.assert_called_once_with()
+    mock_ci_check.assert_called()
+    mock_checkout.assert_called_once_with('my_branch')
+    mock_version.assert_called_once_with(noop=False, retry=True, force_level=False)
+
+
+def test_publish_bad_token(mocker):
+    mock_get_current = mocker.patch('semantic_release.cli.get_current_version',
+                                    return_value='current')
+    mock_get_previous = mocker.patch('semantic_release.cli.get_previous_version',
+                                     return_value='previous')
+    mock_get_owner_name = mocker.patch('semantic_release.cli.get_repository_owner_and_name',
+                                       return_value=('owner', 'name'))
+    mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
+    mock_checkout = mocker.patch('semantic_release.cli.checkout')
+    mocker.patch('semantic_release.cli.config.get', return_value='my_branch')
+    mocker.patch('semantic_release.cli.config.getboolean', return_value=False)
+    mock_version = mocker.patch('semantic_release.cli.version')
+    mock_get_token = mocker.patch('semantic_release.cli.get_token',
+                                  return_value='SUPERTOKEN')
+    mock_get_domain = mocker.patch('semantic_release.cli.get_domain',
+                                   return_value='domain')
+    mock_push = mocker.patch('semantic_release.cli.push_new_version')
+    mock_check_token = mocker.patch('semantic_release.cli.check_token',
+                                    return_value=False)
+
+    publish(noop=False, retry=True, force_level=False)
+
+    mock_get_current.assert_called_once_with()
+    mock_get_previous.assert_called_once_with('current')
+    mock_get_owner_name.assert_called_once_with()
+    mock_ci_check.assert_called()
+    mock_checkout.assert_called_once_with('my_branch')
+    mock_version.assert_called_once_with(noop=False, retry=True, force_level=False)
+    mock_get_token.assert_called()
+    mock_get_domain.assert_called()
+    mock_push.assert_called_once_with(auth_token='SUPERTOKEN', owner='owner', name='name',
+                                      branch='my_branch', domain='domain')
+    mock_check_token.assert_called_once_with()
+
+
+def test_publish_giterror_when_posting(mocker):
+    mock_get_current = mocker.patch('semantic_release.cli.get_current_version',
+                                    return_value='current')
+    mock_evaluate = mocker.patch('semantic_release.cli.evaluate_version_bump',
+                                 return_value='patch')
+    mock_get_new = mocker.patch('semantic_release.cli.get_new_version',
+                                return_value='new')
+    mock_get_owner_name = mocker.patch('semantic_release.cli.get_repository_owner_and_name',
+                                       return_value=('owner', 'name'))
+    mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
+    mock_checkout = mocker.patch('semantic_release.cli.checkout')
+    mocker.patch('semantic_release.cli.config.get', return_value='my_branch')
+    mocker.patch('semantic_release.cli.config.getboolean', return_value=False)
+    mock_version = mocker.patch('semantic_release.cli.version')
+    mock_get_token = mocker.patch('semantic_release.cli.get_token',
+                                  return_value='SUPERTOKEN')
+    mock_get_domain = mocker.patch('semantic_release.cli.get_domain',
+                                   return_value='domain')
+    mock_push = mocker.patch('semantic_release.cli.push_new_version')
+    mock_check_token = mocker.patch('semantic_release.cli.check_token',
+                                    return_value=True)
+    mock_generate = mocker.patch('semantic_release.cli.generate_changelog',
+                                 return_value='super changelog')
+    mock_markdown = mocker.patch('semantic_release.cli.markdown_changelog',
+                                 return_value='super md changelog')
+    mock_post = mocker.patch('semantic_release.cli.post_changelog',
+                             mock.Mock(side_effect=GitError()))
+
+    publish(noop=False, retry=False, force_level=False)
+
+    mock_get_current.assert_called_once_with()
+    mock_evaluate.assert_called_once_with('current', False)
+    mock_get_new.assert_called_once_with('current', 'patch')
+    mock_get_owner_name.assert_called_once_with()
+    mock_ci_check.assert_called()
+    mock_checkout.assert_called_once_with('my_branch')
+    mock_version.assert_called_once_with(noop=False, retry=False, force_level=False)
+    mock_get_token.assert_called_once_with()
+    mock_get_domain.assert_called_once_with()
+    mock_push.assert_called_once_with(auth_token='SUPERTOKEN', owner='owner', name='name',
+                                      branch='my_branch', domain='domain')
+    mock_check_token.assert_called_once_with()
+    mock_generate.assert_called_once_with('current', 'new')
+    mock_markdown.assert_called_once_with('new', 'super changelog', header=False)
+    mock_post.assert_called_once_with('owner', 'name', 'new', 'super md changelog')
+
+
 def test_changelog_should_call_functions(mocker, runner):
     mock_changelog = mocker.patch('semantic_release.cli.changelog', return_value=True)
     result = runner.invoke(main, ['changelog'])
@@ -341,9 +473,81 @@ def test_changelog_should_call_functions(mocker, runner):
 
 
 def test_overload_by_cli(mocker, runner):
-    mock_open = mocker.patch('semantic_release.history.open',
-                             mock.mock_open(read_data='my_version_var = v1.2.3'))
+    mock_open = mocker.patch('semantic_release.history.open', mock_version_file)
     runner.invoke(main, ['version', '--noop', '--patch', '-D',
                          'version_variable=my_version_path:my_version_var'])
 
     mock_open.assert_called_once_with('my_version_path', 'r')
+    mock_open.reset_mock()
+
+
+def test_changelog_noop(mocker):
+    mocker.patch('semantic_release.cli.get_current_version', return_value='current')
+    mock_previous_version = mocker.patch('semantic_release.cli.get_previous_version',
+                                         return_value='previous')
+    mock_generate_changelog = mocker.patch('semantic_release.cli.generate_changelog',
+                                           return_value='super changelog')
+    mock_markdown_changelog = mocker.patch('semantic_release.cli.markdown_changelog',
+                                           return_value='super changelog')
+
+    changelog(noop=True, unreleased=False)
+
+    mock_previous_version.assert_called_once_with('current')
+    mock_generate_changelog.assert_called_once_with('previous', 'current')
+    mock_markdown_changelog.assert_called_once_with('current', 'super changelog', header=False)
+
+
+def test_changelog_post_unreleased_no_token(mocker):
+    mocker.patch('semantic_release.cli.get_current_version', return_value='current')
+    mock_previous_version = mocker.patch('semantic_release.cli.get_previous_version',
+                                         return_value='previous')
+    mock_generate_changelog = mocker.patch('semantic_release.cli.generate_changelog',
+                                           return_value='super changelog')
+    mock_markdown_changelog = mocker.patch('semantic_release.cli.markdown_changelog',
+                                           return_value='super changelog')
+    mock_check_token = mocker.patch('semantic_release.cli.check_token',
+                                    return_value=False)
+
+    changelog(unreleased=True, post=True)
+
+    mock_previous_version.assert_called_once_with('current')
+    mock_generate_changelog.assert_called_once_with('current', None)
+    mock_markdown_changelog.assert_called_once_with('current', 'super changelog', header=False)
+    mock_check_token.assert_called_once_with()
+
+
+def test_changelog_post_complete(mocker):
+    mocker.patch('semantic_release.cli.get_current_version', return_value='current')
+    mock_previous_version = mocker.patch('semantic_release.cli.get_previous_version',
+                                         return_value='previous')
+    mock_generate_changelog = mocker.patch('semantic_release.cli.generate_changelog',
+                                           return_value='super changelog')
+    mock_markdown_changelog = mocker.patch('semantic_release.cli.markdown_changelog',
+                                           return_value='super md changelog')
+    mock_check_token = mocker.patch('semantic_release.cli.check_token',
+                                    return_value=True)
+    mock_get_owner_name = mocker.patch('semantic_release.cli.get_repository_owner_and_name',
+                                       return_value=('owner', 'name'))
+    mock_post_changelog = mocker.patch('semantic_release.cli.post_changelog')
+
+    changelog(unreleased=True, post=True)
+
+    mock_previous_version.assert_called_once_with('current')
+    mock_generate_changelog.assert_called_once_with('current', None)
+    mock_markdown_changelog.assert_any_call('current', 'super changelog', header=False)
+    mock_check_token.assert_called_once_with()
+    mock_get_owner_name.assert_called_once_with()
+    mock_post_changelog.assert_called_once_with('owner', 'name', 'current',
+                                                'super md changelog')
+
+
+def test_changelog_raises_exception_when_no_current_version(mocker):
+    mocker.patch('semantic_release.cli.get_current_version', return_value=None)
+    with pytest.raises(ImproperConfigurationError):
+        changelog()
+
+
+@mock.patch('semantic_release.cli.debug')
+def test_main_debug(mock_debug, runner):
+    runner.invoke(main, ['version', '--noop'])
+    assert mock_debug.called
