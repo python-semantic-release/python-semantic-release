@@ -60,8 +60,10 @@ def test_push_new_version_with_custom_branch(mock_git):
     ("git@github.com:group/project.git", ("group", "project")),
     ("git@gitlab.example.com:group/project.git", ("group", "project")),
     ("git@gitlab.example.com:group/subgroup/project.git", ("group/subgroup", "project")),
+    ("git@gitlab.example.com:group/subgroup/project", ("group/subgroup", "project")),
     ("https://github.com/group/project.git", ("group", "project")),
     ("https://gitlab.example.com/group/subgroup/project.git", ("group/subgroup", "project")),
+    ("https://gitlab.example.com/group/subgroup/project", ("group/subgroup", "project")),
     ("bad_repo_url", HvcsRepoParseError),
 ])
 def test_get_repository_owner_and_name(mocker, origin_url, expected_result):
