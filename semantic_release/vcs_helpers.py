@@ -163,12 +163,22 @@ def push_new_version(
         token = auth_token
         if config.get('semantic_release', 'hvcs') == 'gitlab':
             token = 'gitlab-ci-token:' + token
-        server = 'https://{token}@{server_url}/{owner}/{name}.git'.format(
+        actor = os.environ.get('GITHUB_ACTOR')
+        if actor:
+            server = 'https://{actor}:{token}@{server_url}/{owner}/{name}.git'.format(
             token=token,
             server_url=domain,
             owner=owner,
             name=name,
+            actor=actor
         )
+        else:
+            server = 'https://{token}@{server_url}/{owner}/{name}.git'.format(
+                token=token,
+                server_url=domain,
+                owner=owner,
+                name=name,
+            )
 
     try:
         repo.git.push(server, branch)
