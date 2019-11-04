@@ -1,9 +1,11 @@
+import git
 import pytest
-from git import GitCommandError
+from git import GitCommandError, Repo, TagObject
 
-from semantic_release.errors import GitError
-from semantic_release.vcs_helpers import (checkout, commit_new_version, get_commit_log,
-                                          get_current_head_hash, get_repository_owner_and_name,
+from semantic_release.errors import GitError, HvcsRepoParseError
+from semantic_release.vcs_helpers import (check_repo, checkout, commit_new_version, get_commit_log,
+                                          get_current_head_hash, get_last_version,
+                                          get_repository_owner_and_name, get_version_from_tag,
                                           push_new_version, tag_new_version)
 
 from . import mock
@@ -12,6 +14,12 @@ from . import mock
 @pytest.fixture
 def mock_git(mocker):
     return mocker.patch('semantic_release.vcs_helpers.repo.git')
+
+
+@mock.patch('semantic_release.vcs_helpers.repo', None)
+def test_raises_error_when_invalid_repo():
+    with pytest.raises(GitError):
+        check_repo()
 
 
 def test_first_commit_is_not_initial_commit():
@@ -40,9 +48,35 @@ def test_push_new_version(mock_git):
     ])
 
 
-def test_get_repository_owner_and_name():
-    assert get_repository_owner_and_name()[0] == 'relekang'
-    assert get_repository_owner_and_name()[1] == 'python-semantic-release'
+def test_push_new_version_with_custom_branch(mock_git):
+    push_new_version(branch="release")
+    mock_git.push.assert_has_calls([
+        mock.call('origin', 'release'),
+        mock.call('--tags', 'origin', 'release'),
+    ])
+
+
+@pytest.mark.parametrize("origin_url,expected_result", [
+    ("git@github.com:group/project.git", ("group", "project")),
+    ("git@gitlab.example.com:group/project.git", ("group", "project")),
+    ("git@gitlab.example.com:group/subgroup/project.git", ("group/subgroup", "project")),
+    ("git@gitlab.example.com:group/subgroup/project", ("group/subgroup", "project")),
+    ("https://github.com/group/project.git", ("group", "project")),
+    ("https://gitlab.example.com/group/subgroup/project.git", ("group/subgroup", "project")),
+    ("https://gitlab.example.com/group/subgroup/project", ("group/subgroup", "project")),
+    ("https://gitlab.example.com/group/subgroup/pro.ject", ("group/subgroup", "pro.ject")),
+    ("https://gitlab.example.com/group/subgroup/pro.ject.git", ("group/subgroup", "pro.ject")),
+    ("bad_repo_url", HvcsRepoParseError),
+])
+def test_get_repository_owner_and_name(mocker, origin_url, expected_result):
+    class FakeRemote:
+        url = origin_url
+    mocker.patch('git.repo.base.Repo.remote', return_value=FakeRemote())
+    if isinstance(expected_result, tuple):
+        assert get_repository_owner_and_name() == expected_result
+    else:
+        with pytest.raises(expected_result):
+            get_repository_owner_and_name()
 
 
 def test_get_current_head_hash(mocker):
@@ -50,15 +84,74 @@ def test_get_current_head_hash(mocker):
     assert get_current_head_hash() == 'commit-hash'
 
 
-def test_push_should_not_print_gh_token(mock_git):
+@mock.patch('semantic_release.vcs_helpers.config.get', return_value='gitlab')
+def test_push_should_not_print_auth_token(mock_gitlab, mock_git):
     mock_git.configure_mock(**{
-        'push.side_effect': GitCommandError('gh--token', 1, b'gh--token', b'gh--token')
+        'push.side_effect': GitCommandError('auth--token', 1, b'auth--token', b'auth--token')
     })
     with pytest.raises(GitError) as excinfo:
-        push_new_version(gh_token='gh--token')
-    assert 'gh--token' not in str(excinfo)
+        push_new_version(auth_token='auth--token')
+    assert 'auth--token' not in str(excinfo)
 
 
 def test_checkout_should_checkout_correct_branch(mock_git):
     checkout('a-branch')
     mock_git.checkout.assert_called_once_with('a-branch')
+
+
+@pytest.mark.parametrize('skip_tags,expected_result', [
+    (None, '2.0.0'),
+    (['v2.0.0'], '1.1.0'),
+    (['v0.1.0', 'v1.0.0', 'v1.1.0', 'v2.0.0'], None),
+])
+def test_get_last_version(skip_tags, expected_result):
+    class FakeCommit:
+        def __init__(self, com_date):
+            self.committed_date = com_date
+
+    class FakeTagObject:
+        def __init__(self, tag_date):
+            self.tagged_date = tag_date
+
+    class FakeTag:
+        def __init__(self, name, sha, date, is_tag_object):
+            self.name = name
+            self.tag = FakeTagObject(date)
+            if is_tag_object:
+                self.commit = TagObject(Repo(), sha)
+            else:
+                self.commit = FakeCommit(date)
+
+    mock.patch('semantic_release.vcs_helpers.check_repo')
+    git.repo.base.Repo.tags = mock.PropertyMock(return_value=[
+        FakeTag('v0.1.0', 'aaaaaaaaaaaaaaaaaaaa', 1, True),
+        FakeTag('v2.0.0', 'dddddddddddddddddddd', 4, True),
+        FakeTag('badly_formatted', 'eeeeeeeeeeeeeeeeeeee', 5, False),
+        FakeTag('v1.1.0', 'cccccccccccccccccccc', 3, True),
+        FakeTag('v1.0.0', 'bbbbbbbbbbbbbbbbbbbb', 2, False),
+    ])
+    assert expected_result == get_last_version(skip_tags)
+
+
+@pytest.mark.parametrize('tag_name,expected_version', [
+    ('v0.1.0', 'aaaaa'),
+    ('v1.0.0', 'bbbbb'),
+    ('v2.0.0', None),
+])
+def test_get_version_from_tag(tag_name, expected_version):
+    class FakeCommit:
+        def __init__(self, sha):
+            self.hexsha = sha
+
+    class FakeTag:
+        def __init__(self, name, sha):
+            self.name = name
+            self.commit = FakeCommit(sha)
+
+    mock.patch('semantic_release.vcs_helpers.check_repo')
+    git.repo.base.Repo.tags = mock.PropertyMock(return_value=[
+        FakeTag('v0.1.0', 'aaaaa'),
+        FakeTag('v1.0.0', 'bbbbb'),
+        FakeTag('v1.1.0', 'ccccc'),
+    ])
+    assert expected_version == get_version_from_tag(tag_name)

@@ -1,10 +1,10 @@
 """Semantic Release
 """
-__version__ = '4.1.1'
+__version__ = '4.3.2'
 
 
-from .errors import (SemanticReleaseBaseError, ImproperConfigurationError,  # noqa
-                     UnknownCommitMessageStyleError)  # noqa
+from .errors import UnknownCommitMessageStyleError  # noqa
+from .errors import ImproperConfigurationError, SemanticReleaseBaseError  # noqa
 
 
 def setup_hook(argv: list):

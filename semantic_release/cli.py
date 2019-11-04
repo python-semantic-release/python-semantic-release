@@ -12,13 +12,20 @@ from semantic_release.errors import GitError, ImproperConfigurationError
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
 from .history.logs import generate_changelog, markdown_changelog
-from .hvcs import check_build_status, check_token, post_changelog
+from .hvcs import check_build_status, check_token, get_domain, get_token, post_changelog
 from .pypi import upload_to_pypi
-from .settings import config
+from .settings import config, overload_configuration
 from .vcs_helpers import (checkout, commit_new_version, get_current_head_hash,
                           get_repository_owner_and_name, push_new_version, tag_new_version)
 
 debug = ndebug.create(__name__)
+
+SECRET_NAMES = [
+    'PYPI_USERNAME',
+    'PYPI_PASSWORD',
+    'GH_TOKEN',
+    'GL_TOKEN',
+]
 
 COMMON_OPTIONS = [
     click.option('--major', 'force_level', flag_value='major', help='Force major version.'),
@@ -27,7 +34,10 @@ COMMON_OPTIONS = [
     click.option('--post', is_flag=True, help='Post changelog.'),
     click.option('--retry', is_flag=True, help='Retry the same release, do not bump.'),
     click.option('--noop', is_flag=True,
-                 help='No-operations mode, finds the new version number without changing it.')
+                 help='No-operations mode, finds the new version number without changing it.'),
+    click.option('--define', '-D', multiple=True,
+                 help='setting="value", override a configuration value'),
+    overload_configuration,
 ]
 
 
@@ -85,8 +95,10 @@ def version(**kwargs):
         # No need to make changes to the repo, we're just retrying.
         return True
 
-    if config.get('semantic_release', 'version_source') == 'commit':
-        set_new_version(new_version)
+    set_new_version(new_version)
+    if config.get('semantic_release', 'commit_version_number', fallback=(
+                config.get('semantic_release', 'version_source') == 'commit')
+            ):
         commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
@@ -110,7 +122,10 @@ def changelog(**kwargs):
     previous_version = get_previous_version(current_version)
     debug('changelog got previous_version', previous_version)
 
-    log = generate_changelog(previous_version, current_version)
+    if kwargs['unreleased']:
+        log = generate_changelog(current_version, None)
+    else:
+        log = generate_changelog(previous_version, current_version)
     click.echo(markdown_changelog(current_version, log, header=False))
 
     debug('noop={}, post={}'.format(kwargs.get('noop'), kwargs.get('post')))
@@ -148,14 +163,18 @@ def publish(**kwargs):
         new_version = get_new_version(current_version, level_bump)
     owner, name = get_repository_owner_and_name()
 
-    ci_checks.check('master')
-    checkout('master')
+    branch = config.get('semantic_release', 'branch')
+    debug('branch=', branch)
+    ci_checks.check(branch)
+    checkout(branch)
 
     if version(**kwargs):
         push_new_version(
-            gh_token=os.environ.get('GH_TOKEN'),
+            auth_token=get_token(),
             owner=owner,
-            name=name
+            name=name,
+            branch=branch,
+            domain=get_domain(),
         )
 
         if config.getboolean('semantic_release', 'upload_to_pypi'):
@@ -164,6 +183,8 @@ def publish(**kwargs):
                 password=os.environ.get('PYPI_PASSWORD'),
                 # We are retrying, so we don't want errors for files that are already on PyPI.
                 skip_existing=retry,
+                remove_dist=config.getboolean('semantic_release', 'remove_dist'),
+                path=config.get('semantic_release', 'dist_path'),
             )
 
         if check_token():
@@ -190,15 +211,10 @@ def publish(**kwargs):
 
 def filter_output_for_secrets(message):
     output = message
-    username = os.environ.get('PYPI_USERNAME')
-    password = os.environ.get('PYPI_PASSWORD')
-    gh_token = os.environ.get('GH_TOKEN')
-    if username != '' and username is not None:
-        output = output.replace(username, '$PYPI_USERNAME')
-    if password != '' and password is not None:
-        output = output.replace(password, '$PYPI_PASSWORD')
-    if gh_token != '' and gh_token is not None:
-        output = output.replace(gh_token, '$GH_TOKEN')
+    for secret_name in SECRET_NAMES:
+        secret = os.environ.get(secret_name)
+        if secret != '' and secret is not None:
+            output = output.replace(secret, '${}'.format(secret_name))
 
     return output
 
@@ -215,8 +231,8 @@ def main(**kwargs):
     if debug.enabled:
         debug('main args:', kwargs)
         message = ''
-        for key in ['GH_TOKEN', 'PYPI_USERNAME', 'PYPI_PASSWORD']:
-            message += '{}="{}",'.format(key, os.environ.get(key))
+        for secret_name in SECRET_NAMES:
+            message += '{}="{}",'.format(secret_name, os.environ.get(secret_name))
         debug('main env:', filter_output_for_secrets(message))
 
         obj = {}
@@ -239,6 +255,10 @@ def cmd_publish(**kwargs):
 
 @main.command(name='changelog', help=changelog.__doc__)
 @common_options
+@click.option(
+    '--unreleased/--released',
+    help="Decides whether to show the released or unreleased changelog."
+)
 def cmd_changelog(**kwargs):
     try:
         return changelog(**kwargs)

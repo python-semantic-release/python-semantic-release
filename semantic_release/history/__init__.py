@@ -2,14 +2,15 @@
 """
 import re
 from typing import Optional
-import semver
 
 import ndebug
+import semver
 
+from ..errors import ImproperConfigurationError
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
-from ..errors import ImproperConfigurationError
+
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 

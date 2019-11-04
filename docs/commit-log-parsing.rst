@@ -30,7 +30,7 @@ the changelog. The format of the output should be as follows::
     (level to bump, type of change, scope of change, (subject, body, footer))
 
 The type of change can be one of `feature`, `fix` or any string in lowercase.
-The `feature` will result in an minor release and `fix` indicates an patch release.
+The `feature` will result in an minor release and `fix` or `perf` indicates a patch release.
 To create a major release the body in the last item in the tuple must contain::
 
     BREAKING CHANGE: <explanation>

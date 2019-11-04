@@ -1,11 +1,13 @@
 from unittest import TestCase
 
 import semantic_release
-from semantic_release.history import (evaluate_version_bump, get_current_version, get_new_version,
-                                      get_previous_version, replace_version_string)
+from semantic_release.history import (evaluate_version_bump, get_current_version,
+                                      get_current_version_by_tag, get_new_version,
+                                      get_previous_version, replace_version_string, set_new_version)
 from semantic_release.history.logs import generate_changelog, markdown_changelog
 
 from . import mock
+from .mocks import mock_version_file
 
 MAJOR = (
     '221',
@@ -16,6 +18,11 @@ MAJOR2 = (
     'feat(x): Add super-feature\n\nSome explanation\n\n'
     'BREAKING CHANGE: Uses super-feature as default instead of dull-feature.'
 )
+MAJOR_MENTIONING_1_0_0 = (
+    '222',
+    'feat(x): Add super-feature\n\nSome explanation\n\n'
+    'BREAKING CHANGE: Uses super-feature as default instead of dull-feature from v1.0.0.'
+)
 MINOR = ('111', 'feat(x): Add non-breaking super-feature')
 PATCH = ('24', 'fix(x): Fix bug in super-feature')
 NO_TAG = ('191', 'docs(x): Add documentation for super-feature')
@@ -25,6 +32,7 @@ ALL_KINDS_OF_COMMIT_MESSAGES = [MINOR, MAJOR, MINOR, PATCH]
 MINOR_AND_PATCH_COMMIT_MESSAGES = [MINOR, PATCH]
 PATCH_COMMIT_MESSAGES = [PATCH, PATCH]
 MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, ('22', '1.1.0'), MAJOR]
+MAJOR_MENTIONING_LAST_VERSION = [MAJOR_MENTIONING_1_0_0, ('22', '1.0.0'), MAJOR]
 
 
 class EvaluateVersionBumpTest(TestCase):
@@ -53,10 +61,10 @@ class EvaluateVersionBumpTest(TestCase):
         self.assertEqual(evaluate_version_bump('0.0.0', 'minor'), 'minor')
         self.assertEqual(evaluate_version_bump('0.0.0', 'patch'), 'patch')
 
-    def test_should_account_for_commits_earlier_than_last_commit(self):
+    def test_should_not_skip_commits_mentioning_other_commits(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
-                        lambda *a, **kw: MAJOR_LAST_RELEASE_MINOR_AFTER):
-            self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
+                        lambda *a, **kw: MAJOR_MENTIONING_LAST_VERSION):
+            self.assertEqual(evaluate_version_bump('1.0.0'), 'major')
 
     @mock.patch('semantic_release.history.config.getboolean', lambda *x: True)
     @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [NO_TAG])
@@ -82,8 +90,8 @@ class EvaluateVersionBumpTest(TestCase):
     def test_version_bump_maintains_formatting(self):
         self.assertEqual(replace_version_string('ver="1.2.3"', 'ver', '1.2.4'), 'ver="1.2.4"')
         self.assertEqual(replace_version_string(
-                        "version = '1.2.3'", 'version', '1.2.4'),
-                        "version = '1.2.4'"
+            "version = '1.2.3'", 'version', '1.2.4'),
+            "version = '1.2.4'"
         )
 
 
@@ -99,6 +107,14 @@ class GenerateChangelogTests(TestCase):
             self.assertGreater(len(changelog['feature']), 0)
             self.assertGreater(len(changelog['fix']), 0)
             self.assertGreater(len(changelog['breaking']), 0)
+
+    def test_should_include_hash_in_section_contents(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda *a, **k: ALL_KINDS_OF_COMMIT_MESSAGES):
+            changelog = generate_changelog('0.0.0')
+            self.assertEqual(changelog['breaking'][0][0], MAJOR[0])
+            self.assertEqual(changelog['feature'][0][0], MINOR[0])
+            self.assertEqual(changelog['fix'][0][0], PATCH[0])
 
     def test_should_only_read_until_given_version(self):
         with mock.patch('semantic_release.history.logs.get_commit_log',
@@ -124,6 +140,17 @@ class GenerateChangelogTests(TestCase):
 
 def test_current_version_should_return_correct_version():
     assert get_current_version() == semantic_release.__version__
+
+
+@mock.patch('semantic_release.history.get_last_version', return_value='last_version')
+def test_current_version_should_return_git_version(mock_last_version):
+    assert 'last_version' == get_current_version_by_tag()
+
+
+@mock.patch('semantic_release.history.config.get', return_value='tag')
+@mock.patch('semantic_release.history.get_last_version', return_value=None)
+def test_current_version_should_return_default_version(mock_config, mock_last_version):
+    assert '0.0.0' == get_current_version()
 
 
 class GetPreviousVersionTests(TestCase):
@@ -168,7 +195,8 @@ class MarkdownChangelogTests(TestCase):
             'breaking': [('21', 'Uses super-feature as default instead of dull-feature.')],
             'feature': [('145', 'Add non-breaking super-feature'), ('134', 'Add super-feature')],
             'fix': [('234', 'Fix bug in super-feature')],
-            'documentation': [('0', 'Document super-feature')]
+            'documentation': [('0', 'Document super-feature')],
+            'performance': [],
         })
         self.assertEqual(
             markdown,
@@ -191,7 +219,14 @@ class MarkdownChangelogTests(TestCase):
         self.assertEqual(
             markdown_changelog(
                 '1.0.1',
-                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                {
+                    'refactor': [],
+                    'breaking': [],
+                    'feature': [],
+                    'fix': [],
+                    'documentation': [],
+                    'performance': [],
+                },
             ),
             ''
         )
@@ -201,7 +236,14 @@ class MarkdownChangelogTests(TestCase):
             '## v1.0.1\n',
             markdown_changelog(
                 '1.0.1',
-                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                {
+                    'refactor': [],
+                    'breaking': [],
+                    'feature': [],
+                    'fix': [],
+                    'documentation': [],
+                    'performance': [],
+                },
                 header=True
             )
         )
@@ -211,6 +253,27 @@ class MarkdownChangelogTests(TestCase):
             'v1.0.1',
             markdown_changelog(
                 '1.0.1',
-                {'refactor': [], 'breaking': [], 'feature': [], 'fix': [], 'documentation': []},
+                {
+                    'refactor': [],
+                    'breaking': [],
+                    'feature': [],
+                    'fix': [],
+                    'documentation': [],
+                    'performance': [],
+                },
             )
         )
+
+
+@mock.patch('builtins.open', mock_version_file)
+@mock.patch('semantic_release.history.config.get', return_value='my_version_path:my_version_var')
+def test_set_version(mock_config):
+
+    set_new_version('X.Y.Z')
+
+    handle_open = mock_version_file()
+    mock_version_file.assert_any_call('my_version_path', mode='w')
+    mock_version_file.assert_any_call('my_version_path', mode='r')
+    handle_open.read.assert_called_once_with()
+    handle_open.write.assert_called_once_with('my_version_var = \'X.Y.Z\'')
+    mock_version_file.reset_mock()

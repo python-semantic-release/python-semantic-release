@@ -17,6 +17,9 @@ TYPES = {
     'docs': 'documentation',
     'style': 'style',
     'refactor': 'refactor',
+    'build': 'build',
+    'ci': 'ci',
+    'perf': 'performance',
     'chore': 'chore',
 }
 
@@ -27,6 +30,15 @@ re_parser = re.compile(
     r'(:?\n\n(?P<text>.+))?',
     re.DOTALL
 )
+
+MINOR_TYPES = [
+    'feat',
+]
+
+PATCH_TYPES = [
+    'fix',
+    'perf',
+]
 
 
 def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, str]]:
@@ -47,10 +59,10 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
     if parsed.group('text') and 'BREAKING CHANGE' in parsed.group('text'):
         level_bump = 3
 
-    if parsed.group('type') == 'feat':
+    if parsed.group('type') in MINOR_TYPES:
         level_bump = max([level_bump, 2])
 
-    if parsed.group('type') == 'fix':
+    if parsed.group('type') in PATCH_TYPES:
         level_bump = max([level_bump, 1])
 
     body, footer = parse_text_block(parsed.group('text'))

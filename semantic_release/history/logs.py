@@ -17,7 +17,13 @@ LEVELS = {
     3: 'major',
 }
 
-CHANGELOG_SECTIONS = ['feature', 'fix', 'breaking', 'documentation']
+CHANGELOG_SECTIONS = [
+    'feature',
+    'fix',
+    'breaking',
+    'documentation',
+    'performance',
+]
 
 re_breaking = re.compile('BREAKING CHANGE: (.*)')
 
@@ -41,9 +47,8 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     commit_count = 0
 
     for _hash, commit_message in get_commit_log('v{0}'.format(current_version)):
-        if (current_version in commit_message and
-                config.get('semantic_release', 'version_source') == 'commit'):
-            debug('found {} in "{}. breaking loop'.format(current_version, commit_message))
+        if commit_message.startswith(current_version):
+            debug('"{}" is commit for {}. breaking loop'.format(commit_message, current_version))
             break
         try:
             message = current_commit_parser()(commit_message)
@@ -73,8 +78,14 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :return: a dict with different changelog sections
     """
     debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
-    changes: dict = {'feature': [], 'fix': [],
-                     'documentation': [], 'refactor': [], 'breaking': []}
+    changes: dict = {
+        'feature': [],
+        'fix': [],
+        'documentation': [],
+        'refactor': [],
+        'breaking': [],
+        'performance': [],
+    }
 
     found_the_release = to_version is None
 
@@ -102,12 +113,12 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
                 parts = re_breaking.match(message[3][1])
                 if parts:
-                    changes['breaking'].append(parts.group(1))
+                    changes['breaking'].append((_hash, parts.group(1)))
 
             if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
                 parts = re_breaking.match(message[3][2])
                 if parts:
-                    changes['breaking'].append(parts.group(1))
+                    changes['breaking'].append((_hash, parts.group(1)))
 
         except UnknownCommitMessageStyleError as err:
             debug('Ignoring', err)

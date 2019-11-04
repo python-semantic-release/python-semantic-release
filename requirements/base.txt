@@ -6,3 +6,5 @@ twine~=1.12
 requests~=2.21
 wheel
 ndebug~=0.1
+toml==0.10.0
+python-gitlab==1.10.0
