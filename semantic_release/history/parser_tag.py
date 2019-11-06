@@ -38,13 +38,13 @@ def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[s
         level = 'feature'
         level_bump = 2
         if subject:
-            subject = subject.replace(config.get('semantic_release', 'minor_tag'.format(level)), '')
+            subject = subject.replace(config.get('semantic_release', 'minor_tag'), '')
 
     elif config.get('semantic_release', 'fix_tag') in message:
         level = 'fix'
         level_bump = 1
         if subject:
-            subject = subject.replace(config.get('semantic_release', 'fix_tag'.format(level)), '')
+            subject = subject.replace(config.get('semantic_release', 'fix_tag'), '')
 
     else:
         raise UnknownCommitMessageStyleError(
