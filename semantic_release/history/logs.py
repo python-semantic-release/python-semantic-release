@@ -110,15 +110,22 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
             changes[message[1]].append((_hash, message[3][0]))
 
-            if message[3][1] and 'BREAKING CHANGE' in message[3][1]:
-                parts = re_breaking.match(message[3][1])
-                if parts:
-                    changes['breaking'].append((_hash, parts.group(1)))
+            # Handle breaking change message
+            parts = None
+            if message[0] == 3:
+                # parse footer (standard)
+                if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
+                    parts = re_breaking.match(message[3][2])
+                # parse body (not standard, kept for backwards compatibility)
+                elif message[3][1] and 'BREAKING CHANGE' in message[3][1]:
+                    parts = re_breaking.match(message[3][1])
 
-            if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
-                parts = re_breaking.match(message[3][2])
                 if parts:
-                    changes['breaking'].append((_hash, parts.group(1)))
+                    breaking_description = parts.group(1)
+                else:
+                    breaking_description = message[3][0]
+
+                changes['breaking'].append((_hash, breaking_description))
 
         except UnknownCommitMessageStyleError as err:
             debug('Ignoring', err)

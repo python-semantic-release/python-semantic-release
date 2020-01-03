@@ -19,9 +19,18 @@ MAJOR2 = (
     'BREAKING CHANGE: Uses super-feature as default instead of dull-feature.'
 )
 MAJOR_MENTIONING_1_0_0 = (
-    '222',
+    '223',
     'feat(x): Add super-feature\n\nSome explanation\n\n'
     'BREAKING CHANGE: Uses super-feature as default instead of dull-feature from v1.0.0.'
+)
+MAJOR_EXCL_WITH_FOOTER = (
+    '231',
+    'feat(x)!: Add another feature\n\n'
+    'BREAKING CHANGE: Another feature, another breaking change'
+)
+MAJOR_EXCL_NOT_FOOTER = (
+    '232',
+    'fix!: Fix a big bug that everyone exploited\n\nThis is the reason you should not exploit bugs'
 )
 MINOR = ('111', 'feat(x): Add non-breaking super-feature')
 PATCH = ('24', 'fix(x): Fix bug in super-feature')
@@ -136,6 +145,24 @@ class GenerateChangelogTests(TestCase):
                         lambda *a, **kw: PATCH_COMMIT_MESSAGES + [('23', 'chore(x): change x')]):
             changelog = generate_changelog('0.0.0')
             self.assertNotIn('chore', changelog)
+
+    def test_should_get_right_breaking_description(self):
+        param_list = [
+            (MAJOR, 'Uses super-feature as default instead of dull-feature.'),
+            (MAJOR2, 'Uses super-feature as default instead of dull-feature.'),
+            (
+                MAJOR_MENTIONING_1_0_0,
+                'Uses super-feature as default instead of dull-feature from v1.0.0.'
+            ),
+            (MAJOR_EXCL_WITH_FOOTER, 'Another feature, another breaking change'),
+            (MAJOR_EXCL_NOT_FOOTER, 'Fix a big bug that everyone exploited'),
+        ]
+        for commit, expected_description in param_list:
+            with mock.patch('semantic_release.history.logs.get_commit_log',
+                            lambda *a, **kw: [commit]):
+                with self.subTest(hash=commit[0]):
+                    changelog = generate_changelog('0.0.0')
+                    self.assertEqual(changelog['breaking'][0][1], expected_description)
 
 
 def test_current_version_should_return_correct_version():
