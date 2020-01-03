@@ -16,16 +16,20 @@ def test_parser_raises_unknown_message_style():
 
 def test_parser_return_correct_bump_level():
     assert(
-        angular_parser('feat(parsers): Add new parser pattern\n\nBREAKING CHANGE:')[0] ==
+        angular_parser('feat(parsers): Add new parser pattern\n\nBREAKING CHANGE: ')[0] ==
         3
     )
     assert(
-        angular_parser('feat(parsers)!: Add new parser pattern\n\nBREAKING CHANGE:')[0] ==
+        angular_parser('feat(parsers)!: Add new parser pattern\n\nBREAKING CHANGE: ')[0] ==
         3
     )
     assert(
         angular_parser('feat(parsers): Add new parser pattern\n\n'
-                       'New pattern is awesome\n\nBREAKING CHANGE:')[0] ==
+                       'New pattern is awesome\n\nBREAKING CHANGE: ')[0] ==
+        3
+    )
+    assert(
+        angular_parser('feat(parsers): Add new parser pattern\n\nBREAKING-CHANGE: change !')[0] ==
         3
     )
     assert angular_parser('feat(parser): Add emoji parser')[0] == 2

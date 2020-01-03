@@ -1,6 +1,9 @@
 """Commit parser helpers
 """
+import re
 from typing import Tuple
+
+re_breaking = re.compile('BREAKING[ -]CHANGE: (.*)')
 
 
 def parse_text_block(text: str) -> Tuple[str, str]:

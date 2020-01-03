@@ -1,6 +1,5 @@
 """Logs
 """
-import re
 from typing import Optional
 
 import ndebug
@@ -8,6 +7,7 @@ import ndebug
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
+from .parser_helpers import re_breaking
 
 debug = ndebug.create(__name__)
 
@@ -24,8 +24,6 @@ CHANGELOG_SECTIONS = [
     'documentation',
     'performance',
 ]
-
-re_breaking = re.compile('BREAKING CHANGE: (.*)')
 
 
 def evaluate_version_bump(current_version: str, force: str = None) -> Optional[str]:
