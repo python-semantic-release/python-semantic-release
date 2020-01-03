@@ -25,7 +25,8 @@ TYPES = {
 
 re_parser = re.compile(
     r'(?P<type>' + '|'.join(TYPES.keys()) + ')'
-    r'(?:\((?P<scope>[^\n]+)\))?: '
+    r'(?:\((?P<scope>[^\n]+)\))?'
+    r'(?P<break>!)?: '
     r'(?P<subject>[^\n]+)'
     r'(:?\n\n(?P<text>.+))?',
     re.DOTALL
@@ -56,7 +57,7 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
         )
 
     level_bump = 0
-    if parsed.group('text') and 'BREAKING CHANGE' in parsed.group('text'):
+    if parsed.group('break') or (parsed.group('text') and 'BREAKING CHANGE' in parsed.group('text')):
         level_bump = 3
 
     if parsed.group('type') in MINOR_TYPES:
