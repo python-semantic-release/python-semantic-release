@@ -15,7 +15,7 @@ class PypiTests(TestCase):
             [
                 mock.call('rm -rf dist'),
                 mock.call('python setup.py sdist bdist_wheel'),
-                mock.call('twine upload -u username -p password  dist/*'),
+                mock.call("twine upload -u 'username' -p 'password'  \"dist/*\""),
                 mock.call('rm -rf dist')
             ]
         )
@@ -27,7 +27,7 @@ class PypiTests(TestCase):
             mock_run.call_args_list,
             [
                 mock.call('python setup.py sdist bdist_wheel'),
-                mock.call('twine upload -u username -p password  dist/*'),
+                mock.call("twine upload -u 'username' -p 'password'  \"dist/*\""),
             ]
         )
 
@@ -38,7 +38,8 @@ class PypiTests(TestCase):
         self.assertEqual(args[0], mock.call('rm -rf custom-dist'),)
         self.assertEqual(args[1], mock.call('python setup.py sdist bdist_wheel'),)
         self.assertEqual(args[2], mock.call(
-            'twine upload -u username -p password  custom-dist/*'),)
+            "twine upload -u 'username' -p 'password'  \"custom-dist/*\""),
+        )
         self.assertEqual(args[3], mock.call('rm -rf custom-dist'))
 
     def test_raises_error_when_missing_credentials(self):

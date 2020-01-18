@@ -27,7 +27,7 @@ def upload_to_pypi(
         run(f'rm -rf {path}')
     run('python setup.py {}'.format(dists))
     run(
-        'twine upload -u {} -p {} {} {}/*'.format(
+        "twine upload -u '{}' -p '{}' {} \"{}/*\"".format(
             username,
             password,
             '--skip-existing' if skip_existing else '',
