@@ -41,7 +41,7 @@ setup(
     install_requires=requirements,
     entry_points='''
         [console_scripts]
-        semantic-release=semantic_release.cli:main
+        semantic-release=semantic_release.cli:entry
     ''',
     include_package_data=True,
     classifiers=[
