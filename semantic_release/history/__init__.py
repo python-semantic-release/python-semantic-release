@@ -45,11 +45,20 @@ def get_current_version_by_config_file() -> str:
     variable = variable.strip()
     debug(filename, variable)
     with open(filename, 'r') as fd:
+        file_text = fd.read()
+        # checks for variable in the format variable=version
         parts = re.search(
             r'^{0}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(variable),
-            fd.read(),
+            file_text,
             re.MULTILINE
         )
+        # checks for variable in the format variable:version
+        if not parts:
+            parts = re.search(
+                r'{0}\s*:\s*[\'"]([^\'"]*)[\'"]'.format(variable),
+                file_text,
+                re.MULTILINE
+            )
         if not parts:
             raise ImproperConfigurationError
         debug(parts)
@@ -116,11 +125,19 @@ def replace_version_string(content, variable, new_version):
     :param new_version: The new version number as a string
     :return: A string with the updated version number
     """
-    return re.sub(
+    new_content = re.sub(
         r'({0} ?= ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable),
         r'\g<1>{0}\g<2>'.format(new_version),
         content
     )
+    # The version string did not chage because above re did not match. Use : instead of =
+    if (new_content == content):
+        new_content = re.sub(
+            r'({0} ?: ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable),
+            r'\g<1>{0}\g<2>'.format(new_version),
+            content
+        )
+    return new_content
 
 
 def set_new_version(new_version: str) -> bool:
