@@ -97,8 +97,8 @@ def version(**kwargs):
 
     set_new_version(new_version)
     if config.get('semantic_release', 'commit_version_number', fallback=(
-                config.get('semantic_release', 'version_source') == 'commit')
-            ):
+        config.get('semantic_release', 'version_source') == 'commit')
+    ):
         commit_new_version(new_version)
     tag_new_version(new_version)
     click.echo('Bumping with a {0} version to {1}.'.format(level_bump, new_version))
@@ -218,6 +218,11 @@ def filter_output_for_secrets(message):
 
     return output
 
+
+def entry():
+    ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith('--') else -1)
+    main(args=ARGS)
+
 #
 # Making the CLI commands.
 # We have a level of indirection to the logical commands
@@ -285,5 +290,4 @@ if __name__ == '__main__':
     # This will have to be removed if there are ever global options
     # that are not valid for a subcommand.
     #
-    ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith('--') else -1)
-    main(args=ARGS)
+    entry()
