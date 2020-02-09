@@ -19,7 +19,7 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
 project = u'python-semantic-release'
-copyright = u'2015, Rolf Erik Lekang'
+copyright = u'2020, Rolf Erik Lekang'
 
 version = semantic_release.__version__
 release = semantic_release.__version__
@@ -63,5 +63,5 @@ texinfo_documents = [
 epub_title = u'python-semantic-release'
 epub_author = u'Rolf Erik Lekang'
 epub_publisher = u'Rolf Erik Lekang'
-epub_copyright = u'2015, Rolf Erik Lekang'
+epub_copyright = u'2020, Rolf Erik Lekang'
 epub_exclude_files = ['search.html']

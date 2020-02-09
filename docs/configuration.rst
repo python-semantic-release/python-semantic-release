@@ -3,7 +3,10 @@
 Configuration
 -------------
 
-All configuration options described here can be overloaded in a ``setup.cfg`` file in a ``semantic_release`` section and/or in a ``pyproject.toml`` file in a ``[tool.semantic_release]`` section. ``pyproject.toml`` is loaded after ``setup.cfg`` and has the priority.
+All configuration options described here can be overloaded in a ``setup.cfg``
+file in a ``semantic_release`` section and/or in a ``pyproject.toml`` file in
+a ``[tool.semantic_release]`` section. ``pyproject.toml`` is loaded after
+``setup.cfg`` and has the priority.
 
 Moreover, those configuration values can be overloaded with the ``-D`` option, like so ::
 

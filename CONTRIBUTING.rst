@@ -28,3 +28,23 @@ Releases
 
 This package is released by python-semantic-release on each master build, thus if there are changes
 that should result in a new release it will happen if the build is green.
+
+
+Development
+~~~~~~~~~~~
+
+Install this module and the development dependencies:
+
+::
+
+    python setup.py develop
+    pip install -r requirements/dev.txt
+
+Testing
+~~~~~~~
+
+To test your modifications locally:
+
+::
+
+    tox
