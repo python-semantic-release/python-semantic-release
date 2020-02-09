@@ -75,11 +75,20 @@ Configuration
 
 Configuration belongs in ``semantic_release`` section of the setup.cfg
 file in your project. Details about configuration options can be found
-in `the configuration
-documentation <http://python-semantic-release.readthedocs.org/en/latest/configuration.html>`__.
+in `the configuration documentation <http://python-semantic-release.readthedocs.org/en/latest/configuration.html>`__.
 
+
+Running it on CI
+~~~~~~~~~~~~~~~~
+
+Getting a fully automated setup with automatic releases from CI can be helpful for some projects.
+It was the main motivation to create this tool. There is a dedicated documentation page for setting
+up with different CI tools:
+`Automatic release with CI documentation <https://python-semantic-release.readthedocs.io/en/latest/automatic-releases/index.html>`__
 
 
 .. |Build status| image:: https://circleci.com/gh/relekang/python-semantic-release/tree/master.svg?style=svg
     :target: https://circleci.com/gh/relekang/python-semantic-release/tree/master
 .. |PyPI version| image:: https://badge.fury.io/py/python-semantic-release.svg
+
+
