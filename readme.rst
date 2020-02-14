@@ -30,9 +30,10 @@ Configure it
 ~~~~~~~~~~~~
 
 There are a three different ways to configure semantic-release.
-- ``[semantic_release]`` section in ``setup.cfg``
-- ``[tool.semantic_release]`` section in ``pyproject.toml``
-- Passing ``-D`` to the command like ``semantic-release <command> -D <option_name>=<option_value>``
+
+-  ``[semantic_release]`` section in ``setup.cfg``
+-  ``[tool.semantic_release]`` section in ``pyproject.toml``
+-  Passing ``-D`` to the command like ``semantic-release <command> -D <option_name>=<option_value>``
 
 The important thing to configure for all projects is where the version variable is stored. This
 is used to get the current version and updating it. The config variable for that is ``version_variable``.
