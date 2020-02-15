@@ -86,46 +86,46 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = '{domain}/repos/{owner}/{repo}/releases?access_token={token}'
+        url = '{domain}/repos/{owner}/{repo}/releases'
         tag = 'v{0}'.format(version)
         debug_gh('listing releases')
         response = requests.post(
             url.format(
                 domain=Github.API_URL,
                 owner=owner,
-                repo=repo,
-                token=Github.token()
+                repo=repo
             ),
-            json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
+            json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
+            headers={'Authorization': 'token {}'.format(Github.token())}
         )
         status, _ = response.status_code == 201, response.json()
         debug_gh('response #1, status_code={}, status={}'.format(response.status_code, status))
 
         if not status:
             debug_gh('not status, getting tag', tag)
-            url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}?access_token={token}'
+            url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}'
             response = requests.get(
                 url.format(
                     domain=Github.API_URL,
                     owner=owner,
                     repo=repo,
-                    token=Github().token(),
                     tag=tag
                 ),
+                headers={'Authorization': 'token {}'.format(Github.token())}
             )
             release_id = response.json()['id']
             debug_gh('response #2, status_code={}'.format(response.status_code))
-            url = '{domain}/repos/{owner}/{repo}/releases/{id}?access_token={token}'
+            url = '{domain}/repos/{owner}/{repo}/releases/{id}'
             debug_gh('getting release_id', release_id)
             response = requests.post(
                 url.format(
                     domain=Github.API_URL,
                     owner=owner,
                     repo=repo,
-                    token=Github().token(),
                     id=release_id
                 ),
-                json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False}
+                json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
+                headers={'Authorization': 'token {}'.format(Github.token())}
             )
             status, _ = response.status_code == 200, response.json()
             debug_gh('response #3, status_code={}, status={}'.format(response.status_code, status))
