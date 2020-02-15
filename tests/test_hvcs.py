@@ -128,7 +128,7 @@ class GithubReleaseTests(TestCase):
             self.assertEqual(payload['body'], 'text')
             self.assertEqual(payload['draft'], False)
             self.assertEqual(payload['prerelease'], False)
-            self.assertIn('?access_token=super-token', request.url)
+            self.assertEqual('token super-token', request.headers['Authorization'])
 
             return 201, {}, json.dumps({})
 
