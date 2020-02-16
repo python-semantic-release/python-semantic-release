@@ -86,9 +86,33 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = '{domain}/repos/{owner}/{repo}/releases'
+        debug_gh('attempting to create release')
         tag = 'v{0}'.format(version)
-        debug_gh('listing releases')
+        success = Github.create_release(owner, repo, tag, changelog)
+
+        if not success:
+            debug_gh('unsuccessful, looking for an existing release to update', tag)
+            release_id = Github.get_tag(owner, repo, tag)
+
+            debug_gh('updating release', release_id)
+            success = Github.edit_release(owner, repo, release_id, tag, changelog)
+
+        return success
+
+    @classmethod
+    def create_release(cls, owner, repo, tag, changelog):
+        """Create a release
+
+        https://developer.github.com/v3/repos/releases/#create-a-release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param tag: The tag name corresponding to this release
+        :param changelog: The release notes for this version
+
+        :returns: Whether the request succeeded
+        """
+        url = '{domain}/repos/{owner}/{repo}/releases'
         response = requests.post(
             url.format(
                 domain=Github.API_URL,
@@ -98,38 +122,65 @@ class Github(Base):
             json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
             headers={'Authorization': 'token {}'.format(Github.token())}
         )
-        status, _ = response.status_code == 201, response.json()
-        debug_gh('response #1, status_code={}, status={}'.format(response.status_code, status))
+        debug_gh('response #1, status_code={}'.format(response.status_code))
 
-        if not status:
-            debug_gh('not status, getting tag', tag)
-            url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}'
-            response = requests.get(
-                url.format(
-                    domain=Github.API_URL,
-                    owner=owner,
-                    repo=repo,
-                    tag=tag
-                ),
-                headers={'Authorization': 'token {}'.format(Github.token())}
-            )
-            release_id = response.json()['id']
-            debug_gh('response #2, status_code={}'.format(response.status_code))
-            url = '{domain}/repos/{owner}/{repo}/releases/{id}'
-            debug_gh('getting release_id', release_id)
-            response = requests.post(
-                url.format(
-                    domain=Github.API_URL,
-                    owner=owner,
-                    repo=repo,
-                    id=release_id
-                ),
-                json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
-                headers={'Authorization': 'token {}'.format(Github.token())}
-            )
-            status, _ = response.status_code == 200, response.json()
-            debug_gh('response #3, status_code={}, status={}'.format(response.status_code, status))
-        return status
+        return response.status_code == 201
+
+    @classmethod
+    def get_tag(cls, owner, repo, tag):
+        """Get a release by tag name
+
+        https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param tag: The tag to find a release for
+
+        :returns: ID of the found release
+        """
+        url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}'
+        response = requests.get(
+            url.format(
+                domain=Github.API_URL,
+                owner=owner,
+                repo=repo,
+                tag=tag
+            ),
+            headers={'Authorization': 'token {}'.format(Github.token())}
+        )
+        release_id = response.json()['id']
+        debug_gh('response #2, status_code={}, release_id={}'
+            .format(response.status_code, release_id))
+
+        return release_id
+
+    @classmethod
+    def edit_release(cls, owner, repo, release_id, tag, changelog):
+        """Edit a release
+
+        https://developer.github.com/v3/repos/releases/#edit-a-release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param release_id: ID of the release to update
+        :param changelog: New changelog text
+
+        :returns: Whether the request succeeded
+        """
+        url = '{domain}/repos/{owner}/{repo}/releases/{id}'
+        response = requests.post(
+            url.format(
+                domain=Github.API_URL,
+                owner=owner,
+                repo=repo,
+                id=release_id
+            ),
+            json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
+            headers={'Authorization': 'token {}'.format(Github.token())}
+        )
+        debug_gh('response #3, status_code={}'.format(response.status_code))
+
+        return response.status_code == 200
 
 
 class Gitlab(Base):
