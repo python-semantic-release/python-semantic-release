@@ -109,7 +109,8 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             changes[message[1]].append((
                 _hash,
                 # Capitalize the first letter of the message
-                message[3][0][0].upper() + message[3][0][1:]
+                message[3][0].capitalize()
+
             ))
 
             # Handle breaking change message
