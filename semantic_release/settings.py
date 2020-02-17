@@ -38,7 +38,7 @@ def _config():
                 for key, value in pyproject_toml_settings:
                     parser['semantic_release'][key] = str(value)
             except toml.TomlDecodeError:
-                debug("Could not decode pyproject.toml")
+                debug('Could not decode pyproject.toml')
 
     return parser
 

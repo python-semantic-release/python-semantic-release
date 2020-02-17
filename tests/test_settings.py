@@ -84,7 +84,6 @@ class ConfigTests(TestCase):
         with open(dummy_conf_path, 'w') as dummy_conf_file:
             dummy_conf_file.write(bad_toml_conf_content)
 
-        print('Before calling config again')
         _ = _config()
         mock_getcwd.assert_called_once_with()
         mock_debug.assert_called_once_with('Could not decode pyproject.toml')
