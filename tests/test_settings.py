@@ -1,4 +1,5 @@
 import os
+import platform
 from unittest import TestCase
 
 import toml
@@ -13,7 +14,11 @@ assert reset_config
 
 
 # Set path to this directory
-here = os.path.abspath(os.path.dirname(__file__))
+temp_dir = (
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "tmp")
+    if platform.system() == "Windows"
+    else "/tmp/"
+)
 
 
 class ConfigTests(TestCase):
@@ -25,7 +30,7 @@ class ConfigTests(TestCase):
             'semantic_release/__init__.py:__version__'
         )
 
-    @mock.patch('semantic_release.settings.getcwd', return_value='/tmp/')
+    @mock.patch('semantic_release.settings.getcwd', return_value=temp_dir)
     def test_defaults(self, mock_getcwd):
         config = _config()
         mock_getcwd.assert_called_once_with()
@@ -36,10 +41,10 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get('semantic_release', 'hvcs'), 'github')
         self.assertEqual(config.getboolean('semantic_release', 'upload_to_pypi'), True)
 
-    @mock.patch('semantic_release.settings.getcwd', return_value='/tmp/')
+    @mock.patch('semantic_release.settings.getcwd', return_value=temp_dir)
     def test_toml_override(self, mock_getcwd):
         # create temporary toml config file
-        dummy_conf_path = os.path.join(here, 'tmp', 'pyproject.toml')
+        dummy_conf_path = os.path.join(temp_dir, 'pyproject.toml')
         os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
         toml_conf_content = {
             'tool': {
@@ -65,10 +70,10 @@ class ConfigTests(TestCase):
         os.remove(dummy_conf_path)
 
     @mock.patch('semantic_release.settings.debug')
-    @mock.patch('semantic_release.settings.getcwd', return_value='/tmp/')
+    @mock.patch('semantic_release.settings.getcwd', return_value=temp_dir)
     def test_no_raise_toml_error(self, mock_getcwd, mock_debug):
         # create temporary toml config file
-        dummy_conf_path = os.path.join(here, 'tmp', 'pyproject.toml')
+        dummy_conf_path = os.path.join(temp_dir, 'pyproject.toml')
         bad_toml_conf_content = """
         TITLE OF BAD TOML
         [section]
@@ -79,6 +84,7 @@ class ConfigTests(TestCase):
         with open(dummy_conf_path, 'w') as dummy_conf_file:
             dummy_conf_file.write(bad_toml_conf_content)
 
+        print('Before calling config again')
         _ = _config()
         mock_getcwd.assert_called_once_with()
         mock_debug.assert_called_once_with('Could not decode pyproject.toml')
