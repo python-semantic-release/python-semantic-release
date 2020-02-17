@@ -150,7 +150,7 @@ class Github(Base):
         )
         release_id = response.json()['id']
         debug_gh('response #2, status_code={}, release_id={}'
-            .format(response.status_code, release_id))
+                 .format(response.status_code, release_id))
 
         return release_id
 
