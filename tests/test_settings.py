@@ -12,6 +12,10 @@ from . import mock, reset_config
 assert reset_config
 
 
+# Set path to this directory
+here = os.path.abspath(os.path.dirname(__file__))
+
+
 class ConfigTests(TestCase):
 
     def test_config(self):
@@ -35,7 +39,8 @@ class ConfigTests(TestCase):
     @mock.patch('semantic_release.settings.getcwd', return_value='/tmp/')
     def test_toml_override(self, mock_getcwd):
         # create temporary toml config file
-        dummy_conf_path = '/tmp/pyproject.toml'
+        dummy_conf_path = os.path.join(here, 'tmp', 'pyproject.toml')
+        os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
         toml_conf_content = {
             'tool': {
                 'foo': {'bar': 'baz'},
@@ -63,12 +68,14 @@ class ConfigTests(TestCase):
     @mock.patch('semantic_release.settings.getcwd', return_value='/tmp/')
     def test_no_raise_toml_error(self, mock_getcwd, mock_debug):
         # create temporary toml config file
-        dummy_conf_path = '/tmp/pyproject.toml'
+        dummy_conf_path = os.path.join(here, 'tmp', 'pyproject.toml')
         bad_toml_conf_content = """
         TITLE OF BAD TOML
         [section]
         key = # BAD BECAUSE NO VALUE
         """
+        os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
+
         with open(dummy_conf_path, 'w') as dummy_conf_file:
             dummy_conf_file.write(bad_toml_conf_content)
 
