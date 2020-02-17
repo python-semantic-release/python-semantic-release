@@ -92,7 +92,7 @@ class Github(Base):
 
         if not success:
             debug_gh('unsuccessful, looking for an existing release to update', tag)
-            release_id = Github.get_tag(owner, repo, tag)
+            release_id = Github.get_release_by_tag(owner, repo, tag)
 
             debug_gh('updating release', release_id)
             success = Github.edit_release(owner, repo, release_id, tag, changelog)
@@ -127,7 +127,7 @@ class Github(Base):
         return response.status_code == 201
 
     @classmethod
-    def get_tag(cls, owner, repo, tag):
+    def get_release_by_tag(cls, owner, repo, tag):
         """Get a release by tag name
 
         https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
