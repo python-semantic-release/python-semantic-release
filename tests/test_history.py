@@ -164,6 +164,12 @@ class GenerateChangelogTests(TestCase):
                     changelog = generate_changelog('0.0.0')
                     self.assertEqual(changelog['breaking'][0][1], expected_description)
 
+    def test_messages_are_capitalized(self):
+        with mock.patch('semantic_release.history.logs.get_commit_log',
+                        lambda *a, **k: [('23', 'fix(x): abcd')]):
+            changelog = generate_changelog('0.0.0')
+            self.assertEqual(changelog['fix'][0][1], 'Abcd')
+
 
 def test_current_version_should_return_correct_version():
     assert get_current_version() == semantic_release.__version__
