@@ -171,6 +171,7 @@ def publish(**kwargs):
     checkout(branch)
 
     if version(**kwargs):
+        click.echo('Pushing new version')
         push_new_version(
             auth_token=get_token(),
             owner=owner,
@@ -203,6 +204,7 @@ def publish(**kwargs):
             path = config.get('semantic_release', 'dist_path') or 'dist'
             remove_dist = config.getboolean('semantic_release', 'remove_dist')
 
+            click.echo('Building distributions')
             if remove_dist:
                 # Remove old distributions before building
                 remove_dists(path)
