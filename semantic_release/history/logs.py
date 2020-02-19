@@ -52,7 +52,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
             message = current_commit_parser()(commit_message)
             changes.append(message[0])
         except UnknownCommitMessageStyleError as err:
-            debug('ignored', err)
+            debug('ignored commit', err)
             pass
 
         commit_count += 1
@@ -61,8 +61,13 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         level = max(changes)
         if level in LEVELS:
             bump = LEVELS[level]
+            debug(f'Evaluated {bump}({level}) from {changes}')
+        else:
+            debug(f'Unknown level {level}')
+
     if config.getboolean('semantic_release', 'patch_without_tag') and commit_count:
         bump = 'patch'
+        debug(f'Changing bump to patch based on config patch_without_tag')
     return bump
 
 
