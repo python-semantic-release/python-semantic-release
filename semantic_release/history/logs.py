@@ -48,6 +48,9 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         if commit_message.startswith(current_version):
             debug('"{}" is commit for {}. breaking loop'.format(commit_message, current_version))
             break
+
+        commit_count += 1
+
         try:
             message = current_commit_parser()(commit_message)
             changes.append(message[0])
@@ -55,7 +58,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
             debug('ignored commit', err)
             pass
 
-        commit_count += 1
+    debug(f'commit_count={commit_count}')
 
     if changes:
         level = max(changes)
@@ -65,9 +68,15 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         else:
             debug(f'Unknown level {level}')
 
-    if config.getboolean('semantic_release', 'patch_without_tag') and commit_count:
+    if (
+        config.getboolean('semantic_release', 'patch_without_tag') and
+        commit_count > 0 and
+        bump is None
+    ):
         bump = 'patch'
         debug(f'Changing bump to patch based on config patch_without_tag')
+
+    debug(f'evaluate_version_bump returned {bump}')
     return bump
 
 

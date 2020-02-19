@@ -43,6 +43,8 @@ PATCH_COMMIT_MESSAGES = [PATCH, PATCH]
 MAJOR_LAST_RELEASE_MINOR_AFTER = [MINOR, ('22', '1.1.0'), MAJOR]
 MAJOR_MENTIONING_LAST_VERSION = [MAJOR_MENTIONING_1_0_0, ('22', '1.0.0'), MAJOR]
 
+PATCH_WIHTOUT_TAG = ('semantic_release', 'patch_without_tag')
+
 
 class EvaluateVersionBumpTest(TestCase):
     def test_major(self):
@@ -75,12 +77,17 @@ class EvaluateVersionBumpTest(TestCase):
                         lambda *a, **kw: MAJOR_MENTIONING_LAST_VERSION):
             self.assertEqual(evaluate_version_bump('1.0.0'), 'major')
 
-    @mock.patch('semantic_release.history.config.getboolean', lambda *x: True)
+    @mock.patch('semantic_release.history.config.getboolean', lambda *x: x == PATCH_WIHTOUT_TAG)
+    @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [MINOR])
+    def test_should_minor_with_patch_without_tag(self):
+        self.assertEqual(evaluate_version_bump('1.1.0'), 'minor')
+
+    @mock.patch('semantic_release.history.config.getboolean', lambda *x: x == PATCH_WIHTOUT_TAG)
     @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [NO_TAG])
     def test_should_patch_without_tagged_commits(self):
         self.assertEqual(evaluate_version_bump('1.1.0'), 'patch')
 
-    @mock.patch('semantic_release.history.config.getboolean', lambda *x: False)
+    @mock.patch('semantic_release.history.config.getboolean', lambda *x: x != PATCH_WIHTOUT_TAG)
     @mock.patch('semantic_release.history.logs.get_commit_log', lambda *a, **kw: [NO_TAG])
     def test_should_return_none_without_tagged_commits(self):
         self.assertIsNone(evaluate_version_bump('1.1.0'))
