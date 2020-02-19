@@ -331,6 +331,8 @@ def test_publish_should_call_functions(mocker, runner):
     mock_log = mocker.patch('semantic_release.cli.post_changelog')
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
     mock_pypi = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mock_build_dists = mocker.patch('semantic_release.cli.build_dists')
+    mock_remove_dists = mocker.patch('semantic_release.cli.remove_dists')
     mocker.patch('semantic_release.cli.get_repository_owner_and_name',
                  return_value=('relekang', 'python-semantic-release'))
     mocker.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'feature')
@@ -342,6 +344,8 @@ def test_publish_should_call_functions(mocker, runner):
     assert result.exit_code == 0
     assert mock_ci_check.called
     assert mock_push.called
+    assert mock_remove_dists.called
+    assert mock_build_dists.called
     assert mock_pypi.called
     mock_version.assert_called_once_with(
         noop=False,

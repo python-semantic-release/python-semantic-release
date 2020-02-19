@@ -9,6 +9,7 @@ import ndebug
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
 
+from .dist import build_dists, remove_dists
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
 from .history.logs import generate_changelog, markdown_changelog
@@ -178,14 +179,25 @@ def publish(**kwargs):
         )
 
         if config.getboolean('semantic_release', 'upload_to_pypi'):
+            path = config.get('semantic_release', 'dist_path') or 'dist'
+            remove_dist = config.getboolean('semantic_release', 'remove_dist')
+            if remove_dist is None:
+                remove_dist = True
+
+            if remove_dist:
+                # Remove old distributions before building
+                remove_dists(path)
+            build_dists()
+
             upload_to_pypi(
                 username=os.environ.get('PYPI_USERNAME'),
                 password=os.environ.get('PYPI_PASSWORD'),
                 # We are retrying, so we don't want errors for files that are already on PyPI.
-                skip_existing=retry,
-                remove_dist=config.getboolean('semantic_release', 'remove_dist'),
-                path=config.get('semantic_release', 'dist_path'),
+                skip_existing=retry
             )
+
+            if remove_dist:
+                remove_dists(path)
 
         if check_token():
             click.echo('Updating changelog')
