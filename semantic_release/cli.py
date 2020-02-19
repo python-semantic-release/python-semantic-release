@@ -180,6 +180,28 @@ def publish(**kwargs):
             domain=get_domain(),
         )
 
+        # Get config options for uploads
+        dist_path = config.get('semantic_release', 'dist_path')
+        remove_dist = config.getboolean('semantic_release', 'remove_dist')
+        upload_pypi = config.getboolean('semantic_release', 'upload_to_pypi')
+        upload_release = config.getboolean('semantic_release', 'upload_to_release')
+
+        if upload_pypi or upload_release:
+            click.echo('Building distributions')
+            if remove_dist:
+                # Remove old distributions before building
+                remove_dists(dist_path)
+            build_dists()
+        if upload_pypi:
+            click.echo('Uploading to PyPI')
+            upload_to_pypi(
+                path=dist_path,
+                username=os.environ.get('PYPI_USERNAME'),
+                password=os.environ.get('PYPI_PASSWORD'),
+                # We are retrying, so we don't want errors for files that are already on PyPI.
+                skip_existing=retry
+            )
+
         if check_token():
             click.echo('Updating changelog')
             try:
@@ -192,39 +214,17 @@ def publish(**kwargs):
                 )
             except GitError:
                 click.echo(click.style('Posting changelog failed.', 'red'), err=True)
-
         else:
             click.echo(
                 click.style('Missing token: cannot post changelog', 'red'), err=True)
 
-        # Get config options for uploads
-        upload_pypi = config.getboolean('semantic_release', 'upload_to_pypi')
-        upload_release = config.getboolean('semantic_release', 'upload_to_release')
-        if upload_pypi or upload_release:
-            path = config.get('semantic_release', 'dist_path') or 'dist'
-            remove_dist = config.getboolean('semantic_release', 'remove_dist')
-
-            click.echo('Building distributions')
-            if remove_dist:
-                # Remove old distributions before building
-                remove_dists(path)
-            build_dists()
-
-            if upload_pypi:
-                click.echo('Uploading to PyPI')
-                upload_to_pypi(
-                    path=path,
-                    username=os.environ.get('PYPI_USERNAME'),
-                    password=os.environ.get('PYPI_PASSWORD'),
-                    # We are retrying, so we don't want errors for files that are already on PyPI.
-                    skip_existing=retry
-                )
-            if upload_release and check_token():
-                click.echo('Uploading to HVCS release')
-                upload_to_release(owner, name, new_version, path)
-
-            if remove_dist:
-                remove_dists(path)
+        # Upload to GitHub Releases
+        if upload_release and check_token():
+            click.echo('Uploading to HVCS release')
+            upload_to_release(owner, name, new_version, dist_path)
+        # Remove distribution files as they are no longer needed
+        if remove_dist:
+            remove_dists(dist_path)
 
         click.echo(click.style('New release published', 'green'))
     else:

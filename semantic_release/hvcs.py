@@ -205,6 +205,7 @@ class Github(Base):
         )
         debug_gh('Asset upload: url={}, status={}'.format(
                  response.url, response.status_code))
+        debug_gh(response.json())
         return response.status_code == 201
 
     @classmethod
