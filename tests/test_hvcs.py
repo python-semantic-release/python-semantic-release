@@ -122,6 +122,8 @@ class GithubReleaseTests(TestCase):
     asset_url = 'https://uploads.github.com/repos/relekang/rmoq/releases/1/assets'
     asset_url_params = ('https://uploads.github.com/repos/relekang/rmoq/releases/1/assets'
                         '?name=testupload.md&label=Dummy+file')
+    dist_asset_url_params = ('https://uploads.github.com/repos/relekang/rmoq/releases/1/assets'
+                             '?name=testupload.md')
 
     @responses.activate
     @mock.patch('semantic_release.hvcs.Github.token', return_value='super-token')
@@ -194,6 +196,42 @@ class GithubReleaseTests(TestCase):
         )
         status = Github.upload_asset(
             'relekang', 'rmoq', 1, dummy_file_path, 'Dummy file')
+        self.assertTrue(status)
+
+        # Remove test file
+        os.remove(dummy_file_path)
+
+    @responses.activate
+    @mock.patch('semantic_release.hvcs.Github.token', return_value='super-token')
+    def test_should_upload_dists(self, mock_token):
+        # Create temporary file to upload
+        os.makedirs('/tmp/dist/', exist_ok=True)
+        dummy_file_path = '/tmp/dist/testupload.md'
+        dummy_content = '# Test File\n\n*Dummy asset for testing uploads.*'
+        with open(dummy_file_path, 'w') as dummy_file:
+            dummy_file.write(dummy_content)
+
+        def request_callback(request):
+            self.assertEqual(request.body.decode(), dummy_content)
+            self.assertEqual(request.url, self.dist_asset_url_params)
+            self.assertEqual(request.headers['Content-Type'], 'text/markdown')
+            self.assertEqual('token super-token', request.headers['Authorization'])
+
+            return 201, {}, json.dumps({})
+
+        responses.add(
+            responses.GET,
+            self.get_url,
+            status=200,
+            body='{"id": 1}',
+            content_type='application/json'
+        )
+        responses.add_callback(
+            responses.POST,
+            self.asset_url,
+            callback=request_callback
+        )
+        status = Github.upload_dists('relekang', 'rmoq', '1.0.0', '/tmp/dist/')
         self.assertTrue(status)
 
         # Remove test file
