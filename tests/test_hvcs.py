@@ -193,7 +193,7 @@ class GithubReleaseTests(TestCase):
             callback=request_callback
         )
         status = Github.upload_asset(
-            'relekang', 'rmoq', 1, dummy_file_path, 'text/markdown', 'Dummy file')
+            'relekang', 'rmoq', 1, dummy_file_path, 'Dummy file')
         self.assertTrue(status)
 
         # Remove test file

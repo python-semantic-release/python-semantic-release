@@ -1,5 +1,6 @@
 """HVCS
 """
+import mimetypes
 import os
 from typing import Optional
 
@@ -133,8 +134,7 @@ class Github(Base):
 
     @classmethod
     def upload_asset(
-            cls, owner: str, repo: str, release_id: int,
-            file: str, content_type: str, label: str = None) -> bool:
+            cls, owner: str, repo: str, release_id: int, file: str, label: str = None) -> bool:
         """Upload an asset to an existing release
 
         https://developer.github.com/v3/repos/releases/#upload-a-release-asset
@@ -143,7 +143,6 @@ class Github(Base):
         :param repo: The repository name
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
-        :param content_type: Content type of the uploaded file, e.g. application/zip
         :param label: Custom label for this file
 
         :return: The status of the request
@@ -159,7 +158,7 @@ class Github(Base):
             params={'name': os.path.basename(file), 'label': label},
             headers={
                 'Authorization': 'token {}'.format(Github.token()),
-                'Content-Type': content_type
+                'Content-Type': mimetypes.guess_type(file, strict=False)[0]
             },
             data=open(file, 'rb').read()
         )
