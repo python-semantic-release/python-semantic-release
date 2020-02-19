@@ -15,6 +15,9 @@ debug = ndebug.create(__name__)
 debug_gh = ndebug.create(__name__ + ':github')
 debug_gl = ndebug.create(__name__ + ':gitlab')
 
+# Add a mime type for wheels so asset upload doesn't fail
+mimetypes.add_type('application/x-wheel+zip', '.whl', False)
+
 
 class Base(object):
 
@@ -37,7 +40,8 @@ class Base(object):
 
     @classmethod
     def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
-        raise NotImplementedError
+        # Skip on unsupported HVCS instead of raising error
+        return True
 
 
 class Github(Base):
@@ -166,6 +170,8 @@ class Github(Base):
             },
             data=open(file, 'rb').read()
         )
+        debug_gh('Asset upload: url={}, status={}'.format(
+                 response.url, response.status_code))
         return response.status_code == 201
 
     @classmethod
@@ -198,13 +204,14 @@ class Github(Base):
             return False
 
         # Upload assets
+        one_or_more_failed = False
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
 
             if not Github.upload_asset(owner, repo, release_id, file_path):
-                return False
+                one_or_more_failed = True
 
-        return True
+        return not one_or_more_failed
 
 
 class Gitlab(Base):
@@ -337,12 +344,7 @@ def upload_to_release(owner: str, repository: str, version: str, path: str) -> b
     :return: Status of the request
     """
 
-    hvcs = get_hvcs()
-    if hvcs.__class__ != Github:
-        # Currently only supported for GitHub
-        return True
-
-    return hvcs.upload_dists(owner, repository, version, path)
+    return get_hvcs().upload_dists(owner, repository, version, path)
 
 
 def get_token() -> Optional[str]:
