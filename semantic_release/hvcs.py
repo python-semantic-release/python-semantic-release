@@ -35,6 +35,10 @@ class Base(object):
             cls, owner: str, repo: str, version: str, changelog: str) -> bool:
         raise NotImplementedError
 
+    @classmethod
+    def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
+        raise NotImplementedError
+
 
 class Github(Base):
     """Github helper class
@@ -164,6 +168,44 @@ class Github(Base):
         )
         return response.status_code == 201
 
+    @classmethod
+    def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
+        """Upload distributions to a release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param version: Version to upload for
+        :param path: Path to the dist  directory
+
+        :return: The status of the request
+        """
+
+        # Find the release corresponding to this version
+        tag = 'v{0}'.format(version)
+        url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}'
+        response = requests.get(
+            url.format(
+                domain=Github.API_URL,
+                owner=owner,
+                repo=repo,
+                tag=tag
+            ),
+            headers={'Authorization': 'token {}'.format(Github.token())}
+        )
+        release_id = response.json()['id']
+        if not release_id:
+            debug_gh('No release found to upload assets to')
+            return False
+
+        # Upload assets
+        for file in os.listdir(path):
+            file_path = os.path.join(path, file)
+
+            if not Github.upload_asset(owner, repo, release_id, file_path):
+                return False
+
+        return True
+
 
 class Gitlab(Base):
     """Gitlab helper class
@@ -281,6 +323,26 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     """
     debug('post_changelog(owner={}, repository={}, version={})'.format(owner, repository, version))
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
+
+
+def upload_to_release(owner: str, repository: str, version: str, path: str) -> bool:
+    """
+    Posts the changelog to the current hvcs release API
+
+    :param owner: The owner of the repository
+    :param repository: The repository name
+    :param version: A string with the version to upload for
+    :param path: Path to dist directory
+
+    :return: Status of the request
+    """
+
+    hvcs = get_hvcs()
+    if hvcs.__class__ != Github:
+        # Currently only supported for GitHub
+        return True
+
+    return hvcs.upload_dists(owner, repository, version, path)
 
 
 def get_token() -> Optional[str]:

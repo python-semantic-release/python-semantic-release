@@ -13,7 +13,8 @@ from .dist import build_dists, remove_dists
 from .history import (evaluate_version_bump, get_current_version, get_new_version,
                       get_previous_version, set_new_version)
 from .history.logs import generate_changelog, markdown_changelog
-from .hvcs import check_build_status, check_token, get_domain, get_token, post_changelog
+from .hvcs import (check_build_status, check_token, get_domain, get_token, post_changelog,
+                   upload_to_release)
 from .pypi import upload_to_pypi
 from .settings import config, overload_configuration
 from .vcs_helpers import (checkout, commit_new_version, get_current_head_hash,
@@ -178,27 +179,6 @@ def publish(**kwargs):
             domain=get_domain(),
         )
 
-        if config.getboolean('semantic_release', 'upload_to_pypi'):
-            path = config.get('semantic_release', 'dist_path') or 'dist'
-            remove_dist = config.getboolean('semantic_release', 'remove_dist')
-            if remove_dist is None:
-                remove_dist = True
-
-            if remove_dist:
-                # Remove old distributions before building
-                remove_dists(path)
-            build_dists()
-
-            upload_to_pypi(
-                username=os.environ.get('PYPI_USERNAME'),
-                password=os.environ.get('PYPI_PASSWORD'),
-                # We are retrying, so we don't want errors for files that are already on PyPI.
-                skip_existing=retry
-            )
-
-            if remove_dist:
-                remove_dists(path)
-
         if check_token():
             click.echo('Updating changelog')
             try:
@@ -215,6 +195,34 @@ def publish(**kwargs):
         else:
             click.echo(
                 click.style('Missing token: cannot post changelog', 'red'), err=True)
+
+        # Get config options for uploads
+        upload_pypi = config.getboolean('semantic_release', 'upload_to_pypi')
+        upload_release = config.getboolean('semantic_release', 'upload_to_release')
+        if upload_pypi or upload_release:
+            path = config.get('semantic_release', 'dist_path') or 'dist'
+            remove_dist = config.getboolean('semantic_release', 'remove_dist')
+
+            if remove_dist:
+                # Remove old distributions before building
+                remove_dists(path)
+            build_dists()
+
+            if upload_pypi:
+                click.echo('Uploading to PyPI')
+                upload_to_pypi(
+                    path=path,
+                    username=os.environ.get('PYPI_USERNAME'),
+                    password=os.environ.get('PYPI_PASSWORD'),
+                    # We are retrying, so we don't want errors for files that are already on PyPI.
+                    skip_existing=retry
+                )
+            if upload_release and check_token():
+                click.echo('Uploading to HVCS release')
+                upload_to_release(owner, name, new_version, path)
+
+            if remove_dist:
+                remove_dists(path)
 
         click.echo(click.style('New release published', 'green'))
     else:
