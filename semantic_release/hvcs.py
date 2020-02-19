@@ -131,6 +131,40 @@ class Github(Base):
             debug_gh('response #3, status_code={}, status={}'.format(response.status_code, status))
         return status
 
+    @classmethod
+    def upload_asset(
+            cls, owner: str, repo: str, release_id: int,
+            file: str, content_type: str, label: str = None) -> bool:
+        """Upload an asset to an existing release
+
+        https://developer.github.com/v3/repos/releases/#upload-a-release-asset
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param release_id: ID of the release to upload to
+        :param file: Path of the file to upload
+        :param content_type: Content type of the uploaded file, e.g. application/zip
+        :param label: Custom label for this file
+
+        :return: The status of the request
+        """
+        url = 'https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets'
+
+        response = requests.post(
+            url.format(
+                owner=owner,
+                repo=repo,
+                id=release_id
+            ),
+            params={'name': os.path.basename(file), 'label': label},
+            headers={
+                'Authorization': 'token {}'.format(Github.token()),
+                'Content-Type': content_type
+            },
+            data=open(file, 'rb').read()
+        )
+        return response.status_code == 201
+
 
 class Gitlab(Base):
     """Gitlab helper class
