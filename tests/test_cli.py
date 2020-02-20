@@ -287,7 +287,8 @@ def test_version_retry(mocker):
 def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker, runner):
     mocker.patch('semantic_release.cli.checkout')
     mocker.patch('semantic_release.cli.ci_checks.check')
-    mock_upload = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mock_upload_pypi = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mock_upload_release = mocker.patch('semantic_release.cli.upload_to_release')
     mocker.patch('semantic_release.cli.post_changelog', lambda *x: True)
     mocker.patch('semantic_release.cli.push_new_version', lambda *x: True)
     mocker.patch('semantic_release.cli.version', lambda: True)
@@ -296,7 +297,8 @@ def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker, runner):
     mocker.patch('semantic_release.cli.check_token', lambda: True)
     mocker.patch('semantic_release.cli.config.getboolean', lambda *x: False)
     runner.invoke(main, ['publish'])
-    assert not mock_upload.called
+    assert not mock_upload_pypi.called
+    assert not mock_upload_release.called
 
 
 def test_publish_should_do_nothing_when_version_fails(mocker, runner):
@@ -305,7 +307,8 @@ def test_publish_should_do_nothing_when_version_fails(mocker, runner):
     mocker.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'feature')
     mocker.patch('semantic_release.cli.generate_changelog')
     mock_log = mocker.patch('semantic_release.cli.post_changelog')
-    mock_upload = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mock_upload_pypi = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mock_upload_release = mocker.patch('semantic_release.cli.upload_to_release')
     mock_push = mocker.patch('semantic_release.cli.push_new_version')
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
     mock_version = mocker.patch('semantic_release.cli.version', return_value=False)
@@ -318,7 +321,8 @@ def test_publish_should_do_nothing_when_version_fails(mocker, runner):
         define=(),
     )
     assert not mock_push.called
-    assert not mock_upload.called
+    assert not mock_upload_pypi.called
+    assert not mock_upload_release.called
     assert not mock_log.called
     assert mock_ci_check.called
     assert result.exit_code == 0
@@ -331,6 +335,9 @@ def test_publish_should_call_functions(mocker, runner):
     mock_log = mocker.patch('semantic_release.cli.post_changelog')
     mock_ci_check = mocker.patch('semantic_release.ci_checks.check')
     mock_pypi = mocker.patch('semantic_release.cli.upload_to_pypi')
+    mock_release = mocker.patch('semantic_release.cli.upload_to_release')
+    mock_build_dists = mocker.patch('semantic_release.cli.build_dists')
+    mock_remove_dists = mocker.patch('semantic_release.cli.remove_dists')
     mocker.patch('semantic_release.cli.get_repository_owner_and_name',
                  return_value=('relekang', 'python-semantic-release'))
     mocker.patch('semantic_release.cli.evaluate_version_bump', lambda *x: 'feature')
@@ -338,11 +345,17 @@ def test_publish_should_call_functions(mocker, runner):
     mocker.patch('semantic_release.cli.markdown_changelog', lambda *x, **y: 'CHANGES')
     mocker.patch('semantic_release.cli.get_new_version', lambda *x: '2.0.0')
     mocker.patch('semantic_release.cli.check_token', lambda: True)
+
     result = runner.invoke(main, ['publish'])
+    print(result.output)  # Print output for debugging should the test fail
+
     assert result.exit_code == 0
     assert mock_ci_check.called
     assert mock_push.called
+    assert mock_remove_dists.called
+    assert mock_build_dists.called
     assert mock_pypi.called
+    assert mock_release.called
     mock_version.assert_called_once_with(
         noop=False,
         post=False,

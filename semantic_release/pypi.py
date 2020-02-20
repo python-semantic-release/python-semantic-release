@@ -6,16 +6,16 @@ from semantic_release import ImproperConfigurationError
 
 
 def upload_to_pypi(
-        dists: str = 'sdist bdist_wheel',
         path: str = 'dist',
         username: str = None,
         password: str = None,
-        skip_existing: bool = False,
-        remove_dist: bool = True
+        skip_existing: bool = False
 ):
-    """Creates the wheel and uploads to pypi with twine.
+    """Upload wheels to PyPI with Twine.
 
-    :param dists: The dists string passed to setup.py. Default: 'bdist_wheel'
+    Wheels must already be created and stored at the given path.
+
+    :param path: Path to dist folder
     :param username: PyPI account username string
     :param password: PyPI account password string
     :param skip_existing: Continue uploading files if one already exists. (Only valid when
@@ -23,9 +23,7 @@ def upload_to_pypi(
     """
     if username is None or password is None or username == "" or password == "":
         raise ImproperConfigurationError('Missing credentials for uploading')
-    if remove_dist:
-        run(f'rm -rf {path}')
-    run('python setup.py {}'.format(dists))
+
     run(
         "twine upload -u '{}' -p '{}' {} \"{}/*\"".format(
             username,
@@ -34,5 +32,3 @@ def upload_to_pypi(
             path
         )
     )
-    if remove_dist:
-        run(f'rm -rf {path}')

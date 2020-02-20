@@ -1,5 +1,6 @@
 """HVCS
 """
+import mimetypes
 import os
 from typing import Optional
 
@@ -13,6 +14,9 @@ from .settings import config
 debug = ndebug.create(__name__)
 debug_gh = ndebug.create(__name__ + ':github')
 debug_gl = ndebug.create(__name__ + ':gitlab')
+
+# Add a mime type for wheels so asset upload doesn't fail
+mimetypes.add_type('application/x-wheel+zip', '.whl', False)
 
 
 class Base(object):
@@ -33,6 +37,11 @@ class Base(object):
     def post_release_changelog(
             cls, owner: str, repo: str, version: str, changelog: str) -> bool:
         raise NotImplementedError
+
+    @classmethod
+    def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
+        # Skip on unsupported HVCS instead of raising error
+        return True
 
 
 class Github(Base):
@@ -75,6 +84,72 @@ class Github(Base):
         return response.json()['state'] == 'success'
 
     @classmethod
+    def create_release(cls, owner: str, repo: str, tag: str, changelog: str) -> bool:
+        """Create a new release
+
+        https://developer.github.com/v3/repos/releases/#create-a-release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param tag: Tag to create release for
+        :param changelog: The release notes for this version
+
+        :return: Whether the request succeeded
+        """
+        response = requests.post(
+            f'{Github.API_URL}/repos/{owner}/{repo}/releases',
+            json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
+            headers={'Authorization': 'token {}'.format(Github.token())}
+        )
+        debug_gh('Release creation: status={}'.format(response.status_code))
+
+        return response.status_code == 201
+
+    @classmethod
+    def get_release(cls, owner: str, repo: str, tag: str) -> int:
+        """Get a release by its tag name
+
+        https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param tag: Tag to get release for
+
+        :return: ID of found release
+        """
+        response = requests.get(
+            f'{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}',
+            headers={'Authorization': 'token {}'.format(Github.token())}
+        )
+        debug_gh('Get release by tag: status={}, release_id={}'.format(
+                 response.status_code, response.json()['id']))
+
+        return response.json()['id']
+
+    @classmethod
+    def edit_release(cls, owner: str, repo: str, id: int, changelog: str) -> bool:
+        """Edit a release with updated change notes
+
+        https://developer.github.com/v3/repos/releases/#edit-a-release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param id: ID of release to update
+        :param changelog: The release notes for this version
+
+        :return: Whether the request succeeded
+        """
+        response = requests.post(
+            f'{Github.API_URL}/repos/{owner}/{repo}/releases/{id}',
+            json={'body': changelog},
+            headers={'Authorization': 'token {}'.format(Github.token())}
+        )
+        debug_gh('Edit release: status={}, release_id={}'.format(
+                 response.status_code, id))
+
+        return response.status_code == 200
+
+    @classmethod
     def post_release_changelog(
             cls, owner: str, repo: str, version: str, changelog: str) -> bool:
         """Post release changelog
@@ -86,50 +161,80 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = '{domain}/repos/{owner}/{repo}/releases'
-        tag = 'v{0}'.format(version)
-        debug_gh('listing releases')
+        tag = f'v{version}'
+        debug_gh(f'Attempting to create release for {tag}')
+        success = Github.create_release(owner, repo, tag, changelog)
+
+        if not success:
+            debug_gh('Unsuccessful, looking for an existing release to update')
+            release_id = Github.get_release(owner, repo, tag)
+            debug_gh(f'Updating release {release_id}')
+            success = Github.edit_release(owner, repo, release_id, changelog)
+
+        return success
+
+    @classmethod
+    def upload_asset(
+            cls, owner: str, repo: str, release_id: int, file: str, label: str = None) -> bool:
+        """Upload an asset to an existing release
+
+        https://developer.github.com/v3/repos/releases/#upload-a-release-asset
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param release_id: ID of the release to upload to
+        :param file: Path of the file to upload
+        :param label: Custom label for this file
+
+        :return: The status of the request
+        """
+        url = 'https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets'
+
         response = requests.post(
             url.format(
-                domain=Github.API_URL,
                 owner=owner,
-                repo=repo
+                repo=repo,
+                id=release_id
             ),
-            json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
-            headers={'Authorization': 'token {}'.format(Github.token())}
+            params={'name': os.path.basename(file), 'label': label},
+            headers={
+                'Authorization': 'token {}'.format(Github.token()),
+                'Content-Type': mimetypes.guess_type(file, strict=False)[0]
+            },
+            data=open(file, 'rb').read()
         )
-        status, _ = response.status_code == 201, response.json()
-        debug_gh('response #1, status_code={}, status={}'.format(response.status_code, status))
+        debug_gh('Asset upload: url={}, status={}'.format(
+                 response.url, response.status_code))
+        debug_gh(response.json())
+        return response.status_code == 201
 
-        if not status:
-            debug_gh('not status, getting tag', tag)
-            url = '{domain}/repos/{owner}/{repo}/releases/tags/{tag}'
-            response = requests.get(
-                url.format(
-                    domain=Github.API_URL,
-                    owner=owner,
-                    repo=repo,
-                    tag=tag
-                ),
-                headers={'Authorization': 'token {}'.format(Github.token())}
-            )
-            release_id = response.json()['id']
-            debug_gh('response #2, status_code={}'.format(response.status_code))
-            url = '{domain}/repos/{owner}/{repo}/releases/{id}'
-            debug_gh('getting release_id', release_id)
-            response = requests.post(
-                url.format(
-                    domain=Github.API_URL,
-                    owner=owner,
-                    repo=repo,
-                    id=release_id
-                ),
-                json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
-                headers={'Authorization': 'token {}'.format(Github.token())}
-            )
-            status, _ = response.status_code == 200, response.json()
-            debug_gh('response #3, status_code={}, status={}'.format(response.status_code, status))
-        return status
+    @classmethod
+    def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
+        """Upload distributions to a release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param version: Version to upload for
+        :param path: Path to the dist  directory
+
+        :return: The status of the request
+        """
+
+        # Find the release corresponding to this version
+        release_id = Github.get_release(owner, repo, f'v{version}')
+        if not release_id:
+            debug_gh('No release found to upload assets to')
+            return False
+
+        # Upload assets
+        one_or_more_failed = False
+        for file in os.listdir(path):
+            file_path = os.path.join(path, file)
+
+            if not Github.upload_asset(owner, repo, release_id, file_path):
+                one_or_more_failed = True
+
+        return not one_or_more_failed
 
 
 class Gitlab(Base):
@@ -248,6 +353,21 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     """
     debug('post_changelog(owner={}, repository={}, version={})'.format(owner, repository, version))
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
+
+
+def upload_to_release(owner: str, repository: str, version: str, path: str) -> bool:
+    """
+    Posts the changelog to the current hvcs release API
+
+    :param owner: The owner of the repository
+    :param repository: The repository name
+    :param version: A string with the version to upload for
+    :param path: Path to dist directory
+
+    :return: Status of the request
+    """
+
+    return get_hvcs().upload_dists(owner, repository, version, path)
 
 
 def get_token() -> Optional[str]:

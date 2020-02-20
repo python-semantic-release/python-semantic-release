@@ -39,6 +39,10 @@ Moreover, those configuration values can be overloaded with the ``-D`` option, l
     If set to false the pypi uploading will be disabled. This can be useful to create
     tag releases for non-pypi projects.
 
+``upload_to_release``
+    If set to false, do not upload distributions to GitHub releases. If you are not using
+    GitHub, this will be skipped regardless.
+
 ``commit_message``
     Long description to append to the version number. This can be useful to skip
     pipelines in your CI tool
