@@ -15,8 +15,8 @@ debug = ndebug.create(__name__)
 debug_gh = ndebug.create(__name__ + ':github')
 debug_gl = ndebug.create(__name__ + ':gitlab')
 
-# Add a mime type for wheels so asset upload doesn't fail
-mimetypes.add_type('application/x-wheel+zip', '.whl', False)
+# Add a mime type for wheels
+mimetypes.add_type('application/octet-stream', '.whl')
 
 
 class Base(object):
