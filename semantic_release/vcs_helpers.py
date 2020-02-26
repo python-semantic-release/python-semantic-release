@@ -4,6 +4,7 @@ import os
 import re
 from pathlib import PurePath
 from typing import Optional, Tuple
+from urllib.parse import urlsplit
 
 import ndebug
 from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
@@ -90,7 +91,9 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
 
     check_repo()
     url = repo.remote('origin').url
-    parts = re.search(r'[:/]([^\.:]+)/([^/]*?)(.git)?$', url)
+    split_url = urlsplit(url)
+    path = split_url.netloc + split_url.path
+    parts = re.search(r'[:/]([^:]+)/([^/]*?)(.git)?$', path)
     if not parts:
         raise HvcsRepoParseError
     debug('get_repository_owner_and_name', parts)
