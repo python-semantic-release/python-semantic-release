@@ -92,7 +92,7 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
     check_repo()
     url = repo.remote('origin').url
     split_url = urlsplit(url)
-    path = split_url.netloc + split_url.path
+    path = split_url.path
     parts = re.search(r'[:/]([^:]+)/([^/]*?)(.git)?$', path)
     if not parts:
         raise HvcsRepoParseError
