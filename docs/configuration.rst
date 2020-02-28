@@ -47,6 +47,9 @@ Moreover, those configuration values can be overloaded with the ``-D`` option, l
     Long description to append to the version number. This can be useful to skip
     pipelines in your CI tool
 
+``commit_author``
+    Author used in commits in git format ``name <email>``. Default: ``semantic-release <semantic-release>``
+
 ``dist_path``
     The relative path to the folder for dists configured for setuptools. This allows for
     customized setuptools processes. Default dist.

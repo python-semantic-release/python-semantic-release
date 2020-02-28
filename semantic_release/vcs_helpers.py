@@ -123,12 +123,15 @@ def commit_new_version(version: str):
     commit_message = config.get('semantic_release', 'commit_message')
     message = '{0}\n\n{1}'.format(version, commit_message)
 
+    commit_author = config.get('semantic_release', 'commit_author',
+                               fallback='semantic-release <semantic-release>')
+
     version_file = config.get('semantic_release', 'version_variable').split(':')[0]
     # get actual path to filename, to allow running cmd from subdir of git root
     version_filepath = PurePath(os.getcwd(), version_file).relative_to(repo.working_dir)
 
     repo.git.add(str(version_filepath))
-    return repo.git.commit(m=message, author="semantic-release <semantic-release>")
+    return repo.git.commit(m=message, author=commit_author)
 
 
 def tag_new_version(version: str):
