@@ -57,6 +57,9 @@ Moreover, those configuration values can be overloaded with the ``-D`` option, l
 ``remove_dist``
     Flag for whether the dist folder should be removed after a release. Default: true
 
+``build_commands``
+    Parameters to call setup.py with to build dists. Default: ``sdist bdist_wheel``
+
 ``branch``
     The branch to run releases from. Default: master
 

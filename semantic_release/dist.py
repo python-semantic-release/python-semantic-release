@@ -2,9 +2,12 @@
 """
 from invoke import run
 
+from .settings import config
+
 
 def build_dists():
-    run('python setup.py sdist bdist_wheel')
+    commands = config.get('semantic_release', 'build_commands')
+    run(f'python setup.py {commands}')
 
 
 def remove_dists(path: str):
