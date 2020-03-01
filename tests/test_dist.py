@@ -4,10 +4,10 @@ from . import pytest
 
 
 @pytest.mark.parametrize('commands', [
-    'sdist bdist_wheels',
+    'sdist bdist_wheel',
     'sdist',
-    'bdist_wheels',
-    'sdist bdist_wheels custom_cmd'
+    'bdist_wheel',
+    'sdist bdist_wheel custom_cmd'
 ])
 def test_build_command(mocker, commands):
     mocker.patch('semantic_release.dist.config.get', lambda *a: commands)
