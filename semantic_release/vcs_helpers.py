@@ -120,8 +120,13 @@ def commit_new_version(version: str):
     """
 
     check_repo()
+    commit_subject = config.get('semantic_release', 'commit_subject')
     commit_message = config.get('semantic_release', 'commit_message')
-    message = '{0}\n\n{1}'.format(version, commit_message)
+
+    message = commit_subject.format(version=version)
+    if commit_message:
+        message += "\n\n"
+        message += commit_message.format(version=version)
 
     commit_author = config.get('semantic_release', 'commit_author',
                                fallback='semantic-release <semantic-release>')

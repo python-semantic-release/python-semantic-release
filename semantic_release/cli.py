@@ -263,8 +263,8 @@ def main(**kwargs):
         debug('main env:', filter_output_for_secrets(message))
 
         obj = {}
-        for key in ['check_build_status', 'commit_message', 'commit_parser', 'patch_without_tag',
-                    'upload_to_pypi', 'version_source']:
+        for key in ['check_build_status', 'commit_subject', 'commit_message', 'commit_parser',
+                    'patch_without_tag', 'upload_to_pypi', 'version_source']:
             val = config.get('semantic_release', key)
             obj[key] = val
         debug('main config:', obj)
