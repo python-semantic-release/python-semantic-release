@@ -1,7 +1,7 @@
 python-semantic-release
 =======================
 
-Automatic semantic versioning for python projects. This is an python
+Automatic semantic versioning for python projects. This is a python
 implementation of the
 `semantic-release <https://github.com/semantic-release/semantic-release>`__
 for js by Stephan Bönnemann. If you find this topic interesting you
