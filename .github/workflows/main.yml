@@ -1,0 +1,20 @@
+name: Semantic Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Python Semantic Release
+      uses: AlphaMycelium/psr-action@v0.2.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        pypi_username: relekang
+        pypi_password: ${{ secrets.PYPI_PASSWORD }}
