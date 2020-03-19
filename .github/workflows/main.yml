@@ -16,5 +16,5 @@ jobs:
       uses: AlphaMycelium/psr-action@v0.2.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        pypi_username: relekang
+        pypi_username: ${{ secrets.PYPI_USERNAME }}
         pypi_password: ${{ secrets.PYPI_PASSWORD }}
