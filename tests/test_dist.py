@@ -9,8 +9,8 @@ from . import pytest
     'bdist_wheel',
     'sdist bdist_wheel custom_cmd'
 ])
-def test_build_command(mocker, commands):
+def test_build_commands(mocker, commands):
     mocker.patch('semantic_release.dist.config.get', lambda *a: commands)
     mock_run = mocker.patch('semantic_release.dist.run')
     build_dists()
-    mock_run.assert_called_once_with('python setup.py ' + commands)
+    mock_run.assert_called_once_with(commands)
