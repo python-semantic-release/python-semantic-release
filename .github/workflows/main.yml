@@ -8,12 +8,13 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: github.repository == 'relekang/python-semantic-release'
 
     steps:
     - uses: actions/checkout@v1
 
     - name: Python Semantic Release
-      uses: AlphaMycelium/psr-action@v0.2.1
+      uses: ./
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         pypi_username: ${{ secrets.PYPI_USERNAME }}
