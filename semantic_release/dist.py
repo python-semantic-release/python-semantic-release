@@ -7,7 +7,7 @@ from .settings import config
 
 def build_dists():
     commands = config.get('semantic_release', 'build_commands')
-    run(f'python setup.py {commands}')
+    run(f'{commands}')
 
 
 def remove_dists(path: str):
