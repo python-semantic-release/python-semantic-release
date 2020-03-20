@@ -13,7 +13,6 @@ from semantic_release.hvcs import (Github, Gitlab, check_build_status, check_tok
 from . import mock
 from .mocks.mock_gitlab import mock_gitlab
 
-
 temp_dir = (
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "tmp")
     if platform.system() == "Windows"
