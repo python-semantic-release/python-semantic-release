@@ -3,7 +3,7 @@ version: 2
 jobs:
   flake8:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.8
 
     steps:
       - checkout
@@ -20,7 +20,7 @@ jobs:
 
   mypy:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.8
 
     steps:
       - checkout
@@ -37,7 +37,7 @@ jobs:
 
   isort:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.8
 
     steps:
       - checkout
@@ -54,7 +54,7 @@ jobs:
 
   tests:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.8
 
     steps:
       - checkout
