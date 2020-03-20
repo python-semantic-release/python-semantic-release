@@ -6,8 +6,8 @@ from .settings import config
 
 
 def build_dists():
-    commands = config.get('semantic_release', 'build_commands')
-    run(f'{commands}')
+    command = config.get('semantic_release', 'build_command')
+    run(command)
 
 
 def remove_dists(path: str):

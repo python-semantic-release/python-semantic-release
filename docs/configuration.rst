@@ -61,8 +61,8 @@ Moreover, those configuration values can be overloaded with the ``-D`` option, l
 ``remove_dist``
     Flag for whether the dist folder should be removed after a release. Default: true
 
-``build_commands``
-    Command to build dists. Default: ``python setup.py sdist bdist_wheel``
+``build_command``
+    Command to build dists. Build output should be stored in the directory configured in ``dist_path``. Default: ``python setup.py sdist bdist_wheel``
 
 ``branch``
     The branch to run releases from. Default: master
