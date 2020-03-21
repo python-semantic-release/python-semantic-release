@@ -54,22 +54,24 @@ def common_options(func):
 
 def version(**kwargs):
     """
-    Detects the new version according to git log and semver. Writes the new version
-    number and commits it, unless the noop-option is True.
+    Detect the new version according to git log and semver.
+
+    Write the new version number and commit it, unless the noop option is True.
     """
     retry = kwargs.get("retry")
     if retry:
         click.echo('Retrying publication of the same version...')
     else:
-        click.echo('Creating new version..')
+        click.echo('Creating new version.')
 
+    # Get the current version number
     try:
         current_version = get_current_version()
+        click.echo('Current version: {0}'.format(current_version))
     except GitError as e:
         click.echo(click.style(str(e), 'red'), err=True)
         return False
-
-    click.echo('Current version: {0}'.format(current_version))
+    # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
     new_version = get_new_version(current_version, level_bump)
 
@@ -86,7 +88,7 @@ def version(**kwargs):
         return False
 
     if config.getboolean('semantic_release', 'check_build_status'):
-        click.echo('Checking build status..')
+        click.echo('Checking build status...')
         owner, name = get_repository_owner_and_name()
         if not check_build_status(owner, name, get_current_head_hash()):
             click.echo(click.style('The build has failed', 'red'))
@@ -97,6 +99,7 @@ def version(**kwargs):
         # No need to make changes to the repo, we're just retrying.
         return True
 
+    # Bump the version
     set_new_version(new_version)
     if config.get('semantic_release', 'commit_version_number', fallback=(
         config.get('semantic_release', 'version_source') == 'commit')
@@ -109,27 +112,31 @@ def version(**kwargs):
 
 def changelog(**kwargs):
     """
-    Generates the changelog since the last release.
+    Generate the changelog since the last release.
+
     :raises ImproperConfigurationError: if there is no current version
     """
     current_version = get_current_version()
-    debug('changelog got current_version', current_version)
-
     if current_version is None:
         raise ImproperConfigurationError(
             "Unable to get the current version. "
             "Make sure semantic_release.version_variable "
             "is setup correctly"
         )
+    else:
+        debug('changelog got current_version', current_version)
+
     previous_version = get_previous_version(current_version)
     debug('changelog got previous_version', previous_version)
 
+    # Generate the changelog
     if kwargs['unreleased']:
         log = generate_changelog(current_version, None)
     else:
         log = generate_changelog(previous_version, current_version)
     click.echo(markdown_changelog(current_version, log, header=False))
 
+    # Post changelog to HVCS if enabled
     debug('noop={}, post={}'.format(kwargs.get('noop'), kwargs.get('post')))
     if not kwargs.get('noop') and kwargs.get('post'):
         if check_token():
@@ -147,22 +154,22 @@ def changelog(**kwargs):
 
 
 def publish(**kwargs):
-    """
-    Runs the version task before pushing to git and uploading to pypi.
-    """
-
+    """Run the version task, then push to git and upload to PyPI / GitHub Releases."""
     current_version = get_current_version()
     click.echo('Current version: {0}'.format(current_version))
-    retry = kwargs.get("retry")
-    debug('publish: retry=', retry)
+
+    retry = kwargs.get('retry')
     if retry:
+        debug('publish: retry is on')
         # The "new" version will actually be the current version, and the
         # "current" version will be the previous version.
         new_version = current_version
         current_version = get_previous_version(current_version)
     else:
+        # Calculate the new version
         level_bump = evaluate_version_bump(current_version, kwargs['force_level'])
         new_version = get_new_version(current_version, level_bump)
+
     owner, name = get_repository_owner_and_name()
 
     branch = config.get('semantic_release', 'branch')
@@ -170,7 +177,8 @@ def publish(**kwargs):
     ci_checks.check(branch)
     checkout(branch)
 
-    if version(**kwargs):
+    if version(**kwargs):  # Bump to the new version if needed
+        # A new version was released
         click.echo('Pushing new version')
         push_new_version(
             auth_token=get_token(),
@@ -187,22 +195,25 @@ def publish(**kwargs):
         upload_release = config.getboolean('semantic_release', 'upload_to_release')
 
         if upload_pypi or upload_release:
+            # We need to run the command to build wheels for releasing
             click.echo('Building distributions')
             if remove_dist:
                 # Remove old distributions before building
                 remove_dists(dist_path)
             build_dists()
+
         if upload_pypi:
             click.echo('Uploading to PyPI')
             upload_to_pypi(
                 path=dist_path,
                 username=os.environ.get('PYPI_USERNAME'),
                 password=os.environ.get('PYPI_PASSWORD'),
-                # We are retrying, so we don't want errors for files that are already on PyPI.
+                # If we are retrying, we don't want errors for files that are already on PyPI.
                 skip_existing=retry
             )
 
         if check_token():
+            # Update changelog on HVCS
             click.echo('Updating changelog')
             try:
                 log = generate_changelog(current_version, new_version)
@@ -227,11 +238,12 @@ def publish(**kwargs):
             remove_dists(dist_path)
 
         click.echo(click.style('New release published', 'green'))
-    else:
-        click.echo('Version failed, no release will be published.', err=True)
+
+    # else: Since version shows a message on failure, we do not need to print another.
 
 
 def filter_output_for_secrets(message):
+    """Remove secrets from cli output."""
     output = message
     for secret_name in SECRET_NAMES:
         secret = os.environ.get(secret_name)
@@ -242,6 +254,7 @@ def filter_output_for_secrets(message):
 
 
 def entry():
+    # Move flags to after the command
     ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith('--') else -1)
     main(args=ARGS)
 
