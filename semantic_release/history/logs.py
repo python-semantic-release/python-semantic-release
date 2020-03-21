@@ -17,6 +17,8 @@ LEVELS = {
     3: 'major',
 }
 
+# Sections which will be shown in the Markdown changelog.
+# This is NOT related to supported commit types.
 CHANGELOG_SECTIONS = [
     'feature',
     'fix',
@@ -28,12 +30,12 @@ CHANGELOG_SECTIONS = [
 
 def evaluate_version_bump(current_version: str, force: str = None) -> Optional[str]:
     """
-    Reads git log since last release to find out if should be a major, minor or patch release.
+    Read git log since the last release to decide if we should make a major, minor or patch release.
 
     :param current_version: A string with the current version number.
     :param force: A string with the bump level that should be forced.
-    :return: A string with either major, minor or patch if there should be a release. If no release
-             is necessary None will be returned.
+    :return: A string with either major, minor or patch if there should be a release.
+             If no release is necessary, None will be returned.
     """
     debug('evaluate_version_bump("{}", "{}")'.format(current_version, force))
     if force:
@@ -46,13 +48,17 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
     for _hash, commit_message in get_commit_log('v{0}'.format(current_version)):
         if commit_message.startswith(current_version):
+            # Stop once we reach the current version
+            # (we are looping in the order of newest -> oldest)
             debug('"{}" is commit for {}. breaking loop'.format(commit_message, current_version))
             break
 
         commit_count += 1
 
+        # Attempt to parse this commit using the currently-configured parser
         try:
             message = current_commit_parser()(commit_message)
+            # Add the bump level that this commit requires
             changes.append(message[0])
         except UnknownCommitMessageStyleError as err:
             debug('ignored commit', err)
@@ -61,6 +67,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     debug(f'commit_count={commit_count}')
 
     if changes:
+        # Select the largest required bump level from the commits we parsed
         level = max(changes)
         if level in LEVELS:
             bump = LEVELS[level]
@@ -82,12 +89,12 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
 def generate_changelog(from_version: str, to_version: str = None) -> dict:
     """
-    Generates a changelog for the given version.
+    Parse a changelog dictionary for the given version.
 
-    :param from_version: The last version not in the changelog. The changelog
-                         will be generated from the commit after this one.
-    :param to_version: The last version in the changelog.
-    :return: a dict with different changelog sections
+    :param from_version: The version before where the changelog starts.
+                         The changelog will be generated from the commit after this one.
+    :param to_version: The last version included in the changelog.
+    :return: A dict with changelog sections and commits
     """
     debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
     changes: dict = {
@@ -99,20 +106,22 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
         'performance': [],
     }
 
-    found_the_release = to_version is None
-
     rev = None
     if from_version:
         rev = 'v{0}'.format(from_version)
 
+    found_the_release = to_version is None
     for _hash, commit_message in get_commit_log(rev):
         if not found_the_release:
+            # Skip until we find the last commit in this release
+            # (we are looping in the order of newest -> oldest)
             if to_version and to_version not in commit_message:
                 continue
             else:
                 found_the_release = True
 
         if from_version is not None and from_version in commit_message:
+            # We reached the previous release
             break
 
         try:
@@ -148,24 +157,27 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
 def markdown_changelog(version: str, changelog: dict, header: bool = False) -> str:
     """
-    Generates a markdown version of the changelog. Takes a parsed changelog dict from
-    generate_changelog.
+    Generate a markdown version of the changelog.
 
     :param version: A string with the version number.
-    :param changelog: A dict from generate_changelog.
-    :param header: A boolean that decides whether a header should be included or not.
+    :param changelog: A parsed changelog dict from generate_changelog.
+    :param header: A boolean that decides whether a version number header should be included.
     :return: The markdown formatted changelog.
     """
     debug('markdown_changelog(version="{}", header={}, changelog=...)'.format(version, header))
     output = ''
     if header:
+        # Add a heading with the version number
         output += '## v{0}\n'.format(version)
 
     for section in CHANGELOG_SECTIONS:
         if not changelog[section]:
+            # This section does not have any commits
             continue
 
+        # Add a header for the section
         output += '\n### {0}\n'.format(section.capitalize())
+        # Add each commit from the section in an unordered list
         for item in changelog[section]:
             output += '* {0} ({1})\n'.format(item[1], item[0])
 
