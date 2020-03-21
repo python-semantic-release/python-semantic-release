@@ -27,29 +27,27 @@ def check_repo():
 
 
 def get_commit_log(from_rev=None):
-    """
-    Yields all commit messages from last to first.
-    """
-
+    """Yield all commit messages from last to first."""
     check_repo()
+
     rev = None
     if from_rev:
         try:
             repo.commit(from_rev)
             rev = '...{from_rev}'.format(from_rev=from_rev)
         except BadName:
-            debug('Reference {} does not exist, considering all log'.format(from_rev))
+            debug('Reference {} does not exist, considering entire history'.format(from_rev))
+
     for commit in repo.iter_commits(rev):
         yield (commit.hexsha, commit.message)
 
 
 def get_last_version(skip_tags=None) -> Optional[str]:
     """
-    Return last version from repo tags.
+    Find the latest version using repo tags.
 
-    :return: A string contains version number.
+    :return: A string containing a version number.
     """
-
     debug('get_last_version skip_tags=', skip_tags)
     check_repo()
     skip_tags = skip_tags or []
@@ -60,22 +58,24 @@ def get_last_version(skip_tags=None) -> Optional[str]:
         return tag.commit.committed_date
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
-        if re.match(r'v\d+\.\d+\.\d+', i.name):
+        if re.match(r'v\d+\.\d+\.\d+', i.name):  # Matches vX.X.X
             if i.name in skip_tags:
                 continue
-            return i.name[1:]
+            return i.name[1:]  # Strip off 'v'
+
     return None
 
 
 def get_version_from_tag(tag_name: str) -> Optional[str]:
-    """Get git hash from tag
+    """
+    Get the git commit hash corresponding to a tag name.
 
     :param tag_name: Name of the git tag (i.e. 'v1.0.0')
     :return: sha1 hash of the commit
     """
-
     debug('get_version_from_tag({})'.format(tag_name))
     check_repo()
+
     for i in repo.tags:
         if i.name == tag_name:
             return i.commit.hexsha
@@ -84,46 +84,48 @@ def get_version_from_tag(tag_name: str) -> Optional[str]:
 
 def get_repository_owner_and_name() -> Tuple[str, str]:
     """
-    Checks the origin remote to get the owner and name of the remote repository.
+    Check the 'origin' remote to get the owner and name of the remote repository.
 
     :return: A tuple of the owner and name.
     """
-
     check_repo()
+
     url = repo.remote('origin').url
     split_url = urlsplit(url)
-    path = split_url.path
-    parts = re.search(r'[:/]([^:]+)/([^/]*?)(.git)?$', path)
+    # Select the owner and name as regex groups
+    parts = re.search(r'[:/]([^:]+)/([^/]*?)(.git)?$', split_url.path)
     if not parts:
         raise HvcsRepoParseError
+
     debug('get_repository_owner_and_name', parts)
     return parts.group(1), parts.group(2)
 
 
 def get_current_head_hash() -> str:
     """
-    Gets the commit hash of the current HEAD.
+    Get the commit hash of the current HEAD.
 
-    :return: A string with the commit hash.
+    :return: The commit hash.
     """
-
     check_repo()
     return repo.head.commit.name_rev.split(' ')[0]
 
 
 def commit_new_version(version: str):
     """
-    Commits the file containing the version number variable with the version number as the commit
-    message.
+    Commit the file containing the version number variable.
 
-    :param version: The version number to be used in the commit message.
+    The commit message will be generated from the configured template.
+
+    :param version: Version number to be used in the commit message.
     """
-
     check_repo()
-    commit_subject = config.get('semantic_release', 'commit_subject')
-    commit_message = config.get('semantic_release', 'commit_message')
 
+    commit_subject = config.get('semantic_release', 'commit_subject')
     message = commit_subject.format(version=version)
+
+    # Add an extended message if one is configured
+    commit_message = config.get('semantic_release', 'commit_message')
     if commit_message:
         message += "\n\n"
         message += commit_message.format(version=version)
@@ -141,11 +143,10 @@ def commit_new_version(version: str):
 
 def tag_new_version(version: str):
     """
-    Creates a new tag with the version number prefixed with v.
+    Create a new tag with the version number, prefixed with v.
 
     :param version: The version number used in the tag as a string.
     """
-
     check_repo()
     return repo.git.tag('-a', 'v{0}'.format(version), m='v{0}'.format(version))
 
@@ -158,7 +159,7 @@ def push_new_version(
     domain: str = 'github.com',
 ):
     """
-    Runs git push and git push --tags.
+    Run git push and git push --tags.
 
     :param auth_token: Authentication token used to push.
     :param owner: Organisation or user that owns the repository.
@@ -167,8 +168,8 @@ def push_new_version(
     :param server_url: Name of the server. Will be used to identify a gitlab instance.
     :raises GitError: if GitCommandError is raised
     """
-
     check_repo()
+
     server = 'origin'
     if auth_token:
         token = auth_token
@@ -203,10 +204,9 @@ def push_new_version(
 
 def checkout(branch: str):
     """
-    Checks out the given branch in the local repository.
+    Check out the given branch in the local repository.
 
     :param branch: The branch to checkout.
     """
-
     check_repo()
     return repo.git.checkout(branch)
