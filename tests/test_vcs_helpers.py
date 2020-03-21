@@ -19,7 +19,7 @@ def mock_git(mocker):
 @mock.patch('semantic_release.vcs_helpers.repo', None)
 def test_raises_error_when_invalid_repo():
     with pytest.raises(GitError):
-        check_repo()
+        check_repo(lambda: None)()
 
 
 def test_first_commit_is_not_initial_commit():
