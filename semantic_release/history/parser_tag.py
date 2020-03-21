@@ -1,5 +1,4 @@
-"""Parser tag
-"""
+"""Legacy commit parser from Python Semantic Release 1.0"""
 import re
 from typing import Optional, Tuple
 
@@ -16,17 +15,18 @@ re_parser = re.compile(
 
 def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[str, str, str]]:
     """
-    Parses a commit message according to the 1.0 version of python-semantic-release. It expects
-    a tag of some sort in the commit message and will use the rest of the first line as changelog
-    content.
+    Parse a commit message according to the 1.0 version of python-semantic-release.
+
+    It expects a tag of some sort in the commit message and will use the rest of the first line
+    as changelog content.
 
     :param message: A string of a commit message.
     :raises UnknownCommitMessageStyleError: If it does not recognise the commit style
     :return: A tuple of (level to bump, type of change, scope of change, a tuple with descriptions)
     """
 
+    # Attempt to parse the commit message with a regular expression
     parsed = re_parser.match(message)
-
     if not parsed:
         raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {0}'.format(message)
@@ -34,6 +34,7 @@ def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[s
 
     subject = parsed.group('subject')
 
+    # Check tags for minor or patch
     if config.get('semantic_release', 'minor_tag') in message:
         level = 'feature'
         level_bump = 2
@@ -47,6 +48,7 @@ def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[s
             subject = subject.replace(config.get('semantic_release', 'fix_tag'), '')
 
     else:
+        # We did not find any tags in the commit message
         raise UnknownCommitMessageStyleError(
             'Unable to parse the given commit message: {0}'.format(message)
         )
@@ -56,5 +58,4 @@ def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[s
         level_bump = 3
 
     body, footer = parse_text_block(parsed.group('text'))
-
     return level_bump, level, None, (subject.strip(), body.strip(), footer.strip())
