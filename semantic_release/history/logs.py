@@ -129,7 +129,10 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             if message[1] not in changes:
                 continue
 
-            changes[message[1]].append((_hash, message[3][0].capitalize()))
+            # Capialize the first letter of the message, leaving others as they were
+            # (using str.capitalize() would make the other letters lowercase)
+            capital_message = message[3][0][0].upper() + message[3][0][1:]
+            changes[message[1]].append((_hash, capital_message))
 
             # Handle breaking change message
             parts = None
