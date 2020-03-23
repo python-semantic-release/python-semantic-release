@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config
-from .parser_helpers import parse_text_block
+from .parser_helpers import ParsedCommit, parse_text_block
 
 re_parser = re.compile(
     r'(?P<subject>[^\n]+)'
@@ -58,4 +58,5 @@ def parse_commit_message(message: str) -> Tuple[int, str, Optional[str], Tuple[s
         level_bump = 3
 
     body, footer = parse_text_block(parsed.group('text'))
-    return level_bump, level, None, (subject.strip(), body.strip(), footer.strip())
+    descriptions = (subject.strip(), body.strip(), footer.strip())
+    return ParsedCommit(level_bump, level, None, descriptions)
