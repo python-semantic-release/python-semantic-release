@@ -58,8 +58,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         # Attempt to parse this commit using the currently-configured parser
         try:
             message = current_commit_parser()(commit_message)
-            # Add the bump level that this commit requires
-            changes.append(message[0])
+            changes.append(message.bump)
         except UnknownCommitMessageStyleError as err:
             debug('ignored commit', err)
             pass
@@ -126,28 +125,29 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
         try:
             message = current_commit_parser()(commit_message)
-            if message[1] not in changes:
+            if message.type not in changes:
                 continue
 
             # Capialize the first letter of the message, leaving others as they were
             # (using str.capitalize() would make the other letters lowercase)
-            capital_message = message[3][0][0].upper() + message[3][0][1:]
-            changes[message[1]].append((_hash, capital_message))
+            capital_message = (message.descriptions[0][0].upper() +
+                               message.descriptions[0][1:])
+            changes[message.type].append((_hash, capital_message))
 
             # Handle breaking change message
             parts = None
-            if message[0] == 3:
+            if message.bump == 3:
                 # parse footer (standard)
-                if message[3][2] and 'BREAKING CHANGE' in message[3][2]:
-                    parts = re_breaking.match(message[3][2])
+                if message.descriptions[2] and 'BREAKING CHANGE' in message.descriptions[2]:
+                    parts = re_breaking.match(message.descriptions[2])
                 # parse body (not standard, kept for backwards compatibility)
-                elif message[3][1] and 'BREAKING CHANGE' in message[3][1]:
-                    parts = re_breaking.match(message[3][1])
+                elif message.descriptions[1] and 'BREAKING CHANGE' in message.descriptions[1]:
+                    parts = re_breaking.match(message.descriptions[1])
 
                 if parts:
                     breaking_description = parts.group(1)
                 else:
-                    breaking_description = message[3][0]
+                    breaking_description = message.descriptions[0]
 
                 changes['breaking'].append((_hash, breaking_description))
 

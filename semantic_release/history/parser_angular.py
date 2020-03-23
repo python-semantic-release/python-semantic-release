@@ -9,7 +9,7 @@ from typing import Tuple
 import ndebug
 
 from ..errors import UnknownCommitMessageStyleError
-from .parser_helpers import parse_text_block, re_breaking
+from .parser_helpers import ParsedCommit, parse_text_block, re_breaking
 
 debug = ndebug.create(__name__)
 
@@ -82,7 +82,7 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
             parsed.group('scope'),
             (parsed.group('subject'), body, footer)
         ))
-    return (
+    return ParsedCommit(
         level_bump,
         TYPES[parsed.group('type')],
         parsed.group('scope'),

@@ -1,9 +1,20 @@
 """Commit parser helpers
 """
+import collections
 import re
 from typing import Tuple
 
 re_breaking = re.compile('BREAKING[ -]CHANGE: (.*)')
+
+
+ParsedCommit = collections.namedtuple(
+    'ParsedCommit', [
+        'bump',
+        'type',
+        'scope',
+        'descriptions'
+    ]
+)
 
 
 def parse_text_block(text: str) -> Tuple[str, str]:
