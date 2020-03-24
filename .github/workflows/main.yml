@@ -1,9 +1,9 @@
 name: Semantic Release
 
 on:
-  push:
-    branches:
-      - master
+  schedule:
+    # Release changes once a day
+    - cron: '0 0 * * *'
 
 jobs:
   release:
