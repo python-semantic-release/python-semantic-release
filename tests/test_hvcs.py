@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 from unittest import TestCase
 
 import pytest
@@ -11,6 +12,12 @@ from semantic_release.hvcs import (Github, Gitlab, check_build_status, check_tok
 
 from . import mock
 from .mocks.mock_gitlab import mock_gitlab
+
+temp_dir = (
+    os.path.join(os.path.abspath(os.path.dirname(__file__)), "tmp")
+    if platform.system() == "Windows"
+    else "/tmp/"
+)
 
 
 @mock.patch('configparser.ConfigParser.get', return_value='github')
@@ -176,13 +183,14 @@ class GithubReleaseTests(TestCase):
     @mock.patch('semantic_release.hvcs.Github.token', return_value='super-token')
     def test_should_upload_asset(self, mock_token):
         # Create temporary file to upload
-        dummy_file_path = '/tmp/testupload.md'
+        dummy_file_path = os.path.join(temp_dir, 'testupload.md')
+        os.makedirs(os.path.dirname(dummy_file_path), exist_ok=True)
         dummy_content = '# Test File\n\n*Dummy asset for testing uploads.*'
         with open(dummy_file_path, 'w') as dummy_file:
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode(), dummy_content)
+            self.assertEqual(request.body.decode().replace('\r\n', '\n'), dummy_content)
             self.assertEqual(request.url, self.asset_url_params)
             self.assertEqual(request.headers['Content-Type'], 'text/markdown')
             self.assertEqual('token super-token', request.headers['Authorization'])
@@ -205,14 +213,14 @@ class GithubReleaseTests(TestCase):
     @mock.patch('semantic_release.hvcs.Github.token', return_value='super-token')
     def test_should_upload_dists(self, mock_token):
         # Create temporary file to upload
-        os.makedirs('/tmp/dist/', exist_ok=True)
-        dummy_file_path = '/tmp/dist/testupload.md'
+        dummy_file_path = os.path.join(temp_dir, 'dist', 'testupload.md')
+        os.makedirs(os.path.dirname(dummy_file_path), exist_ok=True)
         dummy_content = '# Test File\n\n*Dummy asset for testing uploads.*'
         with open(dummy_file_path, 'w') as dummy_file:
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode(), dummy_content)
+            self.assertEqual(request.body.decode().replace('\r\n', '\n'), dummy_content)
             self.assertEqual(request.url, self.dist_asset_url_params)
             self.assertEqual(request.headers['Content-Type'], 'text/markdown')
             self.assertEqual('token super-token', request.headers['Authorization'])
@@ -231,7 +239,7 @@ class GithubReleaseTests(TestCase):
             self.asset_url,
             callback=request_callback
         )
-        status = Github.upload_dists('relekang', 'rmoq', '1.0.0', '/tmp/dist/')
+        status = Github.upload_dists('relekang', 'rmoq', '1.0.0', os.path.dirname(dummy_file_path))
         self.assertTrue(status)
 
         # Remove test file

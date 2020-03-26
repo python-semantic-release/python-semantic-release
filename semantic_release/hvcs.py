@@ -44,10 +44,26 @@ class Base(object):
         return True
 
 
+def _fix_mime_types():
+    """Fix incorrect entries in the `mimetypes` registry.
+    On Windows, the Python standard library's `mimetypes` reads in
+    mappings from file extension to MIME type from the Windows
+    registry. Other applications can and do write incorrect values
+    to this registry, which causes `mimetypes.guess_type` to return
+    incorrect values, which causes TensorBoard to fail to render on
+    the frontend.
+    This method hard-codes the correct mappings for certain MIME
+    types that are known to be either used by python-semantic-release or
+    problematic in general.
+    """
+    mimetypes.add_type("text/markdown", ".md")
+
+
 class Github(Base):
     """Github helper class
     """
     API_URL = 'https://api.github.com'
+    _fix_mime_types()
 
     @staticmethod
     def domain() -> str:
@@ -215,7 +231,7 @@ class Github(Base):
         :param owner: The owner namespace of the repository
         :param repo: The repository name
         :param version: Version to upload for
-        :param path: Path to the dist  directory
+        :param path: Path to the dist directory
 
         :return: The status of the request
         """
