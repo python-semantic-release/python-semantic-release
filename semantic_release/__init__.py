@@ -1,6 +1,6 @@
 """Semantic Release
 """
-__version__ = '5.0.2'
+__version__ = '5.0.3'
 
 
 from .errors import UnknownCommitMessageStyleError  # noqa
