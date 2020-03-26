@@ -19,29 +19,32 @@ Usage
 -----
 
 The general idea is to have some sort of tag in commit messages that
-indicates certain types of changes. If a commit message lack a tag it is
+indicates certain types of changes. If a commit message lacks a tag it is
 ignored. Running release can be run locally or from a CI service.
 
 ::
 
-    Usage: semantic-release [OPTIONS] COMMAND
+  Usage: semantic-release [OPTIONS] COMMAND [ARGS]...
 
-    Options:
-      --major  Force major version.
-      --minor  Force minor version.
-      --patch  Force patch version.
-      --noop   No-operations mode, finds the new version number without changing it.
-      --retry  Retry the same release, do not bump.
-      --help   Show this message and exit.
+  Options:
+  --major            Force major version.
+  --minor            Force minor version.
+  --patch            Force patch version.
+  --post             Post changelog.
+  --retry            Retry the same release, do not bump.
+  --noop             No-operations mode, finds the new version number without
+                     changing it.
+  -D, --define TEXT  setting="value", override a configuration value.
+  --help             Show this message and exit.
 
-    Commands:
-      changelog  Generates the changelog since the last...
-      publish    Runs the version task before pushing to git...
-      version    Detects the new version according to git log...
+  Commands:
+  changelog  Generate the changelog since the last release.
+  publish    Run the version task, then push to git and upload distributions.
+  version    Detect the new version according to git log and semver.
 
 
-Documentation Contents:
-=======================
+Documentation Contents
+======================
 
 .. toctree::
    :maxdepth: 1
