@@ -17,16 +17,6 @@ LEVELS = {
     3: 'major',
 }
 
-# Sections which will be shown in the Markdown changelog.
-# This is NOT related to supported commit types.
-CHANGELOG_SECTIONS = [
-    'feature',
-    'fix',
-    'breaking',
-    'documentation',
-    'performance',
-]
-
 
 def evaluate_version_bump(current_version: str, force: str = None) -> Optional[str]:
     """
@@ -173,8 +163,13 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
         # Add a heading with the version number
         output += '## v{0}\n'.format(version)
 
-    for section in CHANGELOG_SECTIONS:
-        if not changelog[section]:
+    # Sections which will be shown in the Markdown changelog.
+    # This is NOT related to supported commit types.
+    changelog_sections = config.get("semantic_release", "changelog_sections")
+    changelog_sections = [s.strip() for s in changelog_sections.split(',')]
+
+    for section in changelog_sections:
+        if section not in changelog or not changelog[section]:
             # This section does not have any commits
             continue
 

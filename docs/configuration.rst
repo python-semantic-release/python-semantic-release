@@ -97,6 +97,25 @@ Default: ``semantic-release <semantic-release>``
   If you are using the built-in GitHub Action, this is always set to
   ``github-actions <actions@github.com>``.
 
+Changelog
+=========
+
+``changelog_sections``
+-----------------------
+Comma-separated list of sections to display in the changelog.
+They will be displayed in the order they are given.
+
+The available options are:
+
+* ``feature``
+* ``fix``
+* ``documentation``
+* ``refactor``
+* ``performance``
+* ``breaking``
+
+Default: `feature, fix, breaking, documentation, performance`
+
 Distributions
 =============
 
