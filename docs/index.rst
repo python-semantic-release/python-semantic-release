@@ -55,6 +55,6 @@ Documentation Contents
    Automatic releases <automatic-releases/index>
    Configuration <configuration>
    Environment Variables <envvars>
-   API docs <api/semantic_release>
+   API docs <api/modules>
    Troubleshooting <troubleshooting>
    Contributors <contributors>
