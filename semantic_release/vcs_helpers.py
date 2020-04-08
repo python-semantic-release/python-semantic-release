@@ -2,6 +2,7 @@
 """
 import os
 import re
+from functools import wraps
 from pathlib import PurePath
 from typing import Optional, Tuple
 from urllib.parse import urlsplit
@@ -23,6 +24,7 @@ debug = ndebug.create(__name__)
 
 def check_repo(func):
     """Decorator which checks that we are in a git repository."""
+    @wraps(func)
     def function_wrapper(*args, **kwargs):
         if repo is None:
             raise GitError("Not in a valid git repository")
