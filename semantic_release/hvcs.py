@@ -114,7 +114,7 @@ class Github(Base):
         """
         response = requests.post(
             f'{Github.API_URL}/repos/{owner}/{repo}/releases',
-            json={'tag_name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
+            json={'tag_name': tag, 'name': tag, 'body': changelog, 'draft': False, 'prerelease': False},
             headers={'Authorization': 'token {}'.format(Github.token())}
         )
         debug_gh('Release creation: status={}'.format(response.status_code))
