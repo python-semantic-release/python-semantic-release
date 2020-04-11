@@ -25,9 +25,10 @@ If you think this is all well and cool, but the angular style is not for you.
 No need to worry because custom parsers are supported. A parser is basically
 a python function that takes the commit message as the only argument and
 returns a tuple with the information needed to evaluate the commit and build
-the changelog. The format of the output should be as follows::
+the changelog. The format of the output should be a `ParsedCommit` object with
+the following parameters::
 
-    (level to bump, type of change, scope of change, (subject, body, footer))
+    ParsedCommit(level to bump, type of change, scope of change, (subject, body, footer))
 
 The type of change can be one of `feature`, `fix` or any string in lowercase.
 The `feature` will result in an minor release and `fix` or `perf` indicates a patch release.
