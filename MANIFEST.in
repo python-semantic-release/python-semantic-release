@@ -1,1 +1,1 @@
-include setup.py README.md MANIFEST.in LICENSE semantic_release/defaults.cfg requirements/base.txt
+include setup.py README.md MANIFEST.in LICENSE semantic_release/defaults.cfg
