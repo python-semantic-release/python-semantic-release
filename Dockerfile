@@ -5,7 +5,7 @@ env PYTHONPATH /semantic-release
 
 COPY . /semantic-release
 
-RUN cd /semantic-release && pip install -r requirements/base.txt ; cd -
+RUN cd /semantic-release && pip install .
 
 RUN python -m semantic_release.cli --help
 
