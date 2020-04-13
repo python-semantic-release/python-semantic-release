@@ -60,10 +60,10 @@ setup(
             'Sphinx==1.3.6'
         ],
         'dev': [
-            'flake8',
             'mypy',
             'tox',
-            'isort'
+            'isort',
+            'black'
         ]
     },
     entry_points='''
