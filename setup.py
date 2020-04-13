@@ -18,9 +18,6 @@ with open('semantic_release/__init__.py', 'r') as fd:
         re.MULTILINE
     ).group(1)
 
-with open('requirements/base.txt', 'r') as fd:
-    requirements = fd.read().strip().split('\n')
-
 try:
     from semantic_release import setup_hook
 
@@ -38,7 +35,37 @@ setup(
     long_description=_read_long_description(),
     packages=find_packages(exclude=('tests',)),
     license='MIT',
-    install_requires=requirements,
+    install_requires=[
+        'click>=7,<8',
+        'gitpython>=3.0.8,<4',
+        'invoke>=1.4.1,<2',
+        'semver>=2.8,<3',
+        'twine>=3,<4',
+        'requests>=2.21,<3',
+        'wheel',
+        'ndebug~=0.1',
+        'toml==0.10.0',
+        'python-gitlab>=1.10,<2'
+    ],
+    extras_require={
+        'test': [
+            'coverage>=5,<6',
+            'pytest>=5,<6',
+            'pytest-xdist>=1,<2',
+            'pytest-mock>=2,<3',
+            'responses==0.5.0',
+            'mock==1.3.0'
+        ],
+        'docs': [
+            'Sphinx==1.3.6'
+        ],
+        'dev': [
+            'mypy',
+            'tox',
+            'isort',
+            'black'
+        ]
+    },
     entry_points='''
         [console_scripts]
         semantic-release=semantic_release.cli:entry

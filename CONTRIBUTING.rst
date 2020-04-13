@@ -29,12 +29,13 @@ that should result in a new release it will happen if the build is green.
 Development
 ~~~~~~~~~~~
 
-Install this module and the development dependencies:
+Install this module and the development dependencies::
 
-::
+    pip install -e .[test,dev]
 
-    python setup.py develop
-    pip install -r requirements/dev.txt
+And if you'd like to build the documentation locally::
+
+    pip install -e .[docs]
 
 Testing
 ~~~~~~~
