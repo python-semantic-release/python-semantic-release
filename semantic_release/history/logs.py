@@ -12,9 +12,9 @@ from .parser_helpers import re_breaking
 debug = ndebug.create(__name__)
 
 LEVELS = {
-    1: 'patch',
-    2: 'minor',
-    3: 'major',
+    1: "patch",
+    2: "minor",
+    3: "major",
 }
 
 
@@ -36,11 +36,15 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     changes = []
     commit_count = 0
 
-    for _hash, commit_message in get_commit_log('v{0}'.format(current_version)):
+    for _hash, commit_message in get_commit_log("v{0}".format(current_version)):
         if commit_message.startswith(current_version):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
-            debug('"{}" is commit for {}. breaking loop'.format(commit_message, current_version))
+            debug(
+                '"{}" is commit for {}. breaking loop'.format(
+                    commit_message, current_version
+                )
+            )
             break
 
         commit_count += 1
@@ -50,29 +54,29 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
             message = current_commit_parser()(commit_message)
             changes.append(message.bump)
         except UnknownCommitMessageStyleError as err:
-            debug('ignored commit', err)
+            debug("ignored commit", err)
             pass
 
-    debug(f'commit_count={commit_count}')
+    debug(f"commit_count={commit_count}")
 
     if changes:
         # Select the largest required bump level from the commits we parsed
         level = max(changes)
         if level in LEVELS:
             bump = LEVELS[level]
-            debug(f'Evaluated {bump}({level}) from {changes}')
+            debug(f"Evaluated {bump}({level}) from {changes}")
         else:
-            debug(f'Unknown level {level}')
+            debug(f"Unknown level {level}")
 
     if (
-        config.getboolean('semantic_release', 'patch_without_tag') and
-        commit_count > 0 and
-        bump is None
+        config.getboolean("semantic_release", "patch_without_tag")
+        and commit_count > 0
+        and bump is None
     ):
-        bump = 'patch'
-        debug(f'Changing bump to patch based on config patch_without_tag')
+        bump = "patch"
+        debug(f"Changing bump to patch based on config patch_without_tag")
 
-    debug(f'evaluate_version_bump returned {bump}')
+    debug(f"evaluate_version_bump returned {bump}")
     return bump
 
 
@@ -87,17 +91,17 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     """
     debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
     changes: dict = {
-        'feature': [],
-        'fix': [],
-        'documentation': [],
-        'refactor': [],
-        'breaking': [],
-        'performance': [],
+        "feature": [],
+        "fix": [],
+        "documentation": [],
+        "refactor": [],
+        "breaking": [],
+        "performance": [],
     }
 
     rev = None
     if from_version:
-        rev = 'v{0}'.format(from_version)
+        rev = "v{0}".format(from_version)
 
     found_the_release = to_version is None
     for _hash, commit_message in get_commit_log(rev):
@@ -120,18 +124,25 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
             # Capialize the first letter of the message, leaving others as they were
             # (using str.capitalize() would make the other letters lowercase)
-            capital_message = (message.descriptions[0][0].upper() +
-                               message.descriptions[0][1:])
+            capital_message = (
+                message.descriptions[0][0].upper() + message.descriptions[0][1:]
+            )
             changes[message.type].append((_hash, capital_message))
 
             # Handle breaking change message
             parts = None
             if message.bump == 3:
                 # parse footer (standard)
-                if message.descriptions[2] and 'BREAKING CHANGE' in message.descriptions[2]:
+                if (
+                    message.descriptions[2]
+                    and "BREAKING CHANGE" in message.descriptions[2]
+                ):
                     parts = re_breaking.match(message.descriptions[2])
                 # parse body (not standard, kept for backwards compatibility)
-                elif message.descriptions[1] and 'BREAKING CHANGE' in message.descriptions[1]:
+                elif (
+                    message.descriptions[1]
+                    and "BREAKING CHANGE" in message.descriptions[1]
+                ):
                     parts = re_breaking.match(message.descriptions[1])
 
                 if parts:
@@ -139,10 +150,10 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
                 else:
                     breaking_description = message.descriptions[0]
 
-                changes['breaking'].append((_hash, breaking_description))
+                changes["breaking"].append((_hash, breaking_description))
 
         except UnknownCommitMessageStyleError as err:
-            debug('Ignoring', err)
+            debug("Ignoring", err)
             pass
 
     return changes
@@ -157,16 +168,20 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     :param header: A boolean that decides whether a version number header should be included.
     :return: The markdown formatted changelog.
     """
-    debug('markdown_changelog(version="{}", header={}, changelog=...)'.format(version, header))
-    output = ''
+    debug(
+        'markdown_changelog(version="{}", header={}, changelog=...)'.format(
+            version, header
+        )
+    )
+    output = ""
     if header:
         # Add a heading with the version number
-        output += '## v{0}\n'.format(version)
+        output += "## v{0}\n".format(version)
 
     # Sections which will be shown in the Markdown changelog.
     # This is NOT related to supported commit types.
     changelog_sections = config.get("semantic_release", "changelog_sections")
-    changelog_sections = [s.strip() for s in changelog_sections.split(',')]
+    changelog_sections = [s.strip() for s in changelog_sections.split(",")]
 
     for section in changelog_sections:
         if section not in changelog or not changelog[section]:
@@ -174,9 +189,9 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
             continue
 
         # Add a header for the section
-        output += '\n### {0}\n'.format(section.capitalize())
+        output += "\n### {0}\n".format(section.capitalize())
         # Add each commit from the section in an unordered list
         for item in changelog[section]:
-            output += '* {0} ({1})\n'.format(item[1], item[0])
+            output += "* {0} ({1})\n".format(item[1], item[0])
 
     return output

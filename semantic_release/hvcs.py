@@ -12,15 +12,14 @@ from .errors import ImproperConfigurationError
 from .settings import config
 
 debug = ndebug.create(__name__)
-debug_gh = ndebug.create(__name__ + ':github')
-debug_gl = ndebug.create(__name__ + ':gitlab')
+debug_gh = ndebug.create(__name__ + ":github")
+debug_gl = ndebug.create(__name__ + ":gitlab")
 
 # Add a mime type for wheels
-mimetypes.add_type('application/octet-stream', '.whl')
+mimetypes.add_type("application/octet-stream", ".whl")
 
 
 class Base(object):
-
     @staticmethod
     def domain() -> str:
         raise NotImplementedError
@@ -35,7 +34,8 @@ class Base(object):
 
     @classmethod
     def post_release_changelog(
-            cls, owner: str, repo: str, version: str, changelog: str) -> bool:
+        cls, owner: str, repo: str, version: str, changelog: str
+    ) -> bool:
         raise NotImplementedError
 
     @classmethod
@@ -62,7 +62,8 @@ def _fix_mime_types():
 class Github(Base):
     """Github helper class
     """
-    API_URL = 'https://api.github.com'
+
+    API_URL = "https://api.github.com"
     _fix_mime_types()
 
     @staticmethod
@@ -71,7 +72,7 @@ class Github(Base):
 
         :return: The Github domain
         """
-        return 'github.com'
+        return "github.com"
 
     @staticmethod
     def token() -> Optional[str]:
@@ -79,7 +80,7 @@ class Github(Base):
 
         :return: The Github token environment variable (GH_TOKEN) value
         """
-        return os.environ.get('GH_TOKEN')
+        return os.environ.get("GH_TOKEN")
 
     @staticmethod
     def check_build_status(owner: str, repo: str, ref: str) -> bool:
@@ -91,13 +92,13 @@ class Github(Base):
 
         :return: Was the build status success?
         """
-        url = '{domain}/repos/{owner}/{repo}/commits/{ref}/status'
+        url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
         response = requests.get(
             url.format(domain=Github.API_URL, owner=owner, repo=repo, ref=ref)
         )
         if debug_gh.enabled:
-            debug_gh('check_build_status: state={}'.format(response.json()['state']))
-        return response.json()['state'] == 'success'
+            debug_gh("check_build_status: state={}".format(response.json()["state"]))
+        return response.json()["state"] == "success"
 
     @classmethod
     def create_release(cls, owner: str, repo: str, tag: str, changelog: str) -> bool:
@@ -113,17 +114,17 @@ class Github(Base):
         :return: Whether the request succeeded
         """
         response = requests.post(
-            f'{Github.API_URL}/repos/{owner}/{repo}/releases',
+            f"{Github.API_URL}/repos/{owner}/{repo}/releases",
             json={
-                'tag_name': tag,
-                'name': tag,
-                'body': changelog,
-                'draft': False,
-                'prerelease': False
+                "tag_name": tag,
+                "name": tag,
+                "body": changelog,
+                "draft": False,
+                "prerelease": False,
             },
-            headers={'Authorization': 'token {}'.format(Github.token())}
+            headers={"Authorization": "token {}".format(Github.token())},
         )
-        debug_gh('Release creation: status={}'.format(response.status_code))
+        debug_gh("Release creation: status={}".format(response.status_code))
 
         return response.status_code == 201
 
@@ -140,13 +141,16 @@ class Github(Base):
         :return: ID of found release
         """
         response = requests.get(
-            f'{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}',
-            headers={'Authorization': 'token {}'.format(Github.token())}
+            f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
+            headers={"Authorization": "token {}".format(Github.token())},
         )
-        debug_gh('Get release by tag: status={}, release_id={}'.format(
-                 response.status_code, response.json()['id']))
+        debug_gh(
+            "Get release by tag: status={}, release_id={}".format(
+                response.status_code, response.json()["id"]
+            )
+        )
 
-        return response.json()['id']
+        return response.json()["id"]
 
     @classmethod
     def edit_release(cls, owner: str, repo: str, id: int, changelog: str) -> bool:
@@ -162,18 +166,20 @@ class Github(Base):
         :return: Whether the request succeeded
         """
         response = requests.post(
-            f'{Github.API_URL}/repos/{owner}/{repo}/releases/{id}',
-            json={'body': changelog},
-            headers={'Authorization': 'token {}'.format(Github.token())}
+            f"{Github.API_URL}/repos/{owner}/{repo}/releases/{id}",
+            json={"body": changelog},
+            headers={"Authorization": "token {}".format(Github.token())},
         )
-        debug_gh('Edit release: status={}, release_id={}'.format(
-                 response.status_code, id))
+        debug_gh(
+            "Edit release: status={}, release_id={}".format(response.status_code, id)
+        )
 
         return response.status_code == 200
 
     @classmethod
     def post_release_changelog(
-            cls, owner: str, repo: str, version: str, changelog: str) -> bool:
+        cls, owner: str, repo: str, version: str, changelog: str
+    ) -> bool:
         """Post release changelog
 
         :param owner: The owner namespace of the repository
@@ -183,21 +189,22 @@ class Github(Base):
 
         :return: The status of the request
         """
-        tag = f'v{version}'
-        debug_gh(f'Attempting to create release for {tag}')
+        tag = f"v{version}"
+        debug_gh(f"Attempting to create release for {tag}")
         success = Github.create_release(owner, repo, tag, changelog)
 
         if not success:
-            debug_gh('Unsuccessful, looking for an existing release to update')
+            debug_gh("Unsuccessful, looking for an existing release to update")
             release_id = Github.get_release(owner, repo, tag)
-            debug_gh(f'Updating release {release_id}')
+            debug_gh(f"Updating release {release_id}")
             success = Github.edit_release(owner, repo, release_id, changelog)
 
         return success
 
     @classmethod
     def upload_asset(
-            cls, owner: str, repo: str, release_id: int, file: str, label: str = None) -> bool:
+        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+    ) -> bool:
         """Upload an asset to an existing release
 
         https://developer.github.com/v3/repos/releases/#upload-a-release-asset
@@ -210,23 +217,20 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = 'https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets'
+        url = "https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets"
 
         response = requests.post(
-            url.format(
-                owner=owner,
-                repo=repo,
-                id=release_id
-            ),
-            params={'name': os.path.basename(file), 'label': label},
+            url.format(owner=owner, repo=repo, id=release_id),
+            params={"name": os.path.basename(file), "label": label},
             headers={
-                'Authorization': 'token {}'.format(Github.token()),
-                'Content-Type': mimetypes.guess_type(file, strict=False)[0]
+                "Authorization": "token {}".format(Github.token()),
+                "Content-Type": mimetypes.guess_type(file, strict=False)[0],
             },
-            data=open(file, 'rb').read()
+            data=open(file, "rb").read(),
         )
-        debug_gh('Asset upload: url={}, status={}'.format(
-                 response.url, response.status_code))
+        debug_gh(
+            "Asset upload: url={}, status={}".format(response.url, response.status_code)
+        )
         debug_gh(response.json())
         return response.status_code == 201
 
@@ -243,9 +247,9 @@ class Github(Base):
         """
 
         # Find the release corresponding to this version
-        release_id = Github.get_release(owner, repo, f'v{version}')
+        release_id = Github.get_release(owner, repo, f"v{version}")
         if not release_id:
-            debug_gh('No release found to upload assets to')
+            debug_gh("No release found to upload assets to")
             return False
 
         # Upload assets
@@ -262,7 +266,8 @@ class Github(Base):
 class Gitlab(Base):
     """Gitlab helper class
     """
-    API_URL = 'https://' + os.environ.get('CI_SERVER_HOST', 'gitlab.com')
+
+    API_URL = "https://" + os.environ.get("CI_SERVER_HOST", "gitlab.com")
 
     @staticmethod
     def domain() -> str:
@@ -270,7 +275,7 @@ class Gitlab(Base):
 
         :return: The Gitlab instance domain
         """
-        return os.environ.get('CI_SERVER_HOST', 'gitlab.com')
+        return os.environ.get("CI_SERVER_HOST", "gitlab.com")
 
     @staticmethod
     def token() -> Optional[str]:
@@ -278,7 +283,7 @@ class Gitlab(Base):
 
         :return: The Gitlab token environment variable (GL_TOKEN) value
         """
-        return os.environ.get('GL_TOKEN')
+        return os.environ.get("GL_TOKEN")
 
     @staticmethod
     def check_build_status(owner: str, repo: str, ref: str) -> bool:
@@ -292,24 +297,25 @@ class Gitlab(Base):
         """
         gl = gitlab.Gitlab(Gitlab.API_URL, private_token=Gitlab.token())
         gl.auth()
-        jobs = (gl.projects.get(owner+'/'+repo)
-                  .commits.get(ref)
-                  .statuses.list())
+        jobs = gl.projects.get(owner + "/" + repo).commits.get(ref).statuses.list()
         for job in jobs:
-            if job['status'] not in ['success', 'skipped']:
-                if job['status'] == 'pending':
-                    debug_gl('check_build_status: job {} is still in pending status'
-                             .format(job['name']))
+            if job["status"] not in ["success", "skipped"]:
+                if job["status"] == "pending":
+                    debug_gl(
+                        "check_build_status: job {} is still in pending status".format(
+                            job["name"]
+                        )
+                    )
                     return False
-                elif job['status'] == 'failed' and not job['allow_failure']:
-                    debug_gl('check_build_status: job {} failed'
-                             .format(job['name']))
+                elif job["status"] == "failed" and not job["allow_failure"]:
+                    debug_gl("check_build_status: job {} failed".format(job["name"]))
                     return False
         return True
 
     @classmethod
     def post_release_changelog(
-            cls, owner: str, repo: str, version: str, changelog: str) -> bool:
+        cls, owner: str, repo: str, version: str, changelog: str
+    ) -> bool:
         """Post release changelog
 
         :param owner: The owner namespace of the repository
@@ -319,19 +325,21 @@ class Gitlab(Base):
 
         :return: The status of the request
         """
-        ref = 'v' + version
+        ref = "v" + version
         gl = gitlab.Gitlab(Gitlab.API_URL, private_token=Gitlab.token())
         gl.auth()
         try:
-            tag = gl.projects.get(owner+'/'+repo).tags.get(ref)
+            tag = gl.projects.get(owner + "/" + repo).tags.get(ref)
             tag.set_release_description(changelog)
         except gitlab.exceptions.GitlabGetError:
-            debug_gl('Tag {} was not found for project {}'
-                     .format(ref, owner+'/'+repo))
+            debug_gl(
+                "Tag {} was not found for project {}".format(ref, owner + "/" + repo)
+            )
             return False
         except gitlab.exceptions.GitlabUpdateError:
-            debug_gl('Failed to update tag {} for project {}'
-                     .format(ref, owner+'/'+repo))
+            debug_gl(
+                "Failed to update tag {} for project {}".format(ref, owner + "/" + repo)
+            )
             return False
 
         return True
@@ -342,8 +350,8 @@ def get_hvcs() -> Base:
 
     :raises ImproperConfigurationError: if the hvcs option provided is not valid
     """
-    hvcs = config.get('semantic_release', 'hvcs')
-    debug('get_hvcs: hvcs=', hvcs)
+    hvcs = config.get("semantic_release", "hvcs")
+    debug("get_hvcs: hvcs=", hvcs)
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:
@@ -359,7 +367,7 @@ def check_build_status(owner: str, repository: str, ref: str) -> bool:
     :param ref: Commit or branch reference
     :return: A boolean with the build status
     """
-    debug('check_build_status')
+    debug("check_build_status")
     return get_hvcs().check_build_status(owner, repository, ref)
 
 
@@ -373,7 +381,11 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     :param changelog: A string with the changelog in correct format
     :return: a tuple with success status and payload from hvcs
     """
-    debug('post_changelog(owner={}, repository={}, version={})'.format(owner, repository, version))
+    debug(
+        "post_changelog(owner={}, repository={}, version={})".format(
+            owner, repository, version
+        )
+    )
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
 
 

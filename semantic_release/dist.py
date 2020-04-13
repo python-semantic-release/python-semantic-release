@@ -6,9 +6,9 @@ from .settings import config
 
 
 def build_dists():
-    command = config.get('semantic_release', 'build_command')
+    command = config.get("semantic_release", "build_command")
     run(command)
 
 
 def remove_dists(path: str):
-    run(f'rm -rf {path}')
+    run(f"rm -rf {path}")

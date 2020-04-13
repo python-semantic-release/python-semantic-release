@@ -7,20 +7,20 @@ from . import mock
 
 
 class PypiTests(TestCase):
-    @mock.patch('semantic_release.pypi.run')
+    @mock.patch("semantic_release.pypi.run")
     def test_upload_without_arguments(self, mock_run):
-        upload_to_pypi(username='username', password='password')
+        upload_to_pypi(username="username", password="password")
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u 'username' -p 'password'  \"dist/*\"")]
+            [mock.call("twine upload -u 'username' -p 'password'  \"dist/*\"")],
         )
 
-    @mock.patch('semantic_release.pypi.run')
+    @mock.patch("semantic_release.pypi.run")
     def test_upload_with_custom_path(self, mock_run):
-        upload_to_pypi(path='custom-dist', username='username', password='password')
+        upload_to_pypi(path="custom-dist", username="username", password="password")
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u 'username' -p 'password'  \"custom-dist/*\"")]
+            [mock.call("twine upload -u 'username' -p 'password'  \"custom-dist/*\"")],
         )
 
     def test_raises_error_when_missing_credentials(self):

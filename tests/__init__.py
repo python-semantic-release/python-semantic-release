@@ -12,6 +12,7 @@ def reset_config():
     """
     yield
     from importlib import reload
+
     reload(semantic_release.settings)
     reload(semantic_release.vcs_helpers)
     reload(semantic_release.history)

@@ -15,7 +15,7 @@ from .errors import GitError, HvcsRepoParseError
 from .settings import config
 
 try:
-    repo = Repo('.', search_parent_directories=True)
+    repo = Repo(".", search_parent_directories=True)
 except InvalidGitRepositoryError:
     repo = None
 
@@ -24,11 +24,13 @@ debug = ndebug.create(__name__)
 
 def check_repo(func):
     """Decorator which checks that we are in a git repository."""
+
     @wraps(func)
     def function_wrapper(*args, **kwargs):
         if repo is None:
             raise GitError("Not in a valid git repository")
         return func(*args, **kwargs)
+
     return function_wrapper
 
 
@@ -39,9 +41,13 @@ def get_commit_log(from_rev=None):
     if from_rev:
         try:
             repo.commit(from_rev)
-            rev = '...{from_rev}'.format(from_rev=from_rev)
+            rev = "...{from_rev}".format(from_rev=from_rev)
         except BadName:
-            debug('Reference {} does not exist, considering entire history'.format(from_rev))
+            debug(
+                "Reference {} does not exist, considering entire history".format(
+                    from_rev
+                )
+            )
 
     for commit in repo.iter_commits(rev):
         yield (commit.hexsha, commit.message)
@@ -54,7 +60,7 @@ def get_last_version(skip_tags=None) -> Optional[str]:
 
     :return: A string containing a version number.
     """
-    debug('get_last_version skip_tags=', skip_tags)
+    debug("get_last_version skip_tags=", skip_tags)
     skip_tags = skip_tags or []
 
     def version_finder(tag):
@@ -63,7 +69,7 @@ def get_last_version(skip_tags=None) -> Optional[str]:
         return tag.commit.committed_date
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
-        if re.match(r'v\d+\.\d+\.\d+', i.name):  # Matches vX.X.X
+        if re.match(r"v\d+\.\d+\.\d+", i.name):  # Matches vX.X.X
             if i.name in skip_tags:
                 continue
             return i.name[1:]  # Strip off 'v'
@@ -79,7 +85,7 @@ def get_version_from_tag(tag_name: str) -> Optional[str]:
     :param tag_name: Name of the git tag (i.e. 'v1.0.0')
     :return: sha1 hash of the commit
     """
-    debug('get_version_from_tag({})'.format(tag_name))
+    debug("get_version_from_tag({})".format(tag_name))
 
     for i in repo.tags:
         if i.name == tag_name:
@@ -94,14 +100,14 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
 
     :return: A tuple of the owner and name.
     """
-    url = repo.remote('origin').url
+    url = repo.remote("origin").url
     split_url = urlsplit(url)
     # Select the owner and name as regex groups
-    parts = re.search(r'[:/]([^:]+)/([^/]*?)(.git)?$', split_url.path)
+    parts = re.search(r"[:/]([^:]+)/([^/]*?)(.git)?$", split_url.path)
     if not parts:
         raise HvcsRepoParseError
 
-    debug('get_repository_owner_and_name', parts)
+    debug("get_repository_owner_and_name", parts)
     return parts.group(1), parts.group(2)
 
 
@@ -112,7 +118,7 @@ def get_current_head_hash() -> str:
 
     :return: The commit hash.
     """
-    return repo.head.commit.name_rev.split(' ')[0]
+    return repo.head.commit.name_rev.split(" ")[0]
 
 
 @check_repo
@@ -124,19 +130,22 @@ def commit_new_version(version: str):
 
     :param version: Version number to be used in the commit message.
     """
-    commit_subject = config.get('semantic_release', 'commit_subject')
+    commit_subject = config.get("semantic_release", "commit_subject")
     message = commit_subject.format(version=version)
 
     # Add an extended message if one is configured
-    commit_message = config.get('semantic_release', 'commit_message')
+    commit_message = config.get("semantic_release", "commit_message")
     if commit_message:
         message += "\n\n"
         message += commit_message.format(version=version)
 
-    commit_author = config.get('semantic_release', 'commit_author',
-                               fallback='semantic-release <semantic-release>')
+    commit_author = config.get(
+        "semantic_release",
+        "commit_author",
+        fallback="semantic-release <semantic-release>",
+    )
 
-    version_file = config.get('semantic_release', 'version_variable').split(':')[0]
+    version_file = config.get("semantic_release", "version_variable").split(":")[0]
     # get actual path to filename, to allow running cmd from subdir of git root
     version_filepath = PurePath(os.getcwd(), version_file).relative_to(repo.working_dir)
 
@@ -151,7 +160,7 @@ def tag_new_version(version: str):
 
     :param version: The version number used in the tag as a string.
     """
-    return repo.git.tag('-a', 'v{0}'.format(version), m='v{0}'.format(version))
+    return repo.git.tag("-a", "v{0}".format(version), m="v{0}".format(version))
 
 
 @check_repo
@@ -159,8 +168,8 @@ def push_new_version(
     auth_token: str = None,
     owner: str = None,
     name: str = None,
-    branch: str = 'master',
-    domain: str = 'github.com',
+    branch: str = "master",
+    domain: str = "github.com",
 ):
     """
     Run git push and git push --tags.
@@ -172,35 +181,28 @@ def push_new_version(
     :param server_url: Name of the server. Will be used to identify a gitlab instance.
     :raises GitError: if GitCommandError is raised
     """
-    server = 'origin'
+    server = "origin"
     if auth_token:
         token = auth_token
-        if config.get('semantic_release', 'hvcs') == 'gitlab':
-            token = 'gitlab-ci-token:' + token
-        actor = os.environ.get('GITHUB_ACTOR')
+        if config.get("semantic_release", "hvcs") == "gitlab":
+            token = "gitlab-ci-token:" + token
+        actor = os.environ.get("GITHUB_ACTOR")
         if actor:
-            server = 'https://{actor}:{token}@{server_url}/{owner}/{name}.git'.format(
-                token=token,
-                server_url=domain,
-                owner=owner,
-                name=name,
-                actor=actor
+            server = "https://{actor}:{token}@{server_url}/{owner}/{name}.git".format(
+                token=token, server_url=domain, owner=owner, name=name, actor=actor
             )
         else:
-            server = 'https://{token}@{server_url}/{owner}/{name}.git'.format(
-                token=token,
-                server_url=domain,
-                owner=owner,
-                name=name,
+            server = "https://{token}@{server_url}/{owner}/{name}.git".format(
+                token=token, server_url=domain, owner=owner, name=name,
             )
 
     try:
         repo.git.push(server, branch)
-        repo.git.push('--tags', server, branch)
+        repo.git.push("--tags", server, branch)
     except GitCommandError as error:
         message = str(error)
         if auth_token:
-            message = message.replace(auth_token, '[AUTH_TOKEN]')
+            message = message.replace(auth_token, "[AUTH_TOKEN]")
         raise GitError(message)
 
 

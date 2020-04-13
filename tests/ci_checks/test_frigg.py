@@ -5,30 +5,30 @@ from semantic_release.errors import CiVerificationError
 
 
 def test_frigg_should_pass_if_branch_is_master_and_no_pr(monkeypatch):
-    monkeypatch.setenv('FRIGG_BUILD_BRANCH', 'master')
-    monkeypatch.delenv('FRIGG_PULL_REQUEST', raising=False)
+    monkeypatch.setenv("FRIGG_BUILD_BRANCH", "master")
+    monkeypatch.delenv("FRIGG_PULL_REQUEST", raising=False)
 
-    assert ci_checks.frigg('master')
+    assert ci_checks.frigg("master")
 
 
 def test_frigg_should_pass_if_branch_is_correct_and_no_pr(monkeypatch):
-    monkeypatch.setenv('FRIGG_BUILD_BRANCH', 'other-branch')
-    monkeypatch.delenv('FRIGG_PULL_REQUEST', raising=False)
+    monkeypatch.setenv("FRIGG_BUILD_BRANCH", "other-branch")
+    monkeypatch.delenv("FRIGG_PULL_REQUEST", raising=False)
 
-    assert ci_checks.frigg('other-branch')
+    assert ci_checks.frigg("other-branch")
 
 
 def test_frigg_should_raise_ci_verification_error_for_wrong_branch(monkeypatch):
-    monkeypatch.setenv('FRIGG_BUILD_BRANCH', 'other-branch')
-    monkeypatch.delenv('FRIGG_PULL_REQUEST', raising=False)
+    monkeypatch.setenv("FRIGG_BUILD_BRANCH", "other-branch")
+    monkeypatch.delenv("FRIGG_PULL_REQUEST", raising=False)
 
     with pytest.raises(CiVerificationError):
-        ci_checks.frigg('master')
+        ci_checks.frigg("master")
 
 
 def test_frigg_should_raise_ci_verification_error_for_pr(monkeypatch):
-    monkeypatch.setenv('FRIGG_BUILD_BRANCH', 'other-branch')
-    monkeypatch.setenv('FRIGG_PULL_REQUEST', '42')
+    monkeypatch.setenv("FRIGG_BUILD_BRANCH", "other-branch")
+    monkeypatch.setenv("FRIGG_PULL_REQUEST", "42")
 
     with pytest.raises(CiVerificationError):
-        ci_checks.frigg('master')
+        ci_checks.frigg("master")

@@ -21,7 +21,7 @@ def checker(func: Callable) -> Callable:
             return True
         except AssertionError:
             raise CiVerificationError(
-                'The verification check for the environment did not pass.'
+                "The verification check for the environment did not pass."
             )
 
     return func_wrapper
@@ -35,8 +35,8 @@ def travis(branch: str):
 
     :param branch: The branch the environment should be running against.
     """
-    assert os.environ.get('TRAVIS_BRANCH') == branch
-    assert os.environ.get('TRAVIS_PULL_REQUEST') == 'false'
+    assert os.environ.get("TRAVIS_BRANCH") == branch
+    assert os.environ.get("TRAVIS_PULL_REQUEST") == "false"
 
 
 @checker
@@ -47,9 +47,9 @@ def semaphore(branch: str):
 
     :param branch:  The branch the environment should be running against.
     """
-    assert os.environ.get('BRANCH_NAME') == branch
-    assert os.environ.get('PULL_REQUEST_NUMBER') is None
-    assert os.environ.get('SEMAPHORE_THREAD_RESULT') != 'failed'
+    assert os.environ.get("BRANCH_NAME") == branch
+    assert os.environ.get("PULL_REQUEST_NUMBER") is None
+    assert os.environ.get("SEMAPHORE_THREAD_RESULT") != "failed"
 
 
 @checker
@@ -60,8 +60,8 @@ def frigg(branch: str):
 
     :param branch: The branch the environment should be running against.
     """
-    assert os.environ.get('FRIGG_BUILD_BRANCH') == branch
-    assert not os.environ.get('FRIGG_PULL_REQUEST')
+    assert os.environ.get("FRIGG_BUILD_BRANCH") == branch
+    assert not os.environ.get("FRIGG_PULL_REQUEST")
 
 
 @checker
@@ -72,8 +72,8 @@ def circle(branch: str):
 
     :param branch: The branch the environment should be running against.
     """
-    assert os.environ.get('CIRCLE_BRANCH') == branch
-    assert not os.environ.get('CI_PULL_REQUEST')
+    assert os.environ.get("CIRCLE_BRANCH") == branch
+    assert not os.environ.get("CI_PULL_REQUEST")
 
 
 @checker
@@ -84,7 +84,7 @@ def gitlab(branch: str):
 
     :param branch: The branch the environment should be running against.
     """
-    assert os.environ.get('CI_COMMIT_REF_NAME') == branch
+    assert os.environ.get("CI_COMMIT_REF_NAME") == branch
     # TODO - don't think there's a merge request indicator variable
 
 
@@ -96,26 +96,26 @@ def bitbucket(branch: str):
 
     :param branch: The branch the environment should be running against.
     """
-    assert os.environ.get('BITBUCKET_BRANCH') == branch
-    assert not os.environ.get('BITBUCKET_PR_ID')
+    assert os.environ.get("BITBUCKET_BRANCH") == branch
+    assert not os.environ.get("BITBUCKET_PR_ID")
 
 
-def check(branch: str = 'master'):
+def check(branch: str = "master"):
     """
     Detects the current CI environment, if any, and performs necessary
     environment checks.
 
     :param branch: The branch that should be the current branch.
     """
-    if os.environ.get('TRAVIS') == 'true':
+    if os.environ.get("TRAVIS") == "true":
         travis(branch)
-    elif os.environ.get('SEMAPHORE') == 'true':
+    elif os.environ.get("SEMAPHORE") == "true":
         semaphore(branch)
-    elif os.environ.get('FRIGG') == 'true':
+    elif os.environ.get("FRIGG") == "true":
         frigg(branch)
-    elif os.environ.get('CIRCLECI') == 'true':
+    elif os.environ.get("CIRCLECI") == "true":
         circle(branch)
-    elif os.environ.get('GITLAB_CI') == 'true':
+    elif os.environ.get("GITLAB_CI") == "true":
         gitlab(branch)
-    elif 'BITBUCKET_BUILD_NUMBER' in os.environ:
+    elif "BITBUCKET_BUILD_NUMBER" in os.environ:
         bitbucket(branch)
