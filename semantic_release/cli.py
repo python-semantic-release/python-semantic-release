@@ -38,7 +38,7 @@ from .vcs_helpers import (
     tag_new_version,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('semantic_release')
 click_log.basic_config(logger)
 
 SECRET_NAMES = [
@@ -93,9 +93,9 @@ def version(**kwargs):
     """
     retry = kwargs.get("retry")
     if retry:
-        logger.info("Retrying publication of the same version...")
+        logger.info("Retrying publication of the same version")
     else:
-        logger.info("Creating new version.")
+        logger.info("Creating new version")
 
     # Get the current version number
     try:
@@ -115,7 +115,7 @@ def version(**kwargs):
     if kwargs["noop"] is True:
         logger.warning(
             "No operation mode. Should have bumped "
-            f"from {current_version} to {new_version}."
+            f"from {current_version} to {new_version}"
         )
         return False
 
@@ -123,9 +123,9 @@ def version(**kwargs):
         logger.info("Checking build status...")
         owner, name = get_repository_owner_and_name()
         if not check_build_status(owner, name, get_current_head_hash()):
-            logger.warning("The build failed, cancelling release.")
+            logger.warning("The build failed, cancelling the release")
             return False
-        logger.info("The build was a success, continuing the release.")
+        logger.info("The build was a success, continuing the release")
 
     if retry:
         # No need to make changes to the repo, we're just retrying.
@@ -140,7 +140,8 @@ def version(**kwargs):
     ):
         commit_new_version(new_version)
     tag_new_version(new_version)
-    logger.info("Bumping with a {0} version to {1}.".format(level_bump, new_version))
+
+    logger.info(f"Bumping with a {level_bump} version to {new_version}")
     return True
 
 
@@ -157,11 +158,8 @@ def changelog(**kwargs):
             "Make sure semantic_release.version_variable "
             "is setup correctly"
         )
-    else:
-        logger.debug(f"changelog got current_version {current_version}")
 
     previous_version = get_previous_version(current_version)
-    logger.debug(f"changelog got previous_version {previous_version}")
 
     # Generate the changelog
     if kwargs["unreleased"]:
@@ -171,11 +169,10 @@ def changelog(**kwargs):
     logger.info(markdown_changelog(current_version, log, header=False))
 
     # Post changelog to HVCS if enabled
-    logger.debug("noop={}, post={}".format(kwargs.get("noop"), kwargs.get("post")))
     if not kwargs.get("noop") and kwargs.get("post"):
         if check_token():
             owner, name = get_repository_owner_and_name()
-            logger.info("Updating changelog")
+            logger.info("Posting changelog to HVCS")
             post_changelog(
                 owner,
                 name,
@@ -183,13 +180,12 @@ def changelog(**kwargs):
                 markdown_changelog(current_version, log, header=False),
             )
         else:
-            logger.error("Missing token: cannot post changelog")
+            logger.error("Missing token: cannot post changelog to HVCS")
 
 
 def publish(**kwargs):
     """Run the version task, then push to git and upload to PyPI / GitHub Releases."""
     current_version = get_current_version()
-    logger.info("Current version: {0}".format(current_version))
 
     retry = kwargs.get("retry")
     if retry:
@@ -206,7 +202,7 @@ def publish(**kwargs):
     owner, name = get_repository_owner_and_name()
 
     branch = config.get("semantic_release", "branch")
-    logger.debug(f"branch={branch}")
+    logger.debug(f"Running publish on branch {branch}")
     ci_checks.check(branch)
     checkout(branch)
 
@@ -247,7 +243,7 @@ def publish(**kwargs):
 
         if check_token():
             # Update changelog on HVCS
-            logger.info("Updating changelog")
+            logger.info("Posting changelog to HVCS")
             try:
                 log = generate_changelog(current_version, new_version)
                 post_changelog(
@@ -257,9 +253,9 @@ def publish(**kwargs):
                     markdown_changelog(new_version, log, header=False),
                 )
             except GitError:
-                logger.error("Posting changelog failed.")
+                logger.error("Posting changelog failed")
         else:
-            logger.error("Missing token: cannot post changelog")
+            logger.warning("Missing token: cannot post changelog to HVCS")
 
         # Upload to GitHub Releases
         if upload_release and check_token():
@@ -301,11 +297,11 @@ def entry():
 @click.group()
 @common_options
 def main(**kwargs):
-    logger.debug("main args:", kwargs)
+    logger.debug("Main args:", kwargs)
     message = ""
     for secret_name in SECRET_NAMES:
         message += '{}="{}",'.format(secret_name, os.environ.get(secret_name))
-    logger.debug("main env:", filter_output_for_secrets(message))
+    logger.debug("Environment:", filter_output_for_secrets(message))
 
     obj = {}
     for key in [
@@ -319,7 +315,7 @@ def main(**kwargs):
     ]:
         val = config.get("semantic_release", key)
         obj[key] = val
-    logger.debug("main config:", obj)
+    logger.debug("Main config:", obj)
 
 
 @main.command(name="publish", help=publish.__doc__)

@@ -1,10 +1,15 @@
 """Helper for using Twine to upload to PyPI.
 """
 from invoke import run
+import logging
 
 from semantic_release import ImproperConfigurationError
+from .helpers import LoggedFunction
+
+logger = logging.getLogger(__name__)
 
 
+@LoggedFunction(logger)
 def upload_to_pypi(
     path: str = "dist",
     username: str = None,

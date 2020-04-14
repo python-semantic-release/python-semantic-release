@@ -1,14 +1,19 @@
 """Legacy commit parser from Python Semantic Release 1.0"""
 import re
+import logging
 from typing import Optional, Tuple
 
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config
 from .parser_helpers import ParsedCommit, parse_text_block
+from ..helpers import LoggedFunction
+
+logger = logging.getLogger(__name__)
 
 re_parser = re.compile(r"(?P<subject>[^\n]+)" r"(:?\n\n(?P<text>.+))?", re.DOTALL)
 
 
+@LoggedFunction(logger)
 def parse_commit_message(
     message: str,
 ) -> Tuple[int, str, Optional[str], Tuple[str, str, str]]:

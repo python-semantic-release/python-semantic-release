@@ -10,6 +10,7 @@ import requests
 
 from .errors import ImproperConfigurationError
 from .settings import config
+from .helpers import LoggedFunction
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,7 @@ class Github(Base):
         return os.environ.get("GH_TOKEN")
 
     @staticmethod
+    @LoggedFunction(logger)
     def check_build_status(owner: str, repo: str, ref: str) -> bool:
         """Check build status
 
@@ -95,10 +97,10 @@ class Github(Base):
         response = requests.get(
             url.format(domain=Github.API_URL, owner=owner, repo=repo, ref=ref)
         )
-        logger.debug("check_build_status: state={}".format(response.json()["state"]))
         return response.json()["state"] == "success"
 
     @classmethod
+    @LoggedFunction(logger)
     def create_release(cls, owner: str, repo: str, tag: str, changelog: str) -> bool:
         """Create a new release
 
@@ -122,11 +124,12 @@ class Github(Base):
             },
             headers={"Authorization": "token {}".format(Github.token())},
         )
-        logger.debug("Release creation: status={}".format(response.status_code))
+        logger.debug(f"Release creation status code: {response.status_code}")
 
         return response.status_code == 201
 
     @classmethod
+    @LoggedFunction(logger)
     def get_release(cls, owner: str, repo: str, tag: str) -> int:
         """Get a release by its tag name
 
@@ -142,15 +145,12 @@ class Github(Base):
             f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
             headers={"Authorization": "token {}".format(Github.token())},
         )
-        logger.debug(
-            "Get release by tag: status={}, release_id={}".format(
-                response.status_code, response.json()["id"]
-            )
-        )
+        logger.debug(f"Get release by tag status code: {response.status_code}")
 
         return response.json()["id"]
 
     @classmethod
+    @LoggedFunction(logger)
     def edit_release(cls, owner: str, repo: str, id: int, changelog: str) -> bool:
         """Edit a release with updated change notes
 
@@ -168,13 +168,12 @@ class Github(Base):
             json={"body": changelog},
             headers={"Authorization": "token {}".format(Github.token())},
         )
-        logger.debug(
-            "Edit release: status={}, release_id={}".format(response.status_code, id)
-        )
+        logger.debug(f"Edit release status code: {response.status_code}")
 
         return response.status_code == 200
 
     @classmethod
+    @LoggedFunction(logger)
     def post_release_changelog(
         cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
@@ -200,6 +199,7 @@ class Github(Base):
         return success
 
     @classmethod
+    @LoggedFunction(logger)
     def upload_asset(
         cls, owner: str, repo: str, release_id: int, file: str, label: str = None
     ) -> bool:
@@ -227,8 +227,9 @@ class Github(Base):
             data=open(file, "rb").read(),
         )
         logger.debug(
-            "Asset upload: url={}, status={}".format(response.url, response.status_code)
-        )
+            "Asset upload completed, url: {}, status code: {}".format(
+            response.url, response.status_code
+        ))
         logger.debug(response.json())
         return response.status_code == 201
 
@@ -284,6 +285,7 @@ class Gitlab(Base):
         return os.environ.get("GL_TOKEN")
 
     @staticmethod
+    @LoggedFunction(logger)
     def check_build_status(owner: str, repo: str, ref: str) -> bool:
         """Check last build status
 
@@ -311,6 +313,7 @@ class Gitlab(Base):
         return True
 
     @classmethod
+    @LoggedFunction(logger)
     def post_release_changelog(
         cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
