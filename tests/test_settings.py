@@ -68,7 +68,7 @@ class ConfigTests(TestCase):
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 
-    @mock.patch("semantic_release.settings.debug")
+    @mock.patch('semantic_release.settings.logger.debug')
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
     def test_no_raise_toml_error(self, mock_getcwd, mock_debug):
         # create temporary toml config file

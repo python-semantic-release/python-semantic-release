@@ -5,15 +5,14 @@ import os
 from typing import Optional
 
 import gitlab
-import ndebug
+import logging
 import requests
 
 from .errors import ImproperConfigurationError
 from .settings import config
 
-debug = ndebug.create(__name__)
-debug_gh = ndebug.create(__name__ + ":github")
-debug_gl = ndebug.create(__name__ + ":gitlab")
+logger = logging.getLogger(__name__)
+
 
 # Add a mime type for wheels
 mimetypes.add_type("application/octet-stream", ".whl")
@@ -96,8 +95,7 @@ class Github(Base):
         response = requests.get(
             url.format(domain=Github.API_URL, owner=owner, repo=repo, ref=ref)
         )
-        if debug_gh.enabled:
-            debug_gh("check_build_status: state={}".format(response.json()["state"]))
+        logger.debug("check_build_status: state={}".format(response.json()["state"]))
         return response.json()["state"] == "success"
 
     @classmethod
@@ -124,7 +122,7 @@ class Github(Base):
             },
             headers={"Authorization": "token {}".format(Github.token())},
         )
-        debug_gh("Release creation: status={}".format(response.status_code))
+        logger.debug("Release creation: status={}".format(response.status_code))
 
         return response.status_code == 201
 
@@ -144,7 +142,7 @@ class Github(Base):
             f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
             headers={"Authorization": "token {}".format(Github.token())},
         )
-        debug_gh(
+        logger.debug(
             "Get release by tag: status={}, release_id={}".format(
                 response.status_code, response.json()["id"]
             )
@@ -170,7 +168,7 @@ class Github(Base):
             json={"body": changelog},
             headers={"Authorization": "token {}".format(Github.token())},
         )
-        debug_gh(
+        logger.debug(
             "Edit release: status={}, release_id={}".format(response.status_code, id)
         )
 
@@ -190,13 +188,13 @@ class Github(Base):
         :return: The status of the request
         """
         tag = f"v{version}"
-        debug_gh(f"Attempting to create release for {tag}")
+        logger.debug(f"Attempting to create release for {tag}")
         success = Github.create_release(owner, repo, tag, changelog)
 
         if not success:
-            debug_gh("Unsuccessful, looking for an existing release to update")
+            logger.debug("Unsuccessful, looking for an existing release to update")
             release_id = Github.get_release(owner, repo, tag)
-            debug_gh(f"Updating release {release_id}")
+            logger.debug(f"Updating release {release_id}")
             success = Github.edit_release(owner, repo, release_id, changelog)
 
         return success
@@ -228,10 +226,10 @@ class Github(Base):
             },
             data=open(file, "rb").read(),
         )
-        debug_gh(
+        logger.debug(
             "Asset upload: url={}, status={}".format(response.url, response.status_code)
         )
-        debug_gh(response.json())
+        logger.debug(response.json())
         return response.status_code == 201
 
     @classmethod
@@ -249,7 +247,7 @@ class Github(Base):
         # Find the release corresponding to this version
         release_id = Github.get_release(owner, repo, f"v{version}")
         if not release_id:
-            debug_gh("No release found to upload assets to")
+            logger.debug("No release found to upload assets to")
             return False
 
         # Upload assets
@@ -301,14 +299,14 @@ class Gitlab(Base):
         for job in jobs:
             if job["status"] not in ["success", "skipped"]:
                 if job["status"] == "pending":
-                    debug_gl(
+                    logger.debug(
                         "check_build_status: job {} is still in pending status".format(
                             job["name"]
                         )
                     )
                     return False
                 elif job["status"] == "failed" and not job["allow_failure"]:
-                    debug_gl("check_build_status: job {} failed".format(job["name"]))
+                    logger.debug("check_build_status: job {} failed".format(job["name"]))
                     return False
         return True
 
@@ -332,12 +330,12 @@ class Gitlab(Base):
             tag = gl.projects.get(owner + "/" + repo).tags.get(ref)
             tag.set_release_description(changelog)
         except gitlab.exceptions.GitlabGetError:
-            debug_gl(
+            logger.debug(
                 "Tag {} was not found for project {}".format(ref, owner + "/" + repo)
             )
             return False
         except gitlab.exceptions.GitlabUpdateError:
-            debug_gl(
+            logger.debug(
                 "Failed to update tag {} for project {}".format(ref, owner + "/" + repo)
             )
             return False
@@ -351,7 +349,7 @@ def get_hvcs() -> Base:
     :raises ImproperConfigurationError: if the hvcs option provided is not valid
     """
     hvcs = config.get("semantic_release", "hvcs")
-    debug("get_hvcs: hvcs=", hvcs)
+    logger.debug("get_hvcs: hvcs=", hvcs)
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:
@@ -367,7 +365,7 @@ def check_build_status(owner: str, repository: str, ref: str) -> bool:
     :param ref: Commit or branch reference
     :return: A boolean with the build status
     """
-    debug("check_build_status")
+    logger.debug("check_build_status")
     return get_hvcs().check_build_status(owner, repository, ref)
 
 
@@ -381,7 +379,7 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     :param changelog: A string with the changelog in correct format
     :return: a tuple with success status and payload from hvcs
     """
-    debug(
+    logger.debug(
         "post_changelog(owner={}, repository={}, version={})".format(
             owner, repository, version
         )
