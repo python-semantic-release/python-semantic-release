@@ -7,7 +7,7 @@ from pathlib import PurePath
 from typing import Optional, Tuple
 from urllib.parse import urlsplit
 
-import ndebug
+import logging
 from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
 from git.exc import BadName
 
@@ -19,7 +19,7 @@ try:
 except InvalidGitRepositoryError:
     repo = None
 
-debug = ndebug.create(__name__)
+logger = logging.getLogger(__name__)
 
 
 def check_repo(func):
@@ -43,7 +43,7 @@ def get_commit_log(from_rev=None):
             repo.commit(from_rev)
             rev = "...{from_rev}".format(from_rev=from_rev)
         except BadName:
-            debug(
+            logger.debug(
                 "Reference {} does not exist, considering entire history".format(
                     from_rev
                 )
@@ -60,7 +60,7 @@ def get_last_version(skip_tags=None) -> Optional[str]:
 
     :return: A string containing a version number.
     """
-    debug("get_last_version skip_tags=", skip_tags)
+    logger.debug("get_last_version skip_tags=", skip_tags)
     skip_tags = skip_tags or []
 
     def version_finder(tag):
@@ -85,7 +85,7 @@ def get_version_from_tag(tag_name: str) -> Optional[str]:
     :param tag_name: Name of the git tag (i.e. 'v1.0.0')
     :return: sha1 hash of the commit
     """
-    debug("get_version_from_tag({})".format(tag_name))
+    logger.debug("get_version_from_tag({})".format(tag_name))
 
     for i in repo.tags:
         if i.name == tag_name:
@@ -107,7 +107,7 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
     if not parts:
         raise HvcsRepoParseError
 
-    debug("get_repository_owner_and_name", parts)
+    logger.debug("get_repository_owner_and_name", parts)
     return parts.group(1), parts.group(2)
 
 

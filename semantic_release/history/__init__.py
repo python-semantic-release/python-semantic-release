@@ -3,7 +3,7 @@
 import re
 from typing import Optional
 
-import ndebug
+import logging
 import semver
 
 from ..errors import ImproperConfigurationError
@@ -14,7 +14,7 @@ from .logs import evaluate_version_bump  # noqa
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 
-debug = ndebug.create(__name__)
+logger = logging.getLogger(__name__)
 
 
 def get_current_version_by_tag() -> str:
@@ -23,12 +23,12 @@ def get_current_version_by_tag() -> str:
 
     :return: A string with the version number or 0.0.0 on failure.
     """
-    debug("get_current_version_by_tag")
+    logger.debug("get_current_version_by_tag")
     version = get_last_version()
     if version:
         return version
 
-    debug("no version found, will return default")
+    logger.debug("no version found, will return default")
     return "0.0.0"
 
 
@@ -40,10 +40,10 @@ def get_current_version_by_config_file() -> str:
     :raises ImproperConfigurationError: if version variable cannot be parsed
     """
     # Get the file and variable names from configuration
-    debug("get_current_version_by_config_file")
+    logger.debug("get_current_version_by_config_file")
     filename, variable = config.get("semantic_release", "version_variable").split(":")
     variable = variable.strip()
-    debug(filename, variable)
+    logger.debug(filename, variable)
 
     with open(filename, "r") as fd:
         file_text = fd.read()
@@ -60,7 +60,7 @@ def get_current_version_by_config_file() -> str:
             )
         if not parts:
             raise ImproperConfigurationError
-        debug(parts)
+        logger.debug(parts)
         return parts.group(1)
 
 
@@ -84,7 +84,7 @@ def get_new_version(current_version: str, level_bump: str) -> str:
         Should be `'major'`, `'minor'` or `'patch'`.
     :return: A string with the next version number.
     """
-    debug('get_new_version("{}", "{}")'.format(current_version, level_bump))
+    logger.debug('get_new_version("{}", "{}")'.format(current_version, level_bump))
     if not level_bump:
         return current_version
     return getattr(semver, "bump_{0}".format(level_bump))(current_version)
@@ -97,19 +97,19 @@ def get_previous_version(version: str) -> Optional[str]:
     :param version: A string with the version number.
     :return: A string with the previous version number.
     """
-    debug("get_previous_version")
+    logger.debug("get_previous_version")
     found_version = False
     for commit_hash, commit_message in get_commit_log():
-        debug("checking commit {}".format(commit_hash))
+        logger.debug("checking commit {}".format(commit_hash))
         if version in commit_message:
             found_version = True
-            debug('found_version in "{}"'.format(commit_message))
+            logger.debug('found_version in "{}"'.format(commit_message))
             continue
 
         if found_version:
             matches = re.match(r"v?(\d+.\d+.\d+)", commit_message)
             if matches:
-                debug("version matches", commit_message)
+                logger.debug("version matches", commit_message)
                 return matches.group(1).strip()
 
     return get_last_version([version, "v{}".format(version)])

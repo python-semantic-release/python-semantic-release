@@ -7,12 +7,12 @@ from functools import wraps
 from os import getcwd
 from typing import Callable
 
-import ndebug
+import logging
 import toml
 
 from .errors import ImproperConfigurationError
 
-debug = ndebug.create(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _config():
@@ -38,7 +38,7 @@ def _config():
                 for key, value in pyproject_toml_settings:
                     parser["semantic_release"][key] = str(value)
             except toml.TomlDecodeError:
-                debug("Could not decode pyproject.toml")
+                logger.debug("Could not decode pyproject.toml")
 
     return parser
 

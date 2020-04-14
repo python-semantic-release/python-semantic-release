@@ -2,14 +2,14 @@
 """
 from typing import Optional
 
-import ndebug
+import logging
 
 from ..errors import UnknownCommitMessageStyleError
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
 from .parser_helpers import re_breaking
 
-debug = ndebug.create(__name__)
+logger = logging.getLogger(__name__)
 
 LEVELS = {
     1: "patch",
@@ -27,7 +27,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     :return: A string with either major, minor or patch if there should be a release.
              If no release is necessary, None will be returned.
     """
-    debug('evaluate_version_bump("{}", "{}")'.format(current_version, force))
+    logger.debug('evaluate_version_bump("{}", "{}")'.format(current_version, force))
     if force:
         return force
 
@@ -40,7 +40,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         if commit_message.startswith(current_version):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
-            debug(
+            logger.debug(
                 '"{}" is commit for {}. breaking loop'.format(
                     commit_message, current_version
                 )
@@ -54,19 +54,19 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
             message = current_commit_parser()(commit_message)
             changes.append(message.bump)
         except UnknownCommitMessageStyleError as err:
-            debug("ignored commit", err)
+            logger.debug("ignored commit", err)
             pass
 
-    debug(f"commit_count={commit_count}")
+    logger.debug(f"commit_count={commit_count}")
 
     if changes:
         # Select the largest required bump level from the commits we parsed
         level = max(changes)
         if level in LEVELS:
             bump = LEVELS[level]
-            debug(f"Evaluated {bump}({level}) from {changes}")
+            logger.debug(f"Evaluated {bump}({level}) from {changes}")
         else:
-            debug(f"Unknown level {level}")
+            logger.debug(f"Unknown level {level}")
 
     if (
         config.getboolean("semantic_release", "patch_without_tag")
@@ -74,9 +74,9 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         and bump is None
     ):
         bump = "patch"
-        debug(f"Changing bump to patch based on config patch_without_tag")
+        logger.debug(f"Changing bump to patch based on config patch_without_tag")
 
-    debug(f"evaluate_version_bump returned {bump}")
+    logger.debug(f"evaluate_version_bump returned {bump}")
     return bump
 
 
@@ -89,7 +89,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :param to_version: The last version included in the changelog.
     :return: A dict with changelog sections and commits
     """
-    debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
+    logger.debug('generate_changelog("{}", "{}")'.format(from_version, to_version))
     changes: dict = {
         "feature": [],
         "fix": [],
@@ -153,7 +153,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
                 changes["breaking"].append((_hash, breaking_description))
 
         except UnknownCommitMessageStyleError as err:
-            debug("Ignoring", err)
+            logger.debug("Ignoring", err)
             pass
 
     return changes
@@ -168,7 +168,7 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     :param header: A boolean that decides whether a version number header should be included.
     :return: The markdown formatted changelog.
     """
-    debug(
+    logger.debug(
         'markdown_changelog(version="{}", header={}, changelog=...)'.format(
             version, header
         )

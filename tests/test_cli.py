@@ -631,9 +631,3 @@ def test_changelog_raises_exception_when_no_current_version(mocker):
     mocker.patch("semantic_release.cli.get_current_version", return_value=None)
     with pytest.raises(ImproperConfigurationError):
         changelog()
-
-
-@mock.patch("semantic_release.cli.debug")
-def test_main_debug(mock_debug, runner):
-    runner.invoke(main, ["version", "--noop"])
-    assert mock_debug.called
