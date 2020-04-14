@@ -13,6 +13,7 @@ from git.exc import BadName
 
 from .errors import GitError, HvcsRepoParseError
 from .settings import config
+from .helpers import LoggedFunction
 
 try:
     repo = Repo(".", search_parent_directories=True)
@@ -54,13 +55,13 @@ def get_commit_log(from_rev=None):
 
 
 @check_repo
+@LoggedFunction(logger)
 def get_last_version(skip_tags=None) -> Optional[str]:
     """
     Find the latest version using repo tags.
 
     :return: A string containing a version number.
     """
-    logger.debug("get_last_version skip_tags=", skip_tags)
     skip_tags = skip_tags or []
 
     def version_finder(tag):
@@ -78,6 +79,7 @@ def get_last_version(skip_tags=None) -> Optional[str]:
 
 
 @check_repo
+@LoggedFunction(logger)
 def get_version_from_tag(tag_name: str) -> Optional[str]:
     """
     Get the git commit hash corresponding to a tag name.
@@ -85,8 +87,6 @@ def get_version_from_tag(tag_name: str) -> Optional[str]:
     :param tag_name: Name of the git tag (i.e. 'v1.0.0')
     :return: sha1 hash of the commit
     """
-    logger.debug("get_version_from_tag({})".format(tag_name))
-
     for i in repo.tags:
         if i.name == tag_name:
             return i.commit.hexsha
@@ -94,6 +94,7 @@ def get_version_from_tag(tag_name: str) -> Optional[str]:
 
 
 @check_repo
+@LoggedFunction(logger)
 def get_repository_owner_and_name() -> Tuple[str, str]:
     """
     Check the 'origin' remote to get the owner and name of the remote repository.
@@ -107,7 +108,6 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
     if not parts:
         raise HvcsRepoParseError
 
-    logger.debug("get_repository_owner_and_name", parts)
     return parts.group(1), parts.group(2)
 
 
@@ -122,6 +122,7 @@ def get_current_head_hash() -> str:
 
 
 @check_repo
+@LoggedFunction(logger)
 def commit_new_version(version: str):
     """
     Commit the file containing the version number variable.
@@ -154,6 +155,7 @@ def commit_new_version(version: str):
 
 
 @check_repo
+@LoggedFunction(logger)
 def tag_new_version(version: str):
     """
     Create a new tag with the version number, prefixed with v.
@@ -164,6 +166,7 @@ def tag_new_version(version: str):
 
 
 @check_repo
+@LoggedFunction(logger)
 def push_new_version(
     auth_token: str = None,
     owner: str = None,
@@ -207,6 +210,7 @@ def push_new_version(
 
 
 @check_repo
+@LoggedFunction(logger)
 def checkout(branch: str):
     """
     Check out the given branch in the local repository.

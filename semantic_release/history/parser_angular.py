@@ -10,6 +10,7 @@ import logging
 
 from ..errors import UnknownCommitMessageStyleError
 from .parser_helpers import ParsedCommit, parse_text_block, re_breaking
+from ..helpers import LoggedFunction
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ PATCH_TYPES = [
 ]
 
 
+@LoggedFunction(logger)
 def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, str]]:
     """
     Parse a commit message according to the angular commit guidelines specification.
@@ -75,14 +77,6 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
     if parsed.group("type") in PATCH_TYPES:
         level_bump = max([level_bump, 1])
 
-    logger.debug(
-        "parse_commit_message -> ({}, {}, {}, {})".format(
-            level_bump,
-            TYPES[parsed.group("type")],
-            parsed.group("scope"),
-            (parsed.group("subject"), body, footer),
-        )
-    )
     return ParsedCommit(
         level_bump,
         TYPES[parsed.group("type")],

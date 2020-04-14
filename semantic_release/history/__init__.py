@@ -10,6 +10,7 @@ from ..errors import ImproperConfigurationError
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
+from ..helpers import LoggedFunction
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
@@ -17,21 +18,22 @@ from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 logger = logging.getLogger(__name__)
 
 
+@LoggedFunction(logger)
 def get_current_version_by_tag() -> str:
     """
     Find the current version of the package in the current working directory using git tags.
 
     :return: A string with the version number or 0.0.0 on failure.
     """
-    logger.debug("get_current_version_by_tag")
     version = get_last_version()
     if version:
         return version
 
-    logger.debug("no version found, will return default")
+    logger.debug("no version found, returning default of v0.0.0")
     return "0.0.0"
 
 
+@LoggedFunction(logger)
 def get_current_version_by_config_file() -> str:
     """
     Get current version from the version variable defined in the configuration.
@@ -40,10 +42,9 @@ def get_current_version_by_config_file() -> str:
     :raises ImproperConfigurationError: if version variable cannot be parsed
     """
     # Get the file and variable names from configuration
-    logger.debug("get_current_version_by_config_file")
     filename, variable = config.get("semantic_release", "version_variable").split(":")
     variable = variable.strip()
-    logger.debug(filename, variable)
+    logger.debug(f'Looking for current version in {filename}, variable {variable}')
 
     with open(filename, "r") as fd:
         file_text = fd.read()
@@ -60,7 +61,8 @@ def get_current_version_by_config_file() -> str:
             )
         if not parts:
             raise ImproperConfigurationError
-        logger.debug(parts)
+
+        logger.debug(f'Regex matched version: {parts}')
         return parts.group(1)
 
 
@@ -75,6 +77,7 @@ def get_current_version() -> str:
     return get_current_version_by_config_file()
 
 
+@LoggedFunction(logger)
 def get_new_version(current_version: str, level_bump: str) -> str:
     """
     Calculate the next version based on the given bump level with semver.
@@ -84,12 +87,13 @@ def get_new_version(current_version: str, level_bump: str) -> str:
         Should be `'major'`, `'minor'` or `'patch'`.
     :return: A string with the next version number.
     """
-    logger.debug('get_new_version("{}", "{}")'.format(current_version, level_bump))
     if not level_bump:
+        logger.debug('No bump requested, returning input version')
         return current_version
     return getattr(semver, "bump_{0}".format(level_bump))(current_version)
 
 
+@LoggedFunction(logger)
 def get_previous_version(version: str) -> Optional[str]:
     """
     Return the version prior to the given version.
@@ -97,19 +101,18 @@ def get_previous_version(version: str) -> Optional[str]:
     :param version: A string with the version number.
     :return: A string with the previous version number.
     """
-    logger.debug("get_previous_version")
     found_version = False
     for commit_hash, commit_message in get_commit_log():
-        logger.debug("checking commit {}".format(commit_hash))
+        logger.debug("Checking commit {}".format(commit_hash))
         if version in commit_message:
             found_version = True
-            logger.debug('found_version in "{}"'.format(commit_message))
+            logger.debug('Found version in commit "{}"'.format(commit_message))
             continue
 
         if found_version:
             matches = re.match(r"v?(\d+.\d+.\d+)", commit_message)
             if matches:
-                logger.debug("version matches", commit_message)
+                logger.debug("Version matches regex", commit_message)
                 return matches.group(1).strip()
 
     return get_last_version([version, "v{}".format(version)])
@@ -139,6 +142,7 @@ def replace_version_string(content, variable, new_version):
     return new_content
 
 
+@LoggedFunction(logger)
 def set_new_version(new_version: str) -> bool:
     """
     Replace the version number in the correct place and write the changed file to disk.
