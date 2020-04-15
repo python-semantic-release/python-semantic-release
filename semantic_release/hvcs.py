@@ -349,13 +349,13 @@ class Gitlab(Base):
         return True
 
 
+@LoggedFunction(logger)
 def get_hvcs() -> Base:
     """Get HVCS helper class
 
     :raises ImproperConfigurationError: if the hvcs option provided is not valid
     """
     hvcs = config.get("semantic_release", "hvcs")
-    logger.debug("get_hvcs: hvcs=", hvcs)
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:
