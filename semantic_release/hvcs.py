@@ -1,16 +1,16 @@
 """HVCS
 """
+import logging
 import mimetypes
 import os
 from typing import Optional
 
 import gitlab
-import logging
 import requests
 
 from .errors import ImproperConfigurationError
-from .settings import config
 from .helpers import LoggedFunction
+from .settings import config
 
 logger = logging.getLogger(__name__)
 
@@ -228,8 +228,9 @@ class Github(Base):
         )
         logger.debug(
             "Asset upload completed, url: {}, status code: {}".format(
-            response.url, response.status_code
-        ))
+                response.url, response.status_code
+            )
+        )
         logger.debug(response.json())
         return response.status_code == 201
 
@@ -308,7 +309,9 @@ class Gitlab(Base):
                     )
                     return False
                 elif job["status"] == "failed" and not job["allow_failure"]:
-                    logger.debug("check_build_status: job {} failed".format(job["name"]))
+                    logger.debug(
+                        "check_build_status: job {} failed".format(job["name"])
+                    )
                     return False
         return True
 

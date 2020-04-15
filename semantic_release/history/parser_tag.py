@@ -1,12 +1,12 @@
 """Legacy commit parser from Python Semantic Release 1.0"""
-import re
 import logging
+import re
 from typing import Optional, Tuple
 
 from ..errors import UnknownCommitMessageStyleError
+from ..helpers import LoggedFunction
 from ..settings import config
 from .parser_helpers import ParsedCommit, parse_text_block
-from ..helpers import LoggedFunction
 
 logger = logging.getLogger(__name__)
 

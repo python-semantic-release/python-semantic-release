@@ -1,11 +1,11 @@
 """CLI
 """
+import logging
 import os
 import sys
 
 import click
 import click_log
-import logging
 
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
@@ -38,7 +38,7 @@ from .vcs_helpers import (
     tag_new_version,
 )
 
-logger = logging.getLogger('semantic_release')
+logger = logging.getLogger("semantic_release")
 click_log.basic_config(logger)
 
 SECRET_NAMES = [

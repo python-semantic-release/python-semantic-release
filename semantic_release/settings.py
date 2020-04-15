@@ -2,12 +2,12 @@
 """
 import configparser
 import importlib
+import logging
 import os
 from functools import wraps
 from os import getcwd
 from typing import Callable
 
-import logging
 import toml
 
 from .errors import ImproperConfigurationError

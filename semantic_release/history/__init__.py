@@ -1,16 +1,16 @@
 """History
 """
+import logging
 import re
 from typing import Optional
 
-import logging
 import semver
 
 from ..errors import ImproperConfigurationError
+from ..helpers import LoggedFunction
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
 from .logs import evaluate_version_bump  # noqa
-from ..helpers import LoggedFunction
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
@@ -44,7 +44,7 @@ def get_current_version_by_config_file() -> str:
     # Get the file and variable names from configuration
     filename, variable = config.get("semantic_release", "version_variable").split(":")
     variable = variable.strip()
-    logger.debug(f'Looking for current version in {filename}, variable {variable}')
+    logger.debug(f"Looking for current version in {filename}, variable {variable}")
 
     with open(filename, "r") as fd:
         file_text = fd.read()
@@ -62,7 +62,7 @@ def get_current_version_by_config_file() -> str:
         if not parts:
             raise ImproperConfigurationError
 
-        logger.debug(f'Regex matched version: {parts}')
+        logger.debug(f"Regex matched version: {parts}")
         return parts.group(1)
 
 
@@ -88,7 +88,7 @@ def get_new_version(current_version: str, level_bump: str) -> str:
     :return: A string with the next version number.
     """
     if not level_bump:
-        logger.debug('No bump requested, returning input version')
+        logger.debug("No bump requested, returning input version")
         return current_version
     return getattr(semver, "bump_{0}".format(level_bump))(current_version)
 

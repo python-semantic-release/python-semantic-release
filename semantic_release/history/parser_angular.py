@@ -3,14 +3,13 @@ Angular commit style parser
 
 https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines
 """
+import logging
 import re
 from typing import Tuple
 
-import logging
-
 from ..errors import UnknownCommitMessageStyleError
-from .parser_helpers import ParsedCommit, parse_text_block, re_breaking
 from ..helpers import LoggedFunction
+from .parser_helpers import ParsedCommit, parse_text_block, re_breaking
 
 logger = logging.getLogger(__name__)
 

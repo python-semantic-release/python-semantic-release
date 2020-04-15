@@ -1,5 +1,6 @@
 """VCS Helpers
 """
+import logging
 import os
 import re
 from functools import wraps
@@ -7,13 +8,12 @@ from pathlib import PurePath
 from typing import Optional, Tuple
 from urllib.parse import urlsplit
 
-import logging
 from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
 from git.exc import BadName
 
 from .errors import GitError, HvcsRepoParseError
-from .settings import config
 from .helpers import LoggedFunction
+from .settings import config
 
 try:
     repo = Repo(".", search_parent_directories=True)

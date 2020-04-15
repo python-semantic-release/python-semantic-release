@@ -1,14 +1,13 @@
 """Logs
 """
+import logging
 from typing import Optional
 
-import logging
-
 from ..errors import UnknownCommitMessageStyleError
+from ..helpers import LoggedFunction
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
 from .parser_helpers import re_breaking
-from ..helpers import LoggedFunction
 
 logger = logging.getLogger(__name__)
 
@@ -110,18 +109,20 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             if to_version and to_version not in commit_message:
                 continue
             else:
-                logger.debug(f'Reached the start of {to_version}, beginning changelog generation')
+                logger.debug(
+                    f"Reached the start of {to_version}, beginning changelog generation"
+                )
                 found_the_release = True
 
         if from_version is not None and from_version in commit_message:
             # We reached the previous release
-            logger.debug(f'{from_version} reached, ending changelog generation')
+            logger.debug(f"{from_version} reached, ending changelog generation")
             break
 
         try:
             message = current_commit_parser()(commit_message)
             if message.type not in changes:
-                logger.debug(f'Excluding commit type {message.type} from changelog')
+                logger.debug(f"Excluding commit type {message.type} from changelog")
                 continue
 
             # Capialize the first letter of the message, leaving others as they were
@@ -184,7 +185,9 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     for section in changelog_sections:
         if section not in changelog or not changelog[section]:
             # This section does not have any commits
-            logger.debug(f'Excluding section {section} from markdown changelog because it is empty')
+            logger.debug(
+                f"Excluding section {section} from markdown changelog because it is empty"
+            )
             continue
 
         # Add a header for the section

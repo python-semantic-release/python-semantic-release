@@ -7,6 +7,7 @@ def format_arg(value):
     else:
         return str(value)
 
+
 class LoggedFunction:
     """
     Decorator which adds debug logging to a function.
@@ -24,20 +25,26 @@ class LoggedFunction:
         @functools.wraps(func)
         def logged_func(*args, **kwargs):
             # Log function name and arguments
-            self.logger.debug('{function}({args}{kwargs})'.format(
-                function=func.__name__,
-                args=', '.join([format_arg(x) for x in args]),
-                kwargs=''.join([f', {k}={format_arg(v)}' for k, v in kwargs.items()])
-            ))
+            self.logger.debug(
+                "{function}({args}{kwargs})".format(
+                    function=func.__name__,
+                    args=", ".join([format_arg(x) for x in args]),
+                    kwargs="".join(
+                        [f", {k}={format_arg(v)}" for k, v in kwargs.items()]
+                    ),
+                )
+            )
 
             # Call function
             result = func(*args, **kwargs)
 
             # Log result
             if result is not None:
-                self.logger.debug('{function} -> {result}'.format(
-                    function=func.__name__,
-                    result=result
-                ))
+                self.logger.debug(
+                    "{function} -> {result}".format(
+                        function=func.__name__, result=result
+                    )
+                )
             return result
+
         return logged_func
