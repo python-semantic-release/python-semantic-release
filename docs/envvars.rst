@@ -76,17 +76,35 @@ and click on *Personal access token*.
 A personal access token from GitLab. This is used for authenticating
 when pushing tags, publishing releases etc.
 
+.. _env-pypi_token:
+
+``PYPI_TOKEN``
+--------------
+Set an API token for publishing to https://pypi.org/. Information on how to
+obtain a token is given `here <https://pypi.org/help/#apitoken>`_.
+
+See :ref:`automatic-pypi` for more about PyPI uploads.
+
 .. _env-pypi_password:
 
 ``PYPI_PASSWORD``
 -----------------
 Used together with :ref:`env-pypi_username` when publishing to https://pypi.org/.
 
+.. warning::
+  You should use :ref:`env-pypi_token` instead of username and password
+  authentication for the following reasons:
+
+  - It is `strongly recommended by PyPI <https://pypi.org/help/#apitoken>`_.
+  - Tokens can be given access to only a single project, which reduces the
+    possible damage if it is compromised.
+  - You can change your password without having to update it in CI settings.
+  - If your PyPI username is the same as your GitHub and you have it set
+    as a secret in a CI service, they will likely scrub it from the build
+    output. This can break things, for example repository links.
+
 .. _env-pypi_username:
 
 ``PYPI_USERNAME``
 -----------------
 Used together with :ref:`env-pypi_password` when publishing to https://pypi.org/.
-
-.. note::
-  See :ref:`automatic-pypi` for more about PyPI uploads.
