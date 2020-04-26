@@ -2,6 +2,7 @@
 
 # Copy inputs into correctly-named environment variables
 export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
+export PYPI_TOKEN="${INPUT_PYPI_TOKEN}"
 export PYPI_USERNAME="${INPUT_PYPI_USERNAME}"
 export PYPI_PASSWORD="${INPUT_PYPI_PASSWORD}"
 
