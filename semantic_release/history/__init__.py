@@ -50,7 +50,9 @@ def get_current_version_by_config_file() -> str:
         file_text = fd.read()
         # Check for variable in the format variable=version or variable:version
         parts = re.search(
-            r'^{0}\s*[=:]\s*[\'"]([^\'"]*)[\'"]'.format(variable), file_text, re.MULTILINE
+            r'^{0}\s*[=:]\s*[\'"]([^\'"]*)[\'"]'.format(variable),
+            file_text,
+            re.MULTILINE,
         )
         if not parts:
             raise ImproperConfigurationError
