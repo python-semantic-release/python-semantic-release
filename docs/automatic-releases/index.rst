@@ -64,11 +64,10 @@ upload to pypi and push to git and it should be ready to roll.
 
 Configuring pypi upload
 ^^^^^^^^^^^^^^^^^^^^^^^
-In order to upload to pypi python-semantic-release needs credentials to an account that
-have access to the given package. Either by being logged in through a pip configuration file
-or through environment variables. The latter is most often preferable in an CI environment.
-You will need to set ``PYPI_USERNAME`` and ``PYPI_PASSWORD``. Make sure that you mark it
-as a secret on your CI service so that your password will be left out of the build logs.
+In order to upload to PYPI, Python Semantic Release needs credentials to access
+the project. You will need to set the environment variable :ref:`env-pypi_token`.
+Make sure that you mark it as a secret on your CI service so that it is left out
+of the build logs.
 
 
 .. _automatic-github:

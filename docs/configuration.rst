@@ -122,6 +122,7 @@ Distributions
 ``upload_to_pypi``
 ------------------
 If set to false the pypi uploading will be disabled.
+See :ref:`env-pypi_token` which must also be set for this to work.
 
 ``upload_to_release``
 ---------------------
