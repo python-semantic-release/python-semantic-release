@@ -7,23 +7,19 @@ command.
 Inputs
 ------
 
-+-------------------+-------------------------------------------------+
-| Input             | Description                                     |
-+===================+=================================================+
-| ``github_token``  | **Required.** The GitHub token used to post     |
-|                   | release notes and push new commits/tags created |
-|                   | by Python Semantic Release.                     |
-+-------------------+-------------------------------------------------+
-| ``pypi_username`` | **Required unless upload_to_pypi is false.**    |
-|                   | Username with access to push to PyPi.           |
-+-------------------+-------------------------------------------------+
-| ``pypi_password`` | **Required unless upload_to_pypi is false.**    |
-|                   | Password to the account specified in            |
-|                   | ``pypi_username``.                              |
-+-------------------+-------------------------------------------------+
-| ``directory``     | A sub-directory to ``cd`` into before running.  |
-|                   | Defaults to the root of the repository.         |
-+-------------------+-------------------------------------------------+
++--------------------+----------------------------------------------------------------------------------------+
+| Input              | Description                                                                            |
++====================+========================================================================================+
+| ``github_token``   | See :ref:`env-gh_token`. this is usually set to ``${{ secrets.GITHUB_TOKEN }}``.       |
++--------------------+----------------------------------------------------------------------------------------+
+| ``pypi_token``     | See :ref:`env-pypi_token`.                                                             |
++--------------------+----------------------------------------------------------------------------------------+
+| ``pypi_username``  | See :ref:`env-pypi_username`.                                                          |
++--------------------+----------------------------------------------------------------------------------------+
+| ``pypi_password``  | See :ref:`env-pypi_password`.                                                          |
++--------------------+----------------------------------------------------------------------------------------+
+| ``directory``      | A sub-directory to ``cd`` into before running. Defaults to the root of the repository. |
++--------------------+----------------------------------------------------------------------------------------+
 
 Other options are taken from your regular configuration file.
 
@@ -52,12 +48,11 @@ Example Workflow
          uses: relekang/python-semantic-release@master
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
-           pypi_username: <ADD YOUR USERNAME HERE>
-           pypi_password: ${{ secrets.PYPI_PASSWORD }}
+           pypi_token: ${{ secrets.PYPI_TOKEN }}
 
-``PYPI_PASSWORD`` should be set as a secret on your repository's settings page.
-It is safe to include your username directly in the configuration, although you
-could also set it as a secret if you wish.
+``PYPI_TOKEN`` should be set as a secret on your repository's settings page.
+It is also possible to use username and password authentication in a similar
+fashion.
 
 .. warning::
   You must set `fetch-depth` to 0 when using ``actions/checkout@v2``, since
@@ -88,16 +83,14 @@ multiple projects.
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
-       pypi_username: <ADD YOUR USERNAME HERE>
-       pypi_password: ${{ secrets.PYPI_PASSWORD }}
+       pypi_token: ${{ secrets.PYPI_TOKEN }}
 
    - name: Release Project 2
      uses: relekang/python-semantic-release@master
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
-       pypi_username: <ADD YOUR USERNAME HERE>
-       pypi_password: ${{ secrets.PYPI_PASSWORD }}
+       pypi_token: ${{ secrets.PYPI_TOKEN }}
 
 .. note::
   The release notes posted to GitHub will not currently distinguish which
