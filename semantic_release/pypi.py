@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 @LoggedFunction(logger)
 def upload_to_pypi(
-    path: str = "dist",
-    skip_existing: bool = False,
+    path: str = "dist", skip_existing: bool = False,
 ):
     """Upload wheels to PyPI with Twine.
 
@@ -35,11 +34,13 @@ def upload_to_pypi(
         username = os.environ.get("PYPI_USERNAME")
         password = os.environ.get("PYPI_PASSWORD")
         if not (username or password):
-            raise ImproperConfigurationError("Missing credentials for uploading to PyPI")
+            raise ImproperConfigurationError(
+                "Missing credentials for uploading to PyPI"
+            )
     elif not token.startswith("pypi-"):
-        raise ImproperConfigurationError("PyPI token should begin with \"pypi-\"")
+        raise ImproperConfigurationError('PyPI token should begin with "pypi-"')
     else:
-        username = '__token__'
+        username = "__token__"
         password = token
 
     run(

@@ -8,7 +8,9 @@ from . import mock
 
 class PypiTests(TestCase):
     @mock.patch("semantic_release.pypi.run")
-    @mock.patch.dict("os.environ", {"PYPI_USERNAME": "username", "PYPI_PASSWORD": "password"})
+    @mock.patch.dict(
+        "os.environ", {"PYPI_USERNAME": "username", "PYPI_PASSWORD": "password"}
+    )
     def test_upload_with_password(self, mock_run):
         upload_to_pypi()
         self.assertEqual(
@@ -26,7 +28,14 @@ class PypiTests(TestCase):
         )
 
     @mock.patch("semantic_release.pypi.run")
-    @mock.patch.dict("os.environ", {"PYPI_TOKEN": "pypi-x", "PYPI_USERNAME": "username", "PYPI_PASSWORD": "password"})
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "PYPI_TOKEN": "pypi-x",
+            "PYPI_USERNAME": "username",
+            "PYPI_PASSWORD": "password",
+        },
+    )
     def test_upload_prefers_token_over_password(self, mock_run):
         upload_to_pypi()
         self.assertEqual(
