@@ -235,8 +235,6 @@ def publish(**kwargs):
             logger.info("Uploading to PyPI")
             upload_to_pypi(
                 path=dist_path,
-                username=os.environ.get("PYPI_USERNAME"),
-                password=os.environ.get("PYPI_PASSWORD"),
                 # If we are retrying, we don't want errors for files that are already on PyPI.
                 skip_existing=retry,
             )
