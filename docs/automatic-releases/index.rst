@@ -75,8 +75,8 @@ of the build logs.
 Configuring push to Github
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 In order to push to Github and post the changelog to Github the environment variable
-``GH_TOKEN`` has to be set. It needs access to the ``public_repo`` scope for public repositories
-and ``repo`` for private repositories.
+:ref:`env-gh_token` has to be set. It needs access to the ``public_repo`` scope for
+public repositories and ``repo`` for private repositories.
 
 
 Guides

@@ -50,7 +50,7 @@ Example Workflow
            github_token: ${{ secrets.GITHUB_TOKEN }}
            pypi_token: ${{ secrets.PYPI_TOKEN }}
 
-``PYPI_TOKEN`` should be set as a secret on your repository's settings page.
+:ref:`env-pypi_token` should be set as a secret on your repository's settings page.
 It is also possible to use username and password authentication in a similar
 fashion.
 

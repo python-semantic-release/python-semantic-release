@@ -11,8 +11,8 @@ When executed this command will print the changelog to stdout.
 
 If the option ``--post`` is used then the program will check if
 there is a authentication token configured for your vcs provider
-(`GH_TOKEN` for github) and it will be posted to the provider
-if supported.
+(:ref:`env-gh_token` for github, :ref:`env-gl_token` for GitLab)
+and it will be posted to the provider if supported.
 
 
 .. _cmd-publish:
@@ -23,9 +23,9 @@ Publish will do a sequence of things.
 
 #. Run same as the :ref:`cmd-version` command
 #. Push changes to git
-#. If ``upload_to_pypi`` is not ``false`` in the :ref:`configuration`
+#. If :ref:`config-upload_to_pypi` is not ``false`` in the :ref:`configuration`
    it will create the wheel and upload to pypi using twine.
-#. If the environment variable ``GH_TOKEN`` (or equivalent for your
+#. If the environment variable :ref:`env-gh_token` (or equivalent for your
    vcs provider) is set then :ref:`cmd-changelog` will be executed and
    the changelog will be posted to your vcs provider if supported.
 
