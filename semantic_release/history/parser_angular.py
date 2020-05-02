@@ -5,11 +5,10 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 """
 import logging
 import re
-from typing import Tuple
 
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
-from .parser_helpers import ParsedCommit, parse_text_block, re_breaking
+from .parser_helpers import ParsedCommit, parse_paragraphs, re_breaking
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ PATCH_TYPES = [
 
 
 @LoggedFunction(logger)
-def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, str]]:
+def parse_commit_message(message: str) -> ParsedCommit:
     """
     Parse a commit message according to the angular commit guidelines specification.
 
@@ -62,11 +61,16 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
             "Unable to parse the given commit message: {}".format(message)
         )
 
-    body, footer = parse_text_block(parsed.group("text"))
+    if parsed.group("text"):
+        descriptions = parse_paragraphs(parsed.group("text"))
+    else:
+        descriptions = list()
+    # Insert the subject before the other paragraphs
+    descriptions.insert(0, parsed.group("subject"))
 
     # Check for mention of breaking changes
     level_bump = 0
-    if parsed.group("break") or re_breaking.match(body) or re_breaking.match(footer):
+    if parsed.group("break") or any([re_breaking.match(p) for p in descriptions]):
         level_bump = 3  # Major
 
     # Set the bump level based on commit type
@@ -80,5 +84,5 @@ def parse_commit_message(message: str) -> Tuple[int, str, str, Tuple[str, str, s
         level_bump,
         TYPES[parsed.group("type")],
         parsed.group("scope"),
-        (parsed.group("subject"), body, footer),
+        descriptions,
     )
