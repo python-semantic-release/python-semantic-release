@@ -1,12 +1,12 @@
 """Legacy commit parser from Python Semantic Release 1.0"""
 import logging
 import re
-from typing import Optional, Tuple
+from typing import Optional
 
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config
-from .parser_helpers import ParsedCommit, parse_text_block
+from .parser_helpers import ParsedCommit, parse_paragraphs
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ re_parser = re.compile(r"(?P<subject>[^\n]+)" r"(:?\n\n(?P<text>.+))?", re.DOTAL
 @LoggedFunction(logger)
 def parse_commit_message(
     message: str,
-) -> Tuple[int, str, Optional[str], Tuple[str, str, str]]:
+) -> ParsedCommit:
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
 
@@ -60,6 +60,10 @@ def parse_commit_message(
         level = "breaking"
         level_bump = 3
 
-    body, footer = parse_text_block(parsed.group("text"))
-    descriptions = (subject.strip(), body.strip(), footer.strip())
+    if parsed.group("text"):
+        descriptions = parse_paragraphs(parsed.group("text"))
+    else:
+        descriptions = list()
+    descriptions.insert(0, subject.strip())
+    
     return ParsedCommit(level_bump, level, None, descriptions)

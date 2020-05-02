@@ -30,6 +30,13 @@ MAJOR_MENTIONING_1_0_0 = (
     "feat(x): Add super-feature\n\nSome explanation\n\n"
     "BREAKING CHANGE: Uses super-feature as default instead of dull-feature from v1.0.0.",
 )
+MAJOR_MULTIPLE_FOOTERS = (
+    "244",
+    "feat(x): Lots of breaking changes\n\n"
+    "BREAKING CHANGE: Breaking change 1\n\n"
+    "Not a BREAKING CHANGE\n\n"
+    "BREAKING CHANGE: Breaking change 2"
+)
 MAJOR_EXCL_WITH_FOOTER = (
     "231",
     "feat(x)!: Add another feature\n\n"
@@ -213,6 +220,16 @@ class GenerateChangelogTests(TestCase):
                 with self.subTest(hash=commit[0]):
                     changelog = generate_changelog("0.0.0")
                     self.assertEqual(changelog["breaking"][0][1], expected_description)
+
+    def test_should_get_multiple_breaking_descriptions(self):
+        with mock.patch(
+            "semantic_release.history.logs.get_commit_log",
+            lambda *a, **kw: [MAJOR_MULTIPLE_FOOTERS],
+        ):
+            changelog = generate_changelog("0.0.0")
+            assert len(changelog["breaking"]) == 2
+            assert changelog["breaking"][0][1] == "Breaking change 1"
+            assert changelog["breaking"][1][1] == "Breaking change 2"
 
     def test_messages_are_capitalized(self):
         with mock.patch(

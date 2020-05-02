@@ -134,26 +134,24 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
             # Handle breaking change message
             parts = None
-            if message.bump == 3:
-                # parse footer (standard)
-                if (
-                    message.descriptions[2]
-                    and "BREAKING CHANGE" in message.descriptions[2]
-                ):
-                    parts = re_breaking.match(message.descriptions[2])
-                # parse body (not standard, kept for backwards compatibility)
-                elif (
-                    message.descriptions[1]
-                    and "BREAKING CHANGE" in message.descriptions[1]
-                ):
-                    parts = re_breaking.match(message.descriptions[1])
+            if message.bump == 3 and len(message.descriptions) > 1:
+                # Check each paragraph for breaking changes
+                # This can pick up multiple paragraphs, e.g. in squashed commits
+                breaking_paragraphs = list()
+                for paragraph in message.descriptions[1:]:
+                    parts = re_breaking.match(paragraph)
+                    if parts:
+                        # This paragraph describes a breaking change
+                        breaking_paragraphs.append(parts.group(1))
 
-                if parts:
-                    breaking_description = parts.group(1)
+                if len(breaking_paragraphs) > 0:
+                    # Use selected paragraphs
+                    for paragraph in breaking_paragraphs:
+                        changes["breaking"].append((_hash, paragraph))
                 else:
-                    breaking_description = message.descriptions[0]
-
-                changes["breaking"].append((_hash, breaking_description))
+                    # No paragraphs begin with "BREAKING CHANGE:"
+                    # Use the subject instead
+                    changes["breaking"].append((_hash, message.descriptions[0]))
 
         except UnknownCommitMessageStyleError as err:
             logger.debug(f"Ignoring UnknownCommitMessageStyleError: {err}")
