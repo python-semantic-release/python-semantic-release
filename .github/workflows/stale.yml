@@ -22,3 +22,25 @@ jobs:
           then it will be assumed that the question has been resolved and
           the issue will be automatically closed.
         stale-issue-label: 'stale'
+    - uses: actions/stale@v2
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        days-before-stale: 21
+        days-before-close: -1
+        only-labels: 'feature'
+        stale-issue-message: >-
+          This feature request has been labelled as *help wanted* since
+          there has been no activity in the last 3 weeks. It will not be
+          closed.
+        stale-issue-label: 'help-wanted'
+    - uses: actions/stale@v2
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        days-before-stale: 21
+        days-before-close: -1
+        only-labels: 'bug'
+        stale-issue-message: >-
+          This bug report has been labelled as *help wanted* since
+          there has been no activity in the last 3 weeks. It will not be
+          closed.
+        stale-issue-label: 'help-wanted'
