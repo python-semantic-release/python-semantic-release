@@ -81,8 +81,5 @@ def parse_commit_message(message: str) -> ParsedCommit:
         level_bump = max([level_bump, 1])
 
     return ParsedCommit(
-        level_bump,
-        TYPES[parsed.group("type")],
-        parsed.group("scope"),
-        descriptions,
+        level_bump, TYPES[parsed.group("type")], parsed.group("scope"), descriptions,
     )

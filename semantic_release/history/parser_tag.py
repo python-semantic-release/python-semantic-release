@@ -14,9 +14,7 @@ re_parser = re.compile(r"(?P<subject>[^\n]+)" r"(:?\n\n(?P<text>.+))?", re.DOTAL
 
 
 @LoggedFunction(logger)
-def parse_commit_message(
-    message: str,
-) -> ParsedCommit:
+def parse_commit_message(message: str,) -> ParsedCommit:
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
 
@@ -65,5 +63,5 @@ def parse_commit_message(
     else:
         descriptions = list()
     descriptions.insert(0, subject.strip())
-    
+
     return ParsedCommit(level_bump, level, None, descriptions)

@@ -35,7 +35,7 @@ MAJOR_MULTIPLE_FOOTERS = (
     "feat(x): Lots of breaking changes\n\n"
     "BREAKING CHANGE: Breaking change 1\n\n"
     "Not a BREAKING CHANGE\n\n"
-    "BREAKING CHANGE: Breaking change 2"
+    "BREAKING CHANGE: Breaking change 2",
 )
 MAJOR_EXCL_WITH_FOOTER = (
     "231",
