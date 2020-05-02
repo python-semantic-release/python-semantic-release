@@ -24,4 +24,12 @@ from the inner workings of semantic-release.
 
 ::
 
-    semantic-release changelog --verbosity DEBUG
+    semantic-release changelog --verbosity=DEBUG
+
+.. warning::
+  The ``=`` symbol is required between ``--verbosity`` and its argument, but
+  not when using the short form of ``-v``::
+
+    semantic-release changelog -v DEBUG
+
+  See `#227 <https://github.com/relekang/python-semantic-release/issues/227>`_.
