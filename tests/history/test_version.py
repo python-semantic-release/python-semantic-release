@@ -27,7 +27,7 @@ def test_current_version_should_return_default_version(mock_config, mock_last_ve
     assert "0.0.0" == get_current_version()
 
 
-class TestGetPreviousVersion():
+class TestGetPreviousVersion:
     @mock.patch(
         "semantic_release.history.get_commit_log",
         lambda: [("211", "0.10.0"), ("13", "0.9.0")],
@@ -43,7 +43,7 @@ class TestGetPreviousVersion():
         assert get_previous_version("0.10.0") == "0.9.0"
 
 
-class TestGetNewVersion():
+class TestGetNewVersion:
     def test_major_bump(self):
         assert get_new_version("0.0.0", "major") == "1.0.0"
         assert get_new_version("0.1.0", "major") == "1.0.0"

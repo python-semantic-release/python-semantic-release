@@ -33,18 +33,23 @@ def test_should_output_all_sections():
         "* Document super-feature (0)\n"
     )
 
+
 def test_should_not_include_empty_sections():
-    assert markdown_changelog(
-        "1.0.1",
-        {
-            "refactor": [],
-            "breaking": [],
-            "feature": [],
-            "fix": [],
-            "documentation": [],
-            "performance": [],
-        },
-    ) == ""
+    assert (
+        markdown_changelog(
+            "1.0.1",
+            {
+                "refactor": [],
+                "breaking": [],
+                "feature": [],
+                "fix": [],
+                "documentation": [],
+                "performance": [],
+            },
+        )
+        == ""
+    )
+
 
 def test_should_not_output_heading():
     assert "v1.0.1" not in markdown_changelog(
@@ -58,6 +63,7 @@ def test_should_not_output_heading():
             "performance": [],
         },
     )
+
 
 def test_should_output_heading():
     assert "## v1.0.1\n" in markdown_changelog(
