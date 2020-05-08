@@ -136,6 +136,17 @@ The available options are:
 
 Default: `feature, fix, breaking, documentation, performance`
 
+.. _config-compare_link:
+
+``compare_link``
+----------------
+When set to true, add a link to view the commit range since the previous
+release, on GitHub. Only appears when using :ref:`cmd-publish`.
+
+.. note::
+  If you are using a different HVCS, the link will not be included
+  regardless of this option.
+
 Distributions
 =============
 
