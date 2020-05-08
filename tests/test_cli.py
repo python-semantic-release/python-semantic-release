@@ -514,7 +514,10 @@ def test_publish_giterror_when_posting(mocker):
     )
     mock_check_token.assert_called_once_with()
     mock_generate.assert_called_once_with("current", "new")
-    mock_markdown.assert_called_once_with("new", "super changelog", header=False)
+    mock_markdown.assert_called_once_with(
+        "new", "super changelog",
+        header=False, previous_version='current'
+    )
     mock_post.assert_called_once_with("owner", "name", "new", "super md changelog")
 
 

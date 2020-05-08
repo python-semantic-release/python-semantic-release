@@ -6,7 +6,7 @@ from typing import Optional
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config, current_commit_parser
-from ..vcs_helpers import get_commit_log
+from ..vcs_helpers import get_commit_log, get_repository_owner_and_name
 from .parser_helpers import re_breaking
 
 logger = logging.getLogger(__name__)
@@ -160,12 +160,29 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     return changes
 
 
+def get_github_compare_url(from_version: str, to_version: str) -> str:
+    """
+    Get the GitHub comparison link between two version tags.
+
+    :param from_version: The older version to compare.
+    :param to_version: The newer version to compare.
+    :return: Link to view a comparison between the two versions.
+    """
+    owner, name = get_repository_owner_and_name()
+    return (
+        f"https://github.com/{owner}/{name}"
+        f"/compare/v{from_version}...v{to_version}"
+    )
+
+
 @LoggedFunction(logger)
-def markdown_changelog(version: str, changelog: dict, header: bool = False) -> str:
+def markdown_changelog(version: str, changelog: dict, header: bool = False, previous_version: str = None) -> str:
     """
     Generate a markdown version of the changelog.
 
     :param version: A string with the version number.
+    :param previous_version: A string with the last version number, to
+        use for the comparison URL. If omitted, the URL will not be included.
     :param changelog: A parsed changelog dict from generate_changelog.
     :param header: A boolean that decides whether a version number header should be included.
     :return: The markdown formatted changelog.
@@ -174,6 +191,14 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     if header:
         # Add a heading with the version number
         output += "## v{0}\n".format(version)
+
+    if (
+        config.getboolean("semantic_release", "compare_link")
+        and config.get("semantic_release", "hvcs").lower() == 'github'
+        and previous_version
+    ):
+        compare_url = get_github_compare_url(previous_version, version)
+        output += f"**[See all commits in this version]({compare_url})**\n"
 
     # Sections which will be shown in the Markdown changelog.
     # This is NOT related to supported commit types.
