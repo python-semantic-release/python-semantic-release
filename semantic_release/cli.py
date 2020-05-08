@@ -248,7 +248,10 @@ def publish(**kwargs):
                     owner,
                     name,
                     new_version,
-                    markdown_changelog(new_version, log, header=False),
+                    markdown_changelog(
+                        new_version, log, header=False,
+                        previous_version=current_version
+                    ),
                 )
             except GitError:
                 logger.error("Posting changelog failed")
