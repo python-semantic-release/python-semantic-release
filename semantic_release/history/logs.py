@@ -170,13 +170,14 @@ def get_github_compare_url(from_version: str, to_version: str) -> str:
     """
     owner, name = get_repository_owner_and_name()
     return (
-        f"https://github.com/{owner}/{name}"
-        f"/compare/v{from_version}...v{to_version}"
+        f"https://github.com/{owner}/{name}" f"/compare/v{from_version}...v{to_version}"
     )
 
 
 @LoggedFunction(logger)
-def markdown_changelog(version: str, changelog: dict, header: bool = False, previous_version: str = None) -> str:
+def markdown_changelog(
+    version: str, changelog: dict, header: bool = False, previous_version: str = None
+) -> str:
     """
     Generate a markdown version of the changelog.
 
@@ -194,7 +195,7 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False, prev
 
     if (
         config.getboolean("semantic_release", "compare_link")
-        and config.get("semantic_release", "hvcs").lower() == 'github'
+        and config.get("semantic_release", "hvcs").lower() == "github"
         and previous_version
     ):
         compare_url = get_github_compare_url(previous_version, version)

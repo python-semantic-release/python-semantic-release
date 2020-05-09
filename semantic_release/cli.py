@@ -249,8 +249,7 @@ def publish(**kwargs):
                     name,
                     new_version,
                     markdown_changelog(
-                        new_version, log, header=False,
-                        previous_version=current_version
+                        new_version, log, header=False, previous_version=current_version
                     ),
                 )
             except GitError:

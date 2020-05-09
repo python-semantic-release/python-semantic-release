@@ -1,16 +1,16 @@
 import mock
 
-from semantic_release.history.logs import markdown_changelog, get_github_compare_url
+from semantic_release.history.logs import get_github_compare_url, markdown_changelog
 
 
 def test_github_compare_url():
     with mock.patch(
-        'semantic_release.history.logs.get_repository_owner_and_name',
-        return_value=['owner', 'name']
+        "semantic_release.history.logs.get_repository_owner_and_name",
+        return_value=["owner", "name"],
     ):
         assert (
-            get_github_compare_url('1.0.0', '2.0.0') ==
-            "https://github.com/owner/name/compare/v1.0.0...v2.0.0"
+            get_github_compare_url("1.0.0", "2.0.0")
+            == "https://github.com/owner/name/compare/v1.0.0...v2.0.0"
         )
 
 
@@ -94,13 +94,10 @@ def test_should_output_heading():
 
 
 def test_compare_url(mocker):
+    mocker.patch("semantic_release.history.logs.config.getboolean", return_value=True)
     mocker.patch(
-        'semantic_release.history.logs.config.getboolean',
-        return_value=True
-    )
-    mocker.patch(
-        'semantic_release.history.logs.get_repository_owner_and_name',
-        return_value=['owner', 'name']
+        "semantic_release.history.logs.get_repository_owner_and_name",
+        return_value=["owner", "name"],
     )
 
     assert (
