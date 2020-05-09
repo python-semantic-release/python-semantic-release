@@ -1,14 +1,13 @@
 .. _commit-log-parsing:
 
 Parsing of commit logs
-----------------------
+**********************
 
 The semver level that should be bumped on a release is determined by the
-commit messages since last release. In order to be able to decide the correct
-version and generate the changelog the content of those commit messages must
+commit messages since the last release. In order to be able to decide the correct
+version and generate the changelog, the content of those commit messages must
 be parsed. By default this package uses a parser for the Angular commit message
-style(:py:func:`semantic_release.history.parser_angular.parse_commit_message`).
-The commit message style is as follows::
+style::
 
     <type>(<scope>): <subject>
     <BLANK LINE>
@@ -16,29 +15,46 @@ The commit message style is as follows::
     <BLANK LINE>
     <footer>
 
-More information about the Angular commit message style can be found in the
-`angular commit guidelines`_.
+The body or footer can begin with ``BREAKING CHANGE:`` followed by a short
+description to create a major release.
+
+.. note::
+  Python Semantic Release is able to parse more than just the body and footer
+  sections (in fact, they are processed in a loop so you can write as many
+  paragraphs as you need). It also supports having multiple breaking changes
+  in one commit.
+
+  However, other tools may not do this, so if you plan to use any similar
+  programs then you should try to stick to the official format.
+
+More information about the style can be found in the `angular commit guidelines`_.
 
 Writing your own parser
-~~~~~~~~~~~~~~~~~~~~~~~
-If you think this is all well and cool, but the angular style is not for you.
-No need to worry because custom parsers are supported. A parser is basically
-a python function that takes the commit message as the only argument and
-returns a tuple with the information needed to evaluate the commit and build
-the changelog. The format of the output should be a `ParsedCommit` object with
-the following parameters::
+=======================
+If you think this is all well and cool, but the angular style is not for you,
+no need to worry because custom parsers are supported.
 
-    ParsedCommit(level to bump, type of change, scope of change, (subject, body, footer))
+A parser is basically a python function that takes the commit message as the
+only argument and returns the information extracted from the commit. The format
+of the output should be a :py:class:`semantic_release.history.parser_helpers.ParsedCommit`
+object with the following parameters::
 
-The type of change can be one of `feature`, `fix` or any string in lowercase.
-The `feature` will result in an minor release and `fix` or `perf` indicates a patch release.
-To create a major release the body in the last item in the tuple must contain::
+    ParsedCommit(
+      level to bump: major=3 minor=2 patch=1 none=0,
+      type of change,
+      scope of change: can be None,
+      (subject, descriptions...)
+    )
+
+`feature` as the type of change will result in a minor release, and `fix` or `perf`
+indicates a patch release. To create a major release, one or more of the descriptions
+must contain::
 
     BREAKING CHANGE: <explanation>
 
-If your parser does not recognise the commit style or in other words is unable
-to parse it then it should raise :py:class:`semantic_release.UnknownCommitMessageStyleError`.
+If your parser is unable to parse a commit then it should raise
+:py:class:`semantic_release.UnknownCommitMessageStyleError`.
 
-The parser can be set with the ``commit_parser`` configuration option. See :ref:`configuration`.
+The parser can be set with the :ref:`config-commit_parser` configuration option.
 
 .. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
