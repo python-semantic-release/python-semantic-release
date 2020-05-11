@@ -131,7 +131,7 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
 
     # Bump the version
     set_new_version(new_version)
-    if config.get(
+    if config.getboolean(
         "semantic_release",
         "commit_version_number",
         fallback=(config.get("semantic_release", "version_source") == "commit"),
