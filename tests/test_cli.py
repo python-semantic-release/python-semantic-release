@@ -60,7 +60,7 @@ def test_version_by_commit_should_call_correct_functions(mocker):
 
 
 def test_version_by_tag_with_commit_version_number_should_call_correct_functions(
-    mocker
+    mocker,
 ):
     orig = semantic_release.cli.config.get
 
