@@ -35,7 +35,7 @@ def test_version_by_commit_should_call_correct_functions(mocker, runner):
         return False
 
     mocker.patch("semantic_release.cli.config.getboolean", wrapped_config_getboolean)
-    
+
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
     mock_commit_new_version = mocker.patch("semantic_release.cli.commit_new_version")
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
@@ -114,9 +114,7 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
     assert result.exit_code == 0
 
 
-def test_version_by_tag_should_call_correct_functions(
-    mocker, runner
-):
+def test_version_by_tag_should_call_correct_functions(mocker, runner):
     orig = semantic_release.cli.config.get
 
     def wrapped_config_get(*args, **kwargs):
