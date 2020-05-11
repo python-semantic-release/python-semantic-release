@@ -39,7 +39,6 @@ from .vcs_helpers import (
 )
 
 logger = logging.getLogger("semantic_release")
-click_log.basic_config(logger)
 
 SECRET_NAMES = [
     "PYPI_USERNAME",
@@ -85,13 +84,12 @@ def common_options(func):
     return func
 
 
-def version(**kwargs):
+def version(*, retry=False, noop=False, force_level=None, **kwargs):
     """
     Detect the new version according to git log and semver.
 
     Write the new version number and commit it, unless the noop option is True.
     """
-    retry = kwargs.get("retry")
     if retry:
         logger.info("Retrying publication of the same version")
     else:
@@ -105,14 +103,14 @@ def version(**kwargs):
         logger.error(str(e))
         return False
     # Find what the new version number should be
-    level_bump = evaluate_version_bump(current_version, kwargs["force_level"])
+    level_bump = evaluate_version_bump(current_version, force_level)
     new_version = get_new_version(current_version, level_bump)
 
     if new_version == current_version and not retry:
         logger.info("No release will be made.")
         return False
 
-    if kwargs["noop"] is True:
+    if noop:
         logger.warning(
             "No operation mode. Should have bumped "
             f"from {current_version} to {new_version}"
@@ -145,7 +143,7 @@ def version(**kwargs):
     return True
 
 
-def changelog(**kwargs):
+def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
     """
     Generate the changelog since the last release.
 
@@ -162,14 +160,14 @@ def changelog(**kwargs):
     previous_version = get_previous_version(current_version)
 
     # Generate the changelog
-    if kwargs["unreleased"]:
+    if unreleased:
         log = generate_changelog(current_version, None)
     else:
         log = generate_changelog(previous_version, current_version)
     logger.info(markdown_changelog(current_version, log, header=False))
 
     # Post changelog to HVCS if enabled
-    if not kwargs.get("noop") and kwargs.get("post"):
+    if not noop and post:
         if check_token():
             owner, name = get_repository_owner_and_name()
             logger.info("Posting changelog to HVCS")
@@ -196,7 +194,7 @@ def publish(**kwargs):
         current_version = get_previous_version(current_version)
     else:
         # Calculate the new version
-        level_bump = evaluate_version_bump(current_version, kwargs["force_level"])
+        level_bump = evaluate_version_bump(current_version, kwargs.get("force_level"))
         new_version = get_new_version(current_version, level_bump)
 
     owner, name = get_repository_owner_and_name()
@@ -282,6 +280,8 @@ def filter_output_for_secrets(message):
 
 
 def entry():
+    click_log.basic_config(logger)
+
     # Move flags to after the command
     ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith("--") else -1)
     main(args=ARGS)
