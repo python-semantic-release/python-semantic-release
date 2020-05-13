@@ -125,16 +125,10 @@ Changelog
 Comma-separated list of sections to display in the changelog.
 They will be displayed in the order they are given.
 
-The available options are:
+The available options depend on the commit parser used.
 
-* ``feature``
-* ``fix``
-* ``documentation``
-* ``refactor``
-* ``performance``
-* ``breaking``
-
-Default: `feature, fix, breaking, documentation, performance`
+Default: `feature, fix, breaking, documentation, performance` plus all
+the default emojis for :py:class:`semantic_release.history.emoji_parser`.
 
 .. _config-compare_link:
 
