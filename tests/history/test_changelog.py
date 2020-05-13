@@ -6,19 +6,16 @@ from semantic_release.history.logs import generate_changelog
 from . import *
 
 
-def test_should_generate_all_sections():
+def test_should_generate_necessary_sections():
     with mock.patch(
         "semantic_release.history.logs.get_commit_log",
         lambda *a, **k: ALL_KINDS_OF_COMMIT_MESSAGES + [MAJOR2, UNKNOWN_STYLE],
     ):
         changelog = generate_changelog("0.0.0")
-        assert "feature" in changelog
         assert len(changelog["feature"]) > 0
-        assert "fix" in changelog
         assert len(changelog["fix"]) > 0
-        assert "documentation" in changelog
-        assert "breaking" in changelog
         assert len(changelog["breaking"]) > 0
+        assert "documentation" not in changelog
 
 
 def test_should_include_hash_in_section_contents():
@@ -38,28 +35,10 @@ def test_should_only_read_until_given_version():
         lambda *a, **k: MAJOR_LAST_RELEASE_MINOR_AFTER,
     ):
         changelog = generate_changelog("1.1.0")
-        assert len(changelog["feature"]) > 0
-        assert len(changelog["fix"]) == 0
-        assert len(changelog["documentation"]) == 0
         assert len(changelog["breaking"]) == 0
-
-
-def test_should_skip_style_changes():
-    with mock.patch(
-        "semantic_release.history.logs.get_commit_log",
-        lambda *a, **k: PATCH_COMMIT_MESSAGES + [("21", "style(x): change x")],
-    ):
-        changelog = generate_changelog("0.0.0")
-        assert "style" not in changelog
-
-
-def test_should_skip_chore_changes():
-    with mock.patch(
-        "semantic_release.history.logs.get_commit_log",
-        lambda *a, **kw: PATCH_COMMIT_MESSAGES + [("23", "chore(x): change x")],
-    ):
-        changelog = generate_changelog("0.0.0")
-        assert "chore" not in changelog
+        assert len(changelog["feature"]) > 0
+        assert "fix" not in changelog
+        assert "documentation" not in changelog
 
 
 @pytest.mark.parametrize(

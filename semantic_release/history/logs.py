@@ -88,13 +88,9 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :param to_version: The last version included in the changelog.
     :return: A dict with changelog sections and commits
     """
+    # Additional sections will be added as new types are encountered
     changes: dict = {
-        "feature": [],
-        "fix": [],
-        "documentation": [],
-        "refactor": [],
-        "breaking": [],
-        "performance": [],
+        "breaking": []
     }
 
     rev = None
@@ -122,8 +118,8 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
         try:
             message = current_commit_parser()(commit_message)
             if message.type not in changes:
-                logger.debug(f"Excluding commit type {message.type} from changelog")
-                continue
+                logger.debug(f"Creating new changelog section for {message.type} ")
+                changes[message.type] = list()
 
             # Capialize the first letter of the message, leaving others as they were
             # (using str.capitalize() would make the other letters lowercase)
