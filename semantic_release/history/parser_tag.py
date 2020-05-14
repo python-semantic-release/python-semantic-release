@@ -6,7 +6,7 @@ from typing import Optional
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config
-from .parser_helpers import ParsedCommit, parse_paragraphs
+from .parser_helpers import ParsedCommit, parse_paragraphs, re_breaking
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +54,20 @@ def parse_commit_message(message: str,) -> ParsedCommit:
             "Unable to parse the given commit message: {0}".format(message)
         )
 
-    if parsed.group("text") and "BREAKING CHANGE" in parsed.group("text"):
-        level = "breaking"
-        level_bump = 3
-
     if parsed.group("text"):
         descriptions = parse_paragraphs(parsed.group("text"))
     else:
         descriptions = list()
     descriptions.insert(0, subject.strip())
 
-    return ParsedCommit(level_bump, level, None, descriptions)
+    # Look for descriptions of breaking changes
+    breaking_descriptions = [
+        match.group(1) for match in
+        (re_breaking.match(p) for p in descriptions[1:])
+        if match
+    ]
+    if breaking_descriptions:
+        level = "breaking"
+        level_bump = 3
+
+    return ParsedCommit(level_bump, level, None, descriptions, breaking_descriptions)

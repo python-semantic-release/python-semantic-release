@@ -68,18 +68,25 @@ def parse_commit_message(message: str) -> ParsedCommit:
     # Insert the subject before the other paragraphs
     descriptions.insert(0, parsed.group("subject"))
 
-    # Check for mention of breaking changes
+    # Look for descriptions of breaking changes
+    breaking_descriptions = [
+        match.group(1) for match in
+        (re_breaking.match(p) for p in descriptions[1:])
+        if match
+    ]
+
     level_bump = 0
-    if parsed.group("break") or any([re_breaking.match(p) for p in descriptions]):
+    if parsed.group("break") or breaking_descriptions:
         level_bump = 3  # Major
-
-    # Set the bump level based on commit type
-    if parsed.group("type") in MINOR_TYPES:
-        level_bump = max([level_bump, 2])
-
-    if parsed.group("type") in PATCH_TYPES:
-        level_bump = max([level_bump, 1])
+    elif parsed.group("type") in MINOR_TYPES:
+        level_bump = 2  # Minor
+    elif parsed.group("type") in PATCH_TYPES:
+        level_bump = 1  # Patch
 
     return ParsedCommit(
-        level_bump, TYPES[parsed.group("type")], parsed.group("scope"), descriptions,
+        level_bump,
+        TYPES[parsed.group("type")],
+        parsed.group("scope"),
+        descriptions,
+        breaking_descriptions
     )

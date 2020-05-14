@@ -57,4 +57,10 @@ def parse_commit_message(message: str,) -> ParsedCommit:
 
     # All emojis will remain part of the returned description
     descriptions = parse_paragraphs(message)
-    return ParsedCommit(level_bump, primary_emoji, None, descriptions)
+    return ParsedCommit(
+        level_bump,
+        primary_emoji,
+        None,
+        descriptions,
+        descriptions[1:] if level_bump == 3 else []
+    )
