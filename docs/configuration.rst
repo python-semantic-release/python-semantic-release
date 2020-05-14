@@ -46,6 +46,8 @@ The way we get and set the new version. Can be `commit` or `tag`.
 
 Default: `commit`
 
+.. _config-patch_without_tag:
+
 ``patch_without_tag``
 ---------------------
 If this is set to `true`, semantic-release will create a new patch release even if there is
@@ -119,9 +121,6 @@ Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_
 create patch releases.
 
 Default: `:ambulance:, :lock:, :bug:, :zap:, :goal_net:, :alien:, :wheelchair:, :speech_balloon:, :mag:, :apple:, :penguin:, :checkered_flag:, :robot:, :green_apple:`
-
-
-.. _config-patch_without_tag:
 
 Commits
 =======
