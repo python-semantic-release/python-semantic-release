@@ -29,6 +29,11 @@ description to create a major release.
 
 More information about the style can be found in the `angular commit guidelines`_.
 
+Available parsers
+=================
+
+See :ref:`config-commit_parser`.
+
 Writing your own parser
 =======================
 If you think this is all well and cool, but the angular style is not for you,

@@ -46,6 +46,16 @@ The way we get and set the new version. Can be `commit` or `tag`.
 
 Default: `commit`
 
+``patch_without_tag``
+---------------------
+If this is set to `true`, semantic-release will create a new patch release even if there is
+no tag in any commits since the last release.
+
+Default: `false`
+
+Commit Parsing
+==============
+
 .. _config-commit_parser:
 
 ``commit_parser``
@@ -53,16 +63,65 @@ Default: `commit`
 Import path of a Python function that can parse commit messages and return
 information about the commit as described in :ref:`commit-log-parsing`.
 
-Default: `semantic_release.history.angular_parser`
+The following parsers are built in to Python Semantic Release:
+
+- :py:func:`semantic_release.history.angular_parser`
+
+  The default parser, which uses the `Angular commit style <https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits>`_ with the following differences:
+
+  - Multiple ``BREAKING CHANGE:`` paragraphs are supported
+  - ``revert`` is not currently supported
+
+- :py:func:`semantic_release.history.emoji_parser`
+
+  Parser for commits using one or more emojis as tags in the subject line.
+
+  If a commit contains multiple emojis, the one with the highest priority
+  (major, minor, patch, none) or the one listed first is used as the changelog
+  section for that commit. Commits containing no emojis go into an "Other"
+  section.
+
+  See :ref:`config-major_emoji`, :ref:`config-minor_emoji` and
+  :ref:`config-patch_emoji`. The default settings are for
+  `Gitmoji <https://gitmoji.carloscuesta.me/>`_.
+
+- :py:func:`semantic_release.history.tag_parser`
+
+  The original parser from v1.0.0 of Python Semantic Release. Similar to the
+  emoji parser above, but with less features.
+
+.. _config-major_emoji:
+
+``major_emoji``
+---------------
+
+Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_parser` to
+create major releases.
+
+Default: `:boom:`
+
+.. _config-minor_emoji:
+
+``minor_emoji``
+---------------
+
+Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_parser` to
+create minor releases.
+
+Default: `:sparkles:, :children_crossing:, :lipstick:, :iphone:, :egg:, :chart_with_upwards_trend:`
+
+.. _config-patch_emoji:
+
+``patch_emoji``
+---------------
+
+Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_parser` to
+create patch releases.
+
+Default: `:ambulance:, :lock:, :bug:, :zap:, :goal_net:, :alien:, :wheelchair:, :speech_balloon:, :mag:, :apple:, :penguin:, :checkered_flag:, :robot:, :green_apple:`
+
 
 .. _config-patch_without_tag:
-
-``patch_without_tag``
----------------------
-If this is set to `true`, semantic-release will create a new patch release even if there is
-no tag in any commits since the last release.
-
-Default: `false`
 
 Commits
 =======
