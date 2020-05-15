@@ -29,6 +29,11 @@ description to create a major release.
 
 More information about the style can be found in the `angular commit guidelines`_.
 
+Available parsers
+=================
+
+See :ref:`config-commit_parser`.
+
 Writing your own parser
 =======================
 If you think this is all well and cool, but the angular style is not for you,
@@ -43,14 +48,14 @@ object with the following parameters::
       level to bump: major=3 minor=2 patch=1 none=0,
       type of change,
       scope of change: can be None,
-      (subject, descriptions...)
+      (subject, descriptions...),
+      (breaking change descriptions...)
     )
 
-`feature` as the type of change will result in a minor release, and `fix` or `perf`
-indicates a patch release. To create a major release, one or more of the descriptions
-must contain::
-
-    BREAKING CHANGE: <explanation>
+The breaking change descriptions will be added to the changelog in full. They
+can and should also be included within the regular list of description
+paragraphs. The presence of a breaking change description will *not* implicitly
+trigger a major release.
 
 If your parser is unable to parse a commit then it should raise
 :py:class:`semantic_release.UnknownCommitMessageStyleError`.

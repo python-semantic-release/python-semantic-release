@@ -88,13 +88,9 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :param to_version: The last version included in the changelog.
     :return: A dict with changelog sections and commits
     """
+    # Additional sections will be added as new types are encountered
     changes: dict = {
-        "feature": [],
-        "fix": [],
-        "documentation": [],
-        "refactor": [],
-        "breaking": [],
-        "performance": [],
+        "breaking": []
     }
 
     rev = None
@@ -122,8 +118,8 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
         try:
             message = current_commit_parser()(commit_message)
             if message.type not in changes:
-                logger.debug(f"Excluding commit type {message.type} from changelog")
-                continue
+                logger.debug(f"Creating new changelog section for {message.type} ")
+                changes[message.type] = list()
 
             # Capialize the first letter of the message, leaving others as they were
             # (using str.capitalize() would make the other letters lowercase)
@@ -132,26 +128,13 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             )
             changes[message.type].append((_hash, capital_message))
 
-            # Handle breaking change message
-            parts = None
-            if message.bump == 3 and len(message.descriptions) > 1:
-                # Check each paragraph for breaking changes
-                # This can pick up multiple paragraphs, e.g. in squashed commits
-                breaking_paragraphs = list()
-                for paragraph in message.descriptions[1:]:
-                    parts = re_breaking.match(paragraph)
-                    if parts:
-                        # This paragraph describes a breaking change
-                        breaking_paragraphs.append(parts.group(1))
-
-                if len(breaking_paragraphs) > 0:
-                    # Use selected paragraphs
-                    for paragraph in breaking_paragraphs:
-                        changes["breaking"].append((_hash, paragraph))
-                else:
-                    # No paragraphs begin with "BREAKING CHANGE:"
-                    # Use the subject instead
-                    changes["breaking"].append((_hash, message.descriptions[0]))
+            if message.breaking_descriptions:
+                # Copy breaking change descriptions into changelog
+                for paragraph in message.breaking_descriptions:
+                    changes["breaking"].append((_hash, paragraph))
+            elif message.bump == 3:
+                # Major, but no breaking descriptions, use commit subject instead
+                changes["breaking"].append((_hash, message.descriptions[0]))
 
         except UnknownCommitMessageStyleError as err:
             logger.debug(f"Ignoring UnknownCommitMessageStyleError: {err}")

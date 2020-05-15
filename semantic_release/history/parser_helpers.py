@@ -4,11 +4,11 @@ import collections
 import re
 from typing import List
 
-re_breaking = re.compile("BREAKING[ -]CHANGE: (.*)")
+re_breaking = re.compile("BREAKING[ -]CHANGE: ?(.*)")
 
 
 ParsedCommit = collections.namedtuple(
-    "ParsedCommit", ["bump", "type", "scope", "descriptions"]
+    "ParsedCommit", ["bump", "type", "scope", "descriptions", "breaking_descriptions"]
 )
 
 
