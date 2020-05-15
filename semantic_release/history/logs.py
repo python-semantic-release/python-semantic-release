@@ -89,9 +89,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     :return: A dict with changelog sections and commits
     """
     # Additional sections will be added as new types are encountered
-    changes: dict = {
-        "breaking": []
-    }
+    changes: dict = {"breaking": []}
 
     rev = None
     if from_version:

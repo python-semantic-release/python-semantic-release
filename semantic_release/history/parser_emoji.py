@@ -1,4 +1,3 @@
-
 """Commit parser which looks for emojis to determine the type of commit"""
 import logging
 import re
@@ -9,6 +8,7 @@ from ..settings import config
 from .parser_helpers import ParsedCommit, parse_paragraphs
 
 logger = logging.getLogger(__name__)
+
 
 @LoggedFunction(logger)
 def parse_commit_message(message: str,) -> ParsedCommit:
@@ -62,5 +62,5 @@ def parse_commit_message(message: str,) -> ParsedCommit:
         primary_emoji,
         None,
         descriptions,
-        descriptions[1:] if level_bump == 3 else []
+        descriptions[1:] if level_bump == 3 else [],
     )

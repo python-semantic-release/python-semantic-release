@@ -62,8 +62,8 @@ def parse_commit_message(message: str,) -> ParsedCommit:
 
     # Look for descriptions of breaking changes
     breaking_descriptions = [
-        match.group(1) for match in
-        (re_breaking.match(p) for p in descriptions[1:])
+        match.group(1)
+        for match in (re_breaking.match(p) for p in descriptions[1:])
         if match
     ]
     if breaking_descriptions:
