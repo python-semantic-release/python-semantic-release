@@ -188,16 +188,47 @@ The available options depend on the commit parser used.
 Default: `feature, fix, breaking, documentation, performance` plus all
 the default emojis for :py:class:`semantic_release.history.emoji_parser`.
 
-.. _config-compare_link:
+.. _config-changelog_components:
 
-``compare_link``
-----------------
-When set to true, add a link to view the commit range since the previous
-release, on GitHub. Only appears when using :ref:`cmd-publish`.
+``changelog_components``
+------------------------
+A comma-separated list of the import paths of components to include in the
+changelog.
 
-.. note::
-  If you are using a different HVCS, the link will not be included
-  regardless of this option.
+The following components are included in Python Semantic Release:
+
+- :py:func:`semantic_release.changelog.changelog_headers`
+
+  **Only component displayed by default.**
+
+  List of commits between this version and the previous one, with sections and
+  headings for each type of change present in the release.
+
+- :py:func:`semantic_release.changelog.compare_url`
+
+  Link to view a comparison between this release and the previous one on
+  GitHub. Only appears when running through :ref:`cmd-publish`.
+
+  If you are using a different HVCS, the link will not be included.
+
+It is also possible to create your own components. Each component is simply a
+function which returns a string, or ``None`` if it should be skipped, and may
+take any of the following values as keyword arguments:
+
++----------------------+------------------------------------------------------------------------+
+| ``changelog``        | A dictionary with section names such as ``feature`` as keys, and the   |
+|                      | values are lists of (SHA, message) tuples. There is a special section  |
+|                      | named ``breaking`` for breaking changes, where the same commit can     |
+|                      | appear more than once with a different message.                        |
++----------------------+------------------------------------------------------------------------+
+| ``version``          | The current version number in the format ``X.X.X``, or the new version |
+|                      | number when publishing.                                                |
++----------------------+------------------------------------------------------------------------+
+| ``previous_version`` | The previous version number. Only present when publishing, ``None``    |
+|                      | otherwise.                                                             |
++----------------------+------------------------------------------------------------------------+
+
+You can should use ``**kwargs`` to capture any arguments you don't need.
 
 Distributions
 =============
