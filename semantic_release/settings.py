@@ -6,7 +6,7 @@ import logging
 import os
 from functools import wraps
 from os import getcwd
-from typing import Callable
+from typing import Callable, List
 
 import toml
 
@@ -61,6 +61,32 @@ def current_commit_parser() -> Callable:
         return getattr(importlib.import_module(module), parts[-1])
     except (ImportError, AttributeError) as error:
         raise ImproperConfigurationError('Unable to import parser "{}"'.format(error))
+
+
+def current_changelog_components() -> List[Callable]:
+    """Get the currently-configured changelog components
+
+    :raises ImproperConfigurationError: if ImportError or AttributeError is raised
+    :returns: List of component functions
+    """
+    component_paths = config.get("semantic_release", "changelog_components").split(",")
+    components = list()
+
+    for path in component_paths:
+        try:
+            # All except the last part is the import path
+            parts = path.split(".")
+            module = ".".join(parts[:-1])
+            # The final part is the name of the component function
+            components.append(
+                getattr(importlib.import_module(module), parts[-1])
+            )
+        except (ImportError, AttributeError) as error:
+            raise ImproperConfigurationError(
+                f'Unable to import changelog component "{path}"'
+            )
+
+    return components
 
 
 def overload_configuration(func):
