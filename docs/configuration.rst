@@ -215,18 +215,21 @@ It is also possible to create your own components. Each component is simply a
 function which returns a string, or ``None`` if it should be skipped, and may
 take any of the following values as keyword arguments:
 
-+----------------------+------------------------------------------------------------------------+
-| ``changelog``        | A dictionary with section names such as ``feature`` as keys, and the   |
-|                      | values are lists of (SHA, message) tuples. There is a special section  |
-|                      | named ``breaking`` for breaking changes, where the same commit can     |
-|                      | appear more than once with a different message.                        |
-+----------------------+------------------------------------------------------------------------+
-| ``version``          | The current version number in the format ``X.X.X``, or the new version |
-|                      | number when publishing.                                                |
-+----------------------+------------------------------------------------------------------------+
-| ``previous_version`` | The previous version number. Only present when publishing, ``None``    |
-|                      | otherwise.                                                             |
-+----------------------+------------------------------------------------------------------------+
++------------------------+------------------------------------------------------------------------+
+| ``changelog``          | A dictionary with section names such as ``feature`` as keys, and the   |
+|                        | values are lists of (SHA, message) tuples. There is a special section  |
+|                        | named ``breaking`` for breaking changes, where the same commit can     |
+|                        | appear more than once with a different message.                        |
++------------------------+------------------------------------------------------------------------+
+| ``changelog_sections`` | A list of sections from ``changelog`` which the user has set to be     |
+|                        | displayed.                                                             |
++------------------------+------------------------------------------------------------------------+
+| ``version``            | The current version number in the format ``X.X.X``, or the new version |
+|                        | number when publishing.                                                |
++------------------------+------------------------------------------------------------------------+
+| ``previous_version``   | The previous version number. Only present when publishing, ``None``    |
+|                        | otherwise.                                                             |
++------------------------+------------------------------------------------------------------------+
 
 You can should use ``**kwargs`` to capture any arguments you don't need.
 

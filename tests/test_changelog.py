@@ -1,7 +1,7 @@
 import mock
 
 from semantic_release.changelog import markdown_changelog
-from semantic_release.changelog.changelog import changelog_sections
+from semantic_release.changelog.changelog import get_changelog_sections
 from semantic_release.changelog.compare import get_github_compare_url, compare_url
 
 
@@ -53,17 +53,18 @@ def test_should_output_heading():
     )
 
 
-def test_should_not_include_empty_sections():
+def test_get_changelog_sections():
     assert len(list(
-        changelog_sections(
+        get_changelog_sections(
             {
-                "refactor": [],
+                "refactor": [0, 1, 2],
                 "breaking": [],
                 "feature": [],
                 "fix": [],
                 "documentation": [],
                 "performance": [],
             },
+            ["breaking", "feature", "fix", "performance"]
         )
     )) == 0
 

@@ -1,6 +1,6 @@
 import logging
 
-from ..settings import current_changelog_components
+from ..settings import current_changelog_components, config
 from ..helpers import LoggedFunction
 
 from .changelog import changelog_headers  # noqa isort:skip
@@ -32,7 +32,10 @@ def markdown_changelog(
             component(
                 version=version,
                 previous_version=previous_version,
-                changelog=changelog
+                changelog=changelog,
+                changelog_sections=config.get(
+                    "semantic_release", "changelog_sections"
+                ).split(",")
             )
             for component in current_changelog_components()
         )

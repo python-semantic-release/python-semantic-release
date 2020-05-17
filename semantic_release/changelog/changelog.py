@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 from ..settings import config
 
 
-def changelog_sections(changelog: dict) -> Iterable[str]:
+def get_changelog_sections(changelog: dict, changelog_sections: list) -> Iterable[str]:
     """Generator which yields each changelog section to be included"""
 
     included_sections = config.get("semantic_release", "changelog_sections")
@@ -14,10 +14,12 @@ def changelog_sections(changelog: dict) -> Iterable[str]:
             yield section
 
 
-def changelog_headers(changelog: dict, **kwargs) -> Optional[str]:
+def changelog_headers(
+    changelog: dict, changelog_sections: list, **kwargs
+) -> Optional[str]:
     output = ""
 
-    for section in changelog_sections(changelog):
+    for section in get_changelog_sections(changelog, changelog_sections):
         # Add a header for this section
         output += "\n### {0}\n".format(section.capitalize())
 
