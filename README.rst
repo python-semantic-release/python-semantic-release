@@ -1,7 +1,7 @@
 Python Semantic Release
 =======================
 
-|Test Status| |PyPI Version| |Read the Docs Status|
+|Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status|
 
 Automatic semantic versioning for python projects. This is a python
 implementation of `semantic-release`_ for JS by Stephan Bönnemann. If
@@ -85,4 +85,5 @@ See `this documentation page`_ for instructions.
 
 .. |Test Status| image:: https://img.shields.io/github/workflow/status/relekang/python-semantic-release/Test%20%26%20Release?label=Tests&logo=github
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/python-semantic-release?label=PyPI&logo=pypi
+.. |conda-forge Version| image:: https://img.shields.io/conda/vn/conda-forge/python-semantic-release?logo=anaconda
 .. |Read the Docs Status| image:: https://img.shields.io/readthedocs/python-semantic-release?label=Read%20the%20Docs&logo=read-the-docs
