@@ -18,7 +18,8 @@ from .history import (
     get_previous_version,
     set_new_version,
 )
-from .history.logs import generate_changelog, markdown_changelog
+from .history.logs import generate_changelog
+from .changelog import markdown_changelog
 from .hvcs import (
     check_build_status,
     check_token,
