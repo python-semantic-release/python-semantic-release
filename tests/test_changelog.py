@@ -2,7 +2,7 @@ import mock
 
 from semantic_release.changelog import markdown_changelog
 from semantic_release.changelog.changelog import get_changelog_sections
-from semantic_release.changelog.compare import get_github_compare_url, compare_url
+from semantic_release.changelog.compare import compare_url, get_github_compare_url
 
 
 def test_markdown_changelog():
@@ -39,34 +39,32 @@ def test_markdown_changelog():
 
 
 def test_should_not_output_heading():
-    assert "v1.0.1" not in markdown_changelog(
-        "1.0.1",
-        {},
-    )
+    assert "v1.0.1" not in markdown_changelog("1.0.1", {},)
 
 
 def test_should_output_heading():
-    assert "## v1.0.1\n" in markdown_changelog(
-        "1.0.1",
-        {},
-        header=True,
-    )
+    assert "## v1.0.1\n" in markdown_changelog("1.0.1", {}, header=True,)
 
 
 def test_get_changelog_sections():
-    assert len(list(
-        get_changelog_sections(
-            {
-                "refactor": [0, 1, 2],
-                "breaking": [],
-                "feature": [],
-                "fix": [],
-                "documentation": [],
-                "performance": [],
-            },
-            ["breaking", "feature", "fix", "performance"]
+    assert (
+        len(
+            list(
+                get_changelog_sections(
+                    {
+                        "refactor": [0, 1, 2],
+                        "breaking": [],
+                        "feature": [],
+                        "fix": [],
+                        "documentation": [],
+                        "performance": [],
+                    },
+                    ["breaking", "feature", "fix", "performance"],
+                )
+            )
         )
-    )) == 0
+        == 0
+    )
 
 
 def test_github_compare_url():
@@ -85,7 +83,7 @@ def test_compare_url():
         "semantic_release.changelog.compare.get_repository_owner_and_name",
         return_value=["owner", "name"],
     ):
-        assert compare_url(previous_version='1.0.0', version='2.0.0') == (
+        assert compare_url(previous_version="1.0.0", version="2.0.0") == (
             "**[See all commits in this version]"
             "(https://github.com/owner/name/compare/v1.0.0...v2.0.0)**"
         )

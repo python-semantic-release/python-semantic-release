@@ -1,7 +1,7 @@
 import logging
 
-from ..settings import current_changelog_components, config
 from ..helpers import LoggedFunction
+from ..settings import config, current_changelog_components
 
 from .changelog import changelog_headers  # noqa isort:skip
 from .compare import compare_url  # noqa isort:skip
@@ -26,20 +26,22 @@ def markdown_changelog(
     output = f"## v{version}\n" if header else ""
 
     # Add the output of each component separated by a blank line
-    output += '\n\n'.join((
-        component_output.strip()
-        for component_output in (
-            component(
-                version=version,
-                previous_version=previous_version,
-                changelog=changelog,
-                changelog_sections=config.get(
-                    "semantic_release", "changelog_sections"
-                ).split(",")
+    output += "\n\n".join(
+        (
+            component_output.strip()
+            for component_output in (
+                component(
+                    version=version,
+                    previous_version=previous_version,
+                    changelog=changelog,
+                    changelog_sections=config.get(
+                        "semantic_release", "changelog_sections"
+                    ).split(","),
+                )
+                for component in current_changelog_components()
             )
-            for component in current_changelog_components()
+            if component_output is not None
         )
-        if component_output is not None
-    ))
+    )
 
     return output

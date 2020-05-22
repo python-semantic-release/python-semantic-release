@@ -78,9 +78,7 @@ def current_changelog_components() -> List[Callable]:
             parts = path.split(".")
             module = ".".join(parts[:-1])
             # The final part is the name of the component function
-            components.append(
-                getattr(importlib.import_module(module), parts[-1])
-            )
+            components.append(getattr(importlib.import_module(module), parts[-1]))
         except (ImportError, AttributeError) as error:
             raise ImproperConfigurationError(
                 f'Unable to import changelog component "{path}"'

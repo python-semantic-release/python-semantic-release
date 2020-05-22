@@ -10,6 +10,7 @@ import click_log
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
 
+from .changelog import markdown_changelog
 from .dist import build_dists, remove_dists
 from .history import (
     evaluate_version_bump,
@@ -19,7 +20,6 @@ from .history import (
     set_new_version,
 )
 from .history.logs import generate_changelog
-from .changelog import markdown_changelog
 from .hvcs import (
     check_build_status,
     check_token,

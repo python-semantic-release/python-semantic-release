@@ -28,4 +28,3 @@ def changelog_headers(
             output += "* {0} ({1})\n".format(item[1], item[0])
 
     return output
-
