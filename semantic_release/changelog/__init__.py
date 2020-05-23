@@ -3,7 +3,7 @@ import logging
 from ..helpers import LoggedFunction
 from ..settings import config, current_changelog_components
 
-from .changelog import changelog_headers  # noqa isort:skip
+from .changelog import changelog_headers, changelog_table  # noqa isort:skip
 from .compare import compare_url  # noqa isort:skip
 
 logger = logging.getLogger(__name__)

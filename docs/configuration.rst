@@ -204,6 +204,11 @@ The following components are included in Python Semantic Release:
   List of commits between this version and the previous one, with sections and
   headings for each type of change present in the release.
 
+- :py:func:`semantic_release.changelog.changelog_table`
+
+  List of commits between this version and the previous one, dsplayed in a
+  table.
+
 - :py:func:`semantic_release.changelog.compare_url`
 
   Link to view a comparison between this release and the previous one on
