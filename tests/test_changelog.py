@@ -1,7 +1,7 @@
 import mock
 
 from semantic_release.changelog import markdown_changelog
-from semantic_release.changelog.changelog import get_changelog_sections, changelog_table
+from semantic_release.changelog.changelog import changelog_table, get_changelog_sections
 from semantic_release.changelog.compare import compare_url, get_github_compare_url
 
 
@@ -39,10 +39,13 @@ def test_markdown_changelog():
 
 
 def test_changelog_table():
-    assert changelog_table({
-        "feature": [("commit1", "sha1"), ("commit2", "sha2")],
-        "fix": [("commit3", "sha3")]
-    }, ["section1", "section2"]) == (
+    assert changelog_table(
+        {
+            "feature": [("commit1", "sha1"), ("commit2", "sha2")],
+            "fix": [("commit3", "sha3")],
+        },
+        ["section1", "section2"],
+    ) == (
         "| Type | Change |\n"
         "| --- | --- |\n"
         "| Feature | commit1 (sha1)<br>commit2 (sha2) |\n"
