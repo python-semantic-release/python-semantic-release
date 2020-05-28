@@ -34,7 +34,7 @@ def changelog_table(changelog: dict, changelog_sections: list, **kwargs) -> str:
     output = "| Type | Change |\n| --- | --- |\n"
 
     for section in get_changelog_sections(changelog, changelog_sections):
-        items = "<br>".join([f"{item[0]} ({item[1]})" for item in changelog[section]])
+        items = "<br>".join([f"{item[1]} ({item[0]})" for item in changelog[section]])
         output += f"| {section.title()} | {items} |\n"
 
     return output

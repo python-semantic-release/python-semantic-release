@@ -41,8 +41,8 @@ def test_markdown_changelog():
 def test_changelog_table():
     assert changelog_table(
         {
-            "feature": [("commit1", "sha1"), ("commit2", "sha2")],
-            "fix": [("commit3", "sha3")],
+            "feature": [("sha1", "commit1"), ("sha2", "commit2")],
+            "fix": [("sha3", "commit3")],
         },
         ["section1", "section2"],
     ) == (
