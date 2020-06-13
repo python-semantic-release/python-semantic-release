@@ -32,9 +32,9 @@ def parse_commit_message(message: str,) -> ParsedCommit:
 
     subject = message.split("\n")[0]
 
-    major = config.get("semantic_release", "major_emoji").split(",")
-    minor = config.get("semantic_release", "minor_emoji").split(",")
-    patch = config.get("semantic_release", "patch_emoji").split(",")
+    major = config.get("major_emoji").split(",")
+    minor = config.get("minor_emoji").split(",")
+    patch = config.get("patch_emoji").split(",")
     all_emojis = major + minor + patch
 
     # Loop over emojis from most important to least important

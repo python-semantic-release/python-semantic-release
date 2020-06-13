@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_dists():
-    command = config.get("semantic_release", "build_command")
+    command = config.get("build_command")
     logger.info(f"Running {command}")
     run(command)
 

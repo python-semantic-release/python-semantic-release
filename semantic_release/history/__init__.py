@@ -2,7 +2,8 @@
 """
 import logging
 import re
-from typing import Optional
+import json
+from typing import Optional, List, Set
 
 import semver
 
@@ -18,6 +19,67 @@ from .parser_emoji import parse_commit_message as emoji_parser  # noqa isort:ski
 
 logger = logging.getLogger(__name__)
 
+
+class VersionPattern:
+    version_regex = r'(\d+\.\d+(?:\.\d+)?)'
+
+    # The pattern should be a regular expression with a single group, 
+    # containing the version to replace.
+    def __init__(self, path: str, pattern: str):
+        self.path = path
+        self.pattern = pattern
+
+    @classmethod
+    def from_variable(cls, config_str: str):
+        """
+        Instantiate a `VersionPattern` from a string specifying a path and a 
+        variable name.
+        """
+        path, variable = config_str.split(':', 1)
+        pattern = r'{0} *[:=] *["\']{1}["\']'.format(variable, cls.version_regex)
+        return cls(path, pattern)
+
+    @classmethod
+    def from_pattern(cls, config_str: str):
+        """
+        Instantiate a `VersionPattern` from a string specifying a path and a 
+        regular expression matching the version number.
+        """
+        path, pattern = config_str.split(':', 1)
+        pattern = pattern.format(version=cls.version_regex)
+        return cls(path, pattern)
+
+    def parse(self) -> Set[str]:
+        logger.debug(f"Looking for current version in {self.path}, pattern: {self.pattern}")
+
+        with open(self.path, 'r') as f:
+            content = f.read()
+
+        # Returning a set because it's possible for the same pattern to occur 
+        # multiple times (and each match will be updated).
+        versions = {
+                m.group(1)
+                for m in re.finditer(self.pattern, content)
+        }
+        return versions
+
+    def replace(self, new_version: str):
+        """
+        :param new_version: The new version number as a string
+        """
+        with open(self.path, 'r') as f:
+            old_content = f.read()
+
+        def swap_version(m):
+            s = m.string
+            i, j = m.span()
+            ii, jj = m.span(1)
+            return s[i:ii] + new_version + s[jj:j]
+
+        new_content = re.sub(self.pattern, swap_version, old_content)
+
+        with open(self.path, mode='w') as f:
+            f.write(new_content)
 
 @LoggedFunction(logger)
 def get_current_version_by_tag() -> str:
@@ -40,26 +102,21 @@ def get_current_version_by_config_file() -> str:
     Get current version from the version variable defined in the configuration.
 
     :return: A string with the current version number
-    :raises ImproperConfigurationError: if version variable cannot be parsed
+    :raises ImproperConfigurationError: if either no versions are found, or 
+    multiple versions are found.
     """
-    # Get the file and variable names from configuration
-    filename, variable = config.get("semantic_release", "version_variable").split(":")
-    variable = variable.strip()
-    logger.debug(f"Looking for current version in {filename}, variable {variable}")
+    patterns = load_version_patterns()
+    versions = set.union(*[x.parse() for x in patterns])
 
-    with open(filename, "r") as fd:
-        file_text = fd.read()
-        # Check for variable in the format variable=version or variable:version
-        parts = re.search(
-            r'^{0}\s*[=:]\s*[\'"]([^\'"]*)[\'"]'.format(variable),
-            file_text,
-            re.MULTILINE,
-        )
-        if not parts:
-            raise ImproperConfigurationError
+    if len(versions) == 0:
+        raise ImproperConfigurationError("no versions found in the configured locations")
+    if len(versions) != 1:
+        version_strs = ', '.join(repr(x) for x in versions)
+        raise ImproperConfigurationError(f"found conflicting versions: {version_strs}")
 
-        logger.debug(f"Regex matched version: {parts}")
-        return parts.group(1)
+    version = versions.pop()
+    logger.debug(f"Regex matched version: {version}")
+    return version
 
 
 def get_current_version() -> str:
@@ -68,7 +125,7 @@ def get_current_version() -> str:
 
     :return: A string with the current version number
     """
-    if config.get("semantic_release", "version_source") == "tag":
+    if config.get("version_source") == "tag":
         return get_current_version_by_tag()
     return get_current_version_by_config_file()
 
@@ -114,49 +171,37 @@ def get_previous_version(version: str) -> Optional[str]:
     return get_last_version([version, "v{}".format(version)])
 
 
-def replace_version_string(content, variable, new_version):
-    """
-    Given the content of a file, find the version string and updates it.
-
-    :param content: The file contents
-    :param variable: The version variable name as a string
-    :param new_version: The new version number as a string
-    :return: A string with the updated version number
-    """
-    new_content = re.sub(
-        r'({0} ?= ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable),
-        r"\g<1>{0}\g<2>".format(new_version),
-        content,
-    )
-    # The version string did not change because above regex did not match. Use : instead of =
-    if new_content == content:
-        new_content = re.sub(
-            r'({0} ?: ?["\'])\d+\.\d+(?:\.\d+)?(["\'])'.format(variable),
-            r"\g<1>{0}\g<2>".format(new_version),
-            content,
-        )
-    return new_content
-
-
 @LoggedFunction(logger)
 def set_new_version(new_version: str) -> bool:
     """
-    Replace the version number in the correct place and write the changed file to disk.
+    Update the version number in each configured location.
 
     :param new_version: The new version number as a string.
     :return: `True` if it succeeded.
     """
-    # Read the contents of the file
-    filename, variable = config.get("semantic_release", "version_variable").split(":")
-    variable = variable.strip()
-    with open(filename, mode="r") as fr:
-        content = fr.read()
 
-    # Update the version variable
-    content = replace_version_string(content, variable, new_version)
-
-    # Write the update back to the file
-    with open(filename, mode="w") as fw:
-        fw.write(content)
+    for pattern in load_version_patterns():
+        pattern.replace(new_version)
 
     return True
+
+
+def load_version_patterns() -> List[VersionPattern]:
+    patterns = []
+
+    def iter_fields(x):
+        if not x: return
+        yield from x if isinstance(x, list) else [x]
+
+    for version_var in iter_fields(config.get("version_variable")):
+        pattern = VersionPattern.from_variable(version_var)
+        patterns.append(pattern)
+    for version_pat in iter_fields(config.get("version_pattern")):
+        pattern = VersionPattern.from_pattern(version_pat)
+        patterns.append(pattern)
+
+    if not patterns:
+        raise ImproperConfigurationError("must specify either 'version_variable' or 'version_pattern'")
+
+    return patterns
+

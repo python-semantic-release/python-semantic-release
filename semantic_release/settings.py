@@ -4,9 +4,11 @@ import configparser
 import importlib
 import logging
 import os
+import json
 from functools import wraps
 from os import getcwd
 from typing import Callable, List
+from collections import UserDict
 
 import toml
 
@@ -14,33 +16,56 @@ from .errors import ImproperConfigurationError
 
 logger = logging.getLogger(__name__)
 
-
 def _config():
-    # Read setup.cfg, falling back to defaults.cfg
-    current_dir = getcwd()
+    cwd = getcwd()
+    ini_paths = [
+        os.path.join(os.path.dirname(__file__), "defaults.cfg"),
+        os.path.join(cwd, "setup.cfg"),
+    ]
+    ini_config = _config_from_ini(ini_paths)
+
+    toml_path = os.path.join(cwd, "pyproject.toml")
+    toml_config = _config_from_pyproject(toml_path)
+
+    # Cast to a UserDict so that we can mock the get() method.
+    return UserDict({**ini_config, **toml_config})
+
+def _config_from_ini(paths):
     parser = configparser.ConfigParser()
-    parser.read(
-        [
-            os.path.join(os.path.dirname(__file__), "defaults.cfg"),
-            os.path.join(current_dir, "setup.cfg"),
-        ]
-    )
+    parser.read(paths)
 
-    toml_conf_path = os.path.join(current_dir, "pyproject.toml")
-    if os.path.isfile(toml_conf_path):
-        # Overwrite with any settings from pyproject.toml
-        with open(toml_conf_path, "r") as pyproject_toml:
-            try:
-                pyproject_toml = toml.load(pyproject_toml)
-                pyproject_toml_settings = (
-                    pyproject_toml.get("tool", {}).get("semantic_release", {}).items()
-                )
-                for key, value in pyproject_toml_settings:
-                    parser["semantic_release"][key] = str(value)
-            except toml.TomlDecodeError:
-                logger.debug("Could not decode pyproject.toml")
+    flags = {
+            'check_build_status',
+            'commit_version_number',
+            'remove_dist',
+            'upload_to_pypi',
+            'upload_to_release',
+            'patch_without_tag',
+    }
 
-    return parser
+    # Iterate through the sections so that default values are applied 
+    # correctly.  See:
+    # https://stackoverflow.com/questions/1773793/convert-configparser-items-to-dictionary
+    config = {}
+    for key, _ in parser.items('semantic_release'):
+        if key in flags:
+            config[key] = parser.getboolean('semantic_release', key)
+        else:
+            config[key] = parser.get('semantic_release', key)
+
+    return config
+
+def _config_from_pyproject(path):
+    if not os.path.isfile(path):
+        return {}
+
+    try:
+        pyproject = toml.load(path)
+        return pyproject.get('tool', {}).get('semantic_release', {})
+
+    except toml.TomlDecodeError:
+        logger.debug("Could not decode pyproject.toml")
+        return {}
 
 
 config = _config()
@@ -55,7 +80,7 @@ def current_commit_parser() -> Callable:
 
     try:
         # All except the last part is the import path
-        parts = config.get("semantic_release", "commit_parser").split(".")
+        parts = config.get("commit_parser").split(".")
         module = ".".join(parts[:-1])
         # The final part is the name of the parse function
         return getattr(importlib.import_module(module), parts[-1])
@@ -69,7 +94,7 @@ def current_changelog_components() -> List[Callable]:
     :raises ImproperConfigurationError: if ImportError or AttributeError is raised
     :returns: List of component functions
     """
-    component_paths = config.get("semantic_release", "changelog_components").split(",")
+    component_paths = config.get("changelog_components").split(",")
     components = list()
 
     for path in component_paths:
@@ -98,7 +123,7 @@ def overload_configuration(func):
             for defined_param in kwargs["define"]:
                 pair = defined_param.split("=", maxsplit=1)
                 if len(pair) == 2:
-                    config["semantic_release"][str(pair[0])] = str(pair[1])
+                    config[str(pair[0])] = pair[1]
         return func(*args, **kwargs)
 
     return wrap

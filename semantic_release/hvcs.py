@@ -355,7 +355,7 @@ def get_hvcs() -> Base:
 
     :raises ImproperConfigurationError: if the hvcs option provided is not valid
     """
-    hvcs = config.get("semantic_release", "hvcs")
+    hvcs = config.get("hvcs")
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:

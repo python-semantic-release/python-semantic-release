@@ -1,15 +1,31 @@
 import mock
+import pytest
 
 import semantic_release
 from semantic_release.history import (
+    VersionPattern,
     get_current_version,
     get_current_version_by_tag,
     get_new_version,
     get_previous_version,
     set_new_version,
+    load_version_patterns,
+    ImproperConfigurationError,
 )
 
+from .. import wrapped_config_get
 from ..mocks import mock_version_file
+from textwrap import dedent
+
+@pytest.fixture
+def tmp_cwd(tmp_path):
+    import os
+    try:
+        orig_path = os.getcwd()
+        os.chdir(tmp_path)
+        yield tmp_path
+    finally:
+        os.chdir(orig_path)
 
 
 def test_current_version_should_return_correct_version():
@@ -21,11 +37,10 @@ def test_current_version_should_return_git_version(mock_last_version):
     assert "last_version" == get_current_version_by_tag()
 
 
-@mock.patch("semantic_release.history.config.get", return_value="tag")
+@mock.patch("semantic_release.history.config.get", wrapped_config_get(version_source="tag"))
 @mock.patch("semantic_release.history.get_last_version", return_value=None)
-def test_current_version_should_return_default_version(mock_config, mock_last_version):
+def test_current_version_should_return_default_version(mock_last_version):
     assert "0.0.0" == get_current_version()
-
 
 class TestGetPreviousVersion:
     @mock.patch(
@@ -64,17 +79,173 @@ class TestGetNewVersion:
     def test_none_bump(self):
         assert get_new_version("1.0.0", None) == "1.0.0"
 
+@mock.patch("semantic_release.history.config.get", wrapped_config_get(version_variable="my_version_path:my_version_var"))
+def test_set_version(tmp_cwd):
+    path = tmp_cwd / 'my_version_path'
+    path.write_text("my_version_var = '1.2.3'")
 
-@mock.patch("builtins.open", mock_version_file)
-@mock.patch(
-    "semantic_release.history.config.get", return_value="my_version_path:my_version_var"
-)
-def test_set_version(mock_config):
     set_new_version("X.Y.Z")
 
-    handle_open = mock_version_file()
-    mock_version_file.assert_any_call("my_version_path", mode="w")
-    mock_version_file.assert_any_call("my_version_path", mode="r")
-    handle_open.read.assert_called_once_with()
-    handle_open.write.assert_called_once_with("my_version_var = 'X.Y.Z'")
-    mock_version_file.reset_mock()
+    assert path.read_text() == "my_version_var = 'X.Y.Z'"
+
+class TestVersionPattern:
+
+    @pytest.mark.parametrize(
+            'str, path, pattern', [
+                ('path:__version__', 'path', r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+    ])
+    def test_from_variable(self, str, path, pattern):
+        p = VersionPattern.from_variable(str)
+        assert p.path == path
+        assert p.pattern == pattern
+
+    @pytest.mark.parametrize(
+            'str, path, pattern', [
+                ('path:pattern', 'path', r'pattern'),
+                ('path:Version: {version}', 'path', r'Version: (\d+\.\d+(?:\.\d+)?)'),
+    ])
+    def test_from_pattern(self, str, path, pattern):
+        p = VersionPattern.from_pattern(str)
+        assert p.path == path
+        assert p.pattern == pattern
+
+    @pytest.mark.parametrize(
+            'content, hits', [
+                ('',            set()),
+                ('ab12',        {'12'}),
+                ('ab12 cd34',   {'12', '34'}),
+    ])
+    def test_parse(self, tmp_path, content, hits):
+        path = tmp_path / 'pyproject.toml'
+        path.write_text(content)
+
+        pattern = VersionPattern(str(path), r'(\d+)')
+        assert pattern.parse() == hits
+
+    @pytest.mark.parametrize(
+            'pattern, old_content, new_content', [
+                (r'(\d+)', '',          ''),
+                (r'(\d+)', '1',         '-'),
+                (r'(\d+)', '1b',        '-b'),
+                (r'(\d+)', '12',        '-'),
+                (r'(\d+)', '12b',       '-b'),
+
+                (r'(\d+)', 'a',         'a'),
+                (r'(\d+)', 'a1',        'a-'),
+                (r'(\d+)', 'a1b',       'a-b'),
+                (r'(\d+)', 'a12',       'a-'),
+                (r'(\d+)', 'a12b',      'a-b'),
+
+                (r'(\d+)', 'a12b3',      'a-b-'),
+                (r'(\d+)', 'a12b3c',     'a-b-c'),
+                (r'(\d+)', 'a12b34',     'a-b-'),
+                (r'(\d+)', 'a12b34c',    'a-b-c'),
+
+                (r'a(\d+)', 'a',         'a'),
+                (r'a(\d+)', 'a1',        'a-'),
+                (r'a(\d+)', 'a1b',       'a-b'),
+                (r'a(\d+)', 'a12',       'a-'),
+                (r'a(\d+)', 'a12b',      'a-b'),
+
+                (r'(\d+)b', 'a',         'a'),
+                (r'(\d+)b', 'a1',        'a1'),
+                (r'(\d+)b', 'a1b',       'a-b'),
+                (r'(\d+)b', 'a12',       'a12'),
+                (r'(\d+)b', 'a12b',      'a-b'),
+    ])
+    def test_replace(self, tmp_path, pattern, old_content, new_content):
+        path = tmp_path / 'pyproject.toml'
+        path.write_text(old_content)
+
+        pattern = VersionPattern(str(path), pattern)
+        pattern.replace('-')
+
+        assert path.read_text() == new_content
+
+@pytest.mark.parametrize(
+        'params', [
+
+            dict(
+                pyproject="",
+                error=True,
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
+                        """,
+                error=True,
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
+                        version_variable = "path:__version__"
+                        """,
+                patterns=[
+                    ('path', r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                ],
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
+                        version_variable = [
+                            "path1:var1",
+                            "path2:var2"
+                        ]
+                        """,
+                patterns=[
+                    ('path1', r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                    ('path2', r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                ],
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
+                        version_pattern = "path:pattern"
+                        """,
+                patterns=[
+                    ('path', 'pattern'),
+                ],
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
+                        version_pattern = [
+                            "path1:pattern1",
+                            "path2:pattern2"
+                        ]
+                        """,
+                patterns=[
+                    ('path1', 'pattern1'),
+                    ('path2', 'pattern2'),
+                ],
+            ),
+])
+def test_load_version_patterns(tmp_cwd, monkeypatch, params):
+    import semantic_release.history
+    import semantic_release.settings
+
+    config = tmp_cwd / 'pyproject.toml'
+    config.write_text(dedent(params['pyproject']))
+    print(config.read_text())
+    
+    monkeypatch.setattr(
+            semantic_release.history, 'config', 
+            semantic_release.settings._config(),
+    )
+
+    if 'error' in params:
+        with pytest.raises(ImproperConfigurationError):
+            load_version_patterns()
+
+    else:
+        patterns = load_version_patterns()
+        pattern_tuples = [
+                (x.path, x.pattern)
+                for x in patterns
+        ]
+        assert pattern_tuples == params['patterns']

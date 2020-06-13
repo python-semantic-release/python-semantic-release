@@ -36,17 +36,17 @@ def parse_commit_message(message: str,) -> ParsedCommit:
     subject = parsed.group("subject")
 
     # Check tags for minor or patch
-    if config.get("semantic_release", "minor_tag") in message:
+    if config.get("minor_tag") in message:
         level = "feature"
         level_bump = 2
         if subject:
-            subject = subject.replace(config.get("semantic_release", "minor_tag"), "")
+            subject = subject.replace(config.get("minor_tag"), "")
 
-    elif config.get("semantic_release", "fix_tag") in message:
+    elif config.get("fix_tag") in message:
         level = "fix"
         level_bump = 1
         if subject:
-            subject = subject.replace(config.get("semantic_release", "fix_tag"), "")
+            subject = subject.replace(config.get("fix_tag"), "")
 
     else:
         # We did not find any tags in the commit message

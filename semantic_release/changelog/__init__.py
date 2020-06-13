@@ -34,9 +34,7 @@ def markdown_changelog(
                     version=version,
                     previous_version=previous_version,
                     changelog=changelog,
-                    changelog_sections=config.get(
-                        "semantic_release", "changelog_sections"
-                    ).split(","),
+                    changelog_sections=config.get("changelog_sections").split(","),
                 )
                 for component in current_changelog_components()
             )
