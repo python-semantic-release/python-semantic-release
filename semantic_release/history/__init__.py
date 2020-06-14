@@ -2,7 +2,6 @@
 """
 import logging
 import re
-import json
 from typing import Optional, List, Set
 
 import semver
@@ -21,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class VersionPattern:
+    """
+    Represent a version number in a particular file.
+
+    The version number is identified by a regular expression.  Methods are 
+    provided both the read the version number from the file, and to update the 
+    file with a new version number.  Use the `load_version_patterns()` factory 
+    function to create the version patterns specified in the config files.
+    """
     version_regex = r'(\d+\.\d+(?:\.\d+)?)'
 
     # The pattern should be a regular expression with a single group, 
@@ -50,13 +57,20 @@ class VersionPattern:
         return cls(path, pattern)
 
     def parse(self) -> Set[str]:
+        """
+        Return the versions matching this pattern.
+
+        Because a pattern can match in multiple places, this method returns a 
+        set of matches.  Generally, there should only be one element in this 
+        set (i.e. even if the version is specified in multiple places, it 
+        should be the same version in each place), but it falls on the caller 
+        to check for this condition.
+        """
         logger.debug(f"Looking for current version in {self.path}, pattern: {self.pattern}")
 
         with open(self.path, 'r') as f:
             content = f.read()
 
-        # Returning a set because it's possible for the same pattern to occur 
-        # multiple times (and each match will be updated).
         versions = {
                 m.group(1)
                 for m in re.finditer(self.pattern, content)
@@ -65,6 +79,11 @@ class VersionPattern:
 
     def replace(self, new_version: str):
         """
+        Update the versions matching this pattern.
+
+        This method reads the underlying file, replaces each occurrence of the 
+        matched pattern, then writes the updated file.
+
         :param new_version: The new version number as a string
         """
         with open(self.path, 'r') as f:
@@ -187,6 +206,9 @@ def set_new_version(new_version: str) -> bool:
 
 
 def load_version_patterns() -> List[VersionPattern]:
+    """
+    Create the `VersionPattern` objects specified by the config file.
+    """
     patterns = []
 
     def iter_fields(x):
