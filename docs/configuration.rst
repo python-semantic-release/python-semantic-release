@@ -33,8 +33,13 @@ The file and variable name of where the version number is stored, for example::
 
     semantic_release/__init__.py:__version__
 
-In ``pyproject.toml``, you can specify multiple version variables (i.e. in 
-different files) by providing a list of such strings:
+You can specify multiple version variables (i.e. in different files) by 
+providing comma-separated list of such strings::
+
+    semantic_release/__init__.py:__version__,docs/conf.py:version
+
+In ``pyproject.toml`` specifically, you can also use the TOML list syntax to 
+specify multiple versions:
 
 .. code-block:: toml
 
@@ -43,8 +48,6 @@ different files) by providing a list of such strings:
         'semantic_release/__init__.py:__version__',
         'docs/conf.py:version',
     ]
-
-In ``setup.cfg``, only a single version variable can be specified.
 
 .. _config-version_pattern:
 

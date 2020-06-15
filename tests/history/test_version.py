@@ -190,6 +190,17 @@ class TestVersionPattern:
             dict(
                 pyproject="""\
                         [tool.semantic_release]
+                        version_variable = "path1:var1,path2:var2"
+                        """,
+                patterns=[
+                    ('path1', r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                    ('path2', r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                ],
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
                         version_variable = [
                             "path1:var1",
                             "path2:var2"
@@ -208,6 +219,17 @@ class TestVersionPattern:
                         """,
                 patterns=[
                     ('path', 'pattern'),
+                ],
+            ),
+
+            dict(
+                pyproject="""\
+                        [tool.semantic_release]
+                        version_pattern = "path1:pattern1,path2:pattern2"
+                        """,
+                patterns=[
+                    ('path1', 'pattern1'),
+                    ('path2', 'pattern2'),
                 ],
             ),
 

@@ -2,6 +2,7 @@
 """
 import logging
 import re
+import csv
 from typing import Optional, List, Set
 
 import semver
@@ -212,8 +213,14 @@ def load_version_patterns() -> List[VersionPattern]:
     patterns = []
 
     def iter_fields(x):
-        if not x: return
-        yield from x if isinstance(x, list) else [x]
+        if not x:
+            return
+        if isinstance(x, list):
+            yield from x
+        else:
+            # Split by commas, but allow the user to escape commas if 
+            # necessary.
+            yield from next(csv.reader([x]))
 
     for version_var in iter_fields(config.get("version_variable")):
         pattern = VersionPattern.from_variable(version_var)
