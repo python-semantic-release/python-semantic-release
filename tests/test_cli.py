@@ -25,9 +25,10 @@ def test_main_should_call_correct_function(mocker, runner):
 
 
 def test_version_by_commit_should_call_correct_functions(mocker):
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        commit_version_number=True,
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(commit_version_number=True,),
+    )
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
     mock_commit_new_version = mocker.patch("semantic_release.cli.commit_new_version")
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
@@ -55,10 +56,10 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
     mocker,
 ):
 
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        version_source="tag",
-        commit_version_number=True,
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(version_source="tag", commit_version_number=True,),
+    )
 
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
@@ -84,9 +85,9 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 
 
 def test_version_by_tag_should_call_correct_functions(mocker):
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        version_source="tag",
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get", wrapped_config_get(version_source="tag",)
+    )
     mocker.patch("semantic_release.cli.config.get", lambda *x, **y: False)
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
@@ -222,11 +223,12 @@ def test_version_by_commit_check_build_status_succeeds(mocker):
 
 
 def test_version_by_tag_check_build_status_succeeds(mocker):
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        version_source='tag',
-        commit_version_number=False,
-        check_build_status=True,
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            version_source="tag", commit_version_number=False, check_build_status=True,
+        ),
+    )
     mock_check_build_status = mocker.patch(
         "semantic_release.cli.check_build_status", return_value=True
     )
@@ -295,11 +297,12 @@ def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):
     mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
     mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
     mocker.patch("semantic_release.cli.check_token", lambda: True)
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        remove_dist=False,
-        upload_to_pypi=False,
-        upload_to_release=False,
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            remove_dist=False, upload_to_pypi=False, upload_to_release=False,
+        ),
+    )
 
     publish()
 
@@ -403,12 +406,15 @@ def test_publish_bad_token(mocker):
     )
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        branch="my_branch",
-        upload_to_pypi=False,
-        upload_to_release=False,
-        remove_dist=False,
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            branch="my_branch",
+            upload_to_pypi=False,
+            upload_to_release=False,
+            remove_dist=False,
+        ),
+    )
     mock_version = mocker.patch("semantic_release.cli.version")
     mock_get_token = mocker.patch(
         "semantic_release.cli.get_token", return_value="SUPERTOKEN"
@@ -457,12 +463,15 @@ def test_publish_giterror_when_posting(mocker):
     )
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
-    mocker.patch("semantic_release.cli.config.get", wrapped_config_get(
-        branch="my_branch",
-        upload_to_pypi=False,
-        upload_to_release=False,
-        remove_dist=False,
-    ))
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            branch="my_branch",
+            upload_to_pypi=False,
+            upload_to_release=False,
+            remove_dist=False,
+        ),
+    )
     mock_version = mocker.patch("semantic_release.cli.version")
     mock_get_token = mocker.patch(
         "semantic_release.cli.get_token", return_value="SUPERTOKEN"

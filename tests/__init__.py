@@ -18,8 +18,8 @@ def reset_config():
     reload(semantic_release.history)
     reload(semantic_release.history.logs)
 
+
 def wrapped_config_get(**kwargs):
     from semantic_release.settings import config
+
     return lambda *args: {**config, **kwargs}.get(*args)
-
-

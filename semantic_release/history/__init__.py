@@ -1,9 +1,9 @@
 """History
 """
+import csv
 import logging
 import re
-import csv
-from typing import Optional, List, Set
+from typing import List, Optional, Set
 
 import semver
 
@@ -29,9 +29,10 @@ class VersionPattern:
     file with a new version number.  Use the `load_version_patterns()` factory 
     function to create the version patterns specified in the config files.
     """
-    version_regex = r'(\d+\.\d+(?:\.\d+)?)'
 
-    # The pattern should be a regular expression with a single group, 
+    version_regex = r"(\d+\.\d+(?:\.\d+)?)"
+
+    # The pattern should be a regular expression with a single group,
     # containing the version to replace.
     def __init__(self, path: str, pattern: str):
         self.path = path
@@ -43,7 +44,7 @@ class VersionPattern:
         Instantiate a `VersionPattern` from a string specifying a path and a 
         variable name.
         """
-        path, variable = config_str.split(':', 1)
+        path, variable = config_str.split(":", 1)
         pattern = r'{0} *[:=] *["\']{1}["\']'.format(variable, cls.version_regex)
         return cls(path, pattern)
 
@@ -53,7 +54,7 @@ class VersionPattern:
         Instantiate a `VersionPattern` from a string specifying a path and a 
         regular expression matching the version number.
         """
-        path, pattern = config_str.split(':', 1)
+        path, pattern = config_str.split(":", 1)
         pattern = pattern.format(version=cls.version_regex)
         return cls(path, pattern)
 
@@ -67,15 +68,14 @@ class VersionPattern:
         should be the same version in each place), but it falls on the caller 
         to check for this condition.
         """
-        logger.debug(f"Looking for current version in {self.path}, pattern: {self.pattern}")
+        logger.debug(
+            f"Looking for current version in {self.path}, pattern: {self.pattern}"
+        )
 
-        with open(self.path, 'r') as f:
+        with open(self.path, "r") as f:
             content = f.read()
 
-        versions = {
-                m.group(1)
-                for m in re.finditer(self.pattern, content)
-        }
+        versions = {m.group(1) for m in re.finditer(self.pattern, content)}
         return versions
 
     def replace(self, new_version: str):
@@ -87,7 +87,7 @@ class VersionPattern:
 
         :param new_version: The new version number as a string
         """
-        with open(self.path, 'r') as f:
+        with open(self.path, "r") as f:
             old_content = f.read()
 
         def swap_version(m):
@@ -98,8 +98,9 @@ class VersionPattern:
 
         new_content = re.sub(self.pattern, swap_version, old_content)
 
-        with open(self.path, mode='w') as f:
+        with open(self.path, mode="w") as f:
             f.write(new_content)
+
 
 @LoggedFunction(logger)
 def get_current_version_by_tag() -> str:
@@ -129,9 +130,11 @@ def get_current_version_by_config_file() -> str:
     versions = set.union(*[x.parse() for x in patterns])
 
     if len(versions) == 0:
-        raise ImproperConfigurationError("no versions found in the configured locations")
+        raise ImproperConfigurationError(
+            "no versions found in the configured locations"
+        )
     if len(versions) != 1:
-        version_strs = ', '.join(repr(x) for x in versions)
+        version_strs = ", ".join(repr(x) for x in versions)
         raise ImproperConfigurationError(f"found conflicting versions: {version_strs}")
 
     version = versions.pop()
@@ -218,7 +221,7 @@ def load_version_patterns() -> List[VersionPattern]:
         if isinstance(x, list):
             yield from x
         else:
-            # Split by commas, but allow the user to escape commas if 
+            # Split by commas, but allow the user to escape commas if
             # necessary.
             yield from next(csv.reader([x]))
 
@@ -230,7 +233,8 @@ def load_version_patterns() -> List[VersionPattern]:
         patterns.append(pattern)
 
     if not patterns:
-        raise ImproperConfigurationError("must specify either 'version_variable' or 'version_pattern'")
+        raise ImproperConfigurationError(
+            "must specify either 'version_variable' or 'version_pattern'"
+        )
 
     return patterns
-

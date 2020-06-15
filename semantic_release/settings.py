@@ -4,16 +4,17 @@ import configparser
 import importlib
 import logging
 import os
+from collections import UserDict
 from functools import wraps
 from os import getcwd
 from typing import Callable, List
-from collections import UserDict
 
 import toml
 
 from .errors import ImproperConfigurationError
 
 logger = logging.getLogger(__name__)
+
 
 def _config():
     cwd = getcwd()
@@ -29,30 +30,32 @@ def _config():
     # Cast to a UserDict so that we can mock the get() method.
     return UserDict({**ini_config, **toml_config})
 
+
 def _config_from_ini(paths):
     parser = configparser.ConfigParser()
     parser.read(paths)
 
     flags = {
-            'check_build_status',
-            'commit_version_number',
-            'remove_dist',
-            'upload_to_pypi',
-            'upload_to_release',
-            'patch_without_tag',
+        "check_build_status",
+        "commit_version_number",
+        "remove_dist",
+        "upload_to_pypi",
+        "upload_to_release",
+        "patch_without_tag",
     }
 
-    # Iterate through the sections so that default values are applied 
+    # Iterate through the sections so that default values are applied
     # correctly.  See:
     # https://stackoverflow.com/questions/1773793/convert-configparser-items-to-dictionary
     config = {}
-    for key, _ in parser.items('semantic_release'):
+    for key, _ in parser.items("semantic_release"):
         if key in flags:
-            config[key] = parser.getboolean('semantic_release', key)
+            config[key] = parser.getboolean("semantic_release", key)
         else:
-            config[key] = parser.get('semantic_release', key)
+            config[key] = parser.get("semantic_release", key)
 
     return config
+
 
 def _config_from_pyproject(path):
     if not os.path.isfile(path):
@@ -60,7 +63,7 @@ def _config_from_pyproject(path):
 
     try:
         pyproject = toml.load(path)
-        return pyproject.get('tool', {}).get('semantic_release', {})
+        return pyproject.get("tool", {}).get("semantic_release", {})
 
     except toml.TomlDecodeError:
         logger.debug("Could not decode pyproject.toml")

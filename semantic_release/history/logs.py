@@ -67,11 +67,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         else:
             logger.warning(f"Unknown bump level {level}")
 
-    if (
-        config.get("patch_without_tag")
-        and commit_count > 0
-        and bump is None
-    ):
+    if config.get("patch_without_tag") and commit_count > 0 and bump is None:
         bump = "patch"
         logger.debug(f"Changing bump level to patch based on config patch_without_tag")
 

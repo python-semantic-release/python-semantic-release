@@ -140,10 +140,7 @@ def commit_new_version(version: str):
         message += "\n\n"
         message += commit_message.format(version=version)
 
-    commit_author = config.get(
-        "commit_author",
-        "semantic-release <semantic-release>",
-    )
+    commit_author = config.get("commit_author", "semantic-release <semantic-release>",)
 
     version_file = config.get("version_variable").split(":")[0]
     # get actual path to filename, to allow running cmd from subdir of git root
