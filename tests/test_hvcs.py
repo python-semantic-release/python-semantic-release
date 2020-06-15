@@ -16,7 +16,7 @@ from semantic_release.hvcs import (
     post_changelog,
 )
 
-from . import mock
+from . import mock, wrapped_config_get
 from .mocks.mock_gitlab import mock_gitlab
 
 temp_dir = (
@@ -26,13 +26,13 @@ temp_dir = (
 )
 
 
-@mock.patch("configparser.ConfigParser.get", return_value="github")
-def test_get_hvcs_should_return_github(mock_get_vcs):
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="github"))
+def test_get_hvcs_should_return_github():
     assert get_hvcs() == Github
 
 
-@mock.patch("configparser.ConfigParser.get", return_value="gitlab")
-def test_get_hvcs_should_return_gitlab(mock_get_vcs):
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))
+def test_get_hvcs_should_return_gitlab():
     assert get_hvcs() == Gitlab
 
 
@@ -57,9 +57,9 @@ def test_check_token_should_return_false():
     assert check_token() is False
 
 
-@mock.patch("configparser.ConfigParser.get", return_value="gitlab")
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
-def test_get_domain_and_token(mock_get_vcs):
+def test_get_domain_and_token():
     assert get_hvcs().domain()
     assert get_hvcs().token()
 
@@ -124,21 +124,19 @@ class GithubCheckBuildStatusTests(TestCase):
 
 class GitlabCheckBuildStatusTests(TestCase):
     @mock_gitlab("pending")
-    def test_should_return_false_if_pending(self, mock_config, mock_auth, mock_project):
+    def test_should_return_false_if_pending(self, mock_auth, mock_project):
         self.assertFalse(check_build_status("owner", "repo", "my_ref"))
 
     @mock_gitlab("failure")
-    def test_should_return_false_if_failure(self, mock_config, mock_auth, mock_project):
+    def test_should_return_false_if_failure(self, mock_auth, mock_project):
         self.assertFalse(check_build_status("owner", "repo", "my_ref"))
 
     @mock_gitlab("allow_failure")
-    def test_should_return_true_if_allow_failure(
-        self, mock_config, mock_auth, mock_project
-    ):
+    def test_should_return_true_if_allow_failure(self, mock_auth, mock_project):
         self.assertTrue(check_build_status("owner", "repo", "my_ref"))
 
     @mock_gitlab("success")
-    def test_should_return_true_if_success(self, mock_config, mock_auth, mock_project):
+    def test_should_return_true_if_success(self, mock_auth, mock_project):
         self.assertTrue(check_build_status("owner", "repo", "my_ref"))
 
 
@@ -273,17 +271,15 @@ class GithubReleaseTests(TestCase):
 
 class GitlabReleaseTests(TestCase):
     @mock_gitlab()
-    def test_should_return_true_if_success(self, mock_config, mock_auth, mock_project):
+    def test_should_return_true_if_success(self, mock_auth, mock_project):
         self.assertTrue(post_changelog("owner", "repo", "my_good_tag", "changelog"))
 
     @mock_gitlab()
-    def test_should_return_false_if_bad_tag(self, mock_config, mock_auth, mock_project):
+    def test_should_return_false_if_bad_tag(self, mock_auth, mock_project):
         self.assertFalse(post_changelog("owner", "repo", "my_bad_tag", "changelog"))
 
     @mock_gitlab()
-    def test_should_return_false_if_failed_update(
-        self, mock_config, mock_auth, mock_project
-    ):
+    def test_should_return_false_if_failed_update(self, mock_auth, mock_project):
         self.assertFalse(post_changelog("owner", "repo", "my_locked_tag", "changelog"))
 
 

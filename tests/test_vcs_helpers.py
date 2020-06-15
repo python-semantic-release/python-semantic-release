@@ -51,11 +51,7 @@ def test_add_and_commit_with_author(mocker, mock_git):
     orig = config.get
 
     def wrapped_config_get(*args, **kwargs):
-        if (
-            len(args) >= 2
-            and args[0] == "semantic_release"
-            and args[1] == "commit_author"
-        ):
+        if args[0] == "commit_author":
             return "foo <bar@foo.com>"
 
         return orig(*args, **kwargs)

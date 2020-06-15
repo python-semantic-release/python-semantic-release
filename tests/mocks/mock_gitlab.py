@@ -1,8 +1,8 @@
 import gitlab
 
-from .. import mock
+from .. import mock, wrapped_config_get
 
-gitlab.Gitlab("")  # instanciation necessary to discover gitlab ProjectManager
+gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 
 
 class _GitlabProject:
@@ -89,21 +89,17 @@ class _GitlabProject:
                     raise gitlab.exceptions.GitlabUpdateError
 
 
-GITLAB_MOCKS = [
-    mock.patch("os.environ", {"GL_TOKEN": "token"}),
-    mock.patch("configparser.ConfigParser.get", return_value="gitlab"),
-    mock.patch("gitlab.Gitlab.auth"),
-]
-
-
 def mock_gitlab(status="success"):
+    mocks = [
+        mock.patch("os.environ", {"GL_TOKEN": "token"}),
+        mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab")),
+        mock.patch("gitlab.Gitlab.auth"),
+        mock.patch("gitlab.v4.objects.ProjectManager", return_value={"owner/repo": _GitlabProject(status)}),
+    ]
+
     def wraps(func):
-        for option in reversed(GITLAB_MOCKS):
+        for option in reversed(mocks):
             func = option(func)
-        mock_project = mock.patch(
-            "gitlab.v4.objects.ProjectManager",
-            return_value={"owner/repo": _GitlabProject(status)},
-        )
-        return mock_project(func)
+        return func
 
     return wraps

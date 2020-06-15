@@ -118,7 +118,7 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
         )
         return False
 
-    if config.getboolean("semantic_release", "check_build_status"):
+    if config.get("check_build_status"):
         logger.info("Checking build status...")
         owner, name = get_repository_owner_and_name()
         if not check_build_status(owner, name, get_current_head_hash()):
@@ -132,10 +132,9 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
 
     # Bump the version
     set_new_version(new_version)
-    if config.getboolean(
-        "semantic_release",
+    if config.get(
         "commit_version_number",
-        fallback=(config.get("semantic_release", "version_source") == "commit"),
+        config.get("version_source") == "commit",
     ):
         commit_new_version(new_version)
     tag_new_version(new_version)
@@ -200,7 +199,7 @@ def publish(**kwargs):
 
     owner, name = get_repository_owner_and_name()
 
-    branch = config.get("semantic_release", "branch")
+    branch = config.get("branch")
     logger.debug(f"Running publish on branch {branch}")
     ci_checks.check(branch)
     checkout(branch)
@@ -217,10 +216,10 @@ def publish(**kwargs):
         )
 
         # Get config options for uploads
-        dist_path = config.get("semantic_release", "dist_path")
-        remove_dist = config.getboolean("semantic_release", "remove_dist")
-        upload_pypi = config.getboolean("semantic_release", "upload_to_pypi")
-        upload_release = config.getboolean("semantic_release", "upload_to_release")
+        dist_path = config.get("dist_path")
+        remove_dist = config.get("remove_dist")
+        upload_pypi = config.get("upload_to_pypi")
+        upload_release = config.get("upload_to_release")
 
         if upload_pypi or upload_release:
             # We need to run the command to build wheels for releasing
@@ -314,8 +313,7 @@ def main(**kwargs):
         "upload_to_pypi",
         "version_source",
     ]:
-        val = config.get("semantic_release", key)
-        obj[key] = val
+        obj[key] = config.get(key)
     logger.debug("Main config:", obj)
 
 

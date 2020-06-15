@@ -68,7 +68,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
             logger.warning(f"Unknown bump level {level}")
 
     if (
-        config.getboolean("semantic_release", "patch_without_tag")
+        config.get("patch_without_tag")
         and commit_count > 0
         and bump is None
     ):

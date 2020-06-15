@@ -6,7 +6,7 @@ from ..settings import config
 def get_changelog_sections(changelog: dict, changelog_sections: list) -> Iterable[str]:
     """Generator which yields each changelog section to be included"""
 
-    included_sections = config.get("semantic_release", "changelog_sections")
+    included_sections = config.get("changelog_sections")
     included_sections = [s.strip() for s in included_sections.split(",")]
 
     for section in included_sections:

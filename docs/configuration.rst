@@ -33,6 +33,46 @@ The file and variable name of where the version number is stored, for example::
 
     semantic_release/__init__.py:__version__
 
+You can specify multiple version variables (i.e. in different files) by 
+providing comma-separated list of such strings::
+
+    semantic_release/__init__.py:__version__,docs/conf.py:version
+
+In ``pyproject.toml`` specifically, you can also use the TOML list syntax to 
+specify multiple versions:
+
+.. code-block:: toml
+
+    [tool.semantic_release]
+    version_variable = [
+        'semantic_release/__init__.py:__version__',
+        'docs/conf.py:version',
+    ]
+
+.. _config-version_pattern:
+
+``version_pattern``
+-------------------
+Similar to `config-version_variable`, but allows the version number to be 
+identified using an arbitrary regular expression::
+
+    README.rst:VERSION (\d+\.\d+\.\d+)
+
+The regular expression must contain a parenthesized group that matches the 
+version number itself.  Anything outside that group is just context.  For 
+example, the above specifies that there is a version number in ``README.rst`` 
+preceded by the string "VERSION".
+
+If the pattern contains the string ``{version}``, it will be replaced with the 
+regular expression used internally by ``python-semantic-release`` to match 
+semantic version numbers.  So the above example would probably be better 
+written as::
+
+    README.rst:VERSION {version}
+
+As with `config-version_variable`, it is possible to specify multiple version 
+patterns in ``pyproject.toml``.
+
 .. _config-version_source:
 
 ``version_source``
