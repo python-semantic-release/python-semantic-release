@@ -317,7 +317,8 @@ Default: `true`
 ``build_command``
 -----------------
 Command to build dists. Build output should be stored in the directory configured in
-``dist_path``.
+``dist_path``.  If necessary, multiple commands can be specified using ``&&``, e.g.
+``pip install -m flit && flit build``.
 
 Default: ``python setup.py sdist bdist_wheel``
 
