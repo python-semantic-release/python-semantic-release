@@ -68,14 +68,14 @@ class VersionPattern:
         should be the same version in each place), but it falls on the caller 
         to check for this condition.
         """
-        logger.debug(
-            f"Looking for current version in {self.path}, pattern: {self.pattern}"
-        )
-
         with open(self.path, "r") as f:
             content = f.read()
 
         versions = {m.group(1) for m in re.finditer(self.pattern, content)}
+
+        logger.debug(
+                f"Parsing current version: path={self.path!r} pattern={self.pattern!r} num_matches={len(versions)}"
+        )
         return versions
 
     def replace(self, new_version: str):
@@ -87,16 +87,22 @@ class VersionPattern:
 
         :param new_version: The new version number as a string
         """
+        n = 0
         with open(self.path, "r") as f:
             old_content = f.read()
 
         def swap_version(m):
+            nonlocal n; n += 1
             s = m.string
             i, j = m.span()
             ii, jj = m.span(1)
             return s[i:ii] + new_version + s[jj:j]
 
         new_content = re.sub(self.pattern, swap_version, old_content)
+
+        logger.debug(
+                f"Writing new version number: path={self.path!r} pattern={self.pattern!r} num_matches={n!r}"
+        )
 
         with open(self.path, mode="w") as f:
             f.write(new_content)
