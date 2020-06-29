@@ -74,7 +74,7 @@ class VersionPattern:
         versions = {m.group(1) for m in re.finditer(self.pattern, content)}
 
         logger.debug(
-                f"Parsing current version: path={self.path!r} pattern={self.pattern!r} num_matches={len(versions)}"
+            f"Parsing current version: path={self.path!r} pattern={self.pattern!r} num_matches={len(versions)}"
         )
         return versions
 
@@ -92,7 +92,8 @@ class VersionPattern:
             old_content = f.read()
 
         def swap_version(m):
-            nonlocal n; n += 1
+            nonlocal n
+            n += 1
             s = m.string
             i, j = m.span()
             ii, jj = m.span(1)
@@ -101,7 +102,7 @@ class VersionPattern:
         new_content = re.sub(self.pattern, swap_version, old_content)
 
         logger.debug(
-                f"Writing new version number: path={self.path!r} pattern={self.pattern!r} num_matches={n!r}"
+            f"Writing new version number: path={self.path!r} pattern={self.pattern!r} num_matches={n!r}"
         )
 
         with open(self.path, mode="w") as f:
