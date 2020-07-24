@@ -31,11 +31,11 @@ Development
 
 Install this module and the development dependencies::
 
-    pip install -e .[test,dev]
+    pip install -e ".[test,dev]"
 
 And if you'd like to build the documentation locally::
 
-    pip install -e .[docs]
+    pip install -e ".[docs]"
 
 Testing
 ~~~~~~~
