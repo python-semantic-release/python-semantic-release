@@ -161,7 +161,8 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
         log = generate_changelog(current_version, None)
     else:
         log = generate_changelog(previous_version, current_version)
-    logger.info(markdown_changelog(current_version, log, header=False))
+    # print is used to keep the changelog on stdout, separate from log messages
+    print(markdown_changelog(current_version, log, header=False))
 
     # Post changelog to HVCS if enabled
     if not noop and post:
