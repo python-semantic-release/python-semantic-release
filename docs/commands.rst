@@ -7,7 +7,7 @@ Commands
 
 changelog
 ^^^^^^^^^
-When executed this command will print the changelog to stdout.
+When executed this command will print the changelog to stderr.
 
 If the option ``--post`` is used then the program will check if
 there is a authentication token configured for your vcs provider
