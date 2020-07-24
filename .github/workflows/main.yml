@@ -68,7 +68,7 @@ jobs:
           python -m black .
       - name: Sort imports
         run: |
-          python -m pip install isort
+          python -m pip install "isort >=4,<5"
           python -m isort -y -rc semantic_release tests
 
       - name: Commit and push changes
