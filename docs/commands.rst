@@ -5,37 +5,37 @@ Commands
 
 .. _cmd-changelog:
 
-changelog
-^^^^^^^^^
-When executed this command will print the changelog to stdout.
+``semantic-release changelog``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the option ``--post`` is used then the program will check if
-there is a authentication token configured for your vcs provider
-(:ref:`env-gh_token` for github, :ref:`env-gl_token` for GitLab)
-and it will be posted to the provider if supported.
+Print the changelog to stdout.
 
-
-.. _cmd-publish:
-
-publish
-^^^^^^^
-Publish will do a sequence of things.
-
-#. Run same as the :ref:`cmd-version` command
-#. Push changes to git
-#. If :ref:`config-upload_to_pypi` is not ``false`` in the :ref:`configuration`
-   it will create the wheel and upload to pypi using twine.
-#. If the environment variable :ref:`env-gh_token` (or equivalent for your
-   vcs provider) is set then :ref:`cmd-changelog` will be executed and
-   the changelog will be posted to your vcs provider if supported.
+If the option ``--post`` is used and there is an authentication token configured
+for your vcs provider (:ref:`env-gh_token` for GitHub, :ref:`env-gl_token` for
+GitLab), the changelog will be posted there too.
 
 
 .. _cmd-version:
 
-version
-^^^^^^^
-This will figure out the new version number using
-:ref:`commit-log-parsing`, and commit + tag in git.
+``semantic-release version``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This will not push anything to any remote. All changes
-are local.
+Figure out the new version number, update and commit it, and create a tag.
+
+This will not push anything to any remote. All changes are local.
+
+
+.. _cmd-publish:
+
+``semantic-release publish``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Publish will do a sequence of things:
+
+#. Run :ref:`cmd-version`.
+#. Push changes to git.
+#. Run :ref:`config-build_command` and upload the created files to PyPI.
+#. Run :ref:`cmd-changelog` and post to your vcs provider.
+#. Attach the files created by :ref:`config-build_command` to GitHub releases.
+
+Some of these steps may be disabled based on your configuration.
