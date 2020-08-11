@@ -4,12 +4,12 @@
 Getting Started
 ===============
 
-Install
--------
+If you haven't done so already, install Python Semantic Release following the
+instructions above.
 
-::
-
-   pip install python-semantic-release
+There is no strict requirement to have it installed locally if you intend on
+:ref:`using a CI service <automatic>`, however running with ``--noop`` can be
+useful to test your configuration.
 
 Configure
 ---------
