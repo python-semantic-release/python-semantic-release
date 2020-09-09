@@ -128,13 +128,20 @@ class TestVersionPattern:
         assert p.pattern == pattern
 
     @pytest.mark.parametrize(
-        "content, hits", [("", set()), ("ab12", {"12"}), ("ab12 cd34", {"12", "34"}),]
+        "pattern, content, hits",
+        [
+            (r"(\d+)", "", set()),
+            (r"(\d+)", "ab12", {"12"}),
+            (r"(\d+)", "ab12 cd34", {"12", "34"}),
+            (r"version = (\d+)", "version = 12\nnotversion = 34\nversion = 56not", {"12", "34", "56"}),
+            (r"^version = (\d+)$", "version = 12\nnotversion = 34\nversion = 56not", {"12"}),
+        ],
     )
-    def test_parse(self, tmp_path, content, hits):
+    def test_parse(self, tmp_path, pattern, content, hits):
         path = tmp_path / "pyproject.toml"
         path.write_text(content)
 
-        pattern = VersionPattern(str(path), r"(\d+)")
+        pattern = VersionPattern(str(path), pattern)
         assert pattern.parse() == hits
 
     @pytest.mark.parametrize(

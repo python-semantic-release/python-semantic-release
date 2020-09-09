@@ -24,9 +24,9 @@ class VersionPattern:
     """
     Represent a version number in a particular file.
 
-    The version number is identified by a regular expression.  Methods are 
-    provided both the read the version number from the file, and to update the 
-    file with a new version number.  Use the `load_version_patterns()` factory 
+    The version number is identified by a regular expression.  Methods are
+    provided both the read the version number from the file, and to update the
+    file with a new version number.  Use the `load_version_patterns()` factory
     function to create the version patterns specified in the config files.
     """
 
@@ -41,7 +41,7 @@ class VersionPattern:
     @classmethod
     def from_variable(cls, config_str: str):
         """
-        Instantiate a `VersionPattern` from a string specifying a path and a 
+        Instantiate a `VersionPattern` from a string specifying a path and a
         variable name.
         """
         path, variable = config_str.split(":", 1)
@@ -51,7 +51,7 @@ class VersionPattern:
     @classmethod
     def from_pattern(cls, config_str: str):
         """
-        Instantiate a `VersionPattern` from a string specifying a path and a 
+        Instantiate a `VersionPattern` from a string specifying a path and a
         regular expression matching the version number.
         """
         path, pattern = config_str.split(":", 1)
@@ -62,16 +62,16 @@ class VersionPattern:
         """
         Return the versions matching this pattern.
 
-        Because a pattern can match in multiple places, this method returns a 
-        set of matches.  Generally, there should only be one element in this 
-        set (i.e. even if the version is specified in multiple places, it 
-        should be the same version in each place), but it falls on the caller 
+        Because a pattern can match in multiple places, this method returns a
+        set of matches.  Generally, there should only be one element in this
+        set (i.e. even if the version is specified in multiple places, it
+        should be the same version in each place), but it falls on the caller
         to check for this condition.
         """
         with open(self.path, "r") as f:
             content = f.read()
 
-        versions = {m.group(1) for m in re.finditer(self.pattern, content)}
+        versions = {m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)}
 
         logger.debug(
             f"Parsing current version: path={self.path!r} pattern={self.pattern!r} num_matches={len(versions)}"
@@ -82,7 +82,7 @@ class VersionPattern:
         """
         Update the versions matching this pattern.
 
-        This method reads the underlying file, replaces each occurrence of the 
+        This method reads the underlying file, replaces each occurrence of the
         matched pattern, then writes the updated file.
 
         :param new_version: The new version number as a string
@@ -130,7 +130,7 @@ def get_current_version_by_config_file() -> str:
     Get current version from the version variable defined in the configuration.
 
     :return: A string with the current version number
-    :raises ImproperConfigurationError: if either no versions are found, or 
+    :raises ImproperConfigurationError: if either no versions are found, or
     multiple versions are found.
     """
     patterns = load_version_patterns()
