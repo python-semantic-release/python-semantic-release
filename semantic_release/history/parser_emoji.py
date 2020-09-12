@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 @LoggedFunction(logger)
-def parse_commit_message(message: str,) -> ParsedCommit:
+def parse_commit_message(
+    message: str,
+) -> ParsedCommit:
     """
     Parse a commit using an emoji in the subject line.
 

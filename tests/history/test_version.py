@@ -133,8 +133,16 @@ class TestVersionPattern:
             (r"(\d+)", "", set()),
             (r"(\d+)", "ab12", {"12"}),
             (r"(\d+)", "ab12 cd34", {"12", "34"}),
-            (r"version = (\d+)", "version = 12\nnotversion = 34\nversion = 56not", {"12", "34", "56"}),
-            (r"^version = (\d+)$", "version = 12\nnotversion = 34\nversion = 56not", {"12"}),
+            (
+                r"version = (\d+)",
+                "version = 12\nnotversion = 34\nversion = 56not",
+                {"12", "34", "56"},
+            ),
+            (
+                r"^version = (\d+)$",
+                "version = 12\nnotversion = 34\nversion = 56not",
+                {"12"},
+            ),
         ],
     )
     def test_parse(self, tmp_path, pattern, content, hits):
@@ -186,7 +194,10 @@ class TestVersionPattern:
 @pytest.mark.parametrize(
     "params",
     [
-        dict(pyproject="", error=True,),
+        dict(
+            pyproject="",
+            error=True,
+        ),
         dict(
             pyproject="""\
                         [tool.semantic_release]
@@ -198,7 +209,9 @@ class TestVersionPattern:
                         [tool.semantic_release]
                         version_variable = "path:__version__"
                         """,
-            patterns=[("path", r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),],
+            patterns=[
+                ("path", r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+            ],
         ),
         dict(
             pyproject="""\
@@ -228,14 +241,19 @@ class TestVersionPattern:
                         [tool.semantic_release]
                         version_pattern = "path:pattern"
                         """,
-            patterns=[("path", "pattern"),],
+            patterns=[
+                ("path", "pattern"),
+            ],
         ),
         dict(
             pyproject="""\
                         [tool.semantic_release]
                         version_pattern = "path1:pattern1,path2:pattern2"
                         """,
-            patterns=[("path1", "pattern1"), ("path2", "pattern2"),],
+            patterns=[
+                ("path1", "pattern1"),
+                ("path2", "pattern2"),
+            ],
         ),
         dict(
             pyproject="""\
@@ -245,7 +263,10 @@ class TestVersionPattern:
                             "path2:pattern2"
                         ]
                         """,
-            patterns=[("path1", "pattern1"), ("path2", "pattern2"),],
+            patterns=[
+                ("path1", "pattern1"),
+                ("path2", "pattern2"),
+            ],
         ),
     ],
 )
@@ -258,7 +279,9 @@ def test_load_version_patterns(tmp_cwd, monkeypatch, params):
     print(config.read_text())
 
     monkeypatch.setattr(
-        semantic_release.history, "config", semantic_release.settings._config(),
+        semantic_release.history,
+        "config",
+        semantic_release.settings._config(),
     )
 
     if "error" in params:

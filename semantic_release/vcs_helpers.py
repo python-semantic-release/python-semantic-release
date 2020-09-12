@@ -142,7 +142,10 @@ def commit_new_version(version: str):
         message += "\n\n"
         message += commit_message.format(version=version)
 
-    commit_author = config.get("commit_author", "semantic-release <semantic-release>",)
+    commit_author = config.get(
+        "commit_author",
+        "semantic-release <semantic-release>",
+    )
 
     for pattern in load_version_patterns():
         git_path = PurePath(os.getcwd(), pattern.path).relative_to(repo.working_dir)
@@ -193,7 +196,10 @@ def push_new_version(
             )
         else:
             server = "https://{token}@{server_url}/{owner}/{name}.git".format(
-                token=token, server_url=domain, owner=owner, name=name,
+                token=token,
+                server_url=domain,
+                owner=owner,
+                name=name,
             )
 
     try:

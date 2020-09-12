@@ -71,7 +71,9 @@ class VersionPattern:
         with open(self.path, "r") as f:
             content = f.read()
 
-        versions = {m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)}
+        versions = {
+            m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)
+        }
 
         logger.debug(
             f"Parsing current version: path={self.path!r} pattern={self.pattern!r} num_matches={len(versions)}"

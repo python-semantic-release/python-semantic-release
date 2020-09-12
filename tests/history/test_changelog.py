@@ -56,7 +56,8 @@ def test_should_only_read_until_given_version():
 )
 def test_should_get_right_breaking_description(commit, expected_description):
     with mock.patch(
-        "semantic_release.history.logs.get_commit_log", lambda *a, **kw: [commit],
+        "semantic_release.history.logs.get_commit_log",
+        lambda *a, **kw: [commit],
     ):
         changelog = generate_changelog("0.0.0")
         assert changelog["breaking"][0][1] == expected_description

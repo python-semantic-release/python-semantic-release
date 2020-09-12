@@ -19,7 +19,11 @@ def test_main_should_call_correct_function(mocker, runner):
     mock_version = mocker.patch("semantic_release.cli.version")
     result = runner.invoke(main, ["version"])
     mock_version.assert_called_once_with(
-        noop=False, post=False, force_level=None, retry=False, define=(),
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=False,
+        define=(),
     )
     assert result.exit_code == 0
 
@@ -27,7 +31,9 @@ def test_main_should_call_correct_function(mocker, runner):
 def test_version_by_commit_should_call_correct_functions(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
-        wrapped_config_get(commit_version_number=True,),
+        wrapped_config_get(
+            commit_version_number=True,
+        ),
     )
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
     mock_commit_new_version = mocker.patch("semantic_release.cli.commit_new_version")
@@ -58,7 +64,10 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 
     mocker.patch(
         "semantic_release.cli.config.get",
-        wrapped_config_get(version_source="tag", commit_version_number=True,),
+        wrapped_config_get(
+            version_source="tag",
+            commit_version_number=True,
+        ),
     )
 
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
@@ -86,7 +95,10 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 
 def test_version_by_tag_should_call_correct_functions(mocker):
     mocker.patch(
-        "semantic_release.cli.config.get", wrapped_config_get(version_source="tag",)
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            version_source="tag",
+        ),
     )
     mocker.patch("semantic_release.cli.config.get", lambda *x, **y: False)
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
@@ -114,7 +126,11 @@ def test_force_major(mocker, runner):
     mock_version = mocker.patch("semantic_release.cli.version")
     result = runner.invoke(main, ["version", "--major"])
     mock_version.assert_called_once_with(
-        noop=False, post=False, force_level="major", retry=False, define=(),
+        noop=False,
+        post=False,
+        force_level="major",
+        retry=False,
+        define=(),
     )
     assert mock_version.call_args_list[0][1]["force_level"] == "major"
     assert result.exit_code == 0
@@ -124,7 +140,11 @@ def test_force_minor(mocker, runner):
     mock_version = mocker.patch("semantic_release.cli.version")
     result = runner.invoke(main, ["version", "--minor"])
     mock_version.assert_called_once_with(
-        noop=False, post=False, force_level="minor", retry=False, define=(),
+        noop=False,
+        post=False,
+        force_level="minor",
+        retry=False,
+        define=(),
     )
     assert mock_version.call_args_list[0][1]["force_level"] == "minor"
     assert result.exit_code == 0
@@ -134,7 +154,11 @@ def test_force_patch(mocker, runner):
     mock_version = mocker.patch("semantic_release.cli.version")
     result = runner.invoke(main, ["version", "--patch"])
     mock_version.assert_called_once_with(
-        noop=False, post=False, force_level="patch", retry=False, define=(),
+        noop=False,
+        post=False,
+        force_level="patch",
+        retry=False,
+        define=(),
     )
     assert mock_version.call_args_list[0][1]["force_level"] == "patch"
     assert result.exit_code == 0
@@ -144,7 +168,11 @@ def test_retry(mocker, runner):
     mock_version = mocker.patch("semantic_release.cli.version")
     result = runner.invoke(main, ["version", "--retry"])
     mock_version.assert_called_once_with(
-        noop=False, post=False, force_level=None, retry=True, define=(),
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=True,
+        define=(),
     )
     assert result.exit_code == 0
 
@@ -226,7 +254,9 @@ def test_version_by_tag_check_build_status_succeeds(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
         wrapped_config_get(
-            version_source="tag", commit_version_number=False, check_build_status=True,
+            version_source="tag",
+            commit_version_number=False,
+            check_build_status=True,
         ),
     )
     mock_check_build_status = mocker.patch(
@@ -300,7 +330,9 @@ def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
         wrapped_config_get(
-            remove_dist=False, upload_to_pypi=False, upload_to_release=False,
+            remove_dist=False,
+            upload_to_pypi=False,
+            upload_to_release=False,
         ),
     )
 

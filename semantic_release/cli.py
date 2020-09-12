@@ -132,7 +132,10 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
 
     # Bump the version
     set_new_version(new_version)
-    if config.get("commit_version_number", config.get("version_source") == "commit",):
+    if config.get(
+        "commit_version_number",
+        config.get("version_source") == "commit",
+    ):
         commit_new_version(new_version)
     tag_new_version(new_version)
 

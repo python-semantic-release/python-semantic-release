@@ -54,11 +54,18 @@ def test_changelog_table():
 
 
 def test_should_not_output_heading():
-    assert "v1.0.1" not in markdown_changelog("1.0.1", {},)
+    assert "v1.0.1" not in markdown_changelog(
+        "1.0.1",
+        {},
+    )
 
 
 def test_should_output_heading():
-    assert "## v1.0.1\n" in markdown_changelog("1.0.1", {}, header=True,)
+    assert "## v1.0.1\n" in markdown_changelog(
+        "1.0.1",
+        {},
+        header=True,
+    )
 
 
 def test_get_changelog_sections():

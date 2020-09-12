@@ -60,8 +60,7 @@ def _fix_mime_types():
 
 
 class Github(Base):
-    """Github helper class
-    """
+    """Github helper class"""
 
     API_URL = "https://api.github.com"
     _fix_mime_types()
@@ -264,8 +263,7 @@ class Github(Base):
 
 
 class Gitlab(Base):
-    """Gitlab helper class
-    """
+    """Gitlab helper class"""
 
     API_URL = "https://" + os.environ.get("CI_SERVER_HOST", "gitlab.com")
 

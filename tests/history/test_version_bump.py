@@ -32,7 +32,8 @@ def test_patch():
 
 def test_nothing_if_no_tag():
     with mock.patch(
-        "semantic_release.history.logs.get_commit_log", lambda *a, **kw: [("", "...")],
+        "semantic_release.history.logs.get_commit_log",
+        lambda *a, **kw: [("", "...")],
     ):
         assert evaluate_version_bump("0.0.0") is None
 

@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 @LoggedFunction(logger)
 def upload_to_pypi(
-    path: str = "dist", skip_existing: bool = False,
+    path: str = "dist",
+    skip_existing: bool = False,
 ):
     """Upload wheels to PyPI with Twine.
 

@@ -25,7 +25,8 @@ class ConfigTests(TestCase):
     def test_config(self):
         config = _config()
         self.assertEqual(
-            config.get("version_variable"), "semantic_release/__init__.py:__version__",
+            config.get("version_variable"),
+            "semantic_release/__init__.py:__version__",
         )
 
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
