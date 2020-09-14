@@ -42,7 +42,7 @@ setup(
         "twine>=3,<4",
         "requests>=2.21,<3",
         "wheel",
-        "toml==0.10.0",
+        "toml~=0.10.0",
         "python-gitlab>=1.10,<2",
     ],
     extras_require={
