@@ -6,15 +6,19 @@ inputs:
   directory:
     description: 'Sub-directory to cd into before running semantic-release'
     default: '.'
+    required: false
   github_token:
     description: 'GitHub token used to push release notes and new commits/tags'
     required: true
   pypi_token:
     description: 'PyPI API token'
+    required: false
   pypi_username:
     description: 'Username with project access to push to PyPI'
+    required: false
   pypi_password:
     description: 'Password to the account specified in pypi_username'
+    required: false
 
 runs:
   using: 'docker'
