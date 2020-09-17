@@ -123,6 +123,7 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
 
 
 def should_bump_version(*, current_version, new_version, retry=False, noop=False):
+    """Test whether the version should be bumped."""
     if new_version == current_version and not retry:
         logger.info("No release will be made.")
         return False
@@ -146,6 +147,11 @@ def should_bump_version(*, current_version, new_version, retry=False, noop=False
 
 
 def bump_version(new_version, level_bump):
+    """
+    Set the version to the given `new_version`.
+
+    Edit in the source code, commit and create a git tag.
+    """
     set_new_version(new_version)
     if config.get(
         "commit_version_number",
