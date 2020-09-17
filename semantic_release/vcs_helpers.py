@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+from datetime import date
 from functools import wraps
 from pathlib import PurePath, Path
 from typing import Optional, Tuple
@@ -185,7 +186,7 @@ def update_changelog_file(version: str, content_to_add: str):
             [
                 changelog_placeholder,
                 "",
-                f"## v{version}",
+                f"## v{version} ({date.today():%Y-%m-%d})",
                 content_to_add,
             ]
         ),

@@ -1,3 +1,5 @@
+from datetime import date
+
 import git
 import pytest
 from git import GitCommandError, Repo, TagObject
@@ -288,7 +290,7 @@ def test_update_changelog_file_ok(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        "## v1.0.0\n"
+        "## v1.0.0 (2015-08-04)\n"
         "### Feature\n"
         "* Just a start"
     )
@@ -308,13 +310,13 @@ def test_update_changelog_file_ok(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        "## v2.0.0\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
         "### Fix\n"
         "* Fix a bug\n"
         "### Feature\n"
         "* Add something awesome\n"
         "\n"
-        "## v1.0.0\n"
+        "## v1.0.0 (2015-08-04)\n"
         "### Feature\n"
         "* Just a start"
     )
@@ -335,7 +337,7 @@ def test_update_changelog_file_missing_file(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        "## v2.0.0\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
         "* Some new content\n"
     )
 
