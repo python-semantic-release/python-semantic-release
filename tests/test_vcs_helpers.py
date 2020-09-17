@@ -1,5 +1,3 @@
-import os
-
 import git
 import pytest
 from git import GitCommandError, Repo, TagObject
@@ -9,7 +7,6 @@ from semantic_release.vcs_helpers import (
     check_repo,
     checkout,
     commit_new_version,
-    config,
     get_commit_log,
     get_current_head_hash,
     get_last_version,
@@ -17,8 +14,8 @@ from semantic_release.vcs_helpers import (
     get_version_from_tag,
     push_new_version,
     tag_new_version,
+    update_changelog_file,
 )
-
 from . import mock, wrapped_config_get
 
 
@@ -283,3 +280,47 @@ def test_get_version_from_tag(tag_name, expected_version):
         ]
     )
     assert expected_version == get_version_from_tag(tag_name)
+
+
+def test_update_changelog_file(mock_git, mocker):
+    initial_content = "\n".join(
+        [
+            "# Changelog",
+            "<!--next-version-placeholder-->",
+            "## v1.0.0",
+            "### Feature",
+            "* Just a start",
+        ]
+    )
+    mocked_read_text = mocker.patch(
+        "semantic_release.vcs_helpers.Path.read_text", return_value=initial_content
+    )
+    mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
+
+    content_to_add_str = "\n".join(
+        [
+            "### Fix",
+            "* Fix a bug",
+            "### Feature",
+            "* Add something awesome",
+        ]
+    )
+    update_changelog_file("2.0.0", content_to_add_str)
+
+    mock_git.add.assert_called_once_with("CHANGELOG.md")
+    mocked_read_text.assert_called_once()
+    expected_content_str = "\n".join(
+        [
+            "# Changelog",
+            "<!--next-version-placeholder-->",
+            "## v2.0.0",
+            "### Fix",
+            "* Fix a bug",
+            "### Feature",
+            "* Add something awesome",
+            "## v1.0.0",
+            "### Feature",
+            "* Just a start",
+        ]
+    )
+    mocked_write_text.assert_called_once_with(expected_content_str)

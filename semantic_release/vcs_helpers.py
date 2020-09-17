@@ -156,18 +156,18 @@ def commit_new_version(version: str):
 
 @check_repo
 @LoggedFunction(logger)
-def update_changelog_file(new_version, content_to_add):
+def update_changelog_file(new_version: str, content_to_add: str):
     changelog_file = config.get("changelog_file")
-    changelog_header = config.get("changelog_header")
-    git_path = Path(os.getcwd(), changelog_file).relative_to(repo.working_dir)
+    changelog_placeholder = config.get("changelog_placeholder")
+    git_path = Path(os.getcwd(), changelog_file)
     original_content = git_path.read_text()
 
     updated_content = original_content.replace(
-        changelog_header,
-        "\n\n".join([changelog_header, f"## v{new_version}", content_to_add, ""]),
+        changelog_placeholder,
+        "\n".join([changelog_placeholder, f"## v{new_version}", content_to_add]),
     )
     git_path.write_text(updated_content)
-    repo.git.add(str(git_path))
+    repo.git.add(str(git_path.relative_to(repo.working_dir)))
 
 
 @check_repo
