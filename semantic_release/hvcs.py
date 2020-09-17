@@ -393,7 +393,7 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
 
 def upload_to_release(owner: str, repository: str, version: str, path: str) -> bool:
     """
-    Posts the changelog to the current hvcs release API
+    Upload distributions to the current hvcs release API
 
     :param owner: The owner of the repository
     :param repository: The repository name
