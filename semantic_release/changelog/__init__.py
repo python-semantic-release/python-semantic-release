@@ -11,11 +11,18 @@ logger = logging.getLogger(__name__)
 
 @LoggedFunction(logger)
 def markdown_changelog(
-    version: str, changelog: dict, header: bool = False, previous_version: str = None
+    owner: str,
+    repo_name: str,
+    version: str,
+    changelog: dict,
+    header: bool = False,
+    previous_version: str = None,
 ) -> str:
     """
     Generate a markdown version of the changelog.
 
+    :param owner: The repo owner.
+    :param repo_name: The repo name.
     :param version: A string with the version number.
     :param previous_version: A string with the last version number, to
         use for the comparison URL. If omitted, the URL will not be included.
@@ -31,6 +38,8 @@ def markdown_changelog(
             component_output.strip()
             for component_output in (
                 component(
+                    owner=owner,
+                    repo_name=repo_name,
                     version=version,
                     previous_version=previous_version,
                     changelog=changelog,

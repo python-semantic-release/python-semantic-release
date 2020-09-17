@@ -571,7 +571,12 @@ def test_publish_giterror_when_posting(mocker):
     mock_check_token.assert_called_once_with()
     mock_generate.assert_called_once_with("current")
     mock_markdown.assert_called_once_with(
-        "new", "super changelog", header=False, previous_version="current"
+        "owner",
+        "name",
+        "new",
+        "super changelog",
+        header=False,
+        previous_version="current",
     )
     mock_post.assert_called_once_with("owner", "name", "new", "super md changelog")
 
@@ -618,13 +623,17 @@ def test_changelog_noop(mocker):
     mock_markdown_changelog = mocker.patch(
         "semantic_release.cli.markdown_changelog", return_value="super changelog"
     )
+    mocker.patch(
+        "semantic_release.cli.get_repository_owner_and_name",
+        return_value=("owner", "name"),
+    )
 
     changelog(noop=True, unreleased=False)
 
     mock_previous_version.assert_called_once_with("current")
     mock_generate_changelog.assert_called_once_with("previous", "current")
     mock_markdown_changelog.assert_called_once_with(
-        "current", "super changelog", header=False
+        "owner", "name", "current", "super changelog", header=False
     )
 
 
@@ -642,13 +651,17 @@ def test_changelog_post_unreleased_no_token(mocker):
     mock_check_token = mocker.patch(
         "semantic_release.cli.check_token", return_value=False
     )
+    mocker.patch(
+        "semantic_release.cli.get_repository_owner_and_name",
+        return_value=("owner", "name"),
+    )
 
     changelog(unreleased=True, post=True)
 
     mock_previous_version.assert_called_once_with("current")
     mock_generate_changelog.assert_called_once_with("current", None)
     mock_markdown_changelog.assert_called_once_with(
-        "current", "super changelog", header=False
+        "owner", "name", "current", "super changelog", header=False
     )
     mock_check_token.assert_called_once_with()
 
@@ -677,7 +690,9 @@ def test_changelog_post_complete(mocker):
 
     mock_previous_version.assert_called_once_with("current")
     mock_generate_changelog.assert_called_once_with("current", None)
-    mock_markdown_changelog.assert_any_call("current", "super changelog", header=False)
+    mock_markdown_changelog.assert_any_call(
+        "owner", "name", "current", "super changelog", header=False
+    )
     mock_check_token.assert_called_once_with()
     mock_get_owner_name.assert_called_once_with()
     mock_post_changelog.assert_called_once_with(
