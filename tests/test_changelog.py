@@ -26,20 +26,20 @@ def test_markdown_changelog():
     ) == (
         # Expected output with the default configuration
         "### Feature\n"
-        "* Add non-breaking super-feature ([145](https://github.com/owner/repo_name/"
+        "* Add non-breaking super-feature ([`145`](https://github.com/owner/repo_name/"
         "commit/145))\n"
-        "* Add super-feature ([134](https://github.com/owner/repo_name/commit/134))\n"
+        "* Add super-feature ([`134`](https://github.com/owner/repo_name/commit/134))\n"
         "\n"
         "### Fix\n"
-        "* Fix bug in super-feature ([234](https://github.com/owner/repo_name/"
+        "* Fix bug in super-feature ([`234`](https://github.com/owner/repo_name/"
         "commit/234))\n"
         "\n"
         "### Breaking\n"
         "* Uses super-feature as default instead of dull-feature."
-        " ([21](https://github.com/owner/repo_name/commit/21))\n"
+        " ([`21`](https://github.com/owner/repo_name/commit/21))\n"
         "\n"
         "### Documentation\n"
-        "* Document super-feature ([0](https://github.com/owner/repo_name/commit/0))"
+        "* Document super-feature ([`0`](https://github.com/owner/repo_name/commit/0))"
     )
 
 
@@ -55,9 +55,9 @@ def test_changelog_table():
     ) == (
         "| Type | Change |\n"
         "| --- | --- |\n"
-        "| Feature | commit1 ([sha1](https://github.com/owner/repo_name/commit/sha1))"
-        "<br>commit2 ([sha2](https://github.com/owner/repo_name/commit/sha2)) |\n"
-        "| Fix | commit3 ([sha3](https://github.com/owner/repo_name/commit/sha3)) |\n"
+        "| Feature | commit1 ([`sha1`](https://github.com/owner/repo_name/commit/sha1))"
+        "<br>commit2 ([`sha2`](https://github.com/owner/repo_name/commit/sha2)) |\n"
+        "| Fix | commit3 ([`sha3`](https://github.com/owner/repo_name/commit/sha3)) |\n"
     )
 
 

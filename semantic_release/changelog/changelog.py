@@ -21,7 +21,7 @@ def get_hash_link(owner: str, repo_name: str, hash_: str) -> str:
         else f"https://github.com/{owner}/{repo_name}/commit/{hash_}"
     )
     short_hash = hash_[:7]
-    return f"[{short_hash}]({url})"
+    return f"[`{short_hash}`]({url})"
 
 
 def changelog_headers(
