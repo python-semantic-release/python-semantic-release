@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from functools import wraps
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Optional, Tuple
 from urllib.parse import urlsplit
 
@@ -152,6 +152,22 @@ def commit_new_version(version: str):
         repo.git.add(str(git_path))
 
     return repo.git.commit(m=message, author=commit_author)
+
+
+@check_repo
+@LoggedFunction(logger)
+def update_changelog_file(new_version, content_to_add):
+    changelog_file = config.get("changelog_file")
+    changelog_header = config.get("changelog_header")
+    git_path = Path(os.getcwd(), changelog_file).relative_to(repo.working_dir)
+    original_content = git_path.read_text()
+
+    updated_content = original_content.replace(
+        changelog_header,
+        "\n\n".join([changelog_header, f"## v{new_version}", content_to_add, ""]),
+    )
+    git_path.write_text(updated_content)
+    repo.git.add(str(git_path))
 
 
 @check_repo

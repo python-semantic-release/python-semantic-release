@@ -37,6 +37,7 @@ from .vcs_helpers import (
     get_repository_owner_and_name,
     push_new_version,
     tag_new_version,
+    update_changelog_file,
 )
 
 logger = logging.getLogger("semantic_release")
@@ -107,6 +108,21 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
     level_bump = evaluate_version_bump(current_version, force_level)
     new_version = get_new_version(current_version, level_bump)
 
+    if not should_bump_version(
+        current_version=current_version, new_version=new_version, retry=retry, noop=noop
+    ):
+        return False
+
+    if retry:
+        # No need to make changes to the repo, we're just retrying.
+        return True
+
+    # Bump the version
+    bump_version(new_version, level_bump)
+    return True
+
+
+def should_bump_version(*, current_version, new_version, retry=False, noop=False):
     if new_version == current_version and not retry:
         logger.info("No release will be made.")
         return False
@@ -126,11 +142,10 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
             return False
         logger.info("The build was a success, continuing the release")
 
-    if retry:
-        # No need to make changes to the repo, we're just retrying.
-        return True
+    return True
 
-    # Bump the version
+
+def bump_version(new_version, level_bump):
     set_new_version(new_version)
     if config.get(
         "commit_version_number",
@@ -140,7 +155,6 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
     tag_new_version(new_version)
 
     logger.info(f"Bumping with a {level_bump} version to {new_version}")
-    return True
 
 
 def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
@@ -191,6 +205,7 @@ def publish(**kwargs):
         logger.info("Retry is on")
         # The "new" version will actually be the current version, and the
         # "current" version will be the previous version.
+        level_bump = None
         new_version = current_version
         current_version = get_previous_version(current_version)
     else:
@@ -205,7 +220,20 @@ def publish(**kwargs):
     ci_checks.check(branch)
     checkout(branch)
 
-    if version(**kwargs):  # Bump to the new version if needed
+    if should_bump_version(
+        current_version=current_version,
+        new_version=new_version,
+        retry=retry,
+        noop=kwargs.get("noop"),
+    ):
+        log = generate_changelog(current_version, new_version)
+        changelog_md = markdown_changelog(
+            new_version, log, header=False, previous_version=current_version
+        )
+
+        if not retry:
+            update_changelog_file(new_version, changelog_md)
+            bump_version(new_version, level_bump)
         # A new version was released
         logger.info("Pushing new version")
         push_new_version(
@@ -242,15 +270,7 @@ def publish(**kwargs):
             # Update changelog on HVCS
             logger.info("Posting changelog to HVCS")
             try:
-                log = generate_changelog(current_version, new_version)
-                post_changelog(
-                    owner,
-                    name,
-                    new_version,
-                    markdown_changelog(
-                        new_version, log, header=False, previous_version=current_version
-                    ),
-                )
+                post_changelog(owner, name, new_version, changelog_md)
             except GitError:
                 logger.error("Posting changelog failed")
         else:
