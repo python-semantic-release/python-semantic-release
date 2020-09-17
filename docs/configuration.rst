@@ -282,7 +282,7 @@ You can should use ``**kwargs`` to capture any arguments you don't need.
 ------------------
 The name of the file where the changelog is kept, relative to the root of the repo.
 
-If this file doesn't exist, it will be created automatically.
+If this file doesn't exist, it will be created.
 
 Default: ``CHANGELOG.md``.
 
@@ -291,7 +291,7 @@ Default: ``CHANGELOG.md``.
 A placeholder used to inject the changelog of the current release in the
 ``changelog_file``.
 
-If the placeholder isn't presetn in the file, a warning will be logged and nothing
+If the placeholder isn't present in the file, a warning will be logged and nothing
 will be updated.
 
 Default: ``<!--next-version-placeholder-->``.
