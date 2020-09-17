@@ -156,15 +156,38 @@ def commit_new_version(version: str):
 
 @check_repo
 @LoggedFunction(logger)
-def update_changelog_file(new_version: str, content_to_add: str):
+def update_changelog_file(version: str, content_to_add: str):
+    """
+    Update changelog file with changelog for the release.
+
+    :param version: The release version number, as a string.
+    :param content_to_add: The release notes for the version.
+    """
     changelog_file = config.get("changelog_file")
     changelog_placeholder = config.get("changelog_placeholder")
     git_path = Path(os.getcwd(), changelog_file)
-    original_content = git_path.read_text()
+    if not git_path.exists():
+        original_content = f"# Changelog\n\n{changelog_placeholder}\n"
+        logger.warning(f"Changelog file not found: {git_path} - creating it.")
+    else:
+        original_content = git_path.read_text()
 
+    if changelog_placeholder not in original_content:
+        logger.warning(
+            f"Placeholder '{changelog_placeholder}' not found "
+            f"in changelog file {git_path} - skipping change."
+        )
+        return
     updated_content = original_content.replace(
         changelog_placeholder,
-        "\n".join([changelog_placeholder, f"## v{new_version}", content_to_add]),
+        "\n".join(
+            [
+                changelog_placeholder,
+                "",
+                f"## v{version}",
+                content_to_add,
+            ]
+        ),
     )
     git_path.write_text(updated_content)
     repo.git.add(str(git_path.relative_to(repo.working_dir)))
