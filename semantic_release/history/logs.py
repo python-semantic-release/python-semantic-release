@@ -132,6 +132,5 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
         except UnknownCommitMessageStyleError as err:
             logger.debug(f"Ignoring UnknownCommitMessageStyleError: {err}")
-            pass
 
     return changes

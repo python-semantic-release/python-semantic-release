@@ -232,7 +232,7 @@ def publish(**kwargs):
         retry=retry,
         noop=kwargs.get("noop"),
     ):
-        log = generate_changelog(current_version, new_version)
+        log = generate_changelog(current_version)
         changelog_md = markdown_changelog(
             new_version, log, header=False, previous_version=current_version
         )

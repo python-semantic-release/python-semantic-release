@@ -178,6 +178,7 @@ def update_changelog_file(version: str, content_to_add: str):
             f"in changelog file {git_path} - skipping change."
         )
         return
+
     updated_content = original_content.replace(
         changelog_placeholder,
         "\n".join(
