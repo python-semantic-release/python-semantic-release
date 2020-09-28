@@ -1,4 +1,4 @@
-import os
+from datetime import date
 
 import git
 import pytest
@@ -9,7 +9,6 @@ from semantic_release.vcs_helpers import (
     check_repo,
     checkout,
     commit_new_version,
-    config,
     get_commit_log,
     get_current_head_hash,
     get_last_version,
@@ -17,8 +16,8 @@ from semantic_release.vcs_helpers import (
     get_version_from_tag,
     push_new_version,
     tag_new_version,
+    update_changelog_file,
 )
-
 from . import mock, wrapped_config_get
 
 
@@ -283,3 +282,75 @@ def test_get_version_from_tag(tag_name, expected_version):
         ]
     )
     assert expected_version == get_version_from_tag(tag_name)
+
+
+def test_update_changelog_file_ok(mock_git, mocker):
+    initial_content = (
+        "# Changelog\n"
+        "\n"
+        "<!--next-version-placeholder-->\n"
+        "\n"
+        "## v1.0.0 (2015-08-04)\n"
+        "### Feature\n"
+        "* Just a start"
+    )
+    mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=True)
+    mocked_read_text = mocker.patch(
+        "semantic_release.vcs_helpers.Path.read_text", return_value=initial_content
+    )
+    mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
+
+    content_to_add_str = "### Fix\n* Fix a bug\n### Feature\n* Add something awesome"
+    update_changelog_file("2.0.0", content_to_add_str)
+
+    mock_git.add.assert_called_once_with("CHANGELOG.md")
+    mocked_read_text.assert_called_once()
+    expected_content_str = (
+        "# Changelog\n"
+        "\n"
+        "<!--next-version-placeholder-->\n"
+        "\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        "### Fix\n"
+        "* Fix a bug\n"
+        "### Feature\n"
+        "* Add something awesome\n"
+        "\n"
+        "## v1.0.0 (2015-08-04)\n"
+        "### Feature\n"
+        "* Just a start"
+    )
+    mocked_write_text.assert_called_once_with(expected_content_str)
+
+
+def test_update_changelog_file_missing_file(mock_git, mocker):
+    mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=False)
+    mocked_read_text = mocker.patch("semantic_release.vcs_helpers.Path.read_text")
+    mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
+
+    update_changelog_file("2.0.0", "* Some new content")
+
+    mock_git.add.assert_called_once_with("CHANGELOG.md")
+    mocked_read_text.assert_not_called()
+    mocked_write_text.assert_called_once_with(
+        "# Changelog\n"
+        "\n"
+        "<!--next-version-placeholder-->\n"
+        "\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        "* Some new content\n"
+    )
+
+
+def test_update_changelog_file_missing_placeholder(mock_git, mocker):
+    mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=True)
+    mocked_read_text = mocker.patch(
+        "semantic_release.vcs_helpers.Path.read_text", return_value="# Changelog"
+    )
+    mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
+
+    update_changelog_file("2.0.0", "")
+
+    mock_git.add.assert_not_called()
+    mocked_read_text.assert_called_once()
+    mocked_write_text.assert_not_called()

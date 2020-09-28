@@ -32,6 +32,7 @@ This will not push anything to any remote. All changes are local.
 
 Publish will do a sequence of things:
 
+#. Update changelog file.
 #. Run :ref:`cmd-version`.
 #. Push changes to git.
 #. Run :ref:`config-build_command` and upload the created files to PyPI.

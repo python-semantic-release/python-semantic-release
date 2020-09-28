@@ -7,6 +7,8 @@ from semantic_release.changelog.compare import compare_url, get_github_compare_u
 
 def test_markdown_changelog():
     assert markdown_changelog(
+        "owner",
+        "repo_name",
         "0",
         {
             "refactor": [("12", "Refactor super-feature")],
@@ -24,22 +26,27 @@ def test_markdown_changelog():
     ) == (
         # Expected output with the default configuration
         "### Feature\n"
-        "* Add non-breaking super-feature (145)\n"
-        "* Add super-feature (134)\n"
+        "* Add non-breaking super-feature ([`145`](https://github.com/owner/repo_name/"
+        "commit/145))\n"
+        "* Add super-feature ([`134`](https://github.com/owner/repo_name/commit/134))\n"
         "\n"
         "### Fix\n"
-        "* Fix bug in super-feature (234)\n"
+        "* Fix bug in super-feature ([`234`](https://github.com/owner/repo_name/"
+        "commit/234))\n"
         "\n"
         "### Breaking\n"
-        "* Uses super-feature as default instead of dull-feature. (21)\n"
+        "* Uses super-feature as default instead of dull-feature."
+        " ([`21`](https://github.com/owner/repo_name/commit/21))\n"
         "\n"
         "### Documentation\n"
-        "* Document super-feature (0)"
+        "* Document super-feature ([`0`](https://github.com/owner/repo_name/commit/0))"
     )
 
 
 def test_changelog_table():
     assert changelog_table(
+        "owner",
+        "repo_name",
         {
             "feature": [("sha1", "commit1"), ("sha2", "commit2")],
             "fix": [("sha3", "commit3")],
@@ -48,13 +55,16 @@ def test_changelog_table():
     ) == (
         "| Type | Change |\n"
         "| --- | --- |\n"
-        "| Feature | commit1 (sha1)<br>commit2 (sha2) |\n"
-        "| Fix | commit3 (sha3) |\n"
+        "| Feature | commit1 ([`sha1`](https://github.com/owner/repo_name/commit/sha1))"
+        "<br>commit2 ([`sha2`](https://github.com/owner/repo_name/commit/sha2)) |\n"
+        "| Fix | commit3 ([`sha3`](https://github.com/owner/repo_name/commit/sha3)) |\n"
     )
 
 
 def test_should_not_output_heading():
     assert "v1.0.1" not in markdown_changelog(
+        "owner",
+        "repo_name",
         "1.0.1",
         {},
     )
@@ -62,6 +72,8 @@ def test_should_not_output_heading():
 
 def test_should_output_heading():
     assert "## v1.0.1\n" in markdown_changelog(
+        "owner",
+        "repo_name",
         "1.0.1",
         {},
         header=True,
