@@ -5,7 +5,7 @@ import os
 import re
 from datetime import date
 from functools import wraps
-from pathlib import PurePath, Path
+from pathlib import Path, PurePath
 from typing import Optional, Tuple
 from urllib.parse import urlsplit
 
