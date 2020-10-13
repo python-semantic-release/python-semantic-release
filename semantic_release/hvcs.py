@@ -86,6 +86,8 @@ class Github(Base):
     def check_build_status(owner: str, repo: str, ref: str) -> bool:
         """Check build status
 
+        https://docs.github.com/rest/reference/repos#get-the-combined-status-for-a-specific-reference
+
         :param owner: The owner namespace of the repository
         :param repo: The repository name
         :param ref: The sha1 hash of the commit ref
@@ -103,7 +105,7 @@ class Github(Base):
     def create_release(cls, owner: str, repo: str, tag: str, changelog: str) -> bool:
         """Create a new release
 
-        https://developer.github.com/v3/repos/releases/#create-a-release
+        https://docs.github.com/rest/reference/repos#create-a-release
 
         :param owner: The owner namespace of the repository
         :param repo: The repository name
@@ -132,7 +134,7 @@ class Github(Base):
     def get_release(cls, owner: str, repo: str, tag: str) -> int:
         """Get a release by its tag name
 
-        https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
+        https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
 
         :param owner: The owner namespace of the repository
         :param repo: The repository name
@@ -153,7 +155,7 @@ class Github(Base):
     def edit_release(cls, owner: str, repo: str, id: int, changelog: str) -> bool:
         """Edit a release with updated change notes
 
-        https://developer.github.com/v3/repos/releases/#edit-a-release
+        https://docs.github.com/rest/reference/repos#update-a-release
 
         :param owner: The owner namespace of the repository
         :param repo: The repository name
@@ -204,7 +206,7 @@ class Github(Base):
     ) -> bool:
         """Upload an asset to an existing release
 
-        https://developer.github.com/v3/repos/releases/#upload-a-release-asset
+        https://docs.github.com/rest/reference/repos#upload-a-release-asset
 
         :param owner: The owner namespace of the repository
         :param repo: The repository name
