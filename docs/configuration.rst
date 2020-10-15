@@ -53,7 +53,7 @@ specify multiple versions:
 
 ``version_pattern``
 -------------------
-Similar to `config-version_variable`, but allows the version number to be 
+Similar to :ref:`config-version_variable`, but allows the version number to be
 identified using an arbitrary regular expression::
 
     README.rst:VERSION (\d+\.\d+\.\d+)
@@ -70,7 +70,7 @@ written as::
 
     README.rst:VERSION {version}
 
-As with `config-version_variable`, it is possible to specify multiple version 
+As with :ref:`config-version_variable`, it is possible to specify multiple version
 patterns in ``pyproject.toml``.
 
 .. _config-version_source:
@@ -80,9 +80,9 @@ patterns in ``pyproject.toml``.
 The way we get and set the new version. Can be `commit` or `tag`.
 
 - If set to `tag`, will get the current version from the latest tag matching ``vX.Y.Z``.
-  This won't change the source defined in ``version_variable``.
+  This won't change the source defined in :ref:`config-version_variable`.
 - If set to `commit`, will get the current version from the source defined in
-  ``version_variable``, edit the file and commit it.
+  :ref:`config-version_variable`, edit the file and commit it.
 
 Default: `commit`
 
@@ -171,7 +171,7 @@ Commits
 -------------------------
 Whether or not to commit changes when bumping version.
 
-Default: True if ``version_source`` is `tag`, False if ``version_source`` is `commit`
+Default: True if :ref:`config-version_source` is `tag`, False if :ref:`config-version_source` is `commit`
 
 .. _config-commit_subject:
 
@@ -278,6 +278,8 @@ take any of the following values as keyword arguments:
 
 You can should use ``**kwargs`` to capture any arguments you don't need.
 
+.. _config-changelog_file:
+
 ``changelog_file``
 ------------------
 The name of the file where the changelog is kept, relative to the root of the repo.
@@ -288,8 +290,7 @@ Default: ``CHANGELOG.md``.
 
 ``changelog_placeholder``
 -------------------------
-A placeholder used to inject the changelog of the current release in the
-``changelog_file``.
+A placeholder used to inject the changelog of the current release in the :ref:`config-changelog_file`.
 
 If the placeholder isn't present in the file, a warning will be logged and nothing
 will be updated.
