@@ -297,6 +297,12 @@ will be updated.
 
 Default: ``<!--next-version-placeholder-->``.
 
+``changelog_capitalize``
+-------------------------
+If set to false commit messages will not be automatically capitalized when generating the changelog.
+
+Default: ``True``.
+
 Distributions
 =============
 
