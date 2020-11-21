@@ -4,6 +4,7 @@ import pytest
 from semantic_release.history.logs import generate_changelog
 
 from . import *
+from .. import wrapped_config_get
 
 
 def test_should_generate_necessary_sections():
@@ -74,10 +75,20 @@ def test_should_get_multiple_breaking_descriptions():
         assert changelog["breaking"][1][1] == "Breaking change 2"
 
 
-def test_messages_are_capitalized():
+@mock.patch(
+    "semantic_release.history.logs.get_commit_log",
+    lambda *a, **k: [("23", "fix(x): abCD")],
+)
+@pytest.mark.parametrize(
+    "config_setting,expected_description",
+    [
+        (True, "AbCD"),
+        (False, "abCD"),
+    ],
+)
+def test_message_capitalization_is_configurable(config_setting, expected_description):
     with mock.patch(
-        "semantic_release.history.logs.get_commit_log",
-        lambda *a, **k: [("23", "fix(x): abCD")],
+        "semantic_release.history.config.get", wrapped_config_get(changelog_capitalize=config_setting)
     ):
         changelog = generate_changelog("0.0.0")
-        assert changelog["fix"][0][1] == "AbCD"
+        assert changelog["fix"][0][1] == expected_description

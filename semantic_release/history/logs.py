@@ -115,12 +115,15 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
                 logger.debug(f"Creating new changelog section for {message.type} ")
                 changes[message.type] = list()
 
-            # Capialize the first letter of the message, leaving others as they were
+            # Capitalize the first letter of the message, leaving others as they were
             # (using str.capitalize() would make the other letters lowercase)
-            capital_message = (
+            formatted_message = (
                 message.descriptions[0][0].upper() + message.descriptions[0][1:]
             )
-            changes[message.type].append((_hash, capital_message))
+            if config.get('changelog_capitalize') is False:
+                formatted_message = message.descriptions[0]
+
+            changes[message.type].append((_hash, formatted_message))
 
             if message.breaking_descriptions:
                 # Copy breaking change descriptions into changelog
