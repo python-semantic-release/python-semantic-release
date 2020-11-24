@@ -120,7 +120,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             formatted_message = (
                 message.descriptions[0][0].upper() + message.descriptions[0][1:]
             )
-            if config.get('changelog_capitalize') is False:
+            if config.get("changelog_capitalize") is False:
                 formatted_message = message.descriptions[0]
 
             changes[message.type].append((_hash, formatted_message))

@@ -3,8 +3,8 @@ import pytest
 
 from semantic_release.history.logs import generate_changelog
 
-from . import *
 from .. import wrapped_config_get
+from . import *
 
 
 def test_should_generate_necessary_sections():
@@ -88,7 +88,8 @@ def test_should_get_multiple_breaking_descriptions():
 )
 def test_message_capitalization_is_configurable(config_setting, expected_description):
     with mock.patch(
-        "semantic_release.history.config.get", wrapped_config_get(changelog_capitalize=config_setting)
+        "semantic_release.history.config.get",
+        wrapped_config_get(changelog_capitalize=config_setting),
     ):
         changelog = generate_changelog("0.0.0")
         assert changelog["fix"][0][1] == expected_description
