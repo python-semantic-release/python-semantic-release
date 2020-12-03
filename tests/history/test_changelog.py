@@ -75,21 +75,74 @@ def test_should_get_multiple_breaking_descriptions():
         assert changelog["breaking"][1][1] == "Breaking change 2"
 
 
-@mock.patch(
-    "semantic_release.history.logs.get_commit_log",
-    lambda *a, **k: [("23", "fix(x): abCD")],
-)
 @pytest.mark.parametrize(
-    "config_setting,expected_description",
+    "commit,commit_type,expected",
     [
-        (True, "AbCD"),
-        (False, "abCD"),
+        (MAJOR, "feature", "**x:** Add super-feature"),
+        (MINOR, "feature", "**x:** Add non-breaking super-feature"),
+        (PATCH, "fix", "**x:** Fix bug in super-feature"),
     ],
 )
-def test_message_capitalization_is_configurable(config_setting, expected_description):
+def test_scope_is_included_in_changelog(commit, commit_type, expected):
     with mock.patch(
-        "semantic_release.history.config.get",
-        wrapped_config_get(changelog_capitalize=config_setting),
+        "semantic_release.history.logs.get_commit_log",
+        lambda *a, **kw: [commit],
     ):
         changelog = generate_changelog("0.0.0")
-        assert changelog["fix"][0][1] == expected_description
+        assert changelog[commit_type][0][1] == expected
+
+@mock.patch(
+    "semantic_release.history.logs.get_commit_log",
+    lambda *a, **k: [("24", "fix: Fix another bug")],
+)
+def test_scope_is_omitted_with_empty_scope():
+    changelog = generate_changelog("0.0.0")
+    assert changelog['fix'][0][1] == "Fix another bug"
+
+
+@mock.patch(
+    "semantic_release.history.config.get",
+    wrapped_config_get(changelog_scope=False)
+)
+@pytest.mark.parametrize(
+    "commit,commit_type",
+    [
+        (MAJOR, "feature"),
+        (MINOR, "feature"),
+        (PATCH, "fix"),
+    ],
+)
+def test_scope_included_in_changelog_configurable(commit, commit_type):
+    with mock.patch(
+        "semantic_release.history.logs.get_commit_log",
+        lambda *a, **kw: [commit],
+    ):
+        changelog = generate_changelog("0.0.0")
+        assert "**x:**" not in changelog[commit_type][0][1]
+
+
+@mock.patch(
+    "semantic_release.history.logs.get_commit_log",
+    lambda *a, **k: [("23", "fix(x): abCD"), ("23", "fix: abCD")],
+)
+@pytest.mark.parametrize(
+    "commit,config_setting,expected_description",
+    [
+        (("23", "fix(x): abCD"), True, "**x:** AbCD"),
+        (("23", "fix(x): abCD"), False, "**x:** abCD"),
+        (("23", "fix: abCD"), True, "AbCD"),
+        (("23", "fix: abCD"), False, "abCD"),
+    ],
+)
+def test_message_capitalization_is_configurable(commit, config_setting, expected_description):
+    with mock.patch(
+        "semantic_release.history.logs.get_commit_log",
+        lambda *a, **kw: [commit],
+    ):
+
+        with mock.patch(
+            "semantic_release.history.config.get",
+            wrapped_config_get(changelog_capitalize=config_setting),
+        ):
+            changelog = generate_changelog("0.0.0")
+            assert changelog["fix"][0][1] == expected_description

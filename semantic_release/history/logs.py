@@ -123,6 +123,13 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             if config.get("changelog_capitalize") is False:
                 formatted_message = message.descriptions[0]
 
+            # By default, feat(x): description shows up in changelog with the
+            # scope bolded, like:
+            #
+            # * **x**: description
+            if config.get("changelog_scope", True) and message.scope:
+                formatted_message = f'**{message.scope}:** {formatted_message}'
+
             changes[message.type].append((_hash, formatted_message))
 
             if message.breaking_descriptions:
