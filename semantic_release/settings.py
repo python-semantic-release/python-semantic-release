@@ -42,6 +42,7 @@ def _config_from_ini(paths):
         "upload_to_pypi",
         "upload_to_release",
         "patch_without_tag",
+        "changelog_capitalize",
     }
 
     # Iterate through the sections so that default values are applied
