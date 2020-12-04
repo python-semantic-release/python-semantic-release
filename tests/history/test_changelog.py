@@ -91,18 +91,18 @@ def test_scope_is_included_in_changelog(commit, commit_type, expected):
         changelog = generate_changelog("0.0.0")
         assert changelog[commit_type][0][1] == expected
 
+
 @mock.patch(
     "semantic_release.history.logs.get_commit_log",
     lambda *a, **k: [("24", "fix: Fix another bug")],
 )
 def test_scope_is_omitted_with_empty_scope():
     changelog = generate_changelog("0.0.0")
-    assert changelog['fix'][0][1] == "Fix another bug"
+    assert changelog["fix"][0][1] == "Fix another bug"
 
 
 @mock.patch(
-    "semantic_release.history.config.get",
-    wrapped_config_get(changelog_scope=False)
+    "semantic_release.history.config.get", wrapped_config_get(changelog_scope=False)
 )
 @pytest.mark.parametrize(
     "commit,commit_type",
@@ -134,7 +134,9 @@ def test_scope_included_in_changelog_configurable(commit, commit_type):
         (("23", "fix: abCD"), False, "abCD"),
     ],
 )
-def test_message_capitalization_is_configurable(commit, config_setting, expected_description):
+def test_message_capitalization_is_configurable(
+    commit, config_setting, expected_description
+):
     with mock.patch(
         "semantic_release.history.logs.get_commit_log",
         lambda *a, **kw: [commit],
