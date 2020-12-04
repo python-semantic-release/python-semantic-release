@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.4.1 (2020-12-04)
+### Fix
+* Add "changelog_capitalize" to flags (#279) ([`37716df`](https://github.com/relekang/python-semantic-release/commit/37716dfa78eb3f848f57a5100d01d93f5aafc0bf))
+
 ## v7.4.0 (2020-11-24)
 ### Feature
 * Add changelog_capitalize configuration ([`7cacca1`](https://github.com/relekang/python-semantic-release/commit/7cacca1eb436a7166ba8faf643b53c42bc32a6a7))
