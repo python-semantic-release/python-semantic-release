@@ -297,6 +297,13 @@ will be updated.
 
 Default: ``<!--next-version-placeholder-->``.
 
+``changelog_scope``
+-------------------------
+If set to false, `**scope:**` (when scope is set for a commit) will not be
+prepended to the description when generating the changelog.
+
+Default: ``True``.
+
 ``changelog_capitalize``
 -------------------------
 If set to false commit messages will not be automatically capitalized when generating the changelog.
