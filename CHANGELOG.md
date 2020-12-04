@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.5.0 (2020-12-04)
+### Feature
+* **logs:** Include scope in changelogs (#281) ([`21c96b6`](https://github.com/relekang/python-semantic-release/commit/21c96b688cc44cc6f45af962ffe6d1f759783f37))
+
 ## v7.4.1 (2020-12-04)
 ### Fix
 * Add "changelog_capitalize" to flags (#279) ([`37716df`](https://github.com/relekang/python-semantic-release/commit/37716dfa78eb3f848f57a5100d01d93f5aafc0bf))
