@@ -1,8 +1,15 @@
 import mock
+import pytest
 
 from semantic_release.changelog import markdown_changelog
-from semantic_release.changelog.changelog import changelog_table, get_changelog_sections
+from semantic_release.changelog.changelog import (
+    changelog_table,
+    get_changelog_sections,
+    add_pr_link,
+)
 from semantic_release.changelog.compare import compare_url, get_github_compare_url
+
+from . import wrapped_config_get
 
 
 def test_markdown_changelog():
@@ -19,8 +26,8 @@ def test_markdown_changelog():
                 ("145", "Add non-breaking super-feature"),
                 ("134", "Add super-feature"),
             ],
-            "fix": [("234", "Fix bug in super-feature")],
-            "documentation": [("0", "Document super-feature")],
+            "fix": [("234", "Fix bug in super-feature (#15)")],
+            "documentation": [("0", "Document super-feature (#189)")],
             "performance": [],
         },
     ) == (
@@ -31,7 +38,8 @@ def test_markdown_changelog():
         "* Add super-feature ([`134`](https://github.com/owner/repo_name/commit/134))\n"
         "\n"
         "### Fix\n"
-        "* Fix bug in super-feature ([`234`](https://github.com/owner/repo_name/"
+        "* Fix bug in super-feature ([#15](https://github.com/owner/repo_name/pull/15))"
+        " ([`234`](https://github.com/owner/repo_name/"
         "commit/234))\n"
         "\n"
         "### Breaking\n"
@@ -39,8 +47,43 @@ def test_markdown_changelog():
         " ([`21`](https://github.com/owner/repo_name/commit/21))\n"
         "\n"
         "### Documentation\n"
-        "* Document super-feature ([`0`](https://github.com/owner/repo_name/commit/0))"
+        "* Document super-feature ([#189](https://github.com/owner/repo_name/pull/189))"
+        " ([`0`](https://github.com/owner/repo_name/commit/0))"
     )
+
+
+def test_markdown_changelog_gitlab():
+    with mock.patch(
+        "semantic_release.changelog.config.get", wrapped_config_get(hvcs="gitlab")
+    ):
+
+        assert markdown_changelog(
+            "owner",
+            "repo_name",
+            "0",
+            {
+                "refactor": [("12", "Refactor super-feature")],
+                "feature": [
+                    ("145", "Add non-breaking super-feature (#1)"),
+                    ("134", "Add super-feature"),
+                ],
+                "documentation": [("0", "Document super-feature (#189)")],
+                "performance": [],
+            },
+        ) == (
+            # Expected output with the default configuration
+            "### Feature\n"
+            "* Add non-breaking super-feature ([#1](https://gitlab.com/owner/"
+            "repo_name/-/merge_requests/1)) ([`145`](https://gitlab.com/owner/"
+            "repo_name/-/commit/145))\n"
+            "* Add super-feature ([`134`](https://gitlab.com/owner/repo_name/-/"
+            "commit/134))\n"
+            "\n"
+            "### Documentation\n"
+            "* Document super-feature ([#189](https://gitlab.com/owner/repo_name/"
+            "-/merge_requests/189)) ([`0`](https://gitlab.com/owner/repo_name/"
+            "-/commit/0))"
+        )
 
 
 def test_changelog_table():
@@ -49,7 +92,7 @@ def test_changelog_table():
         "repo_name",
         {
             "feature": [("sha1", "commit1"), ("sha2", "commit2")],
-            "fix": [("sha3", "commit3")],
+            "fix": [("sha3", "commit3 (#123)")],
         },
         ["section1", "section2"],
     ) == (
@@ -57,7 +100,8 @@ def test_changelog_table():
         "| --- | --- |\n"
         "| Feature | commit1 ([`sha1`](https://github.com/owner/repo_name/commit/sha1))"
         "<br>commit2 ([`sha2`](https://github.com/owner/repo_name/commit/sha2)) |\n"
-        "| Fix | commit3 ([`sha3`](https://github.com/owner/repo_name/commit/sha3)) |\n"
+        "| Fix | commit3 ([#123](https://github.com/owner/repo_name/pull/123))"
+        " ([`sha3`](https://github.com/owner/repo_name/commit/sha3)) |\n"
     )
 
 
@@ -99,6 +143,33 @@ def test_get_changelog_sections():
         )
         == 0
     )
+
+
+@pytest.mark.parametrize(
+    "message,hvcs,expected_output",
+    [
+        (
+            "test (#123)",
+            "github",
+            "test ([#123](https://github.com/owner/name/pull/123))",
+        ),
+        ("test without commit", "github", "test without commit"),
+        ("test (#123) in middle", "github", "test (#123) in middle"),
+        (
+            "test (#123)",
+            "gitlab",
+            "test ([#123](https://gitlab.com/owner/name/-/merge_requests/123))",
+        ),
+        ("test without commit", "gitlab", "test without commit"),
+    ],
+)
+def test_add_pr_link(message, hvcs, expected_output):
+
+    with mock.patch(
+        "semantic_release.changelog.config.get", wrapped_config_get(hvcs=hvcs)
+    ):
+
+        assert add_pr_link("owner", "name", message) == expected_output
 
 
 def test_github_compare_url():
