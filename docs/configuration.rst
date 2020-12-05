@@ -356,6 +356,14 @@ Command to build dists. Build output should be stored in the directory configure
 
 Default: ``python setup.py sdist bdist_wheel``
 
+.. _config-build_dist:
+
+``build_dist``
+-----------------
+Flag for whether to run ``build_command``
+
+Default: ``true``
+
 HVCS
 ====
 

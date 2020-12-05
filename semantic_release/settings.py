@@ -36,6 +36,7 @@ def _config_from_ini(paths):
     parser.read(paths)
 
     flags = {
+        "build_dist",
         "changelog_capitalize",
         "changelog_scope",
         "check_build_status",

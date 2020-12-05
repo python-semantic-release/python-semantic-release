@@ -257,6 +257,7 @@ def publish(**kwargs):
         )
 
         # Get config options for uploads
+        build_dist = config.get("build_dist")
         dist_path = config.get("dist_path")
         remove_dist = config.get("remove_dist")
         upload_pypi = config.get("upload_to_pypi")
@@ -268,7 +269,8 @@ def publish(**kwargs):
             if remove_dist:
                 # Remove old distributions before building
                 remove_dists(dist_path)
-            build_dists()
+            if build_dist:
+                build_dists()
 
         if upload_pypi:
             logger.info("Uploading to PyPI")
