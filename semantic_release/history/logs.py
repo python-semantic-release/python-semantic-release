@@ -127,7 +127,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             # scope bolded, like:
             #
             # * **x**: description
-            if config.get("changelog_scope", True) and message.scope:
+            if config.get("changelog_scope") and message.scope:
                 formatted_message = f"**{message.scope}:** {formatted_message}"
 
             changes[message.type].append((_hash, formatted_message))
