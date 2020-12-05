@@ -297,6 +297,8 @@ will be updated.
 
 Default: ``<!--next-version-placeholder-->``.
 
+.. _config-changelog_scope:
+
 ``changelog_scope``
 -------------------------
 If set to false, `**scope:**` (when scope is set for a commit) will not be
