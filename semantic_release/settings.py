@@ -36,14 +36,14 @@ def _config_from_ini(paths):
     parser.read(paths)
 
     flags = {
+        "changelog_capitalize",
         "changelog_scope",
         "check_build_status",
         "commit_version_number",
+        "patch_without_tag",
         "remove_dist",
         "upload_to_pypi",
         "upload_to_release",
-        "patch_without_tag",
-        "changelog_capitalize",
     }
 
     # Iterate through the sections so that default values are applied
