@@ -343,6 +343,7 @@ def main(**kwargs):
         "commit_message",
         "commit_parser",
         "patch_without_tag",
+        "major_on_zero",
         "upload_to_pypi",
         "version_source",
     ]:

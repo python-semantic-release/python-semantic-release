@@ -86,3 +86,11 @@ def test_should_return_none_without_commits():
 
     with mock.patch("semantic_release.history.config.get", lambda *x: False):
         assert evaluate_version_bump("1.1.0") is None
+
+
+@mock.patch(
+    "semantic_release.history.config.get", wrapped_config_get(major_on_zero=False)
+)
+@mock.patch("semantic_release.history.logs.get_commit_log", lambda *a, **kw: [MAJOR])
+def test_should_minor_without_major_on_zero():
+    assert evaluate_version_bump("0.1.0") == "minor"

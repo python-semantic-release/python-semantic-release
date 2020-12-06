@@ -71,6 +71,14 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         bump = "patch"
         logger.debug(f"Changing bump level to patch based on config patch_without_tag")
 
+    if (
+        not config.get("major_on_zero")
+        and current_version.startswith("0.")
+        and bump == "major"
+    ):
+        bump = "minor"
+        logger.debug("Changing bump level to minor based on config major_on_zero")
+
     return bump
 
 

@@ -36,6 +36,7 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get("minor_tag"), ":sparkles:")
         self.assertEqual(config.get("fix_tag"), ":nut_and_bolt:")
         self.assertFalse(config.get("patch_without_tag"))
+        self.assertTrue(config.get("major_on_zero"))
         self.assertFalse(config.get("check_build_status"))
         self.assertEqual(config.get("hvcs"), "github")
         self.assertEqual(config.get("upload_to_pypi"), True)
