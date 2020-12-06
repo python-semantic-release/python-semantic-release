@@ -1,6 +1,7 @@
 import re
 from typing import Iterable, Optional
 
+from ..hvcs import Github, Gitlab
 from ..settings import config
 
 
@@ -16,9 +17,9 @@ def add_pr_link(owner: str, repo_name: str, message: str) -> str:
     if match:
         pr_number = match.group(1)
         url = (
-            f"https://gitlab.com/{owner}/{repo_name}/-/merge_requests/{pr_number}"
+            f"https://{Gitlab.domain()}/{owner}/{repo_name}/-/merge_requests/{pr_number}"
             if config.get("hvcs") == "gitlab"
-            else f"https://github.com/{owner}/{repo_name}/issues/{pr_number}"
+            else f"https://{Github.domain()}/{owner}/{repo_name}/issues/{pr_number}"
         )
 
         return re.sub(pr_pattern, f" ([#{pr_number}]({url}))", message)
@@ -38,10 +39,11 @@ def get_changelog_sections(changelog: dict, changelog_sections: list) -> Iterabl
 
 
 def get_hash_link(owner: str, repo_name: str, hash_: str) -> str:
+    """Generate the link for commit hash"""
     url = (
-        f"https://gitlab.com/{owner}/{repo_name}/-/commit/{hash_}"
+        f"https://{Gitlab.domain()}/{owner}/{repo_name}/-/commit/{hash_}"
         if config.get("hvcs") == "gitlab"
-        else f"https://github.com/{owner}/{repo_name}/commit/{hash_}"
+        else f"https://{Github.domain()}/{owner}/{repo_name}/commit/{hash_}"
     )
     short_hash = hash_[:7]
     return f"[`{short_hash}`]({url})"
