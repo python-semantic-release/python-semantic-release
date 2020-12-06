@@ -95,6 +95,23 @@ no tag in any commits since the last release.
 
 Default: `false`
 
+``major_on_zero``
+-----------------
+If this is set to `false`, semantic-release will create a new minor release
+instead of major release when current major version is zero.
+
+Quote from `Semantic Versioning Specification`_:
+
+  Major version zero (0.y.z) is for initial development. Anything MAY change at
+  any time. The public API SHOULD NOT be considered stable.
+
+.. _Semantic Versioning Specification: https://semver.org/spec/v2.0.0.html#spec-item-4
+
+If you do not want to bump version to 1.0.0 from 0.y.z automatically, you can
+set this option to `false`.
+
+Default: `true`.
+
 Commit Parsing
 ==============
 
