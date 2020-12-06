@@ -41,6 +41,7 @@ def _config_from_ini(paths):
         "check_build_status",
         "commit_version_number",
         "patch_without_tag",
+        "major_on_zero",
         "remove_dist",
         "upload_to_pypi",
         "upload_to_release",
