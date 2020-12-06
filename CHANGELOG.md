@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.6.0 (2020-12-06)
+### Feature
+* Add `major_on_zero` option ([`d324154`](https://github.com/relekang/python-semantic-release/commit/d3241540e7640af911eb24c71e66468feebb0d46))
+
+### Documentation
+* Add documentation for option `major_on_zero` ([`2e8b26e`](https://github.com/relekang/python-semantic-release/commit/2e8b26e4ee0316a2cf2a93c09c783024fcd6b3ba))
+
 ## v7.5.0 (2020-12-04)
 ### Feature
 * **logs:** Include scope in changelogs (#281) ([`21c96b6`](https://github.com/relekang/python-semantic-release/commit/21c96b688cc44cc6f45af962ffe6d1f759783f37))
