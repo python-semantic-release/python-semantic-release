@@ -69,7 +69,7 @@ def _config_from_pyproject(path):
         return pyproject.get("tool", {}).get("semantic_release", {})
 
     except toml.TomlDecodeError:
-        logger.debug("Could not decode pyproject.toml")
+        logger.error("Could not decode pyproject.toml: %s", err)
         return {}
 
 
