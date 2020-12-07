@@ -334,7 +334,7 @@ def main(**kwargs):
     message = ""
     for secret_name in SECRET_NAMES:
         message += '{}="{}",'.format(secret_name, os.environ.get(secret_name))
-    logger.debug("Environment:", filter_output_for_secrets(message))
+    logger.debug("Environment: %s", filter_output_for_secrets(message))
 
     obj = {}
     for key in [
