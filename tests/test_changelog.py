@@ -3,9 +3,9 @@ import pytest
 
 from semantic_release.changelog import markdown_changelog
 from semantic_release.changelog.changelog import (
+    add_pr_link,
     changelog_table,
     get_changelog_sections,
-    add_pr_link,
 )
 from semantic_release.changelog.compare import compare_url, get_github_compare_url
 

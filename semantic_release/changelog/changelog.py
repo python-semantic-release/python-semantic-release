@@ -1,5 +1,4 @@
 import re
-
 from typing import Iterable, Optional
 
 from ..settings import config
