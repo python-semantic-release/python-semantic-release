@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.7.0 (2020-12-12)
+### Feature
+* **changelog:** Add PR links in markdown ([#282](https://github.com/relekang/python-semantic-release/pull/282)) ([`0448f6c`](https://github.com/relekang/python-semantic-release/commit/0448f6c350bbbf239a81fe13dc5f45761efa7673))
+
 ## v7.6.0 (2020-12-06)
 ### Feature
 * Add `major_on_zero` option ([`d324154`](https://github.com/relekang/python-semantic-release/commit/d3241540e7640af911eb24c71e66468feebb0d46))
