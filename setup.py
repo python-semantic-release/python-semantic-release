@@ -43,6 +43,7 @@ setup(
         "requests>=2.21,<3",
         "wheel",
         "toml~=0.10.0",
+        "tomlkit>=0.7,<1.0",
         "python-gitlab>=1.10,<2",
     ],
     extras_require={
