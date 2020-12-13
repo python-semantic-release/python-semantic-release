@@ -49,6 +49,11 @@ specify multiple versions:
         'docs/conf.py:version',
     ]
 
+When you specify a toml file with a version you must set the *toml-key-path* to
+the version string after the colon like so::
+
+    pyproject.toml:tool.poetry.version
+
 .. _config-version_pattern:
 
 ``version_pattern``
