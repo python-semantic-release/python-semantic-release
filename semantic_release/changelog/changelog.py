@@ -18,7 +18,7 @@ def add_pr_link(owner: str, repo_name: str, message: str) -> str:
         url = (
             f"https://gitlab.com/{owner}/{repo_name}/-/merge_requests/{pr_number}"
             if config.get("hvcs") == "gitlab"
-            else f"https://github.com/{owner}/{repo_name}/pull/{pr_number}"
+            else f"https://github.com/{owner}/{repo_name}/issues/{pr_number}"
         )
 
         return re.sub(pr_pattern, f" ([#{pr_number}]({url}))", message)

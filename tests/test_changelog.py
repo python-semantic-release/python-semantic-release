@@ -38,7 +38,7 @@ def test_markdown_changelog():
         "* Add super-feature ([`134`](https://github.com/owner/repo_name/commit/134))\n"
         "\n"
         "### Fix\n"
-        "* Fix bug in super-feature ([#15](https://github.com/owner/repo_name/pull/15))"
+        "* Fix bug in super-feature ([#15](https://github.com/owner/repo_name/issues/15))"
         " ([`234`](https://github.com/owner/repo_name/"
         "commit/234))\n"
         "\n"
@@ -47,7 +47,7 @@ def test_markdown_changelog():
         " ([`21`](https://github.com/owner/repo_name/commit/21))\n"
         "\n"
         "### Documentation\n"
-        "* Document super-feature ([#189](https://github.com/owner/repo_name/pull/189))"
+        "* Document super-feature ([#189](https://github.com/owner/repo_name/issues/189))"
         " ([`0`](https://github.com/owner/repo_name/commit/0))"
     )
 
@@ -100,7 +100,7 @@ def test_changelog_table():
         "| --- | --- |\n"
         "| Feature | commit1 ([`sha1`](https://github.com/owner/repo_name/commit/sha1))"
         "<br>commit2 ([`sha2`](https://github.com/owner/repo_name/commit/sha2)) |\n"
-        "| Fix | commit3 ([#123](https://github.com/owner/repo_name/pull/123))"
+        "| Fix | commit3 ([#123](https://github.com/owner/repo_name/issues/123))"
         " ([`sha3`](https://github.com/owner/repo_name/commit/sha3)) |\n"
     )
 
@@ -151,7 +151,7 @@ def test_get_changelog_sections():
         (
             "test (#123)",
             "github",
-            "test ([#123](https://github.com/owner/name/pull/123))",
+            "test ([#123](https://github.com/owner/name/issues/123))",
         ),
         ("test without commit", "github", "test without commit"),
         ("test (#123) in middle", "github", "test (#123) in middle"),
