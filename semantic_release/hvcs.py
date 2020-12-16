@@ -253,11 +253,15 @@ class Github(Base):
         """
         url = "https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets"
 
+        content_type = mimetypes.guess_type(file, strict=False)[0]
+        if not content_type:
+            content_type = "application/octet-stream"
+
         response = requests.post(
             url.format(owner=owner, repo=repo, id=release_id),
             params={"name": os.path.basename(file), "label": label},
             headers={
-                "Content-Type": mimetypes.guess_type(file, strict=False)[0],
+                "Content-Type": content_type,
             },
             auth=Github.auth(),
             data=open(file, "rb").read(),
@@ -272,7 +276,7 @@ class Github(Base):
         try:
             response.raise_for_status()
             return True
-        except HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             logger.warning(f"The github file upload {file} has failed: {e}")
             return False
 
