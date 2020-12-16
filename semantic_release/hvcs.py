@@ -268,7 +268,13 @@ class Github(Base):
             )
         )
         logger.debug(response.json())
-        return response.status_code == 201
+
+        try:
+            response.raise_for_status()
+            return True
+        except HTTPError as e:
+            logger.warning(f"The github file upload {file} has failed: {e}")
+            return False
 
     @classmethod
     def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
