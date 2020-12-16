@@ -52,6 +52,15 @@ class PypiTests(TestCase):
             [mock.call("twine upload -u '__token__' -p 'pypi-x'  \"custom-dist/*\"")],
         )
 
+    @mock.patch("semantic_release.pypi.run")
+    @mock.patch.dict("os.environ", {"PYPI_TOKEN": "pypi-x"})
+    def test_upload_with_custom_globs(self, mock_run):
+        upload_to_pypi(glob_patterns=["*.tar.gz", "*.whl"])
+        self.assertEqual(
+            mock_run.call_args_list,
+            [mock.call("twine upload -u '__token__' -p 'pypi-x'  \"dist/*.tar.gz\" \"dist/*.whl\"")],
+        )
+
     @mock.patch.dict("os.environ", {"PYPI_TOKEN": "invalid"})
     def test_raises_error_when_token_invalid(self):
         with self.assertRaises(ImproperConfigurationError):

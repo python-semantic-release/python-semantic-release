@@ -260,7 +260,11 @@ def publish(**kwargs):
         dist_path = config.get("dist_path")
         remove_dist = config.get("remove_dist")
         upload_pypi = config.get("upload_to_pypi")
+        upload_to_pypi_glob_patterns = config.get("upload_to_pypi_glob_patterns")
         upload_release = config.get("upload_to_release")
+
+        if upload_to_pypi_glob_patterns:
+            upload_to_pypi_glob_patterns = upload_to_pypi_glob_patterns.split(",")
 
         if upload_pypi or upload_release:
             # We need to run the command to build wheels for releasing
@@ -276,6 +280,7 @@ def publish(**kwargs):
                 path=dist_path,
                 # If we are retrying, we don't want errors for files that are already on PyPI.
                 skip_existing=retry,
+                glob_patterns=upload_to_pypi_glob_patterns
             )
 
         if check_token():

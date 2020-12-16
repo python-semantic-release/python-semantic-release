@@ -2,6 +2,7 @@
 """
 import logging
 import os
+from typing import List
 
 from invoke import run
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 def upload_to_pypi(
     path: str = "dist",
     skip_existing: bool = False,
+    glob_patterns: List[str] = None
 ):
     """Upload wheels to PyPI with Twine.
 
@@ -27,7 +29,11 @@ def upload_to_pypi(
     :param path: Path to dist folder containing the files to upload.
     :param skip_existing: Continue uploading files if one already exists.
         (Only valid when uploading to PyPI. Other implementations may not support this.)
+    :param glob_patterns: List of glob patterns to include in the upload (["*"] by default).
     """
+    if not glob_patterns:
+        glob_patterns = ["*"]
+
     # Attempt to get an API token from environment
     token = os.environ.get("PYPI_TOKEN")
     if not token:
@@ -44,8 +50,10 @@ def upload_to_pypi(
         username = "__token__"
         password = token
 
+    dist = " ".join(["\"{}/{}\"".format(path, glob_pattern.strip()) for glob_pattern in glob_patterns])
+
     run(
-        "twine upload -u '{}' -p '{}' {} \"{}/*\"".format(
-            username, password, "--skip-existing" if skip_existing else "", path
+        "twine upload -u '{}' -p '{}' {} {}".format(
+            username, password, "--skip-existing" if skip_existing else "", dist
         )
     )

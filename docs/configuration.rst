@@ -339,6 +339,14 @@ Distributions
 If set to false the pypi uploading will be disabled.
 See :ref:`env-pypi_token` which must also be set for this to work.
 
+.. _config-upload_to_pypi_glob_patterns:
+
+``upload_to_pypi_glob_patterns``
+------------------
+A comma `,` separated list of glob patterns to use when uploading to pypi.
+
+Default: `*`
+
 .. _config-upload_to_release:
 
 ``upload_to_release``
