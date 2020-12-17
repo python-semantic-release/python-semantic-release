@@ -32,7 +32,7 @@ def parse_commit_message(
     parsed = re_parser.match(message)
     if not parsed:
         raise UnknownCommitMessageStyleError(
-            "Unable to parse the given commit message: {0}".format(message)
+            f"Unable to parse the given commit message: {message}"
         )
 
     subject = parsed.group("subject")
@@ -53,7 +53,7 @@ def parse_commit_message(
     else:
         # We did not find any tags in the commit message
         raise UnknownCommitMessageStyleError(
-            "Unable to parse the given commit message: {0}".format(message)
+            f"Unable to parse the given commit message: {message}"
         )
 
     if parsed.group("text"):

@@ -36,15 +36,11 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     changes = []
     commit_count = 0
 
-    for _hash, commit_message in get_commit_log("v{0}".format(current_version)):
+    for _hash, commit_message in get_commit_log(f"v{current_version}"):
         if commit_message.startswith(current_version):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
-            logger.debug(
-                '"{}" is commit for {}, breaking loop'.format(
-                    commit_message, current_version
-                )
-            )
+            logger.debug(f'"{commit_message}" is commit for {current_version}, breaking loop')
             break
 
         commit_count += 1
@@ -97,7 +93,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
     rev = None
     if from_version:
-        rev = "v{0}".format(from_version)
+        rev = f"v{from_version}"
 
     found_the_release = to_version is None
     for _hash, commit_message in get_commit_log(rev):

@@ -15,7 +15,7 @@ class PypiTests(TestCase):
         upload_to_pypi()
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u 'username' -p 'password'  \"dist/*\"")],
+            [mock.call("twine upload -u 'username' -p 'password' \"dist/*\"")],
         )
 
     @mock.patch("semantic_release.pypi.run")
@@ -24,7 +24,7 @@ class PypiTests(TestCase):
         upload_to_pypi()
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u '__token__' -p 'pypi-x'  \"dist/*\"")],
+            [mock.call("twine upload -u '__token__' -p 'pypi-x' \"dist/*\"")],
         )
 
     @mock.patch("semantic_release.pypi.run")
@@ -40,7 +40,7 @@ class PypiTests(TestCase):
         upload_to_pypi()
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u '__token__' -p 'pypi-x'  \"dist/*\"")],
+            [mock.call("twine upload -u '__token__' -p 'pypi-x' \"dist/*\"")],
         )
 
     @mock.patch("semantic_release.pypi.run")
@@ -49,7 +49,7 @@ class PypiTests(TestCase):
         upload_to_pypi(path="custom-dist")
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u '__token__' -p 'pypi-x'  \"custom-dist/*\"")],
+            [mock.call("twine upload -u '__token__' -p 'pypi-x' \"custom-dist/*\"")],
         )
 
     @mock.patch("semantic_release.pypi.run")
@@ -60,7 +60,7 @@ class PypiTests(TestCase):
             mock_run.call_args_list,
             [
                 mock.call(
-                    "twine upload -u '__token__' -p 'pypi-x'  \"dist/*.tar.gz\" \"dist/*.whl\""
+                    "twine upload -u '__token__' -p 'pypi-x' \"dist/*.tar.gz\" \"dist/*.whl\""
                 )
             ],
         )

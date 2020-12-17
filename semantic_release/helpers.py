@@ -40,11 +40,7 @@ class LoggedFunction:
 
             # Log result
             if result is not None:
-                self.logger.debug(
-                    "{function} -> {result}".format(
-                        function=func.__name__, result=result
-                    )
-                )
+                self.logger.debug(f"{func.__name__} -> {result}")
             return result
 
         return logged_func

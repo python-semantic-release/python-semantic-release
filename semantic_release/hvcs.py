@@ -129,10 +129,8 @@ class Github(Base):
 
         :return: Was the build status success?
         """
-        url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
-        response = requests.get(
-            url.format(domain=Github.API_URL, owner=owner, repo=repo, ref=ref)
-        )
+        url = f"{Github.API_URL}/repos/{owner}/{repo}/commits/{ref}/status"
+        response = requests.get(url)
         return response.json()["state"] == "success"
 
     @classmethod
@@ -251,10 +249,10 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = "https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets"
+        url = f"https://uploads.github.com/repos/{owner}/{repo}/releases/{release_id}/assets"
 
         response = requests.post(
-            url.format(owner=owner, repo=repo, id=release_id),
+            url,
             params={"name": os.path.basename(file), "label": label},
             headers={
                 "Content-Type": mimetypes.guess_type(file, strict=False)[0],
@@ -263,9 +261,7 @@ class Github(Base):
             data=open(file, "rb").read(),
         )
         logger.debug(
-            "Asset upload completed, url: {}, status code: {}".format(
-                response.url, response.status_code
-            )
+            f"Asset upload completed, url: {response.url}, status code: {response.status_code}"
         )
         logger.debug(response.json())
         return response.status_code == 201
@@ -338,14 +334,12 @@ class Gitlab(Base):
             if job["status"] not in ["success", "skipped"]:
                 if job["status"] == "pending":
                     logger.debug(
-                        "check_build_status: job {} is still in pending status".format(
-                            job["name"]
-                        )
+                        f"check_build_status: job {job['name']} is still in pending status"
                     )
                     return False
                 elif job["status"] == "failed" and not job["allow_failure"]:
                     logger.debug(
-                        "check_build_status: job {} failed".format(job["name"])
+                        f"check_build_status: job {job['name']} failed"
                     )
                     return False
         return True
@@ -372,12 +366,12 @@ class Gitlab(Base):
             tag.set_release_description(changelog)
         except gitlab.exceptions.GitlabGetError:
             logger.debug(
-                "Tag {} was not found for project {}".format(ref, owner + "/" + repo)
+                f"Tag {ref} was not found for project {owner}/{repo}"
             )
             return False
         except gitlab.exceptions.GitlabUpdateError:
             logger.debug(
-                "Failed to update tag {} for project {}".format(ref, owner + "/" + repo)
+                f"Failed to update tag {ref} for project {owner}/{repo}"
             )
             return False
 
@@ -406,7 +400,7 @@ def check_build_status(owner: str, repository: str, ref: str) -> bool:
     :param ref: Commit or branch reference
     :return: A boolean with the build status
     """
-    logger.debug("check_build_status")
+    logger.debug(f"Checking build status for {owner}/{repository}#{ref}")
     return get_hvcs().check_build_status(owner, repository, ref)
 
 
@@ -421,9 +415,7 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     :return: a tuple with success status and payload from hvcs
     """
     logger.debug(
-        "post_changelog(owner={}, repository={}, version={})".format(
-            owner, repository, version
-        )
+        f"Posting release changelog for {owner}/{repository} {version}"
     )
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
 

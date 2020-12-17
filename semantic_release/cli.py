@@ -100,7 +100,7 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
     # Get the current version number
     try:
         current_version = get_current_version()
-        logger.info("Current version: {0}".format(current_version))
+        logger.info(f"Current version: {current_version}")
     except GitError as e:
         logger.error(str(e))
         return False
@@ -312,7 +312,7 @@ def filter_output_for_secrets(message):
     for secret_name in SECRET_NAMES:
         secret = os.environ.get(secret_name)
         if secret != "" and secret is not None:
-            output = output.replace(secret, "${}".format(secret_name))
+            output = output.replace(secret, f"${secret_name}")
 
     return output
 
@@ -335,11 +335,11 @@ def entry():
 @click.group()
 @common_options
 def main(**kwargs):
-    logger.debug("Main args:", kwargs)
+    logger.debug(f"Main args: {kwargs}")
     message = ""
     for secret_name in SECRET_NAMES:
-        message += '{}="{}",'.format(secret_name, os.environ.get(secret_name))
-    logger.debug("Environment:", filter_output_for_secrets(message))
+        message += f'{secret_name}="{os.environ.get(secret_name)}",'
+    logger.debug(f"Environment: {filter_output_for_secrets(message)}")
 
     obj = {}
     for key in [
@@ -353,7 +353,7 @@ def main(**kwargs):
         "version_source",
     ]:
         obj[key] = config.get(key)
-    logger.debug("Main config:", obj)
+    logger.debug(f"Main config: {obj}")
 
 
 @main.command(name="publish", help=publish.__doc__)

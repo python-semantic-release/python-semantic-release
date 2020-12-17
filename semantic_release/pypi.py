@@ -52,8 +52,8 @@ def upload_to_pypi(
         ['"{}/{}"'.format(path, glob_pattern.strip()) for glob_pattern in glob_patterns]
     )
 
+    skip_existing_param = " --skip-existing" if skip_existing else ""
+
     run(
-        "twine upload -u '{}' -p '{}' {} {}".format(
-            username, password, "--skip-existing" if skip_existing else "", dist
-        )
+        f"twine upload -u '{username}' -p '{password}'{skip_existing_param} {dist}"
     )

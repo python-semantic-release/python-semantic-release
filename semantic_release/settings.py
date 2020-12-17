@@ -90,7 +90,7 @@ def current_commit_parser() -> Callable:
         # The final part is the name of the parse function
         return getattr(importlib.import_module(module), parts[-1])
     except (ImportError, AttributeError) as error:
-        raise ImproperConfigurationError('Unable to import parser "{}"'.format(error))
+        raise ImproperConfigurationError(f'Unable to import parser "{error}"')
 
 
 def current_changelog_components() -> List[Callable]:

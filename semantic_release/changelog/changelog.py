@@ -54,7 +54,7 @@ def changelog_headers(
 
     for section in get_changelog_sections(changelog, changelog_sections):
         # Add a header for this section
-        output += "\n### {0}\n".format(section.capitalize())
+        output += f"\n### {section.capitalize()}\n"
 
         # Add each commit from the section in an unordered list
         for item in changelog[section]:
