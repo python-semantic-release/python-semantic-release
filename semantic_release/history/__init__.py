@@ -45,7 +45,7 @@ class VersionPattern:
         variable name.
         """
         path, variable = config_str.split(":", 1)
-        pattern = r'{0} *[:=] *["\']{1}["\']'.format(variable, cls.version_regex)
+        pattern = rf'{variable} *[:=] *["\']{cls.version_regex}["\']'
         return cls(path, pattern)
 
     @classmethod
@@ -175,7 +175,7 @@ def get_new_version(current_version: str, level_bump: str) -> str:
     if not level_bump:
         logger.debug("No bump requested, returning input version")
         return current_version
-    return getattr(semver, "bump_{0}".format(level_bump))(current_version)
+    return getattr(semver, f"bump_{level_bump}")(current_version)
 
 
 @LoggedFunction(logger)
@@ -188,19 +188,19 @@ def get_previous_version(version: str) -> Optional[str]:
     """
     found_version = False
     for commit_hash, commit_message in get_commit_log():
-        logger.debug("Checking commit {}".format(commit_hash))
+        logger.debug(f"Checking commit {commit_hash}")
         if version in commit_message:
             found_version = True
-            logger.debug('Found version in commit "{}"'.format(commit_message))
+            logger.debug(f'Found version in commit "{commit_message}"')
             continue
 
         if found_version:
             matches = re.match(r"v?(\d+.\d+.\d+)", commit_message)
             if matches:
-                logger.debug("Version matches regex", commit_message)
+                logger.debug(f"Version matches regex {commit_message}")
                 return matches.group(1).strip()
 
-    return get_last_version([version, "v{}".format(version)])
+    return get_last_version([version, f"v{version}"])
 
 
 @LoggedFunction(logger)
