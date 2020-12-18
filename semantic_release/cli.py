@@ -280,7 +280,7 @@ def publish(**kwargs):
                 path=dist_path,
                 # If we are retrying, we don't want errors for files that are already on PyPI.
                 skip_existing=retry,
-                glob_patterns=upload_to_pypi_glob_patterns
+                glob_patterns=upload_to_pypi_glob_patterns,
             )
 
         if check_token():

@@ -157,43 +157,12 @@ class GithubReleaseTests(TestCase):
     )
 
     @responses.activate
-    @mock.patch("semantic_release.hvcs.Github.token", return_value='super-token')
+    @mock.patch("semantic_release.hvcs.Github.token", return_value="super-token")
     def test_should_post_changelog_using_github_token(self, mock_token):
-        with NamedTemporaryFile('w') as netrc_file:
-            netrc_file.write('machine api.github.com\n')
-            netrc_file.write('login username\n')
-            netrc_file.write('password password\n')
-
-            netrc_file.flush()
-
-            def request_callback(request):
-                payload = json.loads(request.body)
-                self.assertEqual(payload["tag_name"], "v1.0.0")
-                self.assertEqual(payload["body"], "text")
-                self.assertEqual(payload["draft"], False)
-                self.assertEqual(payload["prerelease"], False)
-                self.assertEqual('token super-token', request.headers.get("Authorization"))
-
-                return 201, {}, json.dumps({})
-
-            responses.add_callback(
-                responses.POST,
-                self.url,
-                callback=request_callback,
-                content_type="application/json",
-            )
-
-            with mock.patch.dict(os.environ, {'NETRC': netrc_file.name}):
-                status = Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
-                self.assertTrue(status)
-
-    @responses.activate
-    @mock.patch("semantic_release.hvcs.Github.token", return_value=None)
-    def test_should_post_changelog_using_netrc(self, mock_token):
-        with NamedTemporaryFile('w') as netrc_file:
-            netrc_file.write('machine api.github.com\n')
-            netrc_file.write('login username\n')
-            netrc_file.write('password password\n')
+        with NamedTemporaryFile("w") as netrc_file:
+            netrc_file.write("machine api.github.com\n")
+            netrc_file.write("login username\n")
+            netrc_file.write("password password\n")
 
             netrc_file.flush()
 
@@ -204,8 +173,7 @@ class GithubReleaseTests(TestCase):
                 self.assertEqual(payload["draft"], False)
                 self.assertEqual(payload["prerelease"], False)
                 self.assertEqual(
-                    "Basic " + base64.encodebytes(b"username:password").decode('ascii').strip(),
-                    request.headers.get("Authorization")
+                    "token super-token", request.headers.get("Authorization")
                 )
 
                 return 201, {}, json.dumps({})
@@ -217,8 +185,47 @@ class GithubReleaseTests(TestCase):
                 content_type="application/json",
             )
 
-            with mock.patch.dict(os.environ, {'NETRC': netrc_file.name}):
-                status = Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
+            with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
+                status = Github.post_release_changelog(
+                    "relekang", "rmoq", "1.0.0", "text"
+                )
+                self.assertTrue(status)
+
+    @responses.activate
+    @mock.patch("semantic_release.hvcs.Github.token", return_value=None)
+    def test_should_post_changelog_using_netrc(self, mock_token):
+        with NamedTemporaryFile("w") as netrc_file:
+            netrc_file.write("machine api.github.com\n")
+            netrc_file.write("login username\n")
+            netrc_file.write("password password\n")
+
+            netrc_file.flush()
+
+            def request_callback(request):
+                payload = json.loads(request.body)
+                self.assertEqual(payload["tag_name"], "v1.0.0")
+                self.assertEqual(payload["body"], "text")
+                self.assertEqual(payload["draft"], False)
+                self.assertEqual(payload["prerelease"], False)
+                self.assertEqual(
+                    "Basic "
+                    + base64.encodebytes(b"username:password").decode("ascii").strip(),
+                    request.headers.get("Authorization"),
+                )
+
+                return 201, {}, json.dumps({})
+
+            responses.add_callback(
+                responses.POST,
+                self.url,
+                callback=request_callback,
+                content_type="application/json",
+            )
+
+            with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
+                status = Github.post_release_changelog(
+                    "relekang", "rmoq", "1.0.0", "text"
+                )
                 self.assertTrue(status)
 
     @responses.activate

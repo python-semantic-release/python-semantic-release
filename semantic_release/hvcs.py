@@ -64,19 +64,22 @@ class TokenAuth(AuthBase):
     """
     requests Authentication for token based authorization
     """
+
     def __init__(self, token):
         self.token = token
 
     def __eq__(self, other):
-        return all([
-            self.token == getattr(other, 'token', None),
-        ])
+        return all(
+            [
+                self.token == getattr(other, "token", None),
+            ]
+        )
 
     def __ne__(self, other):
         return not self == other
 
     def __call__(self, r):
-        r.headers['Authorization'] = f'token {self.token}'
+        r.headers["Authorization"] = f"token {self.token}"
         return r
 
 
@@ -155,7 +158,7 @@ class Github(Base):
                 "draft": False,
                 "prerelease": False,
             },
-            auth=Github.auth()
+            auth=Github.auth(),
         )
         logger.debug(f"Release creation status code: {response.status_code}")
 
@@ -176,7 +179,7 @@ class Github(Base):
         """
         response = requests.get(
             f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
-            auth=Github.auth()
+            auth=Github.auth(),
         )
         logger.debug(f"Get release by tag status code: {response.status_code}")
 
@@ -199,7 +202,7 @@ class Github(Base):
         response = requests.post(
             f"{Github.API_URL}/repos/{owner}/{repo}/releases/{id}",
             json={"body": changelog},
-            auth=Github.auth()
+            auth=Github.auth(),
         )
         logger.debug(f"Edit release status code: {response.status_code}")
 

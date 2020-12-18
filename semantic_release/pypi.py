@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 @LoggedFunction(logger)
 def upload_to_pypi(
-    path: str = "dist",
-    skip_existing: bool = False,
-    glob_patterns: List[str] = None
+    path: str = "dist", skip_existing: bool = False, glob_patterns: List[str] = None
 ):
     """Upload wheels to PyPI with Twine.
 
@@ -50,7 +48,9 @@ def upload_to_pypi(
         username = "__token__"
         password = token
 
-    dist = " ".join(["\"{}/{}\"".format(path, glob_pattern.strip()) for glob_pattern in glob_patterns])
+    dist = " ".join(
+        ['"{}/{}"'.format(path, glob_pattern.strip()) for glob_pattern in glob_patterns]
+    )
 
     run(
         "twine upload -u '{}' -p '{}' {} {}".format(

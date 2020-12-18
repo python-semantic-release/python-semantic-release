@@ -58,7 +58,11 @@ class PypiTests(TestCase):
         upload_to_pypi(glob_patterns=["*.tar.gz", "*.whl"])
         self.assertEqual(
             mock_run.call_args_list,
-            [mock.call("twine upload -u '__token__' -p 'pypi-x'  \"dist/*.tar.gz\" \"dist/*.whl\"")],
+            [
+                mock.call(
+                    "twine upload -u '__token__' -p 'pypi-x'  \"dist/*.tar.gz\" \"dist/*.whl\""
+                )
+            ],
         )
 
     @mock.patch.dict("os.environ", {"PYPI_TOKEN": "invalid"})

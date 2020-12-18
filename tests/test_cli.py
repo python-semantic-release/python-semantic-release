@@ -445,7 +445,9 @@ def test_publish_should_call_functions_with_custom_pypi_glob_patterns(mocker):
     assert mock_push.called
     assert mock_remove_dists.called
     assert mock_build_dists.called
-    mock_pypi.assert_called_with(path='dist', skip_existing=None, glob_patterns=['*.tar.gz', '*.whl'])
+    mock_pypi.assert_called_with(
+        path="dist", skip_existing=None, glob_patterns=["*.tar.gz", "*.whl"]
+    )
     assert mock_release.called
     assert mock_should_bump_version.called
     mock_log.assert_called_once_with(
