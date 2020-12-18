@@ -54,6 +54,4 @@ def upload_to_pypi(
 
     skip_existing_param = " --skip-existing" if skip_existing else ""
 
-    run(
-        f"twine upload -u '{username}' -p '{password}'{skip_existing_param} {dist}"
-    )
+    run(f"twine upload -u '{username}' -p '{password}'{skip_existing_param} {dist}")

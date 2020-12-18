@@ -348,9 +348,7 @@ class Gitlab(Base):
                     )
                     return False
                 elif job["status"] == "failed" and not job["allow_failure"]:
-                    logger.debug(
-                        f"check_build_status: job {job['name']} failed"
-                    )
+                    logger.debug(f"check_build_status: job {job['name']} failed")
                     return False
         return True
 
@@ -375,14 +373,10 @@ class Gitlab(Base):
             tag = gl.projects.get(owner + "/" + repo).tags.get(ref)
             tag.set_release_description(changelog)
         except gitlab.exceptions.GitlabGetError:
-            logger.debug(
-                f"Tag {ref} was not found for project {owner}/{repo}"
-            )
+            logger.debug(f"Tag {ref} was not found for project {owner}/{repo}")
             return False
         except gitlab.exceptions.GitlabUpdateError:
-            logger.debug(
-                f"Failed to update tag {ref} for project {owner}/{repo}"
-            )
+            logger.debug(f"Failed to update tag {ref} for project {owner}/{repo}")
             return False
 
         return True
@@ -424,9 +418,7 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     :param changelog: A string with the changelog in correct format
     :return: a tuple with success status and payload from hvcs
     """
-    logger.debug(
-        f"Posting release changelog for {owner}/{repository} {version}"
-    )
+    logger.debug(f"Posting release changelog for {owner}/{repository} {version}")
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
 
 

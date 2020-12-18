@@ -288,21 +288,24 @@ class GithubReleaseTests(TestCase):
         # Remove test file
         os.remove(dummy_file_path)
 
-
     @responses.activate
     @mock.patch("semantic_release.hvcs.Github.token", return_value="super-token")
     def test_should_upload_asset_with_no_extension(self, mock_token):
         # Create temporary file to upload
         dummy_file_path = os.path.join(temp_dir, "testupload-no-extension")
         os.makedirs(os.path.dirname(dummy_file_path), exist_ok=True)
-        dummy_content = "# Test File with no extension\n\n*Dummy asset for testing uploads.*"
+        dummy_content = (
+            "# Test File with no extension\n\n*Dummy asset for testing uploads.*"
+        )
         with open(dummy_file_path, "w") as dummy_file:
             dummy_file.write(dummy_content)
 
         def request_callback(request):
             self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.asset_no_extension_url_params)
-            self.assertEqual(request.headers["Content-Type"], "application/octet-stream")
+            self.assertEqual(
+                request.headers["Content-Type"], "application/octet-stream"
+            )
             self.assertEqual("token super-token", request.headers["Authorization"])
 
             return 201, {}, json.dumps({})

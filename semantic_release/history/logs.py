@@ -40,7 +40,9 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
         if commit_message.startswith(current_version):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
-            logger.debug(f'"{commit_message}" is commit for {current_version}, breaking loop')
+            logger.debug(
+                f'"{commit_message}" is commit for {current_version}, breaking loop'
+            )
             break
 
         commit_count += 1
