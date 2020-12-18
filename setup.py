@@ -40,7 +40,7 @@ setup(
         "invoke>=1.4.1,<2",
         "semver>=2.8,<3",
         "twine>=3,<4",
-        "requests>=2.21,<3",
+        "requests>=2.25,<3",
         "wheel",
         "toml~=0.10.0",
         "python-gitlab>=1.10,<2",
