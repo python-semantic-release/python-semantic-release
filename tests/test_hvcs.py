@@ -1,7 +1,9 @@
+import base64
 import json
 import os
 import platform
-from unittest import TestCase
+from tempfile import NamedTemporaryFile
+from unittest import TestCase, mock
 
 import pytest
 import responses
@@ -155,26 +157,69 @@ class GithubReleaseTests(TestCase):
     )
 
     @responses.activate
-    @mock.patch("semantic_release.hvcs.Github.token", return_value="super-token")
-    def test_should_post_changelog(self, mock_token):
-        def request_callback(request):
-            payload = json.loads(request.body)
-            self.assertEqual(payload["tag_name"], "v1.0.0")
-            self.assertEqual(payload["body"], "text")
-            self.assertEqual(payload["draft"], False)
-            self.assertEqual(payload["prerelease"], False)
-            self.assertEqual("token super-token", request.headers["Authorization"])
+    @mock.patch("semantic_release.hvcs.Github.token", return_value='super-token')
+    def test_should_post_changelog_using_github_token(self, mock_token):
+        with NamedTemporaryFile('w') as netrc_file:
+            netrc_file.write('machine api.github.com\n')
+            netrc_file.write('login username\n')
+            netrc_file.write('password password\n')
 
-            return 201, {}, json.dumps({})
+            netrc_file.flush()
 
-        responses.add_callback(
-            responses.POST,
-            self.url,
-            callback=request_callback,
-            content_type="application/json",
-        )
-        status = Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
-        self.assertTrue(status)
+            def request_callback(request):
+                payload = json.loads(request.body)
+                self.assertEqual(payload["tag_name"], "v1.0.0")
+                self.assertEqual(payload["body"], "text")
+                self.assertEqual(payload["draft"], False)
+                self.assertEqual(payload["prerelease"], False)
+                self.assertEqual('token super-token', request.headers.get("Authorization"))
+
+                return 201, {}, json.dumps({})
+
+            responses.add_callback(
+                responses.POST,
+                self.url,
+                callback=request_callback,
+                content_type="application/json",
+            )
+
+            with mock.patch.dict(os.environ, {'NETRC': netrc_file.name}):
+                status = Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
+                self.assertTrue(status)
+
+    @responses.activate
+    @mock.patch("semantic_release.hvcs.Github.token", return_value=None)
+    def test_should_post_changelog_using_netrc(self, mock_token):
+        with NamedTemporaryFile('w') as netrc_file:
+            netrc_file.write('machine api.github.com\n')
+            netrc_file.write('login username\n')
+            netrc_file.write('password password\n')
+
+            netrc_file.flush()
+
+            def request_callback(request):
+                payload = json.loads(request.body)
+                self.assertEqual(payload["tag_name"], "v1.0.0")
+                self.assertEqual(payload["body"], "text")
+                self.assertEqual(payload["draft"], False)
+                self.assertEqual(payload["prerelease"], False)
+                self.assertEqual(
+                    "Basic " + base64.encodebytes(b"username:password").decode('ascii').strip(),
+                    request.headers.get("Authorization")
+                )
+
+                return 201, {}, json.dumps({})
+
+            responses.add_callback(
+                responses.POST,
+                self.url,
+                callback=request_callback,
+                content_type="application/json",
+            )
+
+            with mock.patch.dict(os.environ, {'NETRC': netrc_file.name}):
+                status = Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
+                self.assertTrue(status)
 
     @responses.activate
     def test_should_return_false_status_if_it_failed(self):
@@ -217,7 +262,7 @@ class GithubReleaseTests(TestCase):
             self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.asset_url_params)
             self.assertEqual(request.headers["Content-Type"], "text/markdown")
-            self.assertEqual("token super-token", request.headers["Authorization"])
+            self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
 
@@ -246,7 +291,7 @@ class GithubReleaseTests(TestCase):
             self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.dist_asset_url_params)
             self.assertEqual(request.headers["Content-Type"], "text/markdown")
-            self.assertEqual("token super-token", request.headers["Authorization"])
+            self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
 

@@ -7,6 +7,7 @@ from typing import Optional
 
 import gitlab
 import requests
+from requests.auth import AuthBase
 
 from .errors import ImproperConfigurationError
 from .helpers import LoggedFunction
@@ -59,6 +60,26 @@ def _fix_mime_types():
     mimetypes.add_type("text/markdown", ".md")
 
 
+class TokenAuth(AuthBase):
+    """
+    requests Authentication for token based authorization
+    """
+    def __init__(self, token):
+        self.token = token
+
+    def __eq__(self, other):
+        return all([
+            self.token == getattr(other, 'token', None),
+        ])
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __call__(self, r):
+        r.headers['Authorization'] = f'token {self.token}'
+        return r
+
+
 class Github(Base):
     """Github helper class"""
 
@@ -80,6 +101,17 @@ class Github(Base):
         :return: The Github token environment variable (GH_TOKEN) value
         """
         return os.environ.get("GH_TOKEN")
+
+    @staticmethod
+    def auth() -> Optional[TokenAuth]:
+        """Github token property
+
+        :return: The Github token environment variable (GH_TOKEN) value
+        """
+        token = Github.token()
+        if not token:
+            return None
+        return TokenAuth(token)
 
     @staticmethod
     @LoggedFunction(logger)
@@ -123,7 +155,7 @@ class Github(Base):
                 "draft": False,
                 "prerelease": False,
             },
-            headers={"Authorization": "token {}".format(Github.token())},
+            auth=Github.auth()
         )
         logger.debug(f"Release creation status code: {response.status_code}")
 
@@ -144,7 +176,7 @@ class Github(Base):
         """
         response = requests.get(
             f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
-            headers={"Authorization": "token {}".format(Github.token())},
+            auth=Github.auth()
         )
         logger.debug(f"Get release by tag status code: {response.status_code}")
 
@@ -167,7 +199,7 @@ class Github(Base):
         response = requests.post(
             f"{Github.API_URL}/repos/{owner}/{repo}/releases/{id}",
             json={"body": changelog},
-            headers={"Authorization": "token {}".format(Github.token())},
+            auth=Github.auth()
         )
         logger.debug(f"Edit release status code: {response.status_code}")
 
@@ -222,9 +254,9 @@ class Github(Base):
             url.format(owner=owner, repo=repo, id=release_id),
             params={"name": os.path.basename(file), "label": label},
             headers={
-                "Authorization": "token {}".format(Github.token()),
                 "Content-Type": mimetypes.guess_type(file, strict=False)[0],
             },
+            auth=Github.auth(),
             data=open(file, "rb").read(),
         )
         logger.debug(
