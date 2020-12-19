@@ -175,7 +175,7 @@ def get_new_version(current_version: str, level_bump: str) -> str:
     if not level_bump:
         logger.debug("No bump requested, returning input version")
         return current_version
-    return getattr(semver, f"bump_{level_bump}")(current_version)
+    return semver.VersionInfo.parse(current_version).next_version(part=level_bump)
 
 
 @LoggedFunction(logger)
