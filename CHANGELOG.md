@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.8.2 (2020-12-19)
+### Fix
+* **cli:** Skip remove_dist where not needed ([`04817d4`](https://github.com/relekang/python-semantic-release/commit/04817d4ecfc693195e28c80455bfbb127485f36b))
+
 ## v7.8.1 (2020-12-18)
 ### Fix
 * **logs:** Fix TypeError when enabling debug logs ([`2591a94`](https://github.com/relekang/python-semantic-release/commit/2591a94115114c4a91a48f5b10b3954f6ac932a1))
