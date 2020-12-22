@@ -34,9 +34,9 @@ Set :ref:`config-version_variable` to the location of your version variable::
    version_variable = setup.py:__version__
 
 .. seealso::
-   - :ref:``config-version_pattern`` - use regular expressions to keep the
+   - :ref:`config-version_pattern` - use regular expressions to keep the
      version number in a different format.
-   - :ref:``config-version_source`` - store the version using Git tags.
+   - :ref:`config-version_source` - store the version using Git tags.
 
 Setting up commit parsing
 -------------------------
