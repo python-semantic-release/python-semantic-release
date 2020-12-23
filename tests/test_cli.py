@@ -6,6 +6,7 @@ from semantic_release.errors import GitError, ImproperConfigurationError
 
 from . import mock, pytest, reset_config, wrapped_config_get
 from .mocks import mock_version_file
+from unittest.mock import Mock
 
 assert reset_config
 
@@ -319,7 +320,7 @@ def test_version_retry(mocker):
 def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):
     mocker.patch("semantic_release.cli.checkout")
     mocker.patch("semantic_release.cli.ci_checks.check")
-    mock_upload_pypi = mocker.patch("semantic_release.cli.upload_to_pypi")
+    mock_repository = mocker.patch("semantic_release.cli.get_repository")
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
     mocker.patch("semantic_release.cli.post_changelog", lambda *x: True)
     mocker.patch("semantic_release.cli.push_new_version", return_value=True)
@@ -333,7 +334,7 @@ def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):
         "semantic_release.cli.config.get",
         wrapped_config_get(
             remove_dist=False,
-            upload_to_pypi=False,
+            upload_to_repository=False,
             upload_to_release=False,
         ),
     )
@@ -341,7 +342,7 @@ def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):
 
     publish()
 
-    assert not mock_upload_pypi.called
+    assert not mock_repository.called
     assert not mock_upload_release.called
 
 
@@ -351,7 +352,7 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
     mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
     mocker.patch("semantic_release.cli.generate_changelog")
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
-    mock_upload_pypi = mocker.patch("semantic_release.cli.upload_to_pypi")
+    mock_repository = mocker.patch("semantic_release.cli.get_repository")
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
@@ -363,7 +364,7 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
 
     assert mock_should_bump_version.called
     assert not mock_push.called
-    assert not mock_upload_pypi.called
+    assert not mock_repository.called
     assert not mock_upload_release.called
     assert not mock_log.called
     assert mock_ci_check.called
@@ -377,7 +378,7 @@ def test_publish_should_call_functions(mocker):
     )
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
-    mock_pypi = mocker.patch("semantic_release.cli.upload_to_pypi")
+    mock_repository = mocker.patch("semantic_release.cli.get_repository")
     mock_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_build_dists = mocker.patch("semantic_release.cli.build_dists")
     mock_remove_dists = mocker.patch("semantic_release.cli.remove_dists")
@@ -399,7 +400,7 @@ def test_publish_should_call_functions(mocker):
     assert mock_push.called
     assert mock_remove_dists.called
     assert mock_build_dists.called
-    assert mock_pypi.called
+    assert mock_repository.called
     assert mock_release.called
     assert mock_should_bump_version.called
     mock_log.assert_called_once_with(
@@ -408,7 +409,7 @@ def test_publish_should_call_functions(mocker):
     mock_checkout.assert_called_once_with("master")
 
 
-def test_publish_should_call_functions_with_custom_pypi_glob_patterns(mocker):
+def test_publish_should_call_functions_with_custom_dist_glob_patterns(mocker):
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
     mock_should_bump_version = mocker.patch(
@@ -416,7 +417,9 @@ def test_publish_should_call_functions_with_custom_pypi_glob_patterns(mocker):
     )
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
-    mock_pypi = mocker.patch("semantic_release.cli.upload_to_pypi")
+    mock_repository = mocker.patch("semantic_release.cli.get_repository")
+    repository_mock = Mock()
+    mock_repository.return_value = repository_mock
     mock_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_build_dists = mocker.patch("semantic_release.cli.build_dists")
     mock_remove_dists = mocker.patch("semantic_release.cli.remove_dists")
@@ -435,17 +438,16 @@ def test_publish_should_call_functions_with_custom_pypi_glob_patterns(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
         wrapped_config_get(
-            upload_to_pypi_glob_patterns="*.tar.gz,*.whl",
+            dist_glob_patterns="*.tar.gz,*.whl",
         ),
     )
-
     publish()
 
     assert mock_ci_check.called
     assert mock_push.called
     assert mock_remove_dists.called
     assert mock_build_dists.called
-    mock_pypi.assert_called_with(
+    repository_mock.upload.assert_called_with(
         path="dist", skip_existing=None, glob_patterns=["*.tar.gz", "*.whl"]
     )
     assert mock_release.called
@@ -503,7 +505,7 @@ def test_publish_bad_token(mocker):
         "semantic_release.cli.config.get",
         wrapped_config_get(
             branch="my_branch",
-            upload_to_pypi=False,
+            upload_to_repository=False,
             upload_to_release=False,
             remove_dist=False,
         ),
@@ -562,7 +564,7 @@ def test_publish_giterror_when_posting(mocker):
         "semantic_release.cli.config.get",
         wrapped_config_get(
             branch="my_branch",
-            upload_to_pypi=False,
+            upload_to_repository=False,
             upload_to_release=False,
             remove_dist=False,
         ),

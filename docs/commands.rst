@@ -35,7 +35,7 @@ Publish will do a sequence of things:
 #. Update changelog file.
 #. Run :ref:`cmd-version`.
 #. Push changes to git.
-#. Run :ref:`config-build_command` and upload the created files to PyPI.
+#. Run :ref:`config-build_command` and upload the distribution file to your repository.
 #. Run :ref:`cmd-changelog` and post to your vcs provider.
 #. Attach the files created by :ref:`config-build_command` to GitHub releases.
 

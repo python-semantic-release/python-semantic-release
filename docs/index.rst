@@ -31,7 +31,7 @@ hand - set it to the current version number::
    - :ref:`config-branch` - change the default branch.
    - :ref:`config-commit_parser` - use a different parser for commit messages.
      For example, there is an emoji parser.
-   - :ref:`config-upload_to_pypi` - disable uploading the package to PyPI.
+   - :ref:`config-upload_to_repository` - disable uploading the package to an artifact repository.
    - :ref:`config-hvcs` - change this if you are using GitLab.
 
 .. include:: commands.rst
