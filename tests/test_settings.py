@@ -39,7 +39,7 @@ class ConfigTests(TestCase):
         self.assertTrue(config.get("major_on_zero"))
         self.assertFalse(config.get("check_build_status"))
         self.assertEqual(config.get("hvcs"), "github")
-        self.assertEqual(config.get("upload_to_pypi"), True)
+        self.assertEqual(config.get("upload_to_repository"), True)
 
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
     def test_toml_override(self, mock_getcwd):
@@ -50,7 +50,7 @@ class ConfigTests(TestCase):
             "tool": {
                 "foo": {"bar": "baz"},
                 "semantic_release": {
-                    "upload_to_pypi": False,
+                    "upload_to_repository": False,
                     "version_source": "tag",
                     "foo": "bar",
                 },
@@ -62,7 +62,7 @@ class ConfigTests(TestCase):
         config = _config()
         mock_getcwd.assert_called_once_with()
         self.assertEqual(config.get("hvcs"), "github")
-        self.assertEqual(config.get("upload_to_pypi"), False)
+        self.assertEqual(config.get("upload_to_repository"), False)
         self.assertEqual(config.get("version_source"), "tag")
         self.assertEqual(config.get("foo"), "bar")
 

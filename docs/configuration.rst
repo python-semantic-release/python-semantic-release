@@ -336,14 +336,26 @@ Distributions
 
 ``upload_to_pypi``
 ------------------
+.. deprecated:: 7.10.0
+  Please use :ref:`config-upload_to_repository` instead
+
 If set to false the pypi uploading will be disabled.
-See :ref:`env-pypi_token` which must also be set for this to work.
+See :ref:`env-repository` which must also be set for this to work.
 
-.. _config-upload_to_pypi_glob_patterns:
+.. _config-upload_to_repository:
 
-``upload_to_pypi_glob_patterns``
+``upload_to_repository``
 ------------------
-A comma `,` separated list of glob patterns to use when uploading to pypi.
+If set to false the artifact uploading to repository will be disabled.
+See :ref:`env-repository` which must also be set for this to work.
+
+Default: `true`
+
+.. _config-dist_glob_patterns:
+
+``dist_glob_patterns``
+--------------------------------
+A comma `,` separated list of glob patterns to use when uploading dist files to artifact repository.
 
 Default: `*`
 
@@ -380,6 +392,14 @@ Command to build dists. Build output should be stored in the directory configure
 ``pip install -m flit && flit build``.
 
 Default: ``python setup.py sdist bdist_wheel``
+
+.. _config-repository_url:
+
+``repository_url``
+-----------------
+The repository (package index) URL to upload the package to.
+
+Default: ``pypi``
 
 HVCS
 ====

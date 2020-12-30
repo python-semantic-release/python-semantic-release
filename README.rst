@@ -10,7 +10,7 @@ JSConf Budapest`_.
 
 The general idea is to be able to detect what the next version of the
 project should be based on the commits. This tool will use that to
-automate the whole release, upload to PyPI and post changelogs to
+automate the whole release, upload to an artifact repository and post changelogs to
 GitHub. You can run the tool on a CI service, or just run it locally.
 
 Installation

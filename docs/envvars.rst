@@ -55,8 +55,8 @@ Example: `gitlab.example.com`
   Automatically set in a GitLab CI environment from version 12.1.
 
 
-Authentication
-==============
+HVCS Authentication
+===================
 
 .. _env-gh_token:
 
@@ -76,6 +76,11 @@ and click on *Personal access token*.
 A personal access token from GitLab. This is used for authenticating
 when pushing tags, publishing releases etc.
 
+.. _env-repository
+
+Artifact Repository Authentication
+==================================
+
 .. _env-pypi_token:
 
 ``PYPI_TOKEN``
@@ -89,7 +94,10 @@ See :ref:`automatic-pypi` for more about PyPI uploads.
 
 ``PYPI_PASSWORD``
 -----------------
-Used together with :ref:`env-pypi_username` when publishing to https://pypi.org/.
+.. deprecated:: 7.10.0
+  Please use :ref:`env-repository_username` instead
+
+Used together with :ref:`env-pypi_password` when publishing to https://pypi.org/.
 
 .. warning::
   You should use :ref:`env-pypi_token` instead of username and password
@@ -107,4 +115,19 @@ Used together with :ref:`env-pypi_username` when publishing to https://pypi.org/
 
 ``PYPI_USERNAME``
 -----------------
+.. deprecated:: 7.10.0
+  Please use :ref:`env-repository_username` instead
+
 Used together with :ref:`env-pypi_password` when publishing to https://pypi.org/.
+
+.. _env-repository_username:
+
+``REPOSITORY_USERNAME``
+-----------------------
+Used together with :ref:`env-repository_password` when publishing artifact.
+
+.. _env-repository_password:
+
+``REPOSITORY_PASSWORD``
+-----------------------
+Used together with :ref:`env-repository_username` when publishing artifact.
