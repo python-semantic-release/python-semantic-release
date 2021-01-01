@@ -1,0 +1,133 @@
+[tool.poetry]
+name = "python-semantic-release"
+version = "7.9.1"
+description = "Automatic semantic versioning for python projects"
+authors = ["Rolf Erik Lekang <me@rolflekang.com>"]
+license = "MIT"
+classifiers = ["Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.6", "Programming Language :: Python :: 3.7", "Programming Language :: Python :: 3.8"]
+homepage = "http://github.com/relekang/python-semantic-release"
+packages = [
+    { include = "semantic_release" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+click = "<8,>=7"
+click-log = "<1,>=0.3"
+gitpython = "<4,>=3.0.8"
+invoke = "<2,>=1.4.1"
+semver = "<3,>=2.10"
+toml = "==0.10.*,>=0.10.0"
+twine = "<4,>=3"
+wheel = "*"
+python-gitlab = "<2,>=1.10"
+requests = "<3,>=2.25"
+
+[tool.poetry.dev-dependencies]
+black = "*"
+isort = "*"
+mypy = "*"
+tox = "*"
+coverage = { extras = ["toml"], version = "<6,>=5" }
+mock = { version = "==1.3.0" }
+pytest-mock = { version = "<3,>=2" }
+pytest-xdist = { version = "<2,>=1" }
+responses = { version = "==0.5.0" }
+sphinx = { version = "==1.3.6" }
+pytest = "^6.2.1"
+pytest-cov = "^2.10.1"
+
+[tool.poetry.extras]
+test = [
+    "coverage",
+    "mock",
+    "pytest",
+    "pytest-mock",
+    "pytest-xdist",
+    "responses"
+]
+docs = [
+    "sphinx"
+]
+
+[tool.semantic_release]
+#TODO: When this is setuped, then the tests fails because they expect a specific setup fot this value!
+version_variable = 'semantic_release/__init__.py:__version__'
+#version_variable = [
+#    'pyproject.toml:tool.poetry.version',
+#    'semantic_release/__init__.py:__version__'
+#]
+#version_source = 'commit'
+#TODO: When this is setuped, then the tests fails because they can't mock to use github!
+#hvcs = 'gitlab'
+#TODO: When this is setuped, then the tests fails!
+#upload_to_pypi = false
+#TODO: When this is setuped, then the tests fails!
+#major_on_zero = false
+#TODO: When this is setuped, then this will be used as repository Upload URL!
+#repository_url = 'https://pypi.pkg.hochguertel.work'
+upload_to_repository = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+python_files = [
+    'tests/test_*.py',
+    'tests/**/test_*.py'
+]
+
+
+[tool.isort]
+skip = [
+    '.tox',
+    'venv'
+]
+default_section = 'THIRDPARTY'
+known_first_party = [
+    'semantic_release',
+    'tests'
+]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+[tool.coverage.run]
+omit = [
+    '*/tests/*'
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist =
+    mypy,
+    py39,
+    coverage[toml]
+skipsdist = True
+
+[testenv]
+passenv = CI
+setenv =
+    PYTHONPATH = {toxinidir}
+    TESTING = True
+deps = .[test]
+commands =
+    coverage run -p --source=semantic_release -m pytest -v tests
+
+[testenv:mypy]
+deps = mypy
+commands =
+    mypy --ignore-missing-imports semantic_release
+
+[testenv:coverage]
+deps = coverage
+commands =
+    coverage combine
+    coverage report -m
+    coverage xml
+"""

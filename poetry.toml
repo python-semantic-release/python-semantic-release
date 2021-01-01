@@ -1,0 +1,11 @@
+[virtualenvs]
+in-project = true
+
+[repositories]
+[repositories.private_index]
+url = "https://pypi.pkg.hochguertel.work"
+
+[http-basic]
+[http-basic.private_index]
+username = "ci-user"
+password = "><k~EXa=k.X~63<yd>"

@@ -300,7 +300,7 @@ def publish(**kwargs):
             logger.info("Uploading to HVCS release")
             upload_to_release(owner, name, new_version, dist_path)
         # Remove distribution files as they are no longer needed
-        if (upload_pypi or upload_release) and remove_dist:
+        if upload_release and remove_dist:
             remove_dists(dist_path)
 
         logger.info("New release published")
