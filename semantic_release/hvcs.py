@@ -26,6 +26,10 @@ class Base(object):
         raise NotImplementedError
 
     @staticmethod
+    def api_url() -> str:
+        raise NotImplementedError
+
+    @staticmethod
     def token() -> Optional[str]:
         raise NotImplementedError
 
@@ -86,7 +90,7 @@ class TokenAuth(AuthBase):
 class Github(Base):
     """Github helper class"""
 
-    API_URL = "https://api.github.com"
+    DEFAULT_DOMAIN = "github.com"
     _fix_mime_types()
 
     @staticmethod
@@ -95,7 +99,21 @@ class Github(Base):
 
         :return: The Github domain
         """
-        return "github.com"
+        hvcs_domain = config.get("hvcs_domain")
+        domain = hvcs_domain if hvcs_domain else Github.DEFAULT_DOMAIN
+        return domain
+
+    @staticmethod
+    def api_url() -> str:
+        """Github api_url property
+
+        :return: The Github API URL
+        """
+        # not necessarily prefixed with api in the case of a custom domain, so
+        # can't just default DEFAULT_DOMAIN to github.com
+        hvcs_domain = config.get("hvcs_domain")
+        hostname = hvcs_domain if hvcs_domain else "api." + Github.DEFAULT_DOMAIN
+        return f"https://{hostname}"
 
     @staticmethod
     def token() -> Optional[str]:
@@ -129,8 +147,10 @@ class Github(Base):
 
         :return: Was the build status success?
         """
-        url = f"{Github.API_URL}/repos/{owner}/{repo}/commits/{ref}/status"
-        response = requests.get(url)
+        url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
+        response = requests.get(
+            url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
+        )
         return response.json()["state"] == "success"
 
     @classmethod
@@ -148,7 +168,7 @@ class Github(Base):
         :return: Whether the request succeeded
         """
         response = requests.post(
-            f"{Github.API_URL}/repos/{owner}/{repo}/releases",
+            f"{Github.api_url()}/repos/{owner}/{repo}/releases",
             json={
                 "tag_name": tag,
                 "name": tag,
@@ -176,7 +196,7 @@ class Github(Base):
         :return: ID of found release
         """
         response = requests.get(
-            f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
+            f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}",
             auth=Github.auth(),
         )
         logger.debug(f"Get release by tag status code: {response.status_code}")
@@ -198,7 +218,7 @@ class Github(Base):
         :return: Whether the request succeeded
         """
         response = requests.post(
-            f"{Github.API_URL}/repos/{owner}/{repo}/releases/{id}",
+            f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
             json={"body": changelog},
             auth=Github.auth(),
         )
@@ -308,15 +328,22 @@ class Github(Base):
 class Gitlab(Base):
     """Gitlab helper class"""
 
-    API_URL = "https://" + os.environ.get("CI_SERVER_HOST", "gitlab.com")
-
     @staticmethod
     def domain() -> str:
         """Gitlab domain property
 
         :return: The Gitlab instance domain
         """
-        return os.environ.get("CI_SERVER_HOST", "gitlab.com")
+        domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST"))
+        return domain if domain else "gitlab.com"
+
+    @staticmethod
+    def api_url() -> str:
+        """Gitlab api_url property
+
+        :return: The Gitlab instance API url
+        """
+        return f"https://{Gitlab.domain()}"
 
     @staticmethod
     def token() -> Optional[str]:
@@ -337,7 +364,7 @@ class Gitlab(Base):
 
         :return: the status of the pipeline (False if a job failed)
         """
-        gl = gitlab.Gitlab(Gitlab.API_URL, private_token=Gitlab.token())
+        gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         jobs = gl.projects.get(owner + "/" + repo).commits.get(ref).statuses.list()
         for job in jobs:
@@ -367,7 +394,7 @@ class Gitlab(Base):
         :return: The status of the request
         """
         ref = "v" + version
-        gl = gitlab.Gitlab(Gitlab.API_URL, private_token=Gitlab.token())
+        gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         try:
             tag = gl.projects.get(owner + "/" + repo).tags.get(ref)

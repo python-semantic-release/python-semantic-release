@@ -28,7 +28,7 @@ from .hvcs import (
     post_changelog,
     upload_to_release,
 )
-from .pypi import upload_to_pypi
+from .repository import get_repository
 from .settings import config, overload_configuration
 from .vcs_helpers import (
     checkout,
@@ -45,6 +45,8 @@ logger = logging.getLogger("semantic_release")
 SECRET_NAMES = [
     "PYPI_USERNAME",
     "PYPI_PASSWORD",
+    "REPOSITORY_USERNAME",
+    "REPOSITORY_PASSWORD",
     "GH_TOKEN",
     "GL_TOKEN",
 ]
@@ -204,7 +206,7 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
 
 
 def publish(**kwargs):
-    """Run the version task, then push to git and upload to PyPI / GitHub Releases."""
+    """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
 
     retry = kwargs.get("retry")
@@ -259,14 +261,14 @@ def publish(**kwargs):
         # Get config options for uploads
         dist_path = config.get("dist_path")
         remove_dist = config.get("remove_dist")
-        upload_pypi = config.get("upload_to_pypi")
-        upload_to_pypi_glob_patterns = config.get("upload_to_pypi_glob_patterns")
+        upload_to_artifact_repository = config.get("upload_to_repository") and config.get("upload_to_pypi")
+        dist_glob_patterns = config.get("dist_glob_patterns", config.get("upload_to_pypi_glob_patterns"))
         upload_release = config.get("upload_to_release")
 
-        if upload_to_pypi_glob_patterns:
-            upload_to_pypi_glob_patterns = upload_to_pypi_glob_patterns.split(",")
+        if dist_glob_patterns:
+            dist_glob_patterns = dist_glob_patterns.split(",")
 
-        if upload_pypi or upload_release:
+        if upload_to_artifact_repository or upload_release:
             # We need to run the command to build wheels for releasing
             logger.info("Building distributions")
             if remove_dist:
@@ -274,13 +276,13 @@ def publish(**kwargs):
                 remove_dists(dist_path)
             build_dists()
 
-        if upload_pypi:
-            logger.info("Uploading to PyPI")
-            upload_to_pypi(
+        if upload_to_artifact_repository:
+            logger.info("Uploading to artifact Repository")
+            get_repository().upload(
                 path=dist_path,
                 # If we are retrying, we don't want errors for files that are already on PyPI.
                 skip_existing=retry,
-                glob_patterns=upload_to_pypi_glob_patterns,
+                glob_patterns=dist_glob_patterns,
             )
 
         if check_token():
@@ -298,7 +300,7 @@ def publish(**kwargs):
             logger.info("Uploading to HVCS release")
             upload_to_release(owner, name, new_version, dist_path)
         # Remove distribution files as they are no longer needed
-        if remove_dist:
+        if (upload_pypi or upload_release) and remove_dist:
             remove_dists(dist_path)
 
         logger.info("New release published")
@@ -350,6 +352,7 @@ def main(**kwargs):
         "patch_without_tag",
         "major_on_zero",
         "upload_to_pypi",
+        "upload_to_repository",
         "version_source",
     ]:
         obj[key] = config.get(key)

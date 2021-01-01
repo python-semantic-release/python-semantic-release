@@ -58,14 +58,15 @@ Publish with CI
 ~~~~~~~~~~~~~~~
 Add ``python setup.py publish`` or ``semantic-release publish`` as an after success task on your
 preferred Continuous Integration service. Ensure that you have configured the CI so that it can
-upload to pypi and push to git and it should be ready to roll.
+upload to an artifact repository and push to git and it should be ready to roll.
 
 .. _automatic-pypi:
 
-Configuring pypi upload
-^^^^^^^^^^^^^^^^^^^^^^^
-In order to upload to PYPI, Python Semantic Release needs credentials to access
-the project. You will need to set the environment variable :ref:`env-pypi_token`.
+Configuring distribution upload
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to upload to an artifact repository, Python Semantic Release needs credentials to access
+the project. You will need to set the environment variable :ref:`env-pypi_token` if you use Pypi,
+:ref:`env-repository_username` and :ref:`env-repository_password` otherwise.
 Make sure that you mark it as a secret on your CI service so that it is left out
 of the build logs.
 
@@ -93,7 +94,7 @@ drop at a certain interval. Before you start, answer this: Are you sure you do n
 release for you? (high version numbers are not a bad thing).
 
 The guide below is for setting up scheduled publishing on a server. It requires that the user
-that runs the cronjob has push access to the repository and upload access to pypi.
+that runs the cronjob has push access to the repository and upload access to an artifact repository.
 
 1. Create a virtualenv::
 

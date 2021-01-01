@@ -59,11 +59,61 @@ def test_check_token_should_return_false():
     assert check_token() is False
 
 
+@pytest.mark.parametrize(
+    "hvcs,hvcs_domain,expected_domain,api_url,ci_server_host",
+    [
+        ("github", None, "github.com", "https://api.github.com", None),
+        ("gitlab", None, "gitlab.com", "https://gitlab.com", None),
+        (
+            "github",
+            "github.example.com",
+            "github.example.com",
+            "https://github.example.com",
+            None,
+        ),
+        (
+            "gitlab",
+            "example.gitlab.com",
+            "example.gitlab.com",
+            "https://example.gitlab.com",
+            None,
+        ),
+        (
+            "gitlab",
+            "example2.gitlab.com",
+            "example2.gitlab.com",
+            "https://example2.gitlab.com",
+            "ciserverhost.gitlab.com",
+        ),
+    ],
+)
+@mock.patch("os.environ", {"GL_TOKEN": "token"})
+def test_get_domain_should_have_expected_domain(
+    hvcs, hvcs_domain, expected_domain, api_url, ci_server_host
+):
+
+    with mock.patch(
+        "semantic_release.hvcs.config.get",
+        wrapped_config_get(hvcs_domain=hvcs_domain, hvcs=hvcs),
+    ):
+        with mock.patch(
+            "os.environ",
+            {
+                "GL_TOKEN": "token",
+                "GH_TOKEN": "token",
+                "CI_SERVER_HOST": ci_server_host,
+            },
+        ):
+
+            assert get_hvcs().domain() == expected_domain
+            assert get_hvcs().api_url() == api_url
+
+
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
-def test_get_domain_and_token():
-    assert get_hvcs().domain()
-    assert get_hvcs().token()
+def test_get_token():
+
+    assert get_hvcs().token() == "token"
 
 
 class GithubCheckBuildStatusTests(TestCase):
