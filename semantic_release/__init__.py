@@ -2,7 +2,6 @@
 """
 __version__ = "7.9.1"
 
-
 from .errors import UnknownCommitMessageStyleError  # noqa; noqa
 from .errors import ImproperConfigurationError, SemanticReleaseBaseError
 

@@ -22,6 +22,8 @@ twine = "<4,>=3"
 wheel = "*"
 python-gitlab = "<2,>=1.10"
 requests = "<3,>=2.25"
+tomlkit = "^0.7.0"
+jmespath = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
@@ -52,10 +54,11 @@ docs = [
 
 [tool.semantic_release]
 #TODO: When this is setuped, then the tests fails because they expect a specific setup fot this value!
-version_variable = 'semantic_release/__init__.py:__version__'
+#version_variable = 'semantic_release/__init__.py:__version__'
+version_variable = 'pyproject.toml:tool.poetry.version'
 #version_variable = [
 #    'pyproject.toml:tool.poetry.version',
-#    'semantic_release/__init__.py:__version__'
+#    'semantic_release/__init__.py:__version__',
 #]
 #version_source = 'commit'
 #TODO: When this is setuped, then the tests fails because they can't mock to use github!

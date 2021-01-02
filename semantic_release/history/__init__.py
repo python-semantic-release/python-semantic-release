@@ -3,7 +3,8 @@
 import csv
 import logging
 import re
-from typing import List, Optional, Set
+from re import Match
+from typing import List, Optional, Set, Any
 
 import semver
 
@@ -17,7 +18,111 @@ from .parser_angular import parse_commit_message as angular_parser  # noqa isort
 from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 from .parser_emoji import parse_commit_message as emoji_parser  # noqa isort:skip
 
+import tomlkit
+import jmespath
+
 logger = logging.getLogger(__name__)
+
+
+# public api:
+# TomlHelper.version_pattern()
+# TomlHelper.content()
+class TomlHelper:
+    """
+    Represent a Helper for .toml files, to receive the expected content of
+        the setup version_variable.
+
+        example setting in a .toml file:
+            ```
+            [tool.semantic_release]
+            version_variable = 'pyproject.toml:tool.poetry.version'
+            ```
+
+            or
+
+            ```
+            [tool.semantic_release]
+            version_variable = [
+                'pyproject.toml:tool.poetry.version',
+                'semantic_release/__init__.py:__version__',
+            ]
+            ```
+
+            or
+
+            ```
+            [tool.semantic_release]
+            version_variable = [
+                'pyproject.toml:tool.poetry.version',
+            ]
+            ```
+
+    TomlHelper walks the way in using the original behavior of this project,
+        by extracting the "left-side" of the regular expression of {variable_pattern}
+        as the "xpath" for query the toml structure (tomlkit: -> dict)
+
+        (1) idea of xpath + toml-file as dict, makes the solution, with the help of library `jmespath`
+            to query the dict with the xpath.
+
+        (2) to not break the current behavior or unkown ideas of the author of `python-semantic-version`,
+            TomlHelper provides the exytracted comntent
+
+            Example:
+                .toml-setting:
+                    version_variable = 'pyproject.toml:tool.poetry.version'
+
+                pseudo_code:
+                    variable_pattern = 'tool.poetry.version *[:=] *["\\\'](\\d+\\.\\d+(?:\\.\\d+)?)["\\\']'
+
+                        re.match by '(^.*) \\*\\[:=]'
+                        -> left-side:
+                            is: 'tool.poetry.version *[:=]'
+                        -> right-side (by inverting the match of left-side):
+                            is: ' *["\\\'](\\d+\\.\\d+(?:\\.\\d+)?)["\\\']'
+
+                        from left-side, in group(1) is a `xpath`:str,
+                                          xpath is:       'tool.poetry.version'
+                                        which is used to extract the expected content from .toml-file: dict.
+                              extracted content is:       '7.9.1'
+                                        we wrap the extracted content into ' "."'
+                                                is:    ' "{tomlVersionContent}"'
+                                            result:    ' "7.9.1"'
+
+                                        __idea is to support the existing behavior, and not to change it.__
+
+                        from right-side, we pass the extracted regular expr to versions struct lamba iterator
+                                          to work with the structure, an behavior which is an was already there.
+                         extracted regular expr is:     ' *["\\\'](\\d+\\.\\d+(?:\\.\\d+)?)["\\\']'
+
+    """
+
+    def __init__(self, content: str, pattern: str):
+        self.toml = tomlkit.loads(content)
+        self.pattern = pattern
+        self.version_pattern_match = self.__toml_version_xpath_match()
+
+    def __toml_version_xpath_match(self) -> Match:
+        match = re.match(r'(^.*) \*\[:=]', rf'{self.pattern}')
+        if not match:
+            raise ImproperConfigurationError(
+                "must specify either 'version_variable' or 'version_pattern'"
+            )
+        return match
+
+    def __toml_version_variable_xpath(self) -> str:
+        return self.version_pattern_match.group(1)
+
+    def __extract_version_from_toml(self) -> str:
+        return jmespath.search(self.__toml_version_variable_xpath(), self.toml)
+
+    def version_pattern(self) -> str:
+        full_match_positions = self.version_pattern_match.regs[0]
+        full_match_position_end = full_match_positions[1]
+        right_side = f'{self.pattern}'[full_match_position_end:]
+        return right_side
+
+    def content(self) -> str:
+        return rf' "{self.__extract_version_from_toml()}"'
 
 
 class VersionPattern:
@@ -71,9 +176,16 @@ class VersionPattern:
         with open(self.path, "r") as f:
             content = f.read()
 
-        versions = {
-            m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)
-        }
+        if self.path.endswith('.toml'):
+            toml_help = TomlHelper(content, self.pattern)
+            versions = {
+                m.group(1) for m in re.finditer(toml_help.version_pattern(), toml_help.content(), re.MULTILINE)
+            }
+
+        if not self.path.endswith('.toml'):
+            versions = {
+                m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)
+            }
 
         logger.debug(
             f"Parsing current version: path={self.path!r} pattern={self.pattern!r} num_matches={len(versions)}"
