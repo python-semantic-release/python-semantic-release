@@ -1,7 +1,9 @@
 from textwrap import dedent
 
+import jmespath
 import mock
 import pytest
+import tomlkit
 
 import semantic_release
 from semantic_release.history import (
@@ -14,9 +16,7 @@ from semantic_release.history import (
     load_version_patterns,
     set_new_version,
 )
-
 from .. import wrapped_config_get
-from ..mocks import mock_version_file
 
 
 @pytest.fixture
@@ -31,8 +31,15 @@ def tmp_cwd(tmp_path):
         os.chdir(orig_path)
 
 
-def test_current_version_should_return_correct_version():
+def test_current_version_from_py_file_should_return_correct_version():
     assert get_current_version() == semantic_release.__version__
+
+
+def test_current_version_from_toml_file_should_return_correct_version():
+    with open('pyproject.toml', "r") as f:
+        content = f.read()
+    expected_version = jmespath.search('tool.poetry.version', tomlkit.loads(content))
+    assert get_current_version() == expected_version
 
 
 @mock.patch("semantic_release.history.get_last_version", return_value="last_version")

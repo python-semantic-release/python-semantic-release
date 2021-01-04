@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-semantic-release"
-version = "7.9.1"
+version = "7.9.2"
 description = "Automatic semantic versioning for python projects"
 authors = ["Rolf Erik Lekang <me@rolflekang.com>"]
 license = "MIT"
@@ -60,15 +60,15 @@ version_variable = 'pyproject.toml:tool.poetry.version'
 #    'pyproject.toml:tool.poetry.version',
 #    'semantic_release/__init__.py:__version__',
 #]
-#version_source = 'commit'
+version_source = 'commit'
 #TODO: When this is setuped, then the tests fails because they can't mock to use github!
-#hvcs = 'gitlab'
+hvcs = 'gitlab'
 #TODO: When this is setuped, then the tests fails!
-#upload_to_pypi = false
+upload_to_pypi = false
 #TODO: When this is setuped, then the tests fails!
-#major_on_zero = false
+major_on_zero = false
 #TODO: When this is setuped, then this will be used as repository Upload URL!
-#repository_url = 'https://pypi.pkg.hochguertel.work'
+repository_url = 'https://pypi.pkg.hochguertel.work'
 upload_to_repository = true
 
 [build-system]
