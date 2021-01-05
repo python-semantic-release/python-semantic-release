@@ -72,6 +72,7 @@ class TestGetNewVersion:
         assert get_new_version("10.1.0", "major") == "11.0.0"
 
     def test_minor_bump(self):
+        assert type(get_new_version("0.0.0", "minor")) is str
         assert get_new_version("0.0.0", "minor") == "0.1.0"
         assert get_new_version("1.2.0", "minor") == "1.3.0"
         assert get_new_version("1.2.1", "minor") == "1.3.0"
