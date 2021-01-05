@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-semantic-release"
-version = "7.9.2"
+version = "7.9.3"
 description = "Automatic semantic versioning for python projects"
 authors = ["Rolf Erik Lekang <me@rolflekang.com>"]
 license = "MIT"
@@ -8,6 +8,12 @@ classifiers = ["Programming Language :: Python", "Programming Language :: Python
 homepage = "http://github.com/relekang/python-semantic-release"
 packages = [
     { include = "semantic_release" },
+]
+include = [
+    "include",
+    "README.md",
+    "LICENSE",
+    "semantic_release/defaults.cfg"
 ]
 
 [tool.poetry.dependencies]
@@ -134,3 +140,6 @@ commands =
     coverage report -m
     coverage xml
 """
+
+[tool.poetry.scripts]
+semantic-release = 'semantic_release.cli:entry'
