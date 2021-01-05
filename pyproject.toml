@@ -16,6 +16,12 @@ include = [
     "semantic_release/defaults.cfg"
 ]
 
+[[tool.poetry.source]]
+name = "pivate_index"
+url = "https://pypi.pkg.hochguertel.work/"
+secondary = true
+default = true
+
 [tool.poetry.dependencies]
 python = "^3.6"
 click = "<8,>=7"
