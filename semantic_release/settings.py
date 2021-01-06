@@ -9,7 +9,8 @@ from functools import wraps
 from os import getcwd
 from typing import Callable, List
 
-import toml
+import tomlkit
+from tomlkit.exceptions import TOMLKitError
 
 from .errors import ImproperConfigurationError
 
@@ -61,16 +62,16 @@ def _config_from_ini(paths):
 
 
 def _config_from_pyproject(path):
-    if not os.path.isfile(path):
-        return {}
+    if os.path.isfile(path):
+        try:
+            with open(path, "r") as f:
+                pyproject = tomlkit.loads(f.read())
+            if pyproject:
+                return dict(pyproject.get("tool").get("semantic_release"))
+        except TOMLKitError as e:
+            logger.debug(f"Could not decode pyproject.toml: {e}")
 
-    try:
-        pyproject = toml.load(path)
-        return pyproject.get("tool", {}).get("semantic_release", {})
-
-    except toml.TomlDecodeError:
-        logger.debug("Could not decode pyproject.toml")
-        return {}
+    return {}
 
 
 config = _config()

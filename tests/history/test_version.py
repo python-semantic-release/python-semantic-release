@@ -6,17 +6,17 @@ import pytest
 import semantic_release
 from semantic_release.history import (
     ImproperConfigurationError,
-    VersionPattern,
+    VersionDeclaration,
+    PatternVersionDeclaration,
+    TomlVersionDeclaration,
     get_current_version,
     get_current_version_by_tag,
     get_new_version,
     get_previous_version,
-    load_version_patterns,
-    set_new_version,
+    load_version_declarations,
+    set_new_version
 )
-
 from .. import wrapped_config_get
-from ..mocks import mock_version_file
 
 
 @pytest.fixture
@@ -105,14 +105,14 @@ class TestVersionPattern:
         "str, path, pattern",
         [
             (
-                "path:__version__",
-                "path",
-                r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
+                    "path:__version__",
+                    "path",
+                    r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
             ),
         ],
     )
     def test_from_variable(self, str, path, pattern):
-        p = VersionPattern.from_variable(str)
+        p = VersionDeclaration.from_variable(str)
         assert p.path == path
         assert p.pattern == pattern
 
@@ -124,9 +124,21 @@ class TestVersionPattern:
         ],
     )
     def test_from_pattern(self, str, path, pattern):
-        p = VersionPattern.from_pattern(str)
+        p = VersionDeclaration.from_pattern(str)
         assert p.path == path
         assert p.pattern == pattern
+
+    @pytest.mark.parametrize(
+        "str, path, key",
+        [
+            ("path:some.toml.key", "path", r"some.toml.key"),
+            ("path:some:other:toml.key", "path", r"some:other:toml.key"),
+        ],
+    )
+    def test_from_toml(self, str, path, key):
+        p = VersionDeclaration.from_toml(str)
+        assert p.path == path
+        assert p.key == key
 
     @pytest.mark.parametrize(
         "pattern, content, hits",
@@ -135,23 +147,23 @@ class TestVersionPattern:
             (r"(\d+)", "ab12", {"12"}),
             (r"(\d+)", "ab12 cd34", {"12", "34"}),
             (
-                r"version = (\d+)",
-                "version = 12\nnotversion = 34\nversion = 56not",
-                {"12", "34", "56"},
+                    r"version = (\d+)",
+                    "version = 12\nnotversion = 34\nversion = 56not",
+                    {"12", "34", "56"},
             ),
             (
-                r"^version = (\d+)$",
-                "version = 12\nnotversion = 34\nversion = 56not",
-                {"12"},
+                    r"^version = (\d+)$",
+                    "version = 12\nnotversion = 34\nversion = 56not",
+                    {"12"},
             ),
         ],
     )
-    def test_parse(self, tmp_path, pattern, content, hits):
+    def test_pattern_parse(self, tmp_path, pattern, content, hits):
         path = tmp_path / "pyproject.toml"
         path.write_text(content)
 
-        pattern = VersionPattern(str(path), pattern)
-        assert pattern.parse() == hits
+        declaration = PatternVersionDeclaration(str(path), pattern)
+        assert declaration.parse() == hits
 
     @pytest.mark.parametrize(
         "pattern, old_content, new_content",
@@ -182,12 +194,55 @@ class TestVersionPattern:
             (r"(\d+)b", "a12b", "a-b"),
         ],
     )
-    def test_replace(self, tmp_path, pattern, old_content, new_content):
+    def test_pattern_replace(self, tmp_path, pattern, old_content, new_content):
         path = tmp_path / "pyproject.toml"
         path.write_text(old_content)
 
-        pattern = VersionPattern(str(path), pattern)
-        pattern.replace("-")
+        declaration = PatternVersionDeclaration(str(path), pattern)
+        declaration.replace("-")
+
+        assert path.read_text() == new_content
+
+    @pytest.mark.parametrize(
+        "key, content, hits",
+        [
+            (r'root', 'root = "test"', {"test"}),
+            (r'tool.poetry.version', '[tool.poetry]\nversion = "0.1.0"', {"0.1.0"}),
+        ],
+    )
+    def test_toml_parse(self, tmp_path, key, content, hits):
+        path = tmp_path / "pyproject.toml"
+        path.write_text(content)
+
+        declaration = TomlVersionDeclaration(str(path), key)
+        assert declaration.parse() == hits
+
+    @pytest.mark.parametrize(
+        "key, old_content, new_content",
+        [
+            (r'root', '', ''),
+            (r'root', 'root = "test"', 'root = "-"'),
+            (r'tool.poetry.version',
+             '[tool.poetry]\n'
+             'version = "0.1.0"\n'
+             '[tool.poetry.dependencies.pylint]\n'
+             'version = "^2.5.3"\n'
+             'optional = true\n',
+
+             '[tool.poetry]\n'
+             'version = "-"\n'
+             '[tool.poetry.dependencies.pylint]\n'
+             'version = "^2.5.3"\n'
+             'optional = true\n'
+             )
+        ],
+    )
+    def test_toml_replace(self, tmp_path, key, old_content, new_content):
+        path = tmp_path / "pyproject.toml"
+        path.write_text(old_content)
+
+        declaration = TomlVersionDeclaration(str(path), key)
+        declaration.replace("-")
 
         assert path.read_text() == new_content
 
@@ -287,9 +342,9 @@ def test_load_version_patterns(tmp_cwd, monkeypatch, params):
 
     if "error" in params:
         with pytest.raises(ImproperConfigurationError):
-            load_version_patterns()
+            load_version_declarations()
 
     else:
-        patterns = load_version_patterns()
+        patterns = load_version_declarations()
         pattern_tuples = [(x.path, x.pattern) for x in patterns]
         assert pattern_tuples == params["patterns"]

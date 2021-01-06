@@ -49,6 +49,15 @@ specify multiple versions:
         'docs/conf.py:version',
     ]
 
+.. _config-version_toml:
+
+``version_toml``
+-------------------
+Similar to :ref:`config-version_variable`, but allows the version number to be
+identified safely in a toml file like ``pyproject.toml``, using a dotted notation to the key path::
+
+    pyproject.toml:poetry.tool.version
+
 .. _config-version_pattern:
 
 ``version_pattern``

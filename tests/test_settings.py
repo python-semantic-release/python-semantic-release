@@ -2,7 +2,7 @@ import os
 import platform
 from unittest import TestCase
 
-import toml
+import tomlkit
 
 from semantic_release.errors import ImproperConfigurationError
 from semantic_release.history import parser_angular
@@ -46,18 +46,16 @@ class ConfigTests(TestCase):
         # create temporary toml config file
         dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
         os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
-        toml_conf_content = {
-            "tool": {
-                "foo": {"bar": "baz"},
-                "semantic_release": {
-                    "upload_to_pypi": False,
-                    "version_source": "tag",
-                    "foo": "bar",
-                },
-            },
-        }
+        toml_conf_content = '''
+[tool.foo]
+bar = "baz"
+[tool.semantic_release]
+upload_to_pypi = false
+version_source = "tag"
+foo = "bar"
+'''
         with open(dummy_conf_path, "w") as dummy_conf_file:
-            toml.dump(toml_conf_content, dummy_conf_file)
+            dummy_conf_file.write(toml_conf_content)
 
         config = _config()
         mock_getcwd.assert_called_once_with()
@@ -86,7 +84,8 @@ class ConfigTests(TestCase):
 
         _ = _config()
         mock_getcwd.assert_called_once_with()
-        mock_debug.assert_called_once_with("Could not decode pyproject.toml")
+        mock_debug.assert_called_once_with(
+            'Could not decode pyproject.toml: Invalid key "TITLE OF BAD TOML" at line 1 col 25')
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 
