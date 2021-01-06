@@ -11,7 +11,7 @@ from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
 
 from .changelog import markdown_changelog
-from .dist import build_dists, remove_dists
+from .dist import build_dists, remove_dists, should_build, should_remove_dist
 from .history import (
     evaluate_version_bump,
     get_current_version,
@@ -258,7 +258,6 @@ def publish(**kwargs):
 
         # Get config options for uploads
         dist_path = config.get("dist_path")
-        remove_dist = config.get("remove_dist")
         upload_pypi = config.get("upload_to_pypi")
         upload_to_pypi_glob_patterns = config.get("upload_to_pypi_glob_patterns")
         upload_release = config.get("upload_to_release")
@@ -266,10 +265,10 @@ def publish(**kwargs):
         if upload_to_pypi_glob_patterns:
             upload_to_pypi_glob_patterns = upload_to_pypi_glob_patterns.split(",")
 
-        if upload_pypi or upload_release:
+        if should_build():
             # We need to run the command to build wheels for releasing
             logger.info("Building distributions")
-            if remove_dist:
+            if should_remove_dist():
                 # Remove old distributions before building
                 remove_dists(dist_path)
             build_dists()
@@ -298,7 +297,7 @@ def publish(**kwargs):
             logger.info("Uploading to HVCS release")
             upload_to_release(owner, name, new_version, dist_path)
         # Remove distribution files as they are no longer needed
-        if (upload_pypi or upload_release) and remove_dist:
+        if should_remove_dist():
             remove_dists(dist_path)
 
         logger.info("New release published")
