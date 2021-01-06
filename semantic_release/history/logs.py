@@ -12,6 +12,7 @@ from .parser_helpers import re_breaking
 logger = logging.getLogger(__name__)
 
 LEVELS = {
+    0: None,
     1: "patch",
     2: "minor",
     3: "major",
