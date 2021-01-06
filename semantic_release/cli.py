@@ -416,7 +416,7 @@ def cmd_version(**kwargs):
         exit(1)
 
 
-@main.command(name="print-version", help=version.__doc__)
+@main.command(name="print-version", help=print_version.__doc__)
 @common_options
 @click.option('--current/--next', default=False, help="Choose to output next version (default) or current one.")
 def cmd_print_version(**kwargs):

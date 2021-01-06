@@ -1,7 +1,7 @@
 from click.testing import CliRunner
 
 import semantic_release
-from semantic_release.cli import changelog, main, publish, version
+from semantic_release.cli import changelog, main, publish, version, print_version
 from semantic_release.errors import GitError, ImproperConfigurationError
 
 from . import mock, pytest, reset_config, wrapped_config_get
@@ -189,6 +189,116 @@ def test_noop_mode(mocker):
     assert not mock_commit_new.called
     assert not mock_tag_new_version.called
 
+
+def test_cli_print_version(mocker, runner):
+    mock_print_version = mocker.patch("semantic_release.cli.print_version")
+    result = runner.invoke(main, ["print-version"])
+    mock_print_version.assert_called_once_with(
+        current=False,
+        force_level=None,
+        noop=False,
+        post=False,
+        retry=False,
+        define=(),
+    )
+    assert result.exit_code == 0
+
+
+def test_cli_print_version_force_major(mocker, runner):
+    mock_print_version = mocker.patch("semantic_release.cli.print_version")
+    result = runner.invoke(main, ["print-version", "--major"])
+    mock_print_version.assert_called_once_with(
+        current=False,
+        force_level="major",
+        noop=False,
+        post=False,
+        retry=False,
+        define=(),
+    )
+    assert result.exit_code == 0
+
+
+def test_cli_print_version_current(mocker, runner):
+    mock_print_version = mocker.patch("semantic_release.cli.print_version")
+    result = runner.invoke(main, ["print-version", "--current"])
+    mock_print_version.assert_called_once_with(
+        current=True,
+        force_level=None,
+        noop=False,
+        post=False,
+        retry=False,
+        define=(),
+    )
+    assert result.exit_code == 0
+
+
+def test_cli_print_version_next(mocker, runner):
+    mock_print_version = mocker.patch("semantic_release.cli.print_version")
+    result = runner.invoke(main, ["print-version", "--next"])
+    mock_print_version.assert_called_once_with(
+        current=False,
+        force_level=None,
+        noop=False,
+        post=False,
+        retry=False,
+        define=(),
+    )
+    assert result.exit_code == 0
+
+
+def test_print_version_no_change(mocker, runner, capsys):
+    mock_new_version = mocker.patch(
+        "semantic_release.cli.get_new_version", return_value="1.2.3"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value=None
+    )
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="1.2.3"
+    )
+
+    print_version()
+    outerr = capsys.readouterr()
+    assert outerr.out == ""
+    assert outerr.err == "No release will be made.\n"
+
+    mock_current_version.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+    mock_new_version.assert_called_once_with("1.2.3", None)
+
+
+def test_print_version_change(mocker, runner, capsys):
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="1.2.3"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="minor"
+    )
+
+    print_version()
+    outerr = capsys.readouterr()
+    assert outerr.out == "1.3.0"
+    assert outerr.err == ""
+
+    mock_current_version.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+
+
+def test_print_version_force_major(mocker, runner, capsys):
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="1.2.3"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="major"
+    )
+
+    print_version(force_level="major")
+    outerr = capsys.readouterr()
+    assert outerr.out == "2.0.0"
+    assert outerr.err == ""
+
+    mock_current_version.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with("1.2.3", "major")
 
 def test_version_no_change(mocker, runner):
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
