@@ -24,6 +24,19 @@ Figure out the new version number, update and commit it, and create a tag.
 
 This will not push anything to any remote. All changes are local.
 
+.. _cmd-print-version:
+
+``semantic-release print-version``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Print to standard output the new version number.
+
+If the option ``--current`` is used, it will display the current version number.
+
+It can be used to retrieve the next version number in a shell script during the build, before running the effective
+release, ie. to rename a distribution binary with the effective version::
+
+    VERSION=$(semantic-release print-version)
 
 .. _cmd-publish:
 
