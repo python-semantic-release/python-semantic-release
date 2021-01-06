@@ -71,7 +71,7 @@ COMMON_OPTIONS = [
         "--define",
         "-D",
         multiple=True,
-        help='setting="value", override a configuration value',
+        help='setting="value", override a configuration value.',
     ),
     overload_configuration,
 ]
@@ -84,6 +84,30 @@ def common_options(func):
     for option in reversed(COMMON_OPTIONS):
         func = option(func)
     return func
+
+
+def print_version(*, current=False, force_level=None, **kwargs):
+    """
+    Print the current or new version to standard output.
+    """
+    try:
+        current_version = get_current_version()
+    except GitError as e:
+        print(str(e), file=sys.stderr)
+        return False
+    if current:
+        print(current_version, end="")
+        return True
+
+    # Find what the new version number should be
+    level_bump = evaluate_version_bump(current_version, force_level)
+    new_version = get_new_version(current_version, level_bump)
+    if should_bump_version(current_version=current_version, new_version=new_version):
+        print(new_version, end="")
+        return True
+
+    print("No release will be made.", file=sys.stderr)
+    return False
 
 
 def version(*, retry=False, noop=False, force_level=None, **kwargs):
@@ -318,10 +342,13 @@ def filter_output_for_secrets(message):
 
 
 def entry():
-    click_log.basic_config(logger)
-
     # Move flags to after the command
     ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith("--") else -1)
+
+    if ARGS and not ARGS[0].startswith('print-'):
+        # print-* command output should not be polluted with logging.
+        click_log.basic_config()
+
     main(args=ARGS)
 
 
@@ -390,12 +417,12 @@ def cmd_version(**kwargs):
         exit(1)
 
 
-if __name__ == "__main__":
-    #
-    # Allow options to come BEFORE commands,
-    # we simply sort them behind the command instead.
-    #
-    # This will have to be removed if there are ever global options
-    # that are not valid for a subcommand.
-    #
-    entry()
+@main.command(name="print-version", help=version.__doc__)
+@common_options
+@click.option('--current/--next', default=False, help="Choose to output next version (default) or current one.")
+def cmd_print_version(**kwargs):
+    try:
+        return print_version(**kwargs)
+    except Exception as error:
+        print(filter_output_for_secrets(str(error)), file=sys.stderr)
+        exit(1)
