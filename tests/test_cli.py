@@ -408,6 +408,52 @@ def test_publish_should_call_functions(mocker):
     mock_checkout.assert_called_once_with("master")
 
 
+def test_publish_should_skip_build_when_command_is_empty(mocker):
+    mock_push = mocker.patch("semantic_release.cli.push_new_version")
+    mock_checkout = mocker.patch("semantic_release.cli.checkout")
+    mock_should_bump_version = mocker.patch(
+        "semantic_release.cli.should_bump_version", return_value=True
+    )
+    mock_log = mocker.patch("semantic_release.cli.post_changelog")
+    mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
+    mock_pypi = mocker.patch("semantic_release.cli.upload_to_pypi")
+    mock_release = mocker.patch("semantic_release.cli.upload_to_release")
+    mock_build_dists = mocker.patch("semantic_release.cli.build_dists")
+    mock_remove_dists = mocker.patch("semantic_release.cli.remove_dists")
+    mocker.patch(
+        "semantic_release.cli.get_repository_owner_and_name",
+        return_value=("relekang", "python-semantic-release"),
+    )
+    mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
+    mocker.patch("semantic_release.cli.generate_changelog")
+    mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
+    mocker.patch("semantic_release.cli.update_changelog_file")
+    mocker.patch("semantic_release.cli.bump_version")
+    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
+    mocker.patch("semantic_release.cli.check_token", lambda: True)
+
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            build_command="",
+        ),
+    )
+
+    publish()
+
+    assert mock_ci_check.called
+    assert mock_push.called
+    assert not mock_remove_dists.called
+    assert not mock_build_dists.called
+    assert mock_pypi.called
+    assert mock_release.called
+    assert mock_should_bump_version.called
+    mock_log.assert_called_once_with(
+        u"relekang", "python-semantic-release", "2.0.0", "CHANGES"
+    )
+    mock_checkout.assert_called_once_with("master")
+
+
 def test_publish_should_call_functions_with_custom_pypi_glob_patterns(mocker):
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
