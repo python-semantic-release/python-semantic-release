@@ -344,7 +344,7 @@ def entry():
     # Move flags to after the command
     ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith("--") else -1)
 
-    if ARGS and not ARGS[0].startswith('print-'):
+    if ARGS and not ARGS[0].startswith("print-"):
         # print-* command output should not be polluted with logging.
         click_log.basic_config()
 
@@ -418,7 +418,11 @@ def cmd_version(**kwargs):
 
 @main.command(name="print-version", help=print_version.__doc__)
 @common_options
-@click.option('--current/--next', default=False, help="Choose to output next version (default) or current one.")
+@click.option(
+    "--current/--next",
+    default=False,
+    help="Choose to output next version (default) or current one.",
+)
 def cmd_print_version(**kwargs):
     try:
         return print_version(**kwargs)

@@ -1,7 +1,7 @@
 from click.testing import CliRunner
 
 import semantic_release
-from semantic_release.cli import changelog, main, publish, version, print_version
+from semantic_release.cli import changelog, main, print_version, publish, version
 from semantic_release.errors import GitError, ImproperConfigurationError
 
 from . import mock, pytest, reset_config, wrapped_config_get
@@ -299,6 +299,7 @@ def test_print_version_force_major(mocker, runner, capsys):
 
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("1.2.3", "major")
+
 
 def test_version_no_change(mocker, runner):
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
