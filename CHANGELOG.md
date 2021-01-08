@@ -2,6 +2,15 @@
 
 <!--next-version-placeholder-->
 
+## v7.11.0 (2021-01-08)
+### Feature
+* **print-version:** Add print-version command to output version ([`512e3d9`](https://github.com/relekang/python-semantic-release/commit/512e3d92706055bdf8d08b7c82927d3530183079))
+
+### Fix
+* **actions:** Fix github actions with new main location ([`6666672`](https://github.com/relekang/python-semantic-release/commit/6666672d3d97ab7cdf47badfa3663f1a69c2dbdf))
+* Avoid Unknown bump level 0 message ([`8ab624c`](https://github.com/relekang/python-semantic-release/commit/8ab624cf3508b57a9656a0a212bfee59379d6f8b))
+* Add dot to --define option help ([`eb4107d`](https://github.com/relekang/python-semantic-release/commit/eb4107d2efdf8c885c8ae35f48f1b908d1fced32))
+
 ## v7.10.0 (2021-01-08)
 ### Feature
 * **build:** Allow falsy values for build_command to disable build step ([`c07a440`](https://github.com/relekang/python-semantic-release/commit/c07a440f2dfc45a2ad8f7c454aaac180c4651f70))
