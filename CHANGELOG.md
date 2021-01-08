@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v7.10.0 (2021-01-08)
+### Feature
+* **build:** Allow falsy values for build_command to disable build step ([`c07a440`](https://github.com/relekang/python-semantic-release/commit/c07a440f2dfc45a2ad8f7c454aaac180c4651f70))
+
+### Documentation
+* Fix incorrect reference syntax ([`42027f0`](https://github.com/relekang/python-semantic-release/commit/42027f0d2bb64f4c9eaec65112bf7b6f67568e60))
+* Rewrite getting started page ([`97a9046`](https://github.com/relekang/python-semantic-release/commit/97a90463872502d1207890ae1d9dd008b1834385))
+
 ## v7.9.0 (2020-12-21)
 ### Feature
 * **hvcs:** Add hvcs_domain config option ([`ab3061a`](https://github.com/relekang/python-semantic-release/commit/ab3061ae93c49d71afca043b67b361e2eb2919e6))
