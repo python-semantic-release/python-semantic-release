@@ -1,4 +1,5 @@
 from semantic_release.dist import build_dists, should_build, should_remove_dist
+
 from . import pytest
 
 
@@ -16,35 +17,51 @@ def test_build_command(mocker, commands):
 @pytest.mark.parametrize(
     "config,expected",
     [
-        ({"upload_to_pypi": True,
-          "upload_to_release": True,
-          "build_command": "python setup.py build"},
-         True),
-        ({"upload_to_pypi": True,
-          "upload_to_release": True,
-          "build_command": False},
-         False),
-        ({"upload_to_pypi": True,
-          "upload_to_release": True,
-          "build_command": None},
-         False),
-        ({"upload_to_pypi": True,
-          "upload_to_release": True,
-          "build_command": ""},
-         False),
-        ({"upload_to_pypi": False,
-          "upload_to_release": True,
-          "build_command": "python setup.py build"},
-         True),
-        ({"upload_to_pypi": True,
-          "upload_to_release": False,
-          "build_command": "python setup.py build"},
-         True),
-        ({"upload_to_pypi": False,
-          "upload_to_release": False,
-          "build_command": "python setup.py build"},
-         False)
-    ]
+        (
+            {
+                "upload_to_pypi": True,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+            },
+            True,
+        ),
+        (
+            {"upload_to_pypi": True, "upload_to_release": True, "build_command": False},
+            False,
+        ),
+        (
+            {"upload_to_pypi": True, "upload_to_release": True, "build_command": None},
+            False,
+        ),
+        (
+            {"upload_to_pypi": True, "upload_to_release": True, "build_command": ""},
+            False,
+        ),
+        (
+            {
+                "upload_to_pypi": False,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+            },
+            True,
+        ),
+        (
+            {
+                "upload_to_pypi": True,
+                "upload_to_release": False,
+                "build_command": "python setup.py build",
+            },
+            True,
+        ),
+        (
+            {
+                "upload_to_pypi": False,
+                "upload_to_release": False,
+                "build_command": "python setup.py build",
+            },
+            False,
+        ),
+    ],
 )
 def test_should_build(config, expected, mocker):
     mocker.patch("semantic_release.cli.config.get", lambda key: config.get(key))
@@ -54,22 +71,34 @@ def test_should_build(config, expected, mocker):
 @pytest.mark.parametrize(
     "config,expected",
     [
-        ({"upload_to_pypi": True,
-          "upload_to_release": True,
-          "build_command": "python setup.py build",
-          "remove_dist": True},
-         True),
-        ({"upload_to_pypi": True,
-          "upload_to_release": True,
-          "build_command": "python setup.py build",
-          "remove_dist": False},
-         False),
-        ({"upload_to_pypi": False,
-          "upload_to_release": False,
-          "build_command": False,
-          "remove_dist": True},
-         False),
-    ]
+        (
+            {
+                "upload_to_pypi": True,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+                "remove_dist": True,
+            },
+            True,
+        ),
+        (
+            {
+                "upload_to_pypi": True,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+                "remove_dist": False,
+            },
+            False,
+        ),
+        (
+            {
+                "upload_to_pypi": False,
+                "upload_to_release": False,
+                "build_command": False,
+                "remove_dist": True,
+            },
+            False,
+        ),
+    ],
 )
 def test_should_remove_dist(config, expected, mocker):
     mocker.patch("semantic_release.cli.config.get", lambda key: config.get(key))
