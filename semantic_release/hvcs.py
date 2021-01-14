@@ -3,18 +3,18 @@
 import logging
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import gitlab
 from requests import Session, HTTPError
 from requests.auth import AuthBase
+from urllib3 import Retry
 
 from .errors import ImproperConfigurationError
 from .helpers import LoggedFunction, build_requests_session
 from .settings import config
 
 logger = logging.getLogger(__name__)
-
 
 # Add a mime type for wheels
 mimetypes.add_type("application/octet-stream", ".whl")
@@ -39,7 +39,7 @@ class Base(object):
 
     @classmethod
     def post_release_changelog(
-        cls, owner: str, repo: str, version: str, changelog: str
+            cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         raise NotImplementedError
 
@@ -135,8 +135,8 @@ class Github(Base):
         return TokenAuth(token)
 
     @staticmethod
-    def session(raise_for_status=True) -> Session:
-        session = build_requests_session(raise_for_status=raise_for_status)
+    def session(raise_for_status=True, retry: Union[Retry, bool, int] = True) -> Session:
+        session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
         session.auth = Github.auth()
         return session
 
@@ -243,7 +243,7 @@ class Github(Base):
     @classmethod
     @LoggedFunction(logger)
     def post_release_changelog(
-        cls, owner: str, repo: str, version: str, changelog: str
+            cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         """Post release changelog
 
@@ -272,7 +272,7 @@ class Github(Base):
     @classmethod
     @LoggedFunction(logger)
     def upload_asset(
-        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+            cls, owner: str, repo: str, release_id: int, file: str, label: str = None
     ) -> bool:
         """Upload an asset to an existing release
 
@@ -397,7 +397,7 @@ class Gitlab(Base):
     @classmethod
     @LoggedFunction(logger)
     def post_release_changelog(
-        cls, owner: str, repo: str, version: str, changelog: str
+            cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         """Post release changelog
 
