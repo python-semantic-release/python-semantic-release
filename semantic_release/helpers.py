@@ -1,4 +1,5 @@
 import functools
+from requests import Session
 
 
 def format_arg(value):
@@ -6,6 +7,20 @@ def format_arg(value):
         return f"'{value.strip()}'"
     else:
         return str(value)
+
+
+def build_requests_session(raise_for_status=True) -> Session:
+    """
+    Create a requests session.
+    :param raise_for_status: If True, a hook to invoke raise_for_status be installed
+    :return:
+    """
+    session = Session()
+    if raise_for_status:
+        session.hooks = {
+           'response': [lambda r, *args, **kwargs: r.raise_for_status()]
+        }
+    return session
 
 
 class LoggedFunction:
