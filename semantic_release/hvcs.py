@@ -6,7 +6,7 @@ import os
 from typing import Optional, Union
 
 import gitlab
-from requests import Session, HTTPError
+from requests import HTTPError, Session
 from requests.auth import AuthBase
 from urllib3 import Retry
 
@@ -39,7 +39,7 @@ class Base(object):
 
     @classmethod
     def post_release_changelog(
-            cls, owner: str, repo: str, version: str, changelog: str
+        cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         raise NotImplementedError
 
@@ -135,7 +135,9 @@ class Github(Base):
         return TokenAuth(token)
 
     @staticmethod
-    def session(raise_for_status=True, retry: Union[Retry, bool, int] = True) -> Session:
+    def session(
+        raise_for_status=True, retry: Union[Retry, bool, int] = True
+    ) -> Session:
         session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
         session.auth = Github.auth()
         return session
@@ -186,7 +188,7 @@ class Github(Base):
                     "body": changelog,
                     "draft": False,
                     "prerelease": False,
-                }
+                },
             )
             return True
         except HTTPError as e:
@@ -233,7 +235,7 @@ class Github(Base):
         try:
             Github.session().post(
                 f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
-                json={"body": changelog}
+                json={"body": changelog},
             )
             return True
         except HTTPError as e:
@@ -243,7 +245,7 @@ class Github(Base):
     @classmethod
     @LoggedFunction(logger)
     def post_release_changelog(
-            cls, owner: str, repo: str, version: str, changelog: str
+        cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         """Post release changelog
 
@@ -272,7 +274,7 @@ class Github(Base):
     @classmethod
     @LoggedFunction(logger)
     def upload_asset(
-            cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
     ) -> bool:
         """Upload an asset to an existing release
 
@@ -397,7 +399,7 @@ class Gitlab(Base):
     @classmethod
     @LoggedFunction(logger)
     def post_release_changelog(
-            cls, owner: str, repo: str, version: str, changelog: str
+        cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         """Post release changelog
 
