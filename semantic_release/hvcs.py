@@ -3,18 +3,18 @@
 import logging
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import gitlab
-import requests
+from requests import Session, HTTPError
 from requests.auth import AuthBase
+from urllib3 import Retry
 
 from .errors import ImproperConfigurationError
-from .helpers import LoggedFunction
+from .helpers import LoggedFunction, build_requests_session
 from .settings import config
 
 logger = logging.getLogger(__name__)
-
 
 # Add a mime type for wheels
 mimetypes.add_type("application/octet-stream", ".whl")
@@ -39,7 +39,7 @@ class Base(object):
 
     @classmethod
     def post_release_changelog(
-        cls, owner: str, repo: str, version: str, changelog: str
+            cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         raise NotImplementedError
 
@@ -135,6 +135,12 @@ class Github(Base):
         return TokenAuth(token)
 
     @staticmethod
+    def session(raise_for_status=True, retry: Union[Retry, bool, int] = True) -> Session:
+        session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
+        session.auth = Github.auth()
+        return session
+
+    @staticmethod
     @LoggedFunction(logger)
     def check_build_status(owner: str, repo: str, ref: str) -> bool:
         """Check build status
@@ -148,10 +154,14 @@ class Github(Base):
         :return: Was the build status success?
         """
         url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
-        response = requests.get(
-            url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
-        )
-        return response.json()["state"] == "success"
+        try:
+            response = Github.session().get(
+                url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
+            )
+            return response.json().get("state") == "success"
+        except HTTPError as e:
+            logger.warning(f"Build status check on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
@@ -167,24 +177,25 @@ class Github(Base):
 
         :return: Whether the request succeeded
         """
-        response = requests.post(
-            f"{Github.api_url()}/repos/{owner}/{repo}/releases",
-            json={
-                "tag_name": tag,
-                "name": tag,
-                "body": changelog,
-                "draft": False,
-                "prerelease": False,
-            },
-            auth=Github.auth(),
-        )
-        logger.debug(f"Release creation status code: {response.status_code}")
-
-        return response.status_code == 201
+        try:
+            Github.session().post(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases",
+                json={
+                    "tag_name": tag,
+                    "name": tag,
+                    "body": changelog,
+                    "draft": False,
+                    "prerelease": False,
+                }
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Release creation on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
-    def get_release(cls, owner: str, repo: str, tag: str) -> int:
+    def get_release(cls, owner: str, repo: str, tag: str) -> Optional[int]:
         """Get a release by its tag name
 
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
@@ -195,13 +206,15 @@ class Github(Base):
 
         :return: ID of found release
         """
-        response = requests.get(
-            f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}",
-            auth=Github.auth(),
-        )
-        logger.debug(f"Get release by tag status code: {response.status_code}")
-
-        return response.json()["id"]
+        try:
+            response = Github.session().get(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}"
+            )
+            return response.json().get("id")
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                logger.debug(f"Get release by tag on Github has failed: {e}")
+            return None
 
     @classmethod
     @LoggedFunction(logger)
@@ -217,19 +230,20 @@ class Github(Base):
 
         :return: Whether the request succeeded
         """
-        response = requests.post(
-            f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
-            json={"body": changelog},
-            auth=Github.auth(),
-        )
-        logger.debug(f"Edit release status code: {response.status_code}")
-
-        return response.status_code == 200
+        try:
+            Github.session().post(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
+                json={"body": changelog}
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Edit release on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
     def post_release_changelog(
-        cls, owner: str, repo: str, version: str, changelog: str
+            cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         """Post release changelog
 
@@ -247,15 +261,18 @@ class Github(Base):
         if not success:
             logger.debug("Unsuccessful, looking for an existing release to update")
             release_id = Github.get_release(owner, repo, tag)
-            logger.debug(f"Updating release {release_id}")
-            success = Github.edit_release(owner, repo, release_id, changelog)
+            if release_id:
+                logger.debug(f"Updating release {release_id}")
+                success = Github.edit_release(owner, repo, release_id, changelog)
+            else:
+                logger.debug(f"Existing release not found")
 
         return success
 
     @classmethod
     @LoggedFunction(logger)
     def upload_asset(
-        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+            cls, owner: str, repo: str, release_id: int, file: str, label: str = None
     ) -> bool:
         """Upload an asset to an existing release
 
@@ -275,25 +292,23 @@ class Github(Base):
         if not content_type:
             content_type = "application/octet-stream"
 
-        response = requests.post(
-            url,
-            params={"name": os.path.basename(file), "label": label},
-            headers={
-                "Content-Type": content_type,
-            },
-            auth=Github.auth(),
-            data=open(file, "rb").read(),
-        )
-        logger.debug(
-            f"Asset upload completed, url: {response.url}, status code: {response.status_code}"
-        )
-        logger.debug(response.json())
-
         try:
-            response.raise_for_status()
+            response = Github.session().post(
+                url,
+                params={"name": os.path.basename(file), "label": label},
+                headers={
+                    "Content-Type": content_type,
+                },
+                data=open(file, "rb").read(),
+            )
+
+            logger.debug(
+                f"Asset upload on Github completed, url: {response.url}, status code: {response.status_code}"
+            )
+
             return True
-        except requests.exceptions.HTTPError as e:
-            logger.warning(f"The github file upload {file} has failed: {e}")
+        except HTTPError as e:
+            logger.warning(f"Asset upload {file} on Github has failed: {e}")
             return False
 
     @classmethod
@@ -382,7 +397,7 @@ class Gitlab(Base):
     @classmethod
     @LoggedFunction(logger)
     def post_release_changelog(
-        cls, owner: str, repo: str, version: str, changelog: str
+            cls, owner: str, repo: str, version: str, changelog: str
     ) -> bool:
         """Post release changelog
 
