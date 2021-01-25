@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.12.0 (2021-01-25)
+### Feature
+* **github:** Retry GitHub API requests on failure ([#314](https://github.com/relekang/python-semantic-release/issues/314)) ([`ac241ed`](https://github.com/relekang/python-semantic-release/commit/ac241edf4de39f4fc0ff561a749fa85caaf9e2ae))
+
+### Documentation
+* **actions:** PAT must be passed to checkout step too ([`e2d8e47`](https://github.com/relekang/python-semantic-release/commit/e2d8e47d2b02860881381318dcc088e150c0fcde))
+
 ## v7.11.0 (2021-01-08)
 ### Feature
 * **print-version:** Add print-version command to output version ([`512e3d9`](https://github.com/relekang/python-semantic-release/commit/512e3d92706055bdf8d08b7c82927d3530183079))
