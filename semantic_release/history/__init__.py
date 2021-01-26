@@ -3,24 +3,107 @@
 import csv
 import logging
 import re
+from abc import ABC, abstractmethod
 from typing import List, Optional, Set
 
 import semver
+import tomlkit
+from dotty_dict import Dotty
 
+from .logs import evaluate_version_bump  # noqa
+from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
+from .parser_emoji import parse_commit_message as emoji_parser  # noqa isort:skip
+from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 from ..errors import ImproperConfigurationError
 from ..helpers import LoggedFunction
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
-from .logs import evaluate_version_bump  # noqa
-
-from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
-from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
-from .parser_emoji import parse_commit_message as emoji_parser  # noqa isort:skip
 
 logger = logging.getLogger(__name__)
 
 
-class VersionPattern:
+class VersionDeclaration(ABC):
+    def __init__(self, path: str):
+        self.path = path
+
+    @staticmethod
+    def from_toml(config_str: str):
+        """
+        Instantiate a `TomlVersionDeclaration` from a string specifying a path and a key
+        matching the version number.
+        """
+        path, key = config_str.split(":", 1)
+        return TomlVersionDeclaration(path, key)
+
+    @staticmethod
+    def from_variable(config_str: str):
+        """
+        Instantiate a `PatternVersionDeclaration` from a string specifying a path and a
+        variable name.
+        """
+        path, variable = config_str.split(":", 1)
+        pattern = rf'{variable} *[:=] *["\']{PatternVersionDeclaration.version_regex}["\']'
+        return PatternVersionDeclaration(path, pattern)
+
+    @staticmethod
+    def from_pattern(config_str: str):
+        """
+        Instantiate a `PatternVersionDeclaration` from a string specifying a path and a
+        regular expression matching the version number.
+        """
+        path, pattern = config_str.split(":", 1)
+        pattern = pattern.format(version=PatternVersionDeclaration.version_regex)
+        return PatternVersionDeclaration(path, pattern)
+
+    @abstractmethod
+    def parse(self) -> Set[str]:
+        """
+        Return the versions.
+
+        Because a source can match in multiple places, this method returns a
+        set of matches. Generally, there should only be one element in this
+        set (i.e. even if the version is specified in multiple places, it
+        should be the same version in each place), but it falls on the caller
+        to check for this condition.
+        """
+
+    @abstractmethod
+    def replace(self, new_version: str):
+        """
+        Update the versions.
+
+        This method reads the underlying file, replaces each occurrence of the
+        matched pattern, then writes the updated file.
+
+        :param new_version: The new version number as a string
+        """
+
+
+class TomlVersionDeclaration(VersionDeclaration):
+    def __init__(self, path, key):
+        super().__init__(path)
+        self.key = key
+
+    def _read(self):
+        with open(self.path, "r") as f:
+            return Dotty(tomlkit.loads(f.read()))
+
+    def parse(self) -> Set[str]:
+        config = self._read()
+        if self.key in config:
+            return {config.get(self.key)}
+        return set()
+
+    def replace(self, new_version: str):
+        config = self._read()
+        version = self.key in config
+        if version:
+            config[self.key] = new_version
+            with open(self.path, "w") as f:
+                f.write(tomlkit.dumps(config))
+
+
+class PatternVersionDeclaration(VersionDeclaration):
     """
     Represent a version number in a particular file.
 
@@ -35,28 +118,8 @@ class VersionPattern:
     # The pattern should be a regular expression with a single group,
     # containing the version to replace.
     def __init__(self, path: str, pattern: str):
-        self.path = path
+        super().__init__(path)
         self.pattern = pattern
-
-    @classmethod
-    def from_variable(cls, config_str: str):
-        """
-        Instantiate a `VersionPattern` from a string specifying a path and a
-        variable name.
-        """
-        path, variable = config_str.split(":", 1)
-        pattern = rf'{variable} *[:=] *["\']{cls.version_regex}["\']'
-        return cls(path, pattern)
-
-    @classmethod
-    def from_pattern(cls, config_str: str):
-        """
-        Instantiate a `VersionPattern` from a string specifying a path and a
-        regular expression matching the version number.
-        """
-        path, pattern = config_str.split(":", 1)
-        pattern = pattern.format(version=cls.version_regex)
-        return cls(path, pattern)
 
     def parse(self) -> Set[str]:
         """
@@ -135,8 +198,8 @@ def get_current_version_by_config_file() -> str:
     :raises ImproperConfigurationError: if either no versions are found, or
     multiple versions are found.
     """
-    patterns = load_version_patterns()
-    versions = set.union(*[x.parse() for x in patterns])
+    declarations = load_version_declarations()
+    versions = set.union(*[x.parse() for x in declarations])
 
     if len(versions) == 0:
         raise ImproperConfigurationError(
@@ -212,17 +275,17 @@ def set_new_version(new_version: str) -> bool:
     :return: `True` if it succeeded.
     """
 
-    for pattern in load_version_patterns():
-        pattern.replace(new_version)
+    for declaration in load_version_declarations():
+        declaration.replace(new_version)
 
     return True
 
 
-def load_version_patterns() -> List[VersionPattern]:
+def load_version_declarations() -> List[VersionDeclaration]:
     """
-    Create the `VersionPattern` objects specified by the config file.
+    Create the `VersionDeclaration` objects specified by the config file.
     """
-    patterns = []
+    declarations = []
 
     def iter_fields(x):
         if not x:
@@ -235,15 +298,18 @@ def load_version_patterns() -> List[VersionPattern]:
             yield from next(csv.reader([x]))
 
     for version_var in iter_fields(config.get("version_variable")):
-        pattern = VersionPattern.from_variable(version_var)
-        patterns.append(pattern)
+        declaration = VersionDeclaration.from_variable(version_var)
+        declarations.append(declaration)
     for version_pat in iter_fields(config.get("version_pattern")):
-        pattern = VersionPattern.from_pattern(version_pat)
-        patterns.append(pattern)
+        declaration = VersionDeclaration.from_pattern(version_pat)
+        declarations.append(declaration)
+    for version_toml in iter_fields(config.get("version_toml")):
+        declaration = VersionDeclaration.from_toml(version_toml)
+        declarations.append(declaration)
 
-    if not patterns:
+    if not declarations:
         raise ImproperConfigurationError(
-            "must specify either 'version_variable' or 'version_pattern'"
+            "must specify either 'version_variable', 'version_pattern' or 'version_toml'"
         )
 
-    return patterns
+    return declarations

@@ -130,7 +130,7 @@ def commit_new_version(version: str):
 
     :param version: Version number to be used in the commit message.
     """
-    from .history import load_version_patterns
+    from .history import load_version_declarations
 
     commit_subject = config.get("commit_subject")
     message = commit_subject.format(version=version)
@@ -146,8 +146,8 @@ def commit_new_version(version: str):
         "semantic-release <semantic-release>",
     )
 
-    for pattern in load_version_patterns():
-        git_path = PurePath(os.getcwd(), pattern.path).relative_to(repo.working_dir)
+    for declaration in load_version_declarations():
+        git_path = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir)
         repo.git.add(str(git_path))
 
     return repo.git.commit(m=message, author=commit_author)
