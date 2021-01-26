@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.13.1 (2021-01-26)
+### Fix
+* Use multiline version_pattern match in replace ([#315](https://github.com/relekang/python-semantic-release/issues/315)) ([`1a85af4`](https://github.com/relekang/python-semantic-release/commit/1a85af434325ce52e11b49895e115f7a936e417e))
+
 ## v7.13.0 (2021-01-26)
 ### Feature
 * Support toml files for version declaration ([#307](https://github.com/relekang/python-semantic-release/issues/307)) ([`9b62a7e`](https://github.com/relekang/python-semantic-release/commit/9b62a7e377378667e716384684a47cdf392093fa))
