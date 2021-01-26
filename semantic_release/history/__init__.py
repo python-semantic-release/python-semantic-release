@@ -10,14 +10,15 @@ import semver
 import tomlkit
 from dotty_dict import Dotty
 
-from .logs import evaluate_version_bump  # noqa
-from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
-from .parser_emoji import parse_commit_message as emoji_parser  # noqa isort:skip
-from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 from ..errors import ImproperConfigurationError
 from ..helpers import LoggedFunction
 from ..settings import config
 from ..vcs_helpers import get_commit_log, get_last_version
+from .logs import evaluate_version_bump  # noqa
+
+from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
+from .parser_emoji import parse_commit_message as emoji_parser  # noqa isort:skip
+from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,9 @@ class VersionDeclaration(ABC):
         variable name.
         """
         path, variable = config_str.split(":", 1)
-        pattern = rf'{variable} *[:=] *["\']{PatternVersionDeclaration.version_regex}["\']'
+        pattern = (
+            rf'{variable} *[:=] *["\']{PatternVersionDeclaration.version_regex}["\']'
+        )
         return PatternVersionDeclaration(path, pattern)
 
     @staticmethod

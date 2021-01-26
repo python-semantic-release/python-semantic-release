@@ -6,16 +6,17 @@ import pytest
 import semantic_release
 from semantic_release.history import (
     ImproperConfigurationError,
-    VersionDeclaration,
     PatternVersionDeclaration,
     TomlVersionDeclaration,
+    VersionDeclaration,
     get_current_version,
     get_current_version_by_tag,
     get_new_version,
     get_previous_version,
     load_version_declarations,
-    set_new_version
+    set_new_version,
 )
+
 from .. import wrapped_config_get
 
 
@@ -105,9 +106,9 @@ class TestVersionPattern:
         "str, path, pattern",
         [
             (
-                    "path:__version__",
-                    "path",
-                    r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
+                "path:__version__",
+                "path",
+                r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
             ),
         ],
     )
@@ -147,14 +148,14 @@ class TestVersionPattern:
             (r"(\d+)", "ab12", {"12"}),
             (r"(\d+)", "ab12 cd34", {"12", "34"}),
             (
-                    r"version = (\d+)",
-                    "version = 12\nnotversion = 34\nversion = 56not",
-                    {"12", "34", "56"},
+                r"version = (\d+)",
+                "version = 12\nnotversion = 34\nversion = 56not",
+                {"12", "34", "56"},
             ),
             (
-                    r"^version = (\d+)$",
-                    "version = 12\nnotversion = 34\nversion = 56not",
-                    {"12"},
+                r"^version = (\d+)$",
+                "version = 12\nnotversion = 34\nversion = 56not",
+                {"12"},
             ),
         ],
     )
@@ -206,8 +207,8 @@ class TestVersionPattern:
     @pytest.mark.parametrize(
         "key, content, hits",
         [
-            (r'root', 'root = "test"', {"test"}),
-            (r'tool.poetry.version', '[tool.poetry]\nversion = "0.1.0"', {"0.1.0"}),
+            (r"root", 'root = "test"', {"test"}),
+            (r"tool.poetry.version", '[tool.poetry]\nversion = "0.1.0"', {"0.1.0"}),
         ],
     )
     def test_toml_parse(self, tmp_path, key, content, hits):
@@ -220,21 +221,21 @@ class TestVersionPattern:
     @pytest.mark.parametrize(
         "key, old_content, new_content",
         [
-            (r'root', '', ''),
-            (r'root', 'root = "test"', 'root = "-"'),
-            (r'tool.poetry.version',
-             '[tool.poetry]\n'
-             'version = "0.1.0"\n'
-             '[tool.poetry.dependencies.pylint]\n'
-             'version = "^2.5.3"\n'
-             'optional = true\n',
-
-             '[tool.poetry]\n'
-             'version = "-"\n'
-             '[tool.poetry.dependencies.pylint]\n'
-             'version = "^2.5.3"\n'
-             'optional = true\n'
-             )
+            (r"root", "", ""),
+            (r"root", 'root = "test"', 'root = "-"'),
+            (
+                r"tool.poetry.version",
+                "[tool.poetry]\n"
+                'version = "0.1.0"\n'
+                "[tool.poetry.dependencies.pylint]\n"
+                'version = "^2.5.3"\n'
+                "optional = true\n",
+                "[tool.poetry]\n"
+                'version = "-"\n'
+                "[tool.poetry.dependencies.pylint]\n"
+                'version = "^2.5.3"\n'
+                "optional = true\n",
+            ),
         ],
     )
     def test_toml_replace(self, tmp_path, key, old_content, new_content):

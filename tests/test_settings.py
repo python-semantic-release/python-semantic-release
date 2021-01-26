@@ -46,14 +46,14 @@ class ConfigTests(TestCase):
         # create temporary toml config file
         dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
         os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
-        toml_conf_content = '''
+        toml_conf_content = """
 [tool.foo]
 bar = "baz"
 [tool.semantic_release]
 upload_to_pypi = false
 version_source = "tag"
 foo = "bar"
-'''
+"""
         with open(dummy_conf_path, "w") as dummy_conf_file:
             dummy_conf_file.write(toml_conf_content)
 
@@ -85,7 +85,8 @@ foo = "bar"
         _ = _config()
         mock_getcwd.assert_called_once_with()
         mock_debug.assert_called_once_with(
-            'Could not decode pyproject.toml: Invalid key "TITLE OF BAD TOML" at line 1 col 25')
+            'Could not decode pyproject.toml: Invalid key "TITLE OF BAD TOML" at line 1 col 25'
+        )
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 
