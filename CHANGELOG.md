@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.13.0 (2021-01-26)
+### Feature
+* Support toml files for version declaration ([#307](https://github.com/relekang/python-semantic-release/issues/307)) ([`9b62a7e`](https://github.com/relekang/python-semantic-release/commit/9b62a7e377378667e716384684a47cdf392093fa))
+
 ## v7.12.0 (2021-01-25)
 ### Feature
 * **github:** Retry GitHub API requests on failure ([#314](https://github.com/relekang/python-semantic-release/issues/314)) ([`ac241ed`](https://github.com/relekang/python-semantic-release/commit/ac241edf4de39f4fc0ff561a749fa85caaf9e2ae))
