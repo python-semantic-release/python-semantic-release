@@ -167,7 +167,9 @@ class PatternVersionDeclaration(VersionDeclaration):
             ii, jj = m.span(1)
             return s[i:ii] + new_version + s[jj:j]
 
-        new_content = re.sub(self.pattern, swap_version, old_content, flags=re.MULTILINE)
+        new_content = re.sub(
+            self.pattern, swap_version, old_content, flags=re.MULTILINE
+        )
 
         logger.debug(
             f"Writing new version number: path={self.path!r} pattern={self.pattern!r} num_matches={n!r}"
