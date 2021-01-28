@@ -1,10 +1,7 @@
 import os
 import platform
-from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
-
-import tomlkit
 
 from semantic_release.errors import ImproperConfigurationError
 from semantic_release.history import parser_angular
