@@ -1,5 +1,7 @@
 import os
 import platform
+from pathlib import Path
+from textwrap import dedent
 from unittest import TestCase
 
 import tomlkit
@@ -87,6 +89,27 @@ foo = "bar"
         mock_debug.assert_called_once_with(
             'Could not decode pyproject.toml: Invalid key "TITLE OF BAD TOML" at line 1 col 25'
         )
+        # delete temporary toml config file
+        os.remove(dummy_conf_path)
+
+    @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
+    def test_toml_no_psr_section(self, mock_getcwd):
+        # create temporary toml config file
+        dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
+        toml_conf_content = dedent(
+            """
+            [tool.foo]
+            bar = "baz"
+            """
+        )
+        os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
+
+        with open(dummy_conf_path, "w") as dummy_conf_file:
+            dummy_conf_file.write(toml_conf_content)
+
+        config = _config()
+        mock_getcwd.assert_called_once_with()
+        self.assertEqual(config.get("hvcs"), "github")
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 
