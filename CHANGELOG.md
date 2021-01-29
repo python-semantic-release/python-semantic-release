@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.13.2 (2021-01-29)
+### Fix
+* Fix crash when TOML has no PSR section ([#319](https://github.com/relekang/python-semantic-release/issues/319)) ([`5f8ab99`](https://github.com/relekang/python-semantic-release/commit/5f8ab99bf7254508f4b38fcddef2bdde8dd15a4c))
+
+### Documentation
+* Fix `version_toml` example for Poetry ([#318](https://github.com/relekang/python-semantic-release/issues/318)) ([`39acb68`](https://github.com/relekang/python-semantic-release/commit/39acb68bfffe8242040e476893639ba26fa0d6b5))
+
 ## v7.13.1 (2021-01-26)
 ### Fix
 * Use multiline version_pattern match in replace ([#315](https://github.com/relekang/python-semantic-release/issues/315)) ([`1a85af4`](https://github.com/relekang/python-semantic-release/commit/1a85af434325ce52e11b49895e115f7a936e417e))
