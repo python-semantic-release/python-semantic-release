@@ -28,7 +28,7 @@ your project, for example ``setup.py``::
    )
 
 Python Semantic Release is configured using ``setup.cfg`` or ``pyproject.toml``.
-Set :ref:`config-version_variable` to the location of your version variable inside any python file::
+Set :ref:`config-version_variable` to the location of your version variable inside any Python file::
 
    [semantic_release]
    version_variable = setup.py:__version__

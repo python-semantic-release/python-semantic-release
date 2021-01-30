@@ -3,7 +3,7 @@ Python Semantic Release
 
 |Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status|
 
-Automatic Semantic Versioning for python projects. This is a python
+Automatic Semantic Versioning for Python projects. This is a Python
 implementation of `semantic-release`_ for JS by Stephan Bönnemann. If
 you find this topic interesting you should check out his `talk from
 JSConf Budapest`_.

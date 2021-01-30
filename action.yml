@@ -1,6 +1,6 @@
 name: 'Python Semantic Release'
 
-description: 'Automatic Semantic Versioning for python projects'
+description: 'Automatic Semantic Versioning for Python projects'
 
 inputs:
   directory:
