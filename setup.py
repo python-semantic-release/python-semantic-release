@@ -29,7 +29,7 @@ setup(
     url="http://github.com/relekang/python-semantic-release",
     author="Rolf Erik Lekang",
     author_email="me@rolflekang.com",
-    description="Automatic semantic versioning for python projects",
+    description="Automatic Semantic Versioning for Python projects",
     long_description=_read_long_description(),
     packages=find_packages(exclude=("tests",)),
     license="MIT",
