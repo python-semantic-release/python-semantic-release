@@ -100,6 +100,21 @@ def bitbucket(branch: str):
     assert not os.environ.get("BITBUCKET_PR_ID")
 
 
+@checker
+def jenkins(branch: str):
+    """
+    Performs necessary checks to ensure that the jenkins build is one
+    that should create releases.
+
+    :param branch: The branch the environment should be running against.
+    """
+
+    branch_name = os.environ.get("BRANCH_NAME") or os.environ.get("GIT_BRANCH")
+    assert os.environ.get('JENKINS_URL') is not None
+    assert branch_name == branch
+    assert not os.environ.get("CHANGE_ID") # pull request id
+
+
 def check(branch: str = "master"):
     """
     Detects the current CI environment, if any, and performs necessary
@@ -117,5 +132,7 @@ def check(branch: str = "master"):
         circle(branch)
     elif os.environ.get("GITLAB_CI") == "true":
         gitlab(branch)
+    elif os.environ.get('JENKINS_URL') is not None:
+        jenkins(branch)
     elif "BITBUCKET_BUILD_NUMBER" in os.environ:
         bitbucket(branch)
