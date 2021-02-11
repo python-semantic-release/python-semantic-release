@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.14.0 (2021-02-11)
+### Feature
+* **checks:** Add support for Jenkins CI ([#322](https://github.com/relekang/python-semantic-release/issues/322)) ([`3e99855`](https://github.com/relekang/python-semantic-release/commit/3e99855c6bc72b3e9a572c58cc14e82ddeebfff8))
+
+### Documentation
+* Correct casing on proper nouns ([#320](https://github.com/relekang/python-semantic-release/issues/320)) ([`d51b999`](https://github.com/relekang/python-semantic-release/commit/d51b999a245a4e56ff7a09d0495c75336f2f150d))
+
 ## v7.13.2 (2021-01-29)
 ### Fix
 * Fix crash when TOML has no PSR section ([#319](https://github.com/relekang/python-semantic-release/issues/319)) ([`5f8ab99`](https://github.com/relekang/python-semantic-release/commit/5f8ab99bf7254508f4b38fcddef2bdde8dd15a4c))
