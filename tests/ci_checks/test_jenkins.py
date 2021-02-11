@@ -3,6 +3,7 @@ import pytest
 from semantic_release import ci_checks
 from semantic_release.errors import CiVerificationError
 
+
 def test_jenkins_should_pass_if_url_set_branch_master_no_pr(monkeypatch):
     monkeypatch.setenv("JENKINS_URL", "http://custom.jenkins.int.com")
     monkeypatch.setenv("BRANCH_NAME", "master")

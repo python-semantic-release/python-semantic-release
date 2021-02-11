@@ -110,9 +110,9 @@ def jenkins(branch: str):
     """
 
     branch_name = os.environ.get("BRANCH_NAME") or os.environ.get("GIT_BRANCH")
-    assert os.environ.get('JENKINS_URL') is not None
+    assert os.environ.get("JENKINS_URL") is not None
     assert branch_name == branch
-    assert not os.environ.get("CHANGE_ID") # pull request id
+    assert not os.environ.get("CHANGE_ID")  # pull request id
 
 
 def check(branch: str = "master"):
@@ -132,7 +132,7 @@ def check(branch: str = "master"):
         circle(branch)
     elif os.environ.get("GITLAB_CI") == "true":
         gitlab(branch)
-    elif os.environ.get('JENKINS_URL') is not None:
+    elif os.environ.get("JENKINS_URL") is not None:
         jenkins(branch)
     elif "BITBUCKET_BUILD_NUMBER" in os.environ:
         bitbucket(branch)
