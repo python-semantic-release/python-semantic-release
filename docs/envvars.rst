@@ -46,6 +46,12 @@ Used to check if this is a Travis CI environment.
 -------------
 Used to check if this is a GitLab CI environment.
 
+.. _env-jenkins_url:
+
+``JENKINS_URL``
+---------------
+Used to check if this is a Jenkins CI environment.
+
 ``CI_SERVER_HOST``
 ------------------
 Host component of the GitLab instance URL, without protocol and port.

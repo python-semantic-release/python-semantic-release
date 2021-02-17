@@ -54,6 +54,15 @@ Checks for gitlab-ci to ensure that the build is on the correct branch.
 The branch check, checks against the branch that gitlab-ci said it checked out, not the current
 branch.
 
+Jenkins
+^^^^^^^
+*Condition:* Environment variable ``JENKINS_URL`` is set.
+
+Determines the branch name from either the environment variable ``BRANCH_NAME``
+or the environment variable ``GIT_BRANCH``, and checks to ensure that the build is on
+the correct branch. Also, if ``CHANGE_ID`` is set, meaning it is a PR from a multi-branch
+pipeline, the build will not be automatically released.
+
 Publish with CI
 ~~~~~~~~~~~~~~~
 Add ``python setup.py publish`` or ``semantic-release publish`` as an after success task on your
