@@ -91,6 +91,9 @@ obtain a token is given `here <https://pypi.org/help/#apitoken>`_.
 
 See :ref:`automatic-pypi` for more about PyPI uploads.
 
+.. note::
+  If :ref:`env-pypi_password`, :ref:`env-pypi_username`, and :ref:`env-pypi_token` are not specified credentials from ``$HOME/.pypirc`` will be used.
+
 .. _env-pypi_password:
 
 ``PYPI_PASSWORD``
