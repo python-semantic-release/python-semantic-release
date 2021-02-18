@@ -7,7 +7,6 @@ from typing import List
 from invoke import run
 
 from semantic_release import ImproperConfigurationError
-
 from semantic_release.settings import config
 
 from .helpers import LoggedFunction
@@ -42,21 +41,25 @@ def upload_to_pypi(
         # Look for a username and password instead
         username = os.environ.get("PYPI_USERNAME")
         password = os.environ.get("PYPI_PASSWORD")
-        home_dir = os.environ.get('HOME', '')
-        if not (username or password) and (not home_dir or not os.path.isfile(os.path.join(home_dir, '.pypirc'))):
-                raise ImproperConfigurationError(
-                    "Missing credentials for uploading to PyPI"
-                )
+        home_dir = os.environ.get("HOME", "")
+        if not (username or password) and (
+            not home_dir or not os.path.isfile(os.path.join(home_dir, ".pypirc"))
+        ):
+            raise ImproperConfigurationError(
+                "Missing credentials for uploading to PyPI"
+            )
     elif not token.startswith("pypi-"):
         raise ImproperConfigurationError('PyPI token should begin with "pypi-"')
     else:
         username = "__token__"
         password = token
 
-    repository = config.get('repository', None)
+    repository = config.get("repository", None)
     repository_arg = f" -r '{repository}'" if repository else ""
 
-    username_password = f"-u '{username}' -p '{password}'" if username and password else ""
+    username_password = (
+        f"-u '{username}' -p '{password}'" if username and password else ""
+    )
 
     dist = " ".join(
         ['"{}/{}"'.format(path, glob_pattern.strip()) for glob_pattern in glob_patterns]
