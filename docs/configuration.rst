@@ -356,6 +356,12 @@ A comma `,` separated list of glob patterns to use when uploading to pypi.
 
 Default: `*`
 
+.. _config-repository:
+
+``repository``
+------------------
+The repository (package index) to upload to. Should be a section in the ``.pypirc`` file.
+
 .. _config-upload_to_release:
 
 ``upload_to_release``

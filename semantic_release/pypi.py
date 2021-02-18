@@ -8,6 +8,8 @@ from invoke import run
 
 from semantic_release import ImproperConfigurationError
 
+from semantic_release.settings import config
+
 from .helpers import LoggedFunction
 
 logger = logging.getLogger(__name__)
@@ -34,19 +36,27 @@ def upload_to_pypi(
 
     # Attempt to get an API token from environment
     token = os.environ.get("PYPI_TOKEN")
+    username = None
+    password = None
     if not token:
         # Look for a username and password instead
         username = os.environ.get("PYPI_USERNAME")
         password = os.environ.get("PYPI_PASSWORD")
-        if not (username or password):
-            raise ImproperConfigurationError(
-                "Missing credentials for uploading to PyPI"
-            )
+        home_dir = os.environ.get('HOME', '')
+        if not (username or password) and (not home_dir or not os.path.isfile(os.path.join(home_dir, '.pypirc'))):
+                raise ImproperConfigurationError(
+                    "Missing credentials for uploading to PyPI"
+                )
     elif not token.startswith("pypi-"):
         raise ImproperConfigurationError('PyPI token should begin with "pypi-"')
     else:
         username = "__token__"
         password = token
+
+    repository = config.get('repository', None)
+    repository_arg = f" -r '{repository}'" if repository else ""
+
+    username_password = f"-u '{username}' -p '{password}'" if username and password else ""
 
     dist = " ".join(
         ['"{}/{}"'.format(path, glob_pattern.strip()) for glob_pattern in glob_patterns]
@@ -54,4 +64,4 @@ def upload_to_pypi(
 
     skip_existing_param = " --skip-existing" if skip_existing else ""
 
-    run(f"twine upload -u '{username}' -p '{password}'{skip_existing_param} {dist}")
+    run(f"twine upload {username_password}{repository_arg}{skip_existing_param} {dist}")
