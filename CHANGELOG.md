@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.0 (2021-02-18)
+### Feature
+* Allow the use of .pypirc for twine uploads ([#325](https://github.com/relekang/python-semantic-release/issues/325)) ([`6bc56b8`](https://github.com/relekang/python-semantic-release/commit/6bc56b8aa63069a25a828a2d1a9038ecd09b7d5d))
+
+### Documentation
+* Add documentation for releasing on a Jenkins instance ([#324](https://github.com/relekang/python-semantic-release/issues/324)) ([`77ad988`](https://github.com/relekang/python-semantic-release/commit/77ad988a2057be59e4559614a234d6871c06ee37))
+
 ## v7.14.0 (2021-02-11)
 ### Feature
 * **checks:** Add support for Jenkins CI ([#322](https://github.com/relekang/python-semantic-release/issues/322)) ([`3e99855`](https://github.com/relekang/python-semantic-release/commit/3e99855c6bc72b3e9a572c58cc14e82ddeebfff8))
