@@ -1,6 +1,5 @@
 from click.testing import CliRunner
 
-import semantic_release
 from semantic_release.cli import changelog, main, print_version, publish, version
 from semantic_release.errors import GitError, ImproperConfigurationError
 

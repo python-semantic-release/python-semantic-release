@@ -7,7 +7,6 @@ from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
-from .parser_helpers import re_breaking
 
 logger = logging.getLogger(__name__)
 
