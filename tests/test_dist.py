@@ -38,8 +38,12 @@ def test_build_command(mocker, commands):
             False,
         ),
         (
-                {"upload_to_pypi": True, "upload_to_release": True, "build_command": "false"},
-                False,
+            {
+                "upload_to_pypi": True,
+                "upload_to_release": True,
+                "build_command": "false",
+            },
+            False,
         ),
         (
             {
@@ -103,13 +107,13 @@ def test_should_build(config, expected, mocker):
             False,
         ),
         (
-                {
-                    "upload_to_pypi": False,
-                    "upload_to_release": False,
-                    "build_command": "false",
-                    "remove_dist": True,
-                },
-                False,
+            {
+                "upload_to_pypi": False,
+                "upload_to_release": False,
+                "build_command": "false",
+                "remove_dist": True,
+            },
+            False,
         ),
     ],
 )
