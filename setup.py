@@ -42,7 +42,7 @@ setup(
         "twine>=3,<4",
         "requests>=2.25,<3",
         "wheel",
-        "python-gitlab>=1.10,<2",
+        "python-gitlab>=1.10,<3",
         "tomlkit>=0.7.0,<1.0.0",
         "dotty-dict>=1.3.0,<2",
     ],
