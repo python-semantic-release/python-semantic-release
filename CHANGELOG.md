@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.1 (2021-03-26)
+### Fix
+* Add support for setting build_command to "false" ([`520cf1e`](https://github.com/relekang/python-semantic-release/commit/520cf1eaa7816d0364407dbd17b5bc7c79806086))
+* Upgrade python-gitlab range ([`abfacc4`](https://github.com/relekang/python-semantic-release/commit/abfacc432300941d57488842e41c06d885637e6c))
+
+### Documentation
+* Add common options to documentation ([`20d79a5`](https://github.com/relekang/python-semantic-release/commit/20d79a51bffa26d40607c1b77d10912992279112))
+
 ## v7.15.0 (2021-02-18)
 ### Feature
 * Allow the use of .pypirc for twine uploads ([#325](https://github.com/relekang/python-semantic-release/issues/325)) ([`6bc56b8`](https://github.com/relekang/python-semantic-release/commit/6bc56b8aa63069a25a828a2d1a9038ecd09b7d5d))
