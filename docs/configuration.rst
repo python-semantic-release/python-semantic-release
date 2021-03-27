@@ -405,7 +405,7 @@ HVCS
 
 ``hvcs``
 --------
-The name of your hvcs. Currently only `GitHub` and `GitLab` are supported.
+The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
 
 Default: `github`
 
