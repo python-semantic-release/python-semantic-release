@@ -1,4 +1,6 @@
-#!/bin/sh -l
+#!/bin/bash
+
+set -el
 
 # Copy inputs into correctly-named environment variables
 export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
@@ -14,5 +16,5 @@ git config --global user.name "github-actions"
 git config --global user.email "action@github.com"
 
 # Run Semantic Release
-python -m semantic_release publish -v DEBUG \
+.venv/bin/python -m semantic_release publish -v DEBUG \
   -D commit_author="github-actions <action@github.com>"

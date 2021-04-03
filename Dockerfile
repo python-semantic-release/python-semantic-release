@@ -5,8 +5,10 @@ ENV PYTHONPATH /semantic-release
 
 COPY . /semantic-release
 
-RUN cd /semantic-release && pip install .
+RUN cd /semantic-release && \
+    python -m venv .venv && \
+    .venv/bin/pip install .
 
-RUN python -m semantic_release.cli --help
+RUN .venv/bin/python -m semantic_release.cli --help
 
 ENTRYPOINT ["/semantic-release/action.sh"]
