@@ -16,5 +16,5 @@ git config --global user.name "github-actions"
 git config --global user.email "action@github.com"
 
 # Run Semantic Release
-../.venv/bin/python -m semantic_release publish -v DEBUG \
+/semantic-release/.venv/bin/python -m semantic_release publish -v DEBUG \
   -D commit_author="github-actions <action@github.com>"
