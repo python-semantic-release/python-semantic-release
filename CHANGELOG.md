@@ -2,6 +2,15 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.2 (2021-04-03)
+### Fix
+* Use absolute path for venv in github action ([`d4823b3`](https://github.com/relekang/python-semantic-release/commit/d4823b3b6b1fcd5c33b354f814643c9aaf85a06a))
+* Set correct path for venv in action script ([`aac02b5`](https://github.com/relekang/python-semantic-release/commit/aac02b5a44a6959328d5879578aa3536bdf856c2))
+* Run semantic-release in virtualenv in the github action ([`b508ea9`](https://github.com/relekang/python-semantic-release/commit/b508ea9f411c1cd4f722f929aab9f0efc0890448))
+
+### Documentation
+* Clarify that HVCS should be lowercase ([`da0ab0c`](https://github.com/relekang/python-semantic-release/commit/da0ab0c62c4ce2fa0d815e5558aeec1a1e23bc89))
+
 ## v7.15.1 (2021-03-26)
 ### Fix
 * Add support for setting build_command to "false" ([`520cf1e`](https://github.com/relekang/python-semantic-release/commit/520cf1eaa7816d0364407dbd17b5bc7c79806086))
