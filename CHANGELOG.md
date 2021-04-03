@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.3 (2021-04-03)
+### Fix
+* Add venv to path in github action ([`583c5a1`](https://github.com/relekang/python-semantic-release/commit/583c5a13e40061fc544b82decfe27a6c34f6d265))
+
 ## v7.15.2 (2021-04-03)
 ### Fix
 * Use absolute path for venv in github action ([`d4823b3`](https://github.com/relekang/python-semantic-release/commit/d4823b3b6b1fcd5c33b354f814643c9aaf85a06a))
