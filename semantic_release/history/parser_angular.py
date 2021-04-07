@@ -58,7 +58,7 @@ def parse_commit_message(message: str) -> ParsedCommit:
     parsed = re_parser.match(message)
     if not parsed:
         raise UnknownCommitMessageStyleError(
-            "Unable to parse the given commit message: {}".format(message)
+            f"Unable to parse the given commit message: {message}"
         )
 
     if parsed.group("text"):

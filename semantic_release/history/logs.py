@@ -7,11 +7,11 @@ from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config, current_commit_parser
 from ..vcs_helpers import get_commit_log
-from .parser_helpers import re_breaking
 
 logger = logging.getLogger(__name__)
 
 LEVELS = {
+    0: None,
     1: "patch",
     2: "minor",
     3: "major",
@@ -36,14 +36,12 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     changes = []
     commit_count = 0
 
-    for _hash, commit_message in get_commit_log("v{0}".format(current_version)):
+    for _hash, commit_message in get_commit_log(f"v{current_version}"):
         if commit_message.startswith(current_version):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
             logger.debug(
-                '"{}" is commit for {}, breaking loop'.format(
-                    commit_message, current_version
-                )
+                f'"{commit_message}" is commit for {current_version}, breaking loop'
             )
             break
 
@@ -97,7 +95,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
 
     rev = None
     if from_version:
-        rev = "v{0}".format(from_version)
+        rev = f"v{from_version}"
 
     found_the_release = to_version is None
     for _hash, commit_message in get_commit_log(rev):

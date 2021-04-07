@@ -61,12 +61,13 @@ fashion.
 
 .. warning::
   The ``GITHUB_TOKEN`` secret is automatically configured by GitHub, with the
-  same permissions as the user who triggered the workflow run. This can
-  sometimes cause a problem if your default branch is protected, since only
-  administrators will be able to push to it without creating a pull request.
+  same permissions as the user who triggered the workflow run. This causes
+  a problem if your default branch is protected.
 
-  You can work around this by a user with the necessary permissions creating a
-  Personal Access Token, and storing that in a different secret.
+  You can work around this by storing an administrator's Personal Access Token
+  as a separate secret and using that instead of ``GITHUB_TOKEN``. In this
+  case, you will also need to pass the new token to ``actions/checkout`` (as
+  the ``token`` input) in order to gain push access.
 
 Multiple Projects
 -----------------

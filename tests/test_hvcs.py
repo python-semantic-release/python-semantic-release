@@ -1,7 +1,9 @@
+import base64
 import json
 import os
 import platform
-from unittest import TestCase
+from tempfile import NamedTemporaryFile
+from unittest import TestCase, mock
 
 import pytest
 import responses
@@ -57,11 +59,61 @@ def test_check_token_should_return_false():
     assert check_token() is False
 
 
+@pytest.mark.parametrize(
+    "hvcs,hvcs_domain,expected_domain,api_url,ci_server_host",
+    [
+        ("github", None, "github.com", "https://api.github.com", None),
+        ("gitlab", None, "gitlab.com", "https://gitlab.com", None),
+        (
+            "github",
+            "github.example.com",
+            "github.example.com",
+            "https://github.example.com",
+            None,
+        ),
+        (
+            "gitlab",
+            "example.gitlab.com",
+            "example.gitlab.com",
+            "https://example.gitlab.com",
+            None,
+        ),
+        (
+            "gitlab",
+            "example2.gitlab.com",
+            "example2.gitlab.com",
+            "https://example2.gitlab.com",
+            "ciserverhost.gitlab.com",
+        ),
+    ],
+)
+@mock.patch("os.environ", {"GL_TOKEN": "token"})
+def test_get_domain_should_have_expected_domain(
+    hvcs, hvcs_domain, expected_domain, api_url, ci_server_host
+):
+
+    with mock.patch(
+        "semantic_release.hvcs.config.get",
+        wrapped_config_get(hvcs_domain=hvcs_domain, hvcs=hvcs),
+    ):
+        with mock.patch(
+            "os.environ",
+            {
+                "GL_TOKEN": "token",
+                "GH_TOKEN": "token",
+                "CI_SERVER_HOST": ci_server_host,
+            },
+        ):
+
+            assert get_hvcs().domain() == expected_domain
+            assert get_hvcs().api_url() == api_url
+
+
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
-def test_get_domain_and_token():
-    assert get_hvcs().domain()
-    assert get_hvcs().token()
+def test_get_token():
+
+    assert get_hvcs().token() == "token"
 
 
 class GithubCheckBuildStatusTests(TestCase):
@@ -149,6 +201,10 @@ class GithubReleaseTests(TestCase):
         "https://uploads.github.com/repos/relekang/rmoq/releases/1/assets"
         "?name=testupload.md&label=Dummy+file"
     )
+    asset_no_extension_url_params = (
+        "https://uploads.github.com/repos/relekang/rmoq/releases/1/assets"
+        "?name=testupload-no-extension&label=Dummy+file+no+extension"
+    )
     dist_asset_url_params = (
         "https://uploads.github.com/repos/relekang/rmoq/releases/1/assets"
         "?name=testupload.md"
@@ -156,25 +212,75 @@ class GithubReleaseTests(TestCase):
 
     @responses.activate
     @mock.patch("semantic_release.hvcs.Github.token", return_value="super-token")
-    def test_should_post_changelog(self, mock_token):
-        def request_callback(request):
-            payload = json.loads(request.body)
-            self.assertEqual(payload["tag_name"], "v1.0.0")
-            self.assertEqual(payload["body"], "text")
-            self.assertEqual(payload["draft"], False)
-            self.assertEqual(payload["prerelease"], False)
-            self.assertEqual("token super-token", request.headers["Authorization"])
+    def test_should_post_changelog_using_github_token(self, mock_token):
+        with NamedTemporaryFile("w") as netrc_file:
+            netrc_file.write("machine api.github.com\n")
+            netrc_file.write("login username\n")
+            netrc_file.write("password password\n")
 
-            return 201, {}, json.dumps({})
+            netrc_file.flush()
 
-        responses.add_callback(
-            responses.POST,
-            self.url,
-            callback=request_callback,
-            content_type="application/json",
-        )
-        status = Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
-        self.assertTrue(status)
+            def request_callback(request):
+                payload = json.loads(request.body)
+                self.assertEqual(payload["tag_name"], "v1.0.0")
+                self.assertEqual(payload["body"], "text")
+                self.assertEqual(payload["draft"], False)
+                self.assertEqual(payload["prerelease"], False)
+                self.assertEqual(
+                    "token super-token", request.headers.get("Authorization")
+                )
+
+                return 201, {}, json.dumps({})
+
+            responses.add_callback(
+                responses.POST,
+                self.url,
+                callback=request_callback,
+                content_type="application/json",
+            )
+
+            with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
+                status = Github.post_release_changelog(
+                    "relekang", "rmoq", "1.0.0", "text"
+                )
+                self.assertTrue(status)
+
+    @responses.activate
+    @mock.patch("semantic_release.hvcs.Github.token", return_value=None)
+    def test_should_post_changelog_using_netrc(self, mock_token):
+        with NamedTemporaryFile("w") as netrc_file:
+            netrc_file.write("machine api.github.com\n")
+            netrc_file.write("login username\n")
+            netrc_file.write("password password\n")
+
+            netrc_file.flush()
+
+            def request_callback(request):
+                payload = json.loads(request.body)
+                self.assertEqual(payload["tag_name"], "v1.0.0")
+                self.assertEqual(payload["body"], "text")
+                self.assertEqual(payload["draft"], False)
+                self.assertEqual(payload["prerelease"], False)
+                self.assertEqual(
+                    "Basic "
+                    + base64.encodebytes(b"username:password").decode("ascii").strip(),
+                    request.headers.get("Authorization"),
+                )
+
+                return 201, {}, json.dumps({})
+
+            responses.add_callback(
+                responses.POST,
+                self.url,
+                callback=request_callback,
+                content_type="application/json",
+            )
+
+            with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
+                status = Github.post_release_changelog(
+                    "relekang", "rmoq", "1.0.0", "text"
+                )
+                self.assertTrue(status)
 
     @responses.activate
     def test_should_return_false_status_if_it_failed(self):
@@ -217,7 +323,7 @@ class GithubReleaseTests(TestCase):
             self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.asset_url_params)
             self.assertEqual(request.headers["Content-Type"], "text/markdown")
-            self.assertEqual("token super-token", request.headers["Authorization"])
+            self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
 
@@ -226,6 +332,39 @@ class GithubReleaseTests(TestCase):
         )
         status = Github.upload_asset(
             "relekang", "rmoq", 1, dummy_file_path, "Dummy file"
+        )
+        self.assertTrue(status)
+
+        # Remove test file
+        os.remove(dummy_file_path)
+
+    @responses.activate
+    @mock.patch("semantic_release.hvcs.Github.token", return_value="super-token")
+    def test_should_upload_asset_with_no_extension(self, mock_token):
+        # Create temporary file to upload
+        dummy_file_path = os.path.join(temp_dir, "testupload-no-extension")
+        os.makedirs(os.path.dirname(dummy_file_path), exist_ok=True)
+        dummy_content = (
+            "# Test File with no extension\n\n*Dummy asset for testing uploads.*"
+        )
+        with open(dummy_file_path, "w") as dummy_file:
+            dummy_file.write(dummy_content)
+
+        def request_callback(request):
+            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
+            self.assertEqual(request.url, self.asset_no_extension_url_params)
+            self.assertEqual(
+                request.headers["Content-Type"], "application/octet-stream"
+            )
+            self.assertEqual("token super-token", request.headers["Authorization"])
+
+            return 201, {}, json.dumps({})
+
+        responses.add_callback(
+            responses.POST, self.asset_url, callback=request_callback
+        )
+        status = Github.upload_asset(
+            "relekang", "rmoq", 1, dummy_file_path, "Dummy file no extension"
         )
         self.assertTrue(status)
 
@@ -246,7 +385,7 @@ class GithubReleaseTests(TestCase):
             self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.dist_asset_url_params)
             self.assertEqual(request.headers["Content-Type"], "text/markdown")
-            self.assertEqual("token super-token", request.headers["Authorization"])
+            self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
 

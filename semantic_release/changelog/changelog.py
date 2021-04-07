@@ -1,6 +1,30 @@
+import re
 from typing import Iterable, Optional
 
+from ..hvcs import Github, Gitlab
 from ..settings import config
+
+
+def add_pr_link(owner: str, repo_name: str, message: str) -> str:
+    """
+    GitHub release notes automagically link to the PR, but changelog markdown
+    doesn't. Replace (#123) at the end of a message with a markdown link.
+    """
+
+    pr_pattern = re.compile(r"\s+\(#(\d{1,8})\)$")
+    match = re.search(pr_pattern, message)
+
+    if match:
+        pr_number = match.group(1)
+        url = (
+            f"https://{Gitlab.domain()}/{owner}/{repo_name}/-/merge_requests/{pr_number}"
+            if config.get("hvcs") == "gitlab"
+            else f"https://{Github.domain()}/{owner}/{repo_name}/issues/{pr_number}"
+        )
+
+        return re.sub(pr_pattern, f" ([#{pr_number}]({url}))", message)
+
+    return message
 
 
 def get_changelog_sections(changelog: dict, changelog_sections: list) -> Iterable[str]:
@@ -15,10 +39,11 @@ def get_changelog_sections(changelog: dict, changelog_sections: list) -> Iterabl
 
 
 def get_hash_link(owner: str, repo_name: str, hash_: str) -> str:
+    """Generate the link for commit hash"""
     url = (
-        f"https://gitlab.com/{owner}/{repo_name}/-/commit/{hash_}"
+        f"https://{Gitlab.domain()}/{owner}/{repo_name}/-/commit/{hash_}"
         if config.get("hvcs") == "gitlab"
-        else f"https://github.com/{owner}/{repo_name}/commit/{hash_}"
+        else f"https://{Github.domain()}/{owner}/{repo_name}/commit/{hash_}"
     )
     short_hash = hash_[:7]
     return f"[`{short_hash}`]({url})"
@@ -31,11 +56,12 @@ def changelog_headers(
 
     for section in get_changelog_sections(changelog, changelog_sections):
         # Add a header for this section
-        output += "\n### {0}\n".format(section.capitalize())
+        output += f"\n### {section.capitalize()}\n"
 
         # Add each commit from the section in an unordered list
         for item in changelog[section]:
-            output += f"* {item[1]} ({get_hash_link(owner, repo_name, item[0])})\n"
+            message = add_pr_link(owner, repo_name, item[1])
+            output += f"* {message} ({get_hash_link(owner, repo_name, item[0])})\n"
 
     return output
 
@@ -48,7 +74,8 @@ def changelog_table(
     for section in get_changelog_sections(changelog, changelog_sections):
         items = "<br>".join(
             [
-                f"{item[1]} ({get_hash_link(owner, repo_name, item[0])})"
+                f"{add_pr_link(owner, repo_name, item[1])} "
+                f"({get_hash_link(owner, repo_name, item[0])})"
                 for item in changelog[section]
             ]
         )

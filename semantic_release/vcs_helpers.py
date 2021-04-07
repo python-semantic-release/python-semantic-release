@@ -43,12 +43,10 @@ def get_commit_log(from_rev=None):
     if from_rev:
         try:
             repo.commit(from_rev)
-            rev = "...{from_rev}".format(from_rev=from_rev)
+            rev = f"...{from_rev}"
         except BadName:
             logger.debug(
-                "Reference {} does not exist, considering entire history".format(
-                    from_rev
-                )
+                f"Reference {from_rev} does not exist, considering entire history"
             )
 
     for commit in repo.iter_commits(rev):
@@ -132,7 +130,7 @@ def commit_new_version(version: str):
 
     :param version: Version number to be used in the commit message.
     """
-    from .history import load_version_patterns
+    from .history import load_version_declarations
 
     commit_subject = config.get("commit_subject")
     message = commit_subject.format(version=version)
@@ -148,8 +146,8 @@ def commit_new_version(version: str):
         "semantic-release <semantic-release>",
     )
 
-    for pattern in load_version_patterns():
-        git_path = PurePath(os.getcwd(), pattern.path).relative_to(repo.working_dir)
+    for declaration in load_version_declarations():
+        git_path = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir)
         repo.git.add(str(git_path))
 
     return repo.git.commit(m=message, author=commit_author)
@@ -203,7 +201,7 @@ def tag_new_version(version: str):
 
     :param version: The version number used in the tag as a string.
     """
-    return repo.git.tag("-a", "v{0}".format(version), m="v{0}".format(version))
+    return repo.git.tag("-a", f"v{version}", m=f"v{version}")
 
 
 @check_repo
@@ -232,16 +230,9 @@ def push_new_version(
             token = "gitlab-ci-token:" + token
         actor = os.environ.get("GITHUB_ACTOR")
         if actor:
-            server = "https://{actor}:{token}@{server_url}/{owner}/{name}.git".format(
-                token=token, server_url=domain, owner=owner, name=name, actor=actor
-            )
+            server = f"https://{actor}:{token}@{domain}/{owner}/{name}.git"
         else:
-            server = "https://{token}@{server_url}/{owner}/{name}.git".format(
-                token=token,
-                server_url=domain,
-                owner=owner,
-                name=name,
-            )
+            server = f"https://{token}@{domain}/{owner}/{name}.git"
 
     try:
         repo.git.push(server, branch)

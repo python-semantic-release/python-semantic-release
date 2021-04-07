@@ -3,17 +3,18 @@
 import logging
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import gitlab
-import requests
+from requests import HTTPError, Session
+from requests.auth import AuthBase
+from urllib3 import Retry
 
 from .errors import ImproperConfigurationError
-from .helpers import LoggedFunction
+from .helpers import LoggedFunction, build_requests_session
 from .settings import config
 
 logger = logging.getLogger(__name__)
-
 
 # Add a mime type for wheels
 mimetypes.add_type("application/octet-stream", ".whl")
@@ -22,6 +23,10 @@ mimetypes.add_type("application/octet-stream", ".whl")
 class Base(object):
     @staticmethod
     def domain() -> str:
+        raise NotImplementedError
+
+    @staticmethod
+    def api_url() -> str:
         raise NotImplementedError
 
     @staticmethod
@@ -59,10 +64,33 @@ def _fix_mime_types():
     mimetypes.add_type("text/markdown", ".md")
 
 
+class TokenAuth(AuthBase):
+    """
+    requests Authentication for token based authorization
+    """
+
+    def __init__(self, token):
+        self.token = token
+
+    def __eq__(self, other):
+        return all(
+            [
+                self.token == getattr(other, "token", None),
+            ]
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __call__(self, r):
+        r.headers["Authorization"] = f"token {self.token}"
+        return r
+
+
 class Github(Base):
     """Github helper class"""
 
-    API_URL = "https://api.github.com"
+    DEFAULT_DOMAIN = "github.com"
     _fix_mime_types()
 
     @staticmethod
@@ -71,7 +99,21 @@ class Github(Base):
 
         :return: The Github domain
         """
-        return "github.com"
+        hvcs_domain = config.get("hvcs_domain")
+        domain = hvcs_domain if hvcs_domain else Github.DEFAULT_DOMAIN
+        return domain
+
+    @staticmethod
+    def api_url() -> str:
+        """Github api_url property
+
+        :return: The Github API URL
+        """
+        # not necessarily prefixed with api in the case of a custom domain, so
+        # can't just default DEFAULT_DOMAIN to github.com
+        hvcs_domain = config.get("hvcs_domain")
+        hostname = hvcs_domain if hvcs_domain else "api." + Github.DEFAULT_DOMAIN
+        return f"https://{hostname}"
 
     @staticmethod
     def token() -> Optional[str]:
@@ -80,6 +122,25 @@ class Github(Base):
         :return: The Github token environment variable (GH_TOKEN) value
         """
         return os.environ.get("GH_TOKEN")
+
+    @staticmethod
+    def auth() -> Optional[TokenAuth]:
+        """Github token property
+
+        :return: The Github token environment variable (GH_TOKEN) value
+        """
+        token = Github.token()
+        if not token:
+            return None
+        return TokenAuth(token)
+
+    @staticmethod
+    def session(
+        raise_for_status=True, retry: Union[Retry, bool, int] = True
+    ) -> Session:
+        session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
+        session.auth = Github.auth()
+        return session
 
     @staticmethod
     @LoggedFunction(logger)
@@ -95,10 +156,14 @@ class Github(Base):
         :return: Was the build status success?
         """
         url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
-        response = requests.get(
-            url.format(domain=Github.API_URL, owner=owner, repo=repo, ref=ref)
-        )
-        return response.json()["state"] == "success"
+        try:
+            response = Github.session().get(
+                url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
+            )
+            return response.json().get("state") == "success"
+        except HTTPError as e:
+            logger.warning(f"Build status check on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
@@ -114,24 +179,25 @@ class Github(Base):
 
         :return: Whether the request succeeded
         """
-        response = requests.post(
-            f"{Github.API_URL}/repos/{owner}/{repo}/releases",
-            json={
-                "tag_name": tag,
-                "name": tag,
-                "body": changelog,
-                "draft": False,
-                "prerelease": False,
-            },
-            headers={"Authorization": "token {}".format(Github.token())},
-        )
-        logger.debug(f"Release creation status code: {response.status_code}")
-
-        return response.status_code == 201
+        try:
+            Github.session().post(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases",
+                json={
+                    "tag_name": tag,
+                    "name": tag,
+                    "body": changelog,
+                    "draft": False,
+                    "prerelease": False,
+                },
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Release creation on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
-    def get_release(cls, owner: str, repo: str, tag: str) -> int:
+    def get_release(cls, owner: str, repo: str, tag: str) -> Optional[int]:
         """Get a release by its tag name
 
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
@@ -142,13 +208,15 @@ class Github(Base):
 
         :return: ID of found release
         """
-        response = requests.get(
-            f"{Github.API_URL}/repos/{owner}/{repo}/releases/tags/{tag}",
-            headers={"Authorization": "token {}".format(Github.token())},
-        )
-        logger.debug(f"Get release by tag status code: {response.status_code}")
-
-        return response.json()["id"]
+        try:
+            response = Github.session().get(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}"
+            )
+            return response.json().get("id")
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                logger.debug(f"Get release by tag on Github has failed: {e}")
+            return None
 
     @classmethod
     @LoggedFunction(logger)
@@ -164,14 +232,15 @@ class Github(Base):
 
         :return: Whether the request succeeded
         """
-        response = requests.post(
-            f"{Github.API_URL}/repos/{owner}/{repo}/releases/{id}",
-            json={"body": changelog},
-            headers={"Authorization": "token {}".format(Github.token())},
-        )
-        logger.debug(f"Edit release status code: {response.status_code}")
-
-        return response.status_code == 200
+        try:
+            Github.session().post(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
+                json={"body": changelog},
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Edit release on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
@@ -194,8 +263,11 @@ class Github(Base):
         if not success:
             logger.debug("Unsuccessful, looking for an existing release to update")
             release_id = Github.get_release(owner, repo, tag)
-            logger.debug(f"Updating release {release_id}")
-            success = Github.edit_release(owner, repo, release_id, changelog)
+            if release_id:
+                logger.debug(f"Updating release {release_id}")
+                success = Github.edit_release(owner, repo, release_id, changelog)
+            else:
+                logger.debug(f"Existing release not found")
 
         return success
 
@@ -216,24 +288,30 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = "https://uploads.github.com/repos/{owner}/{repo}/releases/{id}/assets"
+        url = f"https://uploads.github.com/repos/{owner}/{repo}/releases/{release_id}/assets"
 
-        response = requests.post(
-            url.format(owner=owner, repo=repo, id=release_id),
-            params={"name": os.path.basename(file), "label": label},
-            headers={
-                "Authorization": "token {}".format(Github.token()),
-                "Content-Type": mimetypes.guess_type(file, strict=False)[0],
-            },
-            data=open(file, "rb").read(),
-        )
-        logger.debug(
-            "Asset upload completed, url: {}, status code: {}".format(
-                response.url, response.status_code
+        content_type = mimetypes.guess_type(file, strict=False)[0]
+        if not content_type:
+            content_type = "application/octet-stream"
+
+        try:
+            response = Github.session().post(
+                url,
+                params={"name": os.path.basename(file), "label": label},
+                headers={
+                    "Content-Type": content_type,
+                },
+                data=open(file, "rb").read(),
             )
-        )
-        logger.debug(response.json())
-        return response.status_code == 201
+
+            logger.debug(
+                f"Asset upload on Github completed, url: {response.url}, status code: {response.status_code}"
+            )
+
+            return True
+        except HTTPError as e:
+            logger.warning(f"Asset upload {file} on Github has failed: {e}")
+            return False
 
     @classmethod
     def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
@@ -267,15 +345,22 @@ class Github(Base):
 class Gitlab(Base):
     """Gitlab helper class"""
 
-    API_URL = "https://" + os.environ.get("CI_SERVER_HOST", "gitlab.com")
-
     @staticmethod
     def domain() -> str:
         """Gitlab domain property
 
         :return: The Gitlab instance domain
         """
-        return os.environ.get("CI_SERVER_HOST", "gitlab.com")
+        domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST"))
+        return domain if domain else "gitlab.com"
+
+    @staticmethod
+    def api_url() -> str:
+        """Gitlab api_url property
+
+        :return: The Gitlab instance API url
+        """
+        return f"https://{Gitlab.domain()}"
 
     @staticmethod
     def token() -> Optional[str]:
@@ -296,22 +381,18 @@ class Gitlab(Base):
 
         :return: the status of the pipeline (False if a job failed)
         """
-        gl = gitlab.Gitlab(Gitlab.API_URL, private_token=Gitlab.token())
+        gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         jobs = gl.projects.get(owner + "/" + repo).commits.get(ref).statuses.list()
         for job in jobs:
             if job["status"] not in ["success", "skipped"]:
                 if job["status"] == "pending":
                     logger.debug(
-                        "check_build_status: job {} is still in pending status".format(
-                            job["name"]
-                        )
+                        f"check_build_status: job {job['name']} is still in pending status"
                     )
                     return False
                 elif job["status"] == "failed" and not job["allow_failure"]:
-                    logger.debug(
-                        "check_build_status: job {} failed".format(job["name"])
-                    )
+                    logger.debug(f"check_build_status: job {job['name']} failed")
                     return False
         return True
 
@@ -330,20 +411,16 @@ class Gitlab(Base):
         :return: The status of the request
         """
         ref = "v" + version
-        gl = gitlab.Gitlab(Gitlab.API_URL, private_token=Gitlab.token())
+        gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         try:
             tag = gl.projects.get(owner + "/" + repo).tags.get(ref)
             tag.set_release_description(changelog)
         except gitlab.exceptions.GitlabGetError:
-            logger.debug(
-                "Tag {} was not found for project {}".format(ref, owner + "/" + repo)
-            )
+            logger.debug(f"Tag {ref} was not found for project {owner}/{repo}")
             return False
         except gitlab.exceptions.GitlabUpdateError:
-            logger.debug(
-                "Failed to update tag {} for project {}".format(ref, owner + "/" + repo)
-            )
+            logger.debug(f"Failed to update tag {ref} for project {owner}/{repo}")
             return False
 
         return True
@@ -371,7 +448,7 @@ def check_build_status(owner: str, repository: str, ref: str) -> bool:
     :param ref: Commit or branch reference
     :return: A boolean with the build status
     """
-    logger.debug("check_build_status")
+    logger.debug(f"Checking build status for {owner}/{repository}#{ref}")
     return get_hvcs().check_build_status(owner, repository, ref)
 
 
@@ -385,11 +462,7 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     :param changelog: A string with the changelog in correct format
     :return: a tuple with success status and payload from hvcs
     """
-    logger.debug(
-        "post_changelog(owner={}, repository={}, version={})".format(
-            owner, repository, version
-        )
-    )
+    logger.debug(f"Posting release changelog for {owner}/{repository} {version}")
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
 
 

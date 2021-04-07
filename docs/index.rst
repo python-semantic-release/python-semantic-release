@@ -11,28 +11,77 @@ There is no strict requirement to have it installed locally if you intend on
 :ref:`using a CI service <automatic>`, however running with ``--noop`` can be
 useful to test your configuration.
 
-Configure
----------
+Setting up version numbering
+----------------------------
 
-Set :ref:`config-version_variable` in either ``setup.cfg`` or
-``pyproject.toml``.  This option tells Python Semantic Release where to find
-and update the version number. ::
+Create a variable set to the current version number.  This could be anywhere in
+your project, for example ``setup.py``::
 
-   [semantic_release]
-   version_variable = semantic_release/__init__.py:__version__
-
-The example above uses the variable ``__version__`` in
-``semantic_release/__init__.py``. This variable must be initially created by
-hand - set it to the current version number::
+   from setuptools import setup
 
    __version__ = "0.0.0"
 
+   setup(
+      name="my-package",
+      version=__version__,
+      # And so on...
+   )
+
+Python Semantic Release is configured using ``setup.cfg`` or ``pyproject.toml``.
+Set :ref:`config-version_variable` to the location of your version variable inside any Python file::
+
+   [semantic_release]
+   version_variable = setup.py:__version__
+
 .. seealso::
-   - :ref:`config-branch` - change the default branch.
-   - :ref:`config-commit_parser` - use a different parser for commit messages.
-     For example, there is an emoji parser.
-   - :ref:`config-upload_to_pypi` - disable uploading the package to PyPI.
-   - :ref:`config-hvcs` - change this if you are using GitLab.
+   - :ref:`config-version_toml` - use `tomlkit <https://github.com/sdispater/tomlkit>`_ to read and update
+     the version number in a TOML file.
+   - :ref:`config-version_pattern` - use regular expressions to keep the
+     version number in a different format.
+   - :ref:`config-version_source` - store the version using Git tags.
+
+Setting up commit parsing
+-------------------------
+
+We rely on commit messages to detect when a version bump is needed.
+By default, Python Semantic Release uses the
+`Angular style <https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits>`_.
+You can find out more about this on :ref:`commit-log-parsing`.
+
+.. seealso::
+   - :ref:`config-branch` - change the default branch name.
+
+Setting up the changelog
+------------------------
+
+If you already have a `CHANGELOG.md`, you will need to insert a
+placeholder tag so we know where to write new versions::
+
+   <!--next-version-placeholder-->
+
+If you don't have a changelog file then one will be set up like this automatically.
+
+.. seealso::
+   - :ref:`config-changelog_file` - use a file other than `CHANGELOG.md`.
+   - :ref:`config-changelog_placeholder` - use a different placeholder.
+
+Releasing on GitHub / GitLab
+----------------------------
+
+Some options and environment variables need to be set in order to push
+release notes and new versions to GitHub / GitLab:
+
+- :ref:`config-hvcs` - change this if you are using GitLab.
+- :ref:`env-gh_token` - GitHub personal access token.
+- :ref:`env-gl_token` - GitLab personal access token.
+
+Releasing on PyPI
+-----------------
+
+Unless you disable :ref:`config-upload_to_pypi`, Python Semantic Release will
+publish new versions on PyPI. This requires you to obtain an API token
+`here <https://pypi.org/help/#apitoken>`_ and store it in the environment
+variable :ref:`env-pypi_token`.
 
 .. include:: commands.rst
 

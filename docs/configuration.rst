@@ -49,6 +49,15 @@ specify multiple versions:
         'docs/conf.py:version',
     ]
 
+.. _config-version_toml:
+
+``version_toml``
+-------------------
+Similar to :ref:`config-version_variable`, but allows the version number to be
+identified safely in a toml file like ``pyproject.toml``, using a dotted notation to the key path::
+
+    pyproject.toml:tool.poetry.version
+
 .. _config-version_pattern:
 
 ``version_pattern``
@@ -339,6 +348,20 @@ Distributions
 If set to false the pypi uploading will be disabled.
 See :ref:`env-pypi_token` which must also be set for this to work.
 
+.. _config-upload_to_pypi_glob_patterns:
+
+``upload_to_pypi_glob_patterns``
+------------------
+A comma `,` separated list of glob patterns to use when uploading to pypi.
+
+Default: `*`
+
+.. _config-repository:
+
+``repository``
+------------------
+The repository (package index) to upload to. Should be a section in the ``.pypirc`` file.
+
 .. _config-upload_to_release:
 
 ``upload_to_release``
@@ -369,7 +392,9 @@ Default: `true`
 -----------------
 Command to build dists. Build output should be stored in the directory configured in
 ``dist_path``.  If necessary, multiple commands can be specified using ``&&``, e.g.
-``pip install -m flit && flit build``.
+``pip install -m flit && flit build``. If set to false, build command is disabled and
+files should be placed manually in the directory configured in
+``dist_path``.
 
 Default: ``python setup.py sdist bdist_wheel``
 
@@ -380,7 +405,7 @@ HVCS
 
 ``hvcs``
 --------
-The name of your hvcs. Currently only `GitHub` and `GitLab` are supported.
+The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
 
 Default: `github`
 
