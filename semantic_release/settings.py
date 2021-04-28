@@ -69,7 +69,7 @@ def _config_from_pyproject(path):
             if pyproject:
                 return pyproject.get("tool", {}).get("semantic_release", {})
         except TOMLKitError as e:
-            logger.debug(f"Could not decode pyproject.toml: {e}")
+            logger.warning(f"Could not decode pyproject.toml: {e}")
 
     return {}
 
