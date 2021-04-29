@@ -66,9 +66,9 @@ foo = "bar"
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 
-    @mock.patch("semantic_release.settings.logger.debug")
+    @mock.patch("semantic_release.settings.logger.warning")
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
-    def test_no_raise_toml_error(self, mock_getcwd, mock_debug):
+    def test_no_raise_toml_error(self, mock_getcwd, mock_warning):
         # create temporary toml config file
         dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
         bad_toml_conf_content = """\
@@ -83,7 +83,7 @@ foo = "bar"
 
         _ = _config()
         mock_getcwd.assert_called_once_with()
-        mock_debug.assert_called_once_with(
+        mock_warning.assert_called_once_with(
             'Could not decode pyproject.toml: Invalid key "TITLE OF BAD TOML" at line 1 col 25'
         )
         # delete temporary toml config file
