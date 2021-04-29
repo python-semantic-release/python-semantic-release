@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.4 (2021-04-29)
+### Fix
+* Change log level of failed toml loading ([`24bb079`](https://github.com/relekang/python-semantic-release/commit/24bb079cbeff12e7043dd35dd0b5ae03192383bb))
+
 ## v7.15.3 (2021-04-03)
 ### Fix
 * Add venv to path in github action ([`583c5a1`](https://github.com/relekang/python-semantic-release/commit/583c5a13e40061fc544b82decfe27a6c34f6d265))
