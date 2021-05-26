@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.5 (2021-05-26)
+### Fix
+* Pin tomlkit to 0.7.0 ([`2cd0db4`](https://github.com/relekang/python-semantic-release/commit/2cd0db4537bb9497b72eb496f6bab003070672ab))
+
 ## v7.15.4 (2021-04-29)
 ### Fix
 * Change log level of failed toml loading ([`24bb079`](https://github.com/relekang/python-semantic-release/commit/24bb079cbeff12e7043dd35dd0b5ae03192383bb))
