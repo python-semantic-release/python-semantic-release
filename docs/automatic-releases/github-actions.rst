@@ -38,6 +38,7 @@ Example Workflow
    jobs:
      release:
        runs-on: ubuntu-latest
+       concurrency: release
 
        steps:
        - uses: actions/checkout@v2
@@ -53,6 +54,11 @@ Example Workflow
 :ref:`env-pypi_token` should be set as a secret on your repository's settings page.
 It is also possible to use username and password authentication in a similar
 fashion.
+
+``concurrency`` is a
+`beta feature of GitHub Actions <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency>`_
+which disallows two or more release jobs to run in parallel. This prevents race
+conditions if there are multiple pushes in a short period of time.
 
 .. warning::
   You must set `fetch-depth` to 0 when using ``actions/checkout@v2``, since
