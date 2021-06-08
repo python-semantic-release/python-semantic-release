@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.16.0 (2021-06-08)
+### Feature
+* Add option to omit tagging ([#341](https://github.com/relekang/python-semantic-release/issues/341)) ([`20603e5`](https://github.com/relekang/python-semantic-release/commit/20603e53116d4f05e822784ce731b42e8cbc5d8f))
+
 ## v7.15.6 (2021-06-08)
 ### Fix
 * Update click and tomlkit ([#339](https://github.com/relekang/python-semantic-release/issues/339)) ([`947ea3b`](https://github.com/relekang/python-semantic-release/commit/947ea3bc0750735941446cf4a87bae20e750ba12))
