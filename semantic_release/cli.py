@@ -182,7 +182,8 @@ def bump_version(new_version, level_bump):
         config.get("version_source") == "commit",
     ):
         commit_new_version(new_version)
-    tag_new_version(new_version)
+    if config.get("version_source") == "tag" or config.get("tag_commit"):
+        tag_new_version(new_version)
 
     logger.info(f"Bumping with a {level_bump} version to {new_version}")
 
@@ -377,6 +378,7 @@ def main(**kwargs):
         "major_on_zero",
         "upload_to_pypi",
         "version_source",
+        "no_git_tag",
     ]:
         obj[key] = config.get(key)
     logger.debug(f"Main config: {obj}")

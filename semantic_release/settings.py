@@ -46,6 +46,7 @@ def _config_from_ini(paths):
         "remove_dist",
         "upload_to_pypi",
         "upload_to_release",
+        "tag_commit",
     }
 
     # Iterate through the sections so that default values are applied
