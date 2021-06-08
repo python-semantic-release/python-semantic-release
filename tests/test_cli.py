@@ -96,10 +96,9 @@ def test_version_by_tag_should_call_correct_functions(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
         wrapped_config_get(
-            version_source="tag",
+            version_source="tag"
         ),
     )
-    mocker.patch("semantic_release.cli.config.get", lambda *x, **y: False)
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
     mock_new_version = mocker.patch(
@@ -119,6 +118,36 @@ def test_version_by_tag_should_call_correct_functions(mocker):
     mock_new_version.assert_called_once_with("1.2.3", "major")
     mock_set_new_version.assert_called_once_with("2.0.0")
     mock_tag_new_version.assert_called_once_with("2.0.0")
+
+def test_version_by_commit_without_tag_should_call_correct_functions(mocker):
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            version_source="commit",
+            tag_commit=False
+        ),
+    )
+    mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
+    mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
+    mock_commit_new_version = mocker.patch("semantic_release.cli.commit_new_version")
+    mock_new_version = mocker.patch(
+        "semantic_release.cli.get_new_version", return_value="2.0.0"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="major"
+    )
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="1.2.3"
+    )
+
+    version()
+
+    mock_current_version.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+    mock_new_version.assert_called_once_with("1.2.3", "major")
+    mock_set_new_version.assert_called_once_with("2.0.0")
+    mock_commit_new_version.assert_called_once_with("2.0.0")
+    assert not mock_tag_new_version.called
 
 
 def test_force_major(mocker, runner):
