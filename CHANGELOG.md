@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.15.6 (2021-06-08)
+### Fix
+* Update click and tomlkit ([#339](https://github.com/relekang/python-semantic-release/issues/339)) ([`947ea3b`](https://github.com/relekang/python-semantic-release/commit/947ea3bc0750735941446cf4a87bae20e750ba12))
+
 ## v7.15.5 (2021-05-26)
 ### Fix
 * Pin tomlkit to 0.7.0 ([`2cd0db4`](https://github.com/relekang/python-semantic-release/commit/2cd0db4537bb9497b72eb496f6bab003070672ab))
