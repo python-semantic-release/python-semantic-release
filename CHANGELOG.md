@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.16.1 (2021-06-08)
+### Fix
+* Tomlkit should stay at 0.7.0 ([`769a5f3`](https://github.com/relekang/python-semantic-release/commit/769a5f31115cdb1f43f19a23fe72b96a8c8ba0fc))
+
 ## v7.16.0 (2021-06-08)
 ### Feature
 * Add option to omit tagging ([#341](https://github.com/relekang/python-semantic-release/issues/341)) ([`20603e5`](https://github.com/relekang/python-semantic-release/commit/20603e53116d4f05e822784ce731b42e8cbc5d8f))
