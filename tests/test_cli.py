@@ -95,9 +95,7 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 def test_version_by_tag_should_call_correct_functions(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
-        wrapped_config_get(
-            version_source="tag"
-        ),
+        wrapped_config_get(version_source="tag"),
     )
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
@@ -119,13 +117,11 @@ def test_version_by_tag_should_call_correct_functions(mocker):
     mock_set_new_version.assert_called_once_with("2.0.0")
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
+
 def test_version_by_commit_without_tag_should_call_correct_functions(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
-        wrapped_config_get(
-            version_source="commit",
-            tag_commit=False
-        ),
+        wrapped_config_get(version_source="commit", tag_commit=False),
     )
     mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
