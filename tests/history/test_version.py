@@ -224,17 +224,58 @@ class TestVersionPattern:
             (r"root", "", ""),
             (r"root", 'root = "test"', 'root = "-"'),
             (
-                r"tool.poetry.version",
-                "[tool.poetry]\n"
-                'version = "0.1.0"\n'
-                "[tool.poetry.dependencies.pylint]\n"
-                'version = "^2.5.3"\n'
-                "optional = true\n",
-                "[tool.poetry]\n"
-                'version = "-"\n'
-                "[tool.poetry.dependencies.pylint]\n"
-                'version = "^2.5.3"\n'
-                "optional = true\n",
+                "tool.poetry.version",
+                dedent(
+                    """
+                    [tool.poetry]
+                    version = "0.1.0"
+                    [tool.poetry.dependencies.pylint]
+                    version = "^2.5.3"
+                    optional = true
+                    """
+                ),
+                dedent(
+                    """
+                    [tool.poetry]
+                    version = "-"
+                    [tool.poetry.dependencies.pylint]
+                    version = "^2.5.3"
+                    optional = true
+                    """
+                ),
+            ),
+            (
+                "tool.poetry.version",
+                dedent(
+                    """
+                    [tool.poetry]
+                    name = "my-package"
+                    version = "0.1.0"
+                    description = "A super package"
+                    
+                    [build-system]
+                    requires = ["poetry-core>=1.0.0"]
+                    build-backend = "poetry.core.masonry.api"
+                    
+                    [tool.semantic_release]
+                    version_toml = "pyproject.toml:tool.poetry.version"
+                    """
+                ),
+                dedent(
+                    """
+                    [tool.poetry]
+                    name = "my-package"
+                    version = "-"
+                    description = "A super package"
+                    
+                    [build-system]
+                    requires = ["poetry-core>=1.0.0"]
+                    build-backend = "poetry.core.masonry.api"
+                    
+                    [tool.semantic_release]
+                    version_toml = "pyproject.toml:tool.poetry.version"
+                    """
+                ),
             ),
         ],
     )
