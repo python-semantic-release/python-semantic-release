@@ -60,7 +60,8 @@ setup(
             "mock==1.3.0",
         ],
         "docs": ["Sphinx==1.3.6"],
-        "dev": ["mypy", "tox", "isort", "black"],
+        "dev": ["tox", "isort", "black"],
+        "mypy": ["mypy", "types-requests"],
     },
     entry_points="""
         [console_scripts]
