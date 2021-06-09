@@ -1,3 +1,4 @@
+from pathlib import Path
 from textwrap import dedent
 
 import mock
@@ -107,7 +108,7 @@ class TestVersionPattern:
         [
             (
                 "path:__version__",
-                "path",
+                Path("path"),
                 r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
             ),
         ],
@@ -120,8 +121,8 @@ class TestVersionPattern:
     @pytest.mark.parametrize(
         "str, path, pattern",
         [
-            ("path:pattern", "path", r"pattern"),
-            ("path:Version: {version}", "path", r"Version: (\d+\.\d+(?:\.\d+)?)"),
+            ("path:pattern", Path("path"), r"pattern"),
+            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+(?:\.\d+)?)"),
         ],
     )
     def test_from_pattern(self, str, path, pattern):
@@ -132,8 +133,8 @@ class TestVersionPattern:
     @pytest.mark.parametrize(
         "str, path, key",
         [
-            ("path:some.toml.key", "path", r"some.toml.key"),
-            ("path:some:other:toml.key", "path", r"some:other:toml.key"),
+            ("path:some.toml.key", Path("path"), r"some.toml.key"),
+            ("path:some:other:toml.key", Path("path"), r"some:other:toml.key"),
         ],
     )
     def test_from_toml(self, str, path, key):
@@ -207,15 +208,15 @@ class TestVersionPattern:
     @pytest.mark.parametrize(
         "key, content, hits",
         [
-            (r"root", 'root = "test"', {"test"}),
-            (r"tool.poetry.version", '[tool.poetry]\nversion = "0.1.0"', {"0.1.0"}),
+            ("root", 'root = "test"', {"test"}),
+            ("tool.poetry.version", '[tool.poetry]\nversion = "0.1.0"', {"0.1.0"}),
         ],
     )
     def test_toml_parse(self, tmp_path, key, content, hits):
         path = tmp_path / "pyproject.toml"
         path.write_text(content)
 
-        declaration = TomlVersionDeclaration(str(path), key)
+        declaration = TomlVersionDeclaration(path, key)
         assert declaration.parse() == hits
 
     @pytest.mark.parametrize(
@@ -308,7 +309,7 @@ class TestVersionPattern:
                         version_variable = "path:__version__"
                         """,
             patterns=[
-                ("path", r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -317,8 +318,8 @@ class TestVersionPattern:
                         version_variable = "path1:var1,path2:var2"
                         """,
             patterns=[
-                ("path1", r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                ("path2", r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -330,8 +331,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                ("path1", r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                ("path2", r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -340,7 +341,7 @@ class TestVersionPattern:
                         version_pattern = "path:pattern"
                         """,
             patterns=[
-                ("path", "pattern"),
+                (Path("path"), "pattern"),
             ],
         ),
         dict(
@@ -349,8 +350,8 @@ class TestVersionPattern:
                         version_pattern = "path1:pattern1,path2:pattern2"
                         """,
             patterns=[
-                ("path1", "pattern1"),
-                ("path2", "pattern2"),
+                (Path("path1"), "pattern1"),
+                (Path("path2"), "pattern2"),
             ],
         ),
         dict(
@@ -362,8 +363,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                ("path1", "pattern1"),
-                ("path2", "pattern2"),
+                (Path("path1"), "pattern1"),
+                (Path("path2"), "pattern2"),
             ],
         ),
     ],
