@@ -825,7 +825,9 @@ def test_changelog_should_call_functions(mocker, runner):
 
 
 def test_overload_by_cli(mocker, runner):
-    mock_open = mocker.patch("semantic_release.history.open", mock_version_file)
+    mock_read_text = mocker.patch(
+        "semantic_release.history.Path.read_text", mock_version_file
+    )
     runner.invoke(
         main,
         [
@@ -837,8 +839,8 @@ def test_overload_by_cli(mocker, runner):
         ],
     )
 
-    mock_open.assert_called_once_with("my_version_path", "r")
-    mock_open.reset_mock()
+    mock_read_text.assert_called_once_with()
+    mock_read_text.reset_mock()
 
 
 def test_changelog_noop(mocker):

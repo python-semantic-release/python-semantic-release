@@ -4,7 +4,8 @@ import csv
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import List, Optional, Set
+from pathlib import Path
+from typing import List, Optional, Set, Union
 
 import semver
 import tomlkit
@@ -24,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class VersionDeclaration(ABC):
-    def __init__(self, path: str):
-        self.path = path
+    def __init__(self, path: Union[str, Path]):
+        self.path = Path(path)
 
     @staticmethod
     def from_toml(config_str: str):
@@ -87,23 +88,21 @@ class TomlVersionDeclaration(VersionDeclaration):
         super().__init__(path)
         self.key = key
 
-    def _read(self):
-        with open(self.path, "r") as f:
-            return Dotty(tomlkit.loads(f.read()))
+    def _read(self) -> Dotty:
+        toml_doc = tomlkit.loads(self.path.read_text())
+        return Dotty(toml_doc)
 
     def parse(self) -> Set[str]:
-        config = self._read()
-        if self.key in config:
-            return {config.get(self.key)}
+        _config = self._read()
+        if self.key in _config:
+            return {_config.get(self.key)}
         return set()
 
-    def replace(self, new_version: str):
-        config = self._read()
-        version = self.key in config
-        if version:
-            config[self.key] = new_version
-            with open(self.path, "w") as f:
-                f.write(tomlkit.dumps(config))
+    def replace(self, new_version: str) -> None:
+        _config = self._read()
+        if self.key in _config:
+            _config[self.key] = new_version
+            self.path.write_text(tomlkit.dumps(_config))
 
 
 class PatternVersionDeclaration(VersionDeclaration):
@@ -134,8 +133,7 @@ class PatternVersionDeclaration(VersionDeclaration):
         should be the same version in each place), but it falls on the caller
         to check for this condition.
         """
-        with open(self.path, "r") as f:
-            content = f.read()
+        content = self.path.read_text()
 
         versions = {
             m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)
@@ -156,8 +154,7 @@ class PatternVersionDeclaration(VersionDeclaration):
         :param new_version: The new version number as a string
         """
         n = 0
-        with open(self.path, "r") as f:
-            old_content = f.read()
+        old_content = self.path.read_text()
 
         def swap_version(m):
             nonlocal n
@@ -175,8 +172,7 @@ class PatternVersionDeclaration(VersionDeclaration):
             f"Writing new version number: path={self.path!r} pattern={self.pattern!r} num_matches={n!r}"
         )
 
-        with open(self.path, mode="w") as f:
-            f.write(new_content)
+        self.path.write_text(new_content)
 
 
 @LoggedFunction(logger)
