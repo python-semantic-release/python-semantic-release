@@ -51,7 +51,7 @@ jobs:
   beautify:
     name: Beautify
     runs-on: ubuntu-latest
-    concurrency: beautify
+    concurrency: push
     needs: [test, mypy]
     outputs:
       new_sha: ${{ steps.sha.outputs.SHA }}
@@ -94,7 +94,7 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    concurrency: release
+    concurrency: push
     needs: [test, mypy, beautify]
     if: github.repository == 'relekang/python-semantic-release'
 
