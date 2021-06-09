@@ -93,17 +93,16 @@ class TomlVersionDeclaration(VersionDeclaration):
         return Dotty(toml_doc)
 
     def parse(self) -> Set[str]:
-        config = self._read()
-        if self.key in config:
-            return {config.get(self.key)}
+        _config = self._read()
+        if self.key in _config:
+            return {_config.get(self.key)}
         return set()
 
-    def replace(self, new_version: str):
-        config = self._read()
-        version = self.key in config
-        if version:
-            config[self.key] = new_version
-            self.path.write_text(tomlkit.dumps(config))
+    def replace(self, new_version: str) -> None:
+        _config = self._read()
+        if self.key in _config:
+            _config[self.key] = new_version
+            self.path.write_text(tomlkit.dumps(_config))
 
 
 class PatternVersionDeclaration(VersionDeclaration):
