@@ -56,7 +56,7 @@ setup(
             "pytest>=5,<6",
             "pytest-xdist>=1,<2",
             "pytest-mock>=2,<3",
-            "responses==0.5.0",
+            "responses==0.13.3",
             "mock==1.3.0",
         ],
         "docs": ["Sphinx==1.3.6"],
