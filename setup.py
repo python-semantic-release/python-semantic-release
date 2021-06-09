@@ -44,10 +44,7 @@ setup(
         "requests>=2.25,<3",
         "wheel",
         "python-gitlab>=1.10,<3",
-        # See https://github.com/relekang/python-semantic-release/issues/336
-        # and https://github.com/relekang/python-semantic-release/pull/337
-        # for why tomlkit is pinned
-        "tomlkit==0.7.0",
+        "tomlkit>=0.7.0,<1.0.0",
         "dotty-dict>=1.3.0,<2",
     ],
     extras_require={
