@@ -9,6 +9,7 @@ class _GitlabProject:
     def __init__(self, status):
         self.commits = {"my_ref": self._Commit(status)}
         self.tags = self._Tags()
+        self.releases = self._Releases()
 
     class _Commit:
         def __init__(self, status):
@@ -36,7 +37,8 @@ class _GitlabProject:
                             "status": "passed",
                             "allow_failure": False,
                         },
-                        {"name": "bad_job", "status": "failed", "allow_failure": False},
+                        {"name": "bad_job", "status": "failed",
+                            "allow_failure": False},
                     ]
                 elif status == "allow_failure":
                     self.jobs = [
@@ -88,12 +90,27 @@ class _GitlabProject:
                 if self.locked:
                     raise gitlab.exceptions.GitlabUpdateError
 
+    class _Releases:
+        def __init__(self):
+            pass
+
+        def create(self, input):
+            if input['name'] and input['tag_name']:
+                if input['tag_name'] == "vmy_good_tag" or input['tag_name'] == "vmy_locked_tag":
+                    return self._Release()
+            raise gitlab.exceptions.GitlabCreateError
+
+        class _Release:
+            def __init__(self, locked=False):
+                pass
+
 
 def mock_gitlab(status="success"):
     mocks = [
         mock.patch("os.environ", {"GL_TOKEN": "token"}),
         mock.patch(
-            "semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab")
+            "semantic_release.hvcs.config.get", wrapped_config_get(
+                hvcs="gitlab")
         ),
         mock.patch("gitlab.Gitlab.auth"),
         mock.patch(
