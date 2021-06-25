@@ -320,12 +320,10 @@ class GithubReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode().replace(
-                "\r\n", "\n"), dummy_content)
+            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.asset_url_params)
             self.assertEqual(request.headers["Content-Type"], "text/markdown")
-            self.assertEqual("token super-token",
-                             request.headers.get("Authorization"))
+            self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
 
@@ -353,14 +351,12 @@ class GithubReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode().replace(
-                "\r\n", "\n"), dummy_content)
+            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.asset_no_extension_url_params)
             self.assertEqual(
                 request.headers["Content-Type"], "application/octet-stream"
             )
-            self.assertEqual("token super-token",
-                             request.headers["Authorization"])
+            self.assertEqual("token super-token", request.headers["Authorization"])
 
             return 201, {}, json.dumps({})
 
@@ -386,12 +382,10 @@ class GithubReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode().replace(
-                "\r\n", "\n"), dummy_content)
+            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.dist_asset_url_params)
             self.assertEqual(request.headers["Content-Type"], "text/markdown")
-            self.assertEqual("token super-token",
-                             request.headers.get("Authorization"))
+            self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
 
@@ -417,18 +411,15 @@ class GithubReleaseTests(TestCase):
 class GitlabReleaseTests(TestCase):
     @mock_gitlab()
     def test_should_return_true_if_success(self, mock_auth, mock_project):
-        self.assertTrue(post_changelog(
-            "owner", "repo", "my_good_tag", "changelog"))
+        self.assertTrue(post_changelog("owner", "repo", "my_good_tag", "changelog"))
 
     @mock_gitlab()
     def test_should_return_false_if_bad_tag(self, mock_auth, mock_project):
-        self.assertFalse(post_changelog(
-            "owner", "repo", "my_bad_tag", "changelog"))
+        self.assertFalse(post_changelog("owner", "repo", "my_bad_tag", "changelog"))
 
     @mock_gitlab()
     def test_should_return_true_for_locked_tags(self, mock_auth, mock_project):
-        self.assertTrue(post_changelog(
-            "owner", "repo", "my_locked_tag", "changelog"))
+        self.assertTrue(post_changelog("owner", "repo", "my_locked_tag", "changelog"))
 
 
 def test_github_token():

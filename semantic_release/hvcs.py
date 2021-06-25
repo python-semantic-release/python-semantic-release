@@ -5,7 +5,7 @@ import mimetypes
 import os
 from typing import Optional, Union
 
-from gitlab import gitlab, exceptions
+from gitlab import exceptions, gitlab
 from requests import HTTPError, Session
 from requests.auth import AuthBase
 from urllib3 import Retry
@@ -138,8 +138,7 @@ class Github(Base):
     def session(
         raise_for_status=True, retry: Union[Retry, bool, int] = True
     ) -> Session:
-        session = build_requests_session(
-            raise_for_status=raise_for_status, retry=retry)
+        session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
         session.auth = Github.auth()
         return session
 
@@ -159,8 +158,7 @@ class Github(Base):
         url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
         try:
             response = Github.session().get(
-                url.format(domain=Github.api_url(),
-                           owner=owner, repo=repo, ref=ref)
+                url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
             )
             return response.json().get("state") == "success"
         except HTTPError as e:
@@ -263,13 +261,11 @@ class Github(Base):
         success = Github.create_release(owner, repo, tag, changelog)
 
         if not success:
-            logger.debug(
-                "Unsuccessful, looking for an existing release to update")
+            logger.debug("Unsuccessful, looking for an existing release to update")
             release_id = Github.get_release(owner, repo, tag)
             if release_id:
                 logger.debug(f"Updating release {release_id}")
-                success = Github.edit_release(
-                    owner, repo, release_id, changelog)
+                success = Github.edit_release(owner, repo, release_id, changelog)
             else:
                 logger.debug(f"Existing release not found")
 
@@ -387,8 +383,7 @@ class Gitlab(Base):
         """
         gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
-        jobs = gl.projects.get(
-            owner + "/" + repo).commits.get(ref).statuses.list()
+        jobs = gl.projects.get(owner + "/" + repo).commits.get(ref).statuses.list()
         for job in jobs:
             if job["status"] not in ["success", "skipped"]:
                 if job["status"] == "pending":
@@ -397,8 +392,7 @@ class Gitlab(Base):
                     )
                     return False
                 elif job["status"] == "failed" and not job["allow_failure"]:
-                    logger.debug(
-                        f"check_build_status: job {job['name']} failed")
+                    logger.debug(f"check_build_status: job {job['name']} failed")
                     return False
         return True
 
@@ -421,10 +415,16 @@ class Gitlab(Base):
         gl.auth()
         try:
             gl.projects.get(owner + "/" + repo).releases.create(
-                {'name': 'Release ' + version, 'tag_name': ref, 'description': changelog})
+                {
+                    "name": "Release " + version,
+                    "tag_name": ref,
+                    "description": changelog,
+                }
+            )
         except exceptions.GitlabCreateError:
             logger.debug(
-                f"Release {ref} could not be created for project {owner}/{repo}")
+                f"Release {ref} could not be created for project {owner}/{repo}"
+            )
             return False
 
         return True
@@ -440,8 +440,7 @@ def get_hvcs() -> Base:
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:
-        raise ImproperConfigurationError(
-            '"{0}" is not a valid option for hvcs.')
+        raise ImproperConfigurationError('"{0}" is not a valid option for hvcs.')
 
 
 def check_build_status(owner: str, repository: str, ref: str) -> bool:
@@ -467,8 +466,7 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str) ->
     :param changelog: A string with the changelog in correct format
     :return: a tuple with success status and payload from hvcs
     """
-    logger.debug(
-        f"Posting release changelog for {owner}/{repository} {version}")
+    logger.debug(f"Posting release changelog for {owner}/{repository} {version}")
     return get_hvcs().post_release_changelog(owner, repository, version, changelog)
 
 
