@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v7.16.2 (2021-06-25)
+### Fix
+* Use release-api for gitlab ([`1ef5cab`](https://github.com/relekang/python-semantic-release/commit/1ef5caba2d8dd0f2647bc51ede0ef7152d8b7b8d))
+
+### Documentation
+* Update trove classifiers to reflect supported versions ([#344](https://github.com/relekang/python-semantic-release/issues/344)) ([`7578004`](https://github.com/relekang/python-semantic-release/commit/7578004ed4b20c2bd553782443dfd77535faa377))
+* Recommend setting a concurrency group for GitHub Actions ([`34b0735`](https://github.com/relekang/python-semantic-release/commit/34b07357ab3f4f4aa787b71183816ec8aaf334a8))
+
 ## v7.16.1 (2021-06-08)
 ### Fix
 * Tomlkit should stay at 0.7.0 ([`769a5f3`](https://github.com/relekang/python-semantic-release/commit/769a5f31115cdb1f43f19a23fe72b96a8c8ba0fc))
