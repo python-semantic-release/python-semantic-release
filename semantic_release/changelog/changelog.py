@@ -17,7 +17,7 @@ def add_pr_link(owner: str, repo_name: str, message: str) -> str:
     if match:
         pr_number = match.group(1)
         url = (
-            f"https://{Gitlab.domain()}/{owner}/{repo_name}/-/merge_requests/{pr_number}"
+            f"https://{Gitlab.domain()}/{owner}/{repo_name}/-/issues/{pr_number}"
             if config.get("hvcs") == "gitlab"
             else f"https://{Github.domain()}/{owner}/{repo_name}/issues/{pr_number}"
         )

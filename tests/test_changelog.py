@@ -74,14 +74,14 @@ def test_markdown_changelog_gitlab():
             # Expected output with the default configuration
             "### Feature\n"
             "* Add non-breaking super-feature ([#1](https://gitlab.com/owner/"
-            "repo_name/-/merge_requests/1)) ([`145`](https://gitlab.com/owner/"
+            "repo_name/-/issues/1)) ([`145`](https://gitlab.com/owner/"
             "repo_name/-/commit/145))\n"
             "* Add super-feature ([`134`](https://gitlab.com/owner/repo_name/-/"
             "commit/134))\n"
             "\n"
             "### Documentation\n"
             "* Document super-feature ([#189](https://gitlab.com/owner/repo_name/"
-            "-/merge_requests/189)) ([`0`](https://gitlab.com/owner/repo_name/"
+            "-/issues/189)) ([`0`](https://gitlab.com/owner/repo_name/"
             "-/commit/0))"
         )
 
@@ -158,7 +158,7 @@ def test_get_changelog_sections():
         (
             "test (#123)",
             "gitlab",
-            "test ([#123](https://gitlab.com/owner/name/-/merge_requests/123))",
+            "test ([#123](https://gitlab.com/owner/name/-/issues/123))",
         ),
         ("test without commit", "gitlab", "test without commit"),
     ],
