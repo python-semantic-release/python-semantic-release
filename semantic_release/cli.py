@@ -318,14 +318,20 @@ def publish(**kwargs):
             logger.warning("Missing token: cannot post changelog to HVCS")
 
         # Upload to GitHub Releases
-        if upload_release and check_token():
-            logger.info("Uploading to HVCS release")
-            upload_to_release(owner, name, new_version, dist_path)
+        if upload_release:
+            if check_token():
+                logger.info("Uploading to HVCS release")
+                upload_to_release(owner, name, new_version, dist_path)
+                logger.info("Upload to HVCS is complete")
+            else:
+                logger.warning("Missing token: cannot upload to HVCS")
+
         # Remove distribution files as they are no longer needed
         if should_remove_dist():
+            logger.info("Removing distribution files")
             remove_dists(dist_path)
 
-        logger.info("New release published")
+        logger.info("Publish has finished")
 
     # else: Since version shows a message on failure, we do not need to print another.
 
