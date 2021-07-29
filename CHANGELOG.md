@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.16.3 (2021-07-29)
+### Fix
+* Print right info if token is not set (#360) ([#361](https://github.com/relekang/python-semantic-release/issues/361)) ([`a275a7a`](https://github.com/relekang/python-semantic-release/commit/a275a7a17def85ff0b41d254e4ee42772cce1981))
+
 ## v7.16.2 (2021-06-25)
 ### Fix
 * Use release-api for gitlab ([`1ef5cab`](https://github.com/relekang/python-semantic-release/commit/1ef5caba2d8dd0f2647bc51ede0ef7152d8b7b8d))
