@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import os
 from typing import Optional, Union
+from urllib.parse import urlsplit
 
 from gitlab import exceptions, gitlab
 from requests import HTTPError, Session
@@ -352,7 +353,12 @@ class Gitlab(Base):
 
         :return: The Gitlab instance domain
         """
-        domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST"))
+        # Use Gitlab-CI environment vars if available
+        if 'CI_SERVER_URL' in os.environ:
+            url = urlsplit(os.environ['CI_SERVER_URL'])
+            return f"{url.netloc}{url.path}".rstrip('/')
+
+        domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST", None))
         return domain if domain else "gitlab.com"
 
     @staticmethod
@@ -361,6 +367,10 @@ class Gitlab(Base):
 
         :return: The Gitlab instance API url
         """
+        # Use Gitlab-CI environment vars if available
+        if 'CI_SERVER_URL' in os.environ:
+            return os.environ['CI_SERVER_URL']
+
         return f"https://{Gitlab.domain()}"
 
     @staticmethod
@@ -415,6 +425,7 @@ class Gitlab(Base):
         gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         try:
+            logger.debug(f"Before release create call")
             gl.projects.get(owner + "/" + repo).releases.create(
                 {
                     "name": "Release " + version,
