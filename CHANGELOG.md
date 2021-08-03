@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.16.4 (2021-08-03)
+### Fix
+* Correct rendering of gitlab issue references ([`07429ec`](https://github.com/relekang/python-semantic-release/commit/07429ec4a32d32069f25ec77b4bea963bd5d2a00))
+
 ## v7.16.3 (2021-07-29)
 ### Fix
 * Print right info if token is not set (#360) ([#361](https://github.com/relekang/python-semantic-release/issues/361)) ([`a275a7a`](https://github.com/relekang/python-semantic-release/commit/a275a7a17def85ff0b41d254e4ee42772cce1981))
