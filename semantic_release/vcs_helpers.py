@@ -69,10 +69,9 @@ def get_last_version(skip_tags=None) -> Optional[str]:
         return tag.commit.committed_date
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
-        if re.match(r"v\d+\.\d+\.\d+", i.name):  # Matches vX.X.X
-            if i.name in skip_tags:
-                continue
-            return i.name[1:]  # Strip off 'v'
+        match = re.search(r"\d+\.\d+\.\d+", i.name)
+        if match and i.name not in skip_tags:
+            return match.group(0)  # Return only numeric vesion like 1.2.3
 
     return None
 
