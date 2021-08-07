@@ -45,8 +45,8 @@ of the output should be a :py:class:`semantic_release.history.parser_helpers.Par
 object with the following parameters::
 
     ParsedCommit(
-      level to bump: major=3 minor=2 patch=1 none=0,
-      type of change,
+      version level to bump: major=3 minor=2 patch=1 none=0,
+      changelog section (see: :ref:`config-changelog_sections`),
       scope of change: can be None,
       (subject, descriptions...),
       (breaking change descriptions...)
