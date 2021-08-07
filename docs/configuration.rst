@@ -251,7 +251,7 @@ They will be displayed in the order they are given.
 
 The available options depend on the commit parser used.
 
-Default: `feature, fix, breaking, documentation, performance` plus all
+Default: `feature, fix, breaking, documentation, performance, Other` plus all
 the default emojis for :py:class:`semantic_release.history.emoji_parser`.
 
 .. _config-changelog_components:
