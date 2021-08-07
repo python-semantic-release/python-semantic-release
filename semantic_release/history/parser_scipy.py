@@ -142,8 +142,8 @@ def parse_commit_message(message: str) -> ParsedCommit:
     else:
         blocks = [subject]
 
+    msg_type: ChangeType
     for msg_type in COMMIT_TYPES:
-        msg_type: ChangeType
         if msg_type.tag == parsed.group("tag"):
             break
     else:
