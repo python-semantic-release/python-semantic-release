@@ -41,8 +41,6 @@ Supported Changelog Sections::
 
 import logging
 import re
-from dataclasses import dataclass
-
 
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
@@ -51,34 +49,38 @@ from .parser_helpers import ParsedCommit
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class ChangeType:
-    tag: str
-    section: str
-    bump_level: int = 0
+    def __init__(self, tag, section) -> None:
+        self.tag: str = tag
+        self.section: str = section
+        self.bump_level: int = 0
 
     def make_breaking(self):
         self.bump_level = 3
 
 
-@dataclass
 class Breaking(ChangeType):
-    bump_level: int = 3
+    def __init__(self, tag, section) -> None:
+        super().__init__(tag, section)
+        self.bump_level: int = 3
 
 
-@dataclass
 class Compatible(ChangeType):
-    bump_level: int = 2
+    def __init__(self, tag, section) -> None:
+        super().__init__(tag, section)
+        self.bump_level: int = 2
 
 
-@dataclass
 class Patch(ChangeType):
-    bump_level: int = 1
+    def __init__(self, tag, section) -> None:
+        super().__init__(tag, section)
+        self.bump_level: int = 1
 
 
-@dataclass
 class Ignore(ChangeType):
-    bump_level: int = 0
+    def __init__(self, tag, section) -> None:
+        super().__init__(tag, section)
+        self.bump_level: int = 0
 
 
 COMMIT_TYPES = [
@@ -90,12 +92,11 @@ COMMIT_TYPES = [
     Compatible("DEV", "None"),
     Ignore("DOC", "documentation"),
     Compatible("ENH", "feature"),
-    Patch("MAINT", "None"),
+    Patch("MAINT", "fix"),
     Compatible("REV", "Other"),
     Ignore("STY", "None"),
     Ignore("TST", "None"),
     Ignore("REL", "None"),
-    
     # strictly speaking not part of the standard
     Compatible("FEAT", "feature"),
     Ignore("TEST", "None"),
@@ -129,12 +130,20 @@ def parse_commit_message(message: str) -> ParsedCommit:
             f"Unable to parse the given commit message: {message}"
         )
 
-    blocks = parsed.group("text").split("\n\n")
-    blocks = [x for x in blocks if not x == ""]
-    blocks.insert(0, parsed.group("subject"))
+    if parsed.group("subject"):
+        subject = parsed.group("subject")
+    else:
+        raise UnknownCommitMessageStyleError(f"The commit has no subject {message}")
+
+    if parsed.group("text"):
+        blocks = parsed.group("text").split("\n\n")
+        blocks = [x for x in blocks if not x == ""]
+        blocks.insert(0, subject)
+    else:
+        blocks = [subject]
 
     for msg_type in COMMIT_TYPES:
-        msg_type:ChangeType
+        msg_type: ChangeType
         if msg_type.tag == parsed.group("tag"):
             break
     else:
@@ -143,7 +152,9 @@ def parse_commit_message(message: str) -> ParsedCommit:
         msg_type = Ignore("", "None")
 
     # Look for descriptions of breaking changes
-    migration_instructions = [block for block in blocks if block.startswith("BREAKING CHANGE")]
+    migration_instructions = [
+        block for block in blocks if block.startswith("BREAKING CHANGE")
+    ]
     if migration_instructions:
         msg_type.make_breaking()
 
@@ -152,5 +163,5 @@ def parse_commit_message(message: str) -> ParsedCommit:
         msg_type.section,
         parsed.group("scope"),
         blocks,
-        migration_instructions
+        migration_instructions,
     )

@@ -2,6 +2,7 @@ import pytest
 
 from semantic_release.history.parser_scipy import COMMIT_TYPES, ChangeType
 
+
 @pytest.fixture(params=COMMIT_TYPES)
 def scipy_type(request):
     return request.param
@@ -43,11 +44,13 @@ def subject(request):
             updated-dependencies:
             - dependency-name: sphinx
             dependency-type: direct:development
-            update-type: version-update:semver-major"""
+            update-type: version-update:semver-major""",
         ),
-        ("Bug spotted on Fedora, see https://src.fedoraproject.org/rpms/scipy/pull-request/22",
-         "The `int[::]` annotation is used to accept non-contiguous views."),
-        ("[skip azp] [skip actions]",)
+        (
+            "Bug spotted on Fedora, see https://src.fedoraproject.org/rpms/scipy/pull-request/22",
+            "The `int[::]` annotation is used to accept non-contiguous views.",
+        ),
+        ("[skip azp] [skip actions]",),
     ]
 )
 def body_parts(request):
@@ -55,7 +58,7 @@ def body_parts(request):
 
 
 @pytest.fixture()
-def expected_response_scipy(scipy_type:ChangeType, subject, body_parts):
+def expected_response_scipy(scipy_type: ChangeType, subject, body_parts):
     bump_level = scipy_type.bump_level
     topic = scipy_type.section
     changelog_body = (subject, *body_parts)
@@ -63,8 +66,7 @@ def expected_response_scipy(scipy_type:ChangeType, subject, body_parts):
 
 
 @pytest.fixture()
-def valid_scipy_commit(scipy_type:ChangeType, subject, body_parts):
+def valid_scipy_commit(scipy_type: ChangeType, subject, body_parts):
     body = "\n\n".join(body_parts)
-    commit_msg = (
-    f"{scipy_type.tag}: {subject}\n\n{body}")
+    commit_msg = f"{scipy_type.tag}: {subject}\n\n{body}"
     return commit_msg
