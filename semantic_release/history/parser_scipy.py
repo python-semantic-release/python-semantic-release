@@ -1,36 +1,52 @@
 """
-Scipy commit style parser
+Scipy Style Parser
+------------------
 
-Parses commit messages of the following forms
+Parses commit messages using `scipy tags <scipy-style>`_ of the form::
 
-```
-<tag>: <subject>
+    <tag>(<scope>): <subject>
 
-<body>
-```
+    <body>
 
-Both <tag> and <body> are optional. If <tag> is missing, then the commit message
-should be of the form
 
-```
-<subject>
+The elements <tag>, <scope> and <body> are optional. If no tag is present, the
+commit will be added to the changelog section "None" and no version increment
+will be performed.
 
-<body>
-```
+To communicate a breaking change add "BREAKING CHANGE" into the body at the
+beginning of a paragraph. Fill this paragraph with information how to migrate
+from the broken behavior to the new behavior. This section will be added to the
+"Breaking" section of the changelog.
 
-again with an optional body. Releases will only be generated for tagged commits
-or commits.
+Supported Tags::
 
-https://docs.scipy.org/doc/scipy/reference/dev/contributor/continuous_integration.html#continuous-integration
+    API, DEP, ENH, REV, BUG, MAINT, BENCH, BLD,
+    DEV, DOC, STY, TST, REL, FEAT, TEST
+
+Supported Changelog Sections::
+
+    breaking, feature, fix, Other, None
+
+.. note::
+    While <scope> is supported here it isn't actually part of the scipy style.
+    If it is missing, parentheses around it are too. The commit should then be
+    of the form::
+
+        <tag>: <subject>
+
+        <body>
+
+.. _`scipy-style`: https://docs.scipy.org/doc/scipy/reference/dev/contributor/development_workflow.html#writing-the-commit-message
 """
+
 import logging
 import re
 from dataclasses import dataclass
-from semantic_release.history.parser_angular import MINOR_TYPES
+
 
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
-from .parser_helpers import ParsedCommit, parse_paragraphs, re_breaking
+from .parser_helpers import ParsedCommit
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +54,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ChangeType:
     tag: str
-    description: str
+    section: str
     bump_level: int = 0
 
     def make_breaking(self):
@@ -66,24 +82,34 @@ class Ignore(ChangeType):
 
 
 COMMIT_TYPES = [
-    Breaking("API", "an (incompatible) API change"),
-    Compatible("DEP", "deprecate something, or remove a deprecated object"),
-    Compatible("ENH", "enhancement"),
-    Compatible("REV", "revert an earlier commit"),
-    Patch("BUG", "bug fix"),
-    Ignore("MAINT", "maintenance commit (refactoring, typos, etc.)"),
-    Ignore("BENCH", "changes to the benchmark suite"),
-    Ignore("BLD", "change related to building"),
-    Ignore("DEV", "development tool or utility"),
+    Breaking("API", "breaking"),
+    Ignore("BENCH", "None"),
+    Patch("BLD", "fix"),
+    Patch("BUG", "fix"),
+    Compatible("DEP", "breaking"),
+    Compatible("DEV", "None"),
     Ignore("DOC", "documentation"),
-    Ignore("STY", "style fix (whitespace, PEP8)"),
-    Ignore("TST", "addition or modification of tests"),
-    Ignore("REL", "related to releasing"),
+    Compatible("ENH", "feature"),
+    Patch("MAINT", "None"),
+    Compatible("REV", "Other"),
+    Ignore("STY", "None"),
+    Ignore("TST", "None"),
+    Ignore("REL", "None"),
     
     # strictly speaking not part of the standard
-    Compatible("FEAT", "new feature"),
-    Ignore("TEST", "addition or modification of tests"),
+    Compatible("FEAT", "feature"),
+    Ignore("TEST", "None"),
 ]
+
+_commit_filter = "|".join(c.tag for c in COMMIT_TYPES)
+re_parser = re.compile(
+    fr"(?P<tag>{_commit_filter})?"
+    r"(?:\((?P<scope>[^\n]+)\))?"
+    r":? "
+    r"(?P<subject>[^\n]+):?"
+    r"(\n\n(?P<text>.*))?",
+    re.DOTALL,
+)
 
 
 @LoggedFunction(logger)
@@ -97,33 +123,34 @@ def parse_commit_message(message: str) -> ParsedCommit:
     :raises UnknownCommitMessageStyleError: if regular expression matching fails
     """
 
-    blocks = message.split("\n\n")
+    parsed = re_parser.match(message)
+    if not parsed:
+        raise UnknownCommitMessageStyleError(
+            f"Unable to parse the given commit message: {message}"
+        )
+
+    blocks = parsed.group("text").split("\n\n")
     blocks = [x for x in blocks if not x == ""]
-    header = blocks[0]
+    blocks.insert(0, parsed.group("subject"))
 
     for msg_type in COMMIT_TYPES:
         msg_type:ChangeType
-        tag = msg_type.tag
-        if header.startswith(tag):
-            header = header[len(tag):]
-            header = header[2:] if header[0] == ":" else header[0]
-            blocks[0] = header
+        if msg_type.tag == parsed.group("tag"):
             break
     else:
-        # some commits may not have an acronym if they belong to a PR that
+        # some commits may not have a tag, e.g. if they belong to a PR that
         # wasn't squashed (for maintainability) ignore them
-        msg_type = Ignore("", "Untagged commit.")
+        msg_type = Ignore("", "None")
 
     # Look for descriptions of breaking changes
-    # technically scipy doesn't document breaking changes explicitly
-    breaking_blocks = [block for block in blocks if block.startswith("BREAKING CHANGE")]
-    if breaking_blocks:
+    migration_instructions = [block for block in blocks if block.startswith("BREAKING CHANGE")]
+    if migration_instructions:
         msg_type.make_breaking()
 
     return ParsedCommit(
         msg_type.bump_level,
-        msg_type.description,
-        None,  # scipy style doesn't use scopes
+        msg_type.section,
+        parsed.group("scope"),
         blocks,
-        breaking_blocks
+        migration_instructions
     )

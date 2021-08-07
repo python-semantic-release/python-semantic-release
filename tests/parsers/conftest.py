@@ -57,7 +57,7 @@ def body_parts(request):
 @pytest.fixture()
 def expected_response_scipy(scipy_type:ChangeType, subject, body_parts):
     bump_level = scipy_type.bump_level
-    topic = scipy_type.description
+    topic = scipy_type.section
     changelog_body = (subject, *body_parts)
     return (bump_level, topic, None, changelog_body)
 
