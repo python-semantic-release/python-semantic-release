@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.17.0 (2021-08-07)
+### Feature
+* **parser:** Add scipy style parser ([#369](https://github.com/relekang/python-semantic-release/issues/369)) ([`51a3921`](https://github.com/relekang/python-semantic-release/commit/51a39213ea120c4bbd7a57b74d4f0cc3103da9f5))
+
 ## v7.16.4 (2021-08-03)
 ### Fix
 * Correct rendering of gitlab issue references ([`07429ec`](https://github.com/relekang/python-semantic-release/commit/07429ec4a32d32069f25ec77b4bea963bd5d2a00))
