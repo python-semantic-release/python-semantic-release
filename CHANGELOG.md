@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.18.0 (2021-08-09)
+### Feature
+* Add support for non-prefixed tags ([#366](https://github.com/relekang/python-semantic-release/issues/366)) ([`0fee4dd`](https://github.com/relekang/python-semantic-release/commit/0fee4ddb5baaddf85ed6b76e76a04474a5f97d0a))
+
+### Documentation
+* Clarify second argument of ParsedCommit ([`086ddc2`](https://github.com/relekang/python-semantic-release/commit/086ddc28f06522453328f5ea94c873bd202ff496))
+
 ## v7.17.0 (2021-08-07)
 ### Feature
 * **parser:** Add scipy style parser ([#369](https://github.com/relekang/python-semantic-release/issues/369)) ([`51a3921`](https://github.com/relekang/python-semantic-release/commit/51a39213ea120c4bbd7a57b74d4f0cc3103da9f5))
