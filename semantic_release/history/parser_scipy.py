@@ -1,7 +1,4 @@
 """
-Scipy Style Parser
-------------------
-
 Parses commit messages using `scipy tags <scipy-style>`_ of the form::
 
     <tag>(<scope>): <subject>
@@ -13,9 +10,17 @@ The elements <tag>, <scope> and <body> are optional. If no tag is present, the
 commit will be added to the changelog section "None" and no version increment
 will be performed.
 
+While <scope> is supported here it isn't actually part of the scipy style.
+If it is missing, parentheses around it are too. The commit should then be
+of the form::
+
+    <tag>: <subject>
+
+    <body>
+
 To communicate a breaking change add "BREAKING CHANGE" into the body at the
 beginning of a paragraph. Fill this paragraph with information how to migrate
-from the broken behavior to the new behavior. This section will be added to the
+from the broken behavior to the new behavior. It will be added to the
 "Breaking" section of the changelog.
 
 Supported Tags::
@@ -26,15 +31,6 @@ Supported Tags::
 Supported Changelog Sections::
 
     breaking, feature, fix, Other, None
-
-.. note::
-    While <scope> is supported here it isn't actually part of the scipy style.
-    If it is missing, parentheses around it are too. The commit should then be
-    of the form::
-
-        <tag>: <subject>
-
-        <body>
 
 .. _`scipy-style`: https://docs.scipy.org/doc/scipy/reference/dev/contributor/development_workflow.html#writing-the-commit-message
 """

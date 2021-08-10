@@ -158,6 +158,16 @@ The following parsers are built in to Python Semantic Release:
   The original parser from v1.0.0 of Python Semantic Release. Similar to the
   emoji parser above, but with less features.
 
+- :py:func:`semantic_release.history.scipy_parser`
+
+  A parser for `scipy-style commits <scipy-style>`_ with the following differences:
+
+    - Beginning a paragraph inside the commit with ``BREAKING CHANGE`` declares
+      a breaking change. Multiple ``BREAKING CHANGE`` paragraphs are supported.
+    - A scope (following the tag in parentheses) is supported
+
+  See :ref:`config-scipy-parser` for details.
+
 .. _config-major_emoji:
 
 ``major_emoji``
@@ -187,6 +197,14 @@ Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_
 create patch releases.
 
 Default: `:ambulance:, :lock:, :bug:, :zap:, :goal_net:, :alien:, :wheelchair:, :speech_balloon:, :mag:, :apple:, :penguin:, :checkered_flag:, :robot:, :green_apple:`
+
+.. _config-scipy-parser:
+
+``scipy_parser``
+----------------
+
+.. automodule:: semantic_release.history.parser_scipy
+
 
 Commits
 =======
