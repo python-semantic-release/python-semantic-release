@@ -13,6 +13,7 @@ from urllib3 import Retry
 from .errors import ImproperConfigurationError
 from .helpers import LoggedFunction, build_requests_session
 from .settings import config
+from .vcs_helpers import get_formatted_tag
 
 logger = logging.getLogger(__name__)
 
@@ -256,7 +257,7 @@ class Github(Base):
 
         :return: The status of the request
         """
-        tag = f"v{version}"
+        tag = get_formatted_tag(version)
         logger.debug(f"Attempting to create release for {tag}")
         success = Github.create_release(owner, repo, tag, changelog)
 
@@ -326,7 +327,7 @@ class Github(Base):
         """
 
         # Find the release corresponding to this version
-        release_id = Github.get_release(owner, repo, f"v{version}")
+        release_id = Github.get_release(owner, repo, get_formatted_tag(version))
         if not release_id:
             logger.debug("No release found to upload assets to")
             return False
@@ -410,7 +411,7 @@ class Gitlab(Base):
 
         :return: The status of the request
         """
-        ref = "v" + version
+        ref = get_formatted_tag(version)
         gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         try:

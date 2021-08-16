@@ -14,7 +14,7 @@ from dotty_dict import Dotty
 from ..errors import ImproperConfigurationError
 from ..helpers import LoggedFunction
 from ..settings import config
-from ..vcs_helpers import get_commit_log, get_last_version
+from ..vcs_helpers import get_commit_log, get_last_version, get_formatted_tag
 from .logs import evaluate_version_bump  # noqa
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
@@ -265,7 +265,7 @@ def get_previous_version(version: str) -> Optional[str]:
                 logger.debug(f"Version matches regex {commit_message}")
                 return matches.group(1).strip()
 
-    return get_last_version([version, f"v{version}"])
+    return get_last_version([version, get_formatted_tag(version)])
 
 
 @LoggedFunction(logger)
