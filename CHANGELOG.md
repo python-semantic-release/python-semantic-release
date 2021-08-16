@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.19.0 (2021-08-16)
+### Feature
+* Custom git tag format support ([#373](https://github.com/relekang/python-semantic-release/issues/373)) ([`1d76632`](https://github.com/relekang/python-semantic-release/commit/1d76632043bf0b6076d214a63c92013624f4b95e))
+
+### Documentation
+* **parser:** Documentation for scipy-parser ([`45ee34a`](https://github.com/relekang/python-semantic-release/commit/45ee34aa21443860a6c2cd44a52da2f353b960bf))
+
 ## v7.18.0 (2021-08-09)
 ### Feature
 * Add support for non-prefixed tags ([#366](https://github.com/relekang/python-semantic-release/issues/366)) ([`0fee4dd`](https://github.com/relekang/python-semantic-release/commit/0fee4ddb5baaddf85ed6b76e76a04474a5f97d0a))
