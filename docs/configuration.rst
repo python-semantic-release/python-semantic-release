@@ -435,3 +435,17 @@ If enabled, the status of the head commit will be checked and a release will onl
 if the status is success.
 
 Default: `false`
+
+.. _config-tag_format:
+
+``tag_format``
+------------------
+Git tag format. Accepts the following variables as format fields:
+
+================  ========
+Variable          Contents
+================  ========
+``{version}``     The new version number in the format ``X.Y.Z``.
+================  ========
+
+Default: ``v{version}``
