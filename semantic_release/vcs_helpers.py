@@ -196,11 +196,13 @@ def update_changelog_file(version: str, content_to_add: str):
 @LoggedFunction(logger)
 def tag_new_version(version: str):
     """
-    Create a new tag with the version number, prefixed with v.
+    Create a new tag with the version number, prefixed with v by default.
 
     :param version: The version number used in the tag as a string.
     """
-    return repo.git.tag("-a", f"v{version}", m=f"v{version}")
+    tag_format = config.get("tag_format")
+    tag = tag_format.format(version=version)
+    return repo.git.tag("-a", tag, m=tag)
 
 
 @check_repo
