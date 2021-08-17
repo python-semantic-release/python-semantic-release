@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.19.1 (2021-08-17)
+### Fix
+* Add get_formatted_tag helper instead of hardcoded v-prefix in the git tags ([`1a354c8`](https://github.com/relekang/python-semantic-release/commit/1a354c86abad77563ebce9a6944256461006f3c7))
+
 ## v7.19.0 (2021-08-16)
 ### Feature
 * Custom git tag format support ([#373](https://github.com/relekang/python-semantic-release/issues/373)) ([`1d76632`](https://github.com/relekang/python-semantic-release/commit/1d76632043bf0b6076d214a63c92013624f4b95e))
