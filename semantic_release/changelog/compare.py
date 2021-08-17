@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ..settings import config
-from ..vcs_helpers import get_repository_owner_and_name, get_formatted_tag
+from ..vcs_helpers import get_formatted_tag, get_repository_owner_and_name
 
 
 def get_github_compare_url(from_version: str, to_version: str) -> str:

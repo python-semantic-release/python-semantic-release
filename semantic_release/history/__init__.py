@@ -14,7 +14,7 @@ from dotty_dict import Dotty
 from ..errors import ImproperConfigurationError
 from ..helpers import LoggedFunction
 from ..settings import config
-from ..vcs_helpers import get_commit_log, get_last_version, get_formatted_tag
+from ..vcs_helpers import get_commit_log, get_formatted_tag, get_last_version
 from .logs import evaluate_version_bump  # noqa
 
 from .parser_angular import parse_commit_message as angular_parser  # noqa isort:skip
