@@ -1,6 +1,24 @@
 Python Semantic Release
 ***********************
 
+---------------------------------------------
+
+# This Repo is a FORK of `relekang/python-semantic-release`
+
+This Branch was created to resolve Issue #376.
+
+Issue: https://github.com/relekang/python-semantic-release/issues/376
+
+Pull Release: https://github.com/relekang/python-semantic-release/pull/377
+
+
+
+This was `ronnathaniel`'s instinctual response to a failed pip install.
+
+--------------------------------------------
+
+
+
 |Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status|
 
 Automatic Semantic Versioning for Python projects. This is a Python
