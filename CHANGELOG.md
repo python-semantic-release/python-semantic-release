@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.19.2 (2021-09-04)
+### Fix
+* Fixed ImproperConfig import error ([#377](https://github.com/relekang/python-semantic-release/issues/377)) ([`b011a95`](https://github.com/relekang/python-semantic-release/commit/b011a9595df4240cb190bfb1ab5b6d170e430dfc))
+
 ## v7.19.1 (2021-08-17)
 ### Fix
 * Add get_formatted_tag helper instead of hardcoded v-prefix in the git tags ([`1a354c8`](https://github.com/relekang/python-semantic-release/commit/1a354c86abad77563ebce9a6944256461006f3c7))
