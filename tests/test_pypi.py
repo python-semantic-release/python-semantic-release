@@ -109,3 +109,32 @@ class PypiTests(TestCase):
     def test_raises_error_when_missing_credentials(self):
         with self.assertRaises(ImproperConfigurationError):
             upload_to_pypi()
+
+    #########################
+    # test custom pypi vars #
+    #########################
+    @mock.patch("semantic_release.pypi.run")
+    @mock.patch.dict(
+        "os.environ",
+        {"CUSTOM_PYPI_USERNAME": "username", "CUSTOM_PYPI_PASSWORD": "password", "HOME": "/tmp/1234"},
+    )
+    @mock.patch("semantic_release.pypi.config.get", 
+                wrapped_config_get(pypi_user_var="CUSTOM_PYPI_USERNAME",
+                                   pypi_pass_var="CUSTOM_PYPI_PASSWORD"))
+    def test_upload_with_password_using_custom_pypi_vars(self, mock_run):
+        upload_to_pypi()
+        self.assertEqual(
+            mock_run.call_args_list,
+            [mock.call("twine upload -u 'username' -p 'password' \"dist/*\"")],
+        )
+
+    @mock.patch("semantic_release.pypi.run")
+    @mock.patch.dict("os.environ", {"CUSTOM_PYPI_TOKEN": "pypi-x"})
+    @mock.patch("semantic_release.pypi.config.get", 
+                wrapped_config_get(pypi_token_var="CUSTOM_PYPI_TOKEN"))
+    def test_upload_with_token_using_custom_pypi_vars(self, mock_run):
+        upload_to_pypi()
+        self.assertEqual(
+            mock_run.call_args_list,
+            [mock.call("twine upload -u '__token__' -p 'pypi-x' \"dist/*\"")],
+        )

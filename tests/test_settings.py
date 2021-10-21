@@ -39,6 +39,11 @@ class ConfigTests(TestCase):
         self.assertFalse(config.get("check_build_status"))
         self.assertEqual(config.get("hvcs"), "github")
         self.assertEqual(config.get("upload_to_pypi"), True)
+        self.assertEqual(config.get("github_token_var"), "GH_TOKEN")
+        self.assertEqual(config.get("gitlab_token_var"), "GL_TOKEN")
+        self.assertEqual(config.get("pypi_pass_var"), "PYPI_PASSWORD")
+        self.assertEqual(config.get("pypi_token_var"), "PYPI_TOKEN")
+        self.assertEqual(config.get("pypi_user_var"), "PYPI_USERNAME")
 
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
     def test_toml_override(self, mock_getcwd):
