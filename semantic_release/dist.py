@@ -1,6 +1,7 @@
 """Build and manage distributions
 """
 import logging
+import shutil
 
 from invoke import run
 
@@ -29,6 +30,5 @@ def build_dists():
 
 
 def remove_dists(path: str):
-    command = f"rm -rf {path}"
-    logger.debug(f"Running {command}")
-    run(command)
+    logger.debug(f"Removing build folder: `{path}`")
+    shutil.rmtree(path)
