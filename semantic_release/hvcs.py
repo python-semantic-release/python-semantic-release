@@ -122,7 +122,7 @@ class Github(Base):
 
         :return: The Github token environment variable (GH_TOKEN) value
         """
-        return os.environ.get("GH_TOKEN")
+        return os.environ.get(config.get('github_token_var'))
 
     @staticmethod
     def auth() -> Optional[TokenAuth]:
@@ -369,7 +369,7 @@ class Gitlab(Base):
 
         :return: The Gitlab token environment variable (GL_TOKEN) value
         """
-        return os.environ.get("GL_TOKEN")
+        return os.environ.get(config.get('gitlab_token_var'))
 
     @staticmethod
     @LoggedFunction(logger)

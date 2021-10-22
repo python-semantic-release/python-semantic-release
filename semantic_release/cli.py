@@ -42,11 +42,12 @@ from .vcs_helpers import (
 
 logger = logging.getLogger("semantic_release")
 
-SECRET_NAMES = [
-    "PYPI_USERNAME",
-    "PYPI_PASSWORD",
-    "GH_TOKEN",
-    "GL_TOKEN",
+TOKEN_VARS = [
+    'github_token_var',
+    'gitlab_token_var',
+    'pypi_pass_var',
+    'pypi_token_var',
+    'pypi_user_var',
 ]
 
 COMMON_OPTIONS = [
@@ -339,7 +340,8 @@ def publish(**kwargs):
 def filter_output_for_secrets(message):
     """Remove secrets from cli output."""
     output = message
-    for secret_name in SECRET_NAMES:
+    for token_var in TOKEN_VARS:
+        secret_name = config.get(token_var)
         secret = os.environ.get(secret_name)
         if secret != "" and secret is not None:
             output = output.replace(secret, f"${secret_name}")
@@ -370,7 +372,8 @@ def entry():
 def main(**kwargs):
     logger.debug(f"Main args: {kwargs}")
     message = ""
-    for secret_name in SECRET_NAMES:
+    for token_var in TOKEN_VARS:
+        secret_name = config.get(token_var)
         message += f'{secret_name}="{os.environ.get(secret_name)}",'
     logger.debug(f"Environment: {filter_output_for_secrets(message)}")
 

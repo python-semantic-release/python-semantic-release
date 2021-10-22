@@ -34,13 +34,13 @@ def upload_to_pypi(
         glob_patterns = ["*"]
 
     # Attempt to get an API token from environment
-    token = os.environ.get("PYPI_TOKEN")
+    token = os.environ.get(config.get('pypi_token_var'))
     username = None
     password = None
     if not token:
         # Look for a username and password instead
-        username = os.environ.get("PYPI_USERNAME")
-        password = os.environ.get("PYPI_PASSWORD")
+        username = os.environ.get(config.get('pypi_user_var'))
+        password = os.environ.get(config.get('pypi_pass_var'))
         home_dir = os.environ.get("HOME", "")
         if not (username or password) and (
             not home_dir or not os.path.isfile(os.path.join(home_dir, ".pypirc"))
