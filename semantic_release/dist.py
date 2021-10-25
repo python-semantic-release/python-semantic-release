@@ -31,4 +31,4 @@ def build_dists():
 
 def remove_dists(path: str):
     logger.debug(f"Removing build folder: `{path}`")
-    shutil.rmtree(path)
+    shutil.rmtree(path, ignore_errors=True)
