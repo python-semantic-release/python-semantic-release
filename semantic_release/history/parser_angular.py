@@ -8,26 +8,23 @@ import re
 
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
+from ..settings import config
 from .parser_helpers import ParsedCommit, parse_paragraphs, re_breaking
 
 logger = logging.getLogger(__name__)
 
 # Supported commit types for parsing
+allowed_types = config.get('parser_angular_allowed_types').split(',')
+
+# types with long names in changelog
 TYPES = {
     "feat": "feature",
-    "fix": "fix",
-    "test": "test",
     "docs": "documentation",
-    "style": "style",
-    "refactor": "refactor",
-    "build": "build",
-    "ci": "ci",
     "perf": "performance",
-    "chore": "chore",
 }
 
 re_parser = re.compile(
-    r"(?P<type>" + "|".join(TYPES.keys()) + ")"
+    r"(?P<type>" + "|".join(allowed_types) + ")"
     r"(?:\((?P<scope>[^\n]+)\))?"
     r"(?P<break>!)?: "
     r"(?P<subject>[^\n]+)"
@@ -35,15 +32,8 @@ re_parser = re.compile(
     re.DOTALL,
 )
 
-MINOR_TYPES = [
-    "feat",
-]
-
-PATCH_TYPES = [
-    "fix",
-    "perf",
-]
-
+MINOR_TYPES = config.get('parser_angular_minor_types').split(',')
+PATCH_TYPES = config.get('parser_angular_patch_types').split(',')
 
 @LoggedFunction(logger)
 def parse_commit_message(message: str) -> ParsedCommit:
@@ -60,13 +50,19 @@ def parse_commit_message(message: str) -> ParsedCommit:
         raise UnknownCommitMessageStyleError(
             f"Unable to parse the given commit message: {message}"
         )
+    parsed_break   = parsed.group('break')
+    parsed_scope   = parsed.group('scope')
+    parsed_subject = parsed.group('subject')
+    parsed_text    = parsed.group('text')
+    parsed_type    = parsed.group('type')
 
-    if parsed.group("text"):
-        descriptions = parse_paragraphs(parsed.group("text"))
+
+    if parsed_text:
+        descriptions = parse_paragraphs(parsed_text)
     else:
         descriptions = list()
     # Insert the subject before the other paragraphs
-    descriptions.insert(0, parsed.group("subject"))
+    descriptions.insert(0, parsed_subject)
 
     # Look for descriptions of breaking changes
     breaking_descriptions = [
@@ -75,18 +71,23 @@ def parse_commit_message(message: str) -> ParsedCommit:
         if match
     ]
 
-    level_bump = 0
-    if parsed.group("break") or breaking_descriptions:
+    level_bump = int(config.get('parser_angular_default_level_bump'))
+    if parsed_break or breaking_descriptions:
         level_bump = 3  # Major
-    elif parsed.group("type") in MINOR_TYPES:
+    elif parsed_type in MINOR_TYPES:
         level_bump = 2  # Minor
-    elif parsed.group("type") in PATCH_TYPES:
+    elif parsed_type in PATCH_TYPES:
         level_bump = 1  # Patch
+
+    parsed_type_long = TYPES.get(parsed_type, parsed_type)
+    # first param is the key you're getting from the dict,
+    # second param is the default value
+    # allows only putting types with a long name in the TYPES dict
 
     return ParsedCommit(
         level_bump,
-        TYPES[parsed.group("type")],
-        parsed.group("scope"),
+        parsed_type_long,
+        parsed_scope,
         descriptions,
         breaking_descriptions,
     )
