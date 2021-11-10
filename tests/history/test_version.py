@@ -1,3 +1,4 @@
+from pathlib import Path
 from textwrap import dedent
 
 import mock
@@ -6,17 +7,18 @@ import pytest
 import semantic_release
 from semantic_release.history import (
     ImproperConfigurationError,
-    VersionPattern,
+    PatternVersionDeclaration,
+    TomlVersionDeclaration,
+    VersionDeclaration,
     get_current_version,
     get_current_version_by_tag,
     get_new_version,
     get_previous_version,
-    load_version_patterns,
+    load_version_declarations,
     set_new_version,
 )
 
 from .. import wrapped_config_get
-from ..mocks import mock_version_file
 
 
 @pytest.fixture
@@ -106,27 +108,39 @@ class TestVersionPattern:
         [
             (
                 "path:__version__",
-                "path",
+                Path("path"),
                 r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
             ),
         ],
     )
     def test_from_variable(self, str, path, pattern):
-        p = VersionPattern.from_variable(str)
+        p = VersionDeclaration.from_variable(str)
         assert p.path == path
         assert p.pattern == pattern
 
     @pytest.mark.parametrize(
         "str, path, pattern",
         [
-            ("path:pattern", "path", r"pattern"),
-            ("path:Version: {version}", "path", r"Version: (\d+\.\d+(?:\.\d+)?)"),
+            ("path:pattern", Path("path"), r"pattern"),
+            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+(?:\.\d+)?)"),
         ],
     )
     def test_from_pattern(self, str, path, pattern):
-        p = VersionPattern.from_pattern(str)
+        p = VersionDeclaration.from_pattern(str)
         assert p.path == path
         assert p.pattern == pattern
+
+    @pytest.mark.parametrize(
+        "str, path, key",
+        [
+            ("path:some.toml.key", Path("path"), r"some.toml.key"),
+            ("path:some:other:toml.key", Path("path"), r"some:other:toml.key"),
+        ],
+    )
+    def test_from_toml(self, str, path, key):
+        p = VersionDeclaration.from_toml(str)
+        assert p.path == path
+        assert p.key == key
 
     @pytest.mark.parametrize(
         "pattern, content, hits",
@@ -146,12 +160,12 @@ class TestVersionPattern:
             ),
         ],
     )
-    def test_parse(self, tmp_path, pattern, content, hits):
+    def test_pattern_parse(self, tmp_path, pattern, content, hits):
         path = tmp_path / "pyproject.toml"
         path.write_text(content)
 
-        pattern = VersionPattern(str(path), pattern)
-        assert pattern.parse() == hits
+        declaration = PatternVersionDeclaration(str(path), pattern)
+        assert declaration.parse() == hits
 
     @pytest.mark.parametrize(
         "pattern, old_content, new_content",
@@ -182,12 +196,96 @@ class TestVersionPattern:
             (r"(\d+)b", "a12b", "a-b"),
         ],
     )
-    def test_replace(self, tmp_path, pattern, old_content, new_content):
+    def test_pattern_replace(self, tmp_path, pattern, old_content, new_content):
         path = tmp_path / "pyproject.toml"
         path.write_text(old_content)
 
-        pattern = VersionPattern(str(path), pattern)
-        pattern.replace("-")
+        declaration = PatternVersionDeclaration(str(path), pattern)
+        declaration.replace("-")
+
+        assert path.read_text() == new_content
+
+    @pytest.mark.parametrize(
+        "key, content, hits",
+        [
+            ("root", 'root = "test"', {"test"}),
+            ("tool.poetry.version", '[tool.poetry]\nversion = "0.1.0"', {"0.1.0"}),
+        ],
+    )
+    def test_toml_parse(self, tmp_path, key, content, hits):
+        path = tmp_path / "pyproject.toml"
+        path.write_text(content)
+
+        declaration = TomlVersionDeclaration(path, key)
+        assert declaration.parse() == hits
+
+    @pytest.mark.parametrize(
+        "key, old_content, new_content",
+        [
+            (r"root", "", ""),
+            (r"root", 'root = "test"', 'root = "-"'),
+            (
+                "tool.poetry.version",
+                dedent(
+                    """
+                    [tool.poetry]
+                    version = "0.1.0"
+                    [tool.poetry.dependencies.pylint]
+                    version = "^2.5.3"
+                    optional = true
+                    """
+                ),
+                dedent(
+                    """
+                    [tool.poetry]
+                    version = "-"
+                    [tool.poetry.dependencies.pylint]
+                    version = "^2.5.3"
+                    optional = true
+                    """
+                ),
+            ),
+            (
+                "tool.poetry.version",
+                dedent(
+                    """
+                    [tool.poetry]
+                    name = "my-package"
+                    version = "0.1.0"
+                    description = "A super package"
+                    
+                    [build-system]
+                    requires = ["poetry-core>=1.0.0"]
+                    build-backend = "poetry.core.masonry.api"
+                    
+                    [tool.semantic_release]
+                    version_toml = "pyproject.toml:tool.poetry.version"
+                    """
+                ),
+                dedent(
+                    """
+                    [tool.poetry]
+                    name = "my-package"
+                    version = "-"
+                    description = "A super package"
+                    
+                    [build-system]
+                    requires = ["poetry-core>=1.0.0"]
+                    build-backend = "poetry.core.masonry.api"
+                    
+                    [tool.semantic_release]
+                    version_toml = "pyproject.toml:tool.poetry.version"
+                    """
+                ),
+            ),
+        ],
+    )
+    def test_toml_replace(self, tmp_path, key, old_content, new_content):
+        path = tmp_path / "pyproject.toml"
+        path.write_text(old_content)
+
+        declaration = TomlVersionDeclaration(str(path), key)
+        declaration.replace("-")
 
         assert path.read_text() == new_content
 
@@ -211,7 +309,7 @@ class TestVersionPattern:
                         version_variable = "path:__version__"
                         """,
             patterns=[
-                ("path", r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -220,8 +318,8 @@ class TestVersionPattern:
                         version_variable = "path1:var1,path2:var2"
                         """,
             patterns=[
-                ("path1", r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                ("path2", r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -233,8 +331,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                ("path1", r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                ("path2", r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -243,7 +341,7 @@ class TestVersionPattern:
                         version_pattern = "path:pattern"
                         """,
             patterns=[
-                ("path", "pattern"),
+                (Path("path"), "pattern"),
             ],
         ),
         dict(
@@ -252,8 +350,8 @@ class TestVersionPattern:
                         version_pattern = "path1:pattern1,path2:pattern2"
                         """,
             patterns=[
-                ("path1", "pattern1"),
-                ("path2", "pattern2"),
+                (Path("path1"), "pattern1"),
+                (Path("path2"), "pattern2"),
             ],
         ),
         dict(
@@ -265,8 +363,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                ("path1", "pattern1"),
-                ("path2", "pattern2"),
+                (Path("path1"), "pattern1"),
+                (Path("path2"), "pattern2"),
             ],
         ),
     ],
@@ -287,9 +385,9 @@ def test_load_version_patterns(tmp_cwd, monkeypatch, params):
 
     if "error" in params:
         with pytest.raises(ImproperConfigurationError):
-            load_version_patterns()
+            load_version_declarations()
 
     else:
-        patterns = load_version_patterns()
+        patterns = load_version_declarations()
         pattern_tuples = [(x.path, x.pattern) for x in patterns]
         assert pattern_tuples == params["patterns"]

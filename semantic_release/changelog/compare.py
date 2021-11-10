@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ..settings import config
-from ..vcs_helpers import get_repository_owner_and_name
+from ..vcs_helpers import get_formatted_tag, get_repository_owner_and_name
 
 
 def get_github_compare_url(from_version: str, to_version: str) -> str:
@@ -14,7 +14,8 @@ def get_github_compare_url(from_version: str, to_version: str) -> str:
     """
     owner, name = get_repository_owner_and_name()
     return (
-        f"https://github.com/{owner}/{name}" f"/compare/v{from_version}...v{to_version}"
+        f"https://github.com/{owner}/{name}/compare/"
+        f"{get_formatted_tag(from_version)}...{get_formatted_tag(to_version)}"
     )
 
 

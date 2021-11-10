@@ -1,6 +1,7 @@
 import re
-from setuptools import find_packages, setup
 import sys
+
+from setuptools import find_packages, setup
 
 
 def _read_long_description():
@@ -29,12 +30,12 @@ setup(
     url="http://github.com/relekang/python-semantic-release",
     author="Rolf Erik Lekang",
     author_email="me@rolflekang.com",
-    description="Automatic semantic versioning for python projects",
+    description="Automatic Semantic Versioning for Python projects",
     long_description=_read_long_description(),
     packages=find_packages(exclude=("tests",)),
     license="MIT",
     install_requires=[
-        "click>=7,<8",
+        "click>=7,<9",
         "click_log>=0.3,<1",
         "gitpython>=3.0.8,<4",
         "invoke>=1.4.1,<2",
@@ -42,8 +43,12 @@ setup(
         "twine>=3,<4",
         "requests>=2.25,<3",
         "wheel",
-        "toml~=0.10.0",
-        "python-gitlab>=1.10,<2",
+        "python-gitlab>=1.10,<3",
+        # See https://github.com/relekang/python-semantic-release/issues/336
+        # and https://github.com/relekang/python-semantic-release/pull/337
+        # for why tomlkit is pinned
+        "tomlkit==0.7.0",
+        "dotty-dict>=1.3.0,<2",
     ],
     extras_require={
         "test": [
@@ -51,11 +56,12 @@ setup(
             "pytest>=5,<6",
             "pytest-xdist>=1,<2",
             "pytest-mock>=2,<3",
-            "responses==0.5.0",
+            "responses==0.13.3",
             "mock==1.3.0",
         ],
         "docs": ["Sphinx==1.3.6"],
-        "dev": ["mypy", "tox", "isort", "black"],
+        "dev": ["tox", "isort", "black"],
+        "mypy": ["mypy", "types-requests"],
     },
     entry_points="""
         [console_scripts]
@@ -68,5 +74,6 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
 )

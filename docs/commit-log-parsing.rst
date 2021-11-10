@@ -39,14 +39,14 @@ Writing your own parser
 If you think this is all well and cool, but the angular style is not for you,
 no need to worry because custom parsers are supported.
 
-A parser is basically a python function that takes the commit message as the
+A parser is basically a Python function that takes the commit message as the
 only argument and returns the information extracted from the commit. The format
 of the output should be a :py:class:`semantic_release.history.parser_helpers.ParsedCommit`
 object with the following parameters::
 
     ParsedCommit(
-      level to bump: major=3 minor=2 patch=1 none=0,
-      type of change,
+      version level to bump: major=3 minor=2 patch=1 none=0,
+      changelog section (see: :ref:`config-changelog_sections`),
       scope of change: can be None,
       (subject, descriptions...),
       (breaking change descriptions...)

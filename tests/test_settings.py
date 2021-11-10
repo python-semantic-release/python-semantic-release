@@ -1,8 +1,7 @@
 import os
 import platform
+from textwrap import dedent
 from unittest import TestCase
-
-import toml
 
 from semantic_release.errors import ImproperConfigurationError
 from semantic_release.history import parser_angular
@@ -40,24 +39,30 @@ class ConfigTests(TestCase):
         self.assertFalse(config.get("check_build_status"))
         self.assertEqual(config.get("hvcs"), "github")
         self.assertEqual(config.get("upload_to_repository"), True)
+        self.assertEqual(config.get("github_token_var"), "GH_TOKEN")
+        self.assertEqual(config.get("gitlab_token_var"), "GL_TOKEN")
+        self.assertEqual(config.get("pypi_pass_var"), "PYPI_PASSWORD")
+        self.assertEqual(config.get("pypi_token_var"), "PYPI_TOKEN")
+        self.assertEqual(config.get("pypi_user_var"), "PYPI_USERNAME")
+        self.assertEqual(config.get("repository_user_var"), "REPOSITORY_USERNAME")
+        self.assertEqual(config.get("repository_password_var"), "REPOSITORY_PASSWORD")
+
 
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
     def test_toml_override(self, mock_getcwd):
         # create temporary toml config file
         dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
         os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
-        toml_conf_content = {
-            "tool": {
-                "foo": {"bar": "baz"},
-                "semantic_release": {
-                    "upload_to_repository": False,
-                    "version_source": "tag",
-                    "foo": "bar",
-                },
-            },
-        }
+        toml_conf_content = """
+[tool.foo]
+bar = "baz"
+[tool.semantic_release]
+upload_to_repository = false
+version_source = "tag"
+foo = "bar"
+"""
         with open(dummy_conf_path, "w") as dummy_conf_file:
-            toml.dump(toml_conf_content, dummy_conf_file)
+            dummy_conf_file.write(toml_conf_content)
 
         config = _config()
         mock_getcwd.assert_called_once_with()
@@ -69,9 +74,9 @@ class ConfigTests(TestCase):
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 
-    @mock.patch("semantic_release.settings.logger.debug")
+    @mock.patch("semantic_release.settings.logger.warning")
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
-    def test_no_raise_toml_error(self, mock_getcwd, mock_debug):
+    def test_no_raise_toml_error(self, mock_getcwd, mock_warning):
         # create temporary toml config file
         dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
         bad_toml_conf_content = """\
@@ -86,7 +91,30 @@ class ConfigTests(TestCase):
 
         _ = _config()
         mock_getcwd.assert_called_once_with()
-        mock_debug.assert_called_once_with("Could not decode pyproject.toml")
+        mock_warning.assert_called_once_with(
+            'Could not decode pyproject.toml: Invalid key "TITLE OF BAD TOML" at line 1 col 25'
+        )
+        # delete temporary toml config file
+        os.remove(dummy_conf_path)
+
+    @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
+    def test_toml_no_psr_section(self, mock_getcwd):
+        # create temporary toml config file
+        dummy_conf_path = os.path.join(temp_dir, "pyproject.toml")
+        toml_conf_content = dedent(
+            """
+            [tool.foo]
+            bar = "baz"
+            """
+        )
+        os.makedirs(os.path.dirname(dummy_conf_path), exist_ok=True)
+
+        with open(dummy_conf_path, "w") as dummy_conf_file:
+            dummy_conf_file.write(toml_conf_content)
+
+        config = _config()
+        mock_getcwd.assert_called_once_with()
+        self.assertEqual(config.get("hvcs"), "github")
         # delete temporary toml config file
         os.remove(dummy_conf_path)
 

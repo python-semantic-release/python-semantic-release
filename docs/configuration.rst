@@ -49,6 +49,15 @@ specify multiple versions:
         'docs/conf.py:version',
     ]
 
+.. _config-version_toml:
+
+``version_toml``
+-------------------
+Similar to :ref:`config-version_variable`, but allows the version number to be
+identified safely in a toml file like ``pyproject.toml``, using a dotted notation to the key path::
+
+    pyproject.toml:tool.poetry.version
+
 .. _config-version_pattern:
 
 ``version_pattern``
@@ -149,6 +158,16 @@ The following parsers are built in to Python Semantic Release:
   The original parser from v1.0.0 of Python Semantic Release. Similar to the
   emoji parser above, but with less features.
 
+- :py:func:`semantic_release.history.scipy_parser`
+
+  A parser for `scipy-style commits <scipy-style>`_ with the following differences:
+
+    - Beginning a paragraph inside the commit with ``BREAKING CHANGE`` declares
+      a breaking change. Multiple ``BREAKING CHANGE`` paragraphs are supported.
+    - A scope (following the tag in parentheses) is supported
+
+  See :ref:`config-scipy-parser` for details.
+
 .. _config-major_emoji:
 
 ``major_emoji``
@@ -178,6 +197,14 @@ Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_
 create patch releases.
 
 Default: `:ambulance:, :lock:, :bug:, :zap:, :goal_net:, :alien:, :wheelchair:, :speech_balloon:, :mag:, :apple:, :penguin:, :checkered_flag:, :robot:, :green_apple:`
+
+.. _config-scipy-parser:
+
+``scipy_parser``
+----------------
+
+.. automodule:: semantic_release.history.parser_scipy
+
 
 Commits
 =======
@@ -359,6 +386,12 @@ A comma `,` separated list of glob patterns to use when uploading dist files to 
 
 Default: `*`
 
+.. _config-repository:
+
+``repository``
+------------------
+The repository (package index) to upload to. Should be a section in the ``.pypirc`` file.
+
 .. _config-upload_to_release:
 
 ``upload_to_release``
@@ -389,7 +422,9 @@ Default: `true`
 -----------------
 Command to build dists. Build output should be stored in the directory configured in
 ``dist_path``.  If necessary, multiple commands can be specified using ``&&``, e.g.
-``pip install -m flit && flit build``.
+``pip install -m flit && flit build``. If set to false, build command is disabled and
+files should be placed manually in the directory configured in
+``dist_path``.
 
 Default: ``python setup.py sdist bdist_wheel``
 
@@ -408,7 +443,7 @@ HVCS
 
 ``hvcs``
 --------
-The name of your hvcs. Currently only `GitHub` and `GitLab` are supported.
+The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
 
 Default: `github`
 
@@ -420,3 +455,17 @@ If enabled, the status of the head commit will be checked and a release will onl
 if the status is success.
 
 Default: `false`
+
+.. _config-tag_format:
+
+``tag_format``
+------------------
+Git tag format. Accepts the following variables as format fields:
+
+================  ========
+Variable          Contents
+================  ========
+``{version}``     The new version number in the format ``X.Y.Z``.
+================  ========
+
+Default: ``v{version}``

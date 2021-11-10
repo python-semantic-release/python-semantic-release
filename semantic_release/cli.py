@@ -11,7 +11,7 @@ from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
 
 from .changelog import markdown_changelog
-from .dist import build_dists, remove_dists
+from .dist import build_dists, remove_dists, should_build, should_remove_dist
 from .history import (
     evaluate_version_bump,
     get_current_version,
@@ -42,13 +42,14 @@ from .vcs_helpers import (
 
 logger = logging.getLogger("semantic_release")
 
-SECRET_NAMES = [
-    "PYPI_USERNAME",
-    "PYPI_PASSWORD",
-    "REPOSITORY_USERNAME",
-    "REPOSITORY_PASSWORD",
-    "GH_TOKEN",
-    "GL_TOKEN",
+TOKEN_VARS = [
+    'github_token_var',
+    'gitlab_token_var',
+    'pypi_pass_var',
+    'pypi_token_var',
+    'pypi_user_var',
+    'repository_user_var',
+    'repository_password_var',
 ]
 
 COMMON_OPTIONS = [
@@ -73,7 +74,7 @@ COMMON_OPTIONS = [
         "--define",
         "-D",
         multiple=True,
-        help='setting="value", override a configuration value',
+        help='setting="value", override a configuration value.',
     ),
     overload_configuration,
 ]
@@ -86,6 +87,30 @@ def common_options(func):
     for option in reversed(COMMON_OPTIONS):
         func = option(func)
     return func
+
+
+def print_version(*, current=False, force_level=None, **kwargs):
+    """
+    Print the current or new version to standard output.
+    """
+    try:
+        current_version = get_current_version()
+    except GitError as e:
+        print(str(e), file=sys.stderr)
+        return False
+    if current:
+        print(current_version, end="")
+        return True
+
+    # Find what the new version number should be
+    level_bump = evaluate_version_bump(current_version, force_level)
+    new_version = get_new_version(current_version, level_bump)
+    if should_bump_version(current_version=current_version, new_version=new_version):
+        print(new_version, end="")
+        return True
+
+    print("No release will be made.", file=sys.stderr)
+    return False
 
 
 def version(*, retry=False, noop=False, force_level=None, **kwargs):
@@ -160,7 +185,8 @@ def bump_version(new_version, level_bump):
         config.get("version_source") == "commit",
     ):
         commit_new_version(new_version)
-    tag_new_version(new_version)
+    if config.get("version_source") == "tag" or config.get("tag_commit"):
+        tag_new_version(new_version)
 
     logger.info(f"Bumping with a {level_bump} version to {new_version}")
 
@@ -260,7 +286,6 @@ def publish(**kwargs):
 
         # Get config options for uploads
         dist_path = config.get("dist_path")
-        remove_dist = config.get("remove_dist")
         upload_to_artifact_repository = config.get("upload_to_repository") and config.get("upload_to_pypi")
         dist_glob_patterns = config.get("dist_glob_patterns", config.get("upload_to_pypi_glob_patterns"))
         upload_release = config.get("upload_to_release")
@@ -268,10 +293,10 @@ def publish(**kwargs):
         if dist_glob_patterns:
             dist_glob_patterns = dist_glob_patterns.split(",")
 
-        if upload_to_artifact_repository or upload_release:
+        if should_build():
             # We need to run the command to build wheels for releasing
             logger.info("Building distributions")
-            if remove_dist:
+            if should_remove_dist():
                 # Remove old distributions before building
                 remove_dists(dist_path)
             build_dists()
@@ -296,14 +321,20 @@ def publish(**kwargs):
             logger.warning("Missing token: cannot post changelog to HVCS")
 
         # Upload to GitHub Releases
-        if upload_release and check_token():
-            logger.info("Uploading to HVCS release")
-            upload_to_release(owner, name, new_version, dist_path)
+        if upload_release:
+            if check_token():
+                logger.info("Uploading to HVCS release")
+                upload_to_release(owner, name, new_version, dist_path)
+                logger.info("Upload to HVCS is complete")
+            else:
+                logger.warning("Missing token: cannot upload to HVCS")
+
         # Remove distribution files as they are no longer needed
-        if (upload_pypi or upload_release) and remove_dist:
+        if should_remove_dist():
+            logger.info("Removing distribution files")
             remove_dists(dist_path)
 
-        logger.info("New release published")
+        logger.info("Publish has finished")
 
     # else: Since version shows a message on failure, we do not need to print another.
 
@@ -311,7 +342,8 @@ def publish(**kwargs):
 def filter_output_for_secrets(message):
     """Remove secrets from cli output."""
     output = message
-    for secret_name in SECRET_NAMES:
+    for token_var in TOKEN_VARS:
+        secret_name = config.get(token_var)
         secret = os.environ.get(secret_name)
         if secret != "" and secret is not None:
             output = output.replace(secret, f"${secret_name}")
@@ -320,10 +352,13 @@ def filter_output_for_secrets(message):
 
 
 def entry():
-    click_log.basic_config(logger)
-
     # Move flags to after the command
     ARGS = sorted(sys.argv[1:], key=lambda x: 1 if x.startswith("--") else -1)
+
+    if ARGS and not ARGS[0].startswith("print-"):
+        # print-* command output should not be polluted with logging.
+        click_log.basic_config()
+
     main(args=ARGS)
 
 
@@ -339,7 +374,8 @@ def entry():
 def main(**kwargs):
     logger.debug(f"Main args: {kwargs}")
     message = ""
-    for secret_name in SECRET_NAMES:
+    for token_var in TOKEN_VARS:
+        secret_name = config.get(token_var)
         message += f'{secret_name}="{os.environ.get(secret_name)}",'
     logger.debug(f"Environment: {filter_output_for_secrets(message)}")
 
@@ -354,6 +390,7 @@ def main(**kwargs):
         "upload_to_pypi",
         "upload_to_repository",
         "version_source",
+        "no_git_tag",
     ]:
         obj[key] = config.get(key)
     logger.debug(f"Main config: {obj}")
@@ -393,12 +430,16 @@ def cmd_version(**kwargs):
         exit(1)
 
 
-if __name__ == "__main__":
-    #
-    # Allow options to come BEFORE commands,
-    # we simply sort them behind the command instead.
-    #
-    # This will have to be removed if there are ever global options
-    # that are not valid for a subcommand.
-    #
-    entry()
+@main.command(name="print-version", help=print_version.__doc__)
+@common_options
+@click.option(
+    "--current/--next",
+    default=False,
+    help="Choose to output next version (default) or current one.",
+)
+def cmd_print_version(**kwargs):
+    try:
+        return print_version(**kwargs)
+    except Exception as error:
+        print(filter_output_for_secrets(str(error)), file=sys.stderr)
+        exit(1)

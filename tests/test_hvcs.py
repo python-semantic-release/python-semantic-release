@@ -59,6 +59,31 @@ def test_check_token_should_return_false():
     assert check_token() is False
 
 
+###############################
+# test custom token variables #
+###############################
+@mock.patch("os.environ", {"CUSTOM_GH_TOKEN": "token"})
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(github_token_var="CUSTOM_GH_TOKEN"))
+def test_check_custom_github_token_var_should_return_true():
+    assert check_token() is True
+
+
+@mock.patch("os.environ", {"GH_TOKEN": "token"})
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(github_token_var="CUSTOM_TOKEN"))
+def test_check_custom_github_token_should_return_false():
+    assert check_token() is False
+
+@mock.patch("os.environ", {"CUSTOM_GL_TOKEN": "token"})
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(github_token_var="CUSTOM_GL_TOKEN"))
+def test_check_custom_gitlab_token_var_should_return_true():
+    assert check_token() is True
+
+
+@mock.patch("os.environ", {"GL_TOKEN": "token"})
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(gitlab_token_var="CUSTOM_TOKEN"))
+def test_check_custom_gitlab_token_should_return_false():
+    assert check_token() is False
+
 @pytest.mark.parametrize(
     "hvcs,hvcs_domain,expected_domain,api_url,ci_server_host",
     [
@@ -418,8 +443,8 @@ class GitlabReleaseTests(TestCase):
         self.assertFalse(post_changelog("owner", "repo", "my_bad_tag", "changelog"))
 
     @mock_gitlab()
-    def test_should_return_false_if_failed_update(self, mock_auth, mock_project):
-        self.assertFalse(post_changelog("owner", "repo", "my_locked_tag", "changelog"))
+    def test_should_return_true_for_locked_tags(self, mock_auth, mock_project):
+        self.assertTrue(post_changelog("owner", "repo", "my_locked_tag", "changelog"))
 
 
 def test_github_token():

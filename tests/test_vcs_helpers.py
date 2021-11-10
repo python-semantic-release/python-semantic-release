@@ -103,9 +103,13 @@ def test_add_and_commit(mock_git, mocker, params):
     mock_git.commit.assert_called_once_with(**params["commit_args"])
 
 
-def test_tag_new_version(mock_git):
+def test_tag_new_version(mock_git, mocker):
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        return_value="ver{version}",
+    )
     tag_new_version("1.0.0")
-    mock_git.tag.assert_called_with("-a", "v1.0.0", m="v1.0.0")
+    mock_git.tag.assert_called_with("-a", "ver1.0.0", m="ver1.0.0")
 
 
 def test_push_new_version(mock_git):

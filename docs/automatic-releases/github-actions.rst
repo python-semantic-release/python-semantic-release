@@ -38,6 +38,7 @@ Example Workflow
    jobs:
      release:
        runs-on: ubuntu-latest
+       concurrency: release
 
        steps:
        - uses: actions/checkout@v2
@@ -54,6 +55,11 @@ Example Workflow
 It is also possible to use username and password authentication in a similar
 fashion.
 
+``concurrency`` is a
+`beta feature of GitHub Actions <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency>`_
+which disallows two or more release jobs to run in parallel. This prevents race
+conditions if there are multiple pushes in a short period of time.
+
 .. warning::
   You must set `fetch-depth` to 0 when using ``actions/checkout@v2``, since
   Python Semantic Release needs access to the full history to determine whether
@@ -61,12 +67,13 @@ fashion.
 
 .. warning::
   The ``GITHUB_TOKEN`` secret is automatically configured by GitHub, with the
-  same permissions as the user who triggered the workflow run. This can
-  sometimes cause a problem if your default branch is protected, since only
-  administrators will be able to push to it without creating a pull request.
+  same permissions as the user who triggered the workflow run. This causes
+  a problem if your default branch is protected.
 
-  You can work around this by a user with the necessary permissions creating a
-  Personal Access Token, and storing that in a different secret.
+  You can work around this by storing an administrator's Personal Access Token
+  as a separate secret and using that instead of ``GITHUB_TOKEN``. In this
+  case, you will also need to pass the new token to ``actions/checkout`` (as
+  the ``token`` input) in order to gain push access.
 
 Multiple Projects
 -----------------

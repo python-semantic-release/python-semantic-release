@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -43,41 +43,48 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
-      - name: Install mypy
-        run: python -m pip install mypy
+      - name: Install mypy & stubs packages
+        run: python -m pip install .[mypy]
       - name: mypy
         run: python -m mypy --ignore-missing-imports semantic_release
 
   beautify:
     name: Beautify
     runs-on: ubuntu-latest
+    concurrency: push
     needs: [test, mypy]
     outputs:
       new_sha: ${{ steps.sha.outputs.SHA }}
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
 
-      - name: Format code
-        run: |
-          python -m pip install black
-          python -m black .
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Black
+        run: python -m pip install black
+
+      - name: Beautify with Black
+        run: python -m black .
+
+      - name: Install isort
+        run: python -m pip install "isort >=4,<5"
+
       - name: Sort imports
-        run: |
-          python -m pip install "isort >=4,<5"
-          python -m isort -y -rc semantic_release tests
+        run: python -m isort -y -rc .
 
       - name: Commit and push changes
         uses: github-actions-x/commit@v2.5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'style: improve code formatting'
+          commit-message: 'style: beautify ${{ github.sha }}'
           name: github-actions
           email: action@github.com
+
       - name: Get new SHA
         id: sha
         run: |
@@ -87,6 +94,7 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
+    concurrency: push
     needs: [test, mypy, beautify]
     if: github.repository == 'relekang/python-semantic-release'
 

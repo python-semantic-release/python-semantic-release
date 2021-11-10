@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import sys
 import os
+import sys
+
+import semantic_release  # noqa
 
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
-import semantic_release  # noqa
 
 # -- General configuration ------------------------------------------------
 

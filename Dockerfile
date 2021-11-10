@@ -1,12 +1,14 @@
 # This Dockerfile is only for GitHub Actions
-FROM python:3.7
+FROM python:3.9
 
 ENV PYTHONPATH /semantic-release
 
 COPY . /semantic-release
 
-RUN cd /semantic-release && pip install .
+RUN cd /semantic-release && \
+    python -m venv /semantic-release/.venv && \
+    /semantic-release/.venv/bin/pip install .
 
-RUN python -m semantic_release.cli --help
+RUN /semantic-release/.venv/bin/python -m semantic_release.cli --help
 
 ENTRYPOINT ["/semantic-release/action.sh"]

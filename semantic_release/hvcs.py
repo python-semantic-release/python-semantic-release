@@ -3,18 +3,19 @@
 import logging
 import mimetypes
 import os
-from typing import Optional
+from typing import Optional, Union
 
-import gitlab
-import requests
+from gitlab import exceptions, gitlab
+from requests import HTTPError, Session
 from requests.auth import AuthBase
+from urllib3 import Retry
 
 from .errors import ImproperConfigurationError
-from .helpers import LoggedFunction
+from .helpers import LoggedFunction, build_requests_session
 from .settings import config
+from .vcs_helpers import get_formatted_tag
 
 logger = logging.getLogger(__name__)
-
 
 # Add a mime type for wheels
 mimetypes.add_type("application/octet-stream", ".whl")
@@ -121,7 +122,7 @@ class Github(Base):
 
         :return: The Github token environment variable (GH_TOKEN) value
         """
-        return os.environ.get("GH_TOKEN")
+        return os.environ.get(config.get('github_token_var'))
 
     @staticmethod
     def auth() -> Optional[TokenAuth]:
@@ -133,6 +134,14 @@ class Github(Base):
         if not token:
             return None
         return TokenAuth(token)
+
+    @staticmethod
+    def session(
+        raise_for_status=True, retry: Union[Retry, bool, int] = True
+    ) -> Session:
+        session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
+        session.auth = Github.auth()
+        return session
 
     @staticmethod
     @LoggedFunction(logger)
@@ -148,10 +157,14 @@ class Github(Base):
         :return: Was the build status success?
         """
         url = "{domain}/repos/{owner}/{repo}/commits/{ref}/status"
-        response = requests.get(
-            url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
-        )
-        return response.json()["state"] == "success"
+        try:
+            response = Github.session().get(
+                url.format(domain=Github.api_url(), owner=owner, repo=repo, ref=ref)
+            )
+            return response.json().get("state") == "success"
+        except HTTPError as e:
+            logger.warning(f"Build status check on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
@@ -167,24 +180,25 @@ class Github(Base):
 
         :return: Whether the request succeeded
         """
-        response = requests.post(
-            f"{Github.api_url()}/repos/{owner}/{repo}/releases",
-            json={
-                "tag_name": tag,
-                "name": tag,
-                "body": changelog,
-                "draft": False,
-                "prerelease": False,
-            },
-            auth=Github.auth(),
-        )
-        logger.debug(f"Release creation status code: {response.status_code}")
-
-        return response.status_code == 201
+        try:
+            Github.session().post(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases",
+                json={
+                    "tag_name": tag,
+                    "name": tag,
+                    "body": changelog,
+                    "draft": False,
+                    "prerelease": False,
+                },
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Release creation on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
-    def get_release(cls, owner: str, repo: str, tag: str) -> int:
+    def get_release(cls, owner: str, repo: str, tag: str) -> Optional[int]:
         """Get a release by its tag name
 
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
@@ -195,13 +209,15 @@ class Github(Base):
 
         :return: ID of found release
         """
-        response = requests.get(
-            f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}",
-            auth=Github.auth(),
-        )
-        logger.debug(f"Get release by tag status code: {response.status_code}")
-
-        return response.json()["id"]
+        try:
+            response = Github.session().get(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}"
+            )
+            return response.json().get("id")
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                logger.debug(f"Get release by tag on Github has failed: {e}")
+            return None
 
     @classmethod
     @LoggedFunction(logger)
@@ -217,14 +233,15 @@ class Github(Base):
 
         :return: Whether the request succeeded
         """
-        response = requests.post(
-            f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
-            json={"body": changelog},
-            auth=Github.auth(),
-        )
-        logger.debug(f"Edit release status code: {response.status_code}")
-
-        return response.status_code == 200
+        try:
+            Github.session().post(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/{id}",
+                json={"body": changelog},
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Edit release on Github has failed: {e}")
+            return False
 
     @classmethod
     @LoggedFunction(logger)
@@ -240,15 +257,18 @@ class Github(Base):
 
         :return: The status of the request
         """
-        tag = f"v{version}"
+        tag = get_formatted_tag(version)
         logger.debug(f"Attempting to create release for {tag}")
         success = Github.create_release(owner, repo, tag, changelog)
 
         if not success:
             logger.debug("Unsuccessful, looking for an existing release to update")
             release_id = Github.get_release(owner, repo, tag)
-            logger.debug(f"Updating release {release_id}")
-            success = Github.edit_release(owner, repo, release_id, changelog)
+            if release_id:
+                logger.debug(f"Updating release {release_id}")
+                success = Github.edit_release(owner, repo, release_id, changelog)
+            else:
+                logger.debug(f"Existing release not found")
 
         return success
 
@@ -275,25 +295,23 @@ class Github(Base):
         if not content_type:
             content_type = "application/octet-stream"
 
-        response = requests.post(
-            url,
-            params={"name": os.path.basename(file), "label": label},
-            headers={
-                "Content-Type": content_type,
-            },
-            auth=Github.auth(),
-            data=open(file, "rb").read(),
-        )
-        logger.debug(
-            f"Asset upload completed, url: {response.url}, status code: {response.status_code}"
-        )
-        logger.debug(response.json())
-
         try:
-            response.raise_for_status()
+            response = Github.session().post(
+                url,
+                params={"name": os.path.basename(file), "label": label},
+                headers={
+                    "Content-Type": content_type,
+                },
+                data=open(file, "rb").read(),
+            )
+
+            logger.debug(
+                f"Asset upload on Github completed, url: {response.url}, status code: {response.status_code}"
+            )
+
             return True
-        except requests.exceptions.HTTPError as e:
-            logger.warning(f"The github file upload {file} has failed: {e}")
+        except HTTPError as e:
+            logger.warning(f"Asset upload {file} on Github has failed: {e}")
             return False
 
     @classmethod
@@ -309,7 +327,7 @@ class Github(Base):
         """
 
         # Find the release corresponding to this version
-        release_id = Github.get_release(owner, repo, f"v{version}")
+        release_id = Github.get_release(owner, repo, get_formatted_tag(version))
         if not release_id:
             logger.debug("No release found to upload assets to")
             return False
@@ -351,7 +369,7 @@ class Gitlab(Base):
 
         :return: The Gitlab token environment variable (GL_TOKEN) value
         """
-        return os.environ.get("GL_TOKEN")
+        return os.environ.get(config.get('gitlab_token_var'))
 
     @staticmethod
     @LoggedFunction(logger)
@@ -393,17 +411,21 @@ class Gitlab(Base):
 
         :return: The status of the request
         """
-        ref = "v" + version
+        ref = get_formatted_tag(version)
         gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         try:
-            tag = gl.projects.get(owner + "/" + repo).tags.get(ref)
-            tag.set_release_description(changelog)
-        except gitlab.exceptions.GitlabGetError:
-            logger.debug(f"Tag {ref} was not found for project {owner}/{repo}")
-            return False
-        except gitlab.exceptions.GitlabUpdateError:
-            logger.debug(f"Failed to update tag {ref} for project {owner}/{repo}")
+            gl.projects.get(owner + "/" + repo).releases.create(
+                {
+                    "name": "Release " + version,
+                    "tag_name": ref,
+                    "description": changelog,
+                }
+            )
+        except exceptions.GitlabCreateError:
+            logger.debug(
+                f"Release {ref} could not be created for project {owner}/{repo}"
+            )
             return False
 
         return True

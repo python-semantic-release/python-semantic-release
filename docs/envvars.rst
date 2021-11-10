@@ -46,6 +46,12 @@ Used to check if this is a Travis CI environment.
 -------------
 Used to check if this is a GitLab CI environment.
 
+.. _env-jenkins_url:
+
+``JENKINS_URL``
+---------------
+Used to check if this is a Jenkins CI environment.
+
 ``CI_SERVER_HOST``
 ------------------
 Host component of the GitLab instance URL, without protocol and port.
@@ -89,6 +95,9 @@ Set an API token for publishing to https://pypi.org/. Information on how to
 obtain a token is given `here <https://pypi.org/help/#apitoken>`_.
 
 See :ref:`automatic-pypi` for more about PyPI uploads.
+
+.. note::
+  If :ref:`env-pypi_password`, :ref:`env-pypi_username`, and :ref:`env-pypi_token` are not specified credentials from ``$HOME/.pypirc`` will be used.
 
 .. _env-pypi_password:
 

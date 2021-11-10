@@ -9,6 +9,7 @@ class _GitlabProject:
     def __init__(self, status):
         self.commits = {"my_ref": self._Commit(status)}
         self.tags = self._Tags()
+        self.releases = self._Releases()
 
     class _Commit:
         def __init__(self, status):
@@ -87,6 +88,23 @@ class _GitlabProject:
             def set_release_description(self, changelog):
                 if self.locked:
                     raise gitlab.exceptions.GitlabUpdateError
+
+    class _Releases:
+        def __init__(self):
+            pass
+
+        def create(self, input):
+            if input["name"] and input["tag_name"]:
+                if (
+                    input["tag_name"] == "vmy_good_tag"
+                    or input["tag_name"] == "vmy_locked_tag"
+                ):
+                    return self._Release()
+            raise gitlab.exceptions.GitlabCreateError
+
+        class _Release:
+            def __init__(self, locked=False):
+                pass
 
 
 def mock_gitlab(status="success"):
