@@ -363,20 +363,35 @@ Distributions
 
 ``upload_to_pypi``
 ------------------
-.. deprecated:: 7.10.0
+.. deprecated:: 7.20.0
   Please use :ref:`config-upload_to_repository` instead
 
 If set to false the pypi uploading will be disabled.
+
 See :ref:`env-repository` which must also be set for this to work.
+
+Default: `true`
 
 .. _config-upload_to_repository:
 
 ``upload_to_repository``
 ------------------
 If set to false the artifact uploading to repository will be disabled.
+
 See :ref:`env-repository` which must also be set for this to work.
 
 Default: `true`
+
+.. _config-upload_to_pypi_glob_patterns:
+
+``upload_to_pypi_glob_patterns``
+------------------
+.. deprecated:: 7.20.0
+  Please use :ref:`config-dist_glob_patterns` instead
+
+A comma `,` separated list of glob patterns to use when uploading to pypi.
+
+Default: `*`
 
 .. _config-dist_glob_patterns:
 
@@ -390,7 +405,21 @@ Default: `*`
 
 ``repository``
 ------------------
-The repository (package index) to upload to. Should be a section in the ``.pypirc`` file.
+The repository (package index) name to upload to. Should be a section in ``~/.pypirc``.
+The repositories `pypi` and `testpypi` are preconfigured.
+
+Default: `pypi`
+
+.. seealso::
+  - `The .pypirc file <https://packaging.python.org/specifications/pypirc/>`_ - ``~/.pypirc`` documentation
+
+.. _config-repository_url:
+
+``repository_url``
+-----------------
+The repository (package index) URL to upload the package to.
+
+See :ref:`automatic-dist-upload` for more about uploads to custom repositories.
 
 .. _config-upload_to_release:
 
@@ -427,14 +456,6 @@ files should be placed manually in the directory configured in
 ``dist_path``.
 
 Default: ``python setup.py sdist bdist_wheel``
-
-.. _config-repository_url:
-
-``repository_url``
------------------
-The repository (package index) URL to upload the package to.
-
-Default: ``pypi``
 
 HVCS
 ====
