@@ -3,13 +3,13 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import click
 import click_log
 
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
-
 from .changelog import markdown_changelog
 from .dist import build_dists, remove_dists, should_build, should_remove_dist
 from .history import (
@@ -28,7 +28,7 @@ from .hvcs import (
     post_changelog,
     upload_to_release,
 )
-from .repository import get_repository
+from .repository import ArtifactRepo
 from .settings import config, overload_configuration
 from .vcs_helpers import (
     checkout,
@@ -49,7 +49,7 @@ TOKEN_VARS = [
     'pypi_token_var',
     'pypi_user_var',
     'repository_user_var',
-    'repository_password_var',
+    'repository_pass_var',
 ]
 
 COMMON_OPTIONS = [
@@ -231,11 +231,11 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
             logger.error("Missing token: cannot post changelog to HVCS")
 
 
-def publish(**kwargs):
+def publish(retry: bool = False, noop: bool = False, **kwargs):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
 
-    retry = kwargs.get("retry")
+    verbose = logger.isEnabledFor(logging.DEBUG)
     if retry:
         logger.info("Retry is on")
         # The "new" version will actually be the current version, and the
@@ -259,7 +259,7 @@ def publish(**kwargs):
         current_version=current_version,
         new_version=new_version,
         retry=retry,
-        noop=kwargs.get("noop"),
+        noop=noop,
     ):
         log = generate_changelog(current_version)
         changelog_md = markdown_changelog(
@@ -286,12 +286,7 @@ def publish(**kwargs):
 
         # Get config options for uploads
         dist_path = config.get("dist_path")
-        upload_to_artifact_repository = config.get("upload_to_repository") and config.get("upload_to_pypi")
-        dist_glob_patterns = config.get("dist_glob_patterns", config.get("upload_to_pypi_glob_patterns"))
         upload_release = config.get("upload_to_release")
-
-        if dist_glob_patterns:
-            dist_glob_patterns = dist_glob_patterns.split(",")
 
         if should_build():
             # We need to run the command to build wheels for releasing
@@ -301,14 +296,9 @@ def publish(**kwargs):
                 remove_dists(dist_path)
             build_dists()
 
-        if upload_to_artifact_repository:
+        if ArtifactRepo.upload_enabled():
             logger.info("Uploading to artifact Repository")
-            get_repository().upload(
-                path=dist_path,
-                # If we are retrying, we don't want errors for files that are already on PyPI.
-                skip_existing=retry,
-                glob_patterns=dist_glob_patterns,
-            )
+            ArtifactRepo(Path(dist_path)).upload(noop=noop, verbose=verbose, skip_existing=retry)
 
         if check_token():
             # Update changelog on HVCS

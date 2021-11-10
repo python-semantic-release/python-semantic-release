@@ -45,7 +45,7 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get("pypi_token_var"), "PYPI_TOKEN")
         self.assertEqual(config.get("pypi_user_var"), "PYPI_USERNAME")
         self.assertEqual(config.get("repository_user_var"), "REPOSITORY_USERNAME")
-        self.assertEqual(config.get("repository_password_var"), "REPOSITORY_PASSWORD")
+        self.assertEqual(config.get("repository_pass_var"), "REPOSITORY_PASSWORD")
 
 
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
