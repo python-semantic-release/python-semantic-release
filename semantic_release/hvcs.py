@@ -101,7 +101,10 @@ class Github(Base):
 
         :return: The Github domain
         """
-        hvcs_domain = config.get("hvcs_domain")
+        # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+        hvcs_domain = config.get(
+            "hvcs_domain", os.getenv("GITHUB_SERVER_URL", "").replace("https://", "")
+        )
         domain = hvcs_domain if hvcs_domain else Github.DEFAULT_DOMAIN
         return domain
 
@@ -113,8 +116,13 @@ class Github(Base):
         """
         # not necessarily prefixed with api in the case of a custom domain, so
         # can't just default DEFAULT_DOMAIN to github.com
-        hvcs_domain = config.get("hvcs_domain")
-        hostname = hvcs_domain if hvcs_domain else "api." + Github.DEFAULT_DOMAIN
+        # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+        hvcs_api_domain = config.get(
+            "hvcs_api_domain", os.getenv("GITHUB_API_URL", "").replace("https://", "")
+        )
+        hostname = (
+            hvcs_api_domain if hvcs_api_domain else "api." + Github.DEFAULT_DOMAIN
+        )
         return f"https://{hostname}"
 
     @staticmethod
