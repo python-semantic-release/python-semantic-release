@@ -99,22 +99,24 @@ def test_check_custom_gitlab_token_should_return_false():
 
 
 @pytest.mark.parametrize(
-    "hvcs,hvcs_domain,expected_domain,api_url,ci_server_host",
+    "hvcs,hvcs_domain,expected_domain,api_url,ci_server_host,hvcs_api_domain",
     [
-        ("github", None, "github.com", "https://api.github.com", None),
-        ("gitlab", None, "gitlab.com", "https://gitlab.com", None),
+        ("github", None, "github.com", "https://api.github.com", None, None),
+        ("gitlab", None, "gitlab.com", "https://gitlab.com", None, None),
         (
             "github",
             "github.example.com",
             "github.example.com",
-            "https://github.example.com",
+            "https://api.github.enterprise",
             None,
+            "api.github.enterprise",
         ),
         (
             "gitlab",
             "example.gitlab.com",
             "example.gitlab.com",
             "https://example.gitlab.com",
+            None,
             None,
         ),
         (
@@ -130,17 +132,20 @@ def test_check_custom_gitlab_token_should_return_false():
             "example2.gitlab.com",
             "https://example2.gitlab.com",
             "ciserverhost.gitlab.com",
+            None,
         ),
     ],
 )
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
 def test_get_domain_should_have_expected_domain(
-    hvcs, hvcs_domain, expected_domain, api_url, ci_server_host
+    hvcs, hvcs_domain, expected_domain, api_url, ci_server_host, hvcs_api_domain
 ):
 
     with mock.patch(
         "semantic_release.hvcs.config.get",
-        wrapped_config_get(hvcs_domain=hvcs_domain, hvcs=hvcs),
+        wrapped_config_get(
+            hvcs_domain=hvcs_domain, hvcs=hvcs, hvcs_api_domain=hvcs_api_domain
+        ),
     ):
         with mock.patch(
             "os.environ",
@@ -153,6 +158,19 @@ def test_get_domain_should_have_expected_domain(
 
             assert get_hvcs().domain() == expected_domain
             assert get_hvcs().api_url() == api_url
+
+
+@mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="github"))
+@mock.patch(
+    "os.environ",
+    {
+        "GITHUB_API_URL": "api.github.enterprise",
+        "GITHUB_SERVER_URL": "github.enterprise",
+    },
+)
+def test_ghe_domain_should_be_retrieved_from_env():
+    assert get_hvcs().domain() == "github.enterprise"
+    assert get_hvcs().api_url() == "https://api.github.enterprise"
 
 
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))

@@ -468,6 +468,19 @@ The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
 
 Default: `github`
 
+.. _config-hvcs_domain:
+
+``hvcs_domain``
+---------------
+The domain url (without https://) of your custom vcs server.
+
+.. _config-hvcs_api_domain:
+
+``hvcs_api_domain``
+-------------------
+The api url (without https://) of your custom vcs server.
+
+
 .. _config-check_build_status:
 
 ``check_build_status``
