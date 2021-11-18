@@ -6,7 +6,7 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 import logging
 import re
 
-from ..errors import UnknownCommitMessageStyleError
+from ..errors import ImproperConfigurationError, UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config
 from .parser_helpers import ParsedCommit, parse_paragraphs, re_breaking
@@ -17,10 +17,17 @@ logger = logging.getLogger(__name__)
 allowed_types = config.get('parser_angular_allowed_types').split(',')
 
 # types with long names in changelog
-TYPES = {
+LONG_TYPE_NAMES = {
     "feat": "feature",
     "docs": "documentation",
     "perf": "performance",
+}
+
+LEVEL_BUMPS = {
+    'no-release': 0,
+    'patch': 1,
+    'minor': 2,
+    'major': 3
 }
 
 re_parser = re.compile(
@@ -71,7 +78,14 @@ def parse_commit_message(message: str) -> ParsedCommit:
         if match
     ]
 
-    level_bump = int(config.get('parser_angular_default_level_bump'))
+    default_level_bump = config.get('parser_angular_default_level_bump').lower()
+    if default_level_bump not in LEVEL_BUMPS.keys():
+        raise ImproperConfigurationError(
+            f"{default_level_bump} is not a valid option for "
+            f"parser_angular_default_level_bump.\n"
+            f"valid options are: {', '.join(LEVEL_BUMPS.keys())}"
+        )
+    level_bump = LEVEL_BUMPS[default_level_bump]
     if parsed_break or breaking_descriptions:
         level_bump = 3  # Major
     elif parsed_type in MINOR_TYPES:
@@ -79,10 +93,10 @@ def parse_commit_message(message: str) -> ParsedCommit:
     elif parsed_type in PATCH_TYPES:
         level_bump = 1  # Patch
 
-    parsed_type_long = TYPES.get(parsed_type, parsed_type)
+    parsed_type_long = LONG_TYPE_NAMES.get(parsed_type, parsed_type)
     # first param is the key you're getting from the dict,
     # second param is the default value
-    # allows only putting types with a long name in the TYPES dict
+    # allows only putting types with a long name in the LONG_TYPE_NAMES dict
 
     return ParsedCommit(
         level_bump,
