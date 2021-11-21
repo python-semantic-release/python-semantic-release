@@ -119,6 +119,13 @@ def test_check_custom_gitlab_token_should_return_false():
         ),
         (
             "gitlab",
+            "example.gitlab.com/path",
+            "example.gitlab.com/path",
+            "https://example.gitlab.com/path",
+            None,
+        ),
+        (
+            "gitlab",
             "example2.gitlab.com",
             "example2.gitlab.com",
             "https://example2.gitlab.com",

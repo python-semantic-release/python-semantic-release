@@ -107,6 +107,16 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
 
     :return: A tuple of the owner and name.
     """
+    # Gitlab-CI context
+    if 'CI_PROJECT_NAMESPACE' in os.environ and 'CI_PROJECT_NAME' in os.environ:
+        return os.environ['CI_PROJECT_NAMESPACE'], os.environ['CI_PROJECT_NAME']
+
+    # Github actions context
+    if 'GITHUB_REPOSITORY' in os.environ:
+        owner, name = os.environ['GITHUB_REPOSITORY'].rsplit('/', 1)
+        return owner, name
+
+    # Local context
     url = repo.remote("origin").url
     split_url = urlsplit(url)
     # Select the owner and name as regex groups
@@ -197,7 +207,7 @@ def update_changelog_file(version: str, content_to_add: str):
         ),
     )
     git_path.write_text(updated_content)
-    repo.git.add(str(git_path.relative_to(repo.working_dir)))  # type: ignore
+    repo.git.add(str(git_path.relative_to(str(repo.working_dir))))
 
 
 @check_repo
