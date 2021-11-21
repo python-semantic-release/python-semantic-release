@@ -104,9 +104,9 @@ def test_parser_should_accept_message_without_scope():
 # test custom parser options #
 ##############################
 @mock.patch("semantic_release.history.parser_angular.config.get",
-            wrapped_config_get(parser_angular_default_level_bump='50'))
+            wrapped_config_get(parser_angular_default_level_bump='minor'))
 def test_parser_custom_default_level():
-    assert angular_parser("test(parser): Add a test for angular parser")[0] == 50
+    assert angular_parser("test(parser): Add a test for angular parser")[0] == 2
 
 
 @mock.patch("semantic_release.history.parser_angular.config.get",

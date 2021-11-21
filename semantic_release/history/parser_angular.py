@@ -13,8 +13,6 @@ from .parser_helpers import ParsedCommit, parse_paragraphs, re_breaking
 
 logger = logging.getLogger(__name__)
 
-# Supported commit types for parsing
-allowed_types = config.get('parser_angular_allowed_types').split(',')
 
 # types with long names in changelog
 LONG_TYPE_NAMES = {
@@ -30,17 +28,6 @@ LEVEL_BUMPS = {
     'major': 3
 }
 
-re_parser = re.compile(
-    r"(?P<type>" + "|".join(allowed_types) + ")"
-    r"(?:\((?P<scope>[^\n]+)\))?"
-    r"(?P<break>!)?: "
-    r"(?P<subject>[^\n]+)"
-    r"(:?\n\n(?P<text>.+))?",
-    re.DOTALL,
-)
-
-MINOR_TYPES = config.get('parser_angular_minor_types').split(',')
-PATCH_TYPES = config.get('parser_angular_patch_types').split(',')
 
 @LoggedFunction(logger)
 def parse_commit_message(message: str) -> ParsedCommit:
@@ -51,6 +38,21 @@ def parse_commit_message(message: str) -> ParsedCommit:
     :return: A tuple of (level to bump, type of change, scope of change, a tuple with descriptions)
     :raises UnknownCommitMessageStyleError: if regular expression matching fails
     """
+
+    # loading these are here to make it easier to mock in tests
+    allowed_types = config.get('parser_angular_allowed_types').split(',')
+    minor_types = config.get('parser_angular_minor_types').split(',')
+    patch_types = config.get('parser_angular_patch_types').split(',')
+    re_parser = re.compile(
+        r"(?P<type>" + "|".join(allowed_types) + ")"
+        r"(?:\((?P<scope>[^\n]+)\))?"
+        r"(?P<break>!)?: "
+        r"(?P<subject>[^\n]+)"
+        r"(:?\n\n(?P<text>.+))?",
+        re.DOTALL,
+    )
+
+
     # Attempt to parse the commit message with a regular expression
     parsed = re_parser.match(message)
     if not parsed:
@@ -88,9 +90,9 @@ def parse_commit_message(message: str) -> ParsedCommit:
     level_bump = LEVEL_BUMPS[default_level_bump]
     if parsed_break or breaking_descriptions:
         level_bump = 3  # Major
-    elif parsed_type in MINOR_TYPES:
+    elif parsed_type in minor_types:
         level_bump = 2  # Minor
-    elif parsed_type in PATCH_TYPES:
+    elif parsed_type in patch_types:
         level_bump = 1  # Patch
 
     parsed_type_long = LONG_TYPE_NAMES.get(parsed_type, parsed_type)
