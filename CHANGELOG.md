@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v7.20.0 (2021-11-21)
+### Feature
+* Rewrite Twine adapter for uploading to artifact repositories ([`cfb20af`](https://github.com/relekang/python-semantic-release/commit/cfb20af79a8e25a77aee9ff72deedcd63cb7f62f))
+* Allow custom environment variable names ([#392](https://github.com/relekang/python-semantic-release/issues/392)) ([`372cda3`](https://github.com/relekang/python-semantic-release/commit/372cda3497f16ead2209e6e1377d38f497144883))
+* **repository:** Add to settings artifact repository ([`f4ef373`](https://github.com/relekang/python-semantic-release/commit/f4ef3733b948282fba5a832c5c0af134609b26d2))
+
+### Fix
+* Mypy errors in vcs_helpers ([`13ca0fe`](https://github.com/relekang/python-semantic-release/commit/13ca0fe650125be2f5e953f6193fdc4d44d3c75a))
+* Skip removing the build folder if it doesn't exist ([`8e79fdc`](https://github.com/relekang/python-semantic-release/commit/8e79fdc107ffd852a91dfb5473e7bd1dfaba4ee5))
+* Don't use linux commands on windows ([#393](https://github.com/relekang/python-semantic-release/issues/393)) ([`5bcccd2`](https://github.com/relekang/python-semantic-release/commit/5bcccd21cc8be3289db260e645fec8dc6a592abd))
+
+### Documentation
+* Clean typos and add section for repository upload ([`1efa18a`](https://github.com/relekang/python-semantic-release/commit/1efa18a3a55134d6bc6e4572ab025e24082476cd))
+
 ## v7.19.2 (2021-09-04)
 ### Fix
 * Fixed ImproperConfig import error ([#377](https://github.com/relekang/python-semantic-release/issues/377)) ([`b011a95`](https://github.com/relekang/python-semantic-release/commit/b011a9595df4240cb190bfb1ab5b6d170e430dfc))
