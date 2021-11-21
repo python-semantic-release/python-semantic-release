@@ -47,7 +47,6 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get("repository_user_var"), "REPOSITORY_USERNAME")
         self.assertEqual(config.get("repository_pass_var"), "REPOSITORY_PASSWORD")
 
-
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
     def test_toml_override(self, mock_getcwd):
         # create temporary toml config file

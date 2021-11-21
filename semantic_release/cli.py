@@ -10,6 +10,7 @@ import click_log
 
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
+
 from .changelog import markdown_changelog
 from .dist import build_dists, remove_dists, should_build, should_remove_dist
 from .history import (
@@ -43,13 +44,13 @@ from .vcs_helpers import (
 logger = logging.getLogger("semantic_release")
 
 TOKEN_VARS = [
-    'github_token_var',
-    'gitlab_token_var',
-    'pypi_pass_var',
-    'pypi_token_var',
-    'pypi_user_var',
-    'repository_user_var',
-    'repository_pass_var',
+    "github_token_var",
+    "gitlab_token_var",
+    "pypi_pass_var",
+    "pypi_token_var",
+    "pypi_user_var",
+    "repository_user_var",
+    "repository_pass_var",
 ]
 
 COMMON_OPTIONS = [
@@ -298,7 +299,9 @@ def publish(retry: bool = False, noop: bool = False, **kwargs):
 
         if ArtifactRepo.upload_enabled():
             logger.info("Uploading to artifact Repository")
-            ArtifactRepo(Path(dist_path)).upload(noop=noop, verbose=verbose, skip_existing=retry)
+            ArtifactRepo(Path(dist_path)).upload(
+                noop=noop, verbose=verbose, skip_existing=retry
+            )
 
         if check_token():
             # Update changelog on HVCS

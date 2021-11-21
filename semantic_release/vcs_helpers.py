@@ -154,7 +154,7 @@ def commit_new_version(version: str):
     )
 
     for declaration in load_version_declarations():
-        git_path: PurePath = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir) # type: ignore
+        git_path: PurePath = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir)  # type: ignore
         repo.git.add(str(git_path))
 
     return repo.git.commit(m=message, author=commit_author)
@@ -197,7 +197,7 @@ def update_changelog_file(version: str, content_to_add: str):
         ),
     )
     git_path.write_text(updated_content)
-    repo.git.add(str(git_path.relative_to(repo.working_dir))) # type: ignore
+    repo.git.add(str(git_path.relative_to(repo.working_dir)))  # type: ignore
 
 
 @check_repo

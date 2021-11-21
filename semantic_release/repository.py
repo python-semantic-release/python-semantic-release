@@ -2,7 +2,9 @@
 """
 import logging
 import os
-from dataclasses import InitVar, asdict as dataclass_asdict, dataclass, field
+from dataclasses import InitVar
+from dataclasses import asdict as dataclass_asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -63,18 +65,26 @@ class ArtifactRepo:
         :raises ImproperConfigurationError:
             Error while setting up credentials configuration.
         """
-        username = get_env_var('repository_user_var') or get_env_var('pypi_user_var')
-        password = get_env_var('repository_pass_var') or get_env_var('pypi_pass_var') or get_env_var('pypi_token_var')
+        username = get_env_var("repository_user_var") or get_env_var("pypi_user_var")
+        password = (
+            get_env_var("repository_pass_var")
+            or get_env_var("pypi_pass_var")
+            or get_env_var("pypi_token_var")
+        )
         if username and password:
             self.username = username
             self.password = password
         elif password and not username:
             self.username = username or "__token__"
             self.password = password
-            logger.warning("Providing only password or token without username is deprecated")
+            logger.warning(
+                "Providing only password or token without username is deprecated"
+            )
         # neither username nor password provided, check for ~/.pypirc file
         elif not Path("~/.pypirc").expanduser().exists():
-            raise ImproperConfigurationError("Missing credentials for uploading to artifact repository")
+            raise ImproperConfigurationError(
+                "Missing credentials for uploading to artifact repository"
+            )
 
     @LoggedFunction(logger)
     def _handle_glob_patterns(self, dist_path: Path) -> None:
@@ -83,7 +93,9 @@ class ArtifactRepo:
 
         :param dist_path: Path to folder with package files
         """
-        glob_patterns = config.get("dist_glob_patterns") or config.get("upload_to_pypi_glob_patterns")
+        glob_patterns = config.get("dist_glob_patterns") or config.get(
+            "upload_to_pypi_glob_patterns"
+        )
         glob_patterns = (glob_patterns or "*").split(",")
 
         self.dists = [str(dist_path.joinpath(pattern)) for pattern in glob_patterns]
@@ -148,7 +160,9 @@ class ArtifactRepo:
             if not noop:
                 twine_upload(upload_settings=twine_settings, dists=self.dists)
         except TwineException as e:
-            raise ImproperConfigurationError("Upload to artifact repository has failed") from e
+            raise ImproperConfigurationError(
+                "Upload to artifact repository has failed"
+            ) from e
         except requests.HTTPError as e:
             logger.warning(f"Upload to artifact repository has failed: {e}")
             return False

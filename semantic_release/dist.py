@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 def should_build():
-    upload_to_artifact_repository = config.get("upload_to_repository") and config.get("upload_to_pypi")
+    upload_to_artifact_repository = config.get("upload_to_repository") and config.get(
+        "upload_to_pypi"
+    )
     upload_release = config.get("upload_to_release")
     build_command = config.get("build_command")
     build_command = build_command if build_command != "false" else False

@@ -3,6 +3,7 @@ from click.testing import CliRunner
 from semantic_release.cli import changelog, main, print_version, publish, version
 from semantic_release.errors import GitError, ImproperConfigurationError
 from semantic_release.repository import ArtifactRepo
+
 from . import mock, pytest, reset_config, wrapped_config_get
 from .mocks import mock_version_file
 
@@ -542,7 +543,11 @@ def test_publish_should_call_functions(mocker):
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
     mocker.patch.dict(
-        "os.environ", {"REPOSITORY_USERNAME": "repo-username", "REPOSITORY_PASSWORD": "repo-password"}
+        "os.environ",
+        {
+            "REPOSITORY_USERNAME": "repo-username",
+            "REPOSITORY_PASSWORD": "repo-password",
+        },
     )
     mock_repository = mocker.patch.object(ArtifactRepo, "upload")
     mock_release = mocker.patch("semantic_release.cli.upload_to_release")
@@ -584,7 +589,11 @@ def test_publish_should_skip_build_when_command_is_empty(mocker):
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
     mocker.patch.dict(
-        "os.environ", {"REPOSITORY_USERNAME": "repo-username", "REPOSITORY_PASSWORD": "repo-password"}
+        "os.environ",
+        {
+            "REPOSITORY_USERNAME": "repo-username",
+            "REPOSITORY_PASSWORD": "repo-password",
+        },
     )
     mock_repository = mocker.patch.object(ArtifactRepo, "upload")
     mock_release = mocker.patch("semantic_release.cli.upload_to_release")

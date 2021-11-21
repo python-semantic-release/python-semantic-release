@@ -27,15 +27,30 @@ def test_build_command(mocker, commands):
             True,
         ),
         (
-            {"upload_to_pypi": True, "upload_to_repository": True, "upload_to_release": True, "build_command": False},
+            {
+                "upload_to_pypi": True,
+                "upload_to_repository": True,
+                "upload_to_release": True,
+                "build_command": False,
+            },
             False,
         ),
         (
-            {"upload_to_pypi": True, "upload_to_repository": True, "upload_to_release": True, "build_command": None},
+            {
+                "upload_to_pypi": True,
+                "upload_to_repository": True,
+                "upload_to_release": True,
+                "build_command": None,
+            },
             False,
         ),
         (
-            {"upload_to_pypi": True, "upload_to_repository": True, "upload_to_release": True, "build_command": ""},
+            {
+                "upload_to_pypi": True,
+                "upload_to_repository": True,
+                "upload_to_release": True,
+                "build_command": "",
+            },
             False,
         ),
         (
