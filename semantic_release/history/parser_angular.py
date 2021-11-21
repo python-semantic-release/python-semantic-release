@@ -21,12 +21,7 @@ LONG_TYPE_NAMES = {
     "perf": "performance",
 }
 
-LEVEL_BUMPS = {
-    'no-release': 0,
-    'patch': 1,
-    'minor': 2,
-    'major': 3
-}
+LEVEL_BUMPS = {"no-release": 0, "patch": 1, "minor": 2, "major": 3}
 
 
 @LoggedFunction(logger)
@@ -40,9 +35,9 @@ def parse_commit_message(message: str) -> ParsedCommit:
     """
 
     # loading these are here to make it easier to mock in tests
-    allowed_types = config.get('parser_angular_allowed_types').split(',')
-    minor_types = config.get('parser_angular_minor_types').split(',')
-    patch_types = config.get('parser_angular_patch_types').split(',')
+    allowed_types = config.get("parser_angular_allowed_types").split(",")
+    minor_types = config.get("parser_angular_minor_types").split(",")
+    patch_types = config.get("parser_angular_patch_types").split(",")
     re_parser = re.compile(
         r"(?P<type>" + "|".join(allowed_types) + ")"
         r"(?:\((?P<scope>[^\n]+)\))?"
@@ -52,19 +47,17 @@ def parse_commit_message(message: str) -> ParsedCommit:
         re.DOTALL,
     )
 
-
     # Attempt to parse the commit message with a regular expression
     parsed = re_parser.match(message)
     if not parsed:
         raise UnknownCommitMessageStyleError(
             f"Unable to parse the given commit message: {message}"
         )
-    parsed_break   = parsed.group('break')
-    parsed_scope   = parsed.group('scope')
-    parsed_subject = parsed.group('subject')
-    parsed_text    = parsed.group('text')
-    parsed_type    = parsed.group('type')
-
+    parsed_break = parsed.group("break")
+    parsed_scope = parsed.group("scope")
+    parsed_subject = parsed.group("subject")
+    parsed_text = parsed.group("text")
+    parsed_type = parsed.group("type")
 
     if parsed_text:
         descriptions = parse_paragraphs(parsed_text)
@@ -80,7 +73,7 @@ def parse_commit_message(message: str) -> ParsedCommit:
         if match
     ]
 
-    default_level_bump = config.get('parser_angular_default_level_bump').lower()
+    default_level_bump = config.get("parser_angular_default_level_bump").lower()
     if default_level_bump not in LEVEL_BUMPS.keys():
         raise ImproperConfigurationError(
             f"{default_level_bump} is not a valid option for "

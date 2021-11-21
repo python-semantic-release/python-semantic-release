@@ -3,7 +3,7 @@ import pytest
 from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.history import angular_parser
 
-from .. import mock,wrapped_config_get
+from .. import mock, wrapped_config_get
 
 text = (
     "This is an long explanatory part of a commit message. It should give "
@@ -100,32 +100,41 @@ def test_parser_should_accept_message_without_scope():
     assert angular_parser("fix: superfix")[0] == 1
     assert angular_parser("fix: superfix")[3][0] == "superfix"
 
+
 ##############################
 # test custom parser options #
 ##############################
-@mock.patch("semantic_release.history.parser_angular.config.get",
-            wrapped_config_get(parser_angular_default_level_bump='minor'))
+@mock.patch(
+    "semantic_release.history.parser_angular.config.get",
+    wrapped_config_get(parser_angular_default_level_bump="minor"),
+)
 def test_parser_custom_default_level():
     assert angular_parser("test(parser): Add a test for angular parser")[0] == 2
 
 
-@mock.patch("semantic_release.history.parser_angular.config.get",
-            wrapped_config_get(
-                parser_angular_allowed_types=
-                'custom,build,chore,ci,docs,fix,perf,style,refactor,test'))
+@mock.patch(
+    "semantic_release.history.parser_angular.config.get",
+    wrapped_config_get(
+        parser_angular_allowed_types="custom,build,chore,ci,docs,fix,perf,style,refactor,test"
+    ),
+)
 def test_parser_custom_allowed_types():
     assert angular_parser("custom: ...")[0] == 0
     assert angular_parser("custom(parser): ...")[1] == "custom"
     pytest.raises(UnknownCommitMessageStyleError, angular_parser, "feat(parser): ...")
 
 
-@mock.patch("semantic_release.history.parser_angular.config.get",
-            wrapped_config_get(parser_angular_minor_types='docs'))
+@mock.patch(
+    "semantic_release.history.parser_angular.config.get",
+    wrapped_config_get(parser_angular_minor_types="docs"),
+)
 def test_parser_custom_minor_types():
     assert angular_parser("docs: write some docs")[0] == 2
 
 
-@mock.patch("semantic_release.history.parser_angular.config.get",
-            wrapped_config_get(parser_angular_patch_types='test'))
+@mock.patch(
+    "semantic_release.history.parser_angular.config.get",
+    wrapped_config_get(parser_angular_patch_types="test"),
+)
 def test_parser_custom_patch_types():
     assert angular_parser("test(this): added a test")[0] == 1
