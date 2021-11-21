@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.21.0 (2021-11-21)
+### Feature
+* Use gitlab-ci or github actions env vars ([`8ca8dd4`](https://github.com/relekang/python-semantic-release/commit/8ca8dd40f742f823af147928bd75a9577c50d0fd))
+
+### Fix
+* Remove invalid repository exception ([`746b62d`](https://github.com/relekang/python-semantic-release/commit/746b62d4e207a5d491eecd4ca96d096eb22e3bed))
+
 ## v7.20.0 (2021-11-21)
 ### Feature
 * Rewrite Twine adapter for uploading to artifact repositories ([`cfb20af`](https://github.com/relekang/python-semantic-release/commit/cfb20af79a8e25a77aee9ff72deedcd63cb7f62f))
