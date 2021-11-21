@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.22.0 (2021-11-21)
+### Feature
+* **parser_angular:** Allow customization in parser ([`298eebb`](https://github.com/relekang/python-semantic-release/commit/298eebbfab5c083505036ba1df47a5874a1eed6e))
+
+### Fix
+* Address PR feedback for `parser_angular.py` ([`f7bc458`](https://github.com/relekang/python-semantic-release/commit/f7bc45841e6a5c762f99f936c292cee25fabcd02))
+
 ## v7.21.0 (2021-11-21)
 ### Feature
 * Use gitlab-ci or github actions env vars ([`8ca8dd4`](https://github.com/relekang/python-semantic-release/commit/8ca8dd40f742f823af147928bd75a9577c50d0fd))
