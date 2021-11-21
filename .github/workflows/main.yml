@@ -109,5 +109,5 @@ jobs:
       uses: ./
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        pypi_username: ${{ secrets.PYPI_USERNAME }}
-        pypi_password: ${{ secrets.PYPI_PASSWORD }}
+        repository_username: ${{ secrets.PYPI_USERNAME }}
+        repository_password: ${{ secrets.PYPI_PASSWORD }}
