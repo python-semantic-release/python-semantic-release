@@ -49,6 +49,7 @@ setup(
         # for why tomlkit is pinned
         "tomlkit==0.7.0",
         "dotty-dict>=1.3.0,<2",
+        "dataclasses==0.8; python_version < '3.7.0'",
     ],
     extras_require={
         "test": [

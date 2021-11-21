@@ -61,8 +61,8 @@ Example: `gitlab.example.com`
   Automatically set in a GitLab CI environment from version 12.1.
 
 
-Authentication
-==============
+HVCS Authentication
+===================
 
 .. _env-gh_token:
 
@@ -82,26 +82,56 @@ and click on *Personal access token*.
 A personal access token from GitLab. This is used for authenticating
 when pushing tags, publishing releases etc.
 
+.. _env-repository:
+
+Artifact Repository Authentication
+==================================
+
 .. _env-pypi_token:
 
 ``PYPI_TOKEN``
 --------------
-Set an API token for publishing to https://pypi.org/. Information on how to
-obtain a token is given `here <https://pypi.org/help/#apitoken>`_.
+.. deprecated:: 7.20.0
+  Please use :ref:`env-repository_password` instead
 
-See :ref:`automatic-pypi` for more about PyPI uploads.
-
-.. note::
-  If :ref:`env-pypi_password`, :ref:`env-pypi_username`, and :ref:`env-pypi_token` are not specified credentials from ``$HOME/.pypirc`` will be used.
+Set an API token for publishing to https://pypi.org/.
 
 .. _env-pypi_password:
 
 ``PYPI_PASSWORD``
 -----------------
+.. deprecated:: 7.20.0
+  Please use :ref:`env-repository_password` instead
+
 Used together with :ref:`env-pypi_username` when publishing to https://pypi.org/.
 
+.. _env-pypi_username:
+
+``PYPI_USERNAME``
+-----------------
+.. deprecated:: 7.20.0
+  Please use :ref:`env-repository_username` instead
+
+Used together with :ref:`env-pypi_password` when publishing to https://pypi.org/.
+
+.. _env-repository_username:
+
+``REPOSITORY_USERNAME``
+-----------------------
+Used together with :ref:`env-repository_password` when publishing artifact.
+
+.. note::
+  If you use token authentication with `pypi` set this to `__token__`
+
+.. _env-repository_password:
+
+``REPOSITORY_PASSWORD``
+-----------------------
+Used together with :ref:`env-repository_username` when publishing artifact.
+Also used for token when using token authentication.
+
 .. warning::
-  You should use :ref:`env-pypi_token` instead of username and password
+  You should use token authentication instead of username and password
   authentication for the following reasons:
 
   - It is `strongly recommended by PyPI <https://pypi.org/help/#apitoken>`_.
@@ -112,8 +142,4 @@ Used together with :ref:`env-pypi_username` when publishing to https://pypi.org/
     as a secret in a CI service, they will likely scrub it from the build
     output. This can break things, for example repository links.
 
-.. _env-pypi_username:
-
-``PYPI_USERNAME``
------------------
-Used together with :ref:`env-pypi_password` when publishing to https://pypi.org/.
+  - Find more information on `how to obtain a token <https://pypi.org/help/#apitoken>`_.

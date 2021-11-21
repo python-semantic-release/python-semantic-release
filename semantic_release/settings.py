@@ -45,6 +45,7 @@ def _config_from_ini(paths):
         "major_on_zero",
         "remove_dist",
         "upload_to_pypi",
+        "upload_to_repository",
         "upload_to_release",
         "tag_commit",
     }

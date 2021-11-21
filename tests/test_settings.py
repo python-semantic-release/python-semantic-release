@@ -38,12 +38,15 @@ class ConfigTests(TestCase):
         self.assertTrue(config.get("major_on_zero"))
         self.assertFalse(config.get("check_build_status"))
         self.assertEqual(config.get("hvcs"), "github")
-        self.assertEqual(config.get("upload_to_pypi"), True)
+        self.assertEqual(config.get("upload_to_repository"), True)
         self.assertEqual(config.get("github_token_var"), "GH_TOKEN")
         self.assertEqual(config.get("gitlab_token_var"), "GL_TOKEN")
         self.assertEqual(config.get("pypi_pass_var"), "PYPI_PASSWORD")
         self.assertEqual(config.get("pypi_token_var"), "PYPI_TOKEN")
         self.assertEqual(config.get("pypi_user_var"), "PYPI_USERNAME")
+        self.assertEqual(config.get("repository_user_var"), "REPOSITORY_USERNAME")
+        self.assertEqual(config.get("repository_pass_var"), "REPOSITORY_PASSWORD")
+
 
     @mock.patch("semantic_release.settings.getcwd", return_value=temp_dir)
     def test_toml_override(self, mock_getcwd):
@@ -54,7 +57,7 @@ class ConfigTests(TestCase):
 [tool.foo]
 bar = "baz"
 [tool.semantic_release]
-upload_to_pypi = false
+upload_to_repository = false
 version_source = "tag"
 foo = "bar"
 """
@@ -64,7 +67,7 @@ foo = "bar"
         config = _config()
         mock_getcwd.assert_called_once_with()
         self.assertEqual(config.get("hvcs"), "github")
-        self.assertEqual(config.get("upload_to_pypi"), False)
+        self.assertEqual(config.get("upload_to_repository"), False)
         self.assertEqual(config.get("version_source"), "tag")
         self.assertEqual(config.get("foo"), "bar")
 

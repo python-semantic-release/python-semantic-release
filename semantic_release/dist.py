@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 def should_build():
-    upload_pypi = config.get("upload_to_pypi")
+    upload_to_artifact_repository = config.get("upload_to_repository") and config.get("upload_to_pypi")
     upload_release = config.get("upload_to_release")
     build_command = config.get("build_command")
     build_command = build_command if build_command != "false" else False
-    return bool(build_command and (upload_pypi or upload_release))
+    return bool(build_command and (upload_to_artifact_repository or upload_release))
 
 
 def should_remove_dist():

@@ -20,26 +20,28 @@ def test_build_command(mocker, commands):
         (
             {
                 "upload_to_pypi": True,
+                "upload_to_repository": True,
                 "upload_to_release": True,
                 "build_command": "python setup.py build",
             },
             True,
         ),
         (
-            {"upload_to_pypi": True, "upload_to_release": True, "build_command": False},
+            {"upload_to_pypi": True, "upload_to_repository": True, "upload_to_release": True, "build_command": False},
             False,
         ),
         (
-            {"upload_to_pypi": True, "upload_to_release": True, "build_command": None},
+            {"upload_to_pypi": True, "upload_to_repository": True, "upload_to_release": True, "build_command": None},
             False,
         ),
         (
-            {"upload_to_pypi": True, "upload_to_release": True, "build_command": ""},
+            {"upload_to_pypi": True, "upload_to_repository": True, "upload_to_release": True, "build_command": ""},
             False,
         ),
         (
             {
                 "upload_to_pypi": True,
+                "upload_to_repository": True,
                 "upload_to_release": True,
                 "build_command": "false",
             },
@@ -47,7 +49,8 @@ def test_build_command(mocker, commands):
         ),
         (
             {
-                "upload_to_pypi": False,
+                "upload_to_pypi": True,
+                "upload_to_repository": False,
                 "upload_to_release": True,
                 "build_command": "python setup.py build",
             },
@@ -55,8 +58,9 @@ def test_build_command(mocker, commands):
         ),
         (
             {
-                "upload_to_pypi": True,
-                "upload_to_release": False,
+                "upload_to_pypi": False,
+                "upload_to_repository": True,
+                "upload_to_release": True,
                 "build_command": "python setup.py build",
             },
             True,
@@ -64,6 +68,25 @@ def test_build_command(mocker, commands):
         (
             {
                 "upload_to_pypi": False,
+                "upload_to_repository": False,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+            },
+            True,
+        ),
+        (
+            {
+                "upload_to_pypi": False,
+                "upload_to_repository": True,
+                "upload_to_release": False,
+                "build_command": "python setup.py build",
+            },
+            False,
+        ),
+        (
+            {
+                "upload_to_pypi": False,
+                "upload_to_repository": False,
                 "upload_to_release": False,
                 "build_command": "python setup.py build",
             },
@@ -82,6 +105,17 @@ def test_should_build(config, expected, mocker):
         (
             {
                 "upload_to_pypi": True,
+                "upload_to_repository": True,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+                "remove_dist": True,
+            },
+            True,
+        ),
+        (
+            {
+                "upload_to_pypi": False,
+                "upload_to_repository": True,
                 "upload_to_release": True,
                 "build_command": "python setup.py build",
                 "remove_dist": True,
@@ -91,6 +125,27 @@ def test_should_build(config, expected, mocker):
         (
             {
                 "upload_to_pypi": True,
+                "upload_to_repository": False,
+                "upload_to_release": True,
+                "build_command": "python setup.py build",
+                "remove_dist": True,
+            },
+            True,
+        ),
+        (
+            {
+                "upload_to_pypi": True,
+                "upload_to_repository": False,
+                "upload_to_release": False,
+                "build_command": "python setup.py build",
+                "remove_dist": True,
+            },
+            False,
+        ),
+        (
+            {
+                "upload_to_pypi": True,
+                "upload_to_repository": True,
                 "upload_to_release": True,
                 "build_command": "python setup.py build",
                 "remove_dist": False,
@@ -100,6 +155,7 @@ def test_should_build(config, expected, mocker):
         (
             {
                 "upload_to_pypi": False,
+                "upload_to_repository": False,
                 "upload_to_release": False,
                 "build_command": False,
                 "remove_dist": True,
@@ -109,6 +165,7 @@ def test_should_build(config, expected, mocker):
         (
             {
                 "upload_to_pypi": False,
+                "upload_to_repository": False,
                 "upload_to_release": False,
                 "build_command": "false",
                 "remove_dist": True,

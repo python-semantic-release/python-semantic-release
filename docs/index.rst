@@ -49,7 +49,11 @@ By default, Python Semantic Release uses the
 You can find out more about this on :ref:`commit-log-parsing`.
 
 .. seealso::
-   - :ref:`config-branch` - change the default branch name.
+   - :ref:`config-branch` - change the default branch.
+   - :ref:`config-commit_parser` - use a different parser for commit messages.
+     For example, there is an emoji parser.
+   - :ref:`config-upload_to_repository` - disable uploading the package to an artifact repository.
+   - :ref:`config-hvcs` - change this if you are using GitLab.
 
 Setting up the changelog
 ------------------------
@@ -75,13 +79,19 @@ release notes and new versions to GitHub / GitLab:
 - :ref:`env-gh_token` - GitHub personal access token.
 - :ref:`env-gl_token` - GitLab personal access token.
 
-Releasing on PyPI
+Distributing release on PyPI or custom repository
 -----------------
 
-Unless you disable :ref:`config-upload_to_pypi`, Python Semantic Release will
-publish new versions on PyPI. This requires you to obtain an API token
-`here <https://pypi.org/help/#apitoken>`_ and store it in the environment
-variable :ref:`env-pypi_token`.
+Unless you disable :ref:`config-upload_to_repository` (or :ref:`config-upload_to_pypi`),
+Python Semantic Release will publish new versions to `Pypi`. Customization is supported using a
+``~/.pypirc`` file or config setting and environment variables for username and password/token or a
+combination of both.
+Publishing is done using `twine <https://pypi.org/project/twine/>`_.
+
+- :ref:`config-repository` - use repository and/or credentials from ``~/.pypirc`` file
+- :ref:`config-repository_url` - set custom repository url
+- :ref:`env-repository` - provide credentials using environment variables
+- :ref:`automatic-dist-upload` - configuring CI distribution upload
 
 .. include:: commands.rst
 

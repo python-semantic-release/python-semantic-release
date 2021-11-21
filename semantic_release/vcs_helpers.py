@@ -9,8 +9,9 @@ from pathlib import Path, PurePath
 from typing import Optional, Tuple
 from urllib.parse import urlsplit
 
-from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
+from git import GitCommandError, InvalidGitRepositoryError, Repo
 from git.exc import BadName
+from git.objects import TagObject
 
 from .errors import GitError, HvcsRepoParseError
 from .helpers import LoggedFunction
@@ -19,7 +20,7 @@ from .settings import config
 try:
     repo = Repo(".", search_parent_directories=True)
 except InvalidGitRepositoryError:
-    repo = None
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +154,7 @@ def commit_new_version(version: str):
     )
 
     for declaration in load_version_declarations():
-        git_path = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir)
+        git_path: PurePath = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir) # type: ignore
         repo.git.add(str(git_path))
 
     return repo.git.commit(m=message, author=commit_author)
@@ -196,7 +197,7 @@ def update_changelog_file(version: str, content_to_add: str):
         ),
     )
     git_path.write_text(updated_content)
-    repo.git.add(str(git_path.relative_to(repo.working_dir)))
+    repo.git.add(str(git_path.relative_to(repo.working_dir))) # type: ignore
 
 
 @check_repo
