@@ -108,12 +108,12 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
     :return: A tuple of the owner and name.
     """
     # Gitlab-CI context
-    if 'CI_PROJECT_NAMESPACE' in os.environ and 'CI_PROJECT_NAME' in os.environ:
-        return os.environ['CI_PROJECT_NAMESPACE'], os.environ['CI_PROJECT_NAME']
+    if "CI_PROJECT_NAMESPACE" in os.environ and "CI_PROJECT_NAME" in os.environ:
+        return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
 
     # Github actions context
-    if 'GITHUB_REPOSITORY' in os.environ:
-        owner, name = os.environ['GITHUB_REPOSITORY'].rsplit('/', 1)
+    if "GITHUB_REPOSITORY" in os.environ:
+        owner, name = os.environ["GITHUB_REPOSITORY"].rsplit("/", 1)
         return owner, name
 
     # Local context

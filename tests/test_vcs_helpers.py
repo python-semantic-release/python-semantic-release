@@ -1,6 +1,6 @@
+import os
 from datetime import date
 
-import os
 import git
 import pytest
 from git import GitCommandError, Repo, TagObject
@@ -136,10 +136,11 @@ def test_push_new_version_with_custom_branch(mock_git):
 @mock.patch.dict(
     os.environ,
     {
-        k: v for k, v in os.environ.items()
-        if k not in ['GITHUB_REPOSITORY', 'CI_PROJECT_NAMESPACE', 'CI_PROJECT_NAME']
+        k: v
+        for k, v in os.environ.items()
+        if k not in ["GITHUB_REPOSITORY", "CI_PROJECT_NAMESPACE", "CI_PROJECT_NAME"]
     },
-    clear=True
+    clear=True,
 )
 @pytest.mark.parametrize(
     "origin_url,expected_result",
@@ -210,17 +211,26 @@ def test_get_repository_owner_and_name(mocker, origin_url, expected_result):
     os.environ,
     {
         **os.environ,
-        'GITHUB_REPOSITORY': 'group/subgroup/project',
+        "GITHUB_REPOSITORY": "group/subgroup/project",
     },
-    clear=True
+    clear=True,
 )
 @pytest.mark.parametrize(
     "origin_url,expected_result",
     [
         ("https://github.com/group/project.git", ("group/subgroup", "project")),
-        ("https://github.com/group/subgroup/project.git", ("group/subgroup", "project")),
-        ("https://github.com/group/sub.group/project.git", ("group/subgroup", "project")),
-        ("https://github.com/group/subgroup/pro.ject.git", ("group/subgroup", "project")),
+        (
+            "https://github.com/group/subgroup/project.git",
+            ("group/subgroup", "project"),
+        ),
+        (
+            "https://github.com/group/sub.group/project.git",
+            ("group/subgroup", "project"),
+        ),
+        (
+            "https://github.com/group/subgroup/pro.ject.git",
+            ("group/subgroup", "project"),
+        ),
     ],
 )
 def test_get_repository_owner_and_name_github(mocker, origin_url, expected_result):
@@ -239,18 +249,27 @@ def test_get_repository_owner_and_name_github(mocker, origin_url, expected_resul
     os.environ,
     {
         **os.environ,
-        'CI_PROJECT_NAMESPACE': 'group/subgroup',
-        'CI_PROJECT_NAME': 'project',
+        "CI_PROJECT_NAMESPACE": "group/subgroup",
+        "CI_PROJECT_NAME": "project",
     },
-    clear=True
+    clear=True,
 )
 @pytest.mark.parametrize(
     "origin_url,expected_result",
     [
-        ("https://gitlab.example.com/group/subgroup/project.git", ("group/subgroup", "project")),
-        ("https://gitlab.example.com/group/subgroup/project",     ("group/subgroup", "project")),
-        ("https://gitlab.example.com/group/project",              ("group/subgroup", "project")),
-        ("https://gitlab-ci-token:MySuperToken@gitlab.example.com/group/subgroup/project.git", ("group/subgroup", "project")),
+        (
+            "https://gitlab.example.com/group/subgroup/project.git",
+            ("group/subgroup", "project"),
+        ),
+        (
+            "https://gitlab.example.com/group/subgroup/project",
+            ("group/subgroup", "project"),
+        ),
+        ("https://gitlab.example.com/group/project", ("group/subgroup", "project")),
+        (
+            "https://gitlab-ci-token:MySuperToken@gitlab.example.com/group/subgroup/project.git",
+            ("group/subgroup", "project"),
+        ),
     ],
 )
 def test_get_repository_owner_and_name_gitlab(mocker, origin_url, expected_result):

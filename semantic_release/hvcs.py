@@ -354,9 +354,9 @@ class Gitlab(Base):
         :return: The Gitlab instance domain
         """
         # Use Gitlab-CI environment vars if available
-        if 'CI_SERVER_URL' in os.environ:
-            url = urlsplit(os.environ['CI_SERVER_URL'])
-            return f"{url.netloc}{url.path}".rstrip('/')
+        if "CI_SERVER_URL" in os.environ:
+            url = urlsplit(os.environ["CI_SERVER_URL"])
+            return f"{url.netloc}{url.path}".rstrip("/")
 
         domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST", None))
         return domain if domain else "gitlab.com"
@@ -368,8 +368,8 @@ class Gitlab(Base):
         :return: The Gitlab instance API url
         """
         # Use Gitlab-CI environment vars if available
-        if 'CI_SERVER_URL' in os.environ:
-            return os.environ['CI_SERVER_URL']
+        if "CI_SERVER_URL" in os.environ:
+            return os.environ["CI_SERVER_URL"]
 
         return f"https://{Gitlab.domain()}"
 
