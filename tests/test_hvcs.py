@@ -125,6 +125,7 @@ def test_check_custom_gitlab_token_should_return_false():
             "example.gitlab.com/path",
             "https://example.gitlab.com/path",
             None,
+            None,
         ),
         (
             "gitlab",
