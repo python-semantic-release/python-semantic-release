@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.23.0 (2021-11-30)
+### Feature
+* Support Github Enterprise server ([`b4e01f1`](https://github.com/relekang/python-semantic-release/commit/b4e01f1b7e841263fa84f57f0ac331f7c0b31954))
+
 ## v7.22.0 (2021-11-21)
 ### Feature
 * **parser_angular:** Allow customization in parser ([`298eebb`](https://github.com/relekang/python-semantic-release/commit/298eebbfab5c083505036ba1df47a5874a1eed6e))
