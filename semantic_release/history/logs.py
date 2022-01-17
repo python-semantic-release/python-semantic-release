@@ -97,6 +97,8 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
     if from_version:
         rev = from_version
 
+    commit_parser = current_commit_parser()
+
     found_the_release = to_version is None
     for _hash, commit_message in get_commit_log(rev):
         if not found_the_release:
@@ -116,7 +118,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
             break
 
         try:
-            message = current_commit_parser()(commit_message)
+            message = commit_parser(commit_message)
             if message.type not in changes:
                 logger.debug(f"Creating new changelog section for {message.type} ")
                 changes[message.type] = list()

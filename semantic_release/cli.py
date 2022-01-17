@@ -20,7 +20,7 @@ from .history import (
     get_previous_version,
     set_new_version,
 )
-from .history.logs import generate_changelog
+from .settings import current_commit_analyzer
 from .hvcs import (
     check_build_status,
     check_token,
@@ -79,6 +79,8 @@ COMMON_OPTIONS = [
     ),
     overload_configuration,
 ]
+
+commit_analyzer = current_commit_analyzer()
 
 
 def common_options(func):
@@ -210,9 +212,9 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
 
     # Generate the changelog
     if unreleased:
-        log = generate_changelog(current_version, None)
+        log = commit_analyzer(current_version, None)
     else:
-        log = generate_changelog(previous_version, current_version)
+        log = commit_analyzer(previous_version, current_version)
 
     owner, name = get_repository_owner_and_name()
     # print is used to keep the changelog on stdout, separate from log messages
@@ -262,7 +264,7 @@ def publish(retry: bool = False, noop: bool = False, **kwargs):
         retry=retry,
         noop=noop,
     ):
-        log = generate_changelog(current_version)
+        log = commit_analyzer(current_version)
         changelog_md = markdown_changelog(
             owner,
             name,
