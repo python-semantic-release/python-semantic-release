@@ -452,6 +452,95 @@ def test_version_retry(mocker):
     mock_get_new.assert_called_once_with("current", "patch")
 
 
+def test_publish_should_not_run_pre_commit_by_default(mocker):
+    mocker.patch("semantic_release.cli.checkout")
+    mocker.patch("semantic_release.cli.ci_checks.check")
+    mocker.patch.object(ArtifactRepo, "upload")
+    mocker.patch("semantic_release.cli.upload_to_release")
+    mocker.patch("semantic_release.cli.post_changelog", lambda *x: True)
+    mocker.patch("semantic_release.cli.push_new_version", return_value=True)
+    mocker.patch("semantic_release.cli.should_bump_version", return_value=True)
+    mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
+    mocker.patch("semantic_release.cli.update_changelog_file")
+    mocker.patch("semantic_release.cli.bump_version")
+    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
+    mocker.patch("semantic_release.cli.check_token", lambda: True)
+    run_pre_commit = mocker.patch("semantic_release.cli.run_pre_commit")
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            remove_dist=False,
+            upload_to_pypi=False,
+            upload_to_release=False,
+        ),
+    )
+    mocker.patch("semantic_release.cli.update_changelog_file", lambda *x, **y: None)
+
+    publish()
+
+    assert not run_pre_commit.called
+
+
+def test_publish_should_not_run_pre_commit_with_empty_command(mocker):
+    mocker.patch("semantic_release.cli.checkout")
+    mocker.patch("semantic_release.cli.ci_checks.check")
+    mocker.patch.object(ArtifactRepo, "upload")
+    mocker.patch("semantic_release.cli.upload_to_release")
+    mocker.patch("semantic_release.cli.post_changelog", lambda *x: True)
+    mocker.patch("semantic_release.cli.push_new_version", return_value=True)
+    mocker.patch("semantic_release.cli.should_bump_version", return_value=True)
+    mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
+    mocker.patch("semantic_release.cli.update_changelog_file")
+    mocker.patch("semantic_release.cli.bump_version")
+    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
+    mocker.patch("semantic_release.cli.check_token", lambda: True)
+    run_pre_commit = mocker.patch("semantic_release.cli.run_pre_commit")
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            remove_dist=False,
+            upload_to_pypi=False,
+            upload_to_release=False,
+            pre_commit_command="",
+        ),
+    )
+    mocker.patch("semantic_release.cli.update_changelog_file", lambda *x, **y: None)
+
+    publish()
+
+    assert not run_pre_commit.called
+
+
+def test_publish_should_run_pre_commit_if_provided(mocker):
+    mocker.patch("semantic_release.cli.checkout")
+    mocker.patch("semantic_release.cli.ci_checks.check")
+    mocker.patch.object(ArtifactRepo, "upload")
+    mocker.patch("semantic_release.cli.upload_to_release")
+    mocker.patch("semantic_release.cli.post_changelog", lambda *x: True)
+    mocker.patch("semantic_release.cli.push_new_version", return_value=True)
+    mocker.patch("semantic_release.cli.should_bump_version", return_value=True)
+    mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
+    mocker.patch("semantic_release.cli.update_changelog_file")
+    mocker.patch("semantic_release.cli.bump_version")
+    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
+    mocker.patch("semantic_release.cli.check_token", lambda: True)
+    run_pre_commit = mocker.patch("semantic_release.cli.run_pre_commit")
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            remove_dist=False,
+            upload_to_pypi=False,
+            upload_to_release=False,
+            pre_commit_command="echo \"Hello, world.\"",
+        ),
+    )
+    mocker.patch("semantic_release.cli.update_changelog_file", lambda *x, **y: None)
+
+    publish()
+
+    assert run_pre_commit.called
+
+
 def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):
     mocker.patch("semantic_release.cli.checkout")
     mocker.patch("semantic_release.cli.ci_checks.check")

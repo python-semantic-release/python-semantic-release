@@ -121,6 +121,19 @@ set this option to `false`.
 
 Default: `true`.
 
+.. _config-pre_commit_command:
+
+``pre_commit_command``
+----------------------
+If this command is provided, it will be run prior to the creation of the release commit.
+
+.. _config-include_additional_files:
+
+``include_additional_files``
+----------------------------
+A comma-separated list of files to be included within the release commit. This can include
+any files created/modified by the ``pre_commit_command``.
+
 Commit Parsing
 ==============
 
