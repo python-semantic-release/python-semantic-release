@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.24.0 (2022-01-24)
+### Feature
+* Include additional changes in release commits ([`3e34f95`](https://github.com/relekang/python-semantic-release/commit/3e34f957ff5a3ec6e6f984cc4a79a38ce4391ea9))
+
 ## v7.23.0 (2021-11-30)
 ### Feature
 * Support Github Enterprise server ([`b4e01f1`](https://github.com/relekang/python-semantic-release/commit/b4e01f1b7e841263fa84f57f0ac331f7c0b31954))
