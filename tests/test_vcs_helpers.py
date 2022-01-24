@@ -18,6 +18,7 @@ from semantic_release.vcs_helpers import (
     push_new_version,
     tag_new_version,
     update_changelog_file,
+    update_additional_files,
 )
 
 from . import mock, wrapped_config_get
@@ -446,3 +447,83 @@ def test_update_changelog_file_missing_placeholder(mock_git, mocker):
     mock_git.add.assert_not_called()
     mocked_read_text.assert_called_once()
     mocked_write_text.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "include_additional_files",
+    [
+        "",
+        ",",
+        "somefile.txt",
+        "somefile.txt,anotherfile.rst",
+        "somefile.txt,anotherfile.rst,finalfile.md",
+    ],
+)
+def test_update_additional_files_with_no_changes(
+    mock_git,
+    mocker,
+    include_additional_files,
+):
+    """
+    Since we have no file changes, we expect `add` to never be called,
+    regardless of the config.
+    """
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(**{"include_additional_files": include_additional_files}),
+    )
+    mocker.patch("semantic_release.vcs_helpers.get_changed_files", return_value=[])
+    update_additional_files()
+    mock_git.add.assert_not_called()
+
+
+def test_update_additional_files_single_changed_file(mock_git, mocker):
+    """
+    We expect to add the single file corresponding to config & changes.
+    """
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(**{"include_additional_files": "somefile.txt"}),
+    )
+    mocker.patch(
+        "semantic_release.vcs_helpers.get_changed_files",
+        return_value=["somefile.txt"],
+    )
+    update_additional_files()
+    mock_git.add.assert_called_once_with("somefile.txt")
+
+
+def test_update_additional_files_one_in_config_two_changes(mock_git, mocker):
+    """
+    Given two file changes, but only one referenced in the config, we
+    expect that single file to be added.
+    """
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(**{"include_additional_files": "anotherfile.txt"}),
+    )
+    mocker.patch(
+        "semantic_release.vcs_helpers.get_changed_files",
+        return_value=["somefile.txt", "anotherfile.txt"],
+    )
+    update_additional_files()
+    mock_git.add.assert_called_once_with("anotherfile.txt")
+
+
+def test_update_additional_files_two_in_config_one_change(mock_git, mocker):
+    """
+    Given two file changes, but only one referenced in the config, we
+    expect that single file to be added.
+    """
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(
+            **{"include_additional_files": "somefile.txt,anotherfile.txt"}
+        ),
+    )
+    mocker.patch(
+        "semantic_release.vcs_helpers.get_changed_files",
+        return_value=["anotherfile.txt"],
+    )
+    update_additional_files()
+    mock_git.add.assert_called_once_with("anotherfile.txt")

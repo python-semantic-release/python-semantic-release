@@ -29,6 +29,7 @@ from .hvcs import (
     post_changelog,
     upload_to_release,
 )
+from .pre_commit import run_pre_commit, should_run_pre_commit
 from .repository import ArtifactRepo
 from .settings import config, overload_configuration
 from .vcs_helpers import (
@@ -38,6 +39,7 @@ from .vcs_helpers import (
     get_repository_owner_and_name,
     push_new_version,
     tag_new_version,
+    update_additional_files,
     update_changelog_file,
 )
 
@@ -272,8 +274,13 @@ def publish(retry: bool = False, noop: bool = False, **kwargs):
             previous_version=current_version,
         )
 
+        if should_run_pre_commit():
+            logger.info("Running pre-commit command")
+            run_pre_commit()
+
         if not retry:
             update_changelog_file(new_version, changelog_md)
+            update_additional_files()
             bump_version(new_version, level_bump)
         # A new version was released
         logger.info("Pushing new version")

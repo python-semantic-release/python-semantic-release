@@ -6,7 +6,7 @@ import re
 from datetime import date
 from functools import wraps
 from pathlib import Path, PurePath
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 from urllib.parse import urlsplit
 
 from git import GitCommandError, InvalidGitRepositoryError, Repo
@@ -208,6 +208,36 @@ def update_changelog_file(version: str, content_to_add: str):
     )
     git_path.write_text(updated_content)
     repo.git.add(str(git_path.relative_to(str(repo.working_dir))))
+
+
+def get_changed_files(repo: Repo) -> List[str]:
+    """
+    Get untracked / dirty files in the given git repo.
+
+    :param repo: Git repo to check.
+    :return: A list of filenames.
+    """
+    untracked_files = repo.untracked_files
+    dirty_files = [item.a_path for item in repo.index.diff(None)]
+    return [*untracked_files, *dirty_files]
+
+
+@check_repo
+@LoggedFunction(logger)
+def update_additional_files():
+    """
+    Add specified files to VCS, if they've changed.
+    """
+    changed_files = get_changed_files(repo)
+
+    include_additional_files = config.get("include_additional_files")
+    if include_additional_files:
+        for filename in include_additional_files.split(","):
+            if filename in changed_files:
+                logger.debug(f"Updated file: {filename}")
+                repo.git.add(filename)
+            else:
+                logger.warning(f"File {filename} shows no changes, cannot update it.")
 
 
 @check_repo
