@@ -1,6 +1,6 @@
-from semantic_release.pre_commit import run_pre_commit, should_run_pre_commit
-
 import pytest
+
+from semantic_release.pre_commit import run_pre_commit, should_run_pre_commit
 
 
 @pytest.mark.parametrize(

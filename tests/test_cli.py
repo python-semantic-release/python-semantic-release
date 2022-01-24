@@ -531,7 +531,7 @@ def test_publish_should_run_pre_commit_if_provided(mocker):
             remove_dist=False,
             upload_to_pypi=False,
             upload_to_release=False,
-            pre_commit_command="echo \"Hello, world.\"",
+            pre_commit_command='echo "Hello, world."',
         ),
     )
     mocker.patch("semantic_release.cli.update_changelog_file", lambda *x, **y: None)

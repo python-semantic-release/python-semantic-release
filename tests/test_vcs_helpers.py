@@ -17,8 +17,8 @@ from semantic_release.vcs_helpers import (
     get_version_from_tag,
     push_new_version,
     tag_new_version,
-    update_changelog_file,
     update_additional_files,
+    update_changelog_file,
 )
 
 from . import mock, wrapped_config_get
