@@ -664,7 +664,7 @@ def test_publish_should_call_functions(mocker):
     assert mock_release.called
     assert mock_should_bump_version.called
     mock_log.assert_called_once_with(
-        u"relekang", "python-semantic-release", "2.0.0", "CHANGES"
+        "relekang", "python-semantic-release", "2.0.0", "CHANGES"
     )
     mock_checkout.assert_called_once_with("master")
 
@@ -717,7 +717,7 @@ def test_publish_should_skip_build_when_command_is_empty(mocker):
     assert mock_release.called
     assert mock_should_bump_version.called
     mock_log.assert_called_once_with(
-        u"relekang", "python-semantic-release", "2.0.0", "CHANGES"
+        "relekang", "python-semantic-release", "2.0.0", "CHANGES"
     )
     mock_checkout.assert_called_once_with("master")
 
