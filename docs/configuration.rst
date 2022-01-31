@@ -95,6 +95,14 @@ The way we get and set the new version. Can be `commit` or `tag`.
 
 Default: `commit`
 
+.. _config-tag_commit:
+
+``tag_commit``
+-------------
+Whether to create a tag for each new release.
+
+Default: `true`
+
 .. _config-patch_without_tag:
 
 ``patch_without_tag``
