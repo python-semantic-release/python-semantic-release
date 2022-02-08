@@ -114,6 +114,13 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, force_level)
     new_version = get_new_version(current_version, level_bump)
+    if prerelease:
+        current_prerelease_version = get_current_version(prerelease_version=True)
+        if current_prerelease_version:
+            prerelease_num = int(current_prerelease_version.split(".")[-1]) + 1
+        else:
+            prerelease_num = 0
+        new_version = new_version + get_prerelease_pattern() + str(prerelease_num)
     if should_bump_version(current_version=current_version, new_version=new_version):
         print(new_version, end="")
         return True

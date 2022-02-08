@@ -176,6 +176,10 @@ class PatternVersionDeclaration(VersionDeclaration):
         self.path.write_text(new_content)
 
 
+def get_prerelease_pattern() -> str:
+    return "-" + config.get("prerelease_tag") + "."
+
+
 @LoggedFunction(logger)
 def get_current_version_by_tag(omit_pattern=None) -> str:
     """
@@ -216,18 +220,18 @@ def get_current_version_by_config_file(omit_pattern=None) -> str:
     return version
 
 
-def get_current_version() -> str:
+def get_current_version(prerelease_version: bool = False) -> str:
     """
     Get current version from tag or version variable, depending on configuration.
     This will not return prerelease versions.
 
     :return: A string with the current version number
     """
-    omit_pattern = "-" + config.get("prerelease_tag")
+    omit_pattern = None if prerelease_version else get_prerelease_pattern()
     if config.get("version_source") == "tag":
         return get_current_version_by_tag(omit_pattern)
     current_version = get_current_version_by_config_file(omit_pattern)
-    if omit_pattern in current_version:
+    if omit_pattern and omit_pattern in current_version:
         return get_previous_version(current_version)
     return current_version
 

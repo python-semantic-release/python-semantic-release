@@ -337,6 +337,28 @@ def test_print_version_change(mocker, runner, capsys):
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
 
 
+def test_print_version_change_prerelease_bump(mocker, runner, capsys):
+    def get_current_version_mock(prerelease_version: bool = False):
+        if prerelease_version:
+            return "1.3.0-beta.0"
+        return "1.2.3"
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", side_effect=get_current_version_mock
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="minor"
+    )
+
+    print_version(prerelease=True)
+    outerr = capsys.readouterr()
+    assert outerr.out == "1.3.0-beta.1"
+    assert outerr.err == ""
+
+    mock_current_version.assert_any_call()
+    mock_current_version.assert_any_call(prerelease_version=True)
+    mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+
+
 def test_print_version_force_major(mocker, runner, capsys):
     mock_current_version = mocker.patch(
         "semantic_release.cli.get_current_version", return_value="1.2.3"
