@@ -63,7 +63,7 @@ def get_commit_log(from_rev=None):
 
 @check_repo
 @LoggedFunction(logger)
-def get_last_version(skip_tags=None) -> Optional[str]:
+def get_last_version(skip_tags=None, omit_pattern=None) -> Optional[str]:
     """
     Find the latest version using repo tags.
 
@@ -78,8 +78,12 @@ def get_last_version(skip_tags=None) -> Optional[str]:
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
         match = re.search(r"\d+\.\d+\.\d+", i.name)
-        if match and i.name not in skip_tags:
-            return match.group(0)  # Return only numeric vesion like 1.2.3
+        if match:
+            # check if the omit pattern is present in the tag (e.g. -beta for pre-release tags)
+            if omit_pattern and omit_pattern in i.name:
+                continue
+            if i.name not in skip_tags:
+                return match.group(0)  # Return only numeric vesion like 1.2.3
 
     return None
 

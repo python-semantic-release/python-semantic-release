@@ -65,6 +65,21 @@ class TestGetPreviousVersion:
     def test_should_return_correct_version_with_v(self):
         assert get_previous_version("0.10.0") == "0.9.0"
 
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.10.0-beta"), ("13", "0.9.0")],
+    )
+    def test_should_return_correct_version_from_prerelease(self):
+        assert get_previous_version("0.10.0-beta") == "0.9.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.10.0"), ("13", "0.10.0-beta"), ("13", "0.9.0")],
+    )
+    def test_should_return_correct_version_skip_prerelease(self):
+        assert get_previous_version(
+            "0.10.0-beta", omit_pattern="-beta") == "0.9.0"
+
 
 class TestGetNewVersion:
     def test_major_bump(self):

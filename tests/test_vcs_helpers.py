@@ -349,6 +349,46 @@ def test_get_last_version(skip_tags, expected_result):
 
 
 @pytest.mark.parametrize(
+    "skip_tags,expected_result",
+    [
+        (None, "2.0.0"),
+        (["v2.0.0"], "1.1.0"),
+        (["v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
+    ],
+)
+def test_get_last_version_with_omit_pattern(skip_tags, expected_result):
+    class FakeCommit:
+        def __init__(self, com_date):
+            self.committed_date = com_date
+
+    class FakeTagObject:
+        def __init__(self, tag_date):
+            self.tagged_date = tag_date
+
+    class FakeTag:
+        def __init__(self, name, sha, date, is_tag_object):
+            self.name = name
+            self.tag = FakeTagObject(date)
+            if is_tag_object:
+                self.commit = TagObject(Repo(), sha)
+            else:
+                self.commit = FakeCommit(date)
+
+    mock.patch("semantic_release.vcs_helpers.check_repo")
+    git.repo.base.Repo.tags = mock.PropertyMock(
+        return_value=[
+            FakeTag("v0.1.0", "aaaaaaaaaaaaaaaaaaaa", 1, True),
+            FakeTag("v2.0.0", "dddddddddddddddddddd", 4, True),
+            FakeTag("v2.1.0-beta", "ffffffffffffffffffff", 6, True),
+            FakeTag("badly_formatted", "eeeeeeeeeeeeeeeeeeee", 5, False),
+            FakeTag("v1.1.0", "cccccccccccccccccccc", 3, True),
+            FakeTag("v1.0.0", "bbbbbbbbbbbbbbbbbbbb", 2, False),
+        ]
+    )
+    assert expected_result == get_last_version(skip_tags, omit_pattern="-beta")
+
+
+@pytest.mark.parametrize(
     "tag_name,expected_version",
     [
         ("v0.1.0", "aaaaa"),

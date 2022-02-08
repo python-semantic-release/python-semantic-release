@@ -177,13 +177,13 @@ class PatternVersionDeclaration(VersionDeclaration):
 
 
 @LoggedFunction(logger)
-def get_current_version_by_tag() -> str:
+def get_current_version_by_tag(omit_pattern=None) -> str:
     """
     Find the current version of the package in the current working directory using git tags.
 
     :return: A string with the version number or 0.0.0 on failure.
     """
-    version = get_last_version()
+    version = get_last_version(omit_pattern=omit_pattern)
     if version:
         return version
 
@@ -192,7 +192,7 @@ def get_current_version_by_tag() -> str:
 
 
 @LoggedFunction(logger)
-def get_current_version_by_config_file() -> str:
+def get_current_version_by_config_file(omit_pattern=None) -> str:
     """
     Get current version from the version variable defined in the configuration.
 
@@ -219,12 +219,17 @@ def get_current_version_by_config_file() -> str:
 def get_current_version() -> str:
     """
     Get current version from tag or version variable, depending on configuration.
+    This will not return prerelease versions.
 
     :return: A string with the current version number
     """
+    omit_pattern = "-" + config.get("prerelease_tag")
     if config.get("version_source") == "tag":
-        return get_current_version_by_tag()
-    return get_current_version_by_config_file()
+        return get_current_version_by_tag(omit_pattern)
+    current_version = get_current_version_by_config_file(omit_pattern)
+    if omit_pattern in current_version:
+        return get_previous_version(current_version)
+    return current_version
 
 # TODO: prerelease version bump
 @LoggedFunction(logger)
@@ -244,7 +249,7 @@ def get_new_version(current_version: str, level_bump: str) -> str:
 
 
 @LoggedFunction(logger)
-def get_previous_version(version: str) -> Optional[str]:
+def get_previous_version(version: str, omit_pattern: str = None) -> Optional[str]:
     """
     Return the version prior to the given version.
 
@@ -260,12 +265,14 @@ def get_previous_version(version: str) -> Optional[str]:
             continue
 
         if found_version:
+            if omit_pattern and omit_pattern in commit_message:
+                continue
             matches = re.match(r"v?(\d+.\d+.\d+)", commit_message)
             if matches:
                 logger.debug(f"Version matches regex {commit_message}")
                 return matches.group(1).strip()
 
-    return get_last_version([version, get_formatted_tag(version)])
+    return get_last_version([version, get_formatted_tag(version)], omit_pattern=omit_pattern)
 
 
 @LoggedFunction(logger)

@@ -98,7 +98,7 @@ def common_options(func):
 # TODO: prerelease publish
 
 
-def print_version(*, current=False, force_level=None, **kwargs):
+def print_version(*, current=False, force_level=None, prerelease=False, **kwargs):
     """
     Print the current or new version to standard output.
     """

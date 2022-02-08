@@ -254,6 +254,21 @@ def test_cli_print_version_force_major(mocker, runner):
     assert result.exit_code == 0
 
 
+def test_cli_print_version_prerelease(mocker, runner):
+    mock_print_version = mocker.patch("semantic_release.cli.print_version")
+    result = runner.invoke(main, ["print-version", "--prerelease"])
+    mock_print_version.assert_called_once_with(
+        current=False,
+        force_level=None,
+        prerelease=True,
+        noop=False,
+        post=False,
+        retry=False,
+        define=(),
+    )
+    assert result.exit_code == 0
+
+
 def test_cli_print_version_current(mocker, runner):
     mock_print_version = mocker.patch("semantic_release.cli.print_version")
     result = runner.invoke(main, ["print-version", "--current"])
