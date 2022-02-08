@@ -66,8 +66,12 @@ COMMON_OPTIONS = [
     click.option(
         "--patch", "force_level", flag_value="patch", help="Force patch version."
     ),
+    click.option(
+        "--prerelease", is_flag=True, help="Creates a prerelease version."
+    ),
     click.option("--post", is_flag=True, help="Post changelog."),
-    click.option("--retry", is_flag=True, help="Retry the same release, do not bump."),
+    click.option("--retry", is_flag=True,
+                 help="Retry the same release, do not bump."),
     click.option(
         "--noop",
         is_flag=True,
@@ -92,6 +96,8 @@ def common_options(func):
     return func
 
 # TODO: prerelease publish
+
+
 def print_version(*, current=False, force_level=None, **kwargs):
     """
     Print the current or new version to standard output.
@@ -116,6 +122,8 @@ def print_version(*, current=False, force_level=None, **kwargs):
     return False
 
 # TODO: prerelease publish
+
+
 def version(*, retry=False, noop=False, force_level=None, **kwargs):
     """
     Detect the new version according to git log and semver.
@@ -152,6 +160,8 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
     return True
 
 # TODO: compare prerelease
+
+
 def should_bump_version(*, current_version, new_version, retry=False, noop=False):
     """Test whether the version should be bumped."""
     if new_version == current_version and not retry:
@@ -228,12 +238,15 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
                 owner,
                 name,
                 current_version,
-                markdown_changelog(owner, name, current_version, log, header=False),
+                markdown_changelog(
+                    owner, name, current_version, log, header=False),
             )
         else:
             logger.error("Missing token: cannot post changelog to HVCS")
 
 # TODO: prerelease publish
+
+
 def publish(retry: bool = False, noop: bool = False, **kwargs):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
@@ -248,7 +261,8 @@ def publish(retry: bool = False, noop: bool = False, **kwargs):
         current_version = get_previous_version(current_version)
     else:
         # Calculate the new version
-        level_bump = evaluate_version_bump(current_version, kwargs.get("force_level"))
+        level_bump = evaluate_version_bump(
+            current_version, kwargs.get("force_level"))
         new_version = get_new_version(current_version, level_bump)
 
     owner, name = get_repository_owner_and_name()
@@ -396,6 +410,8 @@ def main(**kwargs):
     logger.debug(f"Main config: {obj}")
 
 # TODO: add --prerelease flag
+
+
 @main.command(name="publish", help=publish.__doc__)
 @common_options
 def cmd_publish(**kwargs):
@@ -420,6 +436,8 @@ def cmd_changelog(**kwargs):
         exit(1)
 
 # TODO: add --prerelease flag
+
+
 @main.command(name="version", help=version.__doc__)
 @common_options
 def cmd_version(**kwargs):
@@ -430,6 +448,8 @@ def cmd_version(**kwargs):
         exit(1)
 
 # TODO: add --prerelease flag
+
+
 @main.command(name="print-version", help=print_version.__doc__)
 @common_options
 @click.option(
