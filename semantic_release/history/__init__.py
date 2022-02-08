@@ -226,7 +226,7 @@ def get_current_version() -> str:
         return get_current_version_by_tag()
     return get_current_version_by_config_file()
 
-
+# TODO: prerelease version bump
 @LoggedFunction(logger)
 def get_new_version(current_version: str, level_bump: str) -> str:
     """

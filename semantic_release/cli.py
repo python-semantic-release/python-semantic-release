@@ -91,7 +91,7 @@ def common_options(func):
         func = option(func)
     return func
 
-
+# TODO: prerelease publish
 def print_version(*, current=False, force_level=None, **kwargs):
     """
     Print the current or new version to standard output.
@@ -115,7 +115,7 @@ def print_version(*, current=False, force_level=None, **kwargs):
     print("No release will be made.", file=sys.stderr)
     return False
 
-
+# TODO: prerelease publish
 def version(*, retry=False, noop=False, force_level=None, **kwargs):
     """
     Detect the new version according to git log and semver.
@@ -151,7 +151,7 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
     bump_version(new_version, level_bump)
     return True
 
-
+# TODO: compare prerelease
 def should_bump_version(*, current_version, new_version, retry=False, noop=False):
     """Test whether the version should be bumped."""
     if new_version == current_version and not retry:
@@ -233,7 +233,7 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
         else:
             logger.error("Missing token: cannot post changelog to HVCS")
 
-
+# TODO: prerelease publish
 def publish(retry: bool = False, noop: bool = False, **kwargs):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
@@ -395,7 +395,7 @@ def main(**kwargs):
         obj[key] = config.get(key)
     logger.debug(f"Main config: {obj}")
 
-
+# TODO: add --prerelease flag
 @main.command(name="publish", help=publish.__doc__)
 @common_options
 def cmd_publish(**kwargs):
@@ -419,7 +419,7 @@ def cmd_changelog(**kwargs):
         logger.error(filter_output_for_secrets(str(error)))
         exit(1)
 
-
+# TODO: add --prerelease flag
 @main.command(name="version", help=version.__doc__)
 @common_options
 def cmd_version(**kwargs):
@@ -429,7 +429,7 @@ def cmd_version(**kwargs):
         logger.error(filter_output_for_secrets(str(error)))
         exit(1)
 
-
+# TODO: add --prerelease flag
 @main.command(name="print-version", help=print_version.__doc__)
 @common_options
 @click.option(
