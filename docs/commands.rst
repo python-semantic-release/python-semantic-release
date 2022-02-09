@@ -12,7 +12,8 @@ Print the changelog to stdout.
 
 If the option ``--post`` is used and there is an authentication token configured
 for your vcs provider (:ref:`env-gh_token` for GitHub, :ref:`env-gl_token` for
-GitLab), the changelog will be posted there too.
+GitLab, :ref:`env-gitea_token` for
+Gitea), the changelog will be posted there too.
 
 
 .. _cmd-version:

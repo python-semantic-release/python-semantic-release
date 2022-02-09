@@ -82,6 +82,13 @@ and click on *Personal access token*.
 A personal access token from GitLab. This is used for authenticating
 when pushing tags, publishing releases etc.
 
+.. _env-gl_token:
+
+``GITEA_TOKEN``
+------------
+A personal access token from Gitea. This is used for authenticating
+when pushing tags, publishing releases etc.
+
 .. _env-repository:
 
 Artifact Repository Authentication
