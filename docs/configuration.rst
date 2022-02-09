@@ -33,12 +33,12 @@ The file and variable name of where the version number is stored, for example::
 
     semantic_release/__init__.py:__version__
 
-You can specify multiple version variables (i.e. in different files) by 
+You can specify multiple version variables (i.e. in different files) by
 providing comma-separated list of such strings::
 
     semantic_release/__init__.py:__version__,docs/conf.py:version
 
-In ``pyproject.toml`` specifically, you can also use the TOML list syntax to 
+In ``pyproject.toml`` specifically, you can also use the TOML list syntax to
 specify multiple versions:
 
 .. code-block:: toml
@@ -67,14 +67,14 @@ identified using an arbitrary regular expression::
 
     README.rst:VERSION (\d+\.\d+\.\d+)
 
-The regular expression must contain a parenthesized group that matches the 
-version number itself.  Anything outside that group is just context.  For 
-example, the above specifies that there is a version number in ``README.rst`` 
+The regular expression must contain a parenthesized group that matches the
+version number itself.  Anything outside that group is just context.  For
+example, the above specifies that there is a version number in ``README.rst``
 preceded by the string "VERSION".
 
-If the pattern contains the string ``{version}``, it will be replaced with the 
-regular expression used internally by ``python-semantic-release`` to match 
-semantic version numbers.  So the above example would probably be better 
+If the pattern contains the string ``{version}``, it will be replaced with the
+regular expression used internally by ``python-semantic-release`` to match
+semantic version numbers.  So the above example would probably be better
 written as::
 
     README.rst:VERSION {version}
@@ -94,6 +94,17 @@ The way we get and set the new version. Can be `commit` or `tag`.
   :ref:`config-version_variable`, edit the file and commit it.
 
 Default: `commit`
+
+.. _config-prerelease_tag:
+
+``prerelease_tag``
+------------------
+Defined the prerelease marker appended to the version when doing a prerelease.
+
+- The format of a prerelease version will be `{tag_format}-{prerelease_tag}.<prerelease_number>`,
+  e.g. `1.0.0-beta.0` or `1.1.0-beta.1`
+
+Default: `beta`
 
 .. _config-tag_commit:
 

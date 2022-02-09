@@ -74,6 +74,12 @@ Force a minor release, ignoring the version bump determined from commit messages
 
 Force a major release, ignoring the version bump determined from commit messages.
 
+``--prerelease``
+...........
+
+Makes the next release a prerelease, version bumps are still determined or can be forced,
+but the `prerelease_tag` (see :ref:`config-prerelease_tag`) will be appended to version number.
+
 ``--noop``
 ..........
 
