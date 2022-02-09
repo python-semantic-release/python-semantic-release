@@ -4,7 +4,7 @@ import logging
 import mimetypes
 import os
 from typing import Optional, Union
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urlsplit
 
 from gitlab import exceptions, gitlab
 from requests import HTTPError, Session
@@ -387,9 +387,9 @@ class Gitea(Base):
         )
         
         if hvcs_domain and not hostname:
-            hostname = urljoin(hvcs_domain, Gitea.DEFAULT_API_PATH)
+            hostname = hvcs_domain + Gitea.DEFAULT_API_PATH
         elif not hostname:
-            hostname = urljoin(Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_API_PATH)
+            hostname = Gitea.DEFAULT_DOMAIN + Gitea.DEFAULT_API_PATH
 
         return f"https://{hostname}"
 

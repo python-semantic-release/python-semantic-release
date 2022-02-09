@@ -82,7 +82,7 @@ and click on *Personal access token*.
 A personal access token from GitLab. This is used for authenticating
 when pushing tags, publishing releases etc.
 
-.. _env-gl_token:
+.. _env-gitea_token:
 
 ``GITEA_TOKEN``
 ------------

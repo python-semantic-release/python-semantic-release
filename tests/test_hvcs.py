@@ -97,7 +97,7 @@ def test_check_custom_gitea_token_should_return_false():
     wrapped_config_get(gitea_token_var="GITEA_CUSTOM_TOKEN"),
 )
 def test_check_custom_gitea_token_should_return_false():
-    assert check_token() is True
+    assert check_token() is False
 
 
 @mock.patch("os.environ", {"CUSTOM_GL_TOKEN": "token"})
@@ -119,7 +119,7 @@ def test_check_custom_gitlab_token_should_return_false():
 
 
 @pytest.mark.parametrize(
-    "hvcs,hvcs_domain,expected_domain,api_url,ci_server_host,hvcs_api_domain",
+    "hvcs,hvcs_domain,expected_domain,expected_api_url,ci_server_host,hvcs_api_domain",
     [
         ("github", None, "github.com", "https://api.github.com", None, None),
         ("gitlab", None, "gitlab.com", "https://gitlab.com", None, None),
@@ -128,7 +128,7 @@ def test_check_custom_gitlab_token_should_return_false():
             "github",
             "github.example.com",
             "github.example.com",
-            None,
+            "https://api.github.com",
             None,
             None,
         ),
@@ -168,7 +168,7 @@ def test_check_custom_gitlab_token_should_return_false():
 )
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
 def test_get_domain_should_have_expected_domain(
-    hvcs, hvcs_domain, expected_domain, api_url, ci_server_host, hvcs_api_domain
+    hvcs, hvcs_domain, expected_domain, expected_api_url, ci_server_host, hvcs_api_domain
 ):
 
     with mock.patch(
@@ -188,7 +188,7 @@ def test_get_domain_should_have_expected_domain(
         ):
 
             assert get_hvcs().domain() == expected_domain
-            assert get_hvcs().api_url() == api_url
+            assert get_hvcs().api_url() == expected_api_url
 
 
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="github"))
@@ -561,11 +561,11 @@ class GiteaReleaseTests(TestCase):
     asset_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/1/assets"
     asset_url_params = (
         "https://gitea.com/api/v1/repos/gitea/tea/releases/1/assets"
-        "?name=testupload.md+file"
+        "?name=testupload.md"
     )
     asset_no_extension_url_params = (
         "https://gitea.com/api/v1/repos/gitea/tea/releases/1/assets"
-        "?name=testupload-no-extension+file+no+extension"
+        "?name=testupload-no-extension"
     )
     dist_asset_url_params = (
         "https://gitea.com/api/v1/repos/gitea/tea/releases/1/assets"
