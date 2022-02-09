@@ -378,9 +378,10 @@ def test_get_last_version_with_omit_pattern(skip_tags, expected_result):
     git.repo.base.Repo.tags = mock.PropertyMock(
         return_value=[
             FakeTag("v0.1.0", "aaaaaaaaaaaaaaaaaaaa", 1, True),
-            FakeTag("v2.0.0", "dddddddddddddddddddd", 4, True),
-            FakeTag("v2.1.0-beta", "ffffffffffffffffffff", 6, True),
-            FakeTag("badly_formatted", "eeeeeeeeeeeeeeeeeeee", 5, False),
+            FakeTag("v2.0.0", "dddddddddddddddddddd", 5, True),
+            FakeTag("v2.1.0-beta", "ffffffffffffffffffff", 7, True),
+            FakeTag("badly_formatted", "eeeeeeeeeeeeeeeeeeee", 6, False),
+            FakeTag("v2.0.0-beta", "ffffffffffffffffffff", 4, True),
             FakeTag("v1.1.0", "cccccccccccccccccccc", 3, True),
             FakeTag("v1.0.0", "bbbbbbbbbbbbbbbbbbbb", 2, False),
         ]
