@@ -18,8 +18,7 @@ from .history import (
     get_current_version,
     get_new_version,
     get_previous_version,
-    set_new_version,
-    get_prerelease_pattern
+    set_new_version
 )
 from .history.logs import generate_changelog
 from .hvcs import (
@@ -114,14 +113,7 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
 
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, force_level)
-    new_version = get_new_version(current_version, level_bump)
-    if prerelease:
-        potentialy_prereleased_current_version = get_current_version(prerelease_version=True)
-        if get_prerelease_pattern() in potentialy_prereleased_current_version:
-            prerelease_num = int(potentialy_prereleased_current_version.split(".")[-1]) + 1
-        else:
-            prerelease_num = 0
-        new_version = new_version + get_prerelease_pattern() + str(prerelease_num)
+    new_version = get_new_version(current_version, level_bump, prerelease)
     if should_bump_version(current_version=current_version, new_version=new_version):
         print(new_version, end="")
         return True
@@ -166,8 +158,6 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
     # Bump the version
     bump_version(new_version, level_bump)
     return True
-
-# TODO: compare prerelease
 
 
 def should_bump_version(*, current_version, new_version, retry=False, noop=False):

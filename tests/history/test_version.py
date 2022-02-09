@@ -103,6 +103,19 @@ class TestGetNewVersion:
     def test_none_bump(self):
         assert get_new_version("1.0.0", None) == "1.0.0"
 
+    def test_prerelease(self):
+        assert get_new_version("1.0.0", None, True) == "1.0.0-beta.0"
+        assert get_new_version("1.0.0", "major", True) == "2.0.0-beta.0"
+        assert get_new_version("1.0.0", "minor", True) == "1.1.0-beta.0"
+        assert get_new_version("1.0.0", "patch", True) == "1.0.1-beta.0"
+
+    def test_prerelease_bump(self, mocker):
+        mocker.patch(
+            "semantic_release.history.get_current_version",
+            return_value="1.0.0-beta.0"
+        )
+        assert get_new_version("1.0.0", None, True) == "1.0.0-beta.1"
+
 
 @mock.patch(
     "semantic_release.history.config.get",
@@ -268,11 +281,11 @@ class TestVersionPattern:
                     name = "my-package"
                     version = "0.1.0"
                     description = "A super package"
-                    
+
                     [build-system]
                     requires = ["poetry-core>=1.0.0"]
                     build-backend = "poetry.core.masonry.api"
-                    
+
                     [tool.semantic_release]
                     version_toml = "pyproject.toml:tool.poetry.version"
                     """
@@ -283,11 +296,11 @@ class TestVersionPattern:
                     name = "my-package"
                     version = "-"
                     description = "A super package"
-                    
+
                     [build-system]
                     requires = ["poetry-core>=1.0.0"]
                     build-backend = "poetry.core.masonry.api"
-                    
+
                     [tool.semantic_release]
                     version_toml = "pyproject.toml:tool.poetry.version"
                     """

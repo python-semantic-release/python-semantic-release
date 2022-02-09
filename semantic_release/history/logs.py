@@ -17,7 +17,7 @@ LEVELS = {
     3: "major",
 }
 
-# TODO: detect version bump
+
 @LoggedFunction(logger)
 def evaluate_version_bump(current_version: str, force: str = None) -> Optional[str]:
     """

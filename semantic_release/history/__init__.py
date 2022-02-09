@@ -235,21 +235,36 @@ def get_current_version(prerelease_version: bool = False) -> str:
         return get_previous_version(current_version)
     return current_version
 
-# TODO: prerelease version bump
+
 @LoggedFunction(logger)
-def get_new_version(current_version: str, level_bump: str) -> str:
+def get_new_version(current_version: str, level_bump: str, prerelease: bool = False) -> str:
     """
     Calculate the next version based on the given bump level with semver.
 
     :param current_version: The version the package has now.
     :param level_bump: The level of the version number that should be bumped.
         Should be `'major'`, `'minor'` or `'patch'`.
+    :param prerelease: Should the version bump be marked as a prerelease
     :return: A string with the next version number.
     """
     if not level_bump:
-        logger.debug("No bump requested, returning input version")
-        return current_version
-    return str(semver.VersionInfo.parse(current_version).next_version(part=level_bump))
+        logger.debug("No bump requested, using input version")
+        new_version =  current_version
+    else:
+        new_version = str(semver.VersionInfo.parse(current_version).next_version(part=level_bump))
+
+    if prerelease:
+        logger.debug("Prerelease requested")
+        potentialy_prereleased_current_version = get_current_version(prerelease_version=True)
+        if get_prerelease_pattern() in potentialy_prereleased_current_version:
+            logger.debug("Previouse prerelease detected, increment prerelease version")
+            prerelease_num = int(potentialy_prereleased_current_version.split(".")[-1]) + 1
+        else:
+            logger.debug("No previouse prerelease detected, starting from 0")
+            prerelease_num = 0
+        new_version = new_version + get_prerelease_pattern() + str(prerelease_num)
+
+    return new_version
 
 
 @LoggedFunction(logger)
