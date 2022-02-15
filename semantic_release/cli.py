@@ -124,7 +124,7 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
 # TODO: prerelease publish
 
 
-def version(*, retry=False, noop=False, force_level=None, **kwargs):
+def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kwargs):
     """
     Detect the new version according to git log and semver.
 
@@ -144,7 +144,7 @@ def version(*, retry=False, noop=False, force_level=None, **kwargs):
         return False
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, force_level)
-    new_version = get_new_version(current_version, level_bump)
+    new_version = get_new_version(current_version, level_bump, prerelease)
 
     if not should_bump_version(
         current_version=current_version, new_version=new_version, retry=retry, noop=noop
@@ -245,7 +245,7 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
 # TODO: prerelease publish
 
 
-def publish(retry: bool = False, noop: bool = False, **kwargs):
+def publish(retry: bool = False, noop: bool = False, prerelease=False, **kwargs):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
 
@@ -261,7 +261,7 @@ def publish(retry: bool = False, noop: bool = False, **kwargs):
         # Calculate the new version
         level_bump = evaluate_version_bump(
             current_version, kwargs.get("force_level"))
-        new_version = get_new_version(current_version, level_bump)
+        new_version = get_new_version(current_version, level_bump, prerelease)
 
     owner, name = get_repository_owner_and_name()
 

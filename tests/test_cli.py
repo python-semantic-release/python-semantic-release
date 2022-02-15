@@ -54,7 +54,7 @@ def test_version_by_commit_should_call_correct_functions(mocker):
 
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", "major")
+    mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
     mock_commit_new_version.assert_called_once_with("2.0.0")
     mock_tag_new_version.assert_called_once_with("2.0.0")
@@ -90,7 +90,7 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", "major")
+    mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
     mock_commit_new_version.assert_called_once_with("2.0.0")
     mock_tag_new_version.assert_called_once_with("2.0.0")
@@ -117,7 +117,7 @@ def test_version_by_tag_should_call_correct_functions(mocker):
 
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", "major")
+    mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
@@ -145,7 +145,7 @@ def test_version_by_commit_without_tag_should_call_correct_functions(mocker):
 
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", "major")
+    mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
     mock_commit_new_version.assert_called_once_with("2.0.0")
     assert not mock_tag_new_version.called
@@ -427,7 +427,7 @@ def test_version_no_change(mocker, runner):
 
     mock_current_version.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", None)
+    mock_new_version.assert_called_once_with("1.2.3", None, False)
     assert not mock_set_new_version.called
     assert not mock_commit_new_version.called
     assert not mock_tag_new_version.called
@@ -538,7 +538,7 @@ def test_version_retry(mocker):
     assert result
     mock_get_current.assert_called_once_with()
     mock_evaluate_bump.assert_called_once_with("current", False)
-    mock_get_new.assert_called_once_with("current", "patch")
+    mock_get_new.assert_called_once_with("current", "patch", False)
 
 
 def test_publish_should_not_run_pre_commit_by_default(mocker):
@@ -975,7 +975,7 @@ def test_publish_giterror_when_posting(mocker):
 
     mock_get_current.assert_called_once_with()
     mock_evaluate.assert_called_once_with("current", False)
-    mock_get_new.assert_called_once_with("current", "patch")
+    mock_get_new.assert_called_once_with("current", "patch", False)
     mock_get_owner_name.assert_called_once_with()
     mock_ci_check.assert_called()
     mock_checkout.assert_called_once_with("my_branch")
