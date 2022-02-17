@@ -78,6 +78,7 @@ release notes and new versions to GitHub / GitLab:
 - :ref:`config-hvcs` - change this if you are using GitLab.
 - :ref:`env-gh_token` - GitHub personal access token.
 - :ref:`env-gl_token` - GitLab personal access token.
+- :ref:`env-gitea_token` - Gitea personal access token.
 
 Distributing release on PyPI or custom repository
 -----------------

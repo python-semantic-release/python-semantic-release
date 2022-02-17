@@ -40,6 +40,7 @@ class ConfigTests(TestCase):
         self.assertEqual(config.get("hvcs"), "github")
         self.assertEqual(config.get("upload_to_repository"), True)
         self.assertEqual(config.get("github_token_var"), "GH_TOKEN")
+        self.assertEqual(config.get("gitea_token_var"), "GITEA_TOKEN")
         self.assertEqual(config.get("gitlab_token_var"), "GL_TOKEN")
         self.assertEqual(config.get("pypi_pass_var"), "PYPI_PASSWORD")
         self.assertEqual(config.get("pypi_token_var"), "PYPI_TOKEN")
