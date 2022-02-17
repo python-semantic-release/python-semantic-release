@@ -10,9 +10,9 @@ import responses
 
 from semantic_release.errors import ImproperConfigurationError
 from semantic_release.hvcs import (
+    Gitea,
     Github,
     Gitlab,
-    Gitea,
     check_build_status,
     check_token,
     get_hvcs,
@@ -38,9 +38,11 @@ def test_get_hvcs_should_return_github():
 def test_get_hvcs_should_return_gitlab():
     assert get_hvcs() == Gitlab
 
+
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitea"))
 def test_get_hvcs_should_return_gitea():
     assert get_hvcs() == Gitea
+
 
 @mock.patch("semantic_release.hvcs.config.get", lambda *x: "doesnotexist")
 def test_get_hvcs_should_raise_improper_config():
@@ -83,6 +85,7 @@ def test_check_custom_github_token_var_should_return_true():
 def test_check_custom_github_token_should_return_false():
     assert check_token() is False
 
+
 @mock.patch("os.environ", {"GITEA_TOKEN": "token"})
 @mock.patch(
     "semantic_release.hvcs.config.get",
@@ -90,6 +93,7 @@ def test_check_custom_github_token_should_return_false():
 )
 def test_check_custom_gitea_token_should_return_false():
     assert check_token() is False
+
 
 @mock.patch("os.environ", {"GITEA_CUSTOM_TOKEN": "token"})
 @mock.patch(
@@ -123,7 +127,14 @@ def test_check_custom_gitlab_token_should_return_false():
     [
         ("github", None, "github.com", "https://api.github.com", None, None),
         ("gitlab", None, "gitlab.com", "https://gitlab.com", None, None),
-        ("gitea", "git.grassrootseconomics.net", "git.grassrootseconomics.net", "https://git.grassrootseconomics.net/api/v1", None, None),
+        (
+            "gitea",
+            "git.grassrootseconomics.net",
+            "git.grassrootseconomics.net",
+            "https://git.grassrootseconomics.net/api/v1",
+            None,
+            None,
+        ),
         (
             "github",
             "github.example.com",
@@ -168,7 +179,12 @@ def test_check_custom_gitlab_token_should_return_false():
 )
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
 def test_get_domain_should_have_expected_domain(
-    hvcs, hvcs_domain, expected_domain, expected_api_url, ci_server_host, hvcs_api_domain
+    hvcs,
+    hvcs_domain,
+    expected_domain,
+    expected_api_url,
+    ci_server_host,
+    hvcs_api_domain,
 ):
 
     with mock.patch(
@@ -268,6 +284,7 @@ class GithubCheckBuildStatusTests(TestCase):
             )
         )
 
+
 class GiteaCheckBuildStatusTests(TestCase):
     url = "https://gitea.com/api/v1/repos/gitea/tea/statuses/268aa061795d53a1914b734c479b7c1f62cfd7af"
 
@@ -319,6 +336,7 @@ class GiteaCheckBuildStatusTests(TestCase):
                 "gitea", "tea", "268aa061795d53a1914b734c479b7c1f62cfd7af"
             )
         )
+
 
 class GitlabCheckBuildStatusTests(TestCase):
     @mock_gitlab("pending")
@@ -553,8 +571,9 @@ class GithubReleaseTests(TestCase):
         # Remove test file
         os.remove(dummy_file_path)
 
+
 class GiteaReleaseTests(TestCase):
-    
+
     url = "https://gitea.com/api/v1/repos/gitea/tea/releases"
     edit_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/1"
     get_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/tags/v1.0.0"
@@ -602,9 +621,7 @@ class GiteaReleaseTests(TestCase):
             )
 
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-                status = Gitea.post_release_changelog(
-                    "gitea", "tea", "1.0.0", "text"
-                )
+                status = Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text")
                 self.assertTrue(status)
 
     @responses.activate
@@ -639,9 +656,7 @@ class GiteaReleaseTests(TestCase):
             )
 
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-                status = Gitea.post_release_changelog(
-                    "gitea", "tea", "1.0.0", "text"
-                )
+                status = Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text")
                 self.assertTrue(status)
 
     @responses.activate
@@ -667,9 +682,7 @@ class GiteaReleaseTests(TestCase):
             body="{}",
             content_type="application/json",
         )
-        self.assertFalse(
-            Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text")
-        )
+        self.assertFalse(Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text"))
 
     @responses.activate
     @mock.patch("semantic_release.hvcs.Gitea.token", return_value="super-token")
@@ -692,9 +705,7 @@ class GiteaReleaseTests(TestCase):
         responses.add_callback(
             responses.POST, self.asset_url, callback=request_callback
         )
-        status = Gitea.upload_asset(
-            "gitea", "tea", 1, dummy_file_path, "Dummy file"
-        )
+        status = Gitea.upload_asset("gitea", "tea", 1, dummy_file_path, "Dummy file")
         self.assertTrue(status)
 
         # Remove test file
@@ -769,6 +780,7 @@ class GiteaReleaseTests(TestCase):
         # Remove test file
         os.remove(dummy_file_path)
 
+
 class GitlabReleaseTests(TestCase):
     @mock_gitlab()
     def test_should_return_true_if_success(self, mock_auth, mock_project):
@@ -782,9 +794,11 @@ class GitlabReleaseTests(TestCase):
     def test_should_return_true_for_locked_tags(self, mock_auth, mock_project):
         self.assertTrue(post_changelog("owner", "repo", "my_locked_tag", "changelog"))
 
+
 def test_gitea_token():
     with mock.patch("os.environ", {"GITEA_TOKEN": "token"}):
         assert Gitea.token() == "token"
+
 
 def test_github_token():
     with mock.patch("os.environ", {"GH_TOKEN": "token"}):

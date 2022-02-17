@@ -351,6 +351,7 @@ class Github(Base):
 
         return not one_or_more_failed
 
+
 class Gitea(Base):
     """Gitea helper class"""
 
@@ -385,7 +386,7 @@ class Gitea(Base):
         hostname = config.get(
             "hvcs_api_domain", os.getenv("GITEA_API_URL", "").replace("https://", "")
         )
-        
+
         if hvcs_domain and not hostname:
             hostname = hvcs_domain + Gitea.DEFAULT_API_PATH
         elif not hostname:
@@ -619,6 +620,7 @@ class Gitea(Base):
 
         return not one_or_more_failed
 
+
 class Gitlab(Base):
     """Gitlab helper class"""
 
@@ -727,7 +729,11 @@ def get_hvcs() -> Base:
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:
-        raise ImproperConfigurationError('"{0}" is not a valid option for hvcs. Please use "github"|"gitlab"|"gitea"'.format(hvcs))
+        raise ImproperConfigurationError(
+            '"{0}" is not a valid option for hvcs. Please use "github"|"gitlab"|"gitea"'.format(
+                hvcs
+            )
+        )
 
 
 def check_build_status(owner: str, repository: str, ref: str) -> bool:
