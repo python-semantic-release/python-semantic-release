@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from unittest import TestCase, mock
 
@@ -7,8 +8,6 @@ from twine import auth
 from semantic_release import ImproperConfigurationError
 from semantic_release.repository import ArtifactRepo
 from tests import wrapped_config_get
-
-import os
 
 
 class RepositoryTests(TestCase):
@@ -122,7 +121,10 @@ class RepositoryTests(TestCase):
     )
     def test_repo_with_custom_dist_globs(self, mock_handle_creds):
         repo = ArtifactRepo(Path("dist"))
-        self.assertEqual(repo.dists, [os.path.join("dist", "*.tar.gz"), os.path.join("dist", "*.whl")])
+        self.assertEqual(
+            repo.dists,
+            [os.path.join("dist", "*.tar.gz"), os.path.join("dist", "*.whl")],
+        )
 
     @mock.patch.object(ArtifactRepo, "_handle_credentials_init")
     @mock.patch(
@@ -131,7 +133,10 @@ class RepositoryTests(TestCase):
     )
     def test_repo_with_custom_pypi_globs(self, mock_handle_creds):
         repo = ArtifactRepo(Path("dist"))
-        self.assertEqual(repo.dists, [os.path.join("dist", "*.tar.gz"), os.path.join("dist", "*.whl")])
+        self.assertEqual(
+            repo.dists,
+            [os.path.join("dist", "*.tar.gz"), os.path.join("dist", "*.whl")],
+        )
 
     @mock.patch.object(ArtifactRepo, "_handle_credentials_init")
     @mock.patch(
