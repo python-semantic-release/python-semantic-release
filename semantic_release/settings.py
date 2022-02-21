@@ -112,12 +112,32 @@ def current_changelog_components() -> List[Callable]:
             module = ".".join(parts[:-1])
             # The final part is the name of the component function
             components.append(getattr(importlib.import_module(module), parts[-1]))
-        except (ImportError, AttributeError) as error:
+        except (ImportError, AttributeError):
             raise ImproperConfigurationError(
                 f'Unable to import changelog component "{path}"'
             )
 
     return components
+
+
+def current_commit_analyzer() -> Callable:
+    """Get the currently-configured commit_analyzer
+
+    :raises ImproperConfigurationError: if ImportError or AttributeError is raised
+    :returns: Commit analyzer
+    """
+    try:
+        # All except the last part is the import path
+        parts = config.get("commit_analyzer").split(".")
+        module = ".".join(parts[:-1])
+        # The final part is the name of the parse function
+        return getattr(importlib.import_module(module), parts[-1])
+    except (ImportError, AttributeError) as error:
+        raise ImproperConfigurationError(f'Unable to import commit analyzer "{error}"')
+    except ValueError:
+        raise ImproperConfigurationError(
+            f'Wrong path for import: {config.get("commit_analyzer")!r}'
+        )
 
 
 def overload_configuration(func):

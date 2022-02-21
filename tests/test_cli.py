@@ -603,7 +603,7 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
     mocker.patch("semantic_release.cli.checkout")
     mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
     mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
-    mocker.patch("semantic_release.cli.generate_changelog")
+    mocker.patch("semantic_release.cli.commit_analyzer")
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
     mock_repository = mocker.patch.object(ArtifactRepo, "upload")
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
@@ -647,7 +647,7 @@ def test_publish_should_call_functions(mocker):
         return_value=("relekang", "python-semantic-release"),
     )
     mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
-    mocker.patch("semantic_release.cli.generate_changelog")
+    mocker.patch("semantic_release.cli.commit_analyzer")
     mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
     mocker.patch("semantic_release.cli.update_changelog_file")
     mocker.patch("semantic_release.cli.bump_version")
@@ -693,7 +693,7 @@ def test_publish_should_skip_build_when_command_is_empty(mocker):
         return_value=("relekang", "python-semantic-release"),
     )
     mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
-    mocker.patch("semantic_release.cli.generate_changelog")
+    mocker.patch("semantic_release.cli.commit_analyzer")
     mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
     mocker.patch("semantic_release.cli.update_changelog_file")
     mocker.patch("semantic_release.cli.bump_version")
@@ -848,7 +848,7 @@ def test_publish_giterror_when_posting(mocker):
         "semantic_release.cli.check_token", return_value=True
     )
     mock_generate = mocker.patch(
-        "semantic_release.cli.generate_changelog", return_value="super changelog"
+        "semantic_release.cli.commit_analyzer", return_value="super changelog"
     )
     mock_markdown = mocker.patch(
         "semantic_release.cli.markdown_changelog", return_value="super md changelog"
@@ -934,7 +934,7 @@ def test_changelog_noop(mocker):
         "semantic_release.cli.get_previous_version", return_value="previous"
     )
     mock_generate_changelog = mocker.patch(
-        "semantic_release.cli.generate_changelog", return_value="super changelog"
+        "semantic_release.cli.commit_analyzer", return_value="super changelog"
     )
     mock_markdown_changelog = mocker.patch(
         "semantic_release.cli.markdown_changelog", return_value="super changelog"
@@ -959,7 +959,7 @@ def test_changelog_post_unreleased_no_token(mocker):
         "semantic_release.cli.get_previous_version", return_value="previous"
     )
     mock_generate_changelog = mocker.patch(
-        "semantic_release.cli.generate_changelog", return_value="super changelog"
+        "semantic_release.cli.commit_analyzer", return_value="super changelog"
     )
     mock_markdown_changelog = mocker.patch(
         "semantic_release.cli.markdown_changelog", return_value="super changelog"
@@ -988,7 +988,7 @@ def test_changelog_post_complete(mocker):
         "semantic_release.cli.get_previous_version", return_value="previous"
     )
     mock_generate_changelog = mocker.patch(
-        "semantic_release.cli.generate_changelog", return_value="super changelog"
+        "semantic_release.cli.commit_analyzer", return_value="super changelog"
     )
     mock_markdown_changelog = mocker.patch(
         "semantic_release.cli.markdown_changelog", return_value="super md changelog"
