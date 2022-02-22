@@ -43,7 +43,7 @@ setup(
         "twine>=3,<4",
         "requests>=2.25,<3",
         "wheel",
-        "python-gitlab>=1.10,<3",
+        "python-gitlab>=2",
         # See https://github.com/relekang/python-semantic-release/issues/336
         # and https://github.com/relekang/python-semantic-release/pull/337
         # for why tomlkit is pinned
