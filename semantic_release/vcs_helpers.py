@@ -261,14 +261,17 @@ def push_new_version(
     """
     server = "origin"
     if auth_token:
-        token = auth_token
-        if config.get("hvcs") == "gitlab":
-            token = "gitlab-ci-token:" + token
-        actor = os.environ.get("GITHUB_ACTOR")
-        if actor:
-            server = f"https://{actor}:{token}@{domain}/{owner}/{name}.git"
+        if not config.get("ignore_token_for_push"):
+            token = auth_token
+            if config.get("hvcs") == "gitlab":
+                token = "gitlab-ci-token:" + token
+            actor = os.environ.get("GITHUB_ACTOR")
+            if actor:
+                server = f"https://{actor}:{token}@{domain}/{owner}/{name}.git"
+            else:
+                server = f"https://{token}@{domain}/{owner}/{name}.git"
         else:
-            server = f"https://{token}@{domain}/{owner}/{name}.git"
+            logger.debug("Ignoring token for pushing to the repository.")
 
     try:
         repo.git.push(server, branch)
