@@ -572,19 +572,18 @@ class Gitea(Base):
         :return: The status of the request
         """
         url = f"{Gitea.api_url()}/repos/{owner}/{repo}/releases/{release_id}/assets"
-
-        content_type = mimetypes.guess_type(file, strict=False)[0]
-        if not content_type:
-            content_type = "application/octet-stream"
-
         try:
+            name = os.path.basename(file)
             response = Gitea.session().post(
                 url,
-                params={"name": os.path.basename(file)},
+                params={"name": name},
                 headers={
-                    "Content-Type": content_type,
+                    'accept': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                 },
-                data=open(file, "rb").read(),
+                files={
+                    'attachment': (name, open(file,'rb')),
+                },
             )
 
             logger.debug(
