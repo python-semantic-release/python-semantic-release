@@ -695,9 +695,12 @@ class GiteaReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertTrue(f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"' in request.body.decode())
+            self.assertTrue(
+                f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"'
+                in request.body.decode()
+            )
             self.assertEqual(request.url, self.asset_url_params)
-            self.assertEqual(request.headers["Content-Type"], 'multipart/form-data')
+            self.assertEqual(request.headers["Content-Type"], "multipart/form-data")
             self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
@@ -724,11 +727,12 @@ class GiteaReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertTrue(f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"' in request.body.decode())
-            self.assertEqual(request.url, self.asset_no_extension_url_params)
-            self.assertEqual(
-                request.headers["Content-Type"], 'multipart/form-data'
+            self.assertTrue(
+                f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"'
+                in request.body.decode()
             )
+            self.assertEqual(request.url, self.asset_no_extension_url_params)
+            self.assertEqual(request.headers["Content-Type"], "multipart/form-data")
             self.assertEqual("token super-token", request.headers["Authorization"])
 
             return 201, {}, json.dumps({})
@@ -755,9 +759,12 @@ class GiteaReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertTrue(f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"' in request.body.decode())
+            self.assertTrue(
+                f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"'
+                in request.body.decode()
+            )
             self.assertEqual(request.url, self.dist_asset_url_params)
-            self.assertEqual(request.headers["Content-Type"], 'multipart/form-data')
+            self.assertEqual(request.headers["Content-Type"], "multipart/form-data")
             self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})

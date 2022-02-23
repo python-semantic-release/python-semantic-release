@@ -578,11 +578,11 @@ class Gitea(Base):
                 url,
                 params={"name": name},
                 headers={
-                    'accept': 'application/json',
-                    'Content-Type': 'multipart/form-data',
+                    "accept": "application/json",
+                    "Content-Type": "multipart/form-data",
                 },
                 files={
-                    'attachment': (name, open(file,'rb')),
+                    "attachment": (name, open(file, "rb")),
                 },
             )
 
