@@ -291,7 +291,7 @@ class GiteaCheckBuildStatusTests(TestCase):
     def get_response(self, status):
         return json.dumps(
             {
-                "state": status,
+                "status": status,
             }
         )
 
@@ -695,9 +695,9 @@ class GiteaReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
+            self.assertTrue(f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"' in request.body.decode())
             self.assertEqual(request.url, self.asset_url_params)
-            self.assertEqual(request.headers["Content-Type"], "text/markdown")
+            self.assertEqual(request.headers["Content-Type"], 'multipart/form-data')
             self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
@@ -724,10 +724,10 @@ class GiteaReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
+            self.assertTrue(f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"' in request.body.decode())
             self.assertEqual(request.url, self.asset_no_extension_url_params)
             self.assertEqual(
-                request.headers["Content-Type"], "application/octet-stream"
+                request.headers["Content-Type"], 'multipart/form-data'
             )
             self.assertEqual("token super-token", request.headers["Authorization"])
 
@@ -755,9 +755,9 @@ class GiteaReleaseTests(TestCase):
             dummy_file.write(dummy_content)
 
         def request_callback(request):
-            self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
+            self.assertTrue(f'Content-Disposition: form-data; name="attachment"; filename="{os.path.basename(dummy_file_path)}"' in request.body.decode())
             self.assertEqual(request.url, self.dist_asset_url_params)
-            self.assertEqual(request.headers["Content-Type"], "text/markdown")
+            self.assertEqual(request.headers["Content-Type"], 'multipart/form-data')
             self.assertEqual("token super-token", request.headers.get("Authorization"))
 
             return 201, {}, json.dumps({})
