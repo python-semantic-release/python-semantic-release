@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.25.1 (2022-02-23)
+### Fix
+* **gitea:** Build status and asset upload ([#420](https://github.com/relekang/python-semantic-release/issues/420)) ([`57db81f`](https://github.com/relekang/python-semantic-release/commit/57db81f4c6b96da8259e3bad9137eaccbcd10f6e))
+
 ## v7.25.0 (2022-02-17)
 ### Feature
 * **hvcs:** Add gitea support ([#412](https://github.com/relekang/python-semantic-release/issues/412)) ([`b7e7936`](https://github.com/relekang/python-semantic-release/commit/b7e7936331b7939db09abab235c8866d800ddc1a))
