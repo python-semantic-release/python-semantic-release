@@ -439,7 +439,11 @@ class Gitea(Base):
             response = Gitea.session().get(
                 url.format(domain=Gitea.api_url(), owner=owner, repo=repo, ref=ref)
             )
-            return response.json().get("state") == "success"
+            data = response.json()
+            if type(data) == list:
+                return data[0].get("status") == "success"
+            else:
+                return data.get("status") == "success"
         except HTTPError as e:
             logger.warning(f"Build status check on Gitea has failed: {e}")
             return False

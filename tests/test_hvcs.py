@@ -291,7 +291,7 @@ class GiteaCheckBuildStatusTests(TestCase):
     def get_response(self, status):
         return json.dumps(
             {
-                "state": status,
+                "status": status,
             }
         )
 
