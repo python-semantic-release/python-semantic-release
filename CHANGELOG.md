@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.25.2 (2022-02-24)
+### Fix
+* **gitea:** Use form-data from asset upload ([#421](https://github.com/relekang/python-semantic-release/issues/421)) ([`e011944`](https://github.com/relekang/python-semantic-release/commit/e011944987885f75b80fe16a363f4befb2519a91))
+
 ## v7.25.1 (2022-02-23)
 ### Fix
 * **gitea:** Build status and asset upload ([#420](https://github.com/relekang/python-semantic-release/issues/420)) ([`57db81f`](https://github.com/relekang/python-semantic-release/commit/57db81f4c6b96da8259e3bad9137eaccbcd10f6e))
