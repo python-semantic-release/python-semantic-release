@@ -577,13 +577,17 @@ class Gitea(Base):
             response = Gitea.session().post(
                 url,
                 params={"name": name},
-                headers={
-                    "accept": "application/json",
-                    "Content-Type": "multipart/form-data",
-                },
-                files={
-                    "attachment": (name, open(file, "rb")),
-                },
+                data={},
+                files=[
+                    (
+                        "attachment",
+                        (
+                            name,
+                            open(file, "rb"),
+                            "application/octet-stream",
+                        ),
+                    )
+                ],
             )
 
             logger.debug(
