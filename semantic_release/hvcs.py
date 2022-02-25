@@ -3,7 +3,7 @@
 import logging
 import mimetypes
 import os
-from typing import Optional, Union
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlsplit
 
 from gitlab import exceptions, gitlab
@@ -673,14 +673,14 @@ class Gitlab(Base):
         gl.auth()
         jobs = gl.projects.get(owner + "/" + repo).commits.get(ref).statuses.list()
         for job in jobs:
-            if job["status"] not in ["success", "skipped"]:
-                if job["status"] == "pending":
+            if job["status"] not in ["success", "skipped"]:  # type: ignore[index]
+                if job["status"] == "pending":  # type: ignore[index]
                     logger.debug(
-                        f"check_build_status: job {job['name']} is still in pending status"
+                        f"check_build_status: job {job['name']} is still in pending status"  # type: ignore[index]
                     )
                     return False
-                elif job["status"] == "failed" and not job["allow_failure"]:
-                    logger.debug(f"check_build_status: job {job['name']} failed")
+                elif job["status"] == "failed" and not job["allow_failure"]:  # type: ignore[index]
+                    logger.debug(f"check_build_status: job {job['name']} failed")  # type: ignore[index]
                     return False
         return True
 
