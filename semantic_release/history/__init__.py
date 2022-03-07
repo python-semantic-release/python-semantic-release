@@ -176,14 +176,18 @@ class PatternVersionDeclaration(VersionDeclaration):
         self.path.write_text(new_content)
 
 
+def get_prerelease_pattern() -> str:
+    return "-" + config.get("prerelease_tag") + "."
+
+
 @LoggedFunction(logger)
-def get_current_version_by_tag() -> str:
+def get_current_version_by_tag(omit_pattern=None) -> str:
     """
     Find the current version of the package in the current working directory using git tags.
 
     :return: A string with the version number or 0.0.0 on failure.
     """
-    version = get_last_version()
+    version = get_last_version(omit_pattern=omit_pattern)
     if version:
         return version
 
@@ -192,7 +196,7 @@ def get_current_version_by_tag() -> str:
 
 
 @LoggedFunction(logger)
-def get_current_version_by_config_file() -> str:
+def get_current_version_by_config_file(omit_pattern=None) -> str:
     """
     Get current version from the version variable defined in the configuration.
 
@@ -216,35 +220,55 @@ def get_current_version_by_config_file() -> str:
     return version
 
 
-def get_current_version() -> str:
+def get_current_version(prerelease_version: bool = False) -> str:
     """
     Get current version from tag or version variable, depending on configuration.
+    This will not return prerelease versions.
 
     :return: A string with the current version number
     """
+    omit_pattern = None if prerelease_version else get_prerelease_pattern()
     if config.get("version_source") == "tag":
-        return get_current_version_by_tag()
-    return get_current_version_by_config_file()
+        return get_current_version_by_tag(omit_pattern)
+    current_version = get_current_version_by_config_file(omit_pattern)
+    if omit_pattern and omit_pattern in current_version:
+        return get_previous_version(current_version)
+    return current_version
 
 
 @LoggedFunction(logger)
-def get_new_version(current_version: str, level_bump: str) -> str:
+def get_new_version(current_version: str, level_bump: str, prerelease: bool = False) -> str:
     """
     Calculate the next version based on the given bump level with semver.
 
     :param current_version: The version the package has now.
     :param level_bump: The level of the version number that should be bumped.
         Should be `'major'`, `'minor'` or `'patch'`.
+    :param prerelease: Should the version bump be marked as a prerelease
     :return: A string with the next version number.
     """
     if not level_bump:
-        logger.debug("No bump requested, returning input version")
-        return current_version
-    return str(semver.VersionInfo.parse(current_version).next_version(part=level_bump))
+        logger.debug("No bump requested, using input version")
+        new_version =  current_version
+    else:
+        new_version = str(semver.VersionInfo.parse(current_version).next_version(part=level_bump))
+
+    if prerelease:
+        logger.debug("Prerelease requested")
+        potentialy_prereleased_current_version = get_current_version(prerelease_version=True)
+        if get_prerelease_pattern() in potentialy_prereleased_current_version:
+            logger.debug("Previouse prerelease detected, increment prerelease version")
+            prerelease_num = int(potentialy_prereleased_current_version.split(".")[-1]) + 1
+        else:
+            logger.debug("No previouse prerelease detected, starting from 0")
+            prerelease_num = 0
+        new_version = new_version + get_prerelease_pattern() + str(prerelease_num)
+
+    return new_version
 
 
 @LoggedFunction(logger)
-def get_previous_version(version: str) -> Optional[str]:
+def get_previous_version(version: str, omit_pattern: str = None) -> Optional[str]:
     """
     Return the version prior to the given version.
 
@@ -260,12 +284,14 @@ def get_previous_version(version: str) -> Optional[str]:
             continue
 
         if found_version:
+            if omit_pattern and omit_pattern in commit_message:
+                continue
             matches = re.match(r"v?(\d+.\d+.\d+)", commit_message)
             if matches:
                 logger.debug(f"Version matches regex {commit_message}")
                 return matches.group(1).strip()
 
-    return get_last_version([version, get_formatted_tag(version)])
+    return get_last_version([version, get_formatted_tag(version)], omit_pattern=omit_pattern)
 
 
 @LoggedFunction(logger)
