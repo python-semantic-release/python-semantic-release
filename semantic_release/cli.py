@@ -18,7 +18,7 @@ from .history import (
     get_current_version,
     get_new_version,
     get_previous_version,
-    set_new_version
+    set_new_version,
 )
 from .history.logs import generate_changelog
 from .hvcs import (
@@ -66,12 +66,9 @@ COMMON_OPTIONS = [
     click.option(
         "--patch", "force_level", flag_value="patch", help="Force patch version."
     ),
-    click.option(
-        "--prerelease", is_flag=True, help="Creates a prerelease version."
-    ),
+    click.option("--prerelease", is_flag=True, help="Creates a prerelease version."),
     click.option("--post", is_flag=True, help="Post changelog."),
-    click.option("--retry", is_flag=True,
-                 help="Retry the same release, do not bump."),
+    click.option("--retry", is_flag=True, help="Retry the same release, do not bump."),
     click.option(
         "--noop",
         is_flag=True,
@@ -232,8 +229,7 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
                 owner,
                 name,
                 current_version,
-                markdown_changelog(
-                    owner, name, current_version, log, header=False),
+                markdown_changelog(owner, name, current_version, log, header=False),
             )
         else:
             logger.error("Missing token: cannot post changelog to HVCS")
@@ -253,8 +249,7 @@ def publish(retry: bool = False, noop: bool = False, prerelease=False, **kwargs)
         current_version = get_previous_version(current_version)
     else:
         # Calculate the new version
-        level_bump = evaluate_version_bump(
-            current_version, kwargs.get("force_level"))
+        level_bump = evaluate_version_bump(current_version, kwargs.get("force_level"))
         new_version = get_new_version(current_version, level_bump, prerelease)
 
     owner, name = get_repository_owner_and_name()

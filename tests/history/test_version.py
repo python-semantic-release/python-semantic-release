@@ -77,8 +77,7 @@ class TestGetPreviousVersion:
         lambda: [("211", "0.10.0"), ("13", "0.10.0-beta"), ("13", "0.9.0")],
     )
     def test_should_return_correct_version_skip_prerelease(self):
-        assert get_previous_version(
-            "0.10.0-beta", omit_pattern="-beta") == "0.9.0"
+        assert get_previous_version("0.10.0-beta", omit_pattern="-beta") == "0.9.0"
 
 
 class TestGetNewVersion:
@@ -111,8 +110,7 @@ class TestGetNewVersion:
 
     def test_prerelease_bump(self, mocker):
         mocker.patch(
-            "semantic_release.history.get_current_version",
-            return_value="1.0.0-beta.0"
+            "semantic_release.history.get_current_version", return_value="1.0.0-beta.0"
         )
         assert get_new_version("1.0.0", None, True) == "1.0.0-beta.1"
 

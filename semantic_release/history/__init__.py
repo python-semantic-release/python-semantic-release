@@ -237,7 +237,9 @@ def get_current_version(prerelease_version: bool = False) -> str:
 
 
 @LoggedFunction(logger)
-def get_new_version(current_version: str, level_bump: str, prerelease: bool = False) -> str:
+def get_new_version(
+    current_version: str, level_bump: str, prerelease: bool = False
+) -> str:
     """
     Calculate the next version based on the given bump level with semver.
 
@@ -249,16 +251,22 @@ def get_new_version(current_version: str, level_bump: str, prerelease: bool = Fa
     """
     if not level_bump:
         logger.debug("No bump requested, using input version")
-        new_version =  current_version
+        new_version = current_version
     else:
-        new_version = str(semver.VersionInfo.parse(current_version).next_version(part=level_bump))
+        new_version = str(
+            semver.VersionInfo.parse(current_version).next_version(part=level_bump)
+        )
 
     if prerelease:
         logger.debug("Prerelease requested")
-        potentialy_prereleased_current_version = get_current_version(prerelease_version=True)
+        potentialy_prereleased_current_version = get_current_version(
+            prerelease_version=True
+        )
         if get_prerelease_pattern() in potentialy_prereleased_current_version:
             logger.debug("Previouse prerelease detected, increment prerelease version")
-            prerelease_num = int(potentialy_prereleased_current_version.split(".")[-1]) + 1
+            prerelease_num = (
+                int(potentialy_prereleased_current_version.split(".")[-1]) + 1
+            )
         else:
             logger.debug("No previouse prerelease detected, starting from 0")
             prerelease_num = 0
@@ -291,7 +299,9 @@ def get_previous_version(version: str, omit_pattern: str = None) -> Optional[str
                 logger.debug(f"Version matches regex {commit_message}")
                 return matches.group(1).strip()
 
-    return get_last_version([version, get_formatted_tag(version)], omit_pattern=omit_pattern)
+    return get_last_version(
+        [version, get_formatted_tag(version)], omit_pattern=omit_pattern
+    )
 
 
 @LoggedFunction(logger)
