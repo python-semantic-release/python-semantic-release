@@ -95,8 +95,6 @@ def common_options(func):
         func = option(func)
     return func
 
-# TODO: prerelease publish
-
 
 def print_version(*, current=False, force_level=None, prerelease=False, **kwargs):
     """
@@ -120,8 +118,6 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
 
     print("No release will be made.", file=sys.stderr)
     return False
-
-# TODO: prerelease publish
 
 
 def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kwargs):
@@ -241,8 +237,6 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
             )
         else:
             logger.error("Missing token: cannot post changelog to HVCS")
-
-# TODO: prerelease publish
 
 
 def publish(retry: bool = False, noop: bool = False, prerelease=False, **kwargs):
@@ -407,8 +401,6 @@ def main(**kwargs):
         obj[key] = config.get(key)
     logger.debug(f"Main config: {obj}")
 
-# TODO: add --prerelease flag
-
 
 @main.command(name="publish", help=publish.__doc__)
 @common_options
@@ -433,8 +425,6 @@ def cmd_changelog(**kwargs):
         logger.error(filter_output_for_secrets(str(error)))
         exit(1)
 
-# TODO: add --prerelease flag
-
 
 @main.command(name="version", help=version.__doc__)
 @common_options
@@ -444,8 +434,6 @@ def cmd_version(**kwargs):
     except Exception as error:
         logger.error(filter_output_for_secrets(str(error)))
         exit(1)
-
-# TODO: add --prerelease flag
 
 
 @main.command(name="print-version", help=print_version.__doc__)
