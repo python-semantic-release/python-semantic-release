@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.26.0 (2022-03-07)
+### Feature
+* Add prerelease functionality ([#413](https://github.com/relekang/python-semantic-release/issues/413)) ([`7064265`](https://github.com/relekang/python-semantic-release/commit/7064265627a2aba09caa2873d823b594e0e23e77))
+
 ## v7.25.2 (2022-02-24)
 ### Fix
 * **gitea:** Use form-data from asset upload ([#421](https://github.com/relekang/python-semantic-release/issues/421)) ([`e011944`](https://github.com/relekang/python-semantic-release/commit/e011944987885f75b80fe16a363f4befb2519a91))
