@@ -98,7 +98,7 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
     Print the current or new version to standard output.
     """
     try:
-        current_version = get_current_version()
+        current_version = get_current_version(prerelease)
     except GitError as e:
         print(str(e), file=sys.stderr)
         return False
@@ -130,7 +130,7 @@ def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kw
 
     # Get the current version number
     try:
-        current_version = get_current_version()
+        current_version = get_current_version(prerelease)
         logger.info(f"Current version: {current_version}")
     except GitError as e:
         logger.error(str(e))
@@ -195,13 +195,13 @@ def bump_version(new_version, level_bump):
     logger.info(f"Bumping with a {level_bump} version to {new_version}")
 
 
-def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
+def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **kwargs):
     """
     Generate the changelog since the last release.
 
     :raises ImproperConfigurationError: if there is no current version
     """
-    current_version = get_current_version()
+    current_version = get_current_version(prerelease)
     if current_version is None:
         raise ImproperConfigurationError(
             "Unable to get the current version. "
@@ -235,9 +235,9 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
             logger.error("Missing token: cannot post changelog to HVCS")
 
 
-def publish(retry: bool = False, noop: bool = False, prerelease=False, **kwargs):
+def publish(retry: bool = False, noop: bool = False, prerelease: bool = False, **kwargs):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
-    current_version = get_current_version()
+    current_version = get_current_version(prerelease)
 
     verbose = logger.isEnabledFor(logging.DEBUG)
     if retry:
