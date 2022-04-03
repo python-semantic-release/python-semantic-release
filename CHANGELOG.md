@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.27.1 (2022-04-03)
+### Fix
+* **prerelase:** Pass prerelease option to get_current_version ([#432](https://github.com/relekang/python-semantic-release/issues/432)) ([`aabab0b`](https://github.com/relekang/python-semantic-release/commit/aabab0b7ce647d25e0c78ae6566f1132ece9fcb9))
+
 ## v7.27.0 (2022-03-15)
 ### Feature
 * Add git-lfs to docker container ([#427](https://github.com/relekang/python-semantic-release/issues/427)) ([`184e365`](https://github.com/relekang/python-semantic-release/commit/184e3653932979b82e5a62b497f2a46cbe15ba87))
