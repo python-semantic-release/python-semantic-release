@@ -235,7 +235,9 @@ def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **k
             logger.error("Missing token: cannot post changelog to HVCS")
 
 
-def publish(retry: bool = False, noop: bool = False, prerelease: bool = False, **kwargs):
+def publish(
+    retry: bool = False, noop: bool = False, prerelease: bool = False, **kwargs
+):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version(prerelease)
 
