@@ -6,7 +6,7 @@ import pytest
 from git import GitCommandError, Repo, TagObject
 
 from semantic_release.errors import GitError, HvcsRepoParseError
-from semantic_release.history import version_pattern
+from semantic_release.history import version_pattern, release_version_pattern
 from semantic_release.vcs_helpers import (
     check_repo,
     checkout,
@@ -354,6 +354,9 @@ def test_get_last_version(pattern, skip_tags, expected_result):
         (version_pattern, ["v2.1.0-beta.0"], "2.0.0"),
         (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v2.0.0"], "1.1.0"),
         (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
+        (release_version_pattern, None, "2.0.0"),
+        (release_version_pattern, ["v2.0.0"], "1.1.0"),
+        (release_version_pattern, ["v2.0.0", "v1.1.0", "v1.0.0", "v0.1.0"], None),
     ],
 )
 def test_get_last_version_with_real_pattern(pattern, skip_tags, expected_result):

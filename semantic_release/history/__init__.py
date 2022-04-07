@@ -25,7 +25,11 @@ from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 logger = logging.getLogger(__name__)
 
 
-version_pattern = f"(\d+.\d+.\d+(-{config.get('prerelease_tag')}.\d+)?)"
+prerelease_pattern = f"-{config.get('prerelease_tag')}.\d+"
+version_pattern = f"(\d+.\d+.\d+({prerelease_pattern})?)"
+release_version_pattern = f"(\d+.\d+.\d+(?!{prerelease_pattern}))"
+
+release_version_regex = rf"{release_version_pattern}"
 version_regex = rf"{version_pattern}"
 
 
@@ -194,6 +198,21 @@ def get_current_version_by_tag() -> str:
 
 
 @LoggedFunction(logger)
+def get_current_release_version_by_tag() -> str:
+    """
+    Find the current version of the package in the current working directory using git tags.
+
+    :return: A string with the version number or 0.0.0 on failure.
+    """
+    version = get_last_version(pattern=release_version_pattern)
+    if version:
+        return version
+
+    logger.debug("no version found, returning default of v0.0.0")
+    return "0.0.0"
+
+
+@LoggedFunction(logger)
 def get_current_version_by_config_file() -> str:
     """
     Get current version from the version variable defined in the configuration.
@@ -221,6 +240,7 @@ def get_current_version_by_config_file() -> str:
 def get_current_version() -> str:
     """
     Get current version from tag or version variable, depending on configuration.
+    This can be either a release or prerelease version
 
     :return: A string with the current version number
     """
@@ -228,6 +248,20 @@ def get_current_version() -> str:
         return get_current_version_by_tag()
     else:
         return get_current_version_by_config_file()
+
+
+def get_current_release_version() -> str:
+    """
+    Get current release version from tag or commit message (no going back in config file),
+    depending on configuration.
+    This will return the current release version (NOT prerelease), instead of just the current version
+
+    :return: A string with the current version number
+    """
+    if config.get("version_source") == "tag":
+        return get_current_release_version_by_tag()
+    else:
+        return get_current_release_version_by_commits()
 
 
 @LoggedFunction(logger)
@@ -290,6 +324,24 @@ def get_previous_version(version: str) -> Optional[str]:
                 return match.group(1).strip()
 
     return get_last_version(pattern=version_pattern, skip_tags=[version, get_formatted_tag(version)])
+
+
+@LoggedFunction(logger)
+def get_current_release_version_by_commits() -> str:
+    """
+    Return the current release version (NOT prerelease) version.
+
+    :return: A string with the current version number.
+    """
+    for commit_hash, commit_message in get_commit_log():
+        logger.debug(f"Checking commit {commit_hash}")
+        match = re.search(rf"{release_version_pattern}", commit_message)
+        if match:
+            logger.debug(f"Version matches regex {commit_message}")
+            return match.group(1).strip()
+
+    # nothing found, return the initial version
+    return "0.0.0"
 
 
 @LoggedFunction(logger)

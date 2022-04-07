@@ -118,12 +118,16 @@ def test_version_by_tag_only_with_commit_version_number_should_call_correct_func
     mock_current_version = mocker.patch(
         "semantic_release.cli.get_current_version", return_value="1.2.3"
     )
+    mock_current_release_version = mocker.patch(
+        "semantic_release.cli.get_current_release_version", return_value="1.2.3"
+    )
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once_with()
+    mock_current_release_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", "major", False)
+    mock_new_version.assert_called_once_with("1.2.3", "1.2.3", "major", False)
     assert not mock_set_new_version.called
     assert not mock_commit_new_version.called
     mock_tag_new_version.assert_called_once_with("2.0.0")
@@ -171,12 +175,16 @@ def test_version_by_tag_only_should_call_correct_functions(mocker):
     mock_current_version = mocker.patch(
         "semantic_release.cli.get_current_version", return_value="1.2.3"
     )
+    mock_current_release_version = mocker.patch(
+        "semantic_release.cli.get_current_release_version", return_value="1.2.3"
+    )
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once_with()
+    mock_current_release_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
-    mock_new_version.assert_called_once_with("1.2.3", "major", False)
+    mock_new_version.assert_called_once_with("1.2.3", "1.2.3", "major", False)
     assert not mock_set_new_version.called
     mock_tag_new_version.assert_called_once_with("2.0.0")
 

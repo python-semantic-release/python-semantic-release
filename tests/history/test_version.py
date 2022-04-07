@@ -13,6 +13,9 @@ from semantic_release.history import (
     get_current_version,
     get_current_version_by_config_file,
     get_current_version_by_tag,
+    get_current_release_version,
+    get_current_release_version_by_tag,
+    get_current_release_version_by_commits,
     get_new_version,
     get_previous_version,
     load_version_declarations,
@@ -38,9 +41,18 @@ def test_current_version_should_return_correct_version():
     assert get_current_version() == semantic_release.__version__
 
 
+def test_current_release_version_should_return_correct_version():
+    assert get_current_release_version() == semantic_release.__version__
+
+
 @mock.patch("semantic_release.history.get_last_version", return_value="last_version")
 def test_current_version_should_return_git_version(mock_last_version):
     assert "last_version" == get_current_version_by_tag()
+
+
+@mock.patch("semantic_release.history.get_last_version", return_value="last_version")
+def test_current_release_version_should_return_git_version(mock_last_version):
+    assert "last_version" == get_current_release_version_by_tag()
 
 
 @mock.patch(
@@ -68,6 +80,15 @@ def test_current_version_should_run_with_tag_only(mocker):
     assert not mock_get_current_version_by_config_file.called
 
 
+@mock.patch("semantic_release.history.get_last_version", return_value=None)
+@mock.patch("semantic_release.history.get_current_release_version_by_commits", return_value="0.0.0")
+def test_current_release_version_should_return_default_version(
+    mock_last_version,
+    mock_current_release_version_by_commits
+):
+    assert "0.0.0" == get_current_release_version()
+
+
 class TestGetPreviousVersion:
     @mock.patch(
         "semantic_release.history.get_commit_log",
@@ -78,7 +99,7 @@ class TestGetPreviousVersion:
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0"), ("13", "0.9.0")],
+        lambda: [("211", "v0.10.0"), ("13", "v0.9.0")],
     )
     def test_should_return_correct_version_with_v(self):
         assert get_previous_version("0.10.0") == "0.9.0"
@@ -96,6 +117,29 @@ class TestGetPreviousVersion:
     )
     def test_should_return_correct_version_skip_prerelease(self):
         assert get_previous_version("0.10.0-beta") == "0.9.0"
+
+
+class TestGetCurrentReleaseVersionByCommits:
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "0.9.0")],
+    )
+    def test_should_return_correct_version(self):
+        assert get_current_release_version_by_commits() == "0.9.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "v0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "v0.9.0")],
+    )
+    def test_should_return_correct_version_with_v(self):
+        assert get_current_release_version_by_commits() == "0.9.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.10.0-beta.0"), ("13", "0.9.0")],
+    )
+    def test_should_return_correct_version_from_prerelease(self):
+        assert get_current_release_version_by_commits() == "0.9.0"
 
 
 class TestGetNewVersion:
