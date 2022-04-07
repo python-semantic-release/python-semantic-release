@@ -144,33 +144,47 @@ class TestGetCurrentReleaseVersionByCommits:
 
 class TestGetNewVersion:
     def test_major_bump(self):
-        assert get_new_version("0.0.0", "major") == "1.0.0"
-        assert get_new_version("0.1.0", "major") == "1.0.0"
-        assert get_new_version("0.1.9", "major") == "1.0.0"
-        assert get_new_version("10.1.0", "major") == "11.0.0"
+        assert get_new_version("0.0.0", "0.0.0", "major") == "1.0.0"
+        assert get_new_version("0.1.0", "0.1.0", "major") == "1.0.0"
+        assert get_new_version("0.1.9", "0.1.9", "major") == "1.0.0"
+        assert get_new_version("10.1.0", "10.1.0", "major") == "11.0.0"
 
     def test_minor_bump(self):
-        assert type(get_new_version("0.0.0", "minor")) is str
-        assert get_new_version("0.0.0", "minor") == "0.1.0"
-        assert get_new_version("1.2.0", "minor") == "1.3.0"
-        assert get_new_version("1.2.1", "minor") == "1.3.0"
-        assert get_new_version("10.1.0", "minor") == "10.2.0"
+        assert type(get_new_version("0.0.0", "0.0.0", "minor")) is str
+        assert get_new_version("0.0.0", "0.0.0", "minor") == "0.1.0"
+        assert get_new_version("1.2.0", "1.2.0", "minor") == "1.3.0"
+        assert get_new_version("1.2.1", "1.2.1", "minor") == "1.3.0"
+        assert get_new_version("10.1.0", "10.1.0", "minor") == "10.2.0"
 
     def test_patch_bump(self):
-        assert get_new_version("0.0.0", "patch") == "0.0.1"
-        assert get_new_version("0.1.0", "patch") == "0.1.1"
-        assert get_new_version("10.0.9", "patch") == "10.0.10"
+        assert get_new_version("0.0.0", "0.0.0", "patch") == "0.0.1"
+        assert get_new_version("0.1.0", "0.1.0", "patch") == "0.1.1"
+        assert get_new_version("10.0.9", "10.0.9", "patch") == "10.0.10"
 
     def test_none_bump(self):
-        assert get_new_version("1.0.0", None) == "1.0.0"
+        assert get_new_version("1.0.0", "1.0.0", None) == "1.0.0"
 
     def test_prerelease(self):
-        assert get_new_version("1.0.0", None, True) == "1.0.1-beta.1"
-        assert get_new_version("1.0.0-beta.1", None, True) == "1.0.0-beta.2"
-        assert get_new_version("1.0.0-beta.1", "minor", True) == "1.0.0-beta.2"
-        assert get_new_version("1.0.0", "major", True) == "2.0.0-beta.1"
-        assert get_new_version("1.0.0", "minor", True) == "1.1.0-beta.1"
-        assert get_new_version("1.0.0", "patch", True) == "1.0.1-beta.1"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", None, True) == "1.0.1-beta.2"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.2"
+
+        assert get_new_version("1.0.0", "1.0.0", None, True) == "1.0.1-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", "patch", True) == "1.0.1-beta.1"
+
+        assert get_new_version("0.9.0-beta.1", "1.0.0", None, True) == "1.0.1-beta.1"
+        assert get_new_version("0.9.0-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("0.9.0-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("0.9.0-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.1"
+
+        with pytest.raises(ValueError):
+            get_new_version("0.9.0", "1.0.0", None, True)
+
+        with pytest.raises(ValueError):
+            get_new_version("1.0.0", "0.9.0", None, True)
 
 
 @mock.patch(

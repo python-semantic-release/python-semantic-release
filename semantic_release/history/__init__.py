@@ -266,7 +266,7 @@ def get_current_release_version() -> str:
 
 @LoggedFunction(logger)
 def get_new_version(
-    current_version: str, level_bump: str, prerelease: bool = False
+    current_version: str, current_release_version: str, level_bump: str, prerelease: bool = False
 ) -> str:
     """
     Calculate the next version based on the given bump level with semver.
@@ -277,28 +277,42 @@ def get_new_version(
     :param prerelease: Should the version bump be marked as a prerelease
     :return: A string with the next version number.
     """
+    # pre or release version
     current_version_info = semver.VersionInfo.parse(current_version)
-    if prerelease and current_version_info.prerelease:
-        logger.debug("NextVersion: Prerelease from prerelease version (level_bump ignored)")
-        new_version = str(
-            semver.VersionInfo.parse(current_version).bump_prerelease(config.get("prerelease_tag"))
-        )
-    elif prerelease and not current_version_info.prerelease:
-        logger.debug("NextVersion: Prerelease from normal version (level_bump used)")
-        bump = level_bump or "patch"
-        new_version = str(
-            semver.VersionInfo.parse(current_version).next_version(part=bump).bump_prerelease(config.get("prerelease_tag"))
-        )
-    elif not level_bump:
-        logger.debug("NextVersion: Normal version bump with no level_bump - version unchanged")
-        new_version = current_version
-    else:
-        logger.debug("NextVersion: Normal version bump (level_bump ignored)")
-        new_version = str(
-            semver.VersionInfo.parse(current_version).next_version(part=level_bump)
-        )
+    # release version
+    current_release_version_info = semver.VersionInfo.parse(current_release_version)
 
-    return new_version
+    # sanity check
+    # if the current version is no prerelease, than
+    # current_version and current_release_version must be the same
+    if not current_version_info.prerelease and current_version_info.compare(current_release_version_info) != 0:
+        raise ValueError()
+
+    if level_bump:
+        next_version_info = current_release_version_info.next_version(level_bump)
+    elif prerelease:
+        # we do at least a patch for prereleases
+        next_version_info = current_release_version_info.next_version("patch")
+    else:
+        next_version_info = current_release_version_info
+
+    if prerelease:
+        next_raw_version = next_version_info.to_tuple()[:3]
+        current_raw_version = current_version_info.to_tuple()[:3]
+
+        if current_version_info.prerelease and next_raw_version == current_raw_version:
+            # next version (based on commits) matches current prerelease version
+            # bump prerelase
+            next_prerelease_version_info = current_version_info.bump_prerelease(config.get("prerelease_tag"))
+        else:
+            # next version (based on commits) higher than current prerelease version
+            # new prerelease based on next version
+            next_prerelease_version_info = next_version_info.bump_prerelease(config.get("prerelease_tag"))
+
+        return str(next_prerelease_version_info)
+    else:
+        # normal version bump
+        return str(next_version_info)
 
 
 @LoggedFunction(logger)
@@ -324,6 +338,31 @@ def get_previous_version(version: str) -> Optional[str]:
                 return match.group(1).strip()
 
     return get_last_version(pattern=version_pattern, skip_tags=[version, get_formatted_tag(version)])
+
+
+@LoggedFunction(logger)
+def get_previous_release_version(version: str) -> Optional[str]:
+    """
+    Return the version prior to the given version.
+
+    :param version: A string with the version number.
+    :return: A string with the previous version number.
+    """
+    found_version = False
+    for commit_hash, commit_message in get_commit_log():
+        logger.debug(f"Checking commit {commit_hash}")
+        if version in commit_message:
+            found_version = True
+            logger.debug(f'Found version in commit "{commit_message}"')
+            continue
+
+        if found_version:
+            match = re.search(rf"{release_version_pattern}", commit_message)
+            if match:
+                logger.debug(f"Version matches regex {commit_message}")
+                return match.group(1).strip()
+
+    return get_last_version(pattern=release_version_pattern, skip_tags=[version, get_formatted_tag(version)])
 
 
 @LoggedFunction(logger)

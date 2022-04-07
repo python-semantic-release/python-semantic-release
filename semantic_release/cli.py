@@ -16,8 +16,10 @@ from .dist import build_dists, remove_dists, should_build, should_remove_dist
 from .history import (
     evaluate_version_bump,
     get_current_version,
+    get_current_release_version,
     get_new_version,
     get_previous_version,
+    get_previous_release_version,
     set_new_version,
 )
 from .history.logs import generate_changelog
@@ -99,6 +101,8 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
     """
     try:
         current_version = get_current_version()
+        current_release_version = get_current_release_version()
+        logger.info(f"Current version: {current_version}, Current release version: {current_release_version}")
     except GitError as e:
         print(str(e), file=sys.stderr)
         return False
@@ -108,7 +112,7 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
 
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, force_level)
-    new_version = get_new_version(current_version, level_bump, prerelease)
+    new_version = get_new_version(current_version, current_release_version, level_bump, prerelease)
     if should_bump_version(current_version=current_version, new_version=new_version):
         print(new_version, end="")
         return True
@@ -131,14 +135,14 @@ def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kw
     # Get the current version number
     try:
         current_version = get_current_version()
-        logger.info(f"Current version: {current_version}")
+        current_release_version = get_current_release_version()
+        logger.info(f"Current version: {current_version}, Current release version: {current_release_version}")
     except GitError as e:
         logger.error(str(e))
         return False
     # Find what the new version number should be
-    # TODO: depending on prerelease or not we have to do this differently
-    level_bump = evaluate_version_bump(current_version, force_level)
-    new_version = get_new_version(current_version, level_bump, prerelease)
+    level_bump = evaluate_version_bump(current_release_version, force_level)
+    new_version = get_new_version(current_version, current_release_version, level_bump, prerelease)
 
     if not should_bump_version(
         current_version=current_version, new_version=new_version, retry=retry, noop=noop
@@ -247,6 +251,8 @@ def publish(
 ):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
+    current_release_version = get_current_release_version()
+    logger.info(f"Current version: {current_version}, Current release version: {current_release_version}")
 
     verbose = logger.isEnabledFor(logging.DEBUG)
     if retry:
@@ -255,11 +261,11 @@ def publish(
         # "current" version will be the previous version.
         level_bump = None
         new_version = current_version
-        current_version = get_previous_version(current_version)
+        current_version = get_previous_release_version(current_version)
     else:
         # Calculate the new version
         level_bump = evaluate_version_bump(current_version, kwargs.get("force_level"))
-        new_version = get_new_version(current_version, level_bump, prerelease)
+        new_version = get_new_version(current_version, current_release_version, level_bump, prerelease)
 
     owner, name = get_repository_owner_and_name()
 
