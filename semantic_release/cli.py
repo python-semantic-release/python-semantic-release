@@ -98,7 +98,7 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
     Print the current or new version to standard output.
     """
     try:
-        current_version = get_current_version(prerelease)
+        current_version = get_current_version()
     except GitError as e:
         print(str(e), file=sys.stderr)
         return False
@@ -130,12 +130,13 @@ def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kw
 
     # Get the current version number
     try:
-        current_version = get_current_version(prerelease)
+        current_version = get_current_version()
         logger.info(f"Current version: {current_version}")
     except GitError as e:
         logger.error(str(e))
         return False
     # Find what the new version number should be
+    # TODO: depending on prerelease or not we have to do this differently
     level_bump = evaluate_version_bump(current_version, force_level)
     new_version = get_new_version(current_version, level_bump, prerelease)
 
@@ -207,7 +208,7 @@ def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **k
 
     :raises ImproperConfigurationError: if there is no current version
     """
-    current_version = get_current_version(prerelease)
+    current_version = get_current_version()
     if current_version is None:
         raise ImproperConfigurationError(
             "Unable to get the current version. "
@@ -245,7 +246,7 @@ def publish(
     retry: bool = False, noop: bool = False, prerelease: bool = False, **kwargs
 ):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
-    current_version = get_current_version(prerelease)
+    current_version = get_current_version()
 
     verbose = logger.isEnabledFor(logging.DEBUG)
     if retry:

@@ -63,7 +63,7 @@ def get_commit_log(from_rev=None):
 
 @check_repo
 @LoggedFunction(logger)
-def get_last_version(skip_tags=None, omit_pattern=None) -> Optional[str]:
+def get_last_version(pattern, skip_tags=None) -> Optional[str]:
     """
     Find the latest version using repo tags.
 
@@ -77,29 +77,13 @@ def get_last_version(skip_tags=None, omit_pattern=None) -> Optional[str]:
         return tag.commit.committed_date
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
-        match = re.search(r"\d+\.\d+\.\d+", i.name)
+        if i.name in skip_tags:
+            continue
+
+        match = re.search(rf"{pattern}", i.name)
         if match:
-            # check if the omit pattern is present in the tag (e.g. -beta for pre-release tags)
-            if omit_pattern and omit_pattern in i.name:
-                continue
-            if i.name not in skip_tags:
-                return match.group(0)  # Return only numeric vesion like 1.2.3
+            return match.group(0).strip()  # Return only numeric vesion like 1.2.3
 
-    return None
-
-
-@check_repo
-@LoggedFunction(logger)
-def get_version_from_tag(tag_name: str) -> Optional[str]:
-    """
-    Get the git commit hash corresponding to a tag name.
-
-    :param tag_name: Name of the git tag (i.e. 'v1.0.0')
-    :return: sha1 hash of the commit
-    """
-    for i in repo.tags:
-        if i.name == tag_name:
-            return i.commit.hexsha
     return None
 
 

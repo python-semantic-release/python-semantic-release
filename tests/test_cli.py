@@ -51,7 +51,7 @@ def test_version_by_commit_should_call_correct_functions(mocker):
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
@@ -86,7 +86,7 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
@@ -148,7 +148,7 @@ def test_version_by_tag_should_call_correct_functions(mocker):
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
@@ -201,7 +201,7 @@ def test_version_by_commit_without_tag_should_call_correct_functions(mocker):
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
@@ -372,7 +372,7 @@ def test_print_version_no_change(mocker, runner, capsys):
     assert outerr.out == ""
     assert outerr.err == "No release will be made.\n"
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", None, False)
 
@@ -390,7 +390,7 @@ def test_print_version_change(mocker, runner, capsys):
     assert outerr.out == "1.3.0"
     assert outerr.err == ""
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
 
 
@@ -404,10 +404,10 @@ def test_print_version_change_prerelease(mocker, runner, capsys):
 
     print_version(prerelease=True)
     outerr = capsys.readouterr()
-    assert outerr.out == "1.3.0-beta.0"
+    assert outerr.out == "1.3.0-beta.1"
     assert outerr.err == ""
 
-    mock_current_version.assert_called_once_with(True)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
 
 
@@ -427,7 +427,6 @@ def test_print_version_change_prerelease_bump(mocker, runner, capsys):
     assert outerr.out == "1.3.0-beta.1"
     assert outerr.err == ""
 
-    mock_current_version.assert_called_once_with(prerelease_version=True)
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
 
 
@@ -444,7 +443,7 @@ def test_print_version_force_major(mocker, runner, capsys):
     assert outerr.out == "2.0.0"
     assert outerr.err == ""
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", "major")
 
 
@@ -458,7 +457,7 @@ def test_print_version_force_major_prerelease(mocker, runner, capsys):
 
     print_version(force_level="major", prerelease=True)
     outerr = capsys.readouterr()
-    assert outerr.out == "2.0.0-beta.0"
+    assert outerr.out == "2.0.0-beta.1"
     assert outerr.err == ""
 
     mock_current_version.assert_called_once()
@@ -481,7 +480,7 @@ def test_version_no_change(mocker, runner):
 
     version()
 
-    mock_current_version.assert_called_once_with(False)
+    mock_current_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", None, False)
     assert not mock_set_new_version.called
@@ -609,7 +608,7 @@ def test_version_retry(mocker):
     result = version(noop=False, retry=True, force_level=False)
 
     assert result
-    mock_get_current.assert_called_once_with(False)
+    mock_get_current.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("current", False)
     mock_get_new.assert_called_once_with("current", "patch", False)
 
@@ -904,7 +903,7 @@ def test_publish_retry_version_fail(mocker):
 
     publish(noop=False, retry=True, force_level=False)
 
-    mock_get_current.assert_called_once_with(False)
+    mock_get_current.assert_called_once()
     mock_get_previous.assert_called_once_with("current")
     mock_get_owner_name.assert_called_once_with()
     mock_ci_check.assert_called()
@@ -950,7 +949,7 @@ def test_publish_bad_token(mocker):
 
     publish(noop=False, retry=True, force_level=False)
 
-    mock_get_current.assert_called_once_with(False)
+    mock_get_current.assert_called_once()
     mock_get_previous.assert_called_once_with("current")
     mock_get_owner_name.assert_called_once_with()
     mock_ci_check.assert_called()
@@ -1024,7 +1023,7 @@ def test_publish_giterror_when_posting(mocker):
 
     publish(noop=False, retry=False, force_level=False)
 
-    mock_get_current.assert_called_once_with(False)
+    mock_get_current.assert_called_once()
     mock_evaluate.assert_called_once_with("current", False)
     mock_get_new.assert_called_once_with("current", "patch", False)
     mock_get_owner_name.assert_called_once_with()

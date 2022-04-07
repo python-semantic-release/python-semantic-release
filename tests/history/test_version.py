@@ -95,7 +95,7 @@ class TestGetPreviousVersion:
         lambda: [("211", "0.10.0"), ("13", "0.10.0-beta"), ("13", "0.9.0")],
     )
     def test_should_return_correct_version_skip_prerelease(self):
-        assert get_previous_version("0.10.0-beta", omit_pattern="-beta") == "0.9.0"
+        assert get_previous_version("0.10.0-beta") == "0.9.0"
 
 
 class TestGetNewVersion:
@@ -121,16 +121,12 @@ class TestGetNewVersion:
         assert get_new_version("1.0.0", None) == "1.0.0"
 
     def test_prerelease(self):
-        assert get_new_version("1.0.0", None, True) == "1.0.0-beta.0"
-        assert get_new_version("1.0.0", "major", True) == "2.0.0-beta.0"
-        assert get_new_version("1.0.0", "minor", True) == "1.1.0-beta.0"
-        assert get_new_version("1.0.0", "patch", True) == "1.0.1-beta.0"
-
-    def test_prerelease_bump(self, mocker):
-        mocker.patch(
-            "semantic_release.history.get_current_version", return_value="1.0.0-beta.0"
-        )
-        assert get_new_version("1.0.0", None, True) == "1.0.0-beta.1"
+        assert get_new_version("1.0.0", None, True) == "1.0.1-beta.1"
+        assert get_new_version("1.0.0-beta.1", None, True) == "1.0.0-beta.2"
+        assert get_new_version("1.0.0-beta.1", "minor", True) == "1.0.0-beta.2"
+        assert get_new_version("1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("1.0.0", "patch", True) == "1.0.1-beta.1"
 
 
 @mock.patch(
@@ -153,7 +149,7 @@ class TestVersionPattern:
             (
                 "path:__version__",
                 Path("path"),
-                r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
+                r'__version__ *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']',
             ),
         ],
     )
@@ -166,7 +162,7 @@ class TestVersionPattern:
         "str, path, pattern",
         [
             ("path:pattern", Path("path"), r"pattern"),
-            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+(?:\.\d+)?)"),
+            ("path:Version: {version}", Path("path"), r"Version: (\d+.\d+.\d+(-beta.\d+)?)"),
         ],
     )
     def test_from_pattern(self, str, path, pattern):
@@ -353,7 +349,7 @@ class TestVersionPattern:
                         version_variable = "path:__version__"
                         """,
             patterns=[
-                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path"), r'__version__ *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -362,8 +358,8 @@ class TestVersionPattern:
                         version_variable = "path1:var1,path2:var2"
                         """,
             patterns=[
-                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -375,8 +371,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
             ],
         ),
         dict(

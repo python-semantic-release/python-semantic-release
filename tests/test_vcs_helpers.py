@@ -6,6 +6,7 @@ import pytest
 from git import GitCommandError, Repo, TagObject
 
 from semantic_release.errors import GitError, HvcsRepoParseError
+from semantic_release.history import version_pattern
 from semantic_release.vcs_helpers import (
     check_repo,
     checkout,
@@ -14,7 +15,6 @@ from semantic_release.vcs_helpers import (
     get_current_head_hash,
     get_last_version,
     get_repository_owner_and_name,
-    get_version_from_tag,
     push_new_version,
     tag_new_version,
     update_additional_files,
@@ -310,14 +310,14 @@ def test_checkout_should_checkout_correct_branch(mock_git):
 
 
 @pytest.mark.parametrize(
-    "skip_tags,expected_result",
+    "pattern, skip_tags,expected_result",
     [
-        (None, "2.0.0"),
-        (["v2.0.0"], "1.1.0"),
-        (["v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
+        ("\d+.\d+.\d+", None, "2.0.0"),
+        ("\d+.\d+.\d+", ["v2.0.0"], "1.1.0"),
+        ("\d+.\d+.\d+", ["v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
     ],
 )
-def test_get_last_version(skip_tags, expected_result):
+def test_get_last_version(pattern, skip_tags, expected_result):
     class FakeCommit:
         def __init__(self, com_date):
             self.committed_date = com_date
@@ -345,18 +345,19 @@ def test_get_last_version(skip_tags, expected_result):
             FakeTag("v1.0.0", "bbbbbbbbbbbbbbbbbbbb", 2, False),
         ]
     )
-    assert expected_result == get_last_version(skip_tags)
-
+    assert expected_result == get_last_version(pattern, skip_tags)
 
 @pytest.mark.parametrize(
-    "skip_tags,expected_result",
+    "pattern, skip_tags,expected_result",
     [
-        (None, "2.0.0"),
-        (["v2.0.0"], "1.1.0"),
-        (["v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
+        (version_pattern, None, "2.1.0-beta.0"),
+        (version_pattern, ["v2.1.0-beta.0"], "2.0.0"),
+        (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v2.0.0"], "1.1.0"),
+        (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
     ],
 )
-def test_get_last_version_with_omit_pattern(skip_tags, expected_result):
+def test_get_last_version_with_real_pattern(pattern, skip_tags, expected_result):
+    # TODO: add some prerelease tags
     class FakeCommit:
         def __init__(self, com_date):
             self.committed_date = com_date
@@ -379,43 +380,14 @@ def test_get_last_version_with_omit_pattern(skip_tags, expected_result):
         return_value=[
             FakeTag("v0.1.0", "aaaaaaaaaaaaaaaaaaaa", 1, True),
             FakeTag("v2.0.0", "dddddddddddddddddddd", 5, True),
-            FakeTag("v2.1.0-beta", "ffffffffffffffffffff", 7, True),
+            FakeTag("v2.1.0-beta.0", "ffffffffffffffffffff", 7, True),
             FakeTag("badly_formatted", "eeeeeeeeeeeeeeeeeeee", 6, False),
-            FakeTag("v2.0.0-beta", "ffffffffffffffffffff", 4, True),
+            FakeTag("v2.0.0-beta.0", "ffffffffffffffffffff", 4, True),
             FakeTag("v1.1.0", "cccccccccccccccccccc", 3, True),
             FakeTag("v1.0.0", "bbbbbbbbbbbbbbbbbbbb", 2, False),
         ]
     )
-    assert expected_result == get_last_version(skip_tags, omit_pattern="-beta")
-
-
-@pytest.mark.parametrize(
-    "tag_name,expected_version",
-    [
-        ("v0.1.0", "aaaaa"),
-        ("v1.0.0", "bbbbb"),
-        ("v2.0.0", None),
-    ],
-)
-def test_get_version_from_tag(tag_name, expected_version):
-    class FakeCommit:
-        def __init__(self, sha):
-            self.hexsha = sha
-
-    class FakeTag:
-        def __init__(self, name, sha):
-            self.name = name
-            self.commit = FakeCommit(sha)
-
-    mock.patch("semantic_release.vcs_helpers.check_repo")
-    git.repo.base.Repo.tags = mock.PropertyMock(
-        return_value=[
-            FakeTag("v0.1.0", "aaaaa"),
-            FakeTag("v1.0.0", "bbbbb"),
-            FakeTag("v1.1.0", "ccccc"),
-        ]
-    )
-    assert expected_version == get_version_from_tag(tag_name)
+    assert expected_result == get_last_version(pattern, skip_tags)
 
 
 def test_update_changelog_file_ok(mock_git, mocker):
