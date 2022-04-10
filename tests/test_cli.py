@@ -54,8 +54,8 @@ def test_version_by_commit_should_call_correct_functions(mocker):
     mock_current_version.assert_called_once_with(False)
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
-    mock_set_new_version.assert_called_once_with("2.0.0")
-    mock_commit_new_version.assert_called_once_with("2.0.0")
+    mock_set_new_version.assert_not_called()
+    mock_commit_new_version.assert_not_called()
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
 
@@ -89,8 +89,8 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
     mock_current_version.assert_called_once_with(False)
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
-    mock_set_new_version.assert_called_once_with("2.0.0")
-    mock_commit_new_version.assert_called_once_with("2.0.0")
+    mock_set_new_version.assert_not_called()
+    mock_commit_new_version.assert_not_called()
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
 
@@ -116,7 +116,7 @@ def test_version_by_tag_should_call_correct_functions(mocker):
     mock_current_version.assert_called_once_with(False)
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
-    mock_set_new_version.assert_called_once_with("2.0.0")
+    mock_set_new_version.assert_not_called()
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
 
@@ -459,7 +459,7 @@ def test_version_by_commit_check_build_status_succeeds(mocker):
     version()
 
     assert mock_check_build_status.called
-    assert mock_set_new.called
+    assert not mock_set_new.called
     assert mock_commit_new.called
     assert mock_tag_new_version.called
 
@@ -483,7 +483,7 @@ def test_version_by_tag_check_build_status_succeeds(mocker):
     version()
 
     assert mock_check_build_status.called
-    assert mock_set_new_version.called
+    assert not mock_set_new_version.called
     assert mock_tag_new_version.called
 
 
