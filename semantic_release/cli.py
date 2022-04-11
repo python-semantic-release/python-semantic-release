@@ -200,8 +200,6 @@ def bump_version(new_version, level_bump):
     if config.get("version_source") == "tag" or config.get("tag_commit"):
         tag_new_version(new_version)
 
-    logger.info(f"Bumping with a {level_bump} version to {new_version}")
-
 
 def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **kwargs):
     """
