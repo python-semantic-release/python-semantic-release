@@ -207,7 +207,7 @@ class TestVersionPattern:
             (
                 "path:__version__",
                 Path("path"),
-                r'__version__ *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']',
+                r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']',
             ),
         ],
     )
@@ -220,7 +220,7 @@ class TestVersionPattern:
         "str, path, pattern",
         [
             ("path:pattern", Path("path"), r"pattern"),
-            ("path:Version: {version}", Path("path"), r"Version: (\d+.\d+.\d+(-beta.\d+)?)"),
+            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+\.\d+(-beta\.\d+)?)"),
         ],
     )
     def test_from_pattern(self, str, path, pattern):
@@ -407,7 +407,7 @@ class TestVersionPattern:
                         version_variable = "path:__version__"
                         """,
             patterns=[
-                (Path("path"), r'__version__ *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
+                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -416,8 +416,8 @@ class TestVersionPattern:
                         version_variable = "path1:var1,path2:var2"
                         """,
             patterns=[
-                (Path("path1"), r'var1 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
-                (Path("path2"), r'var2 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -429,8 +429,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                (Path("path1"), r'var1 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
-                (Path("path2"), r'var2 *[:=] *["\'](\d+.\d+.\d+(-beta.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
             ],
         ),
         dict(
