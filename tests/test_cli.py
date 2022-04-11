@@ -94,6 +94,41 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
 
+def test_version_by_tag_only_with_commit_version_number_should_call_correct_functions(
+    mocker,
+):
+
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            version_source="tag_only",
+            commit_version_number=True,
+        ),
+    )
+
+    mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
+    mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
+    mock_commit_new_version = mocker.patch("semantic_release.cli.commit_new_version")
+    mock_new_version = mocker.patch(
+        "semantic_release.cli.get_new_version", return_value="2.0.0"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="major"
+    )
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="1.2.3"
+    )
+
+    version()
+
+    mock_current_version.assert_called_once_with(False)
+    mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+    mock_new_version.assert_called_once_with("1.2.3", "major", False)
+    assert not mock_set_new_version.called
+    assert not mock_commit_new_version.called
+    mock_tag_new_version.assert_called_once_with("2.0.0")
+
+
 def test_version_by_tag_should_call_correct_functions(mocker):
     mocker.patch(
         "semantic_release.cli.config.get",
@@ -117,6 +152,32 @@ def test_version_by_tag_should_call_correct_functions(mocker):
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
     mock_new_version.assert_called_once_with("1.2.3", "major", False)
     mock_set_new_version.assert_called_once_with("2.0.0")
+    mock_tag_new_version.assert_called_once_with("2.0.0")
+
+
+def test_version_by_tag_only_should_call_correct_functions(mocker):
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(version_source="tag_only"),
+    )
+    mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
+    mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
+    mock_new_version = mocker.patch(
+        "semantic_release.cli.get_new_version", return_value="2.0.0"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="major"
+    )
+    mock_current_version = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="1.2.3"
+    )
+
+    version()
+
+    mock_current_version.assert_called_once_with(False)
+    mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+    mock_new_version.assert_called_once_with("1.2.3", "major", False)
+    assert not mock_set_new_version.called
     mock_tag_new_version.assert_called_once_with("2.0.0")
 
 
@@ -484,6 +545,29 @@ def test_version_by_tag_check_build_status_succeeds(mocker):
 
     assert mock_check_build_status.called
     assert mock_set_new_version.called
+    assert mock_tag_new_version.called
+
+
+def test_version_by_tag_only_check_build_status_succeeds(mocker):
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(
+            version_source="tag_only",
+            commit_version_number=False,
+            check_build_status=True,
+        ),
+    )
+    mock_check_build_status = mocker.patch(
+        "semantic_release.cli.check_build_status", return_value=True
+    )
+    mock_set_new_version = mocker.patch("semantic_release.cli.set_new_version")
+    mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
+    mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "major")
+
+    version()
+
+    assert mock_check_build_status.called
+    assert not mock_set_new_version.called
     assert mock_tag_new_version.called
 
 
