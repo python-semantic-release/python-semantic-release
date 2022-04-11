@@ -92,6 +92,9 @@ The way we get and set the new version. Can be `commit` or `tag`.
   This won't change the source defined in :ref:`config-version_variable`.
 - If set to `commit`, will get the current version from the source defined in
   :ref:`config-version_variable`, edit the file and commit it.
+- If set to `tag_only`, then `version_variable` is ignored and no changes are made or committed to local
+  config files. The current version from the latest tag matching ``vX.Y.Z``.
+  This won't change the source defined in :ref:`config-version_variable`.
 
 Default: `commit`
 
