@@ -184,7 +184,7 @@ def bump_version(new_version, level_bump):
     Edit in the source code, commit and create a git tag.
     """
     logger.info(f"Bumping with a {level_bump} version to {new_version}")
-    if config.get("version_source") == "tag" or config.get("tag_commit"):
+    if config.get("version_source") == "tag_only":
         tag_new_version(new_version)
 
         # we are done, no need for file changes if we are using
@@ -197,6 +197,10 @@ def bump_version(new_version, level_bump):
         config.get("version_source") == "commit",
     ):
         commit_new_version(new_version)
+    if config.get("version_source") == "tag" or config.get("tag_commit"):
+        tag_new_version(new_version)
+
+    logger.info(f"Bumping with a {level_bump} version to {new_version}")
 
 
 def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **kwargs):
