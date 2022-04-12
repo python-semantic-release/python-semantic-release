@@ -141,6 +141,13 @@ class TestGetCurrentReleaseVersionByCommits:
     def test_should_return_correct_version_from_prerelease(self):
         assert get_current_release_version_by_commits() == "0.9.0"
 
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "7.28.0"), ("13", "7.27.0")],
+    )
+    def test_should_return_correct_version_without_prerelease(self):
+        assert get_current_release_version_by_commits() == "7.28.0"
+
 
 class TestGetNewVersion:
     def test_major_bump(self):
