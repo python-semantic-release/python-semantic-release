@@ -50,6 +50,19 @@ def test_current_version_should_return_default_version(mock_last_version):
     assert "0.0.0" == get_current_version()
 
 
+@mock.patch(
+    "semantic_release.history.config.get", wrapped_config_get(version_source="tag_only")
+)
+def test_current_version_should_run_with_tag_only(mocker):
+    mock_get_current_version_by_tag = mocker.patch(
+        "semantic_release.history.get_current_version_by_tag", return_value=None
+    )
+
+    get_current_version()
+
+    assert mock_get_current_version_by_tag.called
+
+
 class TestGetPreviousVersion:
     @mock.patch(
         "semantic_release.history.get_commit_log",
