@@ -16,6 +16,7 @@ from semantic_release.history import (
     get_previous_version,
     load_version_declarations,
     set_new_version,
+    get_current_version_by_config_file,
 )
 
 from .. import wrapped_config_get
@@ -48,6 +49,23 @@ def test_current_version_should_return_git_version(mock_last_version):
 @mock.patch("semantic_release.history.get_last_version", return_value=None)
 def test_current_version_should_return_default_version(mock_last_version):
     assert "0.0.0" == get_current_version()
+
+
+@mock.patch(
+    "semantic_release.history.config.get", wrapped_config_get(version_source="tag_only")
+)
+def test_current_version_should_run_with_tag_only(mocker):
+    mock_get_current_version_by_tag = mocker.patch(
+        "semantic_release.history.get_current_version_by_tag", return_value=None
+    )
+    mock_get_current_version_by_config_file = mocker.patch(
+        "semantic_release.history.get_current_version_by_config_file", return_value=None
+    )
+
+    get_current_version()
+
+    assert mock_get_current_version_by_tag.called
+    assert not mock_get_current_version_by_config_file.called
 
 
 class TestGetPreviousVersion:

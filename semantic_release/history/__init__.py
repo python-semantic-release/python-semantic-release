@@ -228,7 +228,7 @@ def get_current_version(prerelease_version: bool = False) -> str:
     :return: A string with the current version number
     """
     omit_pattern = None if prerelease_version else get_prerelease_pattern()
-    if config.get("version_source") == "tag":
+    if config.get("version_source") in ["tag", "tag_only"]:
         return get_current_version_by_tag(omit_pattern)
     current_version = get_current_version_by_config_file(omit_pattern)
     if omit_pattern and omit_pattern in current_version:
