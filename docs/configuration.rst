@@ -538,3 +538,14 @@ Variable          Contents
 ================  ========
 
 Default: ``v{version}``
+
+.. _config-ignore_token_for_push:
+
+``ignore_token_for_push``
+-------------------------
+Do not use the default auth token to push changes to the repository. Use the system
+configured method.
+This is useful if the auth token does not have permission to push, but the system method
+(an ssh deploy key for instance) does.
+
+Default: `false`
