@@ -78,7 +78,7 @@ jobs:
         run: python -m isort -y -rc .
 
       - name: Commit and push changes
-        uses: github-actions-x/commit@v2.5
+        uses: github-actions-x/commit@v2.9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'style: beautify ${{ github.sha }}'
