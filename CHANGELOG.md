@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.28.1 (2022-04-14)
+### Fix
+* Fix getting current version when `version_source=tag_only` ([#437](https://github.com/relekang/python-semantic-release/issues/437)) ([`b247936`](https://github.com/relekang/python-semantic-release/commit/b247936a81c0d859a34bf9f17ab8ca6a80488081))
+
 ## v7.28.0 (2022-04-11)
 ### Feature
 * Add `tag_only` option for `version_source` ([#436](https://github.com/relekang/python-semantic-release/issues/436)) ([`cf74339`](https://github.com/relekang/python-semantic-release/commit/cf743395456a86c62679c2c0342502af043bfc3b))
