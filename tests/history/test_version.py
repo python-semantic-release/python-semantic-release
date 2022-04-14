@@ -11,12 +11,12 @@ from semantic_release.history import (
     TomlVersionDeclaration,
     VersionDeclaration,
     get_current_version,
+    get_current_version_by_config_file,
     get_current_version_by_tag,
     get_new_version,
     get_previous_version,
     load_version_declarations,
     set_new_version,
-    get_current_version_by_config_file,
 )
 
 from .. import wrapped_config_get
