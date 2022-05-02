@@ -13,6 +13,9 @@ from semantic_release.history import (
     get_current_version,
     get_current_version_by_config_file,
     get_current_version_by_tag,
+    get_current_release_version,
+    get_current_release_version_by_tag,
+    get_current_release_version_by_commits,
     get_new_version,
     get_previous_version,
     load_version_declarations,
@@ -38,9 +41,18 @@ def test_current_version_should_return_correct_version():
     assert get_current_version() == semantic_release.__version__
 
 
+def test_current_release_version_should_return_correct_version():
+    assert get_current_release_version() == semantic_release.__version__
+
+
 @mock.patch("semantic_release.history.get_last_version", return_value="last_version")
 def test_current_version_should_return_git_version(mock_last_version):
     assert "last_version" == get_current_version_by_tag()
+
+
+@mock.patch("semantic_release.history.get_last_version", return_value="last_version")
+def test_current_release_version_should_return_git_version(mock_last_version):
+    assert "last_version" == get_current_release_version_by_tag()
 
 
 @mock.patch(
@@ -68,6 +80,15 @@ def test_current_version_should_run_with_tag_only(mocker):
     assert not mock_get_current_version_by_config_file.called
 
 
+@mock.patch("semantic_release.history.get_last_version", return_value=None)
+@mock.patch("semantic_release.history.get_current_release_version_by_commits", return_value="0.0.0")
+def test_current_release_version_should_return_default_version(
+    mock_last_version,
+    mock_current_release_version_by_commits
+):
+    assert "0.0.0" == get_current_release_version()
+
+
 class TestGetPreviousVersion:
     @mock.patch(
         "semantic_release.history.get_commit_log",
@@ -78,7 +99,7 @@ class TestGetPreviousVersion:
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0"), ("13", "0.9.0")],
+        lambda: [("211", "v0.10.0"), ("13", "v0.9.0")],
     )
     def test_should_return_correct_version_with_v(self):
         assert get_previous_version("0.10.0") == "0.9.0"
@@ -95,42 +116,82 @@ class TestGetPreviousVersion:
         lambda: [("211", "0.10.0"), ("13", "0.10.0-beta"), ("13", "0.9.0")],
     )
     def test_should_return_correct_version_skip_prerelease(self):
-        assert get_previous_version("0.10.0-beta", omit_pattern="-beta") == "0.9.0"
+        assert get_previous_version("0.10.0-beta") == "0.9.0"
+
+
+class TestGetCurrentReleaseVersionByCommits:
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "0.9.0")],
+    )
+    def test_should_return_correct_version(self):
+        assert get_current_release_version_by_commits() == "0.9.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "v0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "v0.9.0")],
+    )
+    def test_should_return_correct_version_with_v(self):
+        assert get_current_release_version_by_commits() == "0.9.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.10.0-beta.0"), ("13", "0.9.0")],
+    )
+    def test_should_return_correct_version_from_prerelease(self):
+        assert get_current_release_version_by_commits() == "0.9.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "7.28.0"), ("13", "7.27.0")],
+    )
+    def test_should_return_correct_version_without_prerelease(self):
+        assert get_current_release_version_by_commits() == "7.28.0"
 
 
 class TestGetNewVersion:
     def test_major_bump(self):
-        assert get_new_version("0.0.0", "major") == "1.0.0"
-        assert get_new_version("0.1.0", "major") == "1.0.0"
-        assert get_new_version("0.1.9", "major") == "1.0.0"
-        assert get_new_version("10.1.0", "major") == "11.0.0"
+        assert get_new_version("0.0.0", "0.0.0", "major") == "1.0.0"
+        assert get_new_version("0.1.0", "0.1.0", "major") == "1.0.0"
+        assert get_new_version("0.1.9", "0.1.9", "major") == "1.0.0"
+        assert get_new_version("10.1.0", "10.1.0", "major") == "11.0.0"
 
     def test_minor_bump(self):
-        assert type(get_new_version("0.0.0", "minor")) is str
-        assert get_new_version("0.0.0", "minor") == "0.1.0"
-        assert get_new_version("1.2.0", "minor") == "1.3.0"
-        assert get_new_version("1.2.1", "minor") == "1.3.0"
-        assert get_new_version("10.1.0", "minor") == "10.2.0"
+        assert type(get_new_version("0.0.0", "0.0.0", "minor")) is str
+        assert get_new_version("0.0.0", "0.0.0", "minor") == "0.1.0"
+        assert get_new_version("1.2.0", "1.2.0", "minor") == "1.3.0"
+        assert get_new_version("1.2.1", "1.2.1", "minor") == "1.3.0"
+        assert get_new_version("10.1.0", "10.1.0", "minor") == "10.2.0"
 
     def test_patch_bump(self):
-        assert get_new_version("0.0.0", "patch") == "0.0.1"
-        assert get_new_version("0.1.0", "patch") == "0.1.1"
-        assert get_new_version("10.0.9", "patch") == "10.0.10"
+        assert get_new_version("0.0.0", "0.0.0", "patch") == "0.0.1"
+        assert get_new_version("0.1.0", "0.1.0", "patch") == "0.1.1"
+        assert get_new_version("10.0.9", "10.0.9", "patch") == "10.0.10"
 
     def test_none_bump(self):
-        assert get_new_version("1.0.0", None) == "1.0.0"
+        assert get_new_version("1.0.0", "1.0.0", None) == "1.0.0"
 
     def test_prerelease(self):
-        assert get_new_version("1.0.0", None, True) == "1.0.0-beta.0"
-        assert get_new_version("1.0.0", "major", True) == "2.0.0-beta.0"
-        assert get_new_version("1.0.0", "minor", True) == "1.1.0-beta.0"
-        assert get_new_version("1.0.0", "patch", True) == "1.0.1-beta.0"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", None, True) == "1.0.1-beta.2"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("1.0.1-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.2"
 
-    def test_prerelease_bump(self, mocker):
-        mocker.patch(
-            "semantic_release.history.get_current_version", return_value="1.0.0-beta.0"
-        )
-        assert get_new_version("1.0.0", None, True) == "1.0.0-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", None, True) == "1.0.1-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("1.0.0", "1.0.0", "patch", True) == "1.0.1-beta.1"
+
+        assert get_new_version("0.9.0-beta.1", "1.0.0", None, True) == "1.0.1-beta.1"
+        assert get_new_version("0.9.0-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("0.9.0-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("0.9.0-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.1"
+
+        with pytest.raises(ValueError):
+            get_new_version("0.9.0", "1.0.0", None, True)
+
+        with pytest.raises(ValueError):
+            get_new_version("1.0.0", "0.9.0", None, True)
 
 
 @mock.patch(
@@ -153,7 +214,7 @@ class TestVersionPattern:
             (
                 "path:__version__",
                 Path("path"),
-                r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']',
+                r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']',
             ),
         ],
     )
@@ -166,7 +227,7 @@ class TestVersionPattern:
         "str, path, pattern",
         [
             ("path:pattern", Path("path"), r"pattern"),
-            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+(?:\.\d+)?)"),
+            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+\.\d+(-beta\.\d+)?)"),
         ],
     )
     def test_from_pattern(self, str, path, pattern):
@@ -353,7 +414,7 @@ class TestVersionPattern:
                         version_variable = "path:__version__"
                         """,
             patterns=[
-                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -362,8 +423,8 @@ class TestVersionPattern:
                         version_variable = "path1:var1,path2:var2"
                         """,
             patterns=[
-                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
             ],
         ),
         dict(
@@ -375,8 +436,8 @@ class TestVersionPattern:
                         ]
                         """,
             patterns=[
-                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
-                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+(?:\.\d+)?)["\']'),
+                (Path("path1"), r'var1 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
+                (Path("path2"), r'var2 *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
             ],
         ),
         dict(
