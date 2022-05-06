@@ -36,7 +36,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     changes = []
     commit_count = 0
 
-    for _hash, commit_message in get_commit_log(current_version):
+    for _hash, commit_message, _ in get_commit_log(current_version):
         if commit_message.startswith(current_version):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
@@ -98,7 +98,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
         rev = from_version
 
     found_the_release = to_version is None
-    for _hash, commit_message in get_commit_log(rev):
+    for _hash, commit_message, _ in get_commit_log(rev):
         if not found_the_release:
             # Skip until we find the last commit in this release
             # (we are looping in the order of newest -> oldest)

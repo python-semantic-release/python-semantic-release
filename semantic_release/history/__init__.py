@@ -324,7 +324,7 @@ def get_previous_version(version: str) -> Optional[str]:
     :return: A string with the previous version number.
     """
     found_version = False
-    for commit_hash, commit_message in get_commit_log():
+    for commit_hash, commit_message, _ in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
         if version in commit_message:
             found_version = True
@@ -349,7 +349,7 @@ def get_previous_release_version(version: str) -> Optional[str]:
     :return: A string with the previous version number.
     """
     found_version = False
-    for commit_hash, commit_message in get_commit_log():
+    for commit_hash, commit_message, _ in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
         if version in commit_message:
             found_version = True
@@ -372,10 +372,10 @@ def get_current_release_version_by_commits() -> str:
 
     :return: A string with the current version number.
     """
-    for commit_hash, commit_message in get_commit_log():
+    for commit_hash, commit_message, commit_author in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
         match = re.search(rf"{release_version_pattern}", commit_message)
-        if match:
+        if match and commit_author.name == "github-actions" and commit_author.email == "action@github.com":
             logger.debug(f"Version matches regex {commit_message}")
             return match.group(1).strip()
 

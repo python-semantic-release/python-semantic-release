@@ -94,7 +94,7 @@ def test_scope_is_included_in_changelog(commit, commit_type, expected):
 
 @mock.patch(
     "semantic_release.history.logs.get_commit_log",
-    lambda *a, **k: [("24", "fix: Fix another bug")],
+    lambda *a, **k: [("24", "fix: Fix another bug", "Alice <alice@example.com>")],
 )
 def test_scope_is_omitted_with_empty_scope():
     changelog = generate_changelog("0.0.0")
@@ -123,15 +123,16 @@ def test_scope_included_in_changelog_configurable(commit, commit_type):
 
 @mock.patch(
     "semantic_release.history.logs.get_commit_log",
-    lambda *a, **k: [("23", "fix(x): abCD"), ("23", "fix: abCD")],
+    lambda *a, **k: [("23", "fix(x): abCD", "Alice <alice@example.com>"),
+                     ("23", "fix: abCD", "Alice <alice@example.com>")],
 )
 @pytest.mark.parametrize(
     "commit,config_setting,expected_description",
     [
-        (("23", "fix(x): abCD"), True, "**x:** AbCD"),
-        (("23", "fix(x): abCD"), False, "**x:** abCD"),
-        (("23", "fix: abCD"), True, "AbCD"),
-        (("23", "fix: abCD"), False, "abCD"),
+        (("23", "fix(x): abCD", "Alice <alice@example.com>"), True, "**x:** AbCD"),
+        (("23", "fix(x): abCD", "Alice <alice@example.com>"), False, "**x:** abCD"),
+        (("23", "fix: abCD", "Alice <alice@example.com>"), True, "AbCD"),
+        (("23", "fix: abCD", "Alice <alice@example.com>"), False, "abCD"),
     ],
 )
 def test_message_capitalization_is_configurable(

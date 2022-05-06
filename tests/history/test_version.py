@@ -3,6 +3,7 @@ from textwrap import dedent
 
 import mock
 import pytest
+from git.util import Actor
 
 import semantic_release
 from semantic_release.history import (
@@ -92,28 +93,33 @@ def test_current_release_version_should_return_default_version(
 class TestGetPreviousVersion:
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0"), ("13", "0.9.0")],
+        lambda: [("211", "0.10.0", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version(self):
         assert get_previous_version("0.10.0") == "0.9.0"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "v0.10.0"), ("13", "v0.9.0")],
+        lambda: [("211", "v0.10.0", Actor("github-actions", "action@github.com")),
+                 ("13", "v0.9.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version_with_v(self):
         assert get_previous_version("0.10.0") == "0.9.0"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0-beta"), ("13", "0.9.0")],
+        lambda: [("211", "0.10.0-beta", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version_from_prerelease(self):
         assert get_previous_version("0.10.0-beta") == "0.9.0"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0"), ("13", "0.10.0-beta"), ("13", "0.9.0")],
+        lambda: [("211", "0.10.0",  Actor("github-actions", "action@github.com")),
+                 ("13", "0.10.0-beta", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.0",  Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version_skip_prerelease(self):
         assert get_previous_version("0.10.0-beta") == "0.9.0"
@@ -122,28 +128,34 @@ class TestGetPreviousVersion:
 class TestGetCurrentReleaseVersionByCommits:
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "0.9.0")],
+        lambda: [("211", "0.10.0-beta.1", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.1-beta.1", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version(self):
         assert get_current_release_version_by_commits() == "0.9.0"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "v0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "v0.9.0")],
+        lambda: [("211", "v0.10.0-beta.1", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.1-beta.1", Actor("github-actions", "action@github.com")),
+                 ("13", "v0.9.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version_with_v(self):
         assert get_current_release_version_by_commits() == "0.9.0"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0-beta.0"), ("13", "0.9.0")],
+        lambda: [("211", "0.10.0-beta.0", Actor("github-actions", "action@github.com")),
+                 ("13", "0.9.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version_from_prerelease(self):
         assert get_current_release_version_by_commits() == "0.9.0"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "7.28.0"), ("13", "7.27.0")],
+        lambda: [("211", "7.28.0", Actor("github-actions", "action@github.com")),
+                 ("13", "7.27.0", Actor("github-actions", "action@github.com"))],
     )
     def test_should_return_correct_version_without_prerelease(self):
         assert get_current_release_version_by_commits() == "7.28.0"
