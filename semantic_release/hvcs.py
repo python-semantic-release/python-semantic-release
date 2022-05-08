@@ -3,7 +3,7 @@
 import logging
 import mimetypes
 import os
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 from urllib.parse import urlsplit
 
 from gitlab import exceptions, gitlab
@@ -578,7 +578,7 @@ class Gitea(Base):
                 url,
                 params={"name": name},
                 data={},
-                files=[
+                files=[  # type: ignore
                     (
                         "attachment",
                         (
