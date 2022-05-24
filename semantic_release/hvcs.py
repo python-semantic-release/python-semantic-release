@@ -578,16 +578,13 @@ class Gitea(Base):
                 url,
                 params={"name": name},
                 data={},
-                files=[
-                    (
-                        "attachment",
-                        (
-                            name,
-                            open(file, "rb"),
-                            "application/octet-stream",
-                        ),
-                    )
-                ],
+                files={
+                    "attachment": (
+                        name,
+                        open(file, "rb"),
+                        "application/octet-stream",
+                    ),
+                },
             )
 
             logger.debug(
