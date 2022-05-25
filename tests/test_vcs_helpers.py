@@ -134,14 +134,18 @@ def test_push_new_version_with_custom_branch(mock_git):
     )
 
 
-def test_push_using_token(mock_git):
+@pytest.mark.parametrize("actor", (None, "GITHUB_ACTOR_TOKEN"))
+def test_push_using_token(mock_git, mocker, actor):
+    mocker.patch.dict(
+        os.environ, {"GITHUB_ACTOR": actor} if actor else {}
+    )
     token = "auth--token"
     domain = "domain"
     owner = "owner"
     name = "name"
     branch = "main"
     push_new_version(auth_token=token, domain=domain, owner=owner, name=name, branch=branch)
-    server = f"https://{token}@{domain}/{owner}/{name}.git"
+    server = f"https://{actor + ':' if actor else ''}{token}@{domain}/{owner}/{name}.git"
     mock_git.push.assert_has_calls(
         [
             mock.call(server, branch),
