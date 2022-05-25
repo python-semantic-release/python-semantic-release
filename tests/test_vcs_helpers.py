@@ -136,9 +136,7 @@ def test_push_new_version_with_custom_branch(mock_git):
 
 @pytest.mark.parametrize("actor", (None, "GITHUB_ACTOR_TOKEN"))
 def test_push_using_token(mock_git, mocker, actor):
-    mocker.patch.dict(
-        os.environ, {"GITHUB_ACTOR": actor} if actor else {}
-    )
+    mocker.patch.dict(os.environ, {"GITHUB_ACTOR": actor} if actor else {}, clear=True)
     token = "auth--token"
     domain = "domain"
     owner = "owner"
