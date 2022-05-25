@@ -134,6 +134,44 @@ def test_push_new_version_with_custom_branch(mock_git):
     )
 
 
+@pytest.mark.parametrize("actor", (None, "GITHUB_ACTOR_TOKEN"))
+def test_push_using_token(mock_git, mocker, actor):
+    mocker.patch.dict(os.environ, {"GITHUB_ACTOR": actor} if actor else {}, clear=True)
+    token = "auth--token"
+    domain = "domain"
+    owner = "owner"
+    name = "name"
+    branch = "main"
+    push_new_version(auth_token=token, domain=domain, owner=owner, name=name, branch=branch)
+    server = f"https://{actor + ':' if actor else ''}{token}@{domain}/{owner}/{name}.git"
+    mock_git.push.assert_has_calls(
+        [
+            mock.call(server, branch),
+            mock.call("--tags", server, branch),
+        ]
+    )
+
+
+def test_push_ignoring_token(mock_git, mocker):
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(**{"ignore_token_for_push": True}),
+    )
+    token = "auth--token"
+    domain = "domain"
+    owner = "owner"
+    name = "name"
+    branch = "main"
+    push_new_version(auth_token=token, domain=domain, owner=owner, name=name, branch=branch)
+    server = "origin"
+    mock_git.push.assert_has_calls(
+        [
+            mock.call(server, branch),
+            mock.call("--tags", server, branch),
+        ]
+    )
+
+
 @mock.patch.dict(
     os.environ,
     {
@@ -290,14 +328,17 @@ def test_get_current_head_hash(mocker):
     assert get_current_head_hash() == "commit-hash"
 
 
-@mock.patch("semantic_release.vcs_helpers.config.get", return_value="gitlab")
-def test_push_should_not_print_auth_token(mock_gitlab, mock_git):
+def test_push_should_not_print_auth_token(mock_git, mocker):
     mock_git.configure_mock(
         **{
             "push.side_effect": GitCommandError(
                 "auth--token", 1, b"auth--token", b"auth--token"
             )
         }
+    )
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(**{"hvcs": "gitlab"}),
     )
     with pytest.raises(GitError) as excinfo:
         push_new_version(auth_token="auth--token")
