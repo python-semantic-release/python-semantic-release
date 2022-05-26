@@ -10,12 +10,12 @@ from semantic_release.history import (
     PatternVersionDeclaration,
     TomlVersionDeclaration,
     VersionDeclaration,
+    get_current_release_version,
+    get_current_release_version_by_commits,
+    get_current_release_version_by_tag,
     get_current_version,
     get_current_version_by_config_file,
     get_current_version_by_tag,
-    get_current_release_version,
-    get_current_release_version_by_tag,
-    get_current_release_version_by_commits,
     get_new_version,
     get_previous_version,
     load_version_declarations,
@@ -81,10 +81,12 @@ def test_current_version_should_run_with_tag_only(mocker):
 
 
 @mock.patch("semantic_release.history.get_last_version", return_value=None)
-@mock.patch("semantic_release.history.get_current_release_version_by_commits", return_value="0.0.0")
+@mock.patch(
+    "semantic_release.history.get_current_release_version_by_commits",
+    return_value="0.0.0",
+)
 def test_current_release_version_should_return_default_version(
-    mock_last_version,
-    mock_current_release_version_by_commits
+    mock_last_version, mock_current_release_version_by_commits
 ):
     assert "0.0.0" == get_current_release_version()
 
@@ -227,7 +229,11 @@ class TestVersionPattern:
         "str, path, pattern",
         [
             ("path:pattern", Path("path"), r"pattern"),
-            ("path:Version: {version}", Path("path"), r"Version: (\d+\.\d+\.\d+(-beta\.\d+)?)"),
+            (
+                "path:Version: {version}",
+                Path("path"),
+                r"Version: (\d+\.\d+\.\d+(-beta\.\d+)?)",
+            ),
         ],
     )
     def test_from_pattern(self, str, path, pattern):
@@ -414,7 +420,10 @@ class TestVersionPattern:
                         version_variable = "path:__version__"
                         """,
             patterns=[
-                (Path("path"), r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']'),
+                (
+                    Path("path"),
+                    r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-beta\.\d+)?)["\']',
+                ),
             ],
         ),
         dict(

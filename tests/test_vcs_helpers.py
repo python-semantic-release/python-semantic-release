@@ -6,7 +6,7 @@ import pytest
 from git import GitCommandError, Repo, TagObject
 
 from semantic_release.errors import GitError, HvcsRepoParseError
-from semantic_release.history import version_pattern, release_version_pattern
+from semantic_release.history import release_version_pattern, version_pattern
 from semantic_release.vcs_helpers import (
     check_repo,
     checkout,
@@ -142,8 +142,12 @@ def test_push_using_token(mock_git, mocker, actor):
     owner = "owner"
     name = "name"
     branch = "main"
-    push_new_version(auth_token=token, domain=domain, owner=owner, name=name, branch=branch)
-    server = f"https://{actor + ':' if actor else ''}{token}@{domain}/{owner}/{name}.git"
+    push_new_version(
+        auth_token=token, domain=domain, owner=owner, name=name, branch=branch
+    )
+    server = (
+        f"https://{actor + ':' if actor else ''}{token}@{domain}/{owner}/{name}.git"
+    )
     mock_git.push.assert_has_calls(
         [
             mock.call(server, branch),
@@ -162,7 +166,9 @@ def test_push_ignoring_token(mock_git, mocker):
     owner = "owner"
     name = "name"
     branch = "main"
-    push_new_version(auth_token=token, domain=domain, owner=owner, name=name, branch=branch)
+    push_new_version(
+        auth_token=token, domain=domain, owner=owner, name=name, branch=branch
+    )
     server = "origin"
     mock_git.push.assert_has_calls(
         [
@@ -388,13 +394,18 @@ def test_get_last_version(pattern, skip_tags, expected_result):
     )
     assert expected_result == get_last_version(pattern, skip_tags)
 
+
 @pytest.mark.parametrize(
     "pattern, skip_tags,expected_result",
     [
         (version_pattern, None, "2.1.0-beta.0"),
         (version_pattern, ["v2.1.0-beta.0"], "2.0.0"),
         (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v2.0.0"], "1.1.0"),
-        (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
+        (
+            version_pattern,
+            ["v2.1.0-beta.0", "v2.0.0-beta.0", "v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"],
+            None,
+        ),
         (release_version_pattern, None, "2.0.0"),
         (release_version_pattern, ["v2.0.0"], "1.1.0"),
         (release_version_pattern, ["v2.0.0", "v1.1.0", "v1.0.0", "v0.1.0"], None),

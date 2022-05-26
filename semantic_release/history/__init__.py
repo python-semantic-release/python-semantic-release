@@ -53,9 +53,7 @@ class VersionDeclaration(ABC):
         variable name.
         """
         path, variable = config_str.split(":", 1)
-        pattern = (
-            rf'{variable} *[:=] *["\']{version_regex}["\']'
-        )
+        pattern = rf'{variable} *[:=] *["\']{version_regex}["\']'
         return PatternVersionDeclaration(path, pattern)
 
     @staticmethod
@@ -266,7 +264,10 @@ def get_current_release_version() -> str:
 
 @LoggedFunction(logger)
 def get_new_version(
-    current_version: str, current_release_version: str, level_bump: str, prerelease: bool = False
+    current_version: str,
+    current_release_version: str,
+    level_bump: str,
+    prerelease: bool = False,
 ) -> str:
     """
     Calculate the next version based on the given bump level with semver.
@@ -285,7 +286,10 @@ def get_new_version(
     # sanity check
     # if the current version is no prerelease, than
     # current_version and current_release_version must be the same
-    if not current_version_info.prerelease and current_version_info.compare(current_release_version_info) != 0:
+    if (
+        not current_version_info.prerelease
+        and current_version_info.compare(current_release_version_info) != 0
+    ):
         raise ValueError()
 
     if level_bump:
@@ -303,11 +307,15 @@ def get_new_version(
         if current_version_info.prerelease and next_raw_version == current_raw_version:
             # next version (based on commits) matches current prerelease version
             # bump prerelase
-            next_prerelease_version_info = current_version_info.bump_prerelease(config.get("prerelease_tag"))
+            next_prerelease_version_info = current_version_info.bump_prerelease(
+                config.get("prerelease_tag")
+            )
         else:
             # next version (based on commits) higher than current prerelease version
             # new prerelease based on next version
-            next_prerelease_version_info = next_version_info.bump_prerelease(config.get("prerelease_tag"))
+            next_prerelease_version_info = next_version_info.bump_prerelease(
+                config.get("prerelease_tag")
+            )
 
         return str(next_prerelease_version_info)
     else:
@@ -337,7 +345,9 @@ def get_previous_version(version: str) -> Optional[str]:
                 logger.debug(f"Version matches regex {commit_message}")
                 return match.group(1).strip()
 
-    return get_last_version(pattern=version_pattern, skip_tags=[version, get_formatted_tag(version)])
+    return get_last_version(
+        pattern=version_pattern, skip_tags=[version, get_formatted_tag(version)]
+    )
 
 
 @LoggedFunction(logger)
@@ -362,7 +372,9 @@ def get_previous_release_version(version: str) -> Optional[str]:
                 logger.debug(f"Version matches regex {commit_message}")
                 return match.group(1).strip()
 
-    return get_last_version(pattern=release_version_pattern, skip_tags=[version, get_formatted_tag(version)])
+    return get_last_version(
+        pattern=release_version_pattern, skip_tags=[version, get_formatted_tag(version)]
+    )
 
 
 @LoggedFunction(logger)
