@@ -124,10 +124,17 @@ class TestGetPreviousVersion:
 class TestGetCurrentReleaseVersionByCommits:
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.10.0-beta.1"), ("13", "0.9.1-beta.1"), ("13", "0.9.0")],
+        lambda: [("211", "0.10.0"), ("13", "0.9.13"), ("13", "0.9.0")],
     )
     def test_should_return_correct_version(self):
-        assert get_current_release_version_by_commits() == "0.9.0"
+        assert get_current_release_version_by_commits() == "0.10.0"
+
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "0.0.24-beta.10"), ("13", "0.0.23"), ("14", "0.0.21-beta.0"), ("15", "0.0.19")],
+    )
+    def test_should_return_correct_version_with_prerelease(self):
+        assert get_current_release_version_by_commits() == "0.0.23"
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
@@ -190,10 +197,15 @@ class TestGetNewVersion:
         assert get_new_version("0.9.0-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
         assert get_new_version("0.9.0-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.1"
 
-        assert get_new_version("1.0.1-beta.11", "1.0.0", None, True) == "1.0.1-beta.12"
-        assert get_new_version("1.0.1-beta.11", "1.0.0", "major", True) == "2.0.0-beta.11"
-        assert get_new_version("1.0.1-beta.11", "1.0.0", "minor", True) == "1.1.0-beta.11"
-        assert get_new_version("1.0.1-beta.11", "1.0.0", "patch", True) == "1.0.1-beta.12"
+        assert get_new_version("1.0.11-beta.11", "1.0.10", None, True) == "1.0.11-beta.12"
+        assert get_new_version("1.0.11-beta.11", "1.0.10", "major", True) == "2.0.0-beta.1"
+        assert get_new_version("1.0.11-beta.11", "1.0.10", "minor", True) == "1.1.0-beta.1"
+        assert get_new_version("1.0.11-beta.11", "1.0.10", "patch", True) == "1.0.11-beta.12"
+
+        assert get_new_version("1.0.11-beta.11", "1.0.11", None) == "1.0.11"
+        assert get_new_version("1.0.11-beta.11", "1.0.11", "major") == "2.0.0"
+        assert get_new_version("1.0.11-beta.11", "1.0.11", "minor") == "1.1.0"
+        assert get_new_version("1.0.11-beta.11", "1.0.11", "patch") == "1.0.12"
 
         with pytest.raises(ValueError):
             get_new_version("0.9.0", "1.0.0", None, True)
