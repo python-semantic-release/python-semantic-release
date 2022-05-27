@@ -275,7 +275,7 @@ def get_current_release_version() -> str:
 
     :return: A string with the current version number
     """
-    if config.get("version_source") == "tag":
+    if config.get("version_source") in ["tag", "tag_only"]:
         return get_current_release_version_by_tag()
     else:
         return get_current_release_version_by_commits()
