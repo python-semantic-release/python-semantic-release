@@ -169,6 +169,7 @@ class TestGetNewVersion:
         assert get_new_version("0.0.0", "0.0.0", "patch") == "0.0.1"
         assert get_new_version("0.1.0", "0.1.0", "patch") == "0.1.1"
         assert get_new_version("10.0.9", "10.0.9", "patch") == "10.0.10"
+        assert get_new_version("10.0.19", "10.0.19", "patch") == "10.0.20"
 
     def test_none_bump(self):
         assert get_new_version("1.0.0", "1.0.0", None) == "1.0.0"
@@ -188,6 +189,11 @@ class TestGetNewVersion:
         assert get_new_version("0.9.0-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
         assert get_new_version("0.9.0-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
         assert get_new_version("0.9.0-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.1"
+
+        assert get_new_version("1.0.1-beta.11", "1.0.0", None, True) == "1.0.1-beta.12"
+        assert get_new_version("1.0.1-beta.11", "1.0.0", "major", True) == "2.0.0-beta.11"
+        assert get_new_version("1.0.1-beta.11", "1.0.0", "minor", True) == "1.1.0-beta.11"
+        assert get_new_version("1.0.1-beta.11", "1.0.0", "patch", True) == "1.0.1-beta.12"
 
         with pytest.raises(ValueError):
             get_new_version("0.9.0", "1.0.0", None, True)
