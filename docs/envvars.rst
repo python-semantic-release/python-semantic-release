@@ -91,8 +91,8 @@ when pushing tags, publishing releases etc.
 
 .. _env-repository:
 
-Artifact Repository Authentication
-==================================
+Artifact Repository
+===================
 
 .. _env-pypi_token:
 
@@ -150,3 +150,12 @@ Also used for token when using token authentication.
     output. This can break things, for example repository links.
 
   - Find more information on `how to obtain a token <https://pypi.org/help/#apitoken>`_.
+
+.. _env-repository_url:
+
+``REPOSITORY_URL``
+------------------
+Custom repository (package index) URL to upload the package to.
+Takes precedence over :ref:`config-repository_url`
+
+See :ref:`automatic-dist-upload` for more about uploads to custom repositories.

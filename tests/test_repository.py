@@ -155,6 +155,13 @@ def test_repo_with_custom_repo_url(mock_handle_creds):
     assert repo.repository_url == "https://custom-repo"
 
 
+@mock.patch.dict("os.environ", {"REPOSITORY_URL": "https://custom-repo"})
+@mock.patch.object(ArtifactRepo, "_handle_credentials_init")
+def test_repo_with_custom_repo_url_from_env(mock_handle_creds):
+    repo = ArtifactRepo(Path("dist"))
+    assert repo.repository_url == "https://custom-repo"
+
+
 @mock.patch("semantic_release.repository.twine_upload")
 @mock.patch(
     "semantic_release.repository.config.get",
