@@ -75,8 +75,9 @@ Configuring distribution upload
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In order to upload to an artifact repository, Python Semantic Release needs credentials to access
 the project. You will need to set the environment variables :ref:`env-repository_username` and
-:ref:`env-repository_password`. Use :ref:`config-repository_url` to set a custom repository url.
-As an alternative the repository and/or credentials can be configured using the ``~/.pypirc`` file.
+:ref:`env-repository_password`. Use :ref:`config-repository_url` or :ref:`env-repository_url` to
+set a custom repository url. As an alternative the repository and/or credentials can be configured
+using the ``~/.pypirc`` file.
 
 .. warning::
   Make sure to protect any environment variable containing secrets on your CI service.
