@@ -69,3 +69,4 @@ target/
 .pytest_cache
 .mypy_cache
 .python-version
+*.swp
