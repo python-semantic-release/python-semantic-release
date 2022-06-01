@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.1 (2022-06-01)
+### Fix
+* Capture correct release version when patch has more than one digit ([#448](https://github.com/relekang/python-semantic-release/issues/448)) ([`426cdc7`](https://github.com/relekang/python-semantic-release/commit/426cdc7d7e0140da67f33b6853af71b2295aaac2))
+
 ## v7.29.0 (2022-05-27)
 ### Feature
 * Allow using ssh-key to push version while using token to publish to hvcs ([#419](https://github.com/relekang/python-semantic-release/issues/419)) ([`7b2dffa`](https://github.com/relekang/python-semantic-release/commit/7b2dffadf43c77d5e0eea307aefcee5c7744df5c))
