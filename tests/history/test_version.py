@@ -145,7 +145,12 @@ class TestGetCurrentReleaseVersionByCommits:
 
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("211", "0.0.24-beta.10"), ("13", "0.0.23"), ("14", "0.0.21-beta.0"), ("15", "0.0.19")],
+        lambda: [
+            ("211", "0.0.24-beta.10"),
+            ("13", "0.0.23"),
+            ("14", "0.0.21-beta.0"),
+            ("15", "0.0.19"),
+        ],
     )
     def test_should_return_correct_version_from_large_prerelease(self):
         assert get_current_release_version_by_commits() == "0.0.23"
