@@ -117,7 +117,7 @@ def print_version(*, current=False, force_level=None, prerelease=False, **kwargs
     new_version = get_new_version(
         current_version, current_release_version, level_bump, prerelease
     )
-    if should_bump_version(current_version=current_version, new_version=new_version):
+    if should_bump_version(current_version=current_version, new_version=new_version, current_release_version=current_release_version, prerelease=prerelease):
         print(new_version, end="")
         return True
 
@@ -153,7 +153,7 @@ def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kw
     )
 
     if not should_bump_version(
-        current_version=current_version, new_version=new_version, retry=retry, noop=noop
+        current_version=current_version, new_version=new_version, current_release_version=current_release_version, prerelease=prerelease, retry=retry, noop=noop
     ):
         return False
 
@@ -166,9 +166,11 @@ def version(*, retry=False, noop=False, force_level=None, prerelease=False, **kw
     return True
 
 
-def should_bump_version(*, current_version, new_version, retry=False, noop=False):
+def should_bump_version(*, current_version, current_release_version, new_version, prerelease, retry=False, noop=False):
+    match_version = current_version if prerelease else current_release_version
+    
     """Test whether the version should be bumped."""
-    if new_version == current_version and not retry:
+    if new_version == match_version and not retry:
         logger.info("No release will be made.")
         return False
 
@@ -289,6 +291,8 @@ def publish(
     if should_bump_version(
         current_version=current_version,
         new_version=new_version,
+        current_release_version=current_release_version,
+        prerelease=prerelease,
         retry=retry,
         noop=noop,
     ):
