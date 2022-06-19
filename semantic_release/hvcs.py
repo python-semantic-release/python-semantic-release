@@ -2,6 +2,7 @@
 """
 import logging
 import mimetypes
+from optparse import Option
 import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urlsplit
@@ -105,6 +106,7 @@ class Github(Base):
         hvcs_domain = config.get(
             "hvcs_domain", os.getenv("GITHUB_SERVER_URL", "").replace("https://", "")
         )
+
         domain = hvcs_domain if hvcs_domain else Github.DEFAULT_DOMAIN
         return domain
 
@@ -219,6 +221,7 @@ class Github(Base):
         :return: ID of found release
         """
         try:
+            print(Github.api_url())
             response = Github.session().get(
                 f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}"
             )
@@ -283,6 +286,30 @@ class Github(Base):
 
     @classmethod
     @LoggedFunction(logger)
+    def get_asset_upload_url(cls, owner: str, repo: str, release_id: str) -> Optional[str]:
+        """Get the correct upload url for a release
+
+        https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param release_id: ID of the release to upload to
+
+        :return: URL found to upload for a release
+        """
+        try:
+            response = Github.session().get(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/{release_id}"
+            )
+            return str(response.json().get("upload_url")).split('{')[0]
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                logger.debug(f"Get release asset upload on Github has failed: {e}")
+            return None
+        
+
+    @classmethod
+    @LoggedFunction(logger)
     def upload_asset(
         cls, owner: str, repo: str, release_id: int, file: str, label: str = None
     ) -> bool:
@@ -298,7 +325,10 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = f"https://uploads.github.com/repos/{owner}/{repo}/releases/{release_id}/assets"
+        url = cls.get_asset_upload_url(owner, repo, release_id)
+        if not url:
+            logger.warning('Could not get release upload url')
+            return False
 
         content_type = mimetypes.guess_type(file, strict=False)[0]
         if not content_type:
