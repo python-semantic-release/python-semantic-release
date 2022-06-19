@@ -2,7 +2,6 @@
 """
 import logging
 import mimetypes
-from optparse import Option
 import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urlsplit
@@ -221,7 +220,6 @@ class Github(Base):
         :return: ID of found release
         """
         try:
-            print(Github.api_url())
             response = Github.session().get(
                 f"{Github.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}"
             )
