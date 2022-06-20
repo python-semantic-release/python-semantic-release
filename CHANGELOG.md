@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.2 (2022-06-20)
+### Fix
+* Ensure should_bump checks against release version if not prerelease ([#457](https://github.com/relekang/python-semantic-release/issues/457)) ([`da0606f`](https://github.com/relekang/python-semantic-release/commit/da0606f0d67ada5f097c704b9423ead3b5aca6b2))
+
 ## v7.29.1 (2022-06-01)
 ### Fix
 * Capture correct release version when patch has more than one digit ([#448](https://github.com/relekang/python-semantic-release/issues/448)) ([`426cdc7`](https://github.com/relekang/python-semantic-release/commit/426cdc7d7e0140da67f33b6853af71b2295aaac2))
