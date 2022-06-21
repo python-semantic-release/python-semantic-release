@@ -206,6 +206,9 @@ def test_repo_with_token_only(caplog):
 @mock.patch.dict("os.environ", {"PYPI_PASSWORD": "pypi-password"})
 def test_repo_with_pypi_password_only(caplog):
     repo = ArtifactRepo(Path("dist"))
-    assert "Providing only password or token without username is deprecated" in caplog.messages
+    assert (
+        "Providing only password or token without username is deprecated"
+        in caplog.messages
+    )
     assert repo.username == "__token__"
     assert repo.password == "pypi-password"
