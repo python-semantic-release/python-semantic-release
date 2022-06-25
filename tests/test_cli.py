@@ -967,7 +967,12 @@ def test_publish_retry_version_fail(mocker):
     mock_ci_check.assert_called()
     mock_checkout.assert_called_once_with("my_branch")
     mock_should_bump_version.assert_called_once_with(
-        current_version="previous", new_version="current", noop=False, retry=True
+        current_version="previous",
+        new_version="current",
+        current_release_version="1.2.3",
+        prerelease=False,
+        noop=False,
+        retry=True,
     )
 
 
@@ -1017,7 +1022,12 @@ def test_publish_bad_token(mocker):
     mock_ci_check.assert_called()
     mock_checkout.assert_called_once_with("my_branch")
     mock_should_bump_version.assert_called_once_with(
-        current_version="previous", new_version="current", noop=False, retry=True
+        current_version="previous",
+        new_version="current",
+        current_release_version="1.2.3",
+        prerelease=False,
+        noop=False,
+        retry=True,
     )
     mock_get_token.assert_called()
     mock_get_domain.assert_called()
@@ -1096,7 +1106,12 @@ def test_publish_giterror_when_posting(mocker):
     mock_ci_check.assert_called()
     mock_checkout.assert_called_once_with("my_branch")
     mock_should_bump_version.assert_called_once_with(
-        current_version="1.2.3", new_version="new", noop=False, retry=False
+        current_version="1.2.3",
+        new_version="new",
+        current_release_version="1.2.3",
+        prerelease=False,
+        noop=False,
+        retry=False,
     )
     mock_update_changelog_file.assert_called_once_with("new", "super md changelog")
     mock_bump_version.assert_called_once_with("new", "patch")
