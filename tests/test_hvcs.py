@@ -373,7 +373,9 @@ class GithubReleaseTests(TestCase):
         "https://uploads.github.com/repos/relekang/rmoq/releases/1/assets"
         "?name=testupload.md"
     )
-    upload_url = "https://uploads.github.com/repos/relekang/rmoq/releases/1/assets{?name,label}"
+    upload_url = (
+        "https://uploads.github.com/repos/relekang/rmoq/releases/1/assets{?name,label}"
+    )
 
     @responses.activate
     @mock.patch("semantic_release.hvcs.Github.token", return_value="super-token")
@@ -489,7 +491,7 @@ class GithubReleaseTests(TestCase):
             responses.GET,
             self.edit_url,
             status=200,
-            body= json.dumps(required_payload),
+            body=json.dumps(required_payload),
             content_type="application/json",
         )
 
@@ -523,15 +525,16 @@ class GithubReleaseTests(TestCase):
         )
         with open(dummy_file_path, "w") as dummy_file:
             dummy_file.write(dummy_content)
-        
+
         required_payload = {"upload_url": self.upload_url}
         responses.add(
             responses.GET,
             self.edit_url,
             status=200,
-            body= json.dumps(required_payload),
+            body=json.dumps(required_payload),
             content_type="application/json",
         )
+
         def request_callback(request):
             self.assertEqual(request.body.decode().replace("\r\n", "\n"), dummy_content)
             self.assertEqual(request.url, self.asset_no_extension_url_params)
@@ -568,7 +571,7 @@ class GithubReleaseTests(TestCase):
             responses.GET,
             self.edit_url,
             status=200,
-            body= json.dumps(required_payload),
+            body=json.dumps(required_payload),
             content_type="application/json",
         )
 

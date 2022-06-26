@@ -284,7 +284,9 @@ class Github(Base):
 
     @classmethod
     @LoggedFunction(logger)
-    def get_asset_upload_url(cls, owner: str, repo: str, release_id: str) -> Optional[str]:
+    def get_asset_upload_url(
+        cls, owner: str, repo: str, release_id: str
+    ) -> Optional[str]:
         """Get the correct upload url for a release
 
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
@@ -299,12 +301,11 @@ class Github(Base):
             response = Github.session().get(
                 f"{Github.api_url()}/repos/{owner}/{repo}/releases/{release_id}"
             )
-            return str(response.json().get("upload_url")).split('{')[0]
+            return str(response.json().get("upload_url")).split("{")[0]
         except HTTPError as e:
             if e.response.status_code != 404:
                 logger.debug(f"Get release asset upload on Github has failed: {e}")
             return None
-        
 
     @classmethod
     @LoggedFunction(logger)
@@ -325,7 +326,7 @@ class Github(Base):
         """
         url = cls.get_asset_upload_url(owner, repo, release_id)
         if not url:
-            logger.warning('Could not get release upload url')
+            logger.warning("Could not get release upload url")
             return False
 
         content_type = mimetypes.guess_type(file, strict=False)[0]
