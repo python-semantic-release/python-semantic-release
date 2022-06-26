@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.3 (2022-06-26)
+### Fix
+* Ensure that assets can be uploaded successfully on custom GitHub servers ([#458](https://github.com/relekang/python-semantic-release/issues/458)) ([`32b516d`](https://github.com/relekang/python-semantic-release/commit/32b516d7aded4afcafe4aa56d6a5a329b3fc371d))
+
 ## v7.29.2 (2022-06-20)
 ### Fix
 * Ensure should_bump checks against release version if not prerelease ([#457](https://github.com/relekang/python-semantic-release/issues/457)) ([`da0606f`](https://github.com/relekang/python-semantic-release/commit/da0606f0d67ada5f097c704b9423ead3b5aca6b2))
