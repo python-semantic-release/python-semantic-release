@@ -290,7 +290,7 @@ def get_new_version(
         not current_version_info.prerelease
         and current_version_info.compare(current_release_version_info) != 0
     ):
-        raise ValueError()
+        raise ValueError(f"Error: Current version {current_version} and current release version {current_release_version} do not match!")
 
     if level_bump:
         next_version_info = current_release_version_info.next_version(level_bump)
