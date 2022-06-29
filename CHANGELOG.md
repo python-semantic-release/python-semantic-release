@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.4 (2022-06-29)
+### Fix
+* Add text for empty ValueError ([#461](https://github.com/relekang/python-semantic-release/issues/461)) ([`733254a`](https://github.com/relekang/python-semantic-release/commit/733254a99320d8c2f964d799ac4ec29737867faa))
+
 ## v7.29.3 (2022-06-26)
 ### Fix
 * Ensure that assets can be uploaded successfully on custom GitHub servers ([#458](https://github.com/relekang/python-semantic-release/issues/458)) ([`32b516d`](https://github.com/relekang/python-semantic-release/commit/32b516d7aded4afcafe4aa56d6a5a329b3fc371d))
