@@ -287,6 +287,7 @@ def get_new_version(
     current_release_version: str,
     level_bump: str,
     prerelease: bool = False,
+    prerelease_patch: bool = True
 ) -> str:
     """
     Calculate the next version based on the given bump level with semver.
@@ -316,12 +317,17 @@ def get_new_version(
     if level_bump:
         next_version_info = current_release_version_info.next_version(level_bump)
     elif prerelease:
-        # we do at least a patch for prereleases
-        next_version_info = current_release_version_info.next_version("patch")
+        if prerelease_patch:
+            # we do at least a patch for prereleases
+            next_version_info = current_release_version_info.next_version("patch")
+        elif current_version_info.compare(current_release_version_info) > 0:
+            next_version_info = current_version_info
+        else:
+            next_version_info = current_release_version_info
     else:
         next_version_info = current_release_version_info
 
-    if prerelease:
+    if prerelease and (level_bump or prerelease_patch):
         next_raw_version = next_version_info.to_tuple()[:3]
         current_raw_version = current_version_info.to_tuple()[:3]
 
