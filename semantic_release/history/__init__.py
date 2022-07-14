@@ -388,7 +388,7 @@ def get_current_release_version_by_commits() -> str:
     """
     for commit_hash, commit_message in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
-        match = re.search(rf"{release_version_pattern}", commit_message)
+        match = re.match(rf"{release_version_pattern}", commit_message)
         if match:
             logger.debug(f"Version matches regex {commit_message}")
             return match.group(1).strip()
