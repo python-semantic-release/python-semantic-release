@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 prerelease_pattern = f"-{config.get('prerelease_tag')}\.\d+"
 version_pattern = f"(\d+\.\d+\.\d+({prerelease_pattern})?)"
-release_version_pattern = f"(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+release_version_pattern = f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
 
 release_version_regex = rf"{release_version_pattern}"
 version_regex = rf"{version_pattern}"
