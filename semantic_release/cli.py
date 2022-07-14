@@ -294,7 +294,9 @@ def publish(
         current_version = get_previous_release_version(current_version)
     else:
         # Calculate the new version
-        level_bump = evaluate_version_bump(current_release_version, kwargs.get("force_level"))
+        level_bump = evaluate_version_bump(
+            current_release_version, kwargs.get("force_level")
+        )
         new_version = get_new_version(
             current_version, current_release_version, level_bump, prerelease
         )
