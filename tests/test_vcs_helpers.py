@@ -359,9 +359,9 @@ def test_checkout_should_checkout_correct_branch(mock_git):
 @pytest.mark.parametrize(
     "pattern, skip_tags,expected_result",
     [
-        ("\d+.\d+.\d+", None, "2.0.0"),
-        ("\d+.\d+.\d+", ["v2.0.0"], "1.1.0"),
-        ("\d+.\d+.\d+", ["v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
+        ("(\d+.\d+.\d+)", None, "2.0.0"),
+        ("(\d+.\d+.\d+)", ["v2.0.0"], "1.1.0"),
+        ("(\d+.\d+.\d+)", ["v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"], None),
     ],
 )
 def test_get_last_version(pattern, skip_tags, expected_result):
