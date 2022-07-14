@@ -50,6 +50,7 @@ setup(
         "tomlkit>=0.10.0,<0.11.0",
         "dotty-dict>=1.3.0,<2",
         "dataclasses==0.8; python_version < '3.7.0'",
+        "packaging",
     ],
     extras_require={
         "test": [
