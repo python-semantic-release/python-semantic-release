@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.5 (2022-07-14)
+### Fix
+* **publish:** Get version bump for current release ([#467](https://github.com/relekang/python-semantic-release/issues/467)) ([`dd26888`](https://github.com/relekang/python-semantic-release/commit/dd26888a923b2f480303c19f1916647de48b02bf))
+* Add packaging module requirement ([#469](https://github.com/relekang/python-semantic-release/issues/469)) ([`b99c9fa`](https://github.com/relekang/python-semantic-release/commit/b99c9fa88dc25e5ceacb131cd93d9079c4fb2c86))
+
 ## v7.29.4 (2022-06-29)
 ### Fix
 * Add text for empty ValueError ([#461](https://github.com/relekang/python-semantic-release/issues/461)) ([`733254a`](https://github.com/relekang/python-semantic-release/commit/733254a99320d8c2f964d799ac4ec29737867faa))
