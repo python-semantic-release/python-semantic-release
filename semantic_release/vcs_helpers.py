@@ -82,7 +82,7 @@ def get_last_version(pattern, skip_tags=None) -> Optional[str]:
 
         match = re.search(rf"{pattern}", i.name)
         if match:
-            return match.group(0).strip()
+            return match.group(1).strip()
 
     return None
 
