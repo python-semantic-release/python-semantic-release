@@ -162,6 +162,17 @@ class TestGetCurrentReleaseVersionByCommits:
     def test_should_return_correct_version_without_prerelease(self):
         assert get_current_release_version_by_commits() == "7.28.0"
 
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [
+            ("211", "chore(deps): bump some-deps to 0.6.0"),
+            ("13", "fix(deps): bump other-deps to 1.2.3"),
+            ("13", "8.9.2"),
+        ],
+    )
+    def test_should_ignore_deps_version_bump(self):
+        assert get_current_release_version_by_commits() == "8.9.2"
+
 
 class TestGetNewVersion:
     def test_major_bump(self):
