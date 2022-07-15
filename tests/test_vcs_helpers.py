@@ -6,7 +6,7 @@ import pytest
 from git import GitCommandError, Repo, TagObject
 
 from semantic_release.errors import GitError, HvcsRepoParseError
-from semantic_release.history import release_version_pattern, version_pattern
+from semantic_release.history import get_release_version_pattern, get_version_pattern
 from semantic_release.vcs_helpers import (
     check_repo,
     checkout,
@@ -396,22 +396,22 @@ def test_get_last_version(pattern, skip_tags, expected_result):
 
 
 @pytest.mark.parametrize(
-    "pattern, skip_tags,expected_result",
+    "get_pattern, skip_tags,expected_result",
     [
-        (version_pattern, None, "2.1.0-beta.0"),
-        (version_pattern, ["v2.1.0-beta.0"], "2.0.0"),
-        (version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v2.0.0"], "1.1.0"),
+        (get_version_pattern, None, "2.1.0-beta.0"),
+        (get_version_pattern, ["v2.1.0-beta.0"], "2.0.0"),
+        (get_version_pattern, ["v2.1.0-beta.0", "v2.0.0-beta.0", "v2.0.0"], "1.1.0"),
         (
-            version_pattern,
+            get_version_pattern,
             ["v2.1.0-beta.0", "v2.0.0-beta.0", "v0.1.0", "v1.0.0", "v1.1.0", "v2.0.0"],
             None,
         ),
-        (release_version_pattern, None, "2.0.0"),
-        (release_version_pattern, ["v2.0.0"], "1.1.0"),
-        (release_version_pattern, ["v2.0.0", "v1.1.0", "v1.0.0", "v0.1.0"], None),
+        (get_release_version_pattern, None, "2.0.0"),
+        (get_release_version_pattern, ["v2.0.0"], "1.1.0"),
+        (get_release_version_pattern, ["v2.0.0", "v1.1.0", "v1.0.0", "v0.1.0"], None),
     ],
 )
-def test_get_last_version_with_real_pattern(pattern, skip_tags, expected_result):
+def test_get_last_version_with_real_pattern(get_pattern, skip_tags, expected_result):
     # TODO: add some prerelease tags
     class FakeCommit:
         def __init__(self, com_date):
@@ -442,7 +442,7 @@ def test_get_last_version_with_real_pattern(pattern, skip_tags, expected_result)
             FakeTag("v1.0.0", "bbbbbbbbbbbbbbbbbbbb", 2, False),
         ]
     )
-    assert expected_result == get_last_version(pattern, skip_tags)
+    assert expected_result == get_last_version(get_pattern(), skip_tags)
 
 
 def test_update_changelog_file_ok(mock_git, mocker):

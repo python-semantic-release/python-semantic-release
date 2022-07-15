@@ -464,6 +464,19 @@ class TestVersionPattern:
         dict(
             pyproject="""\
                         [tool.semantic_release]
+                        version_variable = "path:__version__"
+                        prerelease_tag = "alpha"
+                        """,
+            patterns=[
+                (
+                    Path("path"),
+                    r'__version__ *[:=] *["\'](\d+\.\d+\.\d+(-alpha\.\d+)?)["\']',
+                ),
+            ],
+        ),
+        dict(
+            pyproject="""\
+                        [tool.semantic_release]
                         version_pattern = "path:pattern"
                         """,
             patterns=[

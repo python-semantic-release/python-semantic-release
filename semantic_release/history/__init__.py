@@ -25,12 +25,18 @@ from .parser_tag import parse_commit_message as tag_parser  # noqa isort:skip
 logger = logging.getLogger(__name__)
 
 
-prerelease_pattern = f"-{config.get('prerelease_tag')}\.\d+"
-version_pattern = f"(\d+\.\d+\.\d+({prerelease_pattern})?)"
-release_version_pattern = f"(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+def get_prerelease_pattern():
+    return f"-{config.get('prerelease_tag')}\.\d+"
 
-release_version_regex = rf"{release_version_pattern}"
-version_regex = rf"{version_pattern}"
+
+def get_version_pattern():
+    prerelease_pattern = get_prerelease_pattern()
+    return f"(\d+\.\d+\.\d+({prerelease_pattern})?)"
+
+
+def get_release_version_pattern():
+    prerelease_pattern = get_prerelease_pattern()
+    return f"(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
 
 
 class VersionDeclaration(ABC):
@@ -53,7 +59,8 @@ class VersionDeclaration(ABC):
         variable name.
         """
         path, variable = config_str.split(":", 1)
-        pattern = rf'{variable} *[:=] *["\']{version_regex}["\']'
+        version_pattern = get_version_pattern()
+        pattern = rf'{variable} *[:=] *["\']{version_pattern}["\']'
         return PatternVersionDeclaration(path, pattern)
 
     @staticmethod
@@ -63,7 +70,7 @@ class VersionDeclaration(ABC):
         regular expression matching the version number.
         """
         path, pattern = config_str.split(":", 1)
-        pattern = pattern.format(version=version_regex)
+        pattern = pattern.format(version=get_version_pattern())
         return PatternVersionDeclaration(path, pattern)
 
     @abstractmethod
@@ -187,7 +194,7 @@ def get_current_version_by_tag() -> str:
 
     :return: A string with the version number or 0.0.0 on failure.
     """
-    version = get_last_version(pattern=version_pattern)
+    version = get_last_version(pattern=get_version_pattern())
     if version:
         return version
 
@@ -202,7 +209,7 @@ def get_current_release_version_by_tag() -> str:
 
     :return: A string with the version number or 0.0.0 on failure.
     """
-    version = get_last_version(pattern=release_version_pattern)
+    version = get_last_version(pattern=get_release_version_pattern())
     if version:
         return version
 
@@ -333,6 +340,8 @@ def get_previous_version(version: str) -> Optional[str]:
     :param version: A string with the version number.
     :return: A string with the previous version number.
     """
+    version_pattern = get_version_pattern()
+
     found_version = False
     for commit_hash, commit_message in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
@@ -342,7 +351,7 @@ def get_previous_version(version: str) -> Optional[str]:
             continue
 
         if found_version:
-            match = re.search(rf"{version_pattern}", commit_message)
+            match = re.search(version_pattern, commit_message)
             if match:
                 logger.debug(f"Version matches regex {commit_message}")
                 return match.group(1).strip()
@@ -360,6 +369,8 @@ def get_previous_release_version(version: str) -> Optional[str]:
     :param version: A string with the version number.
     :return: A string with the previous version number.
     """
+    release_version_pattern = get_release_version_pattern()
+
     found_version = False
     for commit_hash, commit_message in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
@@ -369,7 +380,7 @@ def get_previous_release_version(version: str) -> Optional[str]:
             continue
 
         if found_version:
-            match = re.search(rf"{release_version_pattern}", commit_message)
+            match = re.search(release_version_pattern, commit_message)
             if match:
                 logger.debug(f"Version matches regex {commit_message}")
                 return match.group(1).strip()
@@ -386,9 +397,11 @@ def get_current_release_version_by_commits() -> str:
 
     :return: A string with the current version number.
     """
+    release_version_re = re.compile(get_release_version_pattern())
+
     for commit_hash, commit_message in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
-        match = re.search(rf"{release_version_pattern}", commit_message)
+        match = release_version_re.search(commit_message)
         if match:
             logger.debug(f"Version matches regex {commit_message}")
             return match.group(1).strip()
