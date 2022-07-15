@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.6 (2022-07-15)
+### Fix
+* Allow changing prerelease tag using CLI flags ([#466](https://github.com/relekang/python-semantic-release/issues/466)) ([`395bf4f`](https://github.com/relekang/python-semantic-release/commit/395bf4f2de73663c070f37cced85162d41934213))
+
 ## v7.29.5 (2022-07-14)
 ### Fix
 * **publish:** Get version bump for current release ([#467](https://github.com/relekang/python-semantic-release/issues/467)) ([`dd26888`](https://github.com/relekang/python-semantic-release/commit/dd26888a923b2f480303c19f1916647de48b02bf))
