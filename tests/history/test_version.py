@@ -163,6 +163,14 @@ class TestGetCurrentReleaseVersionByCommits:
         assert get_current_release_version_by_commits() == "7.28.0"
 
 
+    @mock.patch(
+        "semantic_release.history.get_commit_log",
+        lambda: [("211", "7.28.0"), ("13", "7.27.0"), ("14", "chore(deps): Bump random lib to 7.29.0")],
+    )
+    def test_should_return_correct_version_ignoring_dependency_bumps(self):
+        assert get_current_release_version_by_commits() == "7.28.0"
+
+
 class TestGetNewVersion:
     def test_major_bump(self):
         assert get_new_version("0.0.0", "0.0.0", "major") == "1.0.0"
