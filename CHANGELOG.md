@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.29.7 (2022-07-24)
+### Fix
+* Ignore dependency version bumps when parsing version from commit logs ([#476](https://github.com/relekang/python-semantic-release/issues/476)) ([`51bcb78`](https://github.com/relekang/python-semantic-release/commit/51bcb780a9f55fadfaf01612ff65c1f92642c2c1))
+
 ## v7.29.6 (2022-07-15)
 ### Fix
 * Allow changing prerelease tag using CLI flags ([#466](https://github.com/relekang/python-semantic-release/issues/466)) ([`395bf4f`](https://github.com/relekang/python-semantic-release/commit/395bf4f2de73663c070f37cced85162d41934213))
