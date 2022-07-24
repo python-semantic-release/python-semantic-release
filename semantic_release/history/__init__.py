@@ -29,14 +29,19 @@ def get_prerelease_pattern():
     return f"-{config.get('prerelease_tag')}\.\d+"
 
 
+def get_pattern_with_commit_subject(pattern):
+    escaped_commit_subject = re.escape(config.get("commit_subject"))
+    return escaped_commit_subject.replace("\{version\}", pattern)
+
+
 def get_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
-    return f"(\d+\.\d+\.\d+({prerelease_pattern})?)"
+    return get_pattern_with_commit_subject(f"(\d+\.\d+\.\d+({prerelease_pattern})?)")
 
 
 def get_release_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
-    return f"(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+    return get_pattern_with_commit_subject(f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))")
 
 
 class VersionDeclaration(ABC):
@@ -401,7 +406,7 @@ def get_current_release_version_by_commits() -> str:
 
     for commit_hash, commit_message in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
-        match = release_version_re.search(commit_message)
+        match = release_version_re.match(commit_message)
         if match:
             logger.debug(f"Version matches regex {commit_message}")
             return match.group(1).strip()
