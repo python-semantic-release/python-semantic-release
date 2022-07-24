@@ -41,7 +41,9 @@ def get_version_pattern():
 
 def get_release_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
-    return get_pattern_with_commit_subject(f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))")
+    return get_pattern_with_commit_subject(
+        f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+    )
 
 
 class VersionDeclaration(ABC):

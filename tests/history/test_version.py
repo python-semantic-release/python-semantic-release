@@ -162,23 +162,29 @@ class TestGetCurrentReleaseVersionByCommits:
     def test_should_return_correct_version_without_prerelease(self):
         assert get_current_release_version_by_commits() == "7.28.0"
 
-
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("222", "chore(deps): bump random lib to 7.29.0"), ("211", "7.28.0"), ("13", "7.27.0")],
+        lambda: [
+            ("222", "chore(deps): bump random lib to 7.29.0"),
+            ("211", "7.28.0"),
+            ("13", "7.27.0"),
+        ],
     )
     def test_should_return_correct_version_ignoring_dependency_bumps(self):
         assert get_current_release_version_by_commits() == "7.28.0"
 
-
     @mock.patch(
         "semantic_release.history.get_commit_log",
-        lambda: [("222", "7.29.0"), ("211", "chore(release): 7.28.0"), ("13", "7.27.0")],
+        lambda: [
+            ("222", "7.29.0"),
+            ("211", "chore(release): 7.28.0"),
+            ("13", "7.27.0"),
+        ],
     )
-    
     def test_should_return_correct_version_with_commit_subject(self):
         with mock.patch(
-            "semantic_release.history.config.get", wrapped_config_get(commit_subject="chore(release): {version}")
+            "semantic_release.history.config.get",
+            wrapped_config_get(commit_subject="chore(release): {version}"),
         ):
             assert get_current_release_version_by_commits() == "7.28.0"
 
