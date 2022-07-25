@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.30.0 (2022-07-25)
+### Feature
+* Add `additional_options` input for GitHub Action ([#477](https://github.com/relekang/python-semantic-release/issues/477)) ([`aea60e3`](https://github.com/relekang/python-semantic-release/commit/aea60e3d290c6fe3137bff21e0db1ed936233776))
+
+### Fix
+* Allow empty additional options ([#479](https://github.com/relekang/python-semantic-release/issues/479)) ([`c9b2514`](https://github.com/relekang/python-semantic-release/commit/c9b2514d3e164b20e78b33f60989d78c2587e1df))
+
 ## v7.29.7 (2022-07-24)
 ### Fix
 * Ignore dependency version bumps when parsing version from commit logs ([#476](https://github.com/relekang/python-semantic-release/issues/476)) ([`51bcb78`](https://github.com/relekang/python-semantic-release/commit/51bcb780a9f55fadfaf01612ff65c1f92642c2c1))
