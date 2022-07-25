@@ -21,4 +21,4 @@ git config --global user.email "action@github.com"
   -m semantic_release publish \
   -v DEBUG \
   -D commit_author="github-actions <action@github.com>" \
-  "${INPUT_ADDITIONAL_OPTIONS}"
+  ${INPUT_ADDITIONAL_OPTIONS}
