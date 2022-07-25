@@ -55,6 +55,8 @@ Publish will do a sequence of things:
 
 Some of these steps may be disabled based on your configuration.
 
+.. _cmd-common-options:
+
 Common Options
 ~~~~~~~~~~~~~~
 

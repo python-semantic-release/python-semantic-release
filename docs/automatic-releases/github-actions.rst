@@ -10,15 +10,17 @@ Inputs
 +--------------------------+----------------------------------------------------------------------------------------+
 | Input                    | Description                                                                            |
 +==========================+========================================================================================+
-| ``github_token``         | See :ref:`env-gh_token`. this is usually set to ``${{ secrets.GITHUB_TOKEN }}``. |
+| ``github_token``         | See :ref:`env-gh_token`. this is usually set to ``${{ secrets.GITHUB_TOKEN }}``.       |
 +--------------------------+----------------------------------------------------------------------------------------+
 | ``pypi_token``           | See :ref:`env-pypi_token`.                                                             |
 +--------------------------+----------------------------------------------------------------------------------------+
-| ``repository_username``  | See :ref:`env-repository_username`.                                                          |
+| ``repository_username``  | See :ref:`env-repository_username`.                                                    |
 +--------------------------+----------------------------------------------------------------------------------------+
-| ``repository_password``  | See :ref:`env-repository_password`.                                                          |
+| ``repository_password``  | See :ref:`env-repository_password`.                                                    |
 +--------------------------+----------------------------------------------------------------------------------------+
 | ``directory``            | A sub-directory to ``cd`` into before running. Defaults to the root of the repository. |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``additional_options``   | Additional :ref:`cmd-common-options` for the ``publish`` command. Example: ``--noop``  |
 +--------------------------+----------------------------------------------------------------------------------------+
 
 Other options are taken from your regular configuration file.
