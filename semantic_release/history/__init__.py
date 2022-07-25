@@ -36,10 +36,15 @@ def get_pattern_with_commit_subject(pattern):
 
 def get_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
-    return get_pattern_with_commit_subject(f"(\d+\.\d+\.\d+({prerelease_pattern})?)")
+    return f"(\d+\.\d+\.\d+({prerelease_pattern})?)"
 
 
 def get_release_version_pattern():
+    prerelease_pattern = get_prerelease_pattern()
+    return f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+
+
+def get_commit_release_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
     return get_pattern_with_commit_subject(
         f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
@@ -376,7 +381,7 @@ def get_previous_release_version(version: str) -> Optional[str]:
     :param version: A string with the version number.
     :return: A string with the previous version number.
     """
-    release_version_pattern = get_release_version_pattern()
+    release_version_pattern = get_commit_release_version_pattern()
 
     found_version = False
     for commit_hash, commit_message in get_commit_log():
@@ -404,7 +409,7 @@ def get_current_release_version_by_commits() -> str:
 
     :return: A string with the current version number.
     """
-    release_version_re = re.compile(get_release_version_pattern())
+    release_version_re = re.compile(get_commit_release_version_pattern())
 
     for commit_hash, commit_message in get_commit_log():
         logger.debug(f"Checking commit {commit_hash}")
