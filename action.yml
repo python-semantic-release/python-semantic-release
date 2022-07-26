@@ -3,6 +3,9 @@ name: 'Python Semantic Release'
 description: 'Automatic Semantic Versioning for Python projects'
 
 inputs:
+  additional_options:
+    description: 'Additional options for the publish command. Example: --noop'
+    required: false
   directory:
     description: 'Sub-directory to cd into before running semantic-release'
     default: '.'
