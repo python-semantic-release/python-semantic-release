@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.30.2 (2022-07-26)
+### Fix
+* Declare additional_options as action inputs ([#481](https://github.com/relekang/python-semantic-release/issues/481)) ([`cb5d8c7`](https://github.com/relekang/python-semantic-release/commit/cb5d8c7ce7d013fcfabd7696b5ffb846a8a6f853))
+
 ## v7.30.1 (2022-07-25)
 ### Fix
 * Don't use commit_subject for tag pattern matching ([#480](https://github.com/relekang/python-semantic-release/issues/480)) ([`ac3f11e`](https://github.com/relekang/python-semantic-release/commit/ac3f11e689f4a290d20b68b9c5c214098eb61b5f))
