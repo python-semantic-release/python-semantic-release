@@ -465,7 +465,7 @@ def test_update_changelog_file_ok(mock_git, mocker):
     update_changelog_file("2.0.0", content_to_add_str)
 
     mock_git.add.assert_called_once_with("CHANGELOG.md")
-    mocked_read_text.assert_called_once()
+    mocked_read_text.assert_called()
     expected_content_str = (
         "# Changelog\n"
         "\n"
@@ -503,17 +503,57 @@ def test_update_changelog_file_missing_file(mock_git, mocker):
     )
 
 
-def test_update_changelog_file_missing_placeholder(mock_git, mocker):
+def test_update_changelog_file_missing_placeholder_but_containing_header(
+    mock_git, mocker
+):
     mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=True)
-    mocked_read_text = mocker.patch(
+    mocker.patch(
         "semantic_release.vcs_helpers.Path.read_text", return_value="# Changelog"
     )
     mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
 
-    update_changelog_file("2.0.0", "")
+    update_changelog_file("2.0.0", "* Some new content")
+
+    mock_git.add.assert_called_once_with("CHANGELOG.md")
+    mocked_write_text.assert_called_once_with(
+        "# Changelog\n"
+        "\n"
+        "<!--next-version-placeholder-->\n"
+        "\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        "* Some new content\n"
+    )
+
+
+def test_update_changelog_empty_file(mock_git, mocker):
+    mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=True)
+    mocker.patch("semantic_release.vcs_helpers.Path.read_text", return_value="")
+    mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
+
+    update_changelog_file("2.0.0", "* Some new content")
+
+    mock_git.add.assert_called_once_with("CHANGELOG.md")
+    mocked_write_text.assert_called_once_with(
+        "# Changelog\n"
+        "\n"
+        "<!--next-version-placeholder-->\n"
+        "\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        "* Some new content\n"
+    )
+
+
+def test_update_changelog_file_missing_placeholder(mock_git, mocker):
+    mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=True)
+    mocked_read_text = mocker.patch(
+        "semantic_release.vcs_helpers.Path.read_text", return_value="# Uknown header"
+    )
+    mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
+
+    update_changelog_file("2.0.0", "* Some new content")
 
     mock_git.add.assert_not_called()
-    mocked_read_text.assert_called_once()
+    mocked_read_text.assert_called()
     mocked_write_text.assert_not_called()
 
 
