@@ -20,7 +20,7 @@ from .settings import config
 try:
     repo = Repo(".", search_parent_directories=True)
 except InvalidGitRepositoryError:
-    pass
+    repo = None
 
 logger = logging.getLogger(__name__)
 
