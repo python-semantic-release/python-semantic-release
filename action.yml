@@ -3,6 +3,9 @@ name: 'Python Semantic Release'
 description: 'Automatic Semantic Versioning for Python projects'
 
 inputs:
+  additional_options:
+    description: 'Additional options for the publish command. Example: --noop'
+    required: false
   directory:
     description: 'Sub-directory to cd into before running semantic-release'
     default: '.'
@@ -13,11 +16,11 @@ inputs:
   pypi_token:
     description: 'PyPI API token'
     required: false
-  pypi_username:
-    description: 'Username with project access to push to PyPI'
+  repository_username:
+    description: 'Username with project access to push to Artifact Repository'
     required: false
-  pypi_password:
-    description: 'Password to the account specified in pypi_username'
+  repository_password:
+    description: 'Password or token to the account specified in repository_username'
     required: false
 
 runs:

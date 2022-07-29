@@ -12,7 +12,8 @@ Print the changelog to stdout.
 
 If the option ``--post`` is used and there is an authentication token configured
 for your vcs provider (:ref:`env-gh_token` for GitHub, :ref:`env-gl_token` for
-GitLab), the changelog will be posted there too.
+GitLab, :ref:`env-gitea_token` for
+Gitea), the changelog will be posted there too.
 
 
 .. _cmd-version:
@@ -48,11 +49,13 @@ Publish will do a sequence of things:
 #. Update changelog file.
 #. Run :ref:`cmd-version`.
 #. Push changes to git.
-#. Run :ref:`config-build_command` and upload the created files to PyPI.
+#. Run :ref:`config-build_command` and upload the distribution file to your repository.
 #. Run :ref:`cmd-changelog` and post to your vcs provider.
 #. Attach the files created by :ref:`config-build_command` to GitHub releases.
 
 Some of these steps may be disabled based on your configuration.
+
+.. _cmd-common-options:
 
 Common Options
 ~~~~~~~~~~~~~~
@@ -73,6 +76,12 @@ Force a minor release, ignoring the version bump determined from commit messages
 ...........
 
 Force a major release, ignoring the version bump determined from commit messages.
+
+``--prerelease``
+...........
+
+Makes the next release a prerelease, version bumps are still determined or can be forced,
+but the `prerelease_tag` (see :ref:`config-prerelease_tag`) will be appended to version number.
 
 ``--noop``
 ..........

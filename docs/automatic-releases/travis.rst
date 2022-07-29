@@ -16,8 +16,9 @@ You will need to set up three environment variables in Travis. An easy way to do
 is to go to the settings page for your package and add them there. Make sure that the
 secret toggle is set correct for the ones that are secret.
 
-You will need to set :ref:`env-pypi_token` to a PyPI API token. Furthermore,
-you need to set :ref:`env-gh_token` with a personal access token for Github. It will
+You will need to set :ref:`env-repository_password` to a PyPI API token and
+:ref:`env-repository_username` to `__token__`.
+Furthermore, you need to set :ref:`env-gh_token` with a personal access token for Github. It will
 need either ``repo`` or ``public_repo`` scope depending on whether the
 repository is private or public.
 

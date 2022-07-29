@@ -7,6 +7,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.venv
 env/
 build/
 develop-eggs/
@@ -32,6 +33,7 @@ venv/
 
 # PyCharm
 .idea
+*.iml
 
 # VSCode
 .vscode/
@@ -66,3 +68,5 @@ target/
 
 .pytest_cache
 .mypy_cache
+.python-version
+*.swp

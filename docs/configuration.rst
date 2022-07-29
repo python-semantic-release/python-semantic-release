@@ -33,12 +33,12 @@ The file and variable name of where the version number is stored, for example::
 
     semantic_release/__init__.py:__version__
 
-You can specify multiple version variables (i.e. in different files) by 
+You can specify multiple version variables (i.e. in different files) by
 providing comma-separated list of such strings::
 
     semantic_release/__init__.py:__version__,docs/conf.py:version
 
-In ``pyproject.toml`` specifically, you can also use the TOML list syntax to 
+In ``pyproject.toml`` specifically, you can also use the TOML list syntax to
 specify multiple versions:
 
 .. code-block:: toml
@@ -67,14 +67,14 @@ identified using an arbitrary regular expression::
 
     README.rst:VERSION (\d+\.\d+\.\d+)
 
-The regular expression must contain a parenthesized group that matches the 
-version number itself.  Anything outside that group is just context.  For 
-example, the above specifies that there is a version number in ``README.rst`` 
+The regular expression must contain a parenthesized group that matches the
+version number itself.  Anything outside that group is just context.  For
+example, the above specifies that there is a version number in ``README.rst``
 preceded by the string "VERSION".
 
-If the pattern contains the string ``{version}``, it will be replaced with the 
-regular expression used internally by ``python-semantic-release`` to match 
-semantic version numbers.  So the above example would probably be better 
+If the pattern contains the string ``{version}``, it will be replaced with the
+regular expression used internally by ``python-semantic-release`` to match
+semantic version numbers.  So the above example would probably be better
 written as::
 
     README.rst:VERSION {version}
@@ -92,8 +92,30 @@ The way we get and set the new version. Can be `commit` or `tag`.
   This won't change the source defined in :ref:`config-version_variable`.
 - If set to `commit`, will get the current version from the source defined in
   :ref:`config-version_variable`, edit the file and commit it.
+- If set to `tag_only`, then `version_variable` is ignored and no changes are made or committed to local
+  config files. The current version from the latest tag matching ``vX.Y.Z``.
+  This won't change the source defined in :ref:`config-version_variable`.
 
 Default: `commit`
+
+.. _config-prerelease_tag:
+
+``prerelease_tag``
+------------------
+Defined the prerelease marker appended to the version when doing a prerelease.
+
+- The format of a prerelease version will be `{tag_format}-{prerelease_tag}.<prerelease_number>`,
+  e.g. `1.0.0-beta.0` or `1.1.0-beta.1`
+
+Default: `beta`
+
+.. _config-tag_commit:
+
+``tag_commit``
+-------------
+Whether to create a tag for each new release.
+
+Default: `true`
 
 .. _config-patch_without_tag:
 
@@ -120,6 +142,19 @@ If you do not want to bump version to 1.0.0 from 0.y.z automatically, you can
 set this option to `false`.
 
 Default: `true`.
+
+.. _config-pre_commit_command:
+
+``pre_commit_command``
+----------------------
+If this command is provided, it will be run prior to the creation of the release commit.
+
+.. _config-include_additional_files:
+
+``include_additional_files``
+----------------------------
+A comma-separated list of files to be included within the release commit. This can include
+any files created/modified by the ``pre_commit_command``.
 
 Commit Parsing
 ==============
@@ -363,14 +398,41 @@ Distributions
 
 ``upload_to_pypi``
 ------------------
+.. deprecated:: 7.20.0
+  Please use :ref:`config-upload_to_repository` instead
+
 If set to false the pypi uploading will be disabled.
-See :ref:`env-pypi_token` which must also be set for this to work.
+
+See :ref:`env-repository` which must also be set for this to work.
+
+Default: `true`
+
+.. _config-upload_to_repository:
+
+``upload_to_repository``
+------------------
+If set to false the artifact uploading to repository will be disabled.
+
+See :ref:`env-repository` which must also be set for this to work.
+
+Default: `true`
 
 .. _config-upload_to_pypi_glob_patterns:
 
 ``upload_to_pypi_glob_patterns``
 ------------------
+.. deprecated:: 7.20.0
+  Please use :ref:`config-dist_glob_patterns` instead
+
 A comma `,` separated list of glob patterns to use when uploading to pypi.
+
+Default: `*`
+
+.. _config-dist_glob_patterns:
+
+``dist_glob_patterns``
+--------------------------------
+A comma `,` separated list of glob patterns to use when uploading dist files to artifact repository.
 
 Default: `*`
 
@@ -378,7 +440,21 @@ Default: `*`
 
 ``repository``
 ------------------
-The repository (package index) to upload to. Should be a section in the ``.pypirc`` file.
+The repository (package index) name to upload to. Should be a section in ``~/.pypirc``.
+The repositories `pypi` and `testpypi` are preconfigured.
+
+Default: `pypi`
+
+.. seealso::
+  - `The .pypirc file <https://packaging.python.org/specifications/pypirc/>`_ - ``~/.pypirc`` documentation
+
+.. _config-repository_url:
+
+``repository_url``
+-----------------
+The repository (package index) URL to upload the package to.
+
+See :ref:`automatic-dist-upload` for more about uploads to custom repositories.
 
 .. _config-upload_to_release:
 
@@ -427,6 +503,19 @@ The name of your hvcs. Currently only ``github`` and ``gitlab`` are supported.
 
 Default: `github`
 
+.. _config-hvcs_domain:
+
+``hvcs_domain``
+---------------
+The domain url (without https://) of your custom vcs server.
+
+.. _config-hvcs_api_domain:
+
+``hvcs_api_domain``
+-------------------
+The api url (without https://) of your custom vcs server.
+
+
 .. _config-check_build_status:
 
 ``check_build_status``
@@ -449,3 +538,14 @@ Variable          Contents
 ================  ========
 
 Default: ``v{version}``
+
+.. _config-ignore_token_for_push:
+
+``ignore_token_for_push``
+-------------------------
+Do not use the default auth token to push changes to the repository. Use the system
+configured method.
+This is useful if the auth token does not have permission to push, but the system method
+(an ssh deploy key for instance) does.
+
+Default: `false`

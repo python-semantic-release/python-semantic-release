@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import click
 import click_log
@@ -14,8 +15,10 @@ from .changelog import markdown_changelog
 from .dist import build_dists, remove_dists, should_build, should_remove_dist
 from .history import (
     evaluate_version_bump,
+    get_current_release_version,
     get_current_version,
     get_new_version,
+    get_previous_release_version,
     get_previous_version,
     set_new_version,
 )
@@ -28,7 +31,8 @@ from .hvcs import (
     post_changelog,
     upload_to_release,
 )
-from .pypi import upload_to_pypi
+from .pre_commit import run_pre_commit, should_run_pre_commit
+from .repository import ArtifactRepo
 from .settings import config, overload_configuration
 from .vcs_helpers import (
     checkout,
@@ -37,16 +41,20 @@ from .vcs_helpers import (
     get_repository_owner_and_name,
     push_new_version,
     tag_new_version,
+    update_additional_files,
     update_changelog_file,
 )
 
 logger = logging.getLogger("semantic_release")
 
-SECRET_NAMES = [
-    "PYPI_USERNAME",
-    "PYPI_PASSWORD",
-    "GH_TOKEN",
-    "GL_TOKEN",
+TOKEN_VARS = [
+    "github_token_var",
+    "gitlab_token_var",
+    "pypi_pass_var",
+    "pypi_token_var",
+    "pypi_user_var",
+    "repository_user_var",
+    "repository_pass_var",
 ]
 
 COMMON_OPTIONS = [
@@ -59,6 +67,14 @@ COMMON_OPTIONS = [
     ),
     click.option(
         "--patch", "force_level", flag_value="patch", help="Force patch version."
+    ),
+    click.option("--prerelease", is_flag=True, help="Creates a prerelease version."),
+    click.option(
+        "--prerelease-patch/--no-prerelease-patch",
+        "prerelease_patch",
+        default=True,
+        show_default=True,
+        help="whether or not prerelease always gets at least a patch-level bump",
     ),
     click.option("--post", is_flag=True, help="Post changelog."),
     click.option("--retry", is_flag=True, help="Retry the same release, do not bump."),
@@ -86,12 +102,23 @@ def common_options(func):
     return func
 
 
-def print_version(*, current=False, force_level=None, **kwargs):
+def print_version(
+    *,
+    current=False,
+    force_level=None,
+    prerelease=False,
+    prerelease_patch=True,
+    **kwargs,
+):
     """
     Print the current or new version to standard output.
     """
     try:
         current_version = get_current_version()
+        current_release_version = get_current_release_version()
+        logger.info(
+            f"Current version: {current_version}, Current release version: {current_release_version}"
+        )
     except GitError as e:
         print(str(e), file=sys.stderr)
         return False
@@ -101,8 +128,19 @@ def print_version(*, current=False, force_level=None, **kwargs):
 
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, force_level)
-    new_version = get_new_version(current_version, level_bump)
-    if should_bump_version(current_version=current_version, new_version=new_version):
+    new_version = get_new_version(
+        current_version,
+        current_release_version,
+        level_bump,
+        prerelease,
+        prerelease_patch,
+    )
+    if should_bump_version(
+        current_version=current_version,
+        new_version=new_version,
+        current_release_version=current_release_version,
+        prerelease=prerelease,
+    ):
         print(new_version, end="")
         return True
 
@@ -110,7 +148,16 @@ def print_version(*, current=False, force_level=None, **kwargs):
     return False
 
 
-def version(*, retry=False, noop=False, force_level=None, changelog=False, **kwargs):
+def version(
+    *,
+    retry=False,
+    noop=False,
+    force_level=None,
+    prerelease=False,
+    prerelease_patch=True,
+    changelog=False,
+    **kwargs,
+):
     """
     Detect the new version according to git log and semver.
 
@@ -124,16 +171,30 @@ def version(*, retry=False, noop=False, force_level=None, changelog=False, **kwa
     # Get the current version number
     try:
         current_version = get_current_version()
-        logger.info(f"Current version: {current_version}")
+        current_release_version = get_current_release_version()
+        logger.info(
+            f"Current version: {current_version}, Current release version: {current_release_version}"
+        )
     except GitError as e:
         logger.error(str(e))
         return False
     # Find what the new version number should be
-    level_bump = evaluate_version_bump(current_version, force_level)
-    new_version = get_new_version(current_version, level_bump)
+    level_bump = evaluate_version_bump(current_release_version, force_level)
+    new_version = get_new_version(
+        current_version,
+        current_release_version,
+        level_bump,
+        prerelease,
+        prerelease_patch,
+    )
 
     if not should_bump_version(
-        current_version=current_version, new_version=new_version, retry=retry, noop=noop
+        current_version=current_version,
+        new_version=new_version,
+        current_release_version=current_release_version,
+        prerelease=prerelease,
+        retry=retry,
+        noop=noop,
     ):
         return False
 
@@ -159,9 +220,19 @@ def version(*, retry=False, noop=False, force_level=None, changelog=False, **kwa
     return True
 
 
-def should_bump_version(*, current_version, new_version, retry=False, noop=False):
+def should_bump_version(
+    *,
+    current_version,
+    current_release_version,
+    new_version,
+    prerelease,
+    retry=False,
+    noop=False,
+):
+    match_version = current_version if prerelease else current_release_version
+
     """Test whether the version should be bumped."""
-    if new_version == current_version and not retry:
+    if new_version == match_version and not retry:
         logger.info("No release will be made.")
         return False
 
@@ -189,6 +260,14 @@ def bump_version(new_version, level_bump):
 
     Edit in the source code, commit and create a git tag.
     """
+    logger.info(f"Bumping with a {level_bump} version to {new_version}")
+    if config.get("version_source") == "tag_only":
+        tag_new_version(new_version)
+
+        # we are done, no need for file changes if we are using
+        # tags as version source
+        return
+
     set_new_version(new_version)
     if config.get(
         "commit_version_number",
@@ -198,10 +277,8 @@ def bump_version(new_version, level_bump):
     if config.get("version_source") == "tag" or config.get("tag_commit"):
         tag_new_version(new_version)
 
-    logger.info(f"Bumping with a {level_bump} version to {new_version}")
 
-
-def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
+def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **kwargs):
     """
     Generate the changelog since the last release.
 
@@ -241,22 +318,40 @@ def changelog(*, unreleased=False, noop=False, post=False, **kwargs):
             logger.error("Missing token: cannot post changelog to HVCS")
 
 
-def publish(**kwargs):
-    """Run the version task, then push to git and upload to PyPI / GitHub Releases."""
+def publish(
+    retry: bool = False,
+    noop: bool = False,
+    prerelease: bool = False,
+    prerelease_patch=True,
+    **kwargs,
+):
+    """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
+    current_release_version = get_current_release_version()
+    logger.info(
+        f"Current version: {current_version}, Current release version: {current_release_version}"
+    )
 
-    retry = kwargs.get("retry")
+    verbose = logger.isEnabledFor(logging.DEBUG)
     if retry:
         logger.info("Retry is on")
         # The "new" version will actually be the current version, and the
         # "current" version will be the previous version.
         level_bump = None
         new_version = current_version
-        current_version = get_previous_version(current_version)
+        current_version = get_previous_release_version(current_version)
     else:
         # Calculate the new version
-        level_bump = evaluate_version_bump(current_version, kwargs.get("force_level"))
-        new_version = get_new_version(current_version, level_bump)
+        level_bump = evaluate_version_bump(
+            current_release_version, kwargs.get("force_level")
+        )
+        new_version = get_new_version(
+            current_version,
+            current_release_version,
+            level_bump,
+            prerelease,
+            prerelease_patch,
+        )
 
     owner, name = get_repository_owner_and_name()
 
@@ -268,8 +363,10 @@ def publish(**kwargs):
     if should_bump_version(
         current_version=current_version,
         new_version=new_version,
+        current_release_version=current_release_version,
+        prerelease=prerelease,
         retry=retry,
-        noop=kwargs.get("noop"),
+        noop=noop,
     ):
         log = generate_changelog(current_version)
         changelog_md = markdown_changelog(
@@ -281,8 +378,13 @@ def publish(**kwargs):
             previous_version=current_version,
         )
 
+        if should_run_pre_commit():
+            logger.info("Running pre-commit command")
+            run_pre_commit()
+
         if not retry:
             update_changelog_file(new_version, changelog_md)
+            update_additional_files()
             bump_version(new_version, level_bump)
         # A new version was released
         logger.info("Pushing new version")
@@ -296,12 +398,7 @@ def publish(**kwargs):
 
         # Get config options for uploads
         dist_path = config.get("dist_path")
-        upload_pypi = config.get("upload_to_pypi")
-        upload_to_pypi_glob_patterns = config.get("upload_to_pypi_glob_patterns")
         upload_release = config.get("upload_to_release")
-
-        if upload_to_pypi_glob_patterns:
-            upload_to_pypi_glob_patterns = upload_to_pypi_glob_patterns.split(",")
 
         if should_build():
             # We need to run the command to build wheels for releasing
@@ -311,13 +408,10 @@ def publish(**kwargs):
                 remove_dists(dist_path)
             build_dists()
 
-        if upload_pypi:
-            logger.info("Uploading to PyPI")
-            upload_to_pypi(
-                path=dist_path,
-                # If we are retrying, we don't want errors for files that are already on PyPI.
-                skip_existing=retry,
-                glob_patterns=upload_to_pypi_glob_patterns,
+        if ArtifactRepo.upload_enabled():
+            logger.info("Uploading to artifact Repository")
+            ArtifactRepo(Path(dist_path)).upload(
+                noop=noop, verbose=verbose, skip_existing=retry
             )
 
         if check_token():
@@ -352,7 +446,8 @@ def publish(**kwargs):
 def filter_output_for_secrets(message):
     """Remove secrets from cli output."""
     output = message
-    for secret_name in SECRET_NAMES:
+    for token_var in TOKEN_VARS:
+        secret_name = config.get(token_var)
         secret = os.environ.get(secret_name)
         if secret != "" and secret is not None:
             output = output.replace(secret, f"${secret_name}")
@@ -383,7 +478,8 @@ def entry():
 def main(**kwargs):
     logger.debug(f"Main args: {kwargs}")
     message = ""
-    for secret_name in SECRET_NAMES:
+    for token_var in TOKEN_VARS:
+        secret_name = config.get(token_var)
         message += f'{secret_name}="{os.environ.get(secret_name)}",'
     logger.debug(f"Environment: {filter_output_for_secrets(message)}")
 
@@ -396,6 +492,7 @@ def main(**kwargs):
         "patch_without_tag",
         "major_on_zero",
         "upload_to_pypi",
+        "upload_to_repository",
         "version_source",
         "no_git_tag",
     ]:

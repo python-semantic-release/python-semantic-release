@@ -2,24 +2,26 @@ Setting up python-semantic-release on GitHub Actions
 ====================================================
 
 Python Semantic Release includes a GitHub Action which runs the ``publish``
-command.
+command. The repository is set to `PyPi`.
 
 Inputs
 ------
 
-+--------------------+----------------------------------------------------------------------------------------+
-| Input              | Description                                                                            |
-+====================+========================================================================================+
-| ``github_token``   | See :ref:`env-gh_token`. this is usually set to ``${{ secrets.GITHUB_TOKEN }}``.       |
-+--------------------+----------------------------------------------------------------------------------------+
-| ``pypi_token``     | See :ref:`env-pypi_token`.                                                             |
-+--------------------+----------------------------------------------------------------------------------------+
-| ``pypi_username``  | See :ref:`env-pypi_username`.                                                          |
-+--------------------+----------------------------------------------------------------------------------------+
-| ``pypi_password``  | See :ref:`env-pypi_password`.                                                          |
-+--------------------+----------------------------------------------------------------------------------------+
-| ``directory``      | A sub-directory to ``cd`` into before running. Defaults to the root of the repository. |
-+--------------------+----------------------------------------------------------------------------------------+
++--------------------------+----------------------------------------------------------------------------------------+
+| Input                    | Description                                                                            |
++==========================+========================================================================================+
+| ``github_token``         | See :ref:`env-gh_token`. this is usually set to ``${{ secrets.GITHUB_TOKEN }}``.       |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``pypi_token``           | See :ref:`env-pypi_token`.                                                             |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``repository_username``  | See :ref:`env-repository_username`.                                                    |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``repository_password``  | See :ref:`env-repository_password`.                                                    |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``directory``            | A sub-directory to ``cd`` into before running. Defaults to the root of the repository. |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``additional_options``   | Additional :ref:`cmd-common-options` for the ``publish`` command. Example: ``--noop``  |
++--------------------------+----------------------------------------------------------------------------------------+
 
 Other options are taken from your regular configuration file.
 
@@ -49,11 +51,11 @@ Example Workflow
          uses: relekang/python-semantic-release@master
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
-           pypi_token: ${{ secrets.PYPI_TOKEN }}
+           repository_username: __token__
+           repository_password: ${{ secrets.PYPI_TOKEN }}
 
-:ref:`env-pypi_token` should be set as a secret on your repository's settings page.
-It is also possible to use username and password authentication in a similar
-fashion.
+:ref:`env-repository_password` should be set as a secret on your repository's settings page.
+It is also possible to use username and password authentication in a similar fashion.
 
 ``concurrency`` is a
 `beta feature of GitHub Actions <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency>`_
@@ -90,14 +92,16 @@ multiple projects.
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
-       pypi_token: ${{ secrets.PYPI_TOKEN }}
+       repository_username: __token__
+       repository_password: ${{ secrets.PYPI_TOKEN }}
 
    - name: Release Project 2
      uses: relekang/python-semantic-release@master
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
-       pypi_token: ${{ secrets.PYPI_TOKEN }}
+       repository_username: __token__
+       repository_password: ${{ secrets.PYPI_TOKEN }}
 
 .. note::
   The release notes posted to GitHub will not currently distinguish which

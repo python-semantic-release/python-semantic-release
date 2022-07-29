@@ -3,7 +3,8 @@
 import logging
 import mimetypes
 import os
-from typing import Optional, Union
+from typing import Any, Optional, Union, cast
+from urllib.parse import urlsplit
 
 from gitlab import exceptions, gitlab
 from requests import HTTPError, Session
@@ -100,7 +101,11 @@ class Github(Base):
 
         :return: The Github domain
         """
-        hvcs_domain = config.get("hvcs_domain")
+        # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+        hvcs_domain = config.get(
+            "hvcs_domain", os.getenv("GITHUB_SERVER_URL", "").replace("https://", "")
+        )
+
         domain = hvcs_domain if hvcs_domain else Github.DEFAULT_DOMAIN
         return domain
 
@@ -112,8 +117,13 @@ class Github(Base):
         """
         # not necessarily prefixed with api in the case of a custom domain, so
         # can't just default DEFAULT_DOMAIN to github.com
-        hvcs_domain = config.get("hvcs_domain")
-        hostname = hvcs_domain if hvcs_domain else "api." + Github.DEFAULT_DOMAIN
+        # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+        hvcs_api_domain = config.get(
+            "hvcs_api_domain", os.getenv("GITHUB_API_URL", "").replace("https://", "")
+        )
+        hostname = (
+            hvcs_api_domain if hvcs_api_domain else "api." + Github.DEFAULT_DOMAIN
+        )
         return f"https://{hostname}"
 
     @staticmethod
@@ -122,7 +132,7 @@ class Github(Base):
 
         :return: The Github token environment variable (GH_TOKEN) value
         """
-        return os.environ.get("GH_TOKEN")
+        return os.environ.get(config.get("github_token_var"))
 
     @staticmethod
     def auth() -> Optional[TokenAuth]:
@@ -274,6 +284,31 @@ class Github(Base):
 
     @classmethod
     @LoggedFunction(logger)
+    def get_asset_upload_url(
+        cls, owner: str, repo: str, release_id: str
+    ) -> Optional[str]:
+        """Get the correct upload url for a release
+
+        https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param release_id: ID of the release to upload to
+
+        :return: URL found to upload for a release
+        """
+        try:
+            response = Github.session().get(
+                f"{Github.api_url()}/repos/{owner}/{repo}/releases/{release_id}"
+            )
+            return str(response.json().get("upload_url")).split("{")[0]
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                logger.debug(f"Get release asset upload on Github has failed: {e}")
+            return None
+
+    @classmethod
+    @LoggedFunction(logger)
     def upload_asset(
         cls, owner: str, repo: str, release_id: int, file: str, label: str = None
     ) -> bool:
@@ -289,7 +324,10 @@ class Github(Base):
 
         :return: The status of the request
         """
-        url = f"https://uploads.github.com/repos/{owner}/{repo}/releases/{release_id}/assets"
+        url = cls.get_asset_upload_url(owner, repo, release_id)
+        if not url:
+            logger.warning("Could not get release upload url")
+            return False
 
         content_type = mimetypes.guess_type(file, strict=False)[0]
         if not content_type:
@@ -343,6 +381,279 @@ class Github(Base):
         return not one_or_more_failed
 
 
+class Gitea(Base):
+    """Gitea helper class"""
+
+    DEFAULT_DOMAIN = "gitea.com"
+    DEFAULT_API_PATH = "/api/v1"
+
+    _fix_mime_types()
+
+    @staticmethod
+    def domain() -> str:
+        """Gitea domain property
+
+        :return: The Gitea domain
+        """
+        # ref: https://docs.gitea.com/en/actions/reference/environment-variables#default-environment-variables
+        hvcs_domain = config.get(
+            "hvcs_domain", os.getenv("GITEA_SERVER_URL", "").replace("https://", "")
+        )
+        domain = hvcs_domain if hvcs_domain else Gitea.DEFAULT_DOMAIN
+        return domain
+
+    @staticmethod
+    def api_url() -> str:
+        """Gitea api_url property
+
+        :return: The Gitea API URL
+        """
+
+        hvcs_domain = config.get(
+            "hvcs_domain", os.getenv("GITEA_SERVER_URL", "").replace("https://", "")
+        )
+        hostname = config.get(
+            "hvcs_api_domain", os.getenv("GITEA_API_URL", "").replace("https://", "")
+        )
+
+        if hvcs_domain and not hostname:
+            hostname = hvcs_domain + Gitea.DEFAULT_API_PATH
+        elif not hostname:
+            hostname = Gitea.DEFAULT_DOMAIN + Gitea.DEFAULT_API_PATH
+
+        return f"https://{hostname}"
+
+    @staticmethod
+    def token() -> Optional[str]:
+        """Gitea token property
+
+        :return: The Gitea token environment variable (GITEA_TOKEN) value
+        """
+        return os.environ.get(config.get("gitea_token_var"))
+
+    @staticmethod
+    def auth() -> Optional[TokenAuth]:
+        """Gitea token property
+
+        :return: The Gitea token environment variable (GITEA_TOKEN) value
+        """
+        token = Gitea.token()
+        if not token:
+            return None
+        return TokenAuth(token)
+
+    @staticmethod
+    def session(
+        raise_for_status=True, retry: Union[Retry, bool, int] = True
+    ) -> Session:
+        session = build_requests_session(raise_for_status=raise_for_status, retry=retry)
+        session.auth = Gitea.auth()
+        return session
+
+    @staticmethod
+    @LoggedFunction(logger)
+    def check_build_status(owner: str, repo: str, ref: str) -> bool:
+        """Check build status
+
+        https://gitea.com/api/swagger#/repository/repoCreateStatus
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param ref: The sha1 hash of the commit ref
+
+        :return: Was the build status success?
+        """
+        url = "{domain}/repos/{owner}/{repo}/statuses/{ref}"
+        try:
+            response = Gitea.session().get(
+                url.format(domain=Gitea.api_url(), owner=owner, repo=repo, ref=ref)
+            )
+            data = response.json()
+            if type(data) == list:
+                return data[0].get("status") == "success"
+            else:
+                return data.get("status") == "success"
+        except HTTPError as e:
+            logger.warning(f"Build status check on Gitea has failed: {e}")
+            return False
+
+    @classmethod
+    @LoggedFunction(logger)
+    def create_release(cls, owner: str, repo: str, tag: str, changelog: str) -> bool:
+        """Create a new release
+
+        https://gitea.com/api/swagger#/repository/repoCreateRelease
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param tag: Tag to create release for
+        :param changelog: The release notes for this version
+
+        :return: Whether the request succeeded
+        """
+        try:
+            Gitea.session().post(
+                f"{Gitea.api_url()}/repos/{owner}/{repo}/releases",
+                json={
+                    "tag_name": tag,
+                    "name": tag,
+                    "body": changelog,
+                    "draft": False,
+                    "prerelease": False,
+                },
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Release creation on Gitea has failed: {e}")
+            return False
+
+    @classmethod
+    @LoggedFunction(logger)
+    def get_release(cls, owner: str, repo: str, tag: str) -> Optional[int]:
+        """Get a release by its tag name
+
+        https://gitea.com/api/swagger#/repository/repoGetReleaseByTag
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param tag: Tag to get release for
+
+        :return: ID of found release
+        """
+        try:
+            response = Gitea.session().get(
+                f"{Gitea.api_url()}/repos/{owner}/{repo}/releases/tags/{tag}"
+            )
+            return response.json().get("id")
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                logger.debug(f"Get release by tag on Gitea has failed: {e}")
+            return None
+
+    @classmethod
+    @LoggedFunction(logger)
+    def edit_release(cls, owner: str, repo: str, id: int, changelog: str) -> bool:
+        """Edit a release with updated change notes
+
+        https://gitea.com/api/swagger#/repository/repoEditRelease
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param id: ID of release to update
+        :param changelog: The release notes for this version
+
+        :return: Whether the request succeeded
+        """
+        try:
+            Gitea.session().post(
+                f"{Gitea.api_url()}/repos/{owner}/{repo}/releases/{id}",
+                json={"body": changelog},
+            )
+            return True
+        except HTTPError as e:
+            logger.warning(f"Edit release on Gitea has failed: {e}")
+            return False
+
+    @classmethod
+    @LoggedFunction(logger)
+    def post_release_changelog(
+        cls, owner: str, repo: str, version: str, changelog: str
+    ) -> bool:
+        """Post release changelog
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param version: The version number
+        :param changelog: The release notes for this version
+
+        :return: The status of the request
+        """
+        tag = get_formatted_tag(version)
+        logger.debug(f"Attempting to create release for {tag}")
+        success = Gitea.create_release(owner, repo, tag, changelog)
+
+        if not success:
+            logger.debug("Unsuccessful, looking for an existing release to update")
+            release_id = Gitea.get_release(owner, repo, tag)
+            if release_id:
+                logger.debug(f"Updating release {release_id}")
+                success = Gitea.edit_release(owner, repo, release_id, changelog)
+            else:
+                logger.debug(f"Existing release not found")
+
+        return success
+
+    @classmethod
+    @LoggedFunction(logger)
+    def upload_asset(
+        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+    ) -> bool:
+        """Upload an asset to an existing release
+
+        https://gitea.com/api/swagger#/repository/repoCreateReleaseAttachment
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param release_id: ID of the release to upload to
+        :param file: Path of the file to upload
+        :param label: Custom label for this file
+
+        :return: The status of the request
+        """
+        url = f"{Gitea.api_url()}/repos/{owner}/{repo}/releases/{release_id}/assets"
+        try:
+            name = os.path.basename(file)
+            response = Gitea.session().post(
+                url,
+                params={"name": name},
+                data={},
+                files={
+                    "attachment": (
+                        name,
+                        open(file, "rb"),
+                        "application/octet-stream",
+                    ),
+                },
+            )
+
+            logger.debug(
+                f"Asset upload on Gitea completed, url: {response.url}, status code: {response.status_code}"
+            )
+
+            return True
+        except HTTPError as e:
+            logger.warning(f"Asset upload {file} on Gitea has failed: {e}")
+            return False
+
+    @classmethod
+    def upload_dists(cls, owner: str, repo: str, version: str, path: str) -> bool:
+        """Upload distributions to a release
+
+        :param owner: The owner namespace of the repository
+        :param repo: The repository name
+        :param version: Version to upload for
+        :param path: Path to the dist directory
+
+        :return: The status of the request
+        """
+
+        # Find the release corresponding to this version
+        release_id = Gitea.get_release(owner, repo, get_formatted_tag(version))
+        if not release_id:
+            logger.debug("No release found to upload assets to")
+            return False
+
+        # Upload assets
+        one_or_more_failed = False
+        for file in os.listdir(path):
+            file_path = os.path.join(path, file)
+
+            if not Gitea.upload_asset(owner, repo, release_id, file_path):
+                one_or_more_failed = True
+
+        return not one_or_more_failed
+
+
 class Gitlab(Base):
     """Gitlab helper class"""
 
@@ -352,7 +663,12 @@ class Gitlab(Base):
 
         :return: The Gitlab instance domain
         """
-        domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST"))
+        # Use Gitlab-CI environment vars if available
+        if "CI_SERVER_URL" in os.environ:
+            url = urlsplit(os.environ["CI_SERVER_URL"])
+            return f"{url.netloc}{url.path}".rstrip("/")
+
+        domain = config.get("hvcs_domain", os.environ.get("CI_SERVER_HOST", None))
         return domain if domain else "gitlab.com"
 
     @staticmethod
@@ -361,6 +677,10 @@ class Gitlab(Base):
 
         :return: The Gitlab instance API url
         """
+        # Use Gitlab-CI environment vars if available
+        if "CI_SERVER_URL" in os.environ:
+            return os.environ["CI_SERVER_URL"]
+
         return f"https://{Gitlab.domain()}"
 
     @staticmethod
@@ -369,7 +689,7 @@ class Gitlab(Base):
 
         :return: The Gitlab token environment variable (GL_TOKEN) value
         """
-        return os.environ.get("GL_TOKEN")
+        return os.environ.get(config.get("gitlab_token_var"))
 
     @staticmethod
     @LoggedFunction(logger)
@@ -386,14 +706,14 @@ class Gitlab(Base):
         gl.auth()
         jobs = gl.projects.get(owner + "/" + repo).commits.get(ref).statuses.list()
         for job in jobs:
-            if job["status"] not in ["success", "skipped"]:
-                if job["status"] == "pending":
+            if job["status"] not in ["success", "skipped"]:  # type: ignore[index]
+                if job["status"] == "pending":  # type: ignore[index]
                     logger.debug(
-                        f"check_build_status: job {job['name']} is still in pending status"
+                        f"check_build_status: job {job['name']} is still in pending status"  # type: ignore[index]
                     )
                     return False
-                elif job["status"] == "failed" and not job["allow_failure"]:
-                    logger.debug(f"check_build_status: job {job['name']} failed")
+                elif job["status"] == "failed" and not job["allow_failure"]:  # type: ignore[index]
+                    logger.debug(f"check_build_status: job {job['name']} failed")  # type: ignore[index]
                     return False
         return True
 
@@ -415,6 +735,7 @@ class Gitlab(Base):
         gl = gitlab.Gitlab(Gitlab.api_url(), private_token=Gitlab.token())
         gl.auth()
         try:
+            logger.debug(f"Before release create call")
             gl.projects.get(owner + "/" + repo).releases.create(
                 {
                     "name": "Release " + version,
@@ -441,7 +762,11 @@ def get_hvcs() -> Base:
     try:
         return globals()[hvcs.capitalize()]
     except KeyError:
-        raise ImproperConfigurationError('"{0}" is not a valid option for hvcs.')
+        raise ImproperConfigurationError(
+            '"{0}" is not a valid option for hvcs. Please use "github"|"gitlab"|"gitea"'.format(
+                hvcs
+            )
+        )
 
 
 def check_build_status(owner: str, repository: str, ref: str) -> bool:

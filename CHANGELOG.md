@@ -2,6 +2,140 @@
 
 <!--next-version-placeholder-->
 
+## v7.31.1 (2022-07-29)
+### Fix
+* Update git email in action ([`0ece6f2`](https://github.com/relekang/python-semantic-release/commit/0ece6f263ff02a17bb1e00e7ed21c490f72e3d00))
+
+## v7.31.0 (2022-07-29)
+### Feature
+* Override repository_url w REPOSITORY_URL env var ([#439](https://github.com/relekang/python-semantic-release/issues/439)) ([`cb7578c`](https://github.com/relekang/python-semantic-release/commit/cb7578cf005b8bd65d9b988f6f773e4c060982e3))
+* Add prerelease-patch and no-prerelease-patch flags for whether to auto-bump prereleases ([`b4e5b62`](https://github.com/relekang/python-semantic-release/commit/b4e5b626074f969e4140c75fdac837a0625cfbf6))
+
+### Fix
+* :bug: fix get_current_release_version for tag_only version_source ([`cad09be`](https://github.com/relekang/python-semantic-release/commit/cad09be9ba067f1c882379c0f4b28115a287fc2b))
+
+## v7.30.2 (2022-07-26)
+### Fix
+* Declare additional_options as action inputs ([#481](https://github.com/relekang/python-semantic-release/issues/481)) ([`cb5d8c7`](https://github.com/relekang/python-semantic-release/commit/cb5d8c7ce7d013fcfabd7696b5ffb846a8a6f853))
+
+## v7.30.1 (2022-07-25)
+### Fix
+* Don't use commit_subject for tag pattern matching ([#480](https://github.com/relekang/python-semantic-release/issues/480)) ([`ac3f11e`](https://github.com/relekang/python-semantic-release/commit/ac3f11e689f4a290d20b68b9c5c214098eb61b5f))
+
+## v7.30.0 (2022-07-25)
+### Feature
+* Add `additional_options` input for GitHub Action ([#477](https://github.com/relekang/python-semantic-release/issues/477)) ([`aea60e3`](https://github.com/relekang/python-semantic-release/commit/aea60e3d290c6fe3137bff21e0db1ed936233776))
+
+### Fix
+* Allow empty additional options ([#479](https://github.com/relekang/python-semantic-release/issues/479)) ([`c9b2514`](https://github.com/relekang/python-semantic-release/commit/c9b2514d3e164b20e78b33f60989d78c2587e1df))
+
+## v7.29.7 (2022-07-24)
+### Fix
+* Ignore dependency version bumps when parsing version from commit logs ([#476](https://github.com/relekang/python-semantic-release/issues/476)) ([`51bcb78`](https://github.com/relekang/python-semantic-release/commit/51bcb780a9f55fadfaf01612ff65c1f92642c2c1))
+
+## v7.29.6 (2022-07-15)
+### Fix
+* Allow changing prerelease tag using CLI flags ([#466](https://github.com/relekang/python-semantic-release/issues/466)) ([`395bf4f`](https://github.com/relekang/python-semantic-release/commit/395bf4f2de73663c070f37cced85162d41934213))
+
+## v7.29.5 (2022-07-14)
+### Fix
+* **publish:** Get version bump for current release ([#467](https://github.com/relekang/python-semantic-release/issues/467)) ([`dd26888`](https://github.com/relekang/python-semantic-release/commit/dd26888a923b2f480303c19f1916647de48b02bf))
+* Add packaging module requirement ([#469](https://github.com/relekang/python-semantic-release/issues/469)) ([`b99c9fa`](https://github.com/relekang/python-semantic-release/commit/b99c9fa88dc25e5ceacb131cd93d9079c4fb2c86))
+
+## v7.29.4 (2022-06-29)
+### Fix
+* Add text for empty ValueError ([#461](https://github.com/relekang/python-semantic-release/issues/461)) ([`733254a`](https://github.com/relekang/python-semantic-release/commit/733254a99320d8c2f964d799ac4ec29737867faa))
+
+## v7.29.3 (2022-06-26)
+### Fix
+* Ensure that assets can be uploaded successfully on custom GitHub servers ([#458](https://github.com/relekang/python-semantic-release/issues/458)) ([`32b516d`](https://github.com/relekang/python-semantic-release/commit/32b516d7aded4afcafe4aa56d6a5a329b3fc371d))
+
+## v7.29.2 (2022-06-20)
+### Fix
+* Ensure should_bump checks against release version if not prerelease ([#457](https://github.com/relekang/python-semantic-release/issues/457)) ([`da0606f`](https://github.com/relekang/python-semantic-release/commit/da0606f0d67ada5f097c704b9423ead3b5aca6b2))
+
+## v7.29.1 (2022-06-01)
+### Fix
+* Capture correct release version when patch has more than one digit ([#448](https://github.com/relekang/python-semantic-release/issues/448)) ([`426cdc7`](https://github.com/relekang/python-semantic-release/commit/426cdc7d7e0140da67f33b6853af71b2295aaac2))
+
+## v7.29.0 (2022-05-27)
+### Feature
+* Allow using ssh-key to push version while using token to publish to hvcs ([#419](https://github.com/relekang/python-semantic-release/issues/419)) ([`7b2dffa`](https://github.com/relekang/python-semantic-release/commit/7b2dffadf43c77d5e0eea307aefcee5c7744df5c))
+
+### Fix
+* Fix and refactor prerelease ([#435](https://github.com/relekang/python-semantic-release/issues/435)) ([`94c9494`](https://github.com/relekang/python-semantic-release/commit/94c94942561f85f48433c95fd3467e03e0893ab4))
+
+## v7.28.1 (2022-04-14)
+### Fix
+* Fix getting current version when `version_source=tag_only` ([#437](https://github.com/relekang/python-semantic-release/issues/437)) ([`b247936`](https://github.com/relekang/python-semantic-release/commit/b247936a81c0d859a34bf9f17ab8ca6a80488081))
+
+## v7.28.0 (2022-04-11)
+### Feature
+* Add `tag_only` option for `version_source` ([#436](https://github.com/relekang/python-semantic-release/issues/436)) ([`cf74339`](https://github.com/relekang/python-semantic-release/commit/cf743395456a86c62679c2c0342502af043bfc3b))
+
+## v7.27.1 (2022-04-03)
+### Fix
+* **prerelase:** Pass prerelease option to get_current_version ([#432](https://github.com/relekang/python-semantic-release/issues/432)) ([`aabab0b`](https://github.com/relekang/python-semantic-release/commit/aabab0b7ce647d25e0c78ae6566f1132ece9fcb9))
+
+## v7.27.0 (2022-03-15)
+### Feature
+* Add git-lfs to docker container ([#427](https://github.com/relekang/python-semantic-release/issues/427)) ([`184e365`](https://github.com/relekang/python-semantic-release/commit/184e3653932979b82e5a62b497f2a46cbe15ba87))
+
+## v7.26.0 (2022-03-07)
+### Feature
+* Add prerelease functionality ([#413](https://github.com/relekang/python-semantic-release/issues/413)) ([`7064265`](https://github.com/relekang/python-semantic-release/commit/7064265627a2aba09caa2873d823b594e0e23e77))
+
+## v7.25.2 (2022-02-24)
+### Fix
+* **gitea:** Use form-data from asset upload ([#421](https://github.com/relekang/python-semantic-release/issues/421)) ([`e011944`](https://github.com/relekang/python-semantic-release/commit/e011944987885f75b80fe16a363f4befb2519a91))
+
+## v7.25.1 (2022-02-23)
+### Fix
+* **gitea:** Build status and asset upload ([#420](https://github.com/relekang/python-semantic-release/issues/420)) ([`57db81f`](https://github.com/relekang/python-semantic-release/commit/57db81f4c6b96da8259e3bad9137eaccbcd10f6e))
+
+## v7.25.0 (2022-02-17)
+### Feature
+* **hvcs:** Add gitea support ([#412](https://github.com/relekang/python-semantic-release/issues/412)) ([`b7e7936`](https://github.com/relekang/python-semantic-release/commit/b7e7936331b7939db09abab235c8866d800ddc1a))
+
+### Documentation
+* Document tag_commit ([`b631ca0`](https://github.com/relekang/python-semantic-release/commit/b631ca0a79cb2d5499715d43688fc284cffb3044))
+
+## v7.24.0 (2022-01-24)
+### Feature
+* Include additional changes in release commits ([`3e34f95`](https://github.com/relekang/python-semantic-release/commit/3e34f957ff5a3ec6e6f984cc4a79a38ce4391ea9))
+
+## v7.23.0 (2021-11-30)
+### Feature
+* Support Github Enterprise server ([`b4e01f1`](https://github.com/relekang/python-semantic-release/commit/b4e01f1b7e841263fa84f57f0ac331f7c0b31954))
+
+## v7.22.0 (2021-11-21)
+### Feature
+* **parser_angular:** Allow customization in parser ([`298eebb`](https://github.com/relekang/python-semantic-release/commit/298eebbfab5c083505036ba1df47a5874a1eed6e))
+
+### Fix
+* Address PR feedback for `parser_angular.py` ([`f7bc458`](https://github.com/relekang/python-semantic-release/commit/f7bc45841e6a5c762f99f936c292cee25fabcd02))
+
+## v7.21.0 (2021-11-21)
+### Feature
+* Use gitlab-ci or github actions env vars ([`8ca8dd4`](https://github.com/relekang/python-semantic-release/commit/8ca8dd40f742f823af147928bd75a9577c50d0fd))
+
+### Fix
+* Remove invalid repository exception ([`746b62d`](https://github.com/relekang/python-semantic-release/commit/746b62d4e207a5d491eecd4ca96d096eb22e3bed))
+
+## v7.20.0 (2021-11-21)
+### Feature
+* Rewrite Twine adapter for uploading to artifact repositories ([`cfb20af`](https://github.com/relekang/python-semantic-release/commit/cfb20af79a8e25a77aee9ff72deedcd63cb7f62f))
+* Allow custom environment variable names ([#392](https://github.com/relekang/python-semantic-release/issues/392)) ([`372cda3`](https://github.com/relekang/python-semantic-release/commit/372cda3497f16ead2209e6e1377d38f497144883))
+* **repository:** Add to settings artifact repository ([`f4ef373`](https://github.com/relekang/python-semantic-release/commit/f4ef3733b948282fba5a832c5c0af134609b26d2))
+
+### Fix
+* Mypy errors in vcs_helpers ([`13ca0fe`](https://github.com/relekang/python-semantic-release/commit/13ca0fe650125be2f5e953f6193fdc4d44d3c75a))
+* Skip removing the build folder if it doesn't exist ([`8e79fdc`](https://github.com/relekang/python-semantic-release/commit/8e79fdc107ffd852a91dfb5473e7bd1dfaba4ee5))
+* Don't use linux commands on windows ([#393](https://github.com/relekang/python-semantic-release/issues/393)) ([`5bcccd2`](https://github.com/relekang/python-semantic-release/commit/5bcccd21cc8be3289db260e645fec8dc6a592abd))
+
+### Documentation
+* Clean typos and add section for repository upload ([`1efa18a`](https://github.com/relekang/python-semantic-release/commit/1efa18a3a55134d6bc6e4572ab025e24082476cd))
+
 ## v7.19.2 (2021-09-04)
 ### Fix
 * Fixed ImproperConfig import error ([#377](https://github.com/relekang/python-semantic-release/issues/377)) ([`b011a95`](https://github.com/relekang/python-semantic-release/commit/b011a9595df4240cb190bfb1ab5b6d170e430dfc))

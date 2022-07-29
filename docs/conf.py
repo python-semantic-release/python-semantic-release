@@ -19,8 +19,8 @@ extensions = [
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
-project = u"python-semantic-release"
-copyright = u"2020, Rolf Erik Lekang"
+project = "python-semantic-release"
+copyright = "2020, Rolf Erik Lekang"
 
 version = semantic_release.__version__
 release = semantic_release.__version__
@@ -69,8 +69,8 @@ latex_documents = [
     (
         "index",
         "python-semantic-release.tex",
-        u"python-semantic-release Documentation",
-        u"Rolf Erik Lekang",
+        "python-semantic-release Documentation",
+        "Rolf Erik Lekang",
         "manual",
     ),
 ]
@@ -81,8 +81,8 @@ man_pages = [
     (
         "index",
         "python-semantic-release",
-        u"python-semantic-release Documentation",
-        [u"Rolf Erik Lekang"],
+        "python-semantic-release Documentation",
+        ["Rolf Erik Lekang"],
         1,
     )
 ]
@@ -93,8 +93,8 @@ texinfo_documents = [
     (
         "index",
         "python-semantic-release",
-        u"python-semantic-release Documentation",
-        u"Rolf Erik Lekang",
+        "python-semantic-release Documentation",
+        "Rolf Erik Lekang",
         "python-semantic-release",
         "One line description of project.",
         "Miscellaneous",
@@ -105,8 +105,8 @@ texinfo_documents = [
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u"python-semantic-release"
-epub_author = u"Rolf Erik Lekang"
-epub_publisher = u"Rolf Erik Lekang"
-epub_copyright = u"2020, Rolf Erik Lekang"
+epub_title = "python-semantic-release"
+epub_author = "Rolf Erik Lekang"
+epub_publisher = "Rolf Erik Lekang"
+epub_copyright = "2020, Rolf Erik Lekang"
 epub_exclude_files = ["search.html"]

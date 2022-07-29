@@ -1,6 +1,11 @@
 # This Dockerfile is only for GitHub Actions
 FROM python:3.9
 
+RUN set -ex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        git-lfs
+
 ENV PYTHONPATH /semantic-release
 
 COPY . /semantic-release

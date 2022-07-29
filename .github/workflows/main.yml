@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -78,7 +80,7 @@ jobs:
         run: python -m isort -y -rc .
 
       - name: Commit and push changes
-        uses: github-actions-x/commit@v2.5
+        uses: github-actions-x/commit@v2.9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'style: beautify ${{ github.sha }}'
@@ -109,5 +111,5 @@ jobs:
       uses: ./
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        pypi_username: ${{ secrets.PYPI_USERNAME }}
-        pypi_password: ${{ secrets.PYPI_PASSWORD }}
+        repository_username: ${{ secrets.PYPI_USERNAME }}
+        repository_password: ${{ secrets.PYPI_PASSWORD }}

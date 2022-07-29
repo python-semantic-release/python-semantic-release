@@ -6,11 +6,12 @@ import re
 from datetime import date
 from functools import wraps
 from pathlib import Path, PurePath
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 from urllib.parse import urlsplit
 
-from git import GitCommandError, InvalidGitRepositoryError, Repo, TagObject
+from git import GitCommandError, InvalidGitRepositoryError, Repo
 from git.exc import BadName
+from git.objects import TagObject
 
 from .errors import GitError, HvcsRepoParseError
 from .helpers import LoggedFunction
@@ -19,7 +20,7 @@ from .settings import config
 try:
     repo = Repo(".", search_parent_directories=True)
 except InvalidGitRepositoryError:
-    repo = None
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def get_commit_log(from_rev=None):
 
 @check_repo
 @LoggedFunction(logger)
-def get_last_version(skip_tags=None) -> Optional[str]:
+def get_last_version(pattern, skip_tags=None) -> Optional[str]:
     """
     Find the latest version using repo tags.
 
@@ -76,25 +77,13 @@ def get_last_version(skip_tags=None) -> Optional[str]:
         return tag.commit.committed_date
 
     for i in sorted(repo.tags, reverse=True, key=version_finder):
-        match = re.search(r"\d+\.\d+\.\d+", i.name)
-        if match and i.name not in skip_tags:
-            return match.group(0)  # Return only numeric vesion like 1.2.3
+        if i.name in skip_tags:
+            continue
 
-    return None
+        match = re.search(pattern, i.name)
+        if match:
+            return match.group(1).strip()
 
-
-@check_repo
-@LoggedFunction(logger)
-def get_version_from_tag(tag_name: str) -> Optional[str]:
-    """
-    Get the git commit hash corresponding to a tag name.
-
-    :param tag_name: Name of the git tag (i.e. 'v1.0.0')
-    :return: sha1 hash of the commit
-    """
-    for i in repo.tags:
-        if i.name == tag_name:
-            return i.commit.hexsha
     return None
 
 
@@ -106,6 +95,16 @@ def get_repository_owner_and_name() -> Tuple[str, str]:
 
     :return: A tuple of the owner and name.
     """
+    # Gitlab-CI context
+    if "CI_PROJECT_NAMESPACE" in os.environ and "CI_PROJECT_NAME" in os.environ:
+        return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
+
+    # Github actions context
+    if "GITHUB_REPOSITORY" in os.environ:
+        owner, name = os.environ["GITHUB_REPOSITORY"].rsplit("/", 1)
+        return owner, name
+
+    # Local context
     url = repo.remote("origin").url
     split_url = urlsplit(url)
     # Select the owner and name as regex groups
@@ -153,7 +152,7 @@ def commit_new_version(version: str):
     )
 
     for declaration in load_version_declarations():
-        git_path = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir)
+        git_path: PurePath = PurePath(os.getcwd(), declaration.path).relative_to(repo.working_dir)  # type: ignore
         repo.git.add(str(git_path))
 
     return repo.git.commit(m=message, author=commit_author)
@@ -196,7 +195,37 @@ def update_changelog_file(version: str, content_to_add: str):
         ),
     )
     git_path.write_text(updated_content)
-    repo.git.add(str(git_path.relative_to(repo.working_dir)))
+    repo.git.add(str(git_path.relative_to(str(repo.working_dir))))
+
+
+def get_changed_files(repo: Repo) -> List[str]:
+    """
+    Get untracked / dirty files in the given git repo.
+
+    :param repo: Git repo to check.
+    :return: A list of filenames.
+    """
+    untracked_files = repo.untracked_files
+    dirty_files = [item.a_path for item in repo.index.diff(None)]
+    return [*untracked_files, *dirty_files]
+
+
+@check_repo
+@LoggedFunction(logger)
+def update_additional_files():
+    """
+    Add specified files to VCS, if they've changed.
+    """
+    changed_files = get_changed_files(repo)
+
+    include_additional_files = config.get("include_additional_files")
+    if include_additional_files:
+        for filename in include_additional_files.split(","):
+            if filename in changed_files:
+                logger.debug(f"Updated file: {filename}")
+                repo.git.add(filename)
+            else:
+                logger.warning(f"File {filename} shows no changes, cannot update it.")
 
 
 @check_repo
@@ -232,14 +261,17 @@ def push_new_version(
     """
     server = "origin"
     if auth_token:
-        token = auth_token
-        if config.get("hvcs") == "gitlab":
-            token = "gitlab-ci-token:" + token
-        actor = os.environ.get("GITHUB_ACTOR")
-        if actor:
-            server = f"https://{actor}:{token}@{domain}/{owner}/{name}.git"
+        if not config.get("ignore_token_for_push"):
+            token = auth_token
+            if config.get("hvcs") == "gitlab":
+                token = "gitlab-ci-token:" + token
+            actor = os.environ.get("GITHUB_ACTOR")
+            if actor:
+                server = f"https://{actor}:{token}@{domain}/{owner}/{name}.git"
+            else:
+                server = f"https://{token}@{domain}/{owner}/{name}.git"
         else:
-            server = f"https://{token}@{domain}/{owner}/{name}.git"
+            logger.debug("Ignoring token for pushing to the repository.")
 
     try:
         repo.git.push(server, branch)
