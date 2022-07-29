@@ -30,8 +30,15 @@ your project, for example ``setup.py``::
 Python Semantic Release is configured using ``setup.cfg`` or ``pyproject.toml``.
 Set :ref:`config-version_variable` to the location of your version variable inside any Python file::
 
+``setup.cfg``:
+
    [semantic_release]
    version_variable = setup.py:__version__
+
+``pyproject.toml``:
+
+   [tool.semantic_release]
+   version_variable = "setup.py:__version__"
 
 .. seealso::
    - :ref:`config-version_toml` - use `tomlkit <https://github.com/sdispater/tomlkit>`_ to read and update
