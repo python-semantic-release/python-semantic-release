@@ -8,7 +8,6 @@ from git import GitCommandError, Repo, TagObject
 from semantic_release.errors import GitError, HvcsRepoParseError
 from semantic_release.history import get_release_version_pattern, get_version_pattern
 from semantic_release.vcs_helpers import (
-    check_repo,
     checkout,
     commit_new_version,
     get_commit_log,
@@ -26,13 +25,7 @@ from . import mock, wrapped_config_get
 
 @pytest.fixture
 def mock_git(mocker):
-    return mocker.patch("semantic_release.vcs_helpers.repo.git")
-
-
-@mock.patch("semantic_release.vcs_helpers.repo", None)
-def test_raises_error_when_invalid_repo():
-    with pytest.raises(GitError):
-        check_repo(lambda: None)()
+    return mocker.patch("semantic_release.vcs_helpers._repo.git")
 
 
 def test_first_commit_is_not_initial_commit():
