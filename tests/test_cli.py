@@ -296,6 +296,7 @@ def test_retry(mocker, runner):
     )
     assert result.exit_code == 0
 
+
 def test_prerelease_patch(mocker, runner):
     mock_version = mocker.patch("semantic_release.cli.version")
     result = runner.invoke(main, ["version", "--no-prerelease-patch"])
@@ -309,6 +310,7 @@ def test_prerelease_patch(mocker, runner):
         define=(),
     )
     assert result.exit_code == 0
+
 
 def test_noop_mode(mocker):
     mock_tag_new_version = mocker.patch("semantic_release.cli.tag_new_version")
@@ -468,6 +470,7 @@ def test_print_version_change_prerelease(mocker, runner, capsys):
     mock_current_version.assert_called_once()
     mock_current_release_version.assert_called_once()
     mock_evaluate_bump.assert_called_once_with("1.2.3", None)
+
 
 def test_print_version_change_prerelease_no_patch(mocker, runner, capsys):
     mock_current_version = mocker.patch(

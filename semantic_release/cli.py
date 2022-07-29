@@ -69,7 +69,13 @@ COMMON_OPTIONS = [
         "--patch", "force_level", flag_value="patch", help="Force patch version."
     ),
     click.option("--prerelease", is_flag=True, help="Creates a prerelease version."),
-    click.option("--prerelease-patch/--no-prerelease-patch", "prerelease_patch", default=True, show_default=True, help="whether or not prerelease always gets at least a patch-level bump"),
+    click.option(
+        "--prerelease-patch/--no-prerelease-patch",
+        "prerelease_patch",
+        default=True,
+        show_default=True,
+        help="whether or not prerelease always gets at least a patch-level bump",
+    ),
     click.option("--post", is_flag=True, help="Post changelog."),
     click.option("--retry", is_flag=True, help="Retry the same release, do not bump."),
     click.option(
@@ -96,7 +102,14 @@ def common_options(func):
     return func
 
 
-def print_version(*, current=False, force_level=None, prerelease=False, prerelease_patch=True, **kwargs):
+def print_version(
+    *,
+    current=False,
+    force_level=None,
+    prerelease=False,
+    prerelease_patch=True,
+    **kwargs,
+):
     """
     Print the current or new version to standard output.
     """
@@ -116,7 +129,11 @@ def print_version(*, current=False, force_level=None, prerelease=False, prerelea
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_version, force_level)
     new_version = get_new_version(
-        current_version, current_release_version, level_bump, prerelease, prerelease_patch
+        current_version,
+        current_release_version,
+        level_bump,
+        prerelease,
+        prerelease_patch,
     )
     if should_bump_version(
         current_version=current_version,
@@ -131,7 +148,15 @@ def print_version(*, current=False, force_level=None, prerelease=False, prerelea
     return False
 
 
-def version(*, retry=False, noop=False, force_level=None, prerelease=False, prerelease_patch=True, **kwargs):
+def version(
+    *,
+    retry=False,
+    noop=False,
+    force_level=None,
+    prerelease=False,
+    prerelease_patch=True,
+    **kwargs,
+):
     """
     Detect the new version according to git log and semver.
 
@@ -155,7 +180,11 @@ def version(*, retry=False, noop=False, force_level=None, prerelease=False, prer
     # Find what the new version number should be
     level_bump = evaluate_version_bump(current_release_version, force_level)
     new_version = get_new_version(
-        current_version, current_release_version, level_bump, prerelease, prerelease_patch
+        current_version,
+        current_release_version,
+        level_bump,
+        prerelease,
+        prerelease_patch,
     )
 
     if not should_bump_version(
@@ -276,7 +305,11 @@ def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **k
 
 
 def publish(
-    retry: bool = False, noop: bool = False, prerelease: bool = False, prerelease_patch = True,  **kwargs
+    retry: bool = False,
+    noop: bool = False,
+    prerelease: bool = False,
+    prerelease_patch=True,
+    **kwargs,
 ):
     """Run the version task, then push to git and upload to an artifact repository / GitHub Releases."""
     current_version = get_current_version()
@@ -299,7 +332,11 @@ def publish(
             current_release_version, kwargs.get("force_level")
         )
         new_version = get_new_version(
-            current_version, current_release_version, level_bump, prerelease, prerelease_patch
+            current_version,
+            current_release_version,
+            level_bump,
+            prerelease,
+            prerelease_patch,
         )
 
     owner, name = get_repository_owner_and_name()

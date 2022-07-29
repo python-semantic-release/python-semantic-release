@@ -109,7 +109,9 @@ class ArtifactRepo:
 
         Defaults to repository_name `pypi` when both are not set.
         """
-        repository_url = get_env_var("repository_url_var") or config.get("repository_url")
+        repository_url = get_env_var("repository_url_var") or config.get(
+            "repository_url"
+        )
         repository_name = config.get("repository")
 
         if repository_url:

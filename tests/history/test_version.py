@@ -216,8 +216,14 @@ class TestGetNewVersion:
         assert get_new_version("1.0.1-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
         assert get_new_version("1.0.1-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
         assert get_new_version("1.0.1-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.2"
-        assert get_new_version("1.0.1-beta.1", "1.0.0", "patch", True, False) == "1.0.1-beta.2"
-        assert get_new_version("1.0.1-beta.1", "1.0.0", None, True, False) == "1.0.1-beta.1"
+        assert (
+            get_new_version("1.0.1-beta.1", "1.0.0", "patch", True, False)
+            == "1.0.1-beta.2"
+        )
+        assert (
+            get_new_version("1.0.1-beta.1", "1.0.0", None, True, False)
+            == "1.0.1-beta.1"
+        )
 
         assert get_new_version("1.0.0", "1.0.0", None, True) == "1.0.1-beta.1"
         assert get_new_version("1.0.0", "1.0.0", "major", True) == "2.0.0-beta.1"
@@ -230,7 +236,10 @@ class TestGetNewVersion:
         assert get_new_version("0.9.0-beta.1", "1.0.0", "major", True) == "2.0.0-beta.1"
         assert get_new_version("0.9.0-beta.1", "1.0.0", "minor", True) == "1.1.0-beta.1"
         assert get_new_version("0.9.0-beta.1", "1.0.0", "patch", True) == "1.0.1-beta.1"
-        assert get_new_version("0.9.0-beta.1", "1.0.0", "patch", True, False) == "1.0.1-beta.1"
+        assert (
+            get_new_version("0.9.0-beta.1", "1.0.0", "patch", True, False)
+            == "1.0.1-beta.1"
+        )
         assert get_new_version("0.9.0-beta.1", "1.0.0", None, True, False) == "1.0.0"
 
         with pytest.raises(ValueError):
