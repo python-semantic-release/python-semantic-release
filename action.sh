@@ -14,7 +14,7 @@ cd "${INPUT_DIRECTORY}"
 
 # Set Git details
 git config --global user.name "github-actions"
-git config --global user.email "action@github.com"
+git config --global user.email "github-actions@github.com"
 
 # Run Semantic Release
 /semantic-release/.venv/bin/python \
