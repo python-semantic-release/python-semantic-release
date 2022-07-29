@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.31.1 (2022-07-29)
+### Fix
+* Update git email in action ([`0ece6f2`](https://github.com/relekang/python-semantic-release/commit/0ece6f263ff02a17bb1e00e7ed21c490f72e3d00))
+
 ## v7.31.0 (2022-07-29)
 ### Feature
 * Override repository_url w REPOSITORY_URL env var ([#439](https://github.com/relekang/python-semantic-release/issues/439)) ([`cb7578c`](https://github.com/relekang/python-semantic-release/commit/cb7578cf005b8bd65d9b988f6f773e4c060982e3))
