@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v7.31.2 (2022-07-29)
+### Fix
+* Add better handling of missing changelog placeholder ([`e7a0e81`](https://github.com/relekang/python-semantic-release/commit/e7a0e81c004ade73ed927ba4de8c3e3ccaf0047c))
+* Add repo=None when not in git repo ([`40be804`](https://github.com/relekang/python-semantic-release/commit/40be804c09ab8a036fb135c9c38a63f206d2742c))
+
+### Documentation
+* Add example for pyproject.toml ([`2a4b8af`](https://github.com/relekang/python-semantic-release/commit/2a4b8af1c2893a769c02476bb92f760c8522bd7a))
+
 ## v7.31.1 (2022-07-29)
 ### Fix
 * Update git email in action ([`0ece6f2`](https://github.com/relekang/python-semantic-release/commit/0ece6f263ff02a17bb1e00e7ed21c490f72e3d00))
