@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v7.31.0 (2022-07-29)
+### Feature
+* Override repository_url w REPOSITORY_URL env var ([#439](https://github.com/relekang/python-semantic-release/issues/439)) ([`cb7578c`](https://github.com/relekang/python-semantic-release/commit/cb7578cf005b8bd65d9b988f6f773e4c060982e3))
+* Add prerelease-patch and no-prerelease-patch flags for whether to auto-bump prereleases ([`b4e5b62`](https://github.com/relekang/python-semantic-release/commit/b4e5b626074f969e4140c75fdac837a0625cfbf6))
+
+### Fix
+* :bug: fix get_current_release_version for tag_only version_source ([`cad09be`](https://github.com/relekang/python-semantic-release/commit/cad09be9ba067f1c882379c0f4b28115a287fc2b))
+
 ## v7.30.2 (2022-07-26)
 ### Fix
 * Declare additional_options as action inputs ([#481](https://github.com/relekang/python-semantic-release/issues/481)) ([`cb5d8c7`](https://github.com/relekang/python-semantic-release/commit/cb5d8c7ce7d013fcfabd7696b5ffb846a8a6f853))
