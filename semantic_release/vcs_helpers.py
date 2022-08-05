@@ -50,18 +50,34 @@ def get_formatted_commit(version: str) -> str:
     return message
 
 
-def get_commit_log(from_rev=None):
+def get_commit_log(from_rev=None, to_rev=None):
     """Yield all commit messages from last to first."""
-    rev = None
     if from_rev:
         from_rev = get_formatted_tag(from_rev)
         try:
             repo().commit(from_rev)
-            rev = f"...{from_rev}"
         except BadName:
             logger.debug(
                 f"Reference {from_rev} does not exist, considering entire history"
             )
+            from_rev = None
+    if to_rev:
+        to_rev = get_formatted_tag(to_rev)
+        try:
+            repo().commit(to_rev)
+        except BadName:
+            logger.debug(
+                f"Reference {to_rev} does not exist, considering entire history until HEAD"
+            )
+            to_rev = None
+
+    rev = None
+    if from_rev and to_rev:
+        rev = f"{to_rev}...{from_rev}"
+    elif from_rev:
+        rev = f"...{from_rev}"
+    elif to_rev:
+        rev = f"{to_rev}..."
 
     for commit in repo().iter_commits(rev):
         yield (commit.hexsha, commit.message.replace("\r\n", "\n"))
