@@ -98,14 +98,10 @@ def generate_changelog(
     # Additional sections will be added as new types are encountered
     changes: dict = {"breaking": []}
 
-    rev = None
-    if from_version:
-        rev = from_version
-
     found_the_release = to_version is None
     to_version_commit = to_version and get_formatted_commit(to_version)
     from_version_commit = from_version and get_formatted_commit(from_version)
-    for _hash, commit_message in get_commit_log(rev):
+    for _hash, commit_message in get_commit_log(from_version, to_version):
         if not found_the_release:
             # Skip until we find the last commit in this release
             # (we are looping in the order of newest -> oldest)
