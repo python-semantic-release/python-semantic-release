@@ -36,8 +36,11 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     changes = []
     commit_count = 0
 
+    commit_subject_template = config.get("commit_subject")
+    current_version_commit_subject = commit_subject_template.format(version=current_version)
+
     for _hash, commit_message in get_commit_log(current_version):
-        if commit_message.startswith(current_version):
+        if commit_message.startswith(current_version_commit_subject):
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
             logger.debug(
@@ -67,7 +70,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
     if config.get("patch_without_tag") and commit_count > 0 and bump is None:
         bump = "patch"
-        logger.debug(f"Changing bump level to patch based on config patch_without_tag")
+        logger.debug("Changing bump level to patch based on config patch_without_tag")
 
     if (
         not config.get("major_on_zero")
