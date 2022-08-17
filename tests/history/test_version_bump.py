@@ -93,19 +93,21 @@ def test_should_minor_without_major_on_zero():
 
 @mock.patch(
     "semantic_release.history.config.get", wrapped_config_get(
-        commit_subject="chore(release): {version}"
+        commit_subject="chore(release): {version}",
+        commit_message="Custom message",
     )
 )
 @mock.patch(
     "semantic_release.history.logs.get_commit_log",
-    lambda *a, **kw: [MINOR, ("777", "chore(release): 1.0.0"), MAJOR]
+    lambda *a, **kw: [MINOR, ("777", "chore(release): 1.0.0\n\nCustom message"), MAJOR]
 )
 def test_should_search_for_release_with_commit_subject_pattern():
     assert evaluate_version_bump("1.0.0") == "minor"
 
 @mock.patch(
     "semantic_release.history.config.get", wrapped_config_get(
-        commit_subject="chore(release): {version}"
+        commit_subject="chore(release): {version}",
+        commit_message="Custom message",
     )
 )
 @mock.patch(

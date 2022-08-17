@@ -37,6 +37,19 @@ def get_formatted_tag(version):
     return tag_format.format(version=version)
 
 
+def get_formatted_commit(version: str) -> str:
+    commit_subject = config.get("commit_subject")
+    message = commit_subject.format(version=version)
+
+    # Add an extended message if one is configured
+    commit_message = config.get("commit_message")
+    if commit_message:
+        message += "\n\n"
+        message += commit_message.format(version=version)
+
+    return message
+
+
 def get_commit_log(from_rev=None):
     """Yield all commit messages from last to first."""
     rev = None
@@ -126,15 +139,7 @@ def commit_new_version(version: str):
     """
     from .history import load_version_declarations
 
-    commit_subject = config.get("commit_subject")
-    message = commit_subject.format(version=version)
-
-    # Add an extended message if one is configured
-    commit_message = config.get("commit_message")
-    if commit_message:
-        message += "\n\n"
-        message += commit_message.format(version=version)
-
+    commit_message = get_formatted_commit(version)
     commit_author = config.get(
         "commit_author",
         "semantic-release <semantic-release>",
@@ -144,7 +149,7 @@ def commit_new_version(version: str):
         git_path: PurePath = PurePath(os.getcwd(), declaration.path).relative_to(repo().working_dir)  # type: ignore
         repo().git.add(str(git_path))
 
-    return repo().git.commit(m=message, author=commit_author)
+    return repo().git.commit(m=commit_message, author=commit_author)
 
 
 @LoggedFunction(logger)
