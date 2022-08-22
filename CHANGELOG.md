@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.31.3 (2022-08-22)
+### Fix
+* Use `commit_subject` when searching for release commits ([#488](https://github.com/relekang/python-semantic-release/issues/488)) ([`3849ed9`](https://github.com/relekang/python-semantic-release/commit/3849ed992c3cff9054b8690bcf59e49768f84f47))
+
 ## v7.31.2 (2022-07-29)
 ### Fix
 * Add better handling of missing changelog placeholder ([`e7a0e81`](https://github.com/relekang/python-semantic-release/commit/e7a0e81c004ade73ed927ba4de8c3e3ccaf0047c))
