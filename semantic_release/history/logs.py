@@ -82,7 +82,9 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
 
 @LoggedFunction(logger)
-def generate_changelog(from_version: Optional[str], to_version: Optional[str] = None) -> dict:
+def generate_changelog(
+    from_version: Optional[str], to_version: Optional[str] = None
+) -> dict:
     """
     Parse a changelog dictionary for the given version.
 
