@@ -6,7 +6,7 @@ from typing import Optional
 from ..errors import UnknownCommitMessageStyleError
 from ..helpers import LoggedFunction
 from ..settings import config, current_commit_parser
-from ..vcs_helpers import get_commit_log
+from ..vcs_helpers import get_commit_log, get_formatted_commit
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,9 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
     changes = []
     commit_count = 0
 
+    current_version_commit = get_formatted_commit(current_version)
     for _hash, commit_message in get_commit_log(current_version):
-        if commit_message.startswith(current_version):
+        if commit_message == current_version_commit:
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
             logger.debug(
@@ -67,7 +68,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
     if config.get("patch_without_tag") and commit_count > 0 and bump is None:
         bump = "patch"
-        logger.debug(f"Changing bump level to patch based on config patch_without_tag")
+        logger.debug("Changing bump level to patch based on config patch_without_tag")
 
     if (
         not config.get("major_on_zero")
@@ -81,7 +82,7 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
 
 @LoggedFunction(logger)
-def generate_changelog(from_version: str, to_version: str = None) -> dict:
+def generate_changelog(from_version: Optional[str], to_version: Optional[str] = None) -> dict:
     """
     Parse a changelog dictionary for the given version.
 
@@ -98,11 +99,13 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
         rev = from_version
 
     found_the_release = to_version is None
+    to_version_commit = to_version and get_formatted_commit(to_version)
+    from_version_commit = from_version and get_formatted_commit(from_version)
     for _hash, commit_message in get_commit_log(rev):
         if not found_the_release:
             # Skip until we find the last commit in this release
             # (we are looping in the order of newest -> oldest)
-            if to_version and to_version not in commit_message:
+            if to_version_commit and commit_message != to_version_commit:
                 continue
             else:
                 logger.debug(
@@ -110,7 +113,7 @@ def generate_changelog(from_version: str, to_version: str = None) -> dict:
                 )
                 found_the_release = True
 
-        if from_version is not None and from_version in commit_message:
+        if from_version_commit and commit_message == from_version_commit:
             # We reached the previous release
             logger.debug(f"{from_version} reached, ending changelog generation")
             break
