@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.31.4 (2022-08-23)
+### Fix
+* Account for trailing newlines in commit messages ([#495](https://github.com/relekang/python-semantic-release/issues/495)) ([`111b151`](https://github.com/relekang/python-semantic-release/commit/111b1518e8c8e2bd7535bd4c4b126548da384605))
+
 ## v7.31.3 (2022-08-22)
 ### Fix
 * Use `commit_subject` when searching for release commits ([#488](https://github.com/relekang/python-semantic-release/issues/488)) ([`3849ed9`](https://github.com/relekang/python-semantic-release/commit/3849ed992c3cff9054b8690bcf59e49768f84f47))
