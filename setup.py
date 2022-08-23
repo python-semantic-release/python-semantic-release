@@ -47,7 +47,8 @@ setup(
         # tomlkit used to be pinned to 0.7.0
         # See https://github.com/relekang/python-semantic-release/issues/336
         # and https://github.com/relekang/python-semantic-release/pull/337
-        "tomlkit>=0.10.0,<0.11.0",
+        # and https://github.com/relekang/python-semantic-release/issues/491
+        "tomlkit~=0.10",
         "dotty-dict>=1.3.0,<2",
         "dataclasses==0.8; python_version < '3.7.0'",
         "packaging",
