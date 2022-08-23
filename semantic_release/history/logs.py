@@ -38,7 +38,9 @@ def evaluate_version_bump(current_version: str, force: str = None) -> Optional[s
 
     current_version_commit = get_formatted_commit(current_version)
     for _hash, commit_message in get_commit_log(current_version):
-        if commit_message == current_version_commit:
+        # https://github.com/relekang/python-semantic-release/issues/490 -
+        # commit messages (which we compare with ==) have a trailing newline
+        if commit_message.strip() == current_version_commit.strip():
             # Stop once we reach the current version
             # (we are looping in the order of newest -> oldest)
             logger.debug(
@@ -115,7 +117,12 @@ def generate_changelog(
                 )
                 found_the_release = True
 
-        if from_version_commit and commit_message == from_version_commit:
+        # See https://github.com/relekang/python-semantic-release/issues/490 -
+        # commit messages (which we compare with ==) have a trailing newline
+        if (
+            from_version_commit
+            and commit_message.strip() == from_version_commit.strip()
+        ):
             # We reached the previous release
             logger.debug(f"{from_version} reached, ending changelog generation")
             break
