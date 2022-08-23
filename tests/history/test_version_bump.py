@@ -116,7 +116,60 @@ def test_should_search_for_release_with_commit_subject_pattern():
 )
 @mock.patch(
     "semantic_release.history.logs.get_commit_log",
+    lambda *a, **kw: [
+        MINOR,
+        ("777", "chore(release): 1.0.0\n\nCustom message \n"),
+        MAJOR,
+    ],
+)
+def test_should_search_for_release_with_commit_subject_pattern_including_whitespace():
+    assert evaluate_version_bump("1.0.0") == "minor"
+
+
+@mock.patch(
+    "semantic_release.history.config.get",
+    wrapped_config_get(
+        commit_subject="chore(release): {version}",
+        commit_message="Custom message ",
+    ),
+)
+@mock.patch(
+    "semantic_release.history.logs.get_commit_log",
+    lambda *a, **kw: [
+        MINOR,
+        ("777", "chore(release): 1.0.0\n\nCustom message\n"),
+        MAJOR,
+    ],
+)
+def test_should_search_for_release_with_commit_subject_pattern_including_whitespace_in_configuration():
+    assert evaluate_version_bump("1.0.0") == "minor"
+
+
+@mock.patch(
+    "semantic_release.history.config.get",
+    wrapped_config_get(
+        commit_subject="chore(release): {version}",
+        commit_message="Custom message",
+    ),
+)
+@mock.patch(
+    "semantic_release.history.logs.get_commit_log",
     lambda *a, **kw: [MINOR, ("777", "1.0.0"), MAJOR],
 )
 def test_should_not_search_for_release_without_commit_subject_pattern():
+    assert evaluate_version_bump("1.0.0") == "major"
+
+
+@mock.patch(
+    "semantic_release.history.config.get",
+    wrapped_config_get(
+        commit_subject="chore(release): {version}",
+        commit_message="Custom message",
+    ),
+)
+@mock.patch(
+    "semantic_release.history.logs.get_commit_log",
+    lambda *a, **kw: [MINOR, ("777", "1.0.0\n"), MAJOR],
+)
+def test_should_not_search_for_release_without_commit_subject_pattern_including_whitespace():
     assert evaluate_version_bump("1.0.0") == "major"
