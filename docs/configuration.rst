@@ -250,7 +250,7 @@ Commits
 -------------------------
 Whether or not to commit changes when bumping version.
 
-Default: True if :ref:`config-version_source` is `tag`, False if :ref:`config-version_source` is `commit`
+Default: True if :ref:`config-version_source` is `commit`, False for other values of :ref:`config-version_source`.
 
 .. _config-commit_subject:
 
