@@ -1,6 +1,5 @@
 from __future__ import annotations
 import re
-import string
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.version.version import Version

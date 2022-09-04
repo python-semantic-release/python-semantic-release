@@ -90,7 +90,7 @@ SCIPY_FORMATTED_COMMIT_BODY_PARTS = [
 ]
 
 # Note - the scipy commit testing in v7 is very comprehensive -
-# fixtures for commits that should evaluate to the various scopes 
+# fixtures for commits that should evaluate to the various scopes
 # are in tests/fixtures/scipy
 
 
