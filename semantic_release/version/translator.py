@@ -3,7 +3,7 @@ import re
 import string
 from typing import Optional, Union
 
-from semver import VersionInfo as Version
+from semantic_release.version.version import Version
 
 # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
 SEMVER_REGEX = re.compile(
