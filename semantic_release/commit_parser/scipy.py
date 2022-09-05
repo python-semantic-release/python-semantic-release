@@ -44,10 +44,10 @@ from git import Commit
 
 from semantic_release.enums import LevelBump
 from semantic_release.errors import UnknownCommitMessageStyleError
-from semantic_release.commit_parser.util import ParsedCommit
+from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 tag_to_section = {
@@ -106,7 +106,7 @@ class ScipyParserOptions(ParserOptions):
             self.tag_to_level[tag] = LevelBump.MAJOR
 
 
-class ScipyCommitParser(CommitParser):
+class ScipyCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
     """
     Parse a scipy-style commit message
     :param message: A string of a commit message.
@@ -128,7 +128,7 @@ class ScipyCommitParser(CommitParser):
             re.DOTALL,
         )
 
-    def parse(self, commit: Commit) -> ParsedCommit:
+    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
 
         message = commit.message
         parsed = self.re_parser.match(message)
@@ -141,7 +141,9 @@ class ScipyCommitParser(CommitParser):
         if parsed.group("subject"):
             subject = parsed.group("subject")
         else:
-            raise UnknownCommitMessageStyleError(f"The commit has no subject {message}")
+            parse_error = ParseError(commit, f"Commit has no subject {message!r}")
+            log.debug("Error parsing commit %r, ignoring", commit.message)
+            return parse_error
 
         if parsed.group("text"):
             blocks = parsed.group("text").split("\n\n")

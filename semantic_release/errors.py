@@ -15,6 +15,10 @@ class UnknownCommitMessageStyleError(SemanticReleaseBaseError):
     pass
 
 
+class CommitParseError(SemanticReleaseBaseError):
+    pass
+
+
 class GitError(SemanticReleaseBaseError):
     pass
 

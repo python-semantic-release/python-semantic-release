@@ -7,11 +7,8 @@ from git import Commit
 
 from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.commit_parser._base import ParserOptions, CommitParser
-from semantic_release.commit_parser.util import (
-    ParsedCommit,
-    parse_paragraphs,
-    breaking_re,
-)
+from semantic_release.commit_parser.token import ParsedCommit
+from semantic_release.commit_parser.util import parse_paragraphs, breaking_re
 
 from semantic_release.enums import LevelBump
 
@@ -26,7 +23,7 @@ class TagParserOptions(ParserOptions):
     patch_tag: str = ":nut_and_bolt:"
 
 
-class TagCommitParser(CommitParser):
+class TagCommitParser(CommitParser[ParsedCommit]):
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
     It expects a tag of some sort in the commit message and will use the rest of the first line

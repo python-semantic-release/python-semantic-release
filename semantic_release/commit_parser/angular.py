@@ -9,20 +9,16 @@ from typing import Tuple
 
 from git import Commit
 
-from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.commit_parser._base import (
     ParserOptions,
     CommitParser,
 )
-from semantic_release.commit_parser.util import (
-    ParsedCommit,
-    parse_paragraphs,
-    breaking_re
-)
+from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
+from semantic_release.commit_parser.util import parse_paragraphs, breaking_re
 
 from semantic_release.enums import LevelBump
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 # types with long names in changelog
@@ -52,7 +48,7 @@ class AngularParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
-class AngularCommitParser(CommitParser):
+class AngularCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
     parser_options = AngularParserOptions
 
     def __init__(self, options: AngularParserOptions) -> None:
@@ -68,13 +64,13 @@ class AngularCommitParser(CommitParser):
             flags=re.VERBOSE | re.DOTALL,
         )
 
-    def parse(self, commit: Commit) -> ParsedCommit:
+    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
         # Attempt to parse the commit message with a regular expression
         parsed = self.re_parser.match(commit.message)
         if not parsed:
-            raise UnknownCommitMessageStyleError(
-                f"Unable to parse the given commit message: {commit.message}"
-            )
+            parse_error = ParseError(commit, "Unable to parse commit message")
+            log.debug("Error parsing commit %r", commit.message)
+            return parse_error
         parsed_break = parsed.group("break")
         parsed_scope = parsed.group("scope")
         parsed_subject = parsed.group("subject")
@@ -110,5 +106,5 @@ class AngularCommitParser(CommitParser):
             scope=parsed_scope,
             descriptions=descriptions,
             breaking_descriptions=breaking_descriptions,
-            commit=commit
+            commit=commit,
         )

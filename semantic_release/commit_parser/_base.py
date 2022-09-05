@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Type, Any
+from typing import Type, TypeVar, Generic
 
 from git import Commit
+
+from semantic_release.commit_parser.token import ParseResult
 
 
 class ParserOptions:
@@ -28,7 +30,11 @@ class ParserOptions:
         pass
 
 
-class CommitParser(ABC):
+# TT = TokenType, a subclass of ParsedCommit
+_TT = TypeVar("_TT", bound=ParseResult)
+
+
+class CommitParser(ABC, Generic[_TT]):
     """
     Abstract base class for all commit parsers. Custom commit parsers should inherit
     from this class.
@@ -54,5 +60,5 @@ class CommitParser(ABC):
         self.options = options
 
     @abstractmethod
-    def parse(self, commit: Commit) -> Any:
+    def parse(self, commit: Commit) -> _TT:
         ...

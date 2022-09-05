@@ -52,3 +52,6 @@ def test_version_history(a_repo_with_certain_tags):
             "0.1.0",
         )
     ]
+
+
+def test_next_version_correct(): pass

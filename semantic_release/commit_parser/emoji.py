@@ -6,7 +6,8 @@ from typing import Tuple
 from git import Commit
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.util import ParsedCommit, parse_paragraphs
+from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
+from semantic_release.commit_parser.util import parse_paragraphs
 
 from semantic_release.enums import LevelBump
 
@@ -44,7 +45,7 @@ class EmojiParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
-class EmojiCommitParser(CommitParser):
+class EmojiCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
     """
     Parse a commit using an emoji in the subject line.
     When multiple emojis are encountered, the one with the highest bump
@@ -59,7 +60,7 @@ class EmojiCommitParser(CommitParser):
 
     parser_options = EmojiParserOptions
 
-    def parse(self, commit: Commit) -> ParsedCommit:
+    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
         all_emojis = (
             self.options.major_tags + self.options.minor_tags + self.options.patch_tags
         )

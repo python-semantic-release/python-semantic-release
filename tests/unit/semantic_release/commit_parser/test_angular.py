@@ -1,8 +1,8 @@
 import pytest
 
 from semantic_release.enums import LevelBump
-from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.commit_parser.angular import AngularCommitParser
+from semantic_release.commit_parser.token import ParseError, ParsedCommit
 
 from tests.unit.semantic_release.commit_parser.helper import make_commit
 
@@ -18,13 +18,8 @@ def default_angular_parser(default_options):
 
 
 def test_parser_raises_unknown_message_style(default_angular_parser):
-    with pytest.raises(UnknownCommitMessageStyleError):
-        default_angular_parser.parse(make_commit(""))
-
-    with pytest.raises(UnknownCommitMessageStyleError):
-        default_angular_parser.parse(
-            make_commit("feat(parser\n): Add new parser pattern")
-        )
+    assert isinstance(default_angular_parser.parse(make_commit("")), ParseError)
+    assert isinstance(default_angular_parser.parse(make_commit("feat(parser\n): Add new parser pattern")), ParseError)
 
 
 @pytest.mark.parametrize(
@@ -51,7 +46,9 @@ def test_parser_raises_unknown_message_style(default_angular_parser):
 def test_parser_returns_correct_bump_level(
     default_angular_parser, commit_message, bump
 ):
-    assert default_angular_parser.parse(make_commit(commit_message)).bump is bump
+    result = default_angular_parser.parse(make_commit(commit_message))
+    assert isinstance(result, ParsedCommit)
+    assert result.bump is bump
 
 
 @pytest.mark.parametrize(
@@ -67,7 +64,9 @@ def test_parser_returns_correct_bump_level(
     ],
 )
 def test_parser_return_type_from_commit_message(default_angular_parser, message, type_):
-    assert default_angular_parser.parse(make_commit(message)).type == type_
+    result = default_angular_parser.parse(make_commit(message))
+    assert isinstance(result, ParsedCommit)
+    assert result.type == type_
 
 
 @pytest.mark.parametrize(
@@ -87,7 +86,9 @@ def test_parser_return_type_from_commit_message(default_angular_parser, message,
 def test_parser_return_scope_from_commit_message(
     default_angular_parser, message, scope
 ):
-    assert default_angular_parser.parse(make_commit(message)).scope == scope
+    result = default_angular_parser.parse(make_commit(message))
+    assert isinstance(result, ParsedCommit)
+    assert result.scope == scope
 
 
 _long_text = (
@@ -118,9 +119,9 @@ _footer = "Closes #400"
 def test_parser_return_subject_from_commit_message(
     default_angular_parser, message, descriptions
 ):
-    assert (
-        default_angular_parser.parse(make_commit(message)).descriptions == descriptions
-    )
+    result = default_angular_parser.parse(make_commit(message))
+    assert isinstance(result, ParsedCommit)
+    assert result.descriptions == descriptions
 
 
 ##############################
@@ -129,10 +130,9 @@ def test_parser_return_subject_from_commit_message(
 def test_parser_custom_default_level():
     options = AngularCommitParser.parser_options(default_bump_level=LevelBump.MINOR)
     parser = AngularCommitParser(options)
-    assert (
-        parser.parse(make_commit("test(parser): Add a test for angular parser")).bump
-        is LevelBump.MINOR
-    )
+    result = parser.parse(make_commit("test(parser): Add a test for angular parser"))
+    assert isinstance(result, ParsedCommit)
+    assert result.bump is LevelBump.MINOR
 
 
 def test_parser_custom_allowed_types():
@@ -151,19 +151,25 @@ def test_parser_custom_allowed_types():
         )
     )
     parser = AngularCommitParser(options)
-    assert parser.parse(make_commit("custom: ...")).bump is LevelBump.NO_RELEASE
-    assert parser.parse(make_commit("custom(parser): ...")).type == "custom"
-    with pytest.raises(UnknownCommitMessageStyleError):
-        parser.parse(make_commit("feat(parser): ..."))
+
+    res1 = parser.parse(make_commit("custom: ..."))
+    assert isinstance(res1, ParsedCommit) and res1.bump is LevelBump.NO_RELEASE
+
+    res2 = parser.parse(make_commit("custom(parser): ..."))
+    assert isinstance(res2, ParsedCommit) and res2.type == "custom"
+
+    assert isinstance(parser.parse(make_commit("feat(parser): ...")), ParseError)
 
 
 def test_parser_custom_minor_tags():
     options = AngularCommitParser.parser_options(minor_tags=("docs",))
     parser = AngularCommitParser(options)
-    assert parser.parse(make_commit("docs: write some docs")).bump is LevelBump.MINOR
+    res = parser.parse(make_commit("docs: write some docs"))
+    assert isinstance(res, ParsedCommit) and res.bump is LevelBump.MINOR
 
 
 def test_parser_custom_patch_tags():
     options = AngularCommitParser.parser_options(patch_tags=("test",))
     parser = AngularCommitParser(options)
-    assert parser.parse(make_commit("test(this): added a test")).bump is LevelBump.PATCH
+    res = parser.parse(make_commit("test(this): added a test"))
+    assert isinstance(res, ParsedCommit) and res.bump is LevelBump.PATCH
