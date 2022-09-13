@@ -19,7 +19,12 @@ def default_angular_parser(default_options):
 
 def test_parser_raises_unknown_message_style(default_angular_parser):
     assert isinstance(default_angular_parser.parse(make_commit("")), ParseError)
-    assert isinstance(default_angular_parser.parse(make_commit("feat(parser\n): Add new parser pattern")), ParseError)
+    assert isinstance(
+        default_angular_parser.parse(
+            make_commit("feat(parser\n): Add new parser pattern")
+        ),
+        ParseError,
+    )
 
 
 @pytest.mark.parametrize(

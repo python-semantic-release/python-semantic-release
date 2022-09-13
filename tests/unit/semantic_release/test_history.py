@@ -53,5 +53,3 @@ def test_version_history(a_repo_with_certain_tags):
         )
     ]
 
-
-def test_next_version_correct(): pass

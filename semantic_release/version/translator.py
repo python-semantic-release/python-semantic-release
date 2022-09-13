@@ -33,9 +33,7 @@ class VersionTranslator:
     @classmethod
     def _invert_tag_format_to_re(cls, tag_format: str) -> str:
         return re.compile(
-            tag_format.replace(
-                r"{version}", r"(?P<version>.*)"
-            ),
+            tag_format.replace(r"{version}", r"(?P<version>.*)"),
             flags=re.VERBOSE,
         )
 

@@ -84,7 +84,9 @@ def valid_scipy_commit(scipy_tag, subject, body_parts):
     return commit_msg
 
 
-def test_valid_scipy_commit(default_scipy_parser, valid_scipy_commit, expected_response_scipy):
+def test_valid_scipy_commit(
+    default_scipy_parser, valid_scipy_commit, expected_response_scipy
+):
     (bump, type_, _, body_parts) = expected_response_scipy
     result = default_scipy_parser.parse(make_commit(valid_scipy_commit))
 

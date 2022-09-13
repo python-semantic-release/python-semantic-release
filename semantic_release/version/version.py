@@ -5,7 +5,6 @@ from semantic_release.enums import LevelBump
 
 
 class Version(semver.VersionInfo):
-
     def bump(self, level: LevelBump) -> Version:
         if level is LevelBump.MAJOR:
             return self.bump_major()

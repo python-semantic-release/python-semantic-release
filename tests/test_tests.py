@@ -1,0 +1,2 @@
+def test_tests(repo_with_single_branch, repo_with_single_branch_and_prereleases, repo_with_main_and_feature_branches, repo_with_git_flow, repo_with_git_flow_and_release_channels):
+    pass

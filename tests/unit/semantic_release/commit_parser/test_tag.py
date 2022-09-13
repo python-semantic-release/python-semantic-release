@@ -50,7 +50,12 @@ def test_parser_raises_unknown_message_style(default_tag_parser):
             "fix",
             ["Fix regex in angular parser", text],
         ),
-        (":nut_and_bolt: Fix regex in angular parser", LevelBump.PATCH, "fix", ["Fix regex in angular parser"]),
+        (
+            ":nut_and_bolt: Fix regex in angular parser",
+            LevelBump.PATCH,
+            "fix",
+            ["Fix regex in angular parser"],
+        ),
         (
             ":nut_and_bolt: Fix regex in angular parser\n\n{text}\n\n{footer}".format(
                 text=text, footer=footer
