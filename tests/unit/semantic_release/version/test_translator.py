@@ -65,7 +65,7 @@ def test_invalid_tag_format(fmt: str):
     ],
 )
 @pytest.mark.parametrize(
-    "tag_format, prerelease_suffix",
+    "tag_format, prerelease_token",
     [
         ("v{version}", "dev"),
         ("v{version}", "alpha"),
@@ -73,20 +73,20 @@ def test_invalid_tag_format(fmt: str):
     ],
 )
 def test_translator_converts_versions_with_default_formatting_rules(
-    version_string: str, tag_format: str, prerelease_suffix: str
+    version_string: str, tag_format: str, prerelease_token: str
 ):
     translator = VersionTranslator(
-        tag_format=tag_format, prerelease_suffix=prerelease_suffix
+        tag_format=tag_format, prerelease_token=prerelease_token
     )
 
     assert translator.from_string(version_string) == Version.parse(version_string)
 
     # These are important assumptions for formatting into source files/tags/etc
     assert str(translator.from_string(version_string)) == version_string
-    assert translator.to_tag(version_string) == tag_format.format(
+    assert translator.str_to_tag(version_string) == tag_format.format(
         version=version_string
     )
     assert translator.from_tag(
         tag_format.format(version=version_string)
     ) == Version.parse(version_string)
-    assert str(translator.from_tag(translator.to_tag(version_string))) == version_string
+    assert str(translator.from_tag(translator.str_to_tag(version_string))) == version_string

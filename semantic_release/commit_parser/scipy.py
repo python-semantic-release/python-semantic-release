@@ -43,7 +43,6 @@ from typing import Tuple
 from git import Commit
 
 from semantic_release.enums import LevelBump
-from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 
@@ -135,7 +134,7 @@ class ScipyCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
         parsed = self.re_parser.match(message)
 
         if not parsed:
-            raise UnknownCommitMessageStyleError(
+            return ParseError(commit,
                 f"Unable to parse the given commit message: {message}"
             )
 

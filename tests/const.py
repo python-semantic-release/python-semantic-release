@@ -16,7 +16,7 @@ ANGULAR_COMMITS_PATCH = [
     "fix\n",
     "fix\n",
     "fix\n",
-    "fix: release the bugfix-fix"
+    "fix: release the bugfix-fix\n",
 ]
 ANGULAR_COMMITS_MINOR = [
     "feat: something special\n",
@@ -30,7 +30,93 @@ ANGULAR_COMMITS_MINOR = [
 ]
 # Take previous commits and insert a breaking change
 ANGULAR_COMMITS_MAJOR = ANGULAR_COMMITS_MINOR.copy()
-ANGULAR_COMMITS_MINOR.insert(
+ANGULAR_COMMITS_MAJOR.insert(
+    4, "fix!: big change\n\nBREAKING CHANGE: reworked something for previous feature\n"
+)
+
+EMOJI_COMMITS_PATCH = [
+    ":bug: something annoying\n",
+    "fixup the bugfix\n",
+    "oops it broke again\n",
+    "fix\n",
+    "fix\n",
+    "fix\n",
+    "fix\n",
+    "fix\n",
+    ":bug: release the bugfix-fix\n",
+]
+EMOJI_COMMITS_MINOR = [
+    ":sparkles: something special\n",
+    ":sparkles::pencil: docs for something special\n",
+    ":bug: needed a tweak\n",
+    "tweaked again\n",
+    "tweaked again\n",
+    "tweaked again\n",
+    "fix\n",
+    "fix\n",
+    # Emoji in description should not be used to evaluate change type
+    ":sparkles: last minute rush order\n\n:boom: Good thing we're 10x developers",
+]
+EMOJI_COMMITS_MAJOR = EMOJI_COMMITS_MINOR.copy()
+EMOJI_COMMITS_MAJOR.insert(4, ":boom: Move to the blockchain")
+
+SCIPY_FORMATTED_COMMIT_BODY_PARTS = [
+        # a squash merge that preserved PR commit messages
+        (
+            "DOC: import ropy.transform to test for numpy error",
+            "DOC: lower numpy version",
+            "DOC: lower numpy version further",
+            "MAINT: remove debugging import",
+        ),
+        # empty body
+        (),
+        # formatted body
+        (
+            """Bumps [sphinx](https://github.com/sphinx-doc/sphinx) from 3.5.3 to 4.1.1.
+            - [Release notes](https://github.com/sphinx-doc/sphinx/releases)
+            - [Changelog](https://github.com/sphinx-doc/sphinx/blob/4.x/CHANGES)
+            - [Commits](https://github.com/sphinx-doc/sphinx/commits/v4.1.1)""",
+            """---
+            updated-dependencies:
+            - dependency-name: sphinx
+            dependency-type: direct:development
+            update-type: version-update:semver-major""",
+        ),
+        (
+            "Bug spotted on Fedora, see https://src.fedoraproject.org/rpms/scipy/pull-request/22",
+            "The `int[::]` annotation is used to accept non-contiguous views.",
+        ),
+        ("[skip azp] [skip actions]",),
+]
+
+# Note - the scipy commit testing in v7 is very comprehensive -
+# fixtures for commits that should evaluate to the various scopes 
+# are in tests/fixtures/scipy
+
+
+TAG_COMMITS_PATCH = [
+    ":nut_and_bolt: something annoying\n",
+    "fixup the bugfix\n",
+    "oops it broke again\n",
+    "fix\n",
+    "fix\n",
+    "fix\n",
+    "fix\n",
+    ":persevere: fix\n"
+    ":nut_and_bolt: release the bugfix-fix\n",
+]
+TAG_COMMITS_MINOR = [
+    ":sparkles: something special\n",
+    ":nut_and_bolt: needed a tweak\n",
+    "tweaked again\n",
+    "tweaked again\n",
+    "tweaked again\n",
+    "fix\n",
+    "fix\n",
+    ":sparkles: last minute rush order\n",
+]
+TAG_COMMITS_MAJOR = TAG_COMMITS_MINOR.copy()
+TAG_COMMITS_MAJOR.insert(
     4,
-    "fix!: big change\n\nBREAKING CHANGE: reworked something for previous feature\n"
+    ":nut_and_bolt: big change\n\nBREAKING CHANGE: reworked something for previous feature\n",
 )

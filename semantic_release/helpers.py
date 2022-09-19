@@ -1,12 +1,14 @@
-import functools
-from typing import Union
+import logging
+import string
+from functools import wraps
+from typing import Union, Callable, TypeVar, Any
 
 from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-def format_arg(value):
+def format_arg(value: Any) -> str:
     if type(value) == str:
         return f"'{value.strip()}'"
     else:
@@ -39,7 +41,18 @@ def build_requests_session(
     return session
 
 
-class LoggedFunction:
+def check_tag_format(tag_format: str) -> None:
+    if "version" not in (f[1] for f in string.Formatter().parse(tag_format)):
+        raise ValueError(
+            f"Invalid tag_format {tag_format!r}, must use 'version' as a format key"
+        )
+
+
+_R = TypeVar("_R")
+_FuncType = Callable[..., _R]
+
+
+def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncType[_R]]:
     """
     Decorator which adds debug logging to a function.
 
@@ -48,15 +61,11 @@ class LoggedFunction:
 
     :param logger: Logger to send output to.
     """
-
-    def __init__(self, logger):
-        self.logger = logger
-
-    def __call__(self, func):
-        @functools.wraps(func)
-        def logged_func(*args, **kwargs):
+    def _logged_function(func: _FuncType[_R]) -> _FuncType[_R]:
+        @wraps(func)
+        def _wrapper(*args: Any, **kwargs: Any) -> _R:
             # Log function name and arguments
-            self.logger.debug(
+            logger.debug(
                 "{function}({args}{kwargs})".format(
                     function=func.__name__,
                     args=", ".join([format_arg(x) for x in args]),
@@ -71,7 +80,10 @@ class LoggedFunction:
 
             # Log result
             if result is not None:
-                self.logger.debug(f"{func.__name__} -> {result}")
+                logger.debug(f"{func.__name__} -> {result}")
             return result
+        return _wrapper
+    return _logged_function
 
-        return logged_func
+
+LoggedFunction = logged_function

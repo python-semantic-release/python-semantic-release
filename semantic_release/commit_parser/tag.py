@@ -5,9 +5,8 @@ from dataclasses import dataclass
 
 from git import Commit
 
-from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.commit_parser._base import ParserOptions, CommitParser
-from semantic_release.commit_parser.token import ParsedCommit
+from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
 from semantic_release.commit_parser.util import parse_paragraphs, breaking_re
 
 from semantic_release.enums import LevelBump
@@ -23,7 +22,7 @@ class TagParserOptions(ParserOptions):
     patch_tag: str = ":nut_and_bolt:"
 
 
-class TagCommitParser(CommitParser[ParsedCommit]):
+class TagCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
     It expects a tag of some sort in the commit message and will use the rest of the first line
@@ -35,14 +34,15 @@ class TagCommitParser(CommitParser[ParsedCommit]):
 
     parser_options = TagParserOptions
 
-    def parse(self, commit: Commit) -> ParsedCommit:
+    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
         message = commit.message
 
         # Attempt to parse the commit message with a regular expression
         parsed = re_parser.match(message)
         if not parsed:
-            raise UnknownCommitMessageStyleError(
-                f"Unable to parse the given commit message: {message}"
+            return ParseError(
+                commit,
+                error = f"Unable to parse the given commit message: {message!r}"
             )
 
         subject = parsed.group("subject")
@@ -62,8 +62,9 @@ class TagCommitParser(CommitParser[ParsedCommit]):
 
         else:
             # We did not find any tags in the commit message
-            raise UnknownCommitMessageStyleError(
-                f"Unable to parse the given commit message: {message}"
+            return ParseError(
+                commit,
+                error = f"Unable to parse the given commit message: {message!r}"
             )
 
         if parsed.group("text"):

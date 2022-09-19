@@ -12,10 +12,8 @@ def shortuid(length: int = 8) -> str:
 
 
 def add_text_to_file(repo: Repo, filename: str, text: Optional[str] = None):
-
     with open(f"{repo.working_tree_dir}/{filename}", "a+") as f:
         f.write(text or f"default text {shortuid(12)}")
         f.write("\n")
 
     repo.index.add(filename)
-

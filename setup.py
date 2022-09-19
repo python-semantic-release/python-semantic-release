@@ -59,6 +59,7 @@ setup(
             "pytest>=5,<6",
             "pytest-xdist>=1,<2",
             "pytest-mock>=2,<3",
+            "pytest-lazy-fixture~=0.6.3",
             "responses==0.13.3",
             "mock==1.3.0",
         ],

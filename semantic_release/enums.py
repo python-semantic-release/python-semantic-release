@@ -1,7 +1,8 @@
 from __future__ import annotations
-from enum import IntEnum
+from enum import IntEnum, unique
 
 
+@unique
 class LevelBump(IntEnum):
     """
     IntEnum representing valid types of bumps for a version.
