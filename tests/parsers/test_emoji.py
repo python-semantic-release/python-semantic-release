@@ -1,4 +1,9 @@
+import mock
+import pytest
+
 from semantic_release.history import emoji_parser
+
+from .. import wrapped_config_get
 
 
 def test_major():
@@ -65,3 +70,35 @@ def test_emoji_in_description():
         ":boom: should not be detected",
     ]
     assert parsed_commit[4] == []
+
+
+@mock.patch(
+    "semantic_release.history.parser_emoji.config.get",
+    wrapped_config_get(use_textual_changelog_sections=True),
+)
+@pytest.mark.parametrize(
+    "level,commit,commit_type",
+    [
+        (
+            3,
+            ":boom: Breaking changes\n\n"
+            "More description\n\n"
+            "Even more description",
+            "breaking",
+        ),
+        (
+            2,
+            ":sparkles: Add a new feature\n\n" "Some description of the feature",
+            "feature",
+        ),
+        (
+            1,
+            ":bug: Fixing a bug\n\n" "The bug is finally gone!",
+            "fix",
+        ),
+    ],
+)
+def test_use_textual_changelog_sections(level, commit, commit_type):
+    parsed_commit = emoji_parser(commit)
+    assert parsed_commit[0] == level
+    assert parsed_commit[1] == commit_type

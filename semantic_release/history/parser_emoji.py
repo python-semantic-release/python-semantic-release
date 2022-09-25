@@ -39,6 +39,7 @@ def parse_commit_message(
     patch = config.get("patch_emoji").split(",")
     all_emojis = major + minor + patch
 
+    use_textual_changelog_sections = config.get("use_textual_changelog_sections")
     # Loop over emojis from most important to least important
     # Therefore, we find the highest level emoji first
     primary_emoji = "Other"
@@ -52,9 +53,12 @@ def parse_commit_message(
     level_bump = 0
     if primary_emoji in major:
         level_bump = 3
+        primary_emoji = "breaking" if use_textual_changelog_sections else primary_emoji
     elif primary_emoji in minor:
+        primary_emoji = "feature" if use_textual_changelog_sections else primary_emoji
         level_bump = 2
     elif primary_emoji in patch:
+        primary_emoji = "fix" if use_textual_changelog_sections else primary_emoji
         level_bump = 1
 
     # All emojis will remain part of the returned description
