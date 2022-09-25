@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.32.0 (2022-09-25)
+### Feature
+* Add setting for enforcing textual changelog sections ([#502](https://github.com/relekang/python-semantic-release/issues/502)) ([`988437d`](https://github.com/relekang/python-semantic-release/commit/988437d21e40d3e3b1c95ed66b535bdd523210de))
+
+### Documentation
+* Correct documented default behaviour for `commit_version_number` ([#497](https://github.com/relekang/python-semantic-release/issues/497)) ([`ffae2dc`](https://github.com/relekang/python-semantic-release/commit/ffae2dc68f7f4bc13c5fd015acd43b457e568ada))
+
 ## v7.31.4 (2022-08-23)
 ### Fix
 * Account for trailing newlines in commit messages ([#495](https://github.com/relekang/python-semantic-release/issues/495)) ([`111b151`](https://github.com/relekang/python-semantic-release/commit/111b1518e8c8e2bd7535bd4c4b126548da384605))
