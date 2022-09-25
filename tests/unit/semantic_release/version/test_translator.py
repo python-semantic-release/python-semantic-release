@@ -79,7 +79,7 @@ def test_translator_converts_versions_with_default_formatting_rules(
         tag_format=tag_format, prerelease_token=prerelease_token
     )
 
-    assert translator.from_string(version_string) == Version.parse(version_string)
+    assert translator.from_string(version_string) == Version.parse(version_string, prerelease_token=translator.prerelease_token)
 
     # These are important assumptions for formatting into source files/tags/etc
     assert str(translator.from_string(version_string)) == version_string
@@ -88,5 +88,5 @@ def test_translator_converts_versions_with_default_formatting_rules(
     )
     assert translator.from_tag(
         tag_format.format(version=version_string)
-    ) == Version.parse(version_string)
+    ) == Version.parse(version_string, prerelease_token=translator.prerelease_token)
     assert str(translator.from_tag(translator.str_to_tag(version_string))) == version_string

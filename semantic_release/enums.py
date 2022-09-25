@@ -10,9 +10,10 @@ class LevelBump(IntEnum):
     """
 
     NO_RELEASE = 0
-    PATCH = 1
-    MINOR = 2
-    MAJOR = 3
+    PRERELEASE_REVISION = 1
+    PATCH = 2
+    MINOR = 3
+    MAJOR = 4
 
     def __str__(self):
         """

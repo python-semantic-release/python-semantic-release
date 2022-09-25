@@ -1,7 +1,8 @@
 from __future__ import annotations
 import re
 from functools import wraps
-from typing import Optional, Any, Union, Callable
+from itertools import zip_longest
+from typing import Optional, Any, Union, Callable, overload
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
@@ -22,11 +23,37 @@ VersionComparable = Union["Version", str]
 VersionComparator = Callable[["Version", VersionComparable], bool]
 
 
-def _comparator(method: VersionComparator) -> VersionComparator:
+@overload
+def _comparator(
+    method: None, *, type_guard: bool = True
+) -> Callable[[Callable[..., VersionComparator]], VersionComparator]:
+    ...
+
+
+@overload
+def _comparator(
+    method: VersionComparator, *, type_guard: bool = True
+) -> VersionComparator:
+    ...
+
+
+def _comparator(
+    method: Optional[VersionComparator] = None, *, type_guard: bool = True
+) -> Union[
+    VersionComparator, Callable[[Callable[..., VersionComparator]], VersionComparator]
+]:
+    """
+    wrap a `Version` binop method to guard types and try to parse strings into Versions.
+    use `type_guard = False` for `__eq__` and `__neq__` to make them return False if the
+    wrong type is used, instead of erroring.
+    """
+    if method is None:
+        return lambda method: _comparator(method, type_guard=type_guard)
+
     @wraps(method)
     def _wrapper(self: "Version", other: Any) -> bool:
         if not isinstance(other, (str, Version)):
-            return NotImplemented
+            return False if not type_guard else NotImplemented
         if isinstance(other, str):
             try:
                 other_v = Version.parse(
@@ -35,9 +62,7 @@ def _comparator(method: VersionComparator) -> VersionComparator:
                     prerelease_token=self.prerelease_token,
                 )
             except InvalidVersion as ex:
-                raise TypeError(
-                    f"Expected Version or valid version string, got {other!r}"
-                ) from ex
+                raise TypeError(str(ex)) from ex
         else:
             other_v = other
 
@@ -93,18 +118,18 @@ class Version:
             the parsed token from `version_str` will be used instead.
         """
         if not isinstance(version_str, str):
-            raise TypeError(f"{version_str!r} object cannot be parsed to Version")
-        match = cls._VERSION_REGEX.match(version_str)
+            raise InvalidVersion(f"{version_str!r} cannot be parsed as a Version")
+        match = cls._VERSION_REGEX.fullmatch(version_str)
         if not match:
-            raise ValueError(f"{version_str!r} is not a valid Version")
+            raise InvalidVersion(f"{version_str!r} is not a valid Version")
 
         prerelease = match.group("prerelease")
         if prerelease:
-            pm = re.match(r"(?P<token>\w+)\.(?P<revision>\d+)", prerelease)
+            pm = re.match(r"(?P<token>[a-zA-Z0-9-\.]+)\.(?P<revision>\d+)", prerelease)
             if not pm:
                 raise NotImplementedError(
                     f"{cls.__qualname__} currently supports only prereleases "
-                    r"of the format (-(\w+)\.\(\d+)), for example 1.2.3-rc.4."
+                    r"of the format (-([a-zA-Z0-9-])\.\(\d+)), for example '1.2.3-my-custom-3rc.4'."
                 )
             prerelease_token, prerelease_revision = pm.groups()
         else:
@@ -115,7 +140,9 @@ class Version:
             int(match.group("minor")),
             int(match.group("patch")),
             prerelease_token=prerelease_token,
-            prerelease_revision=int(prerelease_revision) if prerelease_revision else None,
+            prerelease_revision=int(prerelease_revision)
+            if prerelease_revision
+            else None,
             build_metadata=match.group("buildmetadata") or "",
             tag_format=tag_format,
         )
@@ -155,7 +182,7 @@ class Version:
                     f"patch={self.patch}",
                     f"prerelease_token={prerelease_token_repr}",
                     f"prerelease_revision={prerelease_revision_repr}",
-                    f"build_metatdata={build_metadata_repr}",
+                    f"build_metadata={build_metadata_repr}",
                     f"tag_format={self.tag_format!r}",
                 )
             )
@@ -201,6 +228,17 @@ class Version:
                 prerelease_revision=1 if self.is_prerelease else None,
                 tag_format=self.tag_format,
             )
+        if level is LevelBump.PRERELEASE_REVISION:
+            return Version(
+                self.major,
+                self.minor,
+                self.patch,
+                prerelease_token=self.prerelease_token,
+                prerelease_revision=1
+                if not self.is_prerelease
+                else self.prerelease_revision + 1,
+                tag_format=self.tag_format,
+            )
         # for consistency, this creates a new instance regardless
         if level is LevelBump.NO_RELEASE:
             return Version(
@@ -215,16 +253,22 @@ class Version:
     # Enables Version + LevelBump.<level>
     __add__ = bump
 
-    @_comparator
+    def __hash__(self) -> int:
+        # If we use str(self) we don't capture tag_format, so another
+        # instance with a tag_format "special_{version}_format" would
+        # collide with an instance using "v{version}"/other format
+        return hash(self.__repr__())
+
+    @_comparator(type_guard=False)
     def __eq__(self, other: Version) -> bool:
         # https://semver.org/#spec-item-11 -
         # build metadata is not used for comparison
         return all(
             getattr(self, attr) == getattr(other, attr)
-            for attr in ("major", "minor", "patch", "prerelease_revision")
+            for attr in ("major", "minor", "patch", "prerelease_token", "prerelease_revision")
         )
 
-    @_comparator
+    @_comparator(type_guard=False)
     def __neq__(self, other: Version) -> bool:
         return not self.__eq__(other)
 
@@ -250,8 +294,14 @@ class Version:
         # comparing precedence of pre-release versions. Here we just compare
         # the prerelease tokens, and their revision numbers
         if self.prerelease_token != other.prerelease_token:
-            # Lexical sort, e.g. "rc" > "beta" > "alpha"
-            return self.prerelease_token > other.prerelease_token
+            for self_tk, other_tk in zip_longest(self.prerelease_token.split("."), other.prerelease_token.split("."), fillvalue=None):
+                if self_tk == other_tk:
+                    continue
+                if (self_tk is None) ^ (other_tk is None):
+                    # Longest (i.e. non-None) is greater
+                    return other_tk is None
+                # Lexical sort, e.g. "rc" > "beta" > "alpha"
+                return self_tk > other_tk
         return self.prerelease_revision > other.prerelease_revision
 
     @_comparator
@@ -276,8 +326,11 @@ class Version:
             return LevelBump.MINOR
         if self.patch != other.patch:
             return LevelBump.PATCH
-        # TODO: what if one's a prerelease and one isn't?
-        # How do you "get to" the full release from the prerelease?
+        if self.is_prerelease ^ other.is_prerelease:
+            return max(
+                self.finalize_version() - other.finalize_version(),
+                LevelBump.PRERELEASE_REVISION,
+            )
         if self.prerelease_revision != other.prerelease_revision:
             return LevelBump.PRERELEASE_REVISION
         return LevelBump.NO_RELEASE

@@ -1,8 +1,8 @@
 import pytest
 
 from semantic_release.enums import LevelBump
-from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.commit_parser.tag import TagCommitParser
+from semantic_release.commit_parser.token import ParseError
 
 from tests.unit.semantic_release.commit_parser.helper import make_commit
 
@@ -25,8 +25,9 @@ footer = "Closes #400"
 
 
 def test_parser_raises_unknown_message_style(default_tag_parser):
-    with pytest.raises(UnknownCommitMessageStyleError):
-        default_tag_parser.parse(make_commit(""))
+    result = default_tag_parser.parse(make_commit(""))
+    assert isinstance(result, ParseError)
+
 
 
 @pytest.mark.parametrize(
