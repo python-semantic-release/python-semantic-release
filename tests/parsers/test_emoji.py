@@ -74,7 +74,7 @@ def test_emoji_in_description():
 
 @mock.patch(
     "semantic_release.history.parser_emoji.config.get",
-    wrapped_config_get(enforce_ascii_changelog_sections=True),
+    wrapped_config_get(use_textual_changelog_sections=True),
 )
 @pytest.mark.parametrize(
     "level,commit,commit_type",
@@ -98,7 +98,7 @@ def test_emoji_in_description():
         ),
     ],
 )
-def test_enforce_ascii_changelog_sections(level, commit, commit_type):
+def test_use_textual_changelog_sections(level, commit, commit_type):
     parsed_commit = emoji_parser(commit)
     assert parsed_commit[0] == level
     assert parsed_commit[1] == commit_type

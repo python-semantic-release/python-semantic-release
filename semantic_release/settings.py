@@ -39,7 +39,7 @@ def _config_from_ini(paths):
     flags = {
         "changelog_capitalize",
         "changelog_scope",
-        "enforce_ascii_changelog_sections",
+        "use_textual_changelog_sections",
         "check_build_status",
         "commit_version_number",
         "ignore_token_for_push",

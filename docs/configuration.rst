@@ -233,9 +233,9 @@ create patch releases.
 
 Default: `:ambulance:, :lock:, :bug:, :zap:, :goal_net:, :alien:, :wheelchair:, :speech_balloon:, :mag:, :apple:, :penguin:, :checkered_flag:, :robot:, :green_apple:`
 
-.. _config-enforce_ascii_changelog_sections:
+.. _config-use_textual_changelog_sections:
 
-``enforce_ascii_changelog_sections``
+``use_textual_changelog_sections``
 ------------------------------------
 
 If this is set to `true` with using the :py:func:`semantic_release.history.emoji_parser`,
