@@ -22,7 +22,7 @@ def file_in_repo():
         f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}",
     ]
 )
-def git_repo_factory(request, tmp_path_factory):
+def git_repo_factory(request, example_project):
     """
     !!! WARNING !!!
     You must call repo.close() after yield-ing the result of
@@ -31,8 +31,7 @@ def git_repo_factory(request, tmp_path_factory):
     See https://github.com/pytest-dev/pytest/issues/2970#issuecomment-348033023
     """
     def git_repo():
-        repo_path = tmp_path_factory.mktemp(f"repo-{shortuid()}")
-        repo = Repo.init(repo_path.resolve())
+        repo = Repo.init(example_project.resolve())
         # Without this the global config may set it to "master", we want consistency
         repo.git.branch("-M", "main")
         with repo.config_writer("repository") as config:

@@ -131,6 +131,7 @@ def next_version(
 ) -> Optional[Version]:
     # NOTE: if there's no previous versions, and no new commits
     # with an appropriate scope we return None
+    # TODO: if no release should be made, should this return None instead?
 
     # Step 1. All tags, sorted descending by semver ordering rules
     all_git_tags_as_versions = _repo_tags_and_versions(repo.tags, translator)
