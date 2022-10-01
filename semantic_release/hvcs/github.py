@@ -16,6 +16,16 @@ from semantic_release.hvcs.token_auth import TokenAuth
 logger = logging.getLogger(__name__)
 
 # Add a mime type for wheels
+# Fix incorrect entries in the `mimetypes` registry.
+# On Windows, the Python standard library's `mimetypes` reads in
+# mappings from file extension to MIME type from the Windows
+# registry. Other applications can and do write incorrect values
+# to this registry, which causes `mimetypes.guess_type` to return
+# incorrect values, which causes TensorBoard to fail to render on
+# the frontend.
+# This method hard-codes the correct mappings for certain MIME
+# types that are known to be either used by python-semantic-release or
+# problematic in general.
 mimetypes.add_type("application/octet-stream", ".whl")
 mimetypes.add_type("text/markdown", ".md")
 
@@ -35,6 +45,8 @@ class Github(HvcsBase):
         token_var: str = "GH_TOKEN",
     ) -> None:
 
+        self._remote_url = remote_url
+
         # pylint: disable=line-too-long
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
         self.hvcs_domain = hvcs_domain or os.getenv(
@@ -52,7 +64,6 @@ class Github(HvcsBase):
 
         self.token = os.getenv(token_var)
         auth = None if not self.token else TokenAuth(self.token)
-        self._remote_url = remote_url
         self.session = build_requests_session(auth=auth)
 
     def _get_repository_owner_and_name(self) -> Tuple[str, str]:
