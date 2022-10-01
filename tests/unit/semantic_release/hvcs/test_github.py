@@ -1,3 +1,4 @@
+import base64
 import mimetypes
 import re
 import os
@@ -10,6 +11,7 @@ from requests import Session
 
 from semantic_release.hvcs.github import Github
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.helper import netrc_file
 
 
 @pytest.fixture
@@ -45,6 +47,24 @@ def default_gh_client():
         ),
         (
             {},
+            None,
+            None,
+            "GH_TOKEN",
+            Github.DEFAULT_DOMAIN,
+            Github.DEFAULT_API_DOMAIN,
+            None,
+        ),
+        (
+            {"GL_TOKEN": "abc123"},
+            None,
+            None,
+            "GH_TOKEN",
+            Github.DEFAULT_DOMAIN,
+            Github.DEFAULT_API_DOMAIN,
+            None,
+        ),
+        (
+            {"GITEA_TOKEN": "abc123"},
             None,
             None,
             "GH_TOKEN",
@@ -337,6 +357,86 @@ def test_create_release(default_gh_client, status_code, prerelease, expected):
         }
 
 
+def test_should_create_release_using_netrc(default_gh_client):
+    default_gh_client.token = None  # assuming we don't set the token ourselves
+    tag = "v1.0.0"
+    changelog = "# TODO: Changelog"
+    with requests_mock.Mocker(session=default_gh_client.session) as m, netrc_file(
+        machine=default_gh_client.DEFAULT_API_DOMAIN
+    ) as netrc, mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True):
+
+        m.register_uri("POST", github_api_matcher, json={}, status_code=201)
+        assert default_gh_client.create_release(tag, changelog)
+        assert m.called
+        assert len(m.request_history) == 1
+        assert m.last_request.method == "POST"
+        assert {
+            "Authorization": "Basic "
+            + base64.encodebytes(
+                f"{netrc.login_username}:{netrc.login_password}".encode()
+            ).decode("ascii").strip()
+        }.items() <= m.last_request.headers.items()
+        assert (
+            m.last_request.url
+            == "{api_url}/repos/{owner}/{repo_name}/releases".format(
+                api_url=default_gh_client.api_url,
+                owner=default_gh_client.owner,
+                repo_name=default_gh_client.repo_name,
+            )
+        )
+        assert m.last_request.json() == {
+            "tag_name": tag,
+            "name": tag,
+            "body": changelog,
+            "draft": False,
+            "prerelease": False,
+        }
+
+
+def test_request_uses_token_if_given():
+    with mock.patch.dict(os.environ, {"GH_TOKEN": "super-token"}, clear=True):
+        client = Github(remote_url="git@github.com:something/somewhere.git")
+
+        with requests_mock.Mocker(session=client.session) as m:
+            m.register_uri("POST", github_api_matcher, json={}, status_code=201)
+            assert client.create_release("v1.0.0", "# TODO: Changelog")
+            assert m.called
+            assert len(m.request_history) == 1
+            assert m.last_request.method == "POST"
+            assert (
+                m.last_request.url
+                == "{api_url}/repos/{owner}/{repo_name}/releases".format(
+                    api_url=client.api_url,
+                    owner=client.owner,
+                    repo_name=client.repo_name,
+                )
+            )
+            assert {
+                "Authorization": "token super-token"
+            }.items() <= m.last_request.headers.items()
+
+
+def test_request_has_no_auth_header_if_no_token():
+    with mock.patch.dict(os.environ, {}, clear=True):
+        client = Github(remote_url="git@github.com:something/somewhere.git")
+
+        with requests_mock.Mocker(session=client.session) as m:
+            m.register_uri("POST", github_api_matcher, json={}, status_code=201)
+            assert client.create_release("v1.0.0", "# TODO: Changelog")
+            assert m.called
+            assert len(m.request_history) == 1
+            assert m.last_request.method == "POST"
+            assert (
+                m.last_request.url
+                == "{api_url}/repos/{owner}/{repo_name}/releases".format(
+                    api_url=client.api_url,
+                    owner=client.owner,
+                    repo_name=client.repo_name,
+                )
+            )
+            assert "Authorization" not in m.last_request.headers
+
+
 @pytest.mark.parametrize(
     "resp_payload, status_code, expected",
     [
@@ -445,7 +545,8 @@ def test_upload_asset(default_gh_client, example_changelog_md, status_code, expe
             params=urlencode(urlparams),
         )
 
-        # Check if content-type header was correctly set
+        # Check if content-type header was correctly set according to
+        # mimetypes - not retesting guessing functionality
         assert {
             "Content-Type": mimetypes.guess_type(
                 example_changelog_md.resolve(), strict=False

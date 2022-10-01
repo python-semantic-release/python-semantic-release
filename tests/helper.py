@@ -1,6 +1,8 @@
 import secrets
 import string
+from contextlib import contextmanager
 from itertools import zip_longest
+from tempfile import NamedTemporaryFile
 from typing import Optional, List, Tuple
 
 from git import Repo
@@ -31,3 +33,18 @@ def diff_strings(str_a: str, str_b: str) -> Tuple[List[Tuple[int, str]], List[Tu
         if right is not None:
             added.append((pos, right))
     return deleted, added
+
+
+@contextmanager
+def netrc_file(machine: str) -> NamedTemporaryFile:
+    with NamedTemporaryFile("w") as netrc:
+        # Add these attributes to use in tests as source of truth
+        netrc.login_username = "username"
+        netrc.login_password = "password"
+
+        netrc.write(f"machine {machine}" + "\n")
+        netrc.write(f"login {netrc.login_username}" + "\n")
+        netrc.write(f"password {netrc.login_password}" + "\n")
+        netrc.flush()
+
+        yield netrc
