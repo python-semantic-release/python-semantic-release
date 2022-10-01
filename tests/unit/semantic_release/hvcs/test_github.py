@@ -10,6 +10,7 @@ import requests_mock
 from requests import Session
 
 from semantic_release.hvcs.github import Github
+from semantic_release.hvcs.token_auth import TokenAuth
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.helper import netrc_file
 
@@ -357,8 +358,12 @@ def test_create_release(default_gh_client, status_code, prerelease, expected):
         }
 
 
-def test_should_create_release_using_netrc(default_gh_client):
-    default_gh_client.token = None  # assuming we don't set the token ourselves
+@pytest.mark.parametrize(
+    "token", (None, "super-token")
+)
+def test_should_create_release_using_token_or_netrc(default_gh_client, token):
+    default_gh_client.token = token
+    default_gh_client.session.auth = None if not token else TokenAuth(token)
     tag = "v1.0.0"
     changelog = "# TODO: Changelog"
     with requests_mock.Mocker(session=default_gh_client.session) as m, netrc_file(
@@ -370,12 +375,17 @@ def test_should_create_release_using_netrc(default_gh_client):
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
-        assert {
-            "Authorization": "Basic "
-            + base64.encodebytes(
-                f"{netrc.login_username}:{netrc.login_password}".encode()
-            ).decode("ascii").strip()
-        }.items() <= m.last_request.headers.items()
+        if not token:
+            assert {
+                "Authorization": "Basic "
+                + base64.encodebytes(
+                    f"{netrc.login_username}:{netrc.login_password}".encode()
+                ).decode("ascii").strip()
+            }.items() <= m.last_request.headers.items()
+        else:
+            assert {
+                "Authorization": f"token {token}"
+            }.items() <= m.last_request.headers.items()
         assert (
             m.last_request.url
             == "{api_url}/repos/{owner}/{repo_name}/releases".format(
@@ -393,30 +403,7 @@ def test_should_create_release_using_netrc(default_gh_client):
         }
 
 
-def test_request_uses_token_if_given():
-    with mock.patch.dict(os.environ, {"GH_TOKEN": "super-token"}, clear=True):
-        client = Github(remote_url="git@github.com:something/somewhere.git")
-
-        with requests_mock.Mocker(session=client.session) as m:
-            m.register_uri("POST", github_api_matcher, json={}, status_code=201)
-            assert client.create_release("v1.0.0", "# TODO: Changelog")
-            assert m.called
-            assert len(m.request_history) == 1
-            assert m.last_request.method == "POST"
-            assert (
-                m.last_request.url
-                == "{api_url}/repos/{owner}/{repo_name}/releases".format(
-                    api_url=client.api_url,
-                    owner=client.owner,
-                    repo_name=client.repo_name,
-                )
-            )
-            assert {
-                "Authorization": "token super-token"
-            }.items() <= m.last_request.headers.items()
-
-
-def test_request_has_no_auth_header_if_no_token():
+def test_request_has_no_auth_header_if_no_token_or_netrc():
     with mock.patch.dict(os.environ, {}, clear=True):
         client = Github(remote_url="git@github.com:something/somewhere.git")
 
