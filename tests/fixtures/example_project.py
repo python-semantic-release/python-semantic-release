@@ -8,6 +8,7 @@ from tests.const import (
     EXAMPLE_PYPROJECT_TOML_CONTENT,
     EXAMPLE_SETUP_PY_CONTENT,
     EXAMPLE_SETUP_CFG_CONTENT,
+    EXAMPLE_CHANGELOG_MD_CONTENT,
 )
 
 
@@ -40,6 +41,8 @@ def example_project(tmp_path):
     setup_cfg.write_text(EXAMPLE_SETUP_CFG_CONTENT)
     setup_py = tmp_path / "setup.py"
     setup_py.write_text(EXAMPLE_SETUP_PY_CONTENT)
+    changelog_md = tmp_path / "CHANGELOG.md"
+    changelog_md.write_text(EXAMPLE_CHANGELOG_MD_CONTENT)
     yield tmp_path
 
 
@@ -56,3 +59,8 @@ def example_setup_cfg(example_project):
 @pytest.fixture
 def example_setup_py(example_project):
     yield example_project / "setup.py"
+
+
+@pytest.fixture
+def example_changelog_md(example_project):
+    yield example_project / "CHANGELOG.md"

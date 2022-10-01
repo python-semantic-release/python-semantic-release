@@ -1,4 +1,5 @@
 import pytest
+from pytest_lazyfixture import lazy_fixture
 
 from git import Repo, Actor
 
@@ -16,10 +17,20 @@ def file_in_repo():
     yield f"file-{shortuid()}.txt"
 
 
+@pytest.fixture
+def example_git_ssh_url():
+    yield f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+
+
+@pytest.fixture
+def example_git_https_url():
+    yield f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}"
+
+
 @pytest.fixture(
     params=[
-        f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git",
-        f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}",
+        lazy_fixture("example_git_ssh_url"),
+        lazy_fixture("example_git_https_url")
     ]
 )
 def git_repo_factory(request, example_project):

@@ -376,3 +376,14 @@ setup(
     ],
 )
 """
+
+EXAMPLE_CHANGELOG_MD_CONTENT = r"""
+# CHANGELOG.md
+
+## This is an example changlog
+
+## v1.0.0
+* Various bugfixes, security enhancements
+* Extra cookies to enhance your experience
+* ~Removed~ simplified cookie opt-out handling logic
+"""
