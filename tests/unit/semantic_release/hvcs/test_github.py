@@ -280,8 +280,8 @@ def test_asset_upload_url(default_gh_client):
 ############
 
 
-github_matcher = re.compile(r"^https://github.com")
-github_api_matcher = re.compile(r"^https://api.github.com")
+github_matcher = re.compile(rf"^https://{Github.DEFAULT_DOMAIN}")
+github_api_matcher = re.compile(rf"^https://{Github.DEFAULT_API_DOMAIN}")
 
 
 @pytest.mark.parametrize(
@@ -425,6 +425,38 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
 
 
 @pytest.mark.parametrize(
+    "status_code, expected",
+    [
+        (201, True),
+        (400, False),
+        (404, False),
+        (429, False),
+        (500, False),
+        (503, False),
+    ],
+)
+def test_edit_release_changelog(default_gh_client, status_code, expected):
+    release_id = 420
+    changelog = "# TODO: Changelog"
+    with requests_mock.Mocker(session=default_gh_client.session) as m:
+        m.register_uri("POST", github_api_matcher, json={}, status_code=status_code)
+        assert default_gh_client.edit_release_changelog(420, changelog) == expected
+        assert m.called
+        assert len(m.request_history) == 1
+        assert m.last_request.method == "POST"
+        assert (
+            m.last_request.url
+            == "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+                api_url=default_gh_client.api_url,
+                owner=default_gh_client.owner,
+                repo_name=default_gh_client.repo_name,
+                release_id=release_id,
+            )
+        )
+        assert m.last_request.json() == {"body": changelog}
+
+
+@pytest.mark.parametrize(
     "resp_payload, status_code, expected",
     [
         ({"id": 420, "status": "success"}, 200, 420),
@@ -468,7 +500,7 @@ def test_get_release_id_by_tag(default_gh_client, resp_payload, status_code, exp
         (False, None, False, False),
     ],
 )
-def test_edit_release_changelog(
+def test_create_or_update_release(
     default_gh_client,
     create_release_success,
     release_id,
@@ -555,7 +587,7 @@ def test_upload_dists_when_release_id_not_found(default_gh_client):
     ) as mock_upload_asset:
         mock_get_release_id_by_tag.return_value = None
         assert not default_gh_client.upload_dists(tag, path)
-        mock_get_release_id_by_tag.assert_called_once_with(ref=tag)
+        mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
         mock_upload_asset.assert_not_called()
 
 
@@ -592,7 +624,7 @@ def test_upload_dists_when_release_id_found(
 
         mock_upload_asset.side_effect = upload_statuses
         assert default_gh_client.upload_dists(tag, path) == expected
-        mock_get_release_id_by_tag.assert_called_once_with(ref=tag)
+        mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
         assert [
             mock.call(release_id, os.path.join(path, fn)) for fn in files
         ] == mock_upload_asset.call_args_list
