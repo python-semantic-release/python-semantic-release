@@ -191,8 +191,6 @@ class Github(HvcsBase):
     def asset_upload_url(self, release_id: str) -> str:
         """Get the correct upload url for a release
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param release_id: ID of the release to upload to
         :return: URL found to upload for a release
         """
@@ -204,8 +202,6 @@ class Github(HvcsBase):
     def upload_asset(self, release_id: int, file: str, label: str = None) -> bool:
         """Upload an asset to an existing release
         https://docs.github.com/rest/reference/repos#upload-a-release-asset
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
         :param label: Custom label for this file
@@ -245,7 +241,7 @@ class Github(HvcsBase):
         """
 
         # Find the release corresponding to this version
-        release_id = self.get_release_id_by_tag(ref=tag)
+        release_id = self.get_release_id_by_tag(tag=tag)
         if not release_id:
             logger.debug("No release found to upload assets to")
             return False
