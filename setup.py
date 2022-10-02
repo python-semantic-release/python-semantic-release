@@ -55,15 +55,16 @@ setup(
     ],
     extras_require={
         "test": [
-            "coverage>=5,<6",
-            "pytest>=5,<6",
-            "pytest-xdist>=1,<2",
-            "pytest-mock>=2,<3",
+            "coverage>=6,<7",
+            "pytest>=7,<8",
+            "pytest-xdist>=2,<3",
+            "pytest-mock>=3,<4",
             "pytest-lazy-fixture~=0.6.3",
-            "responses==0.13.3",
-            "mock==1.3.0",
+            "pytest-cov>=4,<5",
+            "responses==0.21.0",
+            "requests-mock>=1.10.0,<2"
         ],
-        "docs": ["Sphinx==1.3.6", "Jinja2==3.0.3"],
+        "docs": ["Sphinx==5.2.3", "Jinja2==3.0.3"],
         "dev": ["tox", "isort", "black"],
         "mypy": ["mypy", "types-requests"],
     },

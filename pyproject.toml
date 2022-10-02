@@ -1,0 +1,8 @@
+[build-system]
+requires = ["setuptools>=40.8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.pytest.ini_options]
+addopts = ["-ra", "--cache-clear", "--cov=semantic_release", "--cov-report", "html:coverage-html", "--cov-report", "term"]
+python_files = ["tests/test_*.py", "tests/**/test_*.py"]

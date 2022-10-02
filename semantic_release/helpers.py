@@ -1,11 +1,9 @@
 import logging
+import re
 import string
 from functools import wraps
-from typing import Union, Callable, TypeVar, Any
-
-from requests import Session
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from typing import Callable, TypeVar, Any, NamedTuple
+from urllib.parse import urlsplit
 
 
 def format_arg(value: Any) -> str:
@@ -13,32 +11,6 @@ def format_arg(value: Any) -> str:
         return f"'{value.strip()}'"
     else:
         return str(value)
-
-
-def build_requests_session(
-    raise_for_status=True, retry: Union[bool, int, Retry] = True
-) -> Session:
-    """
-    Create a requests session.
-    :param raise_for_status: If True, a hook to invoke raise_for_status be installed
-    :param retry: If true, it will use default Retry configuration. if an integer, it will use default Retry
-    configuration with given integer as total retry count. if Retry instance, it will use this instance.
-    :return: configured requests Session
-    """
-    session = Session()
-    if raise_for_status:
-        session.hooks = {"response": [lambda r, *args, **kwargs: r.raise_for_status()]}
-    if retry:
-        if isinstance(retry, bool):
-            retry = Retry()
-        elif isinstance(retry, int):
-            retry = Retry(retry)
-        elif not isinstance(retry, Retry):
-            raise ValueError("retry should be a bool, int or Retry instance.")
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-    return session
 
 
 def check_tag_format(tag_format: str) -> None:
@@ -87,3 +59,61 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
 
 
 LoggedFunction = logged_function
+
+
+class ParsedGitUrl(NamedTuple):
+    scheme: str
+    netloc: str
+    namespace: str
+    repo_name: str
+
+
+GIT_URL_REGEX = re.compile(
+    r"""
+    ^
+    git@
+    (?P<netloc>[^:]+)
+    :
+    (?P<namespace>[\w\.@\:/\-~]+)
+    /
+    (?P<repo_name>[\w\.\_\-]+)  # Note this also catches the ".git" at the end if present
+    /?
+    $
+    """,
+    flags=re.VERBOSE
+)
+
+
+def parse_git_url(url: str) -> ParsedGitUrl:
+    urllib_split = urlsplit(url)
+    if urllib_split.scheme:
+        # We have been able to parse the url with urlsplit,
+        # so it's a (git|ssh|https?)://... structure
+        namespace, _, name = urllib_split.path.lstrip("/").rpartition("/")
+        name.rstrip("/")
+        name = name[:-4] if name.endswith(".git") else name
+        if not all((urllib_split.scheme, urllib_split.netloc, namespace, name)):
+            raise ValueError(f"Bad url: {url!r}")
+
+        return ParsedGitUrl(
+            scheme=urllib_split.scheme,
+            netloc=urllib_split.netloc,
+            namespace=namespace,
+            repo_name=name
+        )
+
+    m = GIT_URL_REGEX.match(url)
+    if not m:
+        raise ValueError(f"Cannot parse {url!r}")
+
+    repo_name = m.group("repo_name")
+    repo_name = repo_name[:-4] if repo_name.endswith(".git") else repo_name
+
+    if not all((*m.group("netloc", "namespace"), repo_name)):
+        raise ValueError(f"Bad url: {url!r}")
+    return ParsedGitUrl(
+        scheme="git",
+        netloc=m.group("netloc"),
+        namespace=m.group("namespace"),
+        repo_name=repo_name
+    )
