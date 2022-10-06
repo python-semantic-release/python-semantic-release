@@ -26,28 +26,28 @@ logger = logging.getLogger(__name__)
 
 
 def get_prerelease_pattern():
-    return f"-{config.get('prerelease_tag')}\.\d+"
+    return rf"-{config.get('prerelease_tag')}\.\d+"
 
 
 def get_pattern_with_commit_subject(pattern):
     escaped_commit_subject = re.escape(config.get("commit_subject"))
-    return escaped_commit_subject.replace("\{version\}", pattern)
+    return escaped_commit_subject.replace(r"\{version\}", pattern)
 
 
 def get_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
-    return f"(\d+\.\d+\.\d+({prerelease_pattern})?)"
+    return rf"(\d+\.\d+\.\d+({prerelease_pattern})?)"
 
 
 def get_release_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
-    return f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+    return rf"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
 
 
 def get_commit_release_version_pattern():
     prerelease_pattern = get_prerelease_pattern()
     return get_pattern_with_commit_subject(
-        f"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
+        rf"v?(\d+\.\d+\.\d+(?!.*{prerelease_pattern}))"
     )
 
 
