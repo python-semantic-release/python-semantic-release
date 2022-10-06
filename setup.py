@@ -43,6 +43,7 @@ setup(
         "twine>=3,<4",
         "requests>=2.25,<3",
         "wheel",
+        "jinja2>=3.1.2,<4"
         "python-gitlab>=2,<4",
         # tomlkit used to be pinned to 0.7.0
         # See https://github.com/relekang/python-semantic-release/issues/336
@@ -64,7 +65,7 @@ setup(
             "responses==0.21.0",
             "requests-mock>=1.10.0,<2"
         ],
-        "docs": ["Sphinx==5.2.3", "Jinja2==3.0.3"],
+        "docs": ["Sphinx==5.2.3"],
         "dev": ["tox", "isort", "black"],
         "mypy": ["mypy", "types-requests"],
     },
