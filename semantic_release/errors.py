@@ -29,3 +29,7 @@ class CiVerificationError(SemanticReleaseBaseError):
 
 class HvcsRepoParseError(SemanticReleaseBaseError):
     pass
+
+
+class UploadFailed(SemanticReleaseBaseError):
+    pass
