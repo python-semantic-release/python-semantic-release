@@ -123,7 +123,7 @@ class ArtifactRepo:
     def _create_twine_settings(self, addon_kwargs: Dict[str, Any]) -> TwineSettings:
         """
         Gather all parameters that had a value set during instantiation and
-        pass them to Twine which then validates and laods the config.
+        pass them to Twine which then validates and loads the config.
         """
         params = {name: val for name, val in dataclass_asdict(self).items() if val}
         settings = TwineSettings(**params, **addon_kwargs)
@@ -148,7 +148,7 @@ class ArtifactRepo:
         :raises ImproperConfigurationError:
             The upload failed due to a configuration error.
 
-        :returns True if successfull, False otherwise.
+        :returns True if successful, False otherwise.
         """
         addon_kwargs = {
             "non_interactive": True,

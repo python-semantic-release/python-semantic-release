@@ -539,7 +539,7 @@ def test_update_changelog_empty_file(mock_git, mocker):
 def test_update_changelog_file_missing_placeholder(mock_git, mocker):
     mocker.patch("semantic_release.vcs_helpers.Path.exists", return_value=True)
     mocked_read_text = mocker.patch(
-        "semantic_release.vcs_helpers.Path.read_text", return_value="# Uknown header"
+        "semantic_release.vcs_helpers.Path.read_text", return_value="# Unknown header"
     )
     mocked_write_text = mocker.patch("semantic_release.vcs_helpers.Path.write_text")
 
