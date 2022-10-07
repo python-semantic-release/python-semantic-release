@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.32.1 (2022-10-07)
+### Fix
+* Corrections for deprecation warnings ([#505](https://github.com/relekang/python-semantic-release/issues/505)) ([`d47afb6`](https://github.com/relekang/python-semantic-release/commit/d47afb6516238939e174f946977bf4880062a622))
+
+### Documentation
+* Correct spelling mistakes ([#504](https://github.com/relekang/python-semantic-release/issues/504)) ([`3717e0d`](https://github.com/relekang/python-semantic-release/commit/3717e0d8810f5d683847c7b0e335eeefebbf2921))
+
 ## v7.32.0 (2022-09-25)
 ### Feature
 * Add setting for enforcing textual changelog sections ([#502](https://github.com/relekang/python-semantic-release/issues/502)) ([`988437d`](https://github.com/relekang/python-semantic-release/commit/988437d21e40d3e3b1c95ed66b535bdd523210de))
