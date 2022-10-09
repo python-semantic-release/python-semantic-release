@@ -2,7 +2,7 @@ import logging
 import re
 import string
 from functools import wraps
-from typing import Callable, TypeVar, Any, NamedTuple
+from typing import Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
 
@@ -33,6 +33,7 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
 
     :param logger: Logger to send output to.
     """
+
     def _logged_function(func: _FuncType[_R]) -> _FuncType[_R]:
         @wraps(func)
         def _wrapper(*args: Any, **kwargs: Any) -> _R:
@@ -54,7 +55,9 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
             if result is not None:
                 logger.debug(f"{func.__name__} -> {result}")
             return result
+
         return _wrapper
+
     return _logged_function
 
 
@@ -80,7 +83,7 @@ GIT_URL_REGEX = re.compile(
     /?
     $
     """,
-    flags=re.VERBOSE
+    flags=re.VERBOSE,
 )
 
 
@@ -99,7 +102,7 @@ def parse_git_url(url: str) -> ParsedGitUrl:
             scheme=urllib_split.scheme,
             netloc=urllib_split.netloc,
             namespace=namespace,
-            repo_name=name
+            repo_name=name,
         )
 
     m = GIT_URL_REGEX.match(url)
@@ -115,5 +118,5 @@ def parse_git_url(url: str) -> ParsedGitUrl:
         scheme="git",
         netloc=m.group("netloc"),
         namespace=m.group("namespace"),
-        repo_name=repo_name
+        repo_name=repo_name,
     )

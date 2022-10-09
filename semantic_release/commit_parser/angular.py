@@ -9,13 +9,9 @@ from typing import Tuple
 
 from git import Commit
 
-from semantic_release.commit_parser._base import (
-    ParserOptions,
-    CommitParser,
-)
-from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
-from semantic_release.commit_parser.util import parse_paragraphs, breaking_re
-
+from semantic_release.commit_parser._base import CommitParser, ParserOptions
+from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
+from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 
 log = logging.getLogger(__name__)
@@ -31,7 +27,7 @@ LONG_TYPE_NAMES = {
 
 @dataclass
 class AngularParserOptions(ParserOptions):
-    allowed_tags: Tuple[str] = (
+    allowed_tags: Tuple[str, ...] = (
         "build",
         "chore",
         "ci",
@@ -43,8 +39,8 @@ class AngularParserOptions(ParserOptions):
         "refactor",
         "test",
     )
-    minor_tags: Tuple[str] = ("feat",)
-    patch_tags: Tuple[str] = ("fix", "perf")
+    minor_tags: Tuple[str, ...] = ("feat",)
+    patch_tags: Tuple[str, ...] = ("fix", "perf")
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
@@ -93,6 +89,8 @@ class AngularCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
 
         if parsed_break or breaking_descriptions:
             level_bump = LevelBump.MAJOR
+            # TODO: maybe this isn't the right thing to do
+            parsed_type = "breaking"
         elif parsed_type in self.options.minor_tags:
             level_bump = LevelBump.MINOR
         elif parsed_type in self.options.patch_tags:

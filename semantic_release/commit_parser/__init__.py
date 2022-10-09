@@ -3,4 +3,4 @@ from semantic_release.commit_parser.angular import AngularCommitParser
 from semantic_release.commit_parser.emoji import EmojiCommitParser
 from semantic_release.commit_parser.scipy import ScipyCommitParser
 from semantic_release.commit_parser.tag import TagCommitParser
-from semantic_release.commit_parser.token import ParsedCommit
+from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
