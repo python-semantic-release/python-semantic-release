@@ -1,7 +1,10 @@
 import importlib
+import os
+import shutil
+from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, Union
 
-from jinja2 import FileSystemLoader
+from jinja2 import Environment, FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
 from typing_extensions import Literal
 
@@ -31,7 +34,7 @@ def environment(
     autoescape: Union[bool, str] = True,
 ) -> SandboxedEnvironment:
     """
-    Create a jinja2.Environment with certain parameter resrictions;
+    Create a jinja2.sandbox.SandboxedEnvironment with certain parameter resrictions;
     for example the Loader is fixed to FileSystemLoader, although the searchpath
     is configurable.
 
@@ -63,3 +66,40 @@ def environment(
         autoescape=autoescape_value,
         loader=FileSystemLoader(template_dir, encoding="utf-8"),
     )
+
+
+# pylint: disable=redefined-outer-name
+def recursive_render(
+    template_dir: str, environment: Environment, _root_dir: str = "."
+) -> None:
+    for root, file in (
+        (root, file)
+        for root, _, files in os.walk(template_dir)
+        for file in files
+        if not any(elem.startswith(".") for elem in root.split(os.sep))
+        and not file.startswith(".")
+    ):
+        src_path = Path(root)
+        output_path = (_root_dir / src_path.relative_to(template_dir)).resolve()
+        os.makedirs(str(output_path), exist_ok=True)
+        if file.endswith(".j2"):
+            # We know the file ends with .j2 by the filter in the for-loop
+            output_filename = file[:-3]
+            # Strip off the template directory from the front of the root path -
+            # that's the output location relative to the repo root
+            stream = environment.get_template(
+                str((src_path / file).relative_to(template_dir))
+            ).stream()
+
+            with open(
+                str((output_path / output_filename).resolve()), "wb+"
+            ) as output_file:
+                stream.dump(output_file, encoding="utf-8")
+        else:
+            shutil.copyfile(
+                str((src_path / file).resolve()), str((output_path / file).resolve())
+            )
+
+
+# To avoid confusion on import
+del Environment

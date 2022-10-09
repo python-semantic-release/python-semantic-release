@@ -3,12 +3,12 @@ from textwrap import dedent
 import pytest
 
 from tests.const import (
+    EXAMPLE_CHANGELOG_MD_CONTENT,
     EXAMPLE_PROJECT_NAME,
     EXAMPLE_PROJECT_VERSION,
     EXAMPLE_PYPROJECT_TOML_CONTENT,
-    EXAMPLE_SETUP_PY_CONTENT,
     EXAMPLE_SETUP_CFG_CONTENT,
-    EXAMPLE_CHANGELOG_MD_CONTENT,
+    EXAMPLE_SETUP_PY_CONTENT,
 )
 
 
@@ -41,6 +41,8 @@ def example_project(tmp_path):
     setup_cfg.write_text(EXAMPLE_SETUP_CFG_CONTENT)
     setup_py = tmp_path / "setup.py"
     setup_py.write_text(EXAMPLE_SETUP_PY_CONTENT)
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
     changelog_md = tmp_path / "CHANGELOG.md"
     changelog_md.write_text(EXAMPLE_CHANGELOG_MD_CONTENT)
     yield tmp_path
@@ -61,6 +63,12 @@ def example_setup_py(example_project):
     yield example_project / "setup.py"
 
 
+# Note this is just the path and the content may change
 @pytest.fixture
 def example_changelog_md(example_project):
     yield example_project / "CHANGELOG.md"
+
+
+@pytest.fixture
+def example_project_template_dir(example_project):
+    yield example_project / "templates"
