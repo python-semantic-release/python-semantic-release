@@ -1,8 +1,7 @@
 import logging
 import os
-from typing import Optional, Union, Tuple
+from typing import Optional, Tuple
 
-from requests import Session
 from urllib3 import Retry
 
 from semantic_release.helpers import parse_git_url
@@ -23,7 +22,7 @@ class HvcsBase:
     ) -> None:
         self.hvcs_domain = hvcs_domain
         self.hvcs_api_domain = hvcs_api_domain
-        self.token = os.getenv(token_var)
+        self.token = os.getenv(token_var, "")
         auth = TokenAuth(self.token)
         self._remote_url = remote_url
         self.session = build_requests_session(auth=auth)

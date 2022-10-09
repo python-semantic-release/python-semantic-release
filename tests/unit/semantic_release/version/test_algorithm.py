@@ -1,10 +1,9 @@
 import pytest
-
 from git import Repo
 
 from semantic_release.enums import LevelBump
+from semantic_release.version.algorithm import _increment_version, tags_and_versions
 from semantic_release.version.translator import VersionTranslator
-from semantic_release.version.algorithm import _repo_tags_and_versions, _increment_version
 from semantic_release.version.version import Version
 
 
@@ -30,19 +29,30 @@ from semantic_release.version.version import Version
             ["v2.1.1", "v2.1.0", "v2.0.0", "v1.0.0"],
         ),
         (
-            ["v1.0.0-rc.1", "v1.0.0-beta.2", "v1.0.0-beta.11", "v1.0.0-alpha.1", "v1.0.0-alpha.beta.1", "v1.0.0"],
-            ["v1.0.0", "v1.0.0-rc.1", "v1.0.0-beta.11", "v1.0.0-beta.2", "v1.0.0-alpha.beta.1", "v1.0.0-alpha.1"]
-        )
-    ]
+            [
+                "v1.0.0-rc.1",
+                "v1.0.0-beta.2",
+                "v1.0.0-beta.11",
+                "v1.0.0-alpha.1",
+                "v1.0.0-alpha.beta.1",
+                "v1.0.0",
+            ],
+            [
+                "v1.0.0",
+                "v1.0.0-rc.1",
+                "v1.0.0-beta.11",
+                "v1.0.0-beta.2",
+                "v1.0.0-alpha.beta.1",
+                "v1.0.0-alpha.1",
+            ],
+        ),
+    ],
 )
 def test_sorted_repo_tags_and_versions(tags, sorted_tags):
     repo = Repo()
     translator = VersionTranslator()
     tagrefs = [repo.tag(tag) for tag in tags]
-    actual = [
-        t.name
-        for t, _ in _repo_tags_and_versions(tagrefs, translator)
-    ]
+    actual = [t.name for t, _ in tags_and_versions(tagrefs, translator)]
     assert actual == sorted_tags
 
 
@@ -59,7 +69,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PRERELEASE_REVISION,
             False,
             "rc",
-            Version.parse("1.0.0-rc.1")
+            Version.parse("1.0.0-rc.1"),
         ),
         (
             Version.parse("1.0.0"),
@@ -68,7 +78,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PRERELEASE_REVISION,
             True,
             "rc",
-            Version.parse("1.0.0-rc.1")
+            Version.parse("1.0.0-rc.1"),
         ),
         (
             Version.parse("1.0.0"),
@@ -77,7 +87,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PATCH,
             False,
             "rc",
-            Version.parse("1.0.1")
+            Version.parse("1.0.1"),
         ),
         (
             Version.parse("1.0.0"),
@@ -86,7 +96,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PATCH,
             True,
             "rc",
-            Version.parse("1.0.1-rc.1")
+            Version.parse("1.0.1-rc.1"),
         ),
         (
             Version.parse("1.0.0"),
@@ -95,7 +105,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MINOR,
             False,
             "rc",
-            Version.parse("1.1.0")
+            Version.parse("1.1.0"),
         ),
         (
             Version.parse("1.0.0"),
@@ -104,7 +114,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MINOR,
             True,
             "rc",
-            Version.parse("1.1.0-rc.1")
+            Version.parse("1.1.0-rc.1"),
         ),
         (
             Version.parse("1.0.0"),
@@ -113,7 +123,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MAJOR,
             False,
             "rc",
-            Version.parse("2.0.0")
+            Version.parse("2.0.0"),
         ),
         (
             Version.parse("1.0.0"),
@@ -122,7 +132,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MAJOR,
             True,
             "rc",
-            Version.parse("2.0.0-rc.1")
+            Version.parse("2.0.0-rc.1"),
         ),
         (
             Version.parse("1.2.4-rc.1"),
@@ -131,7 +141,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PATCH,
             False,
             "rc",
-            Version.parse("1.2.4")
+            Version.parse("1.2.4"),
         ),
         (
             Version.parse("1.2.4-rc.1"),
@@ -140,7 +150,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PATCH,
             True,
             "rc",
-            Version.parse("1.2.4-rc.2")
+            Version.parse("1.2.4-rc.2"),
         ),
         (
             Version.parse("1.2.4-rc.1"),
@@ -149,7 +159,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MINOR,
             False,
             "rc",
-            Version.parse("1.3.0")
+            Version.parse("1.3.0"),
         ),
         (
             Version.parse("1.2.4-rc.1"),
@@ -158,7 +168,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MINOR,
             True,
             "rc",
-            Version.parse("1.3.0-rc.1")
+            Version.parse("1.3.0-rc.1"),
         ),
         (
             Version.parse("1.2.4-rc.1"),
@@ -167,7 +177,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MAJOR,
             False,
             "rc",
-            Version.parse("2.0.0")
+            Version.parse("2.0.0"),
         ),
         (
             Version.parse("1.2.4-rc.1"),
@@ -176,9 +186,8 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MAJOR,
             True,
             "rc",
-            Version.parse("2.0.0-rc.1")
+            Version.parse("2.0.0-rc.1"),
         ),
-
         (
             Version.parse("2.0.0-rc.1"),
             Version.parse("1.22.0"),
@@ -186,7 +195,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PATCH,
             False,
             "rc",
-            Version.parse("2.0.0")
+            Version.parse("2.0.0"),
         ),
         (
             Version.parse("2.0.0-rc.1"),
@@ -195,7 +204,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.PATCH,
             True,
             "rc",
-            Version.parse("2.0.0-rc.2")
+            Version.parse("2.0.0-rc.2"),
         ),
         (
             Version.parse("2.0.0-rc.1"),
@@ -204,7 +213,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MINOR,
             False,
             "rc",
-            Version.parse("2.0.0")
+            Version.parse("2.0.0"),
         ),
         (
             Version.parse("2.0.0-rc.1"),
@@ -213,7 +222,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MINOR,
             True,
             "rc",
-            Version.parse("2.0.0-rc.2")
+            Version.parse("2.0.0-rc.2"),
         ),
         (
             Version.parse("2.0.0-rc.1"),
@@ -222,7 +231,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MAJOR,
             False,
             "rc",
-            Version.parse("2.0.0")
+            Version.parse("2.0.0"),
         ),
         (
             Version.parse("2.0.0-rc.1"),
@@ -231,11 +240,19 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             LevelBump.MAJOR,
             True,
             "rc",
-            Version.parse("2.0.0-rc.2")
+            Version.parse("2.0.0-rc.2"),
         ),
-    ]
+    ],
 )
-def test_increment_version(latest_version, latest_full_version, latest_full_version_in_history, level_bump, prerelease, prerelease_token, expected_version):
+def test_increment_version(
+    latest_version,
+    latest_full_version,
+    latest_full_version_in_history,
+    level_bump,
+    prerelease,
+    prerelease_token,
+    expected_version,
+):
     actual = _increment_version(
         latest_version=latest_version,
         latest_full_version=latest_full_version,

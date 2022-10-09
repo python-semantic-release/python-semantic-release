@@ -185,7 +185,6 @@ def repo_with_single_branch_scipy_commits(git_repo_factory, file_in_repo):
     git_repo.close()
 
 
-
 @pytest.fixture
 def repo_with_single_branch_tag_commits(git_repo_factory, file_in_repo):
     git_repo = git_repo_factory()
@@ -611,6 +610,8 @@ def repo_with_git_flow_angular_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="feat: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="fix: (feature) add some missing text")
+    add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
     git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
 
@@ -682,6 +683,8 @@ def repo_with_git_flow_emoji_commits(git_repo_factory, file_in_repo):
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=":bug: (feature) add some missing text")
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
     git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
@@ -755,6 +758,8 @@ def repo_with_git_flow_scipy_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="ENH: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="MAINT: (feature) add some missing text")
+    add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
     git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
 
@@ -826,6 +831,8 @@ def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=":nut_and_bolt: (feature) add some missing text")
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
     git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")

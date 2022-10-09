@@ -1,18 +1,18 @@
 import logging
 from queue import Queue
-from typing import Optional, Set, List, Tuple
+from typing import List, Optional, Set, Tuple
 
-from git import Repo, Commit, Tag
+from git import Commit, Repo, Tag
 
 from semantic_release.commit_parser import CommitParser, ParsedCommit
 from semantic_release.enums import LevelBump
-from semantic_release.version.version import Version
 from semantic_release.version.translator import VersionTranslator
+from semantic_release.version.version import Version
 
 log = logging.getLogger(__name__)
 
 
-def _repo_tags_and_versions(
+def tags_and_versions(
     tags: List[Tag], translator: VersionTranslator
 ) -> List[Tuple[Tag, Version]]:
     """
@@ -134,7 +134,7 @@ def next_version(
     # TODO: if no release should be made, should this return None instead?
 
     # Step 1. All tags, sorted descending by semver ordering rules
-    all_git_tags_as_versions = _repo_tags_and_versions(repo.tags, translator)
+    all_git_tags_as_versions = tags_and_versions(repo.tags, translator)
     all_full_release_tags_and_versions = [
         (t, v) for t, v in all_git_tags_as_versions if not v.is_prerelease
     ]
@@ -150,6 +150,8 @@ def next_version(
         # guarantees that other branches exist
         merge_bases = repo.merge_base(repo.active_branch, repo.active_branch)
     else:
+        # Note the merge_base might be on our current branch, it's not
+        # necessarily the merge base of the current branch with `main`
         merge_bases = repo.merge_base(latest_full_release_tag.name, repo.active_branch)
     if len(merge_bases) > 1:
         raise NotImplementedError(
@@ -171,7 +173,7 @@ def next_version(
 
     # Step 4. Parse each commit since the last release and find any tags that have
     # been added since then.
-    parsed_levels: List[ParsedCommit] = []
+    parsed_levels: List[LevelBump] = []
     latest_version = latest_full_version_in_history or Version(
         0, 0, 0, prerelease_token=translator.prerelease_token
     )

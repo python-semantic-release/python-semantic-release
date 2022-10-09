@@ -1,7 +1,8 @@
 import importlib
-from typing import Iterable, Union, Optional, Callable, Any
+from typing import Any, Callable, Iterable, Optional, Union
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import FileSystemLoader
+from jinja2.sandbox import SandboxedEnvironment
 from typing_extensions import Literal
 
 
@@ -11,6 +12,7 @@ def _dynamic_import(import_path: str) -> Any:
     return getattr(module, attr)
 
 
+# pylint: disable=too-many-arguments,too-many-locals
 def environment(
     template_dir: str = ".",
     block_start_string: str = "{%",
@@ -27,7 +29,7 @@ def environment(
     keep_trailing_newline: bool = False,
     extensions: Iterable[str] = (),
     autoescape: Union[bool, str] = True,
-) -> Environment:
+) -> SandboxedEnvironment:
     """
     Create a jinja2.Environment with certain parameter resrictions;
     for example the Loader is fixed to FileSystemLoader, although the searchpath
@@ -44,7 +46,7 @@ def environment(
     else:
         autoescape_value = autoescape
 
-    return Environment(
+    return SandboxedEnvironment(
         block_start_string=block_start_string,
         block_end_string=block_end_string,
         variable_start_string=variable_start_string,
