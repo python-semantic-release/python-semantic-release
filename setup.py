@@ -52,6 +52,7 @@ setup(
         "tomlkit~=0.10",
         "dotty-dict>=1.3.0,<2",
         "dataclasses==0.8; python_version < '3.7.0'",
+        "importlib-resources==5.7",
         "packaging",
     ],
     extras_require={

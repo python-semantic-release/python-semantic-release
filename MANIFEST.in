@@ -1,1 +1,3 @@
-include setup.py README.md MANIFEST.in LICENSE semantic_release/defaults.cfg
+include setup.py setup.cfg README.md MANIFEST.in LICENSE semantic_release/defaults.cfg pyproject.toml
+recursive-include *.j2
+graft semantic_release/data
