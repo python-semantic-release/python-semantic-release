@@ -561,3 +561,22 @@ This is useful if the auth token does not have permission to push, but the syste
 (an ssh deploy key for instance) does.
 
 Default: `false`
+
+.. _config-use_only_cwd_commits:
+
+``use_only_cwd_commits``
+------------------------
+Only consider commits that are relevant for the current working directory when parsing commits.
+This can be helpful for a monorepo, where commits to one component should not trigger
+new versions for all other components as well.
+
+Default: `false`
+
+.. note::
+  Only valid if ``version_source = commit``.
+  You will probably also need to set a unique ``tag_format`` for each component.
+  Monorepo support is still only partly supported (see `this issue`_).
+
+.. _this issue: https://github.com/relekang/python-semantic-release/issues/168
+  
+  

@@ -17,8 +17,11 @@ from .helpers import LoggedFunction
 from .settings import config
 
 _repo: Optional[Repo]
+_sub_directory = "."
 try:
     _repo = Repo(".", search_parent_directories=True)
+    if config.get("use_only_cwd_commits") and config.get("version_source") == "commit":
+        _sub_directory = os.path.relpath(os.getcwd(), _repo.working_dir)
 except InvalidGitRepositoryError:
     _repo = None
 
@@ -79,7 +82,7 @@ def get_commit_log(from_rev=None, to_rev=None):
     elif to_rev:
         rev = f"{to_rev}..."
 
-    for commit in repo().iter_commits(rev):
+    for commit in repo().iter_commits(rev, paths=_sub_directory):
         yield (commit.hexsha, commit.message.replace("\r\n", "\n"))
 
 
