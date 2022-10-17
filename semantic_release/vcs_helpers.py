@@ -17,8 +17,10 @@ from .helpers import LoggedFunction
 from .settings import config
 
 _repo: Optional[Repo]
+_sub_directory = "."
 try:
     _repo = Repo(".", search_parent_directories=True)
+    _sub_directory = os.path.relpath(os.getcwd(), _repo.working_dir)
 except InvalidGitRepositoryError:
     _repo = None
 
@@ -63,7 +65,7 @@ def get_commit_log(from_rev=None):
                 f"Reference {from_rev} does not exist, considering entire history"
             )
 
-    for commit in repo().iter_commits(rev):
+    for commit in repo().iter_commits(rev, paths=_sub_directory):
         yield (commit.hexsha, commit.message.replace("\r\n", "\n"))
 
 
