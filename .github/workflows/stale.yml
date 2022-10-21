@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/stale@v3
+    - uses: actions/stale@v6
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         days-before-stale: 10
@@ -22,7 +22,7 @@ jobs:
           then it will be assumed that the question has been resolved and
           the issue will be automatically closed.
         stale-issue-label: 'stale'
-    - uses: actions/stale@v3
+    - uses: actions/stale@v6
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         days-before-stale: 21
@@ -33,7 +33,7 @@ jobs:
           there has been no activity in the last 3 weeks. It will not be
           closed.
         stale-issue-label: 'help-wanted'
-    - uses: actions/stale@v3
+    - uses: actions/stale@v6
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         days-before-stale: 21
