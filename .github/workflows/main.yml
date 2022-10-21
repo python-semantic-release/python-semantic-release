@@ -91,7 +91,7 @@ jobs:
         id: sha
         run: |
           new_sha=$(git rev-parse HEAD)
-          echo "::set-output name=SHA::$new_sha"
+          echo "SHA=$new_sha" >> $GITHUB_OUTPUT
 
   release:
     name: Semantic Release
