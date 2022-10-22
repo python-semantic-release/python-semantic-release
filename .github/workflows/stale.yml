@@ -33,6 +33,7 @@ jobs:
           there has been no activity in the last 3 weeks. It will not be
           closed.
         stale-issue-label: 'help-wanted'
+        exempt-issue-labels: 'help-wanted'
     - uses: actions/stale@v6
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,3 +45,4 @@ jobs:
           there has been no activity in the last 3 weeks. It will not be
           closed.
         stale-issue-label: 'help-wanted'
+        exempt-issue-labels: 'help-wanted'
