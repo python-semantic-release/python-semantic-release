@@ -4,5 +4,16 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.pytest.ini_options]
-addopts = ["-ra", "--cache-clear", "--cov=semantic_release", "--cov-report", "html:coverage-html", "--cov-report", "term"]
+addopts = [
+  "-ra",
+  "--cache-clear",
+  "--cov=semantic_release",
+  "--cov-report",
+  "html:coverage-html",
+  "--cov-report",
+  "term",
+]
 python_files = ["tests/test_*.py", "tests/**/test_*.py"]
+
+[tool.semantic_release]
+version_variable = ["semantic_release/__init__.py:__version__"]
