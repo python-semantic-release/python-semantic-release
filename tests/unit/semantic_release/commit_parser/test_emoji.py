@@ -1,8 +1,7 @@
 import pytest
 
-from semantic_release.enums import LevelBump
 from semantic_release.commit_parser.emoji import EmojiCommitParser
-
+from semantic_release.enums import LevelBump
 from tests.unit.semantic_release.commit_parser.helper import make_commit
 
 

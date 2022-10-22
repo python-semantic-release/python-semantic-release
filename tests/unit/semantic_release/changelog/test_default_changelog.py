@@ -1,12 +1,13 @@
 # NOTE: use backport with newer API
 from datetime import datetime
+
 from importlib_resources import files
+
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.changelog.release_history import release_history
 from semantic_release.changelog.template import environment
 from semantic_release.hvcs import Github
 from semantic_release.version.translator import VersionTranslator
-
 from tests.const import COMMIT_MESSAGE
 
 default_changelog_template = (
@@ -18,6 +19,7 @@ today_as_str = datetime.now().strftime("%Y-%m-%d")
 
 def _cm_rstripped(version: str) -> str:
     return COMMIT_MESSAGE.format(version=version).rstrip()
+
 
 EXPECTED_CONTENT = f"""\
 # CHANGELOG

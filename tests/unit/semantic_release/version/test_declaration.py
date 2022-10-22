@@ -3,16 +3,19 @@ from textwrap import dedent
 import pytest
 from pytest_lazyfixture import lazy_fixture
 
-
-from semantic_release.version.declaration import PatternVersionDeclaration, TomlVersionDeclaration
+from semantic_release.version.declaration import (
+    PatternVersionDeclaration,
+    TomlVersionDeclaration,
+)
 from semantic_release.version.version import Version
-
 from tests.const import EXAMPLE_PROJECT_VERSION
 from tests.helper import diff_strings
 
 
 def test_pyproject_toml_version_found(example_pyproject_toml):
-    decl = TomlVersionDeclaration(example_pyproject_toml.resolve(), "tool.poetry.version")
+    decl = TomlVersionDeclaration(
+        example_pyproject_toml.resolve(), "tool.poetry.version"
+    )
     versions = decl.parse()
     assert len(versions) == 1
     assert versions.pop() == Version.parse(EXAMPLE_PROJECT_VERSION)
@@ -28,9 +31,17 @@ def test_setup_cfg_version_found(example_setup_cfg):
 @pytest.mark.parametrize(
     "decl_cls, config_file, search_text",
     [
-        (TomlVersionDeclaration, lazy_fixture("example_pyproject_toml"), "tool.poetry.version"),
-        (PatternVersionDeclaration, lazy_fixture("example_setup_cfg"), r"^version = (.*)$")
-    ]
+        (
+            TomlVersionDeclaration,
+            lazy_fixture("example_pyproject_toml"),
+            "tool.poetry.version",
+        ),
+        (
+            PatternVersionDeclaration,
+            lazy_fixture("example_setup_cfg"),
+            r"^version = (.*)$",
+        ),
+    ],
 )
 def test_version_replace(decl_cls, config_file, search_text):
     new_version = Version(1, 0, 0)
@@ -79,10 +90,13 @@ def test_setup_cfg_no_version(tmp_path):
     decl = PatternVersionDeclaration(setup_cfg.resolve(), r"^version = (.*)$")
     assert decl.parse() == set()
 
+
 # TODO: version_variable?
 
 
-@pytest.mark.parametrize("decl_cls", (TomlVersionDeclaration, PatternVersionDeclaration))
+@pytest.mark.parametrize(
+    "decl_cls", (TomlVersionDeclaration, PatternVersionDeclaration)
+)
 def test_version_decl_error_on_missing_file(decl_cls):
     with pytest.raises(FileNotFoundError):
         decl_cls("/this/is/definitely/a/missing/path/asdfghjkl", "random search text")

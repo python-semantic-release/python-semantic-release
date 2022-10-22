@@ -1,7 +1,6 @@
 import re
 from typing import List
 
-
 breaking_re = re.compile(r"BREAKING[ -]CHANGE:\s?(.*)")
 
 

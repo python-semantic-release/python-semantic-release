@@ -1,9 +1,8 @@
 import pytest
 
-from semantic_release.enums import LevelBump
 from semantic_release.commit_parser.angular import AngularCommitParser
-from semantic_release.commit_parser.token import ParseError, ParsedCommit
-
+from semantic_release.commit_parser.token import ParsedCommit, ParseError
+from semantic_release.enums import LevelBump
 from tests.unit.semantic_release.commit_parser.helper import make_commit
 
 

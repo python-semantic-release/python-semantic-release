@@ -1,3 +1,4 @@
+import os
 from textwrap import dedent
 
 import pytest
@@ -13,6 +14,15 @@ from tests.const import (
 
 
 @pytest.fixture
+def temp_cwd(tmp_path):
+    cwd = os.getcwd()
+    os.chdir(str(tmp_path.resolve()))
+    yield tmp_path
+    os.chdir(cwd)
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("temp_cwd")
 def example_project(tmp_path):
     src_dir = tmp_path / "src"
     src_dir.mkdir()

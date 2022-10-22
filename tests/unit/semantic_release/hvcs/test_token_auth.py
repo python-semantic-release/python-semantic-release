@@ -1,7 +1,5 @@
 import pytest
-
 from requests import Request
-
 
 from semantic_release.hvcs.token_auth import TokenAuth
 
@@ -14,8 +12,8 @@ def example_request():
         headers={
             "User-Agent": "Python3",
             "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+            "Accept": "application/json",
+        },
     )
 
 

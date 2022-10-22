@@ -1,6 +1,6 @@
 import logging
 from functools import wraps
-from typing import Any, Optional, Callable, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter

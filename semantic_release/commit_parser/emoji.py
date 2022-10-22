@@ -6,11 +6,9 @@ from typing import Tuple
 from git import Commit
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
+from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
 from semantic_release.commit_parser.util import parse_paragraphs
-
 from semantic_release.enums import LevelBump
-
 
 logger = logging.getLogger(__name__)
 

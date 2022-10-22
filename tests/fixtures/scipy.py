@@ -3,13 +3,12 @@ from itertools import chain, zip_longest
 
 import pytest
 
-from semantic_release.enums import LevelBump
 from semantic_release.commit_parser.scipy import (
     ScipyCommitParser,
     ScipyParserOptions,
     tag_to_section,
 )
-
+from semantic_release.enums import LevelBump
 from tests.const import SCIPY_FORMATTED_COMMIT_BODY_PARTS
 
 

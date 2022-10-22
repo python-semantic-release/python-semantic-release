@@ -1,3 +1,4 @@
+import importlib
 import logging
 import re
 import string
@@ -62,6 +63,12 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
 
 
 LoggedFunction = logged_function
+
+
+def dynamic_import(import_path: str) -> Any:
+    module_name, _, attr = import_path.split(":", maxsplit=1)
+    module = importlib.import_module(module_name)
+    return getattr(module, attr)
 
 
 class ParsedGitUrl(NamedTuple):

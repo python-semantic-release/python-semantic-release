@@ -9,7 +9,6 @@ from requests import Session
 from semantic_release.hvcs.gitlab import Gitlab
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 
-
 gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 
 # Note: there's nothing special about the value of these variables,
@@ -113,9 +112,7 @@ class _GitlabProject:
 
         def create(self, input_):
             if input_["name"] and input_["tag_name"]:
-                if (
-                    input_["tag_name"] in (A_GOOD_TAG, A_LOCKED_TAG)
-                ):
+                if input_["tag_name"] in (A_GOOD_TAG, A_LOCKED_TAG):
                     return self._Release()
             raise gitlab.exceptions.GitlabCreateError
 
@@ -127,10 +124,10 @@ class _GitlabProject:
 @contextmanager
 def mock_gitlab(status: str = "success"):
     with mock.patch("gitlab.Gitlab.auth"), mock.patch(
-            "gitlab.v4.objects.ProjectManager",
-            return_value={
-                f"{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}": _GitlabProject(status)
-            }
+        "gitlab.v4.objects.ProjectManager",
+        return_value={
+            f"{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}": _GitlabProject(status)
+        },
     ):
         yield
 
@@ -258,7 +255,9 @@ def test_gitlab_client_init(
 
         assert client.hvcs_domain == expected_hvcs_domain
         assert client.hvcs_api_domain == expected_hvcs_api_domain
-        assert client.api_url == patched_os_environ.get("CI_SERVER_URL", f"https://{client.hvcs_api_domain}")
+        assert client.api_url == patched_os_environ.get(
+            "CI_SERVER_URL", f"https://{client.hvcs_api_domain}"
+        )
         assert client.token == expected_token
         assert client._remote_url == remote_url
         assert hasattr(client, "session") and isinstance(
@@ -270,7 +269,11 @@ def test_gitlab_client_init(
     "patched_os_environ, expected_owner, expected_name",
     [
         ({}, None, None),
-        ({"CI_PROJECT_NAMESPACE": "path/to/repo", "CI_PROJECT_NAME": "foo"}, "path/to/repo", "foo"),
+        (
+            {"CI_PROJECT_NAMESPACE": "path/to/repo", "CI_PROJECT_NAME": "foo"},
+            "path/to/repo",
+            "foo",
+        ),
     ],
 )
 def test_gitlab_get_repository_owner_and_name(
@@ -359,8 +362,8 @@ def test_pull_request_url(default_gl_client, pr_number):
         ("pending", False),
         ("failure", False),
         ("allow_failure", True),
-        ("success", True)
-    ]
+        ("success", True),
+    ],
 )
 def test_check_build_status(default_gl_client, status, expected):
     with mock_gitlab(status=status):

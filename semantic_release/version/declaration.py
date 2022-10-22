@@ -2,7 +2,7 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union, Set, Optional, Any
+from typing import Any, Optional, Set, Union
 
 import tomlkit
 from dotty_dict import Dotty

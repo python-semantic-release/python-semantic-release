@@ -32,7 +32,9 @@ setup(
     author_email="me@rolflekang.com",
     description="Automatic Semantic Versioning for Python projects",
     long_description=_read_long_description(),
-    packages=find_packages(exclude=("tests",)),
+    # see https://github.com/pypa/setuptools/issues/3340
+    # extend to resolve deprecation warning
+    packages=[*find_packages(exclude=("tests",)), "semantic_release.data.templates"],
     license="MIT",
     install_requires=[
         "click>=7,<9",
@@ -40,10 +42,10 @@ setup(
         "gitpython>=3.0.8,<4",
         "invoke>=1.4.1,<2",
         "semver>=2.10,<3",
-        "twine>=3,<4",
+        "twine>=4,<5",
         "requests>=2.25,<3",
         "wheel",
-        "jinja2>=3.1.2,<4"
+        "jinja2>=3.1.2,<4",
         "python-gitlab>=2,<4",
         # tomlkit used to be pinned to 0.7.0
         # See https://github.com/relekang/python-semantic-release/issues/336
@@ -53,6 +55,7 @@ setup(
         "dotty-dict>=1.3.0,<2",
         "dataclasses==0.8; python_version < '3.7.0'",
         "importlib-resources==5.7",
+        "pydantic>=1.10.2,<2",
         "packaging",
     ],
     extras_require={
@@ -64,7 +67,7 @@ setup(
             "pytest-lazy-fixture~=0.6.3",
             "pytest-cov>=4,<5",
             "responses==0.21.0",
-            "requests-mock>=1.10.0,<2"
+            "requests-mock>=1.10.0,<2",
         ],
         "docs": ["Sphinx==5.2.3"],
         "dev": ["tox", "isort", "black"],

@@ -3,7 +3,7 @@ import string
 from contextlib import contextmanager
 from itertools import zip_longest
 from tempfile import NamedTemporaryFile
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
 from git import Repo
 
@@ -22,7 +22,9 @@ def add_text_to_file(repo: Repo, filename: str, text: Optional[str] = None):
     repo.index.add(filename)
 
 
-def diff_strings(str_a: str, str_b: str) -> Tuple[List[Tuple[int, str]], List[Tuple[int, str]]]:
+def diff_strings(
+    str_a: str, str_b: str
+) -> Tuple[List[Tuple[int, str]], List[Tuple[int, str]]]:
     deleted = []
     added = []
     for pos, (left, right) in enumerate(zip_longest(str_a, str_b, fillvalue=None)):

@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Union, TypeVar
+from typing import List, NamedTuple, TypeVar, Union
 
 from git import Commit
 

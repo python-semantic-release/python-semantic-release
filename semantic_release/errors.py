@@ -7,16 +7,23 @@ class SemanticReleaseBaseError(Exception):
     pass
 
 
-class ImproperConfigurationError(SemanticReleaseBaseError):
+class InvalidConfiguration(SemanticReleaseBaseError):
     pass
 
 
-class UnknownCommitMessageStyleError(SemanticReleaseBaseError):
+class NotAReleaseBranch(InvalidConfiguration):
     pass
+
+
+ImproperConfigurationError = InvalidConfiguration
 
 
 class CommitParseError(SemanticReleaseBaseError):
     pass
+
+
+# TODO: backwards-compat
+UnknownCommitMessageStyleError = CommitParseError
 
 
 class GitError(SemanticReleaseBaseError):

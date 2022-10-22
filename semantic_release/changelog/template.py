@@ -1,4 +1,3 @@
-import importlib
 import os
 import shutil
 from pathlib import Path
@@ -8,11 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
 from typing_extensions import Literal
 
-
-def _dynamic_import(import_path: str) -> Any:
-    module_name, _, attr = import_path.split(":", maxsplit=1)
-    module = importlib.import_module(module_name)
-    return getattr(module, attr)
+from semantic_release.helpers import dynamic_import
 
 
 # pylint: disable=too-many-arguments,too-many-locals
@@ -45,7 +40,7 @@ def environment(
     """
     autoescape_value: Union[bool, Callable[[Optional[str]], bool]]
     if isinstance(autoescape, str):
-        autoescape_value = _dynamic_import(autoescape)  # type: ignore
+        autoescape_value = dynamic_import(autoescape)  # type: ignore
     else:
         autoescape_value = autoescape
 

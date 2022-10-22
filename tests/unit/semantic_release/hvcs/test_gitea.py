@@ -1,9 +1,10 @@
 import base64
+import glob
 import mimetypes
-import re
 import os
-from urllib.parse import urlencode
+import re
 from unittest import mock
+from urllib.parse import urlencode
 
 import pytest
 import requests_mock
@@ -194,13 +195,7 @@ def test_gitea_get_repository_owner_and_name(default_gitea_client):
         ),
     ],
 )
-def test_remote_url(
-    default_gitea_client,
-    use_token,
-    token,
-    _remote_url,
-    expected
-):
+def test_remote_url(default_gitea_client, use_token, token, _remote_url, expected):
     default_gitea_client._remote_url = _remote_url
     default_gitea_client.token = token
     assert default_gitea_client.remote_url(use_token=use_token) == expected
@@ -299,7 +294,9 @@ def test_create_release(default_gitea_client, status_code, prerelease, expected)
         m.register_uri(
             "POST", gitea_api_matcher, json={"status": "ok"}, status_code=status_code
         )
-        assert default_gitea_client.create_release(tag, changelog, prerelease) == expected
+        assert (
+            default_gitea_client.create_release(tag, changelog, prerelease) == expected
+        )
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
@@ -320,9 +317,7 @@ def test_create_release(default_gitea_client, status_code, prerelease, expected)
         }
 
 
-@pytest.mark.parametrize(
-    "token", (None, "super-token")
-)
+@pytest.mark.parametrize("token", (None, "super-token"))
 def test_should_create_release_using_token_or_netrc(default_gitea_client, token):
     default_gitea_client.token = token
     default_gitea_client.session.auth = None if not token else TokenAuth(token)
@@ -345,7 +340,9 @@ def test_should_create_release_using_token_or_netrc(default_gitea_client, token)
                 "Authorization": "Basic "
                 + base64.encodebytes(
                     f"{netrc.login_username}:{netrc.login_password}".encode()
-                ).decode("ascii").strip()
+                )
+                .decode("ascii")
+                .strip()
             }.items() <= m.last_request.headers.items()
         else:
             assert {
@@ -396,7 +393,9 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
         ({}, 404, None),
     ],
 )
-def test_get_release_id_by_tag(default_gitea_client, resp_payload, status_code, expected):
+def test_get_release_id_by_tag(
+    default_gitea_client, resp_payload, status_code, expected
+):
     tag = "v1.0.0"
     with requests_mock.Mocker(session=default_gitea_client.session) as m:
         m.register_uri(
@@ -501,7 +500,9 @@ def test_create_or_update_release(
         (503, False),
     ],
 )
-def test_upload_asset(default_gitea_client, example_changelog_md, status_code, expected):
+def test_upload_asset(
+    default_gitea_client, example_changelog_md, status_code, expected
+):
     release_id = 420
     urlparams = {"name": example_changelog_md.name}
     with requests_mock.Mocker(session=default_gitea_client.session) as m:
@@ -510,7 +511,9 @@ def test_upload_asset(default_gitea_client, example_changelog_md, status_code, e
         )
         assert (
             default_gitea_client.upload_asset(
-                release_id=release_id, file=example_changelog_md.resolve(), label="doesn't matter could be None"
+                release_id=release_id,
+                file=example_changelog_md.resolve(),
+                label="doesn't matter could be None",
             )
             == expected
         )
@@ -544,39 +547,41 @@ def test_upload_dists_when_release_id_not_found(default_gitea_client):
 
 
 @pytest.mark.parametrize(
-    "files, upload_statuses, expected",
+    "files, glob_pattern, upload_statuses, expected",
     [
-        (["foo.zip", "bar.whl"], [True, False], False),
-        (["foo.whl", "foo.egg", "foo.tar.gz"], [True, True, True], True),
+        (["foo.zip", "bar.whl"], "*.zip", [True], 1),
+        (["foo.whl", "foo.egg", "foo.tar.gz"], "foo.*", [True, True, True], 3),
         # What if not built?
-        ([], [], True),
+        ([], "*", [], 0),
         # What if wrong directory/other stuff in output dir/subfolder?
-        (["specialconfig.yaml", "something.whl", "desc.md"], [True, True, True], True),
+        (["specialconfig.yaml", "something.whl", "desc.md"], "*.yaml", [True], 1),
+        (["specialconfig.yaml", "something.whl", "desc.md"], "*.md", [True], 1),
     ],
 )
 def test_upload_dists_when_release_id_found(
-    default_gitea_client, files, upload_statuses, expected
+    default_gitea_client, files, glob_pattern, upload_statuses, expected
 ):
     release_id = 420
     tag = "doesn't matter"
-    path = "doesn't matter"
     with mock.patch.object(
         default_gitea_client, "get_release_id_by_tag"
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gitea_client, "upload_asset"
     ) as mock_upload_asset, mock.patch.object(
-        os, "listdir"
-    ) as mock_os_listdir, mock.patch.object(
+        glob, "glob"
+    ) as mock_glob_glob, mock.patch.object(
         os.path, "isfile"
     ) as mock_os_path_isfile:
-        # Skip check as the filenames deliberately don't exists for testing
+        # Skip check as the files don't exist in filesystem
         mock_os_path_isfile.return_value = True
-        mock_os_listdir.return_value = files
+
+        matching_files = glob.fnmatch.filter(files, glob_pattern)
+        mock_glob_glob.return_value = matching_files
         mock_get_release_id_by_tag.return_value = release_id
 
         mock_upload_asset.side_effect = upload_statuses
-        assert default_gitea_client.upload_dists(tag, path) == expected
+        assert default_gitea_client.upload_dists(tag, glob_pattern) == expected
         mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
         assert [
-            mock.call(release_id, os.path.join(path, fn)) for fn in files
+            mock.call(release_id, fn) for fn in matching_files
         ] == mock_upload_asset.call_args_list

@@ -1,9 +1,10 @@
 from __future__ import annotations
+
 import re
 
 from semantic_release.const import SEMVER_REGEX
-from semantic_release.version.version import Version
 from semantic_release.helpers import check_tag_format
+from semantic_release.version.version import Version
 
 
 class VersionTranslator:

@@ -1,4 +1,6 @@
-from .cli import entry
+import sys
+
+from semantic_release.cli import main
 
 if __name__ == "__main__":
-    entry()
+    main(args=sys.argv[1:])

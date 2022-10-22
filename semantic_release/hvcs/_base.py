@@ -53,12 +53,14 @@ class HvcsBase:
     def check_build_status(self, ref: str) -> bool:
         raise NotImplementedError()
 
-    def upload_dists(self, release_id: str, path: str) -> bool:
+    def upload_dists(self, tag: str, dist_glob: str) -> int:
         # release_id is generally just the tag
         # Skip on unsupported HVCS instead of raising error
-        return True
+        return 0
 
-    def create_release(self, tag: str, changelog: str, prerelease: bool = False) -> bool:
+    def create_release(
+        self, tag: str, changelog: str, prerelease: bool = False
+    ) -> bool:
         raise NotImplementedError()
 
     def get_release_id_by_tag(self, tag: str) -> Optional[int]:
@@ -67,15 +69,15 @@ class HvcsBase:
     def edit_release_changelog(self, release_id: int, changelog: str) -> bool:
         raise NotImplementedError()
 
-    def create_or_update_release(
-        self, tag: str, changelog: str
-    ) -> bool:
+    def create_or_update_release(self, tag: str, changelog: str) -> bool:
         raise NotImplementedError()
 
     def asset_upload_url(self, release_id: str) -> Optional[str]:
         raise NotImplementedError()
 
-    def upload_asset(self, release_id: int, file: str, label: Optional[str] = None) -> bool:
+    def upload_asset(
+        self, release_id: int, file: str, label: Optional[str] = None
+    ) -> bool:
         raise NotImplementedError()
 
     def remote_url(self, use_token: bool) -> str:

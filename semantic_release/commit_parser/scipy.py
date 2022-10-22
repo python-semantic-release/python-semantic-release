@@ -42,9 +42,9 @@ from typing import Tuple
 
 from git import Commit
 
-from semantic_release.enums import LevelBump
-from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
+from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
+from semantic_release.enums import LevelBump
 
 log = logging.getLogger(__name__)
 
@@ -134,8 +134,8 @@ class ScipyCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
         parsed = self.re_parser.match(message)
 
         if not parsed:
-            return ParseError(commit,
-                f"Unable to parse the given commit message: {message}"
+            return ParseError(
+                commit, f"Unable to parse the given commit message: {message}"
             )
 
         if parsed.group("subject"):

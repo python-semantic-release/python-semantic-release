@@ -16,14 +16,6 @@ from semantic_release.version.version import Version
 log = logging.getLogger(__name__)
 
 
-# NOTE the `released` dict should actually be the following structure:
-# {
-#     "version": {
-#          "change_type": [ParseResult]
-#     }
-# }
-# Changes introduced by each version should be stored in that version's value
-
 # Note: generic NamedTuples aren't yet supported by mypy
 # see https://github.com/python/mypy/issues/685
 class ReleaseHistory(NamedTuple):

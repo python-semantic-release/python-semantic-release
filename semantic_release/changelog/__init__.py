@@ -1,2 +1,3 @@
 from .context import ChangelogContext, make_changelog_context
-from .template import environment
+from .release_history import release_history
+from .template import environment, recursive_render

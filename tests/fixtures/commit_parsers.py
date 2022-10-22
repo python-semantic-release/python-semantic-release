@@ -1,6 +1,10 @@
 import pytest
 
-from semantic_release.commit_parser import AngularCommitParser, EmojiCommitParser, TagCommitParser
+from semantic_release.commit_parser import (
+    AngularCommitParser,
+    EmojiCommitParser,
+    TagCommitParser,
+)
 
 # Note scipy defined in ./scipy.py as already used there
 

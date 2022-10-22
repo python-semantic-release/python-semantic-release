@@ -8,7 +8,6 @@ import pytest
 
 from semantic_release.changelog.template import environment
 
-
 EXAMPLE_TEMPLATE_FORMAT_STR = """
 <h1>This is an example template document</h1>
 

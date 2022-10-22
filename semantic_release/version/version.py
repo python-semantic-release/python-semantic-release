@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import re
 from functools import wraps
 from itertools import zip_longest
-from typing import Optional, Any, Union, Callable, overload
+from typing import Any, Callable, Optional, Union, overload
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
@@ -265,7 +266,13 @@ class Version:
         # build metadata is not used for comparison
         return all(
             getattr(self, attr) == getattr(other, attr)
-            for attr in ("major", "minor", "patch", "prerelease_token", "prerelease_revision")
+            for attr in (
+                "major",
+                "minor",
+                "patch",
+                "prerelease_token",
+                "prerelease_revision",
+            )
         )
 
     @_comparator(type_guard=False)
@@ -294,7 +301,11 @@ class Version:
         # comparing precedence of pre-release versions. Here we just compare
         # the prerelease tokens, and their revision numbers
         if self.prerelease_token != other.prerelease_token:
-            for self_tk, other_tk in zip_longest(self.prerelease_token.split("."), other.prerelease_token.split("."), fillvalue=None):
+            for self_tk, other_tk in zip_longest(
+                self.prerelease_token.split("."),
+                other.prerelease_token.split("."),
+                fillvalue=None,
+            ):
                 if self_tk == other_tk:
                     continue
                 if (self_tk is None) ^ (other_tk is None):

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Generic
+from typing import Generic, Type, TypeVar
 
 from git import Commit
 

@@ -1,9 +1,10 @@
 import base64
+import glob
 import mimetypes
-import re
 import os
-from urllib.parse import urlencode
+import re
 from unittest import mock
+from urllib.parse import urlencode
 
 import pytest
 import requests_mock
@@ -358,9 +359,7 @@ def test_create_release(default_gh_client, status_code, prerelease, expected):
         }
 
 
-@pytest.mark.parametrize(
-    "token", (None, "super-token")
-)
+@pytest.mark.parametrize("token", (None, "super-token"))
 def test_should_create_release_using_token_or_netrc(default_gh_client, token):
     default_gh_client.token = token
     default_gh_client.session.auth = None if not token else TokenAuth(token)
@@ -380,7 +379,9 @@ def test_should_create_release_using_token_or_netrc(default_gh_client, token):
                 "Authorization": "Basic "
                 + base64.encodebytes(
                     f"{netrc.login_username}:{netrc.login_password}".encode()
-                ).decode("ascii").strip()
+                )
+                .decode("ascii")
+                .strip()
             }.items() <= m.last_request.headers.items()
         else:
             assert {
@@ -592,39 +593,41 @@ def test_upload_dists_when_release_id_not_found(default_gh_client):
 
 
 @pytest.mark.parametrize(
-    "files, upload_statuses, expected",
+    "files, glob_pattern, upload_statuses, expected",
     [
-        (["foo.zip", "bar.whl"], [True, False], False),
-        (["foo.whl", "foo.egg", "foo.tar.gz"], [True, True, True], True),
+        (["foo.zip", "bar.whl"], "*.zip", [True], 1),
+        (["foo.whl", "foo.egg", "foo.tar.gz"], "foo.*", [True, True, True], 3),
         # What if not built?
-        ([], [], True),
+        ([], "*", [], 0),
         # What if wrong directory/other stuff in output dir/subfolder?
-        (["specialconfig.yaml", "something.whl", "desc.md"], [True, True, True], True),
+        (["specialconfig.yaml", "something.whl", "desc.md"], "*.yaml", [True], 1),
+        (["specialconfig.yaml", "something.whl", "desc.md"], "*.md", [True], 1),
     ],
 )
 def test_upload_dists_when_release_id_found(
-    default_gh_client, files, upload_statuses, expected
+    default_gh_client, files, glob_pattern, upload_statuses, expected
 ):
     release_id = 420
     tag = "doesn't matter"
-    path = "doesn't matter"
     with mock.patch.object(
         default_gh_client, "get_release_id_by_tag"
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gh_client, "upload_asset"
     ) as mock_upload_asset, mock.patch.object(
-        os, "listdir"
-    ) as mock_os_listdir, mock.patch.object(
+        glob, "glob"
+    ) as mock_glob_glob, mock.patch.object(
         os.path, "isfile"
     ) as mock_os_path_isfile:
         # Skip check as the filenames deliberately don't exists for testing
         mock_os_path_isfile.return_value = True
-        mock_os_listdir.return_value = files
+
+        matching_files = glob.fnmatch.filter(files, glob_pattern)
+        mock_glob_glob.return_value = matching_files
         mock_get_release_id_by_tag.return_value = release_id
 
         mock_upload_asset.side_effect = upload_statuses
-        assert default_gh_client.upload_dists(tag, path) == expected
+        assert default_gh_client.upload_dists(tag, glob_pattern) == expected
         mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
         assert [
-            mock.call(release_id, os.path.join(path, fn)) for fn in files
+            mock.call(release_id, fn) for fn in matching_files
         ] == mock_upload_asset.call_args_list

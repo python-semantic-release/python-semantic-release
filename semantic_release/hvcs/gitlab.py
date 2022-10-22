@@ -46,14 +46,16 @@ class Gitlab(HvcsBase):
         token_var: str = "GL_TOKEN",
     ) -> None:
         self._remote_url = remote_url
-        self.hvcs_domain = hvcs_domain or self._domain_from_environment() or self.DEFAULT_DOMAIN
-        self.hvcs_api_domain = hvcs_api_domain or self.hvcs_domain.replace("https://", "")
+        self.hvcs_domain = (
+            hvcs_domain or self._domain_from_environment() or self.DEFAULT_DOMAIN
+        )
+        self.hvcs_api_domain = hvcs_api_domain or self.hvcs_domain.replace(
+            "https://", ""
+        )
         self.api_url = os.getenv("CI_SERVER_URL", f"https://{self.hvcs_api_domain}")
 
         self.token = os.getenv(token_var)
-        auth = (
-            None if not self.token else TokenAuth(self.token)
-        )
+        auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
 
     @staticmethod
@@ -101,9 +103,7 @@ class Gitlab(HvcsBase):
         return True
 
     @logged_function(logger)
-    def create_release(
-        self, tag: str, changelog: str
-    ) -> bool:
+    def create_release(self, tag: str, changelog: str) -> bool:
         """Post release changelog
         :param owner: The owner namespace of the repository
         :param repo: The repository name
@@ -141,6 +141,4 @@ class Gitlab(HvcsBase):
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/commit/{commit_hash}"
 
     def pull_request_url(self, pr_number: Union[str, int]) -> str:
-        return (
-            f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/issues/{pr_number}"
-        )
+        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/issues/{pr_number}"

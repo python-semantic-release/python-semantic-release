@@ -1,10 +1,9 @@
 import pytest
+from git import Actor, Repo
 from pytest_lazyfixture import lazy_fixture
 
-from git import Repo, Actor
-
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, COMMIT_MESSAGE
-from tests.helper import shortuid, add_text_to_file
+from tests.const import COMMIT_MESSAGE, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.helper import add_text_to_file, shortuid
 
 
 @pytest.fixture
@@ -28,10 +27,7 @@ def example_git_https_url():
 
 
 @pytest.fixture(
-    params=[
-        lazy_fixture("example_git_ssh_url"),
-        lazy_fixture("example_git_https_url")
-    ]
+    params=[lazy_fixture("example_git_ssh_url"), lazy_fixture("example_git_https_url")]
 )
 def git_repo_factory(request, example_project):
     """
@@ -41,6 +37,7 @@ def git_repo_factory(request, example_project):
     OSError: Too Many Open Files
     See https://github.com/pytest-dev/pytest/issues/2970#issuecomment-348033023
     """
+
     def git_repo():
         repo = Repo.init(example_project.resolve())
         # Without this the global config may set it to "master", we want consistency
@@ -207,7 +204,9 @@ def repo_with_single_branch_tag_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_single_branch_and_prereleases_angular_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_and_prereleases_angular_commits(
+    git_repo_factory, file_in_repo
+):
     git_repo = git_repo_factory()
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -243,7 +242,9 @@ def repo_with_single_branch_and_prereleases_angular_commits(git_repo_factory, fi
 
 
 @pytest.fixture
-def repo_with_single_branch_and_prereleases_emoji_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_and_prereleases_emoji_commits(
+    git_repo_factory, file_in_repo
+):
     git_repo = git_repo_factory()
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -279,7 +280,9 @@ def repo_with_single_branch_and_prereleases_emoji_commits(git_repo_factory, file
 
 
 @pytest.fixture
-def repo_with_single_branch_and_prereleases_scipy_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_and_prereleases_scipy_commits(
+    git_repo_factory, file_in_repo
+):
     git_repo = git_repo_factory()
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -788,7 +791,9 @@ def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
 
     # Do a prerelease
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=":sparkles: add some more text\n\nBREAKING CHANGE: add some more text")
+    git_repo.git.commit(
+        m=":sparkles: add some more text\n\nBREAKING CHANGE: add some more text"
+    )
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.0.0-rc.1"))
     git_repo.git.tag("v1.0.0-rc.1", m="v1.0.0-rc.1")
@@ -843,7 +848,9 @@ def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_angular_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_and_release_channels_angular_commits(
+    git_repo_factory, file_in_repo
+):
     git_repo = git_repo_factory()
 
     add_text_to_file(git_repo, file_in_repo)
@@ -923,7 +930,9 @@ def repo_with_git_flow_and_release_channels_angular_commits(git_repo_factory, fi
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_emoji_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_and_release_channels_emoji_commits(
+    git_repo_factory, file_in_repo
+):
     git_repo = git_repo_factory()
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1003,7 +1012,9 @@ def repo_with_git_flow_and_release_channels_emoji_commits(git_repo_factory, file
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_scipy_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_and_release_channels_scipy_commits(
+    git_repo_factory, file_in_repo
+):
     git_repo = git_repo_factory()
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1102,7 +1113,9 @@ def repo_with_git_flow_and_release_channels_tag_commits(git_repo_factory, file_i
 
     # Do a prerelease
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=":sparkles: add some more text\n\nBREAKING CHANGE: add some more text")
+    git_repo.git.commit(
+        m=":sparkles: add some more text\n\nBREAKING CHANGE: add some more text"
+    )
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.0.0-rc.1"))
     git_repo.git.tag("v1.0.0-rc.1", m="v1.0.0-rc.1")

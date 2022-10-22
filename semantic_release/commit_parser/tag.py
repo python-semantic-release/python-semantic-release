@@ -5,10 +5,9 @@ from dataclasses import dataclass
 
 from git import Commit
 
-from semantic_release.commit_parser._base import ParserOptions, CommitParser
-from semantic_release.commit_parser.token import ParsedCommit, ParseResult, ParseError
-from semantic_release.commit_parser.util import parse_paragraphs, breaking_re
-
+from semantic_release.commit_parser._base import CommitParser, ParserOptions
+from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
+from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 
 logger = logging.getLogger(__name__)
@@ -41,8 +40,7 @@ class TagCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
         parsed = re_parser.match(message)
         if not parsed:
             return ParseError(
-                commit,
-                error = f"Unable to parse the given commit message: {message!r}"
+                commit, error=f"Unable to parse the given commit message: {message!r}"
             )
 
         subject = parsed.group("subject")
@@ -63,8 +61,7 @@ class TagCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
         else:
             # We did not find any tags in the commit message
             return ParseError(
-                commit,
-                error = f"Unable to parse the given commit message: {message!r}"
+                commit, error=f"Unable to parse the given commit message: {message!r}"
             )
 
         if parsed.group("text"):
