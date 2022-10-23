@@ -2,10 +2,7 @@ import glob
 import logging
 import mimetypes
 import os
-from typing import Optional, Tuple, Union
-
-from requests import Session
-from urllib3 import Retry
+from typing import Optional, Union
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase

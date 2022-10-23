@@ -11,7 +11,7 @@ class VersionTranslator:
     _VERSION_REGEX = SEMVER_REGEX
 
     @classmethod
-    def _invert_tag_format_to_re(cls, tag_format: str) -> str:
+    def _invert_tag_format_to_re(cls, tag_format: str) -> re.Pattern[str]:
         return re.compile(
             tag_format.replace(r"{version}", r"(?P<version>.*)"),
             flags=re.VERBOSE,
@@ -33,7 +33,12 @@ class VersionTranslator:
         )
 
     def from_tag(self, tag: str) -> Version:
-        raw_version_str = self.from_tag_re.match(tag).group("version")
+        tag_match = self.from_tag_re.match(tag)
+        if not tag_match:
+            raise ValueError(
+                f"Tag {tag!r} doesn't match tag format {self.tag_format!r}"
+            )
+        raw_version_str = tag_match.group("version")
         m = self._VERSION_REGEX.fullmatch(raw_version_str)
         if not m:
             raise ValueError(

@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class EmojiParserOptions(ParserOptions):
-    major_tags: Tuple[str] = (":boom:",)
-    minor_tags: Tuple[str] = (
+    major_tags: Tuple[str, ...] = (":boom:",)
+    minor_tags: Tuple[str, ...] = (
         ":sparkles:",
         ":children_crossing:",
         ":lipstick:",
@@ -24,7 +24,7 @@ class EmojiParserOptions(ParserOptions):
         ":egg:",
         ":chart_with_upwards_trend:",
     )
-    patch_tags: Tuple[str] = (
+    patch_tags: Tuple[str, ...] = (
         ":ambulance:",
         ":lock:",
         ":bug:",
@@ -73,7 +73,7 @@ class EmojiCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
             if emoji in subject:
                 primary_emoji = emoji
                 break
-        logger.debug(f"Selected {primary_emoji} as the primary emoji")
+        logger.debug("Selected %s as the primary emoji", primary_emoji)
 
         # Find which level this commit was from
         level_bump = LevelBump.NO_RELEASE

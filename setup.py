@@ -75,7 +75,7 @@ setup(
     },
     entry_points="""
         [console_scripts]
-        semantic-release=semantic_release.cli:entry
+        semantic-release=semantic_release.cli:main
     """,
     include_package_data=True,
     classifiers=[

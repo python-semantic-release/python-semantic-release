@@ -73,7 +73,7 @@ _COMMIT_FILTER = "|".join(tag_to_section)
 
 @dataclass
 class ScipyParserOptions(ParserOptions):
-    allowed_tags: Tuple[str] = (
+    allowed_tags: Tuple[str, ...] = (
         "API",
         "DEP",
         "ENH",
@@ -90,9 +90,9 @@ class ScipyParserOptions(ParserOptions):
         "FEAT",
         "TEST",
     )
-    major_tags: Tuple[str] = ("API",)
-    minor_tags: Tuple[str] = ("DEP", "DEV", "ENH", "REV", "FEAT")
-    patch_tags: Tuple[str] = ("BLD", "BUG", "MAINT")
+    major_tags: Tuple[str, ...] = ("API",)
+    minor_tags: Tuple[str, ...] = ("DEP", "DEV", "ENH", "REV", "FEAT")
+    patch_tags: Tuple[str, ...] = ("BLD", "BUG", "MAINT")
     default_level_bump: LevelBump = LevelBump.NO_RELEASE
 
     def __post_init__(self):

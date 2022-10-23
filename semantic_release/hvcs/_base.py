@@ -2,8 +2,6 @@ import logging
 import os
 from typing import Optional, Tuple
 
-from urllib3 import Retry
-
 from semantic_release.helpers import parse_git_url
 from semantic_release.hvcs.token_auth import TokenAuth
 from semantic_release.hvcs.util import build_requests_session
@@ -22,8 +20,8 @@ class HvcsBase:
     ) -> None:
         self.hvcs_domain = hvcs_domain
         self.hvcs_api_domain = hvcs_api_domain
-        self.token = os.getenv(token_var, "")
-        auth = TokenAuth(self.token)
+        self.token = os.getenv(token_var)
+        auth = None if not self.token else TokenAuth(self.token)
         self._remote_url = remote_url
         self.session = build_requests_session(auth=auth)
 

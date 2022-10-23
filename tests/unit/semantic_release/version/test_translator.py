@@ -1,6 +1,7 @@
 import pytest
 
-from semantic_release.version import SEMVER_REGEX, VersionTranslator
+from semantic_release.const import SEMVER_REGEX
+from semantic_release.version import VersionTranslator
 from semantic_release.version.version import Version
 from tests.const import (
     A_FULL_VERSION_STRING,

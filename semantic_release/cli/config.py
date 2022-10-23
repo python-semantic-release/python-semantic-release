@@ -26,10 +26,7 @@ from semantic_release.commit_parser import (
 from semantic_release.const import COMMIT_MESSAGE, SEMVER_REGEX
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
-from semantic_release.hvcs import HvcsBase
-from semantic_release.hvcs.gitea import Gitea
-from semantic_release.hvcs.github import Github
-from semantic_release.hvcs.gitlab import Gitlab
+from semantic_release.hvcs import HvcsBase, Gitea, Github, Gitlab
 from semantic_release.version import VersionTranslator
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,
@@ -37,9 +34,6 @@ from semantic_release.version.declaration import (
     VersionDeclarationABC,
 )
 
-# toml dumps:
-# import tomlkit
-# tomlkit.dumps(RawConfig.dict())
 log = logging.getLogger(__name__)
 
 
