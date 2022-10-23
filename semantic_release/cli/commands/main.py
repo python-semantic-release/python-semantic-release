@@ -1,4 +1,3 @@
-import configparser
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -32,19 +31,6 @@ def _read_toml(path: str) -> Dict[str, Any]:
         ) from exc
     except tomlkit.exceptions.TOMLKitError as exc:
         raise InvalidConfiguration(f"File {path!r} contains invalid TOML") from exc
-
-
-def _read_ini(path: str) -> Dict[str, Any]:
-    parser = configparser.ConfigParser()
-    parser.read(path, encoding="utf-8")
-    try:
-        return dict(parser.items("semantic_release"))
-    except configparser.NoSectionError as exc:
-        raise InvalidConfiguration(f"Missing key 'semantic_release' in {path}") from exc
-    except configparser.ParsingError as exc:
-        raise InvalidConfiguration(
-            f"File {path!r} contains invalid ini-format configuration"
-        ) from exc
 
 
 @click.group(
@@ -111,24 +97,13 @@ def main(
     try:
         if config_file and config_file.endswith(".toml"):
             config_text = _read_toml(config_file)
-        elif config_file and config_file.endswith((".ini", ".cfg")):
-            config_text = _read_ini(config_file)
         elif config_file:
             *_, suffix = config_file.split(".")
             print(ctx.get_usage())
             ctx.fail(f"{suffix!r} is not a supported configuration format")
         else:
-            try:
-                config_text = _read_toml("pyproject.toml")
-            except (FileNotFoundError, InvalidConfiguration):
-                try:
-                    config_text = _read_ini("setup.cfg")
-                except FileNotFoundError as exc:
-                    raise InvalidConfiguration(
-                        "Couldn't find either 'pyproject.toml' or 'setup.cfg'"
-                    ) from exc
-
-    except InvalidConfiguration as exc:
+            config_text = _read_toml("pyproject.toml")
+    except (FileNotFoundError, InvalidConfiguration) as exc:
         ctx.fail(str(exc))
 
     raw_config = RawConfig.parse_obj(config_text)
@@ -143,11 +118,11 @@ def main(
     # Maybe if ctx.invoked_subcommand is None we do the default
     # of ctx.forward(version), ctx.forward(changelog), git add & git commit & git tag,
     # ctx.forward(publish)?
-    # The other option is to get the user to do:
+    # The option of:
     # semantic-release version && \
     #     semantic-release changelog && \
     #     semantic-release publish
-    # This might have the advantage of greater flexibility, though we should
-    # ensure in this case we have environment variables for common options
-    # and/or config?
-    # The node impl. does just `npx semantic-release` though...
+    # would be really tricky without some kind of .semantic_release cache,
+    # as we'd lose the info about which version had just been released
+    # between commands
+    # The node impl. does just `npx semantic-release`
