@@ -6,7 +6,7 @@ import platform
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import twine.utils
 from git import Repo
@@ -16,6 +16,7 @@ from twine.settings import Settings as TwineSettings
 from typing_extensions import Literal
 
 from semantic_release.changelog import environment
+from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.commit_parser import (
     AngularCommitParser,
     CommitParser,
@@ -26,7 +27,7 @@ from semantic_release.commit_parser import (
 from semantic_release.const import COMMIT_MESSAGE, SEMVER_REGEX
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
-from semantic_release.hvcs import HvcsBase, Gitea, Github, Gitlab
+from semantic_release.hvcs import Gitea, Github, Gitlab, HvcsBase
 from semantic_release.version import VersionTranslator
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,
@@ -132,6 +133,7 @@ _PY = "py" if platform.system() == "Windows" else "python"
 
 
 class RawConfig(BaseModel):
+    logging_use_named_masks: bool = False
     tag_format: str = "v{version}"
     commit_parser: str = "angular"
     commit_message: str = COMMIT_MESSAGE
@@ -171,6 +173,13 @@ class RawConfig(BaseModel):
 # the defaults should be specified and handled by `RawConfig`.
 # When this is constructed we should know exactly what the user
 # wants
+def _recursive_getattr(obj: Any, path: str) -> Any:
+    out = obj
+    for part in path.split("."):
+        out = getattr(out, part)
+    return out
+
+
 _known_commit_parsers = {
     "angular": AngularCommitParser,
     "emoji": EmojiCommitParser,
@@ -187,6 +196,13 @@ _known_hvcs = {
 
 @dataclass
 class RuntimeContext:
+    _mask_attrs_: ClassVar[List[str]] = [
+        "hvcs_client.token",
+        "twine_settings.password",
+        "twine_settings.cacert",
+        "twine_settings.client_cert",
+    ]
+
     repo: Repo
     commit_parser: CommitParser
     version_translator: VersionTranslator
@@ -205,6 +221,9 @@ class RuntimeContext:
     dist_glob_patterns: Tuple[str, ...]
     upload_to_repository: bool
     upload_to_release: bool
+    # This way the filter can be passed around if needed, so that another function
+    # can accept the filter as an argument and call
+    masker: MaskingFilter
 
     @staticmethod
     def resolve_from_env(param: Optional[MaybeFromEnv]) -> Optional[str]:
@@ -260,9 +279,19 @@ class RuntimeContext:
             disable_progress_bar=upload_config.disable_progress_bar,
         )
 
+    def apply_log_masking(self, masker: MaskingFilter) -> MaskingFilter:
+        for attr in self._mask_attrs_:
+            masker.add_mask_for(
+                str(_recursive_getattr(self, attr)), f"context.{attr}")
+            masker.add_mask_for(
+                repr(_recursive_getattr(self, attr)), f"context.{attr}")
+        return masker
+
     @classmethod
     def from_raw_config(cls, raw: RawConfig, repo: Repo) -> RuntimeContext:
         ##
+        # credentials masking for logging
+        masker = MaskingFilter(_use_named_masks=raw.logging_use_named_masks)
         # branch-specific configuration
         branch_config = cls.select_branch_options(
             raw.branches, repo.active_branch.name)
@@ -336,7 +365,7 @@ class RuntimeContext:
 
         twine_settings = cls.make_twine_settings(raw.upload)
 
-        return cls(
+        self = cls(
             repo=repo,
             commit_parser=commit_parser,
             version_translator=version_translator,
@@ -355,4 +384,10 @@ class RuntimeContext:
             dist_glob_patterns=raw.upload.dist_glob_patterns,
             upload_to_repository=raw.upload.upload_to_repository,
             upload_to_release=raw.upload.upload_to_release,
+            masker=masker,
         )
+        # credential masker
+        self.apply_log_masking(self.masker)
+
+        return self
+        return self

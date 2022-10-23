@@ -11,6 +11,7 @@ from rich.logging import RichHandler
 import semantic_release
 from semantic_release.cli.commands.generate_config import generate_config
 from semantic_release.cli.config import RawConfig, RuntimeContext
+from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.errors import InvalidConfiguration
 
 FORMAT = "[%(module)s:%(funcName)s]: %(message)s"
@@ -62,15 +63,8 @@ def _read_toml(path: str) -> Dict[str, Any]:
 )
 @click.pass_context
 def main(
-    ctx: click.Context,
-    config_file: Optional[str] = None,
-    verbosity: int = 0,
-    **kwargs: Any,
+    ctx: click.Context, config_file: Optional[str] = None, verbosity: int = 0
 ) -> None:
-    #     if not ctx.args:
-    #     print(HELP_TEXT)
-    #     print(ctx.get_usage())
-    #     ctx.exit(0)
     log_level = [logging.WARNING, logging.INFO, logging.DEBUG][verbosity]
     logging.basicConfig(
         level=log_level,
@@ -87,8 +81,7 @@ def main(
         log.debug("Forwarding to %s", generate_config.name)
         return
 
-    rprint("The log level is:", log_level)
-    rprint(f"[cyan bold]Main kwargs: {str(kwargs)}[/cyan bold]")
+    rprint("[bold cyan]logging level set to:", logging.getLevelName(log_level))
     try:
         repo = Repo(".", search_parent_directories=True)
     except InvalidGitRepositoryError:
@@ -112,6 +105,11 @@ def main(
     except InvalidConfiguration as exc:
         ctx.fail(str(exc))
     ctx.obj = runtime
+
+    # This allows us to mask secrets in the logging
+    # by applying it to all the configured handlers
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(runtime.masker)
 
     log.info("All done! :sparkles:")
 
