@@ -1,6 +1,6 @@
 """Semantic Release
 """
-__version__ = "7.32.1"
+__version__ = "7.32.2"
 
 from typing import List
 

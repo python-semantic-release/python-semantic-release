@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.32.2 (2022-10-22)
+### Fix
+* Fix changelog generation in tag-mode ([#171](https://github.com/relekang/python-semantic-release/issues/171)) ([`482a62e`](https://github.com/relekang/python-semantic-release/commit/482a62ec374208b2d57675cb0b7f0ab9695849b9))
+
+### Documentation
+* Fix code blocks ([#506](https://github.com/relekang/python-semantic-release/issues/506)) ([`24b7673`](https://github.com/relekang/python-semantic-release/commit/24b767339fcef1c843f7dd3188900adab05e03b1))
+
 ## v7.32.1 (2022-10-07)
 ### Fix
 * Corrections for deprecation warnings ([#505](https://github.com/relekang/python-semantic-release/issues/505)) ([`d47afb6`](https://github.com/relekang/python-semantic-release/commit/d47afb6516238939e174f946977bf4880062a622))
