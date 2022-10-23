@@ -390,4 +390,3 @@ class RuntimeContext:
         self.apply_log_masking(self.masker)
 
         return self
-        return self
