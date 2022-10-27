@@ -17,25 +17,45 @@ def publish(ctx: click.Context) -> None:
     """
     This is the magic changelog function that writes out your beautiful changelog
     """
-    repo = ctx.obj.repo
-    hvcs_client = ctx.obj.hvcs_client
-    translator = ctx.obj.version_translator
-    build_command = ctx.obj.build_command
-    dist_glob_patterns = ctx.obj.dist_glob_patterns
-    upload_to_repository = ctx.obj.upload_to_repository
-    upload_to_release = ctx.obj.upload_to_release
-    twine_settings = ctx.obj.twine_settings
+    runtime = ctx.obj
+    repo = runtime.repo
+    hvcs_client = runtime.hvcs_client
+    translator = runtime.version_translator
+    build_command = runtime.build_command
+    dist_glob_patterns = runtime.dist_glob_patterns
+    upload_to_repository = runtime.upload_to_repository
+    upload_to_release = runtime.upload_to_release
+    twine_settings = runtime.twine_settings
 
-    try:
-        subprocess.run(shlex.split(build_command), check=True)
-    except subprocess.CalledProcessError as exc:
-        ctx.fail(str(exc))
+    if runtime.global_cli_options.noop:
+        rprint(
+            "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
+            f"have run the build_command {build_command!r}"
+        )
+    else:
+        try:
+            subprocess.run(shlex.split(build_command), check=True)
+        except subprocess.CalledProcessError as exc:
+            ctx.fail(str(exc))
 
-    if upload_to_repository:
+    if runtime.global_cli_options.noop and upload_to_repository:
+        rprint(
+            "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
+            "have uploaded files matching any of the globs "
+            ", ".join(repr(g) for g in dist_glob_patterns) + " to your repository"
+        )
+    elif upload_to_repository:
         upload(upload_settings=twine_settings, dists=dist_glob_patterns)
 
     latest_tag = tags_and_versions(repo.tags, translator)[0][0]
-    if upload_to_release:
+    if upload_to_release and runtime.global_cli_options.noop:
+        rprint(
+            "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
+            "have uploaded files matching any of the globs "
+            + ", ".join(repr(g) for g in dist_glob_patterns)
+            + " to a remote VCS release, if supported"
+        )
+    elif upload_to_release:
         for pattern in dist_glob_patterns:
             hvcs_client.upload_dists(tag=latest_tag, dist_glob=pattern)
 

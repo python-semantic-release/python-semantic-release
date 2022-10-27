@@ -12,18 +12,23 @@ class ParserOptions:
     from configuration and process them as desired, ultimately creating attributes
     on an instance which can be accessed by the corresponding commit parser. For example,
     >>> class MyParserOptions(BaseParserOptions):
-            def __init__(self, message_prefix: str) -> None:
-                self.prefix = message_prefix * 2
+    ...     def __init__(self, message_prefix: str) -> None:
+    ...         self.prefix = message_prefix * 2
 
     >>> class MyCommitParser(AbstractCommitParser
-            parser_options = MyParserOptions
-            def parse(self, Commit):
-                print(self.options.prefix)
-                ...
+    ...     parser_options = MyParserOptions
+    ...     def parse(self, Commit):
+    ...         print(self.options.prefix)
+    ...         ...
 
     Any defaults that need to be set should also be done in this class too.
     Invalid options should be signalled by raising an ``InvalidOptionsException``
     within the ``__init__`` method of the options class.
+
+    A dataclass is also well suited to this; if type-checking of input is desired,
+    a ``pydantic.dataclasses.dataclass`` works well and is used internally
+    by python-semantic-release. Parser options are not validated in the configuration
+    and passed directly to the appropriate class to handle.
     """
 
     def __init__(self, **_):

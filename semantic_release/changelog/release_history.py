@@ -7,6 +7,7 @@ from typing import Dict, List, NamedTuple, Optional
 
 from git import Repo, TagObject
 from git.util import Actor
+
 # For Python3.7 compatibility
 from typing_extensions import TypedDict
 

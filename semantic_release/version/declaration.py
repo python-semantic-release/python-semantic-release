@@ -92,7 +92,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
 
     # The pattern should be a regular expression with a single group,
     # containing the version to replace.
-    def parse(self) -> Set[str]:
+    def parse(self) -> Set[Version]:
         """
         Return the versions matching this pattern.
         Because a pattern can match in multiple places, this method returns a

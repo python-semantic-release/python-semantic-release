@@ -73,7 +73,7 @@ def version(
         )
     # TODO: if it's already the same/released?
     print(str(v))
-    if print_only or runtime.cli_options.noop:
+    if print_only or runtime.global_cli_options.noop:
         ctx.exit(0)
 
     for declaration in runtime.version_declarations:

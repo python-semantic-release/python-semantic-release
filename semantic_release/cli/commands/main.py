@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -25,7 +26,7 @@ This program is really really awesome.
 
 
 def _read_toml(path: str) -> Dict[str, Any]:
-    raw_text = (Path() / path).resolve().read_text()
+    raw_text = (Path() / path).resolve().read_text(encoding="utf-8")
     try:
         toml_text = tomlkit.loads(raw_text)
         return toml_text["tool"]["semantic_release"]
@@ -38,10 +39,7 @@ def _read_toml(path: str) -> Dict[str, Any]:
 
 
 @click.group(
-    context_settings={
-        "ignore_unknown_options": True,
-        "allow_interspersed_args": True,
-    },
+    context_settings={"allow_interspersed_args": True},
     help=HELP_TEXT,
 )
 @click.option(
@@ -79,7 +77,7 @@ def main(
         level=log_level,
         format=FORMAT,
         datefmt="[%X]",
-        handlers=[RichHandler(rich_tracebacks=True)],
+        handlers=[RichHandler(rich_tracebacks=True, tracebacks_suppress=[click])],
     )
 
     log = logging.getLogger(__name__)
@@ -90,7 +88,7 @@ def main(
         log.debug("Forwarding to %s", generate_config.name)
         return
 
-    log.info("logging level set to:", logging.getLevelName(log_level))
+    log.info("logging level set to: %s", logging.getLevelName(log_level))
     try:
         repo = Repo(".", search_parent_directories=True)
     except InvalidGitRepositoryError:
@@ -106,6 +104,9 @@ def main(
     try:
         if config_file and config_file.endswith(".toml"):
             config_text = _read_toml(config_file)
+        elif config_file and config_file.endswith(".json"):
+            raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
+            config_text = json.loads(raw_text)["semantic_release"]
         elif config_file:
             *_, suffix = config_file.split(".")
             print(ctx.get_usage())
@@ -118,7 +119,7 @@ def main(
     raw_config = RawConfig.parse_obj(config_text)
     try:
         runtime = RuntimeContext.from_raw_config(
-            raw_config, repo=repo, cli_options=cli_options
+            raw_config, repo=repo, global_cli_options=cli_options
         )
     except InvalidConfiguration as exc:
         ctx.fail(str(exc))
@@ -130,15 +131,3 @@ def main(
         handler.addFilter(runtime.masker)
 
     log.info("All done! :sparkles:")
-
-    # Maybe if ctx.invoked_subcommand is None we do the default
-    # of ctx.forward(version), ctx.forward(changelog), git add & git commit & git tag,
-    # ctx.forward(publish)?
-    # The option of:
-    # semantic-release version && \
-    #     semantic-release changelog && \
-    #     semantic-release publish
-    # would be really tricky without some kind of .semantic_release cache,
-    # as we'd lose the info about which version had just been released
-    # between commands
-    # The node impl. does just `npx semantic-release`

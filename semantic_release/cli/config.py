@@ -231,7 +231,7 @@ class RuntimeContext:
     dist_glob_patterns: Tuple[str, ...]
     upload_to_repository: bool
     upload_to_release: bool
-    cli_options: GlobalCommandLineOptions
+    global_cli_options: GlobalCommandLineOptions
     # This way the filter can be passed around if needed, so that another function
     # can accept the filter as an argument and call
     masker: MaskingFilter
@@ -297,7 +297,7 @@ class RuntimeContext:
 
     @classmethod
     def from_raw_config(
-        cls, raw: RawConfig, repo: Repo, cli_options: GlobalCommandLineOptions
+        cls, raw: RawConfig, repo: Repo, global_cli_options: GlobalCommandLineOptions
     ) -> RuntimeContext:
         ##
         # credentials masking for logging
@@ -393,7 +393,7 @@ class RuntimeContext:
             dist_glob_patterns=raw.upload.dist_glob_patterns,
             upload_to_repository=raw.upload.upload_to_repository,
             upload_to_release=raw.upload.upload_to_release,
-            cli_options=cli_options,
+            global_cli_options=global_cli_options,
             masker=masker,
         )
         # credential masker

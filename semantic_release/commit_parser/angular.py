@@ -4,10 +4,10 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 """
 import logging
 import re
-from dataclasses import dataclass
 from typing import Tuple
 
 from git import Commit
+from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
