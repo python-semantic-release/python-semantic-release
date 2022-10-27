@@ -1,0 +1,4 @@
+# Separate config file because flake8 is doesn't want to use pyproject.toml
+# for config - https://github.com/PyCQA/flake8/issues/234
+[flake8]
+max-line-length = 120
