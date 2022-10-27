@@ -165,6 +165,16 @@ class RawConfig(BaseModel):
     upload: UploadConfig = UploadConfig()
 
 
+@dataclass
+class GlobalCommandLineOptions:
+    """
+    A dataclass to hold all the command line options that
+    should be set in the RuntimeContext
+    """
+
+    noop: bool = False
+
+
 ######
 # RuntimeContext
 ######
@@ -221,6 +231,7 @@ class RuntimeContext:
     dist_glob_patterns: Tuple[str, ...]
     upload_to_repository: bool
     upload_to_release: bool
+    cli_options: GlobalCommandLineOptions
     # This way the filter can be passed around if needed, so that another function
     # can accept the filter as an argument and call
     masker: MaskingFilter
@@ -262,8 +273,7 @@ class RuntimeContext:
             identity=cls.resolve_from_env(upload_config.identity),
             username=cls.resolve_from_env(upload_config.username),
             password=cls.resolve_from_env(upload_config.password),
-            non_interactive=cls.resolve_from_env(
-                upload_config.non_interactive),
+            non_interactive=cls.resolve_from_env(upload_config.non_interactive),
             comment=upload_config.comment,
             config_file=upload_config.config_file,
             skip_existing=upload_config.skip_existing,
@@ -281,20 +291,19 @@ class RuntimeContext:
 
     def apply_log_masking(self, masker: MaskingFilter) -> MaskingFilter:
         for attr in self._mask_attrs_:
-            masker.add_mask_for(
-                str(_recursive_getattr(self, attr)), f"context.{attr}")
-            masker.add_mask_for(
-                repr(_recursive_getattr(self, attr)), f"context.{attr}")
+            masker.add_mask_for(str(_recursive_getattr(self, attr)), f"context.{attr}")
+            masker.add_mask_for(repr(_recursive_getattr(self, attr)), f"context.{attr}")
         return masker
 
     @classmethod
-    def from_raw_config(cls, raw: RawConfig, repo: Repo) -> RuntimeContext:
+    def from_raw_config(
+        cls, raw: RawConfig, repo: Repo, cli_options: GlobalCommandLineOptions
+    ) -> RuntimeContext:
         ##
         # credentials masking for logging
         masker = MaskingFilter(_use_named_masks=raw.logging_use_named_masks)
         # branch-specific configuration
-        branch_config = cls.select_branch_options(
-            raw.branches, repo.active_branch.name)
+        branch_config = cls.select_branch_options(raw.branches, repo.active_branch.name)
         # commit_parser
         commit_parser_cls = (
             _known_commit_parsers[raw.commit_parser]
@@ -384,6 +393,7 @@ class RuntimeContext:
             dist_glob_patterns=raw.upload.dist_glob_patterns,
             upload_to_repository=raw.upload.upload_to_repository,
             upload_to_release=raw.upload.upload_to_release,
+            cli_options=cli_options,
             masker=masker,
         )
         # credential masker

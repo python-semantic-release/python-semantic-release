@@ -10,8 +10,11 @@ from rich.logging import RichHandler
 
 import semantic_release
 from semantic_release.cli.commands.generate_config import generate_config
-from semantic_release.cli.config import RawConfig, RuntimeContext
-from semantic_release.cli.masking_filter import MaskingFilter
+from semantic_release.cli.config import (
+    GlobalCommandLineOptions,
+    RawConfig,
+    RuntimeContext,
+)
 from semantic_release.errors import InvalidConfiguration
 
 FORMAT = "[%(module)s:%(funcName)s]: %(message)s"
@@ -52,7 +55,9 @@ def _read_toml(path: str) -> Dict[str, Any]:
     type=click.IntRange(0, 2, clamp=True),
 )
 @click.version_option(
-    version=semantic_release.__version__, prog_name="semantic-release"
+    version=semantic_release.__version__,
+    prog_name="semantic-release",
+    help="Show the version of semantic-release and exit",
 )
 @click.option(
     "-c",
@@ -61,9 +66,13 @@ def _read_toml(path: str) -> Dict[str, Any]:
     help="Specify a configuration file for semantic-release to use",
     type=click.Path(exists=True),
 )
+@click.option("--noop", "noop", is_flag=True, help="Run semantic-release in no-op mode")
 @click.pass_context
 def main(
-    ctx: click.Context, config_file: Optional[str] = None, verbosity: int = 0
+    ctx: click.Context,
+    config_file: Optional[str] = None,
+    verbosity: int = 0,
+    noop: bool = False,
 ) -> None:
     log_level = [logging.WARNING, logging.INFO, logging.DEBUG][verbosity]
     logging.basicConfig(
@@ -81,11 +90,18 @@ def main(
         log.debug("Forwarding to %s", generate_config.name)
         return
 
-    rprint("[bold cyan]logging level set to:", logging.getLevelName(log_level))
+    log.info("logging level set to:", logging.getLevelName(log_level))
     try:
         repo = Repo(".", search_parent_directories=True)
     except InvalidGitRepositoryError:
         ctx.fail("Not in a valid Git repository")
+
+    if noop:
+        rprint(
+            ":shield: [bold cyan]You are running in no-operation mode, because the "
+            "'--noop' flag was supplied"
+        )
+    cli_options = GlobalCommandLineOptions(noop=noop)
 
     try:
         if config_file and config_file.endswith(".toml"):
@@ -101,7 +117,9 @@ def main(
 
     raw_config = RawConfig.parse_obj(config_text)
     try:
-        runtime = RuntimeContext.from_raw_config(raw_config, repo=repo)
+        runtime = RuntimeContext.from_raw_config(
+            raw_config, repo=repo, cli_options=cli_options
+        )
     except InvalidConfiguration as exc:
         ctx.fail(str(exc))
     ctx.obj = runtime

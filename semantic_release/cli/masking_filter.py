@@ -22,8 +22,7 @@ class MaskingFilter(logging.Filter):
         super().__init__()
         self._redact_patterns = defaultdict(set)
         for k, vs in patterns.items():
-            self._redact_patterns[k] = {
-                v for v in vs if v and v not in self._UNWANTED}
+            self._redact_patterns[k] = {v for v in vs if v and v not in self._UNWANTED}
         self._use_named_masks = _use_named_masks
 
     def add_mask_for(self, data: str, name: str = "redacted") -> MaskingFilter:
@@ -36,8 +35,7 @@ class MaskingFilter(logging.Filter):
         if record.args is None:
             pass
         elif isinstance(record.args, dict):
-            record.args = {k: self.mask(str(v))
-                           for k, v in record.args.items()}
+            record.args = {k: self.mask(str(v)) for k, v in record.args.items()}
         else:
             record.args = tuple(self.mask(str(arg)) for arg in record.args)
         return True

@@ -3,10 +3,12 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, NamedTuple, Optional, TypedDict
+from typing import Dict, List, NamedTuple, Optional
 
 from git import Repo, TagObject
 from git.util import Actor
+# For Python3.7 compatibility
+from typing_extensions import TypedDict
 
 from semantic_release.commit_parser import CommitParser, ParseError, ParseResult
 from semantic_release.version.algorithm import tags_and_versions
