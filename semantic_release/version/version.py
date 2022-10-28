@@ -103,6 +103,7 @@ class Version:
         check_tag_format(new_format)
         self._tag_format = new_format
 
+    # Maybe cache?
     @classmethod
     def parse(
         cls,

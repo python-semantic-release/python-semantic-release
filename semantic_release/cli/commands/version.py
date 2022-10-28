@@ -1,4 +1,5 @@
 import logging
+import sys
 from typing import Optional
 
 import click
@@ -70,6 +71,7 @@ def version(
             translator=translator,
             commit_parser=parser,
             prerelease=prerelease,
+            major_on_zero=major_on_zero,
         )
     # TODO: if it's already the same/released?
     print(str(v))

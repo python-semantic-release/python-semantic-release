@@ -27,7 +27,10 @@ def example_git_https_url():
 
 
 @pytest.fixture(
-    params=[lazy_fixture("example_git_ssh_url"), lazy_fixture("example_git_https_url")]
+    # For the moment there's no value in re-running every test that wants a repo
+    # twice, once with a different URL format
+    # params=[lazy_fixture("example_git_ssh_url"), lazy_fixture("example_git_https_url")]
+    params=[lazy_fixture("example_git_ssh_url")]
 )
 def git_repo_factory(request, example_project):
     """

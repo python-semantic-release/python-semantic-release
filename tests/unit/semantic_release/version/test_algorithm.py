@@ -244,7 +244,7 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
         ),
     ],
 )
-def test_increment_version(
+def test_increment_version_no_major_on_zero(
     latest_version,
     latest_full_version,
     latest_full_version_in_history,
@@ -260,5 +260,6 @@ def test_increment_version(
         level_bump=level_bump,
         prerelease=prerelease,
         prerelease_token=prerelease_token,
+        major_on_zero=False,
     )
     assert actual == expected_version

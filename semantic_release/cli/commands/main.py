@@ -39,7 +39,10 @@ def _read_toml(path: str) -> Dict[str, Any]:
 
 
 @click.group(
-    context_settings={"allow_interspersed_args": True},
+    context_settings={
+        "allow_interspersed_args": True,
+        "ignore_unknown_options": True,
+    },
     help=HELP_TEXT,
 )
 @click.option(

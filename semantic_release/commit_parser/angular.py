@@ -60,6 +60,7 @@ class AngularCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
             flags=re.VERBOSE | re.DOTALL,
         )
 
+    # TODO: maybe cache?
     def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
         # Attempt to parse the commit message with a regular expression
         parsed = self.re_parser.match(commit.message)

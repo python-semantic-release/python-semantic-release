@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import re
 
 from semantic_release.const import SEMVER_REGEX
