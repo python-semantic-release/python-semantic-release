@@ -12,8 +12,8 @@ export PATH="${PATH}:/semantic-release/.venv/bin"
 # Change to configured directory
 cd "${INPUT_DIRECTORY}"
 
-export GIT_COMMITER_NAME: "${GIT_COMMITER_NAME:="github-actions"}"
-export GIT_COMMITER_EMAIL: "${GIT_COMMITER_EMAIL:="github-actions@github.com"}"
+export GIT_COMMITER_NAME="${GIT_COMMITER_NAME:="github-actions"}"
+export GIT_COMMITER_EMAIL="${GIT_COMMITER_EMAIL:="github-actions@github.com"}"
 
 # Set Git details
 git config --global user.name "$GIT_COMMITER_NAME"
