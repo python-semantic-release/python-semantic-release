@@ -12,6 +12,7 @@ import twine.utils
 from git import Repo
 from jinja2 import Environment
 from pydantic import BaseModel
+from twine.exceptions import TwineException
 from twine.settings import Settings as TwineSettings
 from typing_extensions import Literal
 
@@ -184,9 +185,14 @@ class GlobalCommandLineOptions:
 # When this is constructed we should know exactly what the user
 # wants
 def _recursive_getattr(obj: Any, path: str) -> Any:
+    """
+    Used to find nested parts of RuntimeContext which
+    might contain sensitive data. Returns None if an attribute
+    is missing
+    """
     out = obj
     for part in path.split("."):
-        out = getattr(out, part)
+        out = getattr(out, part, None)
     return out
 
 
@@ -227,7 +233,7 @@ class RuntimeContext:
     template_dir: str
     default_changelog_output_file: str
     build_command: str
-    twine_settings: TwineSettings
+    twine_settings: Optional[TwineSettings]
     dist_glob_patterns: Tuple[str, ...]
     upload_to_repository: bool
     upload_to_release: bool
@@ -267,7 +273,7 @@ class RuntimeContext:
 
     @classmethod
     def make_twine_settings(cls, upload_config: UploadConfig) -> TwineSettings:
-        return TwineSettings(
+        settings = TwineSettings(
             sign=upload_config.sign,
             sign_with=upload_config.sign_with,
             identity=cls.resolve_from_env(upload_config.identity),
@@ -288,6 +294,18 @@ class RuntimeContext:
             ),
             disable_progress_bar=upload_config.disable_progress_bar,
         )
+        try:
+            # Twine settings are lazy, so we trigger validation errors now if there
+            # are any
+            settings.username
+            settings.password
+            settings.config_file
+        except TwineException as err:
+            log.warning(
+                    "TwineException: uploading to repositories will be unavailable (message: %r)",
+                str(err),
+            )
+            return None
 
     def apply_log_masking(self, masker: MaskingFilter) -> MaskingFilter:
         for attr in self._mask_attrs_:
@@ -323,6 +341,7 @@ class RuntimeContext:
                 # VersionDeclarationABC handles path existence check
                 vd = TomlVersionDeclaration(path, search_text)
             except ValueError as exc:
+                log.error("Invalid TOML declaration %r", decl, exc_info=True)
                 raise InvalidConfiguration(
                     f"Invalid TOML declaration {decl!r}"
                 ) from exc
@@ -336,8 +355,9 @@ class RuntimeContext:
                 search_text = rf"(?x){variable}\s*(:=|[:=])\s*(?P<quote>['\"]){SEMVER_REGEX.pattern}(?P=quote)"
                 pd = PatternVersionDeclaration(path, search_text)
             except ValueError as exc:
+                log.error("Invalid variable declaration %r", decl, exc_info=True)
                 raise InvalidConfiguration(
-                    f"Invalid TOML declaration {decl!r}"
+                    f"Invalid variable declaration {decl!r}"
                 ) from exc
 
             version_declarations.append(pd)
@@ -372,7 +392,11 @@ class RuntimeContext:
             tag_format=raw.tag_format, prerelease_token=branch_config.prerelease_token
         )
 
-        twine_settings = cls.make_twine_settings(raw.upload)
+        try:
+            twine_settings = cls.make_twine_settings(raw.upload)
+        except TwineException as err:
+            log.warning(str(err))
+            log.warning("uploading to repositories will be unavailable", exc_info=True)
 
         self = cls(
             repo=repo,

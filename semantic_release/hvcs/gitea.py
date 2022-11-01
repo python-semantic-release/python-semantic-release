@@ -152,7 +152,7 @@ class Gitea(HvcsBase):
             logger.debug("Unsuccessful, looking for an existing release to update")
             release_id = self.get_release_id_by_tag(tag)
             if release_id:
-                logger.debug("Updating release %d", release_id)
+                logger.debug("Updating release %s", release_id)
                 success = self.edit_release_changelog(release_id, changelog)
             else:
                 logger.debug("Existing release not found")
@@ -198,7 +198,7 @@ class Gitea(HvcsBase):
             )
 
         logger.debug(
-            "Asset upload on Gitea completed, url: %s, status code: %d",
+            "Asset upload on Gitea completed, url: %s, status code: %s",
             response.url,
             response.status_code,
         )

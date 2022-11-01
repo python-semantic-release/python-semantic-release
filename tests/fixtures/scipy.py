@@ -9,6 +9,7 @@ from semantic_release.commit_parser.scipy import (
     tag_to_section,
 )
 from semantic_release.enums import LevelBump
+
 from tests.const import SCIPY_FORMATTED_COMMIT_BODY_PARTS
 
 

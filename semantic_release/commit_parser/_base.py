@@ -37,9 +37,10 @@ class ParserOptions:
 
 # TT = TokenType, a subclass of ParsedCommit
 _TT = TypeVar("_TT", bound=ParseResult)
+_OPTS = TypeVar("_OPTS", bound=ParserOptions)
 
 
-class CommitParser(ABC, Generic[_TT]):
+class CommitParser(ABC, Generic[_TT, _OPTS]):
     """
     Abstract base class for all commit parsers. Custom commit parsers should inherit
     from this class.
@@ -59,9 +60,9 @@ class CommitParser(ABC, Generic[_TT]):
                 ...
     """
 
-    parser_options: Type[ParserOptions]
+    parser_options: Type[_OPTS]
 
-    def __init__(self, options: ParserOptions) -> None:
+    def __init__(self, options: _OPTS) -> None:
         self.options = options
 
     @abstractmethod

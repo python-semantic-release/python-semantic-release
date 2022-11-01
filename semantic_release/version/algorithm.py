@@ -50,8 +50,20 @@ def _bfs_for_latest_version_in_history(
             return None
 
         for tag, version in full_release_tags_and_versions:
+            log.debug(
+                "checking if tag %r (%s) matches commit %s",
+                tag.name,
+                tag.commit.hexsha,
+                node.hexsha,
+            )
             if tag.commit == node:
+                log.info(
+                    "found latest version in branch history: %r (%s)",
+                    str(version),
+                    node.hexsha[:7],
+                )
                 return version
+            log.debug("commit %s doesn't match any tags", node.hexsha)
 
         visited.add(node)
         for parent in node.parents:
@@ -59,7 +71,7 @@ def _bfs_for_latest_version_in_history(
 
         return bfs(visited, q)
 
-    q = Queue()
+    q: Queue[Commit] = Queue()
     q.put(merge_base)
     return bfs(set(), q)
 
@@ -87,11 +99,18 @@ def _increment_version(
     `latest_full_version_in_history`, correspondingly, is the latest full release which
     is in this branch's history.
     """
+
+    log.debug(
+        "_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in locals().items())
+    )
     if not major_on_zero and latest_version.major == 0:
         # if we are a 0.x.y release and have set `major_on_zero`,
         # breaking changes should increment the minor digit.
         # Correspondingly, we reduce the level that we increment the
         # version by.
+        log.debug(
+            "reducing version increment due to 0. version and major_on_zero=False"
+        )
 
         level_bump = min(level_bump, LevelBump.MINOR)
 
@@ -99,6 +118,9 @@ def _increment_version(
         target_final_version = latest_full_version.finalize_version()
         diff_with_last_released_version = (
             latest_version - latest_full_version_in_history
+        )
+        log.debug(
+            "diff_with_last_released_version: %s", diff_with_last_released_version
         )
         # 6a i) if the level_bump > the level bump introduced by any prerelease tag before
         # e.g. 1.2.4-rc.3 -> 1.3.0-rc.1
@@ -124,6 +146,9 @@ def _increment_version(
         diff_with_last_released_version = (
             latest_version - latest_full_version_in_history
         )
+        log.debug(
+            "diff_with_last_released_version: %s", diff_with_last_released_version
+        )
         if level_bump > diff_with_last_released_version:
             return latest_version.bump(level_bump).finalize_version()
         return latest_version.finalize_version()
@@ -148,6 +173,7 @@ def next_version(
     all_full_release_tags_and_versions = [
         (t, v) for t, v in all_git_tags_as_versions if not v.is_prerelease
     ]
+    log.debug("Found %s previous tags", len(all_git_tags_as_versions))
 
     # Default initial version of 0.0.0
     latest_full_release_tag, latest_full_release_version = next(
@@ -158,21 +184,31 @@ def next_version(
         # Workaround - we can safely scan the extra commits on this
         # branch if it's never been released, but we have no other
         # guarantees that other branches exist
+        log.info("No full releases have been made yet")
         merge_bases = repo.merge_base(repo.active_branch, repo.active_branch)
     else:
         # Note the merge_base might be on our current branch, it's not
         # necessarily the merge base of the current branch with `main`
+        log.info(
+            "The last full release was %s, tagged as %r",
+            latest_full_release_version,
+            latest_full_release_tag,
+        )
         merge_bases = repo.merge_base(latest_full_release_tag.name, repo.active_branch)
     if len(merge_bases) > 1:
         raise NotImplementedError(
             "This branch has more than one merge-base with the "
-            "latest release, which is not yet supported"
+            "latest version, which is not yet supported"
         )
     merge_base = merge_bases[0]
 
     latest_full_version_in_history = _bfs_for_latest_version_in_history(
         merge_base=merge_base,
         full_release_tags_and_versions=all_full_release_tags_and_versions,
+    )
+    log.info(
+        "The last full version in this branch's history was %s",
+        latest_full_version_in_history,
     )
 
     commits_since_last_full_release = (
@@ -183,7 +219,7 @@ def next_version(
 
     # Step 4. Parse each commit since the last release and find any tags that have
     # been added since then.
-    parsed_levels: List[LevelBump] = []
+    parsed_levels: Set[LevelBump] = set()
     latest_version = latest_full_version_in_history or Version(
         0, 0, 0, prerelease_token=translator.prerelease_token
     )
@@ -192,24 +228,58 @@ def next_version(
     for commit in commits_since_last_full_release:
         parse_result = commit_parser.parse(commit)
         if isinstance(parse_result, ParsedCommit):
-            parsed_levels.append(parse_result.bump)
+            log.debug(
+                "adding %s to the levels identified in commits_since_last_full_release",
+                parse_result.bump,
+            )
+            parsed_levels.add(parse_result.bump)
 
+        # We only include pre-releases here if doing a prerelease.
+        # If it's not a prerelease, we need to include commits back
+        # to the last full version in consideration for what kind of
+        # bump to produce. However if we're doing a prerelease, we can
+        # include prereleases here to potentially consider a smaller portion
+        # of history (from a prerelease since the last full release, onwards)
+
+        # Note that a side-effect of this is, if at some point the configuration
+        # for a particular branch pattern changes w.r.t. prerelease=True/False,
+        # the new kind of version will be produced from the commits already
+        # included in a prerelease since the last full release on the branch
         for tag, version in (
             (tag, version)
             for tag, version in all_git_tags_as_versions
-            if version.is_prerelease
+            if prerelease or not version.is_prerelease
         ):
+            log.debug(
+                "testing if tag %r (%s) matches commit %s",
+                tag.name,
+                tag.commit.hexsha,
+                commit.hexsha,
+            )
             if tag.commit == commit:
                 latest_version = version
+                log.debug(
+                    "tag %r (%s) matches commit %s. the latest version is %s",
+                    tag.name,
+                    tag.commit.hexsha,
+                    commit.hexsha,
+                    latest_version,
+                )
                 break
         else:
             # If we haven't found the latest prerelease on the branch,
             # keep the outer loop going to look for it
+            log.debug("no tags correspond to commit %s", commit.hexsha)
             continue
         # If we found it in the inner loop, break the outer loop too
         break
 
+    log.debug(
+        "parsed the following distinct levels from the commits since the last release: %s",
+        parsed_levels,
+    )
     level_bump = max(parsed_levels, default=LevelBump.NO_RELEASE)
+    log.info("The type of release triggered is: %s", level_bump)
     if level_bump is LevelBump.NO_RELEASE:
         log.info("No release will be made")
         return latest_version

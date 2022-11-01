@@ -6,6 +6,7 @@ from pytest_lazyfixture import lazy_fixture
 from semantic_release.changelog.release_history import release_history
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
+
 from tests.const import ANGULAR_COMMITS_MINOR, COMMIT_MESSAGE
 from tests.helper import add_text_to_file
 

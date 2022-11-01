@@ -79,12 +79,14 @@ def version(
         ctx.exit(0)
 
     for declaration in runtime.version_declarations:
-        declaration.replace(new_version=v)
+        new_content = declaration.replace(new_version=v)
+        declaration.path.write_text(new_content)
 
     paths = [
-        declaration.path.relative_to(repo.working_dir)
+        declaration.path.resolve().relative_to(repo.working_dir)
         for declaration in runtime.version_declarations
     ]
+    log.debug("versions declared in: %s", ", ".join(str(path) for path in paths))
     repo.git.add(paths)
     if assets:
         repo.git.add(assets)

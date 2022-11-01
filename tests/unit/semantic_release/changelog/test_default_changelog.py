@@ -8,6 +8,7 @@ from semantic_release.changelog.release_history import release_history
 from semantic_release.changelog.template import environment
 from semantic_release.hvcs import Github
 from semantic_release.version.translator import VersionTranslator
+
 from tests.const import COMMIT_MESSAGE
 
 default_changelog_template = (

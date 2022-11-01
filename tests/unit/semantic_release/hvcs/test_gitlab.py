@@ -7,6 +7,7 @@ import pytest
 from requests import Session
 
 from semantic_release.hvcs.gitlab import Gitlab
+
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 
 gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager

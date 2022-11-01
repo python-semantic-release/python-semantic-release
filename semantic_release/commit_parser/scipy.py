@@ -105,7 +105,9 @@ class ScipyParserOptions(ParserOptions):
             self.tag_to_level[tag] = LevelBump.MAJOR
 
 
-class ScipyCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
+class ScipyCommitParser(
+    CommitParser[ParseResult[ParsedCommit, ParseError], ScipyParserOptions]
+):
     """
     Parse a scipy-style commit message
     :param message: A string of a commit message.

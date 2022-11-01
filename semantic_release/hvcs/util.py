@@ -72,7 +72,7 @@ def suppress_http_error_for_codes(
             except HTTPError as err:
                 if err.response.status_code in codes:
                     logger.warning(
-                        "%s received response %d: %s",
+                        "%s received response %s: %s",
                         func.__qualname__,
                         err.response.status_code,
                         str(err),

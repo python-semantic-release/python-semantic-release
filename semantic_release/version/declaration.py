@@ -69,6 +69,7 @@ class TomlVersionDeclaration(VersionDeclarationABC):
         content = self._load()
         maybe_version = content.get(self.search_text)
         if maybe_version is not None:
+            logger.debug("Found a string %r that looks like a version", maybe_version)
             valid_version = Version.parse(maybe_version)
             return {valid_version}
         # TODO: maybe raise error if not found?
@@ -107,7 +108,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
         }
 
         logger.debug(
-            "Parsing current version: path=%r pattern=%r num_matches=%d",
+            "Parsing current version: path=%r pattern=%r num_matches=%s",
             self.path.resolve(),
             self.search_text,
             len(versions),

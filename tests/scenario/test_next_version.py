@@ -24,6 +24,15 @@ from tests.helper import add_text_to_file
 # this testing
 
 
+# NOTE: There is a bit of a corner-case where if we are not doing a
+# prerelease, we will get a full version based on already-released commits.
+# So for example, commits that wouldn't trigger a release on a prerelease branch
+# won't trigger a release if prerelease=true; however, when commits included in a
+# prerelease branch are merged to a release branch, prerelease=False - so a feat commit
+# which previously triggered a prerelease on a branch will subsequently trigger a full
+# release when merged to a full release branch where prerelease=False.
+# For this reason a couple of these test cases predict a new version even when the
+# commits being added here don't induce a version bump.
 @pytest.mark.parametrize(
     "repo, commit_parser, translator, commit_messages,"
     "prerelease, expected_new_version",
@@ -44,11 +53,10 @@ from tests.helper import add_text_to_file
                 "default_angular_parser",
                 VersionTranslator(),
             ): [
-                *(
-                    (commits, prerelease, "1.2.0-rc.2")
-                    for prerelease in (True, False)
-                    for commits in ([], ["uninteresting"])
-                ),
+                *((commits, True, "1.2.0-rc.2") for commits in ([], ["uninteresting"])),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.2.0") for commits in ([], ["uninteresting"])),
                 (ANGULAR_COMMITS_PATCH, False, "1.2.0"),
                 (ANGULAR_COMMITS_PATCH, True, "1.2.0-rc.3"),
                 (ANGULAR_COMMITS_MINOR, False, "1.2.0"),
@@ -64,10 +72,12 @@ from tests.helper import add_text_to_file
                 VersionTranslator(prerelease_token="alpha"),
             ): [
                 *(
-                    (commits, prerelease, "1.1.0-alpha.3")
-                    for prerelease in (True, False)
+                    (commits, True, "1.1.0-alpha.3")
                     for commits in ([], ["uninteresting"])
                 ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.1.0") for commits in ([], ["uninteresting"])),
                 (ANGULAR_COMMITS_PATCH, False, "1.1.0"),
                 (ANGULAR_COMMITS_PATCH, True, "1.1.0-alpha.4"),
                 (ANGULAR_COMMITS_MINOR, False, "1.1.0"),
@@ -123,11 +133,10 @@ def test_algorithm_no_zero_dot_versions_angular(
                 "default_emoji_parser",
                 VersionTranslator(),
             ): [
-                *(
-                    (commits, prerelease, "1.2.0-rc.2")
-                    for prerelease in (True, False)
-                    for commits in ([], ["uninteresting"])
-                ),
+                *((commits, True, "1.2.0-rc.2") for commits in ([], ["uninteresting"])),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.2.0") for commits in ([], ["uninteresting"])),
                 (EMOJI_COMMITS_PATCH, False, "1.2.0"),
                 (EMOJI_COMMITS_PATCH, True, "1.2.0-rc.3"),
                 (EMOJI_COMMITS_MINOR, False, "1.2.0"),
@@ -143,10 +152,12 @@ def test_algorithm_no_zero_dot_versions_angular(
                 VersionTranslator(prerelease_token="alpha"),
             ): [
                 *(
-                    (commits, prerelease, "1.1.0-alpha.3")
-                    for prerelease in (True, False)
+                    (commits, True, "1.1.0-alpha.3")
                     for commits in ([], ["uninteresting"])
                 ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.1.0") for commits in ([], ["uninteresting"])),
                 (EMOJI_COMMITS_PATCH, False, "1.1.0"),
                 (EMOJI_COMMITS_PATCH, True, "1.1.0-alpha.4"),
                 (EMOJI_COMMITS_MINOR, False, "1.1.0"),
@@ -202,11 +213,10 @@ def test_algorithm_no_zero_dot_versions_emoji(
                 "default_scipy_parser",
                 VersionTranslator(),
             ): [
-                *(
-                    (commits, prerelease, "1.2.0-rc.2")
-                    for prerelease in (True, False)
-                    for commits in ([], ["uninteresting"])
-                ),
+                *((commits, True, "1.2.0-rc.2") for commits in ([], ["uninteresting"])),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.2.0") for commits in ([], ["uninteresting"])),
                 (lazy_fixture("scipy_commits_patch"), False, "1.2.0"),
                 (lazy_fixture("scipy_commits_patch"), True, "1.2.0-rc.3"),
                 (lazy_fixture("scipy_commits_minor"), False, "1.2.0"),
@@ -222,10 +232,12 @@ def test_algorithm_no_zero_dot_versions_emoji(
                 VersionTranslator(prerelease_token="alpha"),
             ): [
                 *(
-                    (commits, prerelease, "1.1.0-alpha.3")
-                    for prerelease in (True, False)
+                    (commits, True, "1.1.0-alpha.3")
                     for commits in ([], ["uninteresting"])
                 ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.1.0") for commits in ([], ["uninteresting"])),
                 (lazy_fixture("scipy_commits_patch"), False, "1.1.0"),
                 (lazy_fixture("scipy_commits_patch"), True, "1.1.0-alpha.4"),
                 (lazy_fixture("scipy_commits_minor"), False, "1.1.0"),
@@ -281,11 +293,10 @@ def test_algorithm_no_zero_dot_versions_scipy(
                 "default_tag_parser",
                 VersionTranslator(),
             ): [
-                *(
-                    (commits, prerelease, "1.2.0-rc.2")
-                    for prerelease in (True, False)
-                    for commits in ([], ["uninteresting"])
-                ),
+                *((commits, True, "1.2.0-rc.2") for commits in ([], ["uninteresting"])),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.2.0") for commits in ([], ["uninteresting"])),
                 (TAG_COMMITS_PATCH, False, "1.2.0"),
                 (TAG_COMMITS_PATCH, True, "1.2.0-rc.3"),
                 (TAG_COMMITS_MINOR, False, "1.2.0"),
@@ -301,10 +312,12 @@ def test_algorithm_no_zero_dot_versions_scipy(
                 VersionTranslator(prerelease_token="alpha"),
             ): [
                 *(
-                    (commits, prerelease, "1.1.0-alpha.3")
-                    for prerelease in (True, False)
+                    (commits, True, "1.1.0-alpha.3")
                     for commits in ([], ["uninteresting"])
                 ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *((commits, False, "1.1.0") for commits in ([], ["uninteresting"])),
                 (TAG_COMMITS_PATCH, False, "1.1.0"),
                 (TAG_COMMITS_PATCH, True, "1.1.0-alpha.4"),
                 (TAG_COMMITS_MINOR, False, "1.1.0"),
@@ -443,8 +456,14 @@ def test_algorithm_no_zero_dot_versions_tag(
                 VersionTranslator(),
             ): [
                 *(
-                    (commits, prerelease, major_on_zero, "0.3.0-rc.1")
-                    for prerelease in (True, False)
+                    (commits, True, major_on_zero, "0.3.0-rc.1")
+                    for major_on_zero in (True, False)
+                    for commits in ([], ["uninteresting"])
+                ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *(
+                    (commits, False, major_on_zero, "0.3.0")
                     for major_on_zero in (True, False)
                     for commits in ([], ["uninteresting"])
                 ),
@@ -598,8 +617,14 @@ def test_algorithm_with_zero_dot_versions_angular(
                 VersionTranslator(),
             ): [
                 *(
-                    (commits, prerelease, major_on_zero, "0.3.0-rc.1")
-                    for prerelease in (True, False)
+                    (commits, True, major_on_zero, "0.3.0-rc.1")
+                    for major_on_zero in (True, False)
+                    for commits in ([], ["uninteresting"])
+                ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *(
+                    (commits, False, major_on_zero, "0.3.0")
                     for major_on_zero in (True, False)
                     for commits in ([], ["uninteresting"])
                 ),
@@ -763,8 +788,14 @@ def test_algorithm_with_zero_dot_versions_emoji(
                 VersionTranslator(),
             ): [
                 *(
-                    (commits, prerelease, major_on_zero, "0.3.0-rc.1")
-                    for prerelease in (True, False)
+                    (commits, True, major_on_zero, "0.3.0-rc.1")
+                    for major_on_zero in (True, False)
+                    for commits in ([], ["uninteresting"])
+                ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *(
+                    (commits, False, major_on_zero, "0.3.0")
                     for major_on_zero in (True, False)
                     for commits in ([], ["uninteresting"])
                 ),
@@ -928,8 +959,14 @@ def test_algorithm_with_zero_dot_versions_scipy(
                 VersionTranslator(),
             ): [
                 *(
-                    (commits, prerelease, major_on_zero, "0.3.0-rc.1")
-                    for prerelease in (True, False)
+                    (commits, True, major_on_zero, "0.3.0-rc.1")
+                    for major_on_zero in (True, False)
+                    for commits in ([], ["uninteresting"])
+                ),
+                # Models a merge of commits from the branch to the main branch, now
+                # that prerelease=False
+                *(
+                    (commits, False, major_on_zero, "0.3.0")
                     for major_on_zero in (True, False)
                     for commits in ([], ["uninteresting"])
                 ),

@@ -4,7 +4,7 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 """
 import logging
 import re
-from typing import Tuple
+from typing import Tuple, Type
 
 from git import Commit
 from pydantic.dataclasses import dataclass
@@ -44,7 +44,9 @@ class AngularParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
-class AngularCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
+class AngularCommitParser(
+    CommitParser[ParseResult[ParsedCommit, ParseError], AngularParserOptions]
+):
     parser_options = AngularParserOptions
 
     def __init__(self, options: AngularParserOptions) -> None:
@@ -98,6 +100,12 @@ class AngularCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
             level_bump = LevelBump.PATCH
         else:
             level_bump = self.options.default_bump_level
+            log.debug(
+                "commit %s introduces a level bump of %s due to the default_bump_level",
+                commit.hexsha,
+                level_bump,
+            )
+        log.debug("commit %s introduces a %s level_bump", commit.hexsha, level_bump)
 
         return ParsedCommit(
             bump=level_bump,

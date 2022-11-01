@@ -21,7 +21,9 @@ class TagParserOptions(ParserOptions):
     patch_tag: str = ":nut_and_bolt:"
 
 
-class TagCommitParser(CommitParser[ParseResult[ParsedCommit, ParseError]]):
+class TagCommitParser(
+    CommitParser[ParseResult[ParsedCommit, ParseError], TagParserOptions]
+):
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
     It expects a tag of some sort in the commit message and will use the rest of the first line

@@ -12,6 +12,7 @@ from requests import Session
 
 from semantic_release.hvcs.gitea import Gitea
 from semantic_release.hvcs.token_auth import TokenAuth
+
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.helper import netrc_file
 

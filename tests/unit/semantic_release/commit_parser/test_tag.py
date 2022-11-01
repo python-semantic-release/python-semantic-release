@@ -3,6 +3,7 @@ import pytest
 from semantic_release.commit_parser.tag import TagCommitParser
 from semantic_release.commit_parser.token import ParseError
 from semantic_release.enums import LevelBump
+
 from tests.unit.semantic_release.commit_parser.helper import make_commit
 
 

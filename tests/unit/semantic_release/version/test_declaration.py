@@ -8,6 +8,7 @@ from semantic_release.version.declaration import (
     TomlVersionDeclaration,
 )
 from semantic_release.version.version import Version
+
 from tests.const import EXAMPLE_PROJECT_VERSION
 from tests.helper import diff_strings
 

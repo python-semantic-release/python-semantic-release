@@ -6,6 +6,7 @@ import click
 from rich import print as rprint
 from twine.commands.upload import upload
 
+from semantic_release.errors import InvalidConfiguration
 from semantic_release.version import tags_and_versions
 
 log = logging.getLogger(__name__)
@@ -26,6 +27,12 @@ def publish(ctx: click.Context) -> None:
     upload_to_repository = runtime.upload_to_repository
     upload_to_release = runtime.upload_to_release
     twine_settings = runtime.twine_settings
+
+    if upload_to_repository and not twine_settings:
+        ctx.fail(
+            "Your configuration sets upload_to_repository = true, but your twine "
+            "upload settings are invalid"
+        )
 
     if runtime.global_cli_options.noop:
         rprint(
