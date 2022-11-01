@@ -12,13 +12,16 @@ export PATH="${PATH}:/semantic-release/.venv/bin"
 # Change to configured directory
 cd "${INPUT_DIRECTORY}"
 
+export GIT_COMMITER_NAME: "${GIT_COMMITER_NAME:="github-actions"}"
+export GIT_COMMITER_EMAIL: "${GIT_COMMITER_EMAIL:="github-actions@github.com"}"
+
 # Set Git details
-git config --global user.name "github-actions"
-git config --global user.email "github-actions@github.com"
+git config --global user.name "$GIT_COMMITER_NAME"
+git config --global user.email "$GIT_COMMITER_EMAIL"
 
 # Run Semantic Release
 /semantic-release/.venv/bin/python \
   -m semantic_release publish \
   -v DEBUG \
-  -D commit_author="github-actions <action@github.com>" \
+  -D commit_author="$GIT_COMMITER_NAME <$GIT_COMMITER_EMAIL>" \
   ${INPUT_ADDITIONAL_OPTIONS}
