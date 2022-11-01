@@ -36,7 +36,7 @@ jobs:
           python -m pip install pytest-github-actions-annotate-failures
 
       - name: pytest
-        run: python -m pytest -n2 -v tests
+        run: python -m pytest -v tests
 
   mypy:
     runs-on: ubuntu-latest
