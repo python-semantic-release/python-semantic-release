@@ -300,8 +300,9 @@ Author used in commits in the format ``name <email>``.
 Default: ``semantic-release <semantic-release>``
 
 .. note::
-  If you are using the built-in GitHub Action, this is always set to
-  ``github-actions <actions@github.com>``.
+  If you are using the built-in GitHub Action, the default value is set to
+  ``github-actions <actions@github.com>``. You can modify this with the
+  ``git_committer_name`` and ``git_committer_name`` inputs.
 
 Changelog
 =========
