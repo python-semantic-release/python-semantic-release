@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from functools import wraps
 from itertools import zip_longest
-from typing import Any, Callable, Optional, Union, overload
+from typing import Any, Callable, Optional, Type, Union, overload
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
@@ -21,28 +21,24 @@ class InvalidVersion(ValueError):
 # a cleaner way to do this
 # https://github.com/python-semver/python-semver/blob/b5317af9a7e99e6a86df98320e73be72d5adf0de/src/semver/version.py#L32
 VersionComparable = Union["Version", str]
-VersionComparator = Callable[["Version", VersionComparable], bool]
+VersionComparator = Callable[["Version", "Version"], bool]
 
 
 @overload
 def _comparator(
-    method: None = None, *, type_guard: bool = True
-) -> Callable[[Callable[..., VersionComparator]], VersionComparator]:
+    *, type_guard: bool
+) -> Callable[[VersionComparator], VersionComparator]:
     ...
 
 
 @overload
-def _comparator(
-    method: VersionComparator, *, type_guard: bool = True
-) -> VersionComparator:
+def _comparator(method: VersionComparator, *, type_guard: bool = True) -> VersionComparator:
     ...
 
 
 def _comparator(
     method: Optional[VersionComparator] = None, *, type_guard: bool = True
-) -> Union[
-    VersionComparator, Callable[[Callable[..., VersionComparator]], VersionComparator]
-]:
+) -> Union[VersionComparator, Callable[[VersionComparator], VersionComparator]]:
     """
     wrap a `Version` binop method to guard types and try to parse strings into Versions.
     use `type_guard = False` for `__eq__` and `__neq__` to make them return False if the
@@ -52,12 +48,12 @@ def _comparator(
         return lambda method: _comparator(method, type_guard=type_guard)
 
     @wraps(method)
-    def _wrapper(self: "Version", other: Any) -> bool:
+    def _wrapper(self: "Version", other: VersionComparable) -> bool:
         if not isinstance(other, (str, Version)):
             return False if not type_guard else NotImplemented
         if isinstance(other, str):
             try:
-                other_v = Version.parse(
+                other_v = self.parse(
                     other,
                     tag_format=self.tag_format,
                     prerelease_token=self.prerelease_token,
@@ -67,7 +63,7 @@ def _comparator(
         else:
             other_v = other
 
-        return method(self, other_v)
+        return method(self, other_v)  # type: ignore
 
     return _wrapper
 
@@ -238,7 +234,7 @@ class Version:
                 prerelease_token=self.prerelease_token,
                 prerelease_revision=1
                 if not self.is_prerelease
-                else self.prerelease_revision + 1,
+                else (self.prerelease_revision or 0) + 1,
                 tag_format=self.tag_format,
             )
         # for consistency, this creates a new instance regardless
@@ -262,7 +258,7 @@ class Version:
         return hash(self.__repr__())
 
     @_comparator(type_guard=False)
-    def __eq__(self, other: Version) -> bool:
+    def __eq__(self, other: Version) -> bool:  # type: ignore
         # https://semver.org/#spec-item-11 -
         # build metadata is not used for comparison
         return all(
@@ -280,8 +276,9 @@ class Version:
     def __neq__(self, other: Version) -> bool:
         return not self.__eq__(other)
 
+    # mypy wants to compare signature types with __lt__ but can't because of the decorator
     @_comparator
-    def __gt__(self, other: Version) -> bool:
+    def __gt__(self, other: Version) -> bool:  # type: ignore
         # https://semver.org/#spec-item-11 -
         # build metadata is not used for comparison
 
@@ -313,11 +310,15 @@ class Version:
                     # Longest (i.e. non-None) is greater
                     return other_tk is None
                 # Lexical sort, e.g. "rc" > "beta" > "alpha"
-                return self_tk > other_tk
-        return self.prerelease_revision > other.prerelease_revision
+                # we have eliminated that one or both might be None above,
+                # but mypy doesn't recognise this
+                return self_tk > other_tk  # type: ignore
+        # We have eliminated that one or both aren't prereleases by the above
+        return self.prerelease_revision > other.prerelease_revision  # type: ignore
 
+    # mypy wants to compare signature types with __le__ but can't because of the decorator
     @_comparator
-    def __ge__(self, other: Version) -> bool:
+    def __ge__(self, other: Version) -> bool:  # type: ignore
         return self.__gt__(other) or self.__eq__(other)
 
     @_comparator

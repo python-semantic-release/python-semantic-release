@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Callable, Iterable, Optional, Union
 
 from jinja2 import Environment, FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
@@ -40,7 +40,7 @@ def environment(
     """
     autoescape_value: Union[bool, Callable[[Optional[str]], bool]]
     if isinstance(autoescape, str):
-        autoescape_value = dynamic_import(autoescape)  # type: ignore
+        autoescape_value = dynamic_import(autoescape)
     else:
         autoescape_value = autoescape
 

@@ -1,5 +1,5 @@
 import logging
-import sys
+import os
 from typing import Optional
 
 import click
@@ -82,8 +82,10 @@ def version(
         new_content = declaration.replace(new_version=v)
         declaration.path.write_text(new_content)
 
+    working_dir = os.getcwd() if repo.working_dir is None else repo.working_dir
+
     paths = [
-        declaration.path.resolve().relative_to(repo.working_dir)
+        declaration.path.resolve().relative_to(working_dir)
         for declaration in runtime.version_declarations
     ]
     log.debug("versions declared in: %s", ", ".join(str(path) for path in paths))

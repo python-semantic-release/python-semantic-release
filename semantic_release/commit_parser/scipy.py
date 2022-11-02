@@ -39,7 +39,7 @@ import logging
 import re
 from typing import Tuple
 
-from git import Commit
+from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
@@ -95,7 +95,7 @@ class ScipyParserOptions(ParserOptions):
     patch_tags: Tuple[str, ...] = ("BLD", "BUG", "MAINT")
     default_level_bump: LevelBump = LevelBump.NO_RELEASE
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.tag_to_level = {tag: LevelBump.NO_RELEASE for tag in self.allowed_tags}
         for tag in self.patch_tags:
             self.tag_to_level[tag] = LevelBump.PATCH
@@ -105,9 +105,7 @@ class ScipyParserOptions(ParserOptions):
             self.tag_to_level[tag] = LevelBump.MAJOR
 
 
-class ScipyCommitParser(
-    CommitParser[ParseResult[ParsedCommit, ParseError], ScipyParserOptions]
-):
+class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
     """
     Parse a scipy-style commit message
     :param message: A string of a commit message.
@@ -130,9 +128,9 @@ class ScipyCommitParser(
             re.DOTALL,
         )
 
-    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
+    def parse(self, commit: Commit) -> ParseResult:
 
-        message = commit.message
+        message = str(commit.message)
         parsed = self.re_parser.match(message)
 
         if not parsed:

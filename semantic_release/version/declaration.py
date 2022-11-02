@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -5,7 +7,7 @@ from pathlib import Path
 from typing import Any, Optional, Set, Union
 
 import tomlkit
-from dotty_dict import Dotty
+from dotty_dict import Dotty  # type: ignore
 
 from semantic_release.version.version import Version
 
@@ -26,11 +28,12 @@ class VersionDeclarationABC(ABC):
             self._content = self.path.read_text()
         return self._content
 
-    @content.setter
+    # mypy doesn't like properties?
+    @content.setter  # type: ignore
     def _(self, _: Any) -> None:
         raise AttributeError("'content' cannot be set directly")
 
-    @content.deleter
+    @content.deleter  # type: ignore
     def _(self) -> None:
         self._content = None
 
@@ -124,7 +127,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
         """
         n = 0
 
-        def swap_version(m):
+        def swap_version(m: re.Match[str]) -> str:
             nonlocal n
             n += 1
             s = m.string

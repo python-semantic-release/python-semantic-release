@@ -2,7 +2,7 @@
 import logging
 import re
 
-from git import Commit
+from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
@@ -21,9 +21,7 @@ class TagParserOptions(ParserOptions):
     patch_tag: str = ":nut_and_bolt:"
 
 
-class TagCommitParser(
-    CommitParser[ParseResult[ParsedCommit, ParseError], TagParserOptions]
-):
+class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
     It expects a tag of some sort in the commit message and will use the rest of the first line
@@ -35,8 +33,8 @@ class TagCommitParser(
 
     parser_options = TagParserOptions
 
-    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
-        message = commit.message
+    def parse(self, commit: Commit) -> ParseResult:
+        message = str(commit.message)
 
         # Attempt to parse the commit message with a regular expression
         parsed = re_parser.match(message)
@@ -85,7 +83,7 @@ class TagCommitParser(
         return ParsedCommit(
             bump=level_bump,
             type=level,
-            scope=None,
+            scope="",
             descriptions=descriptions,
             breaking_descriptions=breaking_descriptions,
             commit=commit,

@@ -5,7 +5,8 @@ from typing import Any, Dict, Optional
 
 import click
 import tomlkit
-from git import InvalidGitRepositoryError, Repo
+from git import InvalidGitRepositoryError
+from git.repo.base import Repo
 from rich import print as rprint
 from rich.logging import RichHandler
 
@@ -29,7 +30,7 @@ def _read_toml(path: str) -> Dict[str, Any]:
     raw_text = (Path() / path).resolve().read_text(encoding="utf-8")
     try:
         toml_text = tomlkit.loads(raw_text)
-        return toml_text["tool"]["semantic_release"]
+        return toml_text["tool"]["semantic_release"]  # type: ignore
     except KeyError as exc:
         raise InvalidConfiguration(
             f"Missing key 'tool.semantic_release' in {path}"

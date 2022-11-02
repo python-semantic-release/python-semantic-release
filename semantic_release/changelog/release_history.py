@@ -5,19 +5,19 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, NamedTuple, Optional
 
-from git import Repo, TagObject
+from git.objects.tag import TagObject
+from git.repo.base import Repo
 from git.util import Actor
 
 # For Python3.7 compatibility
 from typing_extensions import TypedDict
 
-from semantic_release.commit_parser import CommitParser, ParseError, ParseResult
+from semantic_release.commit_parser import CommitParser, ParseError, ParseResult, ParserOptions
 from semantic_release.version.algorithm import tags_and_versions
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
 log = logging.getLogger(__name__)
-
 
 # Note: generic NamedTuples aren't yet supported by mypy
 # see https://github.com/python/mypy/issues/685
@@ -42,7 +42,7 @@ class Release(TypedDict):
 def release_history(
     repo: Repo,
     translator: VersionTranslator,
-    commit_parser: CommitParser,
+    commit_parser: CommitParser[ParseResult, ParserOptions],
 ) -> ReleaseHistory:
     all_git_tags_and_versions = tags_and_versions(repo.tags, translator)
     unreleased: Dict[str, List[ParseResult]] = defaultdict(list)

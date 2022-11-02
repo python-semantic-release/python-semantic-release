@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import twine.utils
-from git import Repo
+from git.repo.base import Repo
 from jinja2 import Environment
 from pydantic import BaseModel
 from twine.exceptions import TwineException
@@ -22,6 +22,8 @@ from semantic_release.commit_parser import (
     AngularCommitParser,
     CommitParser,
     EmojiCommitParser,
+    ParseResult,
+    ParserOptions,
     ScipyCommitParser,
     TagCommitParser,
 )
@@ -220,7 +222,7 @@ class RuntimeContext:
     ]
 
     repo: Repo
-    commit_parser: CommitParser
+    commit_parser: CommitParser[ParseResult, ParserOptions]
     version_translator: VersionTranslator
     major_on_zero: bool
     prerelease: bool
@@ -267,19 +269,27 @@ class RuntimeContext:
                 options.match,
                 active_branch,
             )
-        raise NotAReleaseBranch(
-            f"branch {active_branch!r} isn't in any release groups; no release will be made"
-        )
+        else:
+            raise NotAReleaseBranch(
+                f"branch {active_branch!r} isn't in any release groups; no release will be made"
+            )
 
     @classmethod
-    def make_twine_settings(cls, upload_config: UploadConfig) -> TwineSettings:
+    def make_twine_settings(
+        cls, upload_config: UploadConfig
+    ) -> Optional[TwineSettings]:
         settings = TwineSettings(
             sign=upload_config.sign,
             sign_with=upload_config.sign_with,
             identity=cls.resolve_from_env(upload_config.identity),
             username=cls.resolve_from_env(upload_config.username),
             password=cls.resolve_from_env(upload_config.password),
-            non_interactive=cls.resolve_from_env(upload_config.non_interactive),
+            non_interactive=(
+                False
+                if cls.resolve_from_env(upload_config.non_interactive)
+                in ("false", "0", 0)
+                else True
+            ),
             comment=upload_config.comment,
             config_file=upload_config.config_file,
             skip_existing=upload_config.skip_existing,
@@ -302,10 +312,12 @@ class RuntimeContext:
             settings.config_file
         except TwineException as err:
             log.warning(
-                    "TwineException: uploading to repositories will be unavailable (message: %r)",
+                "TwineException: uploading to repositories will be unavailable (message: %r)",
                 str(err),
             )
             return None
+        else:
+            return settings
 
     def apply_log_masking(self, masker: MaskingFilter) -> MaskingFilter:
         for attr in self._mask_attrs_:
@@ -330,9 +342,7 @@ class RuntimeContext:
         )
 
         commit_parser = commit_parser_cls(
-            options=commit_parser_cls.parser_options(  # type: ignore
-                **raw.commit_parser_options
-            )
+            options=commit_parser_cls.parser_options(**raw.commit_parser_options)
         )
         version_declarations: List[VersionDeclarationABC] = []
         for decl in () if raw.version_toml is None else raw.version_toml:

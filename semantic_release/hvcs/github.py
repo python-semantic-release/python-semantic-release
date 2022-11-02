@@ -101,7 +101,7 @@ class Github(HvcsBase):
         """
         url = f"{self.api_url}/repos/{self.owner}/{self.repo_name}/commits/{ref}/status"
         response = self.session.get(url)
-        return response.json().get("state") == "success"
+        return response.json().get("state") == "success"  # type: ignore
 
     @logged_function(logger)
     @suppress_http_error
@@ -141,7 +141,7 @@ class Github(HvcsBase):
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}"
         )
-        return response.json().get("id")
+        return response.json().get("id")  # type: ignore
 
     @logged_function(logger)
     @suppress_http_error
@@ -199,7 +199,9 @@ class Github(HvcsBase):
 
     @logged_function(logger)
     @suppress_http_error
-    def upload_asset(self, release_id: int, file: str, label: str = None) -> bool:
+    def upload_asset(
+        self, release_id: int, file: str, label: Optional[str] = None
+    ) -> bool:
         """Upload an asset to an existing release
         https://docs.github.com/rest/reference/repos#upload-a-release-asset
         :param release_id: ID of the release to upload to

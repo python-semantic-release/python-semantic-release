@@ -11,7 +11,7 @@ from semantic_release.errors import (
 )
 
 
-def setup_hook(argv: List[str]):
+def setup_hook(argv: List[str]) -> None:
     """
     A hook to be used in setup.py to enable `python setup.py publish`.
 

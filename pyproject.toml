@@ -44,7 +44,7 @@ Homepage = "https://python-semantic-release.readthedocs.io"
 
 [project.optional-dependencies]
 test = [
-  "coverage>=6,<7",
+  "coverage[toml]>=6,<7",
   "pytest>=7,<8",
   "pytest-xdist>=2,<3",
   "pytest-mock>=3,<4",
@@ -121,7 +121,7 @@ commands =
     mypy --ignore-missing-imports semantic_release
 
 [testenv:coverage]
-deps = coverage
+deps = coverage[toml]
 commands =
     coverage combine
     coverage report -m

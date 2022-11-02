@@ -1,6 +1,6 @@
 from typing import Any
 
-from requests import Request
+from requests import PreparedRequest
 from requests.auth import AuthBase
 
 
@@ -18,6 +18,6 @@ class TokenAuth(AuthBase):
     def __ne__(self, other: Any) -> bool:
         return not self == other
 
-    def __call__(self, req: Request) -> Request:
+    def __call__(self, req: PreparedRequest) -> PreparedRequest:
         req.headers["Authorization"] = f"token {self.token}"
         return req

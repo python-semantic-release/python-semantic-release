@@ -4,9 +4,9 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 """
 import logging
 import re
-from typing import Tuple, Type
+from typing import Tuple
 
-from git import Commit
+from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
@@ -44,9 +44,7 @@ class AngularParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
-class AngularCommitParser(
-    CommitParser[ParseResult[ParsedCommit, ParseError], AngularParserOptions]
-):
+class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     parser_options = AngularParserOptions
 
     def __init__(self, options: AngularParserOptions) -> None:
@@ -63,9 +61,9 @@ class AngularCommitParser(
         )
 
     # TODO: maybe cache?
-    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
+    def parse(self, commit: Commit) -> ParseResult:
         # Attempt to parse the commit message with a regular expression
-        parsed = self.re_parser.match(commit.message)
+        parsed = self.re_parser.match(str(commit.message))
         if not parsed:
             parse_error = ParseError(commit, "Unable to parse commit message")
             log.debug("Error parsing commit %r", commit.message)

@@ -16,7 +16,7 @@ class LevelBump(IntEnum):
     MINOR = 3
     MAJOR = 4
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return the level name rather than 'LevelBump.<level>'
         E.g.

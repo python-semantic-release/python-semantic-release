@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, TypeVar, Union
 
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from requests.packages.urllib3.util.retry import Retry  # type: ignore
 
 from semantic_release.hvcs.token_auth import TokenAuth
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_requests_session(
-    raise_for_status=True,
+    raise_for_status: bool = True,
     retry: Union[bool, int, Retry] = True,
     auth: Optional[TokenAuth] = None,
 ) -> Session:
@@ -25,7 +25,7 @@ def build_requests_session(
     """
     session = Session()
     if raise_for_status:
-        session.hooks = {"response": [lambda r, *args, **kwargs: r.raise_for_status()]}
+        session.hooks = {"response": [lambda r, *_, **__: r.raise_for_status()]}
 
     if retry:
         if isinstance(retry, bool):

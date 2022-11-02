@@ -1,12 +1,12 @@
 """CI Checks
 """
 import os
-from typing import Callable
+from typing import Any, Callable
 
 from semantic_release.errors import CiVerificationError
 
 
-def checker(func: Callable) -> Callable:
+def checker(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     A decorator that will convert AssertionErrors into
     CiVerificationError.
@@ -15,7 +15,7 @@ def checker(func: Callable) -> Callable:
     :return: The given function wrapped to raise a CiVerificationError on AssertionError
     """
 
-    def func_wrapper(*args, **kwargs):
+    def func_wrapper(*args: Any, **kwargs: Any) -> bool:
         try:
             func(*args, **kwargs)
             return True
@@ -28,7 +28,7 @@ def checker(func: Callable) -> Callable:
 
 
 @checker
-def travis(branch: str):
+def travis(branch: str) -> None:
     """
     Performs necessary checks to ensure that the travis build is one
     that should create releases.
@@ -40,7 +40,7 @@ def travis(branch: str):
 
 
 @checker
-def semaphore(branch: str):
+def semaphore(branch: str) -> None:
     """
     Performs necessary checks to ensure that the semaphore build is successful,
     on the correct branch and not a pull-request.
@@ -53,7 +53,7 @@ def semaphore(branch: str):
 
 
 @checker
-def frigg(branch: str):
+def frigg(branch: str) -> None:
     """
     Performs necessary checks to ensure that the frigg build is one
     that should create releases.
@@ -65,7 +65,7 @@ def frigg(branch: str):
 
 
 @checker
-def circle(branch: str):
+def circle(branch: str) -> None:
     """
     Performs necessary checks to ensure that the circle build is one
     that should create releases.
@@ -77,7 +77,7 @@ def circle(branch: str):
 
 
 @checker
-def gitlab(branch: str):
+def gitlab(branch: str) -> None:
     """
     Performs necessary checks to ensure that the gitlab build is one
     that should create releases.
@@ -89,7 +89,7 @@ def gitlab(branch: str):
 
 
 @checker
-def bitbucket(branch: str):
+def bitbucket(branch: str) -> None:
     """
     Performs necessary checks to ensure that the bitbucket build is one
     that should create releases.
@@ -101,7 +101,7 @@ def bitbucket(branch: str):
 
 
 @checker
-def jenkins(branch: str):
+def jenkins(branch: str) -> None:
     """
     Performs necessary checks to ensure that the jenkins build is one
     that should create releases.
@@ -115,7 +115,7 @@ def jenkins(branch: str):
     assert not os.environ.get("CHANGE_ID")  # pull request id
 
 
-def check(branch: str = "master"):
+def check(branch: str = "master") -> None:
     """
     Detects the current CI environment, if any, and performs necessary
     environment checks.

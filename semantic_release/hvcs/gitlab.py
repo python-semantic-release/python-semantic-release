@@ -4,7 +4,7 @@ import os
 from typing import Optional, Tuple, Union
 from urllib.parse import urlsplit
 
-from gitlab import exceptions, gitlab
+import gitlab
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
@@ -93,8 +93,8 @@ class Gitlab(HvcsBase):
             # "success" and "skipped" aren't considered
             if job["status"] == "pending":  # type: ignore[index]
                 logger.debug(
-                    "check_build_status: job %s is still in pending status",  # type: ignore[index]
-                    job["name"],
+                    "check_build_status: job %s is still in pending status",
+                    job["name"],  # type: ignore[index]
                 )
                 return False
             if job["status"] == "failed" and not job["allow_failure"]:  # type: ignore[index]
@@ -123,7 +123,7 @@ class Gitlab(HvcsBase):
                 }
             )
             return True
-        except exceptions.GitlabCreateError:
+        except gitlab.GitlabCreateError:
             logger.debug(
                 "Release %s could not be created for project %s/%s",
                 tag,

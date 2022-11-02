@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import logging
 import re
+import sys
 from collections import defaultdict
 from typing import Iterable, Union
+
+if sys.version_info >= (3, 9):
+    from re import Pattern
+else:
+    from typing import Pattern
 
 log = logging.getLogger(__name__)
 
@@ -12,12 +18,12 @@ log = logging.getLogger(__name__)
 # Updated/adapted for Python3
 class MaskingFilter(logging.Filter):
     REPLACE_STR = "*" * 4
-    _UNWANTED = [f(obj) for f in (repr, str) for obj in ("", None)]
+    _UNWANTED = [s for obj in ("", None) for s in (repr(obj), str(obj))]
 
     def __init__(
         self,
         _use_named_masks: bool = False,
-        **patterns: Iterable[Union[str, re.Pattern]],
+        **patterns: Iterable[Union[str, Pattern[str]]],
     ) -> None:
         super().__init__()
         self._redact_patterns = defaultdict(set)

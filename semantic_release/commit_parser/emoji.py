@@ -2,11 +2,11 @@
 import logging
 from typing import Tuple
 
-from git import Commit
+from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
+from semantic_release.commit_parser.token import ParsedCommit, ParseResult
 from semantic_release.commit_parser.util import parse_paragraphs
 from semantic_release.enums import LevelBump
 
@@ -44,7 +44,7 @@ class EmojiParserOptions(ParserOptions):
 
 
 class EmojiCommitParser(
-    CommitParser[ParseResult[ParsedCommit, ParseError], EmojiParserOptions]
+    CommitParser[ParseResult, EmojiParserOptions]
 ):
     """
     Parse a commit using an emoji in the subject line.
@@ -60,13 +60,13 @@ class EmojiCommitParser(
 
     parser_options = EmojiParserOptions
 
-    def parse(self, commit: Commit) -> ParseResult[ParsedCommit, ParseError]:
+    def parse(self, commit: Commit) -> ParseResult:
         all_emojis = (
             self.options.major_tags + self.options.minor_tags + self.options.patch_tags
         )
-        message = commit.message
 
-        subject = commit.message.split("\n")[0]
+        message = str(commit.message)
+        subject = message.split("\n")[0]
 
         # Loop over emojis from most important to least important
         # Therefore, we find the highest level emoji first
@@ -91,7 +91,7 @@ class EmojiCommitParser(
         return ParsedCommit(
             bump=level_bump,
             type=primary_emoji,
-            scope=None,
+            scope="",
             descriptions=descriptions,
             breaking_descriptions=descriptions[1:]
             if level_bump is LevelBump.MAJOR

@@ -1,10 +1,22 @@
+from __future__ import annotations
+
 import logging
 from queue import Queue
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple, Union
 
-from git import Commit, Repo, Tag
+from git.objects.blob import Blob
+from git.objects.commit import Commit
+from git.objects.tag import TagObject
+from git.objects.tree import Tree
+from git.refs.tag import Tag
+from git.repo.base import Repo
 
-from semantic_release.commit_parser import CommitParser, ParsedCommit
+from semantic_release.commit_parser import (
+    CommitParser,
+    ParsedCommit,
+    ParseResult,
+    ParserOptions,
+)
 from semantic_release.enums import LevelBump
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
@@ -29,7 +41,7 @@ def tags_and_versions(
 
 
 def _bfs_for_latest_version_in_history(
-    merge_base: Commit,
+    merge_base: Union[Commit, TagObject, Blob, Tree],
     full_release_tags_and_versions: List[Tuple[Tag, Version]],
 ) -> Optional[Version]:
     """
@@ -41,7 +53,7 @@ def _bfs_for_latest_version_in_history(
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
-    def bfs(visited: Set[Commit], q: Queue) -> Optional[Version]:
+    def bfs(visited: Set[Commit], q: "Queue[Commit]") -> Optional[Version]:
         if q.empty():
             return None
 
@@ -105,7 +117,7 @@ def _increment_version(
     )
     if not major_on_zero and latest_version.major == 0:
         # if we are a 0.x.y release and have set `major_on_zero`,
-        # breaking changes should increment the minor digit.
+        # breaking changes should increment the minor di
         # Correspondingly, we reduce the level that we increment the
         # version by.
         log.debug(
@@ -160,14 +172,10 @@ def _increment_version(
 def next_version(
     repo: Repo,
     translator: VersionTranslator,
-    commit_parser: CommitParser,
+    commit_parser: CommitParser[ParseResult, ParserOptions],
     prerelease: bool = False,
     major_on_zero: bool = True,
-) -> Optional[Version]:
-    # NOTE: if there's no previous versions, and no new commits
-    # with an appropriate scope we return None
-    # TODO: if no release should be made, should this return None instead?
-
+) -> Version:
     # Step 1. All tags, sorted descending by semver ordering rules
     all_git_tags_as_versions = tags_and_versions(repo.tags, translator)
     all_full_release_tags_and_versions = [
@@ -201,6 +209,13 @@ def next_version(
             "latest version, which is not yet supported"
         )
     merge_base = merge_bases[0]
+    if merge_base is None:
+        str_tag_name = (
+            "None" if latest_full_release_tag is None else latest_full_release_tag.name
+        )
+        raise ValueError(
+            f"The merge_base found by merge_base({str_tag_name}, {repo.active_branch}) is None"
+        )
 
     latest_full_version_in_history = _bfs_for_latest_version_in_history(
         merge_base=merge_base,
@@ -287,7 +302,10 @@ def next_version(
     return _increment_version(
         latest_version=latest_version,
         latest_full_version=latest_full_release_version,
-        latest_full_version_in_history=latest_full_version_in_history,
+        latest_full_version_in_history=(
+            latest_full_version_in_history
+            or Version.parse("0.0.0", prerelease_token=translator.prerelease_token)
+        ),
         level_bump=level_bump,
         prerelease=prerelease,
         prerelease_token=translator.prerelease_token,

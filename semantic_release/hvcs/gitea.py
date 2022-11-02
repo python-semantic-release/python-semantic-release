@@ -76,8 +76,8 @@ class Gitea(HvcsBase):
         response = self.session.get(url)
         data = response.json()
         if isinstance(data, list):
-            return data[0].get("status") == "success"
-        return data.get("status") == "success"
+            return data[0].get("status") == "success"  # type: ignore
+        return data.get("status") == "success"  # type: ignore
 
     @logged_function(logger)
     @suppress_http_error
@@ -117,7 +117,7 @@ class Gitea(HvcsBase):
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}"
         )
-        return response.json().get("id")
+        return response.json().get("id")  # type: ignore
 
     @logged_function(logger)
     @suppress_http_error

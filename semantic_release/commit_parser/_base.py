@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Type, TypeVar
+from typing import Generic, Type, TypeVar, Any
 
-from git import Commit
+from git.objects.commit import Commit
 
 from semantic_release.commit_parser.token import ParseResult
 
@@ -31,7 +31,7 @@ class ParserOptions:
     and passed directly to the appropriate class to handle.
     """
 
-    def __init__(self, **_):
+    def __init__(self, **_: Any) -> None:
         pass
 
 
