@@ -12,12 +12,18 @@ from git.util import Actor
 # For Python3.7 compatibility
 from typing_extensions import TypedDict
 
-from semantic_release.commit_parser import CommitParser, ParseError, ParseResult, ParserOptions
+from semantic_release.commit_parser import (
+    CommitParser,
+    ParseError,
+    ParseResult,
+    ParserOptions,
+)
 from semantic_release.version.algorithm import tags_and_versions
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
 log = logging.getLogger(__name__)
+
 
 # Note: generic NamedTuples aren't yet supported by mypy
 # see https://github.com/python/mypy/issues/685
@@ -102,8 +108,8 @@ def release_history(
             unreleased[commit_type].append(parse_result)
             continue
 
-        assert the_version is not None
-        # released.setdefault(the_version, defaultdict(list))
+        if the_version is None:
+            raise RuntimeError("expected a version to be found")
         released[the_version]["elements"][commit_type].append(parse_result)
 
     return ReleaseHistory(unreleased=unreleased, released=released)

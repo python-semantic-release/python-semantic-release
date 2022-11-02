@@ -17,6 +17,11 @@ from semantic_release.enums import LevelBump
 log = logging.getLogger(__name__)
 
 
+def _logged_parse_error(commit: Commit, error: str) -> ParseError:
+    log.debug(error)
+    return ParseError(commit, error=error)
+
+
 # types with long names in changelog
 LONG_TYPE_NAMES = {
     "feat": "feature",
@@ -63,21 +68,19 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     # TODO: maybe cache?
     def parse(self, commit: Commit) -> ParseResult:
         # Attempt to parse the commit message with a regular expression
-        parsed = self.re_parser.match(str(commit.message))
+        message = str(commit.message)
+        parsed = self.re_parser.match(message)
         if not parsed:
-            parse_error = ParseError(commit, "Unable to parse commit message")
-            log.debug("Error parsing commit %r", commit.message)
-            return parse_error
+            return _logged_parse_error(
+                commit, f"Unable to parse commit message: {message}"
+            )
         parsed_break = parsed.group("break")
         parsed_scope = parsed.group("scope")
         parsed_subject = parsed.group("subject")
         parsed_text = parsed.group("text")
         parsed_type = parsed.group("type")
 
-        if parsed_text:
-            descriptions = parse_paragraphs(parsed_text)
-        else:
-            descriptions = []
+        descriptions = parse_paragraphs(parsed_text) if parsed_text else []
         # Insert the subject before the other paragraphs
         descriptions.insert(0, parsed_subject)
 

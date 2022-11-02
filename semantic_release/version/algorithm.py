@@ -33,11 +33,9 @@ def tags_and_versions(
     to `Version.from_tag`. The returned list is sorted according to semver
     ordering rules
     """
-    return sorted(
-        [(t, translator.from_tag(t.name)) for t in tags],
-        reverse=True,
-        key=lambda v: v[1],
-    )
+    ts_and_vs = [(t, translator.from_tag(t.name)) for t in tags]
+    log.info("found %s previous tags", len(ts_and_vs))
+    return sorted(ts_and_vs, reverse=True, key=lambda v: v[1])
 
 
 def _bfs_for_latest_version_in_history(
@@ -54,11 +52,14 @@ def _bfs_for_latest_version_in_history(
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
     def bfs(visited: Set[Commit], q: "Queue[Commit]") -> Optional[Version]:
+
         if q.empty():
+            log.debug("queue is empty, returning none")
             return None
 
         node = q.get()
         if node in visited:
+            log.debug("commit %s already visited, returning none", node.hexsha)
             return None
 
         for tag, version in full_release_tags_and_versions:
@@ -79,13 +80,17 @@ def _bfs_for_latest_version_in_history(
 
         visited.add(node)
         for parent in node.parents:
+            log.debug("queuing parent commit %s", parent.hexsha)
             q.put(parent)
 
         return bfs(visited, q)
 
     q: Queue[Commit] = Queue()
     q.put(merge_base)
-    return bfs(set(), q)
+    latest_version = bfs(set(), q)
+
+    log.info("the latest version in this branch's history is %s", latest_version)
+    return latest_version
 
 
 def _increment_version(
@@ -127,6 +132,7 @@ def _increment_version(
         level_bump = min(level_bump, LevelBump.MINOR)
 
     if prerelease:
+        log.debug("prerelease=true")
         target_final_version = latest_full_version.finalize_version()
         diff_with_last_released_version = (
             latest_version - latest_full_version_in_history
@@ -137,11 +143,20 @@ def _increment_version(
         # 6a i) if the level_bump > the level bump introduced by any prerelease tag before
         # e.g. 1.2.4-rc.3 -> 1.3.0-rc.1
         if level_bump > diff_with_last_released_version:
+            log.debug(
+                "this release has a greater bump than any change since the last full release, %s",
+                latest_full_version_in_history,
+            )
             return target_final_version.bump(level_bump).to_prerelease(
                 token=prerelease_token
             )
 
         # 6a ii) if level_bump <= the level bump introduced by prerelease tag
+        log.debug(
+            "there has already been at least a %s release since the last full release %s",
+            level_bump,
+            latest_full_version_in_history,
+        )
         return latest_version.to_prerelease(
             token=prerelease_token,
             revision=(
@@ -155,6 +170,9 @@ def _increment_version(
     # NOTE: These can actually be condensed down to the single line
     # 6b. i) if there's been a prerelease
     if latest_version.is_prerelease:
+        log.debug(
+            "prerelease=false and the latest version %s is a prerelease", latest_version
+        )
         diff_with_last_released_version = (
             latest_version - latest_full_version_in_history
         )
@@ -162,10 +180,24 @@ def _increment_version(
             "diff_with_last_released_version: %s", diff_with_last_released_version
         )
         if level_bump > diff_with_last_released_version:
+            log.debug(
+                "this release has a greater bump than any change since the last full release, %s",
+                latest_full_version_in_history,
+            )
             return latest_version.bump(level_bump).finalize_version()
+        log.debug(
+            "there has already been at least a %s release since the last full release %s",
+            level_bump,
+            latest_full_version_in_history,
+        )
         return latest_version.finalize_version()
 
     # 6b. ii) If there's been no prerelease
+    log.debug(
+        "prerelease=false and %s is not a prerelease; bumping with a %s release",
+        latest_version,
+        level_bump,
+    )
     return latest_version.bump(level_bump)
 
 
@@ -181,7 +213,10 @@ def next_version(
     all_full_release_tags_and_versions = [
         (t, v) for t, v in all_git_tags_as_versions if not v.is_prerelease
     ]
-    log.debug("Found %s previous tags", len(all_git_tags_as_versions))
+    log.info(
+        "Found %s full releases (excluding prereleases)",
+        len(all_full_release_tags_and_versions),
+    )
 
     # Default initial version of 0.0.0
     latest_full_release_tag, latest_full_release_version = next(
@@ -192,7 +227,10 @@ def next_version(
         # Workaround - we can safely scan the extra commits on this
         # branch if it's never been released, but we have no other
         # guarantees that other branches exist
-        log.info("No full releases have been made yet")
+        log.info(
+            "No full releases have been made yet, the default version to use is %s",
+            latest_full_release_version,
+        )
         merge_bases = repo.merge_base(repo.active_branch, repo.active_branch)
     else:
         # Note the merge_base might be on our current branch, it's not
@@ -294,7 +332,7 @@ def next_version(
         parsed_levels,
     )
     level_bump = max(parsed_levels, default=LevelBump.NO_RELEASE)
-    log.info("The type of release triggered is: %s", level_bump)
+    log.info("The type of the next release release is: %s", level_bump)
     if level_bump is LevelBump.NO_RELEASE:
         log.info("No release will be made")
         return latest_version

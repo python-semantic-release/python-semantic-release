@@ -13,7 +13,7 @@ from semantic_release.hvcs.util import (
     suppress_not_found,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Add a mime type for wheels
 # Fix incorrect entries in the `mimetypes` registry.
@@ -69,6 +69,7 @@ class Github(HvcsBase):
     def _get_repository_owner_and_name(self) -> Tuple[str, str]:
         # Github actions context
         if "GITHUB_REPOSITORY" in os.environ:
+            log.debug("getting repository owner and name from environment variables")
             owner, name = os.environ["GITHUB_REPOSITORY"].rsplit("/", 1)
             return owner, name
         return super()._get_repository_owner_and_name()
@@ -89,7 +90,7 @@ class Github(HvcsBase):
             f"{from_rev}...{to_rev}"
         )
 
-    @logged_function(logger)
+    @logged_function(log)
     @suppress_http_error
     def check_build_status(self, ref: str) -> bool:
         """Check build status
@@ -103,7 +104,7 @@ class Github(HvcsBase):
         response = self.session.get(url)
         return response.json().get("state") == "success"  # type: ignore
 
-    @logged_function(logger)
+    @logged_function(log)
     @suppress_http_error
     def create_release(
         self, tag: str, changelog: str, prerelease: bool = False
@@ -116,6 +117,7 @@ class Github(HvcsBase):
         :param changelog: The release notes for this version
         :return: Whether the request succeeded
         """
+        log.info("Creating release for tag %s", tag)
         self.session.post(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases",
             json={
@@ -128,7 +130,7 @@ class Github(HvcsBase):
         )
         return True
 
-    @logged_function(logger)
+    @logged_function(log)
     @suppress_not_found
     def get_release_id_by_tag(self, tag: str) -> Optional[int]:
         """Get a release by its tag name
@@ -143,7 +145,7 @@ class Github(HvcsBase):
         )
         return response.json().get("id")  # type: ignore
 
-    @logged_function(logger)
+    @logged_function(log)
     @suppress_http_error
     def edit_release_changelog(
         self,
@@ -158,13 +160,14 @@ class Github(HvcsBase):
         :param changelog: The release notes for this version
         :return: Whether the request succeeded
         """
+        log.info("Updating release %s", release_id)
         self.session.post(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
             json={"body": changelog},
         )
         return True
 
-    @logged_function(logger)
+    @logged_function(log)
     def create_or_update_release(self, tag: str, changelog: str) -> bool:
         """Post release changelog
         :param owner: The owner namespace of the repository
@@ -173,21 +176,21 @@ class Github(HvcsBase):
         :param changelog: The release notes for this version
         :return: The status of the request
         """
-        logger.debug("Attempting to create release for %s", tag)
+        log.info("Creating release for %s", tag)
         success = self.create_release(tag, changelog)
 
         if not success:
-            logger.debug("Unsuccessful, looking for an existing release to update")
+            log.debug("Unsuccessful, looking for an existing release to update")
             release_id = self.get_release_id_by_tag(tag)
             if release_id:
-                logger.debug("Updating release %s", release_id)
+                log.debug("Found existing release %s, updating", release_id)
                 success = self.edit_release_changelog(release_id, changelog)
             else:
-                logger.debug("Existing release not found")
+                log.debug("Existing release not found")
 
         return success
 
-    @logged_function(logger)
+    @logged_function(log)
     def asset_upload_url(self, release_id: str) -> str:
         """Get the correct upload url for a release
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
@@ -197,7 +200,7 @@ class Github(HvcsBase):
         # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset ?
         return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"
 
-    @logged_function(logger)
+    @logged_function(log)
     @suppress_http_error
     def upload_asset(
         self, release_id: int, file: str, label: Optional[str] = None
@@ -224,15 +227,16 @@ class Github(HvcsBase):
                 data=data.read(),
             )
 
-        logger.debug(
-            "Asset upload on Github completed, url: %s, status code: %s",
+        log.debug(
+            "Successfully uploaded %s to Github, url: %s, status code: %s",
+            file,
             response.url,
             response.status_code,
         )
 
         return True
 
-    @logged_function(logger)
+    @logged_function(log)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """Upload distributions to a release
         :param owner: The owner namespace of the repository
@@ -245,7 +249,7 @@ class Github(HvcsBase):
         # Find the release corresponding to this version
         release_id = self.get_release_id_by_tag(tag=tag)
         if not release_id:
-            logger.debug("No release found to upload assets to")
+            log.warning("No release corresponds to tag %s, can't upload dists", tag)
             return False
 
         # Upload assets

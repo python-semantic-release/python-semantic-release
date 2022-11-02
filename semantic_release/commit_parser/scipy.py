@@ -49,6 +49,11 @@ from semantic_release.enums import LevelBump
 log = logging.getLogger(__name__)
 
 
+def _logged_parse_error(commit: Commit, error: str) -> ParseError:
+    log.debug(error)
+    return ParseError(commit, error=error)
+
+
 tag_to_section = {
     "API": "breaking",
     "BENCH": "None",
@@ -134,20 +139,20 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         parsed = self.re_parser.match(message)
 
         if not parsed:
-            return ParseError(
+            return _logged_parse_error(
                 commit, f"Unable to parse the given commit message: {message}"
             )
 
         if parsed.group("subject"):
             subject = parsed.group("subject")
         else:
-            parse_error = ParseError(commit, f"Commit has no subject {message!r}")
-            log.debug("Error parsing commit %r, ignoring", commit.message)
-            return parse_error
+            return _logged_parse_error(
+                commit, f"Commit has no subject {message!r}"
+            )
 
         if parsed.group("text"):
             blocks = parsed.group("text").split("\n\n")
-            blocks = [x for x in blocks if not x == ""]
+            blocks = [x for x in blocks if x]
             blocks.insert(0, subject)
         else:
             blocks = [subject]
@@ -158,11 +163,17 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
                 level_bump = self.options.tag_to_level.get(
                     tag, self.options.default_level_bump
                 )
+                log.debug("commit %s introduces a %s level_bump", commit.hexsha, level_bump)
                 break
         else:
             # some commits may not have a tag, e.g. if they belong to a PR that
             # wasn't squashed (for maintainability) ignore them
             section, level_bump = "None", self.options.default_level_bump
+            log.debug(
+                "commit %s introduces a level bump of %s due to the default_bump_level",
+                commit.hexsha,
+                level_bump,
+            )
 
         # Look for descriptions of breaking changes
         migration_instructions = [
@@ -170,6 +181,7 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         ]
         if migration_instructions:
             level_bump = LevelBump.MAJOR
+            log.debug("commit %s upgraded a %s level_bump due to migration_instructions", commit.hexsha, level_bump)
 
         return ParsedCommit(
             bump=level_bump,

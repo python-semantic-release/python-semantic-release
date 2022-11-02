@@ -15,7 +15,7 @@ class NotAReleaseBranch(InvalidConfiguration):
     pass
 
 
-ImproperConfigurationError = InvalidConfiguration
+# ImproperConfigurationError = InvalidConfiguration
 
 
 class CommitParseError(SemanticReleaseBaseError):
@@ -23,7 +23,7 @@ class CommitParseError(SemanticReleaseBaseError):
 
 
 # TODO: backwards-compat
-UnknownCommitMessageStyleError = CommitParseError
+# UnknownCommitMessageStyleError = CommitParseError
 
 
 class GitError(SemanticReleaseBaseError):

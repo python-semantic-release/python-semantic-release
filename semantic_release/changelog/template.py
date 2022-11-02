@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -8,6 +9,8 @@ from jinja2.sandbox import SandboxedEnvironment
 from typing_extensions import Literal
 
 from semantic_release.helpers import dynamic_import
+
+log = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-arguments,too-many-locals
@@ -43,6 +46,7 @@ def environment(
         autoescape_value = dynamic_import(autoescape)
     else:
         autoescape_value = autoescape
+    log.debug("%s", locals())
 
     return SandboxedEnvironment(
         block_start_string=block_start_string,
@@ -76,24 +80,29 @@ def recursive_render(
     ):
         src_path = Path(root)
         output_path = (_root_dir / src_path.relative_to(template_dir)).resolve()
+        log.info("Rendering templates from %s to %s", src_path, output_path)
         os.makedirs(str(output_path), exist_ok=True)
         if file.endswith(".j2"):
             # We know the file ends with .j2 by the filter in the for-loop
             output_filename = file[:-3]
             # Strip off the template directory from the front of the root path -
             # that's the output location relative to the repo root
-            stream = environment.get_template(
-                str((src_path / file).relative_to(template_dir))
-            ).stream()
+            output_file_path = str((src_path / file).relative_to(template_dir))
+
+            log.debug("rendering %s to %s", file, output_file_path)
+            stream = environment.get_template(output_file_path).stream()
 
             with open(
                 str((output_path / output_filename).resolve()), "wb+"
             ) as output_file:
                 stream.dump(output_file, encoding="utf-8")
         else:
-            shutil.copyfile(
-                str((src_path / file).resolve()), str((output_path / file).resolve())
+            src_file = str((src_path / file).resolve())
+            target_file = str((output_path / file).resolve())
+            log.debug(
+                "source file %s is not a template, copying to %s", src_file, target_file
             )
+            shutil.copyfile(src_file, target_file)
 
 
 # To avoid confusion on import

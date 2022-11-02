@@ -5,9 +5,9 @@ __version__ = "7.32.2"
 from typing import List
 
 from semantic_release.errors import (
-    ImproperConfigurationError,
-    SemanticReleaseBaseError,
-    UnknownCommitMessageStyleError,
+    InvalidConfiguration as InvalidConfiguration,
+    SemanticReleaseBaseError as SemanticReleaseBaseError,
+    CommitParseError as CommitParseError,
 )
 
 

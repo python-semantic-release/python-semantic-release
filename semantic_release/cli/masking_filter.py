@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import logging
 import re
-import sys
 from collections import defaultdict
 from typing import Iterable, Union
 
-if sys.version_info >= (3, 9):
-    from re import Pattern
-else:
-    from typing import Pattern
+# else:
+# from typing import Pattern
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +20,7 @@ class MaskingFilter(logging.Filter):
     def __init__(
         self,
         _use_named_masks: bool = False,
-        **patterns: Iterable[Union[str, Pattern[str]]],
+        **patterns: Iterable[Union[str, re.Pattern[str]]],
     ) -> None:
         super().__init__()
         self._redact_patterns = defaultdict(set)
@@ -33,6 +30,7 @@ class MaskingFilter(logging.Filter):
 
     def add_mask_for(self, data: str, name: str = "redacted") -> MaskingFilter:
         if data and data not in self._UNWANTED:
+            log.debug("Adding redact pattern %r to _redact_patterns", name)
             self._redact_patterns[name].add(data)
         return self
 

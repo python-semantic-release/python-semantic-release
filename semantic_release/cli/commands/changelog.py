@@ -5,10 +5,10 @@ import click
 
 # NOTE: use backport with newer API than stdlib
 from importlib_resources import files
-from rich import print as rprint
 
 from semantic_release.changelog import recursive_render, release_history
 from semantic_release.changelog.context import make_changelog_context
+from semantic_release.cli.util import rprint
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ def changelog(ctx: click.Context) -> None:
         with open(default_output_file, "w+", encoding="utf-8") as f:
             tmpl.dump(f)
     else:
-        log.debug("Rendering whole directory %r recursively", template_dir)
         if runtime.global_cli_options.noop:
             rprint(
                 "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
@@ -63,5 +62,3 @@ def changelog(ctx: click.Context) -> None:
         recursive_render(template_dir, environment=env, _root_dir=repo.working_dir)
 
     # TODO: --post?
-
-    rprint("[green]:sparkles: Done! :sparkles:")

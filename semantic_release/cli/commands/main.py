@@ -7,7 +7,6 @@ import click
 import tomlkit
 from git import InvalidGitRepositoryError
 from git.repo.base import Repo
-from rich import print as rprint
 from rich.logging import RichHandler
 
 import semantic_release
@@ -17,6 +16,7 @@ from semantic_release.cli.config import (
     RawConfig,
     RuntimeContext,
 )
+from semantic_release.cli.util import rprint
 from semantic_release.errors import InvalidConfiguration
 
 FORMAT = "[%(module)s:%(funcName)s]: %(message)s"
@@ -92,7 +92,7 @@ def main(
         log.debug("Forwarding to %s", generate_config.name)
         return
 
-    log.info("logging level set to: %s", logging.getLevelName(log_level))
+    log.debug("logging level set to: %s", logging.getLevelName(log_level))
     try:
         repo = Repo(".", search_parent_directories=True)
     except InvalidGitRepositoryError:
@@ -107,8 +107,10 @@ def main(
 
     try:
         if config_file and config_file.endswith(".toml"):
+            rprint(f"Loading TOML configuration from {config_file}")
             config_text = _read_toml(config_file)
         elif config_file and config_file.endswith(".json"):
+            rprint(f"Loading JSON configuration from {config_file}")
             raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
             config_text = json.loads(raw_text)["semantic_release"]
         elif config_file:
@@ -116,6 +118,8 @@ def main(
             print(ctx.get_usage())
             ctx.fail(f"{suffix!r} is not a supported configuration format")
         else:
+            log.debug("no config file specified, looking for default (pyproject.toml)")
+            rprint("Loading TOML configuration from pyproject.toml")
             config_text = _read_toml("pyproject.toml")
     except (FileNotFoundError, InvalidConfiguration) as exc:
         ctx.fail(str(exc))
@@ -134,4 +138,7 @@ def main(
     for handler in logging.getLogger().handlers:
         handler.addFilter(runtime.masker)
 
-    log.info("All done! :sparkles:")
+
+@main.result_callback()
+def main_result_callback(result: Any, *a: Any, **kw: Any):
+    rprint("[bold green]:sparkles: All done! :sparkles:")

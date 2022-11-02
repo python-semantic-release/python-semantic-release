@@ -6,6 +6,8 @@ from functools import wraps
 from typing import Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
+log = logging.getLogger(__name__)
+
 
 def format_arg(value: Any) -> str:
     if type(value) == str:
@@ -40,11 +42,11 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
         def _wrapper(*args: Any, **kwargs: Any) -> _R:
             # Log function name and arguments
             logger.debug(
-                "{function}({args}{kwargs})".format(
+                "{function}({args}, {kwargs})".format(
                     function=func.__name__,
                     args=", ".join([format_arg(x) for x in args]),
-                    kwargs="".join(
-                        [f", {k}={format_arg(v)}" for k, v in kwargs.items()]
+                    kwargs=", ".join(
+                        [f"{k}={format_arg(v)}" for k, v in kwargs.items()]
                     ),
                 )
             )
@@ -53,8 +55,7 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
             result = func(*args, **kwargs)
 
             # Log result
-            if result is not None:
-                logger.debug(f"{func.__name__} -> {result}")
+            logger.debug("%s -> %s", func.__qualname__, str(result))
             return result
 
         return _wrapper
@@ -62,10 +63,12 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
     return _logged_function
 
 
-LoggedFunction = logged_function
+# LoggedFunction = logged_function
 
 
+@logged_function(log)
 def dynamic_import(import_path: str) -> Any:
+    log.debug("Trying to import %s", import_path)
     module_name, _, attr = import_path.split(":", maxsplit=1)
     module = importlib.import_module(module_name)
     return getattr(module, attr)
@@ -95,6 +98,7 @@ GIT_URL_REGEX = re.compile(
 
 
 def parse_git_url(url: str) -> ParsedGitUrl:
+    log.debug("Parsing git url %r", url)
     urllib_split = urlsplit(url)
     if urllib_split.scheme:
         # We have been able to parse the url with urlsplit,

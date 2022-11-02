@@ -1,2 +1,2 @@
-from .main import main
-from .version import version
+from semantic_release.cli.commands.main import main as main
+from semantic_release.cli.commands.version import version as version

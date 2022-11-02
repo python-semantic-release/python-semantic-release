@@ -11,7 +11,7 @@ from semantic_release.hvcs._base import HvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
 from semantic_release.hvcs.util import build_requests_session
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Add a mime type for wheels
 # Fix incorrect entries in the `mimetypes` registry.
@@ -71,10 +71,11 @@ class Gitlab(HvcsBase):
     def _get_repository_owner_and_name(self) -> Tuple[str, str]:
         # Gitlab-CI context
         if "CI_PROJECT_NAMESPACE" in os.environ and "CI_PROJECT_NAME" in os.environ:
+            log.debug("getting repository owner and name from environment variables")
             return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
         return super()._get_repository_owner_and_name()
 
-    @logged_function(logger)
+    @logged_function(log)
     def check_build_status(self, ref: str) -> bool:
         """Check last build status
         :param owner: The owner namespace of the repository. It includes all groups and subgroups.
@@ -92,17 +93,17 @@ class Gitlab(HvcsBase):
         for job in jobs:
             # "success" and "skipped" aren't considered
             if job["status"] == "pending":  # type: ignore[index]
-                logger.debug(
-                    "check_build_status: job %s is still in pending status",
+                log.info(
+                    "Job %s is still in pending status",
                     job["name"],  # type: ignore[index]
                 )
                 return False
             if job["status"] == "failed" and not job["allow_failure"]:  # type: ignore[index]
-                logger.debug("check_build_status: job %s failed", job["name"])  # type: ignore[index]
+                log.info("Job %s failed", job["name"])  # type: ignore[index]
                 return False
         return True
 
-    @logged_function(logger)
+    @logged_function(log)
     def create_release(self, tag: str, changelog: str) -> bool:
         """Post release changelog
         :param owner: The owner namespace of the repository
@@ -114,7 +115,7 @@ class Gitlab(HvcsBase):
         client = gitlab.Gitlab(self.api_url, private_token=self.token)
         client.auth()
         try:
-            logger.debug("Before release create call")
+            log.info("Creating release for %s", tag)
             client.projects.get(self.owner + "/" + self.repo_name).releases.create(
                 {
                     "name": "Release " + tag,
@@ -124,7 +125,7 @@ class Gitlab(HvcsBase):
             )
             return True
         except gitlab.GitlabCreateError:
-            logger.debug(
+            log.warning(
                 "Release %s could not be created for project %s/%s",
                 tag,
                 self.owner,

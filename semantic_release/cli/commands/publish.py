@@ -3,9 +3,9 @@ import shlex
 import subprocess
 
 import click
-from rich import print as rprint
 from twine.commands.upload import upload
 
+from semantic_release.cli.util import rprint
 from semantic_release.errors import InvalidConfiguration
 from semantic_release.version import tags_and_versions
 
@@ -41,6 +41,7 @@ def publish(ctx: click.Context) -> None:
         )
     else:
         try:
+            log.info("Running build command %s", build_command)
             subprocess.run(shlex.split(build_command), check=True)
         except subprocess.CalledProcessError as exc:
             ctx.fail(str(exc))
@@ -52,6 +53,7 @@ def publish(ctx: click.Context) -> None:
             ", ".join(repr(g) for g in dist_glob_patterns) + " to your repository"
         )
     elif upload_to_repository:
+        log.info("Uploading distributions to repository")
         upload(upload_settings=twine_settings, dists=dist_glob_patterns)
 
     latest_tag = tags_and_versions(repo.tags, translator)[0][0]
@@ -63,7 +65,6 @@ def publish(ctx: click.Context) -> None:
             + " to a remote VCS release, if supported"
         )
     elif upload_to_release:
+        log.info("Uploading distributions to release")
         for pattern in dist_glob_patterns:
             hvcs_client.upload_dists(tag=latest_tag, dist_glob=pattern)
-
-    rprint("[green]:sparkles: Done! :sparkles:")

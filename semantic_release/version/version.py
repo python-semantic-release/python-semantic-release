@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import logging
 import re
 from functools import wraps
 from itertools import zip_longest
-from typing import Any, Callable, Optional, Type, Union, overload
+from typing import Callable, Optional, Union, overload
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
 from semantic_release.helpers import check_tag_format
+
+log = logging.getLogger(__name__)
 
 
 class InvalidVersion(ValueError):
@@ -32,7 +35,9 @@ def _comparator(
 
 
 @overload
-def _comparator(method: VersionComparator, *, type_guard: bool = True) -> VersionComparator:
+def _comparator(
+    method: VersionComparator, *, type_guard: bool = True
+) -> VersionComparator:
     ...
 
 
@@ -117,6 +122,8 @@ class Version:
         """
         if not isinstance(version_str, str):
             raise InvalidVersion(f"{version_str!r} cannot be parsed as a Version")
+
+        log.debug("attempting to parse string %r as Version", version_str)
         match = cls._VERSION_REGEX.fullmatch(version_str)
         if not match:
             raise InvalidVersion(f"{version_str!r} is not a valid Version")
@@ -130,18 +137,32 @@ class Version:
                     r"of the format (-([a-zA-Z0-9-])\.\(\d+)), for example '1.2.3-my-custom-3rc.4'."
                 )
             prerelease_token, prerelease_revision = pm.groups()
+            log.debug(
+                "parsed prerelease_token %s, prerelease_revision %s from version string %s",
+                prerelease_token,
+                prerelease_revision,
+                version_str,
+            )
         else:
             prerelease_revision = None
+            log.debug("version string %s parsed as a non-prerelease", version_str)
+
+        build_metadata = match.group("buildmetadata") or ""
+        log.debug(
+            "parsed build metadata %r from version string %s",
+            build_metadata,
+            version_str,
+        )
 
         return Version(
             int(match.group("major")),
             int(match.group("minor")),
             int(match.group("patch")),
             prerelease_token=prerelease_token,
-            prerelease_revision=int(prerelease_revision)
-            if prerelease_revision
-            else None,
-            build_metadata=match.group("buildmetadata") or "",
+            prerelease_revision=(
+                int(prerelease_revision) if prerelease_revision else None
+            ),
+            build_metadata=build_metadata,
             tag_format=tag_format,
         )
 
@@ -199,6 +220,7 @@ class Version:
         if type(level) != LevelBump:
             raise TypeError(f"Unexpected level {level!r}: expected {LevelBump!r}")
 
+        log.debug("performing a %s level bump", level)
         if level is LevelBump.MAJOR:
             return Version(
                 self.major + 1,

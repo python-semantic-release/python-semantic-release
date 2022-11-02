@@ -43,9 +43,7 @@ class EmojiParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
-class EmojiCommitParser(
-    CommitParser[ParseResult, EmojiParserOptions]
-):
+class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     """
     Parse a commit using an emoji in the subject line.
     When multiple emojis are encountered, the one with the highest bump
@@ -93,8 +91,8 @@ class EmojiCommitParser(
             type=primary_emoji,
             scope="",
             descriptions=descriptions,
-            breaking_descriptions=descriptions[1:]
-            if level_bump is LevelBump.MAJOR
-            else [],
+            breaking_descriptions=(
+                descriptions[1:] if level_bump is LevelBump.MAJOR else []
+            ),
             commit=commit,
         )

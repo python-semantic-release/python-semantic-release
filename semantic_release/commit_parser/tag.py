@@ -10,7 +10,7 @@ from semantic_release.commit_parser.token import ParsedCommit, ParseError, Parse
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 re_parser = re.compile(r"(?P<subject>[^\n]+)" + r"(:?\n\n(?P<text>.+))?", re.DOTALL)
 
@@ -19,6 +19,11 @@ re_parser = re.compile(r"(?P<subject>[^\n]+)" + r"(:?\n\n(?P<text>.+))?", re.DOT
 class TagParserOptions(ParserOptions):
     minor_tag: str = ":sparkles:"
     patch_tag: str = ":nut_and_bolt:"
+
+
+def _logged_parse_error(commit: Commit, error: str) -> ParseError:
+    log.debug(error)
+    return ParseError(commit, error=error)
 
 
 class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
@@ -39,7 +44,7 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
         # Attempt to parse the commit message with a regular expression
         parsed = re_parser.match(message)
         if not parsed:
-            return ParseError(
+            return _logged_parse_error(
                 commit, error=f"Unable to parse the given commit message: {message!r}"
             )
 
@@ -60,7 +65,7 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
 
         else:
             # We did not find any tags in the commit message
-            return ParseError(
+            return _logged_parse_error(
                 commit, error=f"Unable to parse the given commit message: {message!r}"
             )
 
@@ -79,6 +84,7 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
         if breaking_descriptions:
             level = "breaking"
             level_bump = LevelBump.MAJOR
+            log.debug("commit %s upgraded a %s level_bump due to breaking_descriptions", commit.hexsha, level_bump)
 
         return ParsedCommit(
             bump=level_bump,

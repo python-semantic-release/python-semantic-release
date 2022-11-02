@@ -256,7 +256,7 @@ class RuntimeContext:
     ) -> BranchConfig:
         for group, options in choices.items():
             if re.match(options.match, active_branch):
-                log.debug(
+                log.info(
                     "Using group %r options, as %r matches %r",
                     group,
                     options.match,

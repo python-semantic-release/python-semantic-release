@@ -3,9 +3,9 @@ import os
 from typing import Optional
 
 import click
-from rich import print as rprint
 
 from semantic_release.cli.config import RuntimeContext
+from semantic_release.cli.util import rprint
 from semantic_release.enums import LevelBump
 from semantic_release.version import next_version, tags_and_versions
 
@@ -103,5 +103,3 @@ def version(
     # Wrap in GitCommandError handling - remove token
     repo.git.push(remote_url, repo.active_branch.name)
     repo.git.push("--tags", remote_url, repo.active_branch.name)
-
-    rprint("[green]:sparkles: Done! :sparkles:")

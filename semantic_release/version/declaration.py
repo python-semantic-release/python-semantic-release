@@ -11,7 +11,7 @@ from dotty_dict import Dotty  # type: ignore
 
 from semantic_release.version.version import Version
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class VersionDeclarationABC(ABC):
@@ -25,6 +25,9 @@ class VersionDeclarationABC(ABC):
     @property
     def content(self) -> str:
         if self._content is None:
+            log.debug(
+                "No content stored, reading from source file %s", self.path.resolve()
+            )
             self._content = self.path.read_text()
         return self._content
 
@@ -35,6 +38,7 @@ class VersionDeclarationABC(ABC):
 
     @content.deleter  # type: ignore
     def _(self) -> None:
+        log.debug("resetting instance-stored source file contents")
         self._content = None
 
     @abstractmethod
@@ -58,7 +62,7 @@ class VersionDeclarationABC(ABC):
         """
 
     def write(self, content: str) -> None:
-        logger.debug("writing content to %r", self.path.resolve())
+        log.debug("writing content to %r", self.path.resolve())
         self.path.write_text(content)
         self._content = None
 
@@ -72,7 +76,11 @@ class TomlVersionDeclaration(VersionDeclarationABC):
         content = self._load()
         maybe_version = content.get(self.search_text)
         if maybe_version is not None:
-            logger.debug("Found a string %r that looks like a version", maybe_version)
+            log.debug(
+                "Found a key %r that looks like a version (%r)",
+                self.search_text,
+                maybe_version,
+            )
             valid_version = Version.parse(maybe_version)
             return {valid_version}
         # TODO: maybe raise error if not found?
@@ -81,6 +89,11 @@ class TomlVersionDeclaration(VersionDeclarationABC):
     def replace(self, new_version: Version) -> str:
         content = self._load()
         if self.search_text in content:
+            log.info(
+                "found %r in source file contents, replacing with %s",
+                self.search_text,
+                new_version,
+            )
             content[self.search_text] = str(new_version)
         return tomlkit.dumps(content)
 
@@ -110,7 +123,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
             for m in re.finditer(self.search_text, self.content, re.MULTILINE)
         }
 
-        logger.debug(
+        log.debug(
             "Parsing current version: path=%r pattern=%r num_matches=%s",
             self.path.resolve(),
             self.search_text,
@@ -132,15 +145,15 @@ class PatternVersionDeclaration(VersionDeclarationABC):
             n += 1
             s = m.string
             i, j = m.span()
+            log.debug("match spans characters %s:%s", i, j)
             ii, jj = m.span(1)
+            log.debug("version group spans characters %s:%s", ii, jj)
             return s[i:ii] + str(new_version) + s[jj:j]
 
         new_content = re.sub(
             self.search_text, swap_version, self.content, flags=re.MULTILINE
         )
 
-        logger.debug(
-            "path=%r pattern=%r num_matches=%r", self.path, self.search_text, n
-        )
+        log.debug("path=%r pattern=%r num_matches=%r", self.path, self.search_text, n)
 
         return new_content

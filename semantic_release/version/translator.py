@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import functools
+import logging
 import re
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.helpers import check_tag_format
 from semantic_release.version.version import Version
+
+log = logging.getLogger(__name__)
 
 
 class VersionTranslator:
@@ -13,10 +15,12 @@ class VersionTranslator:
 
     @classmethod
     def _invert_tag_format_to_re(cls, tag_format: str) -> re.Pattern[str]:
-        return re.compile(
+        pat = re.compile(
             tag_format.replace(r"{version}", r"(?P<version>.*)"),
             flags=re.VERBOSE,
         )
+        log.debug("inverted tag_format %r to %r", tag_format, pat.pattern)
+        return pat
 
     def __init__(
         self, tag_format: str = "v{version}", prerelease_token: str = "rc"
