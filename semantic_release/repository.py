@@ -2,9 +2,7 @@
 """
 import logging
 import os
-from dataclasses import InitVar
-from dataclasses import asdict as dataclass_asdict
-from dataclasses import dataclass, field
+from dataclasses import InitVar, asdict as dataclass_asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -126,6 +124,13 @@ class ArtifactRepo:
         pass them to Twine which then validates and loads the config.
         """
         params = {name: val for name, val in dataclass_asdict(self).items() if val}
+        cacert = os.environ.get("TWINE_CERT", None)
+        if cacert:
+            if not Path(cacert).is_file():
+                raise ImproperConfigurationError(
+                    f"TWINE_CERT env variable set, but file does not exist. Value: {cacert}"
+                )
+            params["cacert"] = cacert
         settings = TwineSettings(**params, **addon_kwargs)
 
         return settings

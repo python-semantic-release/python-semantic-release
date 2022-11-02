@@ -174,9 +174,11 @@ def test_repo_with_custom_repo_url_from_env(mock_handle_creds):
     {
         "REPOSITORY_USERNAME": "repo-username",
         "REPOSITORY_PASSWORD": "repo-password",
+        "TWINE_CERT": "cert_bundle.crt",
     },
 )
-def test_upload_with_custom_settings(mock_upload):
+@mock.patch("semantic_release.repository.Path.is_file", return_value=True)
+def test_upload_with_custom_settings(mock_is_file, mock_upload):
     repo = ArtifactRepo(Path("custom-dist"))
     repo.upload(
         noop=False, verbose=True, skip_existing=True, comment="distribution comment"
@@ -184,12 +186,35 @@ def test_upload_with_custom_settings(mock_upload):
     settings = mock_upload.call_args[1]["upload_settings"]
     assert isinstance(settings.auth, auth.Private)
     assert settings.comment == "distribution comment"
+    assert settings.cacert == "cert_bundle.crt"
     assert settings.username == "repo-username"
     assert settings.password == "repo-password"
     assert settings.repository_config["repository"] == "https://custom-repo"
     assert settings.skip_existing
     assert settings.verbose
     assert mock_upload.called
+
+
+@mock.patch.dict(
+    "os.environ",
+    {
+        "TWINE_CERT": "cert_bundle.crt",
+    },
+)
+@mock.patch("semantic_release.repository.Path.is_file", return_value=False)
+def test_upload_with_invalid_twine_cert(mock_is_file):
+    repo = ArtifactRepo(Path("custom-dist"))
+    with pytest.raises(ImproperConfigurationError) as ex:
+        repo.upload(noop=False, verbose=True, skip_existing=True)
+
+    assert "TWINE_CERT env variable set, but file does not exist" in str(ex.value)
+
+
+@mock.patch.object(ArtifactRepo, "_handle_credentials_init")
+@mock.patch("semantic_release.repository.twine_upload")
+def test_upload_with_noop(mock_upload, mock_handle_creds):
+    ArtifactRepo(Path("dist")).upload(noop=True, verbose=False, skip_existing=False)
+    assert not mock_upload.called
 
 
 @mock.patch.object(ArtifactRepo, "_handle_credentials_init")
