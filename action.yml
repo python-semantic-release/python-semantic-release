@@ -22,6 +22,12 @@ inputs:
   repository_password:
     description: 'Password or token to the account specified in repository_username'
     required: false
+  git_committer_name:
+    description: 'The human name for the “committer” field'
+    required: false
+  git_committer_email:
+    description: 'The email address for the “committer” field'
+    required: false
 
 runs:
   using: 'docker'
