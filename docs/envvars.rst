@@ -159,3 +159,7 @@ Custom repository (package index) URL to upload the package to.
 Takes precedence over :ref:`config-repository_url`
 
 See :ref:`automatic-dist-upload` for more about uploads to custom repositories.
+
+``TWINE_CERT``
+------------------
+Path to alternative CA bundle to use for SSL verification to repository. `See here for more information <https://twine.readthedocs.io/en/stable/>`

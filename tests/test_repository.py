@@ -202,19 +202,14 @@ def test_upload_with_custom_settings(mock_is_file, mock_upload):
     },
 )
 @mock.patch("semantic_release.repository.Path.is_file", return_value=False)
-def test_upload_with_invalid_twine_cert(mock_is_file):
+@mock.patch.object(ArtifactRepo, "_handle_credentials_init")
+def test_upload_with_invalid_twine_cert(mock_is_file, mock_handle_creds):
     repo = ArtifactRepo(Path("custom-dist"))
+
     with pytest.raises(ImproperConfigurationError) as ex:
         repo.upload(noop=False, verbose=True, skip_existing=True)
 
     assert "TWINE_CERT env variable set, but file does not exist" in str(ex.value)
-
-
-@mock.patch.object(ArtifactRepo, "_handle_credentials_init")
-@mock.patch("semantic_release.repository.twine_upload")
-def test_upload_with_noop(mock_upload, mock_handle_creds):
-    ArtifactRepo(Path("dist")).upload(noop=True, verbose=False, skip_existing=False)
-    assert not mock_upload.called
 
 
 @mock.patch.object(ArtifactRepo, "_handle_credentials_init")
