@@ -15,6 +15,11 @@ log = logging.getLogger(__name__)
 
 
 class VersionDeclarationABC(ABC):
+    """
+    ABC for classes representing a location in which a version is declared somewhere
+    within the source tree of the repository
+    """
+
     def __init__(self, path: Union[Path, str], search_text: str) -> None:
         self.path = Path(path)
         if not self.path.exists():
@@ -24,6 +29,10 @@ class VersionDeclarationABC(ABC):
 
     @property
     def content(self) -> str:
+        """
+        The content of the source file in which the version is stored. This property
+        is cached in the instance variable _content
+        """
         if self._content is None:
             log.debug(
                 "No content stored, reading from source file %s", self.path.resolve()
@@ -62,17 +71,39 @@ class VersionDeclarationABC(ABC):
         """
 
     def write(self, content: str) -> None:
+        """
+        Write new content back to the source path.
+        Use alongside .replace():
+        >>> class MyVD(VersionDeclarationABC):
+        ...     def parse(self): ...
+        ...     def replace(self, new_version: Version): ...
+        ...     def write(self, content: str): ...
+
+        >>> new_version = Version.parse("1.2.3")
+        >>> vd = MyVD("path", r"__version__ = (?P<version>\d+\d+\d+)")
+        >>> vd.write(vd.replace(new_version))
+        """
         log.debug("writing content to %r", self.path.resolve())
         self.path.write_text(content)
         self._content = None
 
 
 class TomlVersionDeclaration(VersionDeclarationABC):
+    """
+    VersionDeclarationABC implementation which manages toml-format source files.
+    """
+
     def _load(self) -> Dotty:
+        """
+        Load the content of the source file into a Dotty for easier searching
+        """
         loaded = tomlkit.loads(self.content)
         return Dotty(loaded)
 
     def parse(self) -> Set[Version]:
+        """
+        Look for the version in the source content
+        """
         content = self._load()
         maybe_version = content.get(self.search_text)
         if maybe_version is not None:
@@ -87,6 +118,10 @@ class TomlVersionDeclaration(VersionDeclarationABC):
         return set()
 
     def replace(self, new_version: Version) -> str:
+        """
+        Replace the version in the source content with `new_version`, and return the
+        updated content.
+        """
         content = self._load()
         if self.search_text in content:
             log.info(
@@ -100,11 +135,9 @@ class TomlVersionDeclaration(VersionDeclarationABC):
 
 class PatternVersionDeclaration(VersionDeclarationABC):
     """
-    Represent a version number in a particular file.
-    The version number is identified by a regular expression.  Methods are
-    provided both the read the version number from the file, and to update the
-    file with a new version number.  Use the `load_version_patterns()` factory
-    function to create the version patterns specified in the config files.
+    VersionDeclarationABC implementation representing a version number in a particular
+    file. The version number is identified by a regular expression, which should be
+    provided in `search_text`.
     """
 
     # The pattern should be a regular expression with a single group,

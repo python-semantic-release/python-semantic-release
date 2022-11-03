@@ -7,6 +7,7 @@ import click
 import tomlkit
 from git import InvalidGitRepositoryError
 from git.repo.base import Repo
+from rich.console import Console
 from rich.logging import RichHandler
 
 import semantic_release
@@ -20,10 +21,6 @@ from semantic_release.cli.util import rprint
 from semantic_release.errors import InvalidConfiguration
 
 FORMAT = "[%(module)s:%(funcName)s]: %(message)s"
-
-HELP_TEXT = """\
-This program is really really awesome.
-"""
 
 
 def _read_toml(path: str) -> Dict[str, Any]:
@@ -41,10 +38,10 @@ def _read_toml(path: str) -> Dict[str, Any]:
 
 @click.group(
     context_settings={
-        "allow_interspersed_args": True,
-        "ignore_unknown_options": True,
+        "help_option_names": ["-h", "--help"],
+        # "allow_interspersed_args": True,
+        # "ignore_unknown_options": True,
     },
-    help=HELP_TEXT,
 )
 @click.option(
     "-v",
@@ -76,12 +73,29 @@ def main(
     verbosity: int = 0,
     noop: bool = False,
 ) -> None:
+    """
+    Python Semantic Release
+
+    Automated Semantic Versioning based on version 2.0.0 of the Semantic Versioning
+    specification, which can be found at https://semver.org/spec/v2.0.0.html.
+
+    Detect the next semantically correct version for a project based on the Git
+    history, create and publish a changelog to a remote VCS, build a project.
+
+    If the project is written in Python, distributions can also be
+    uploaded to a remote Python package repository using twine.
+
+    For more information, visit https://python-semantic-release.readthedocs.io/
+    """
+
+    console = Console(stderr=True)
+
     log_level = [logging.WARNING, logging.INFO, logging.DEBUG][verbosity]
     logging.basicConfig(
         level=log_level,
         format=FORMAT,
         datefmt="[%X]",
-        handlers=[RichHandler(rich_tracebacks=True, tracebacks_suppress=[click])],
+        handlers=[RichHandler(console=console, rich_tracebacks=True, tracebacks_suppress=[click])],
     )
 
     log = logging.getLogger(__name__)
@@ -115,11 +129,9 @@ def main(
             config_text = json.loads(raw_text)["semantic_release"]
         elif config_file:
             *_, suffix = config_file.split(".")
-            print(ctx.get_usage())
             ctx.fail(f"{suffix!r} is not a supported configuration format")
         else:
-            log.debug("no config file specified, looking for default (pyproject.toml)")
-            rprint("Loading TOML configuration from pyproject.toml")
+            log.info("no config file specified, loading TOML configuration from pyproject.toml")
             config_text = _read_toml("pyproject.toml")
     except (FileNotFoundError, InvalidConfiguration) as exc:
         ctx.fail(str(exc))
@@ -137,8 +149,3 @@ def main(
     # by applying it to all the configured handlers
     for handler in logging.getLogger().handlers:
         handler.addFilter(runtime.masker)
-
-
-@main.result_callback()
-def main_result_callback(result: Any, *a: Any, **kw: Any):
-    rprint("[bold green]:sparkles: All done! :sparkles:")

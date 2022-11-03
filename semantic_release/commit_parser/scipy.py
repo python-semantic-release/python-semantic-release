@@ -112,12 +112,7 @@ class ScipyParserOptions(ParserOptions):
 
 class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
     """
-    Parse a scipy-style commit message
-    :param message: A string of a commit message.
-    # :return: A tuple of (level to bump, type of change, scope of change, a tuple
-    :return: A ParsedCommit
-    with descriptions)
-    :raises UnknownCommitMessageStyleError: if regular expression matching fails
+    Parser for scipy-style commit messages
     """
 
     parser_options = ScipyParserOptions
@@ -146,9 +141,7 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         if parsed.group("subject"):
             subject = parsed.group("subject")
         else:
-            return _logged_parse_error(
-                commit, f"Commit has no subject {message!r}"
-            )
+            return _logged_parse_error(commit, f"Commit has no subject {message!r}")
 
         if parsed.group("text"):
             blocks = parsed.group("text").split("\n\n")
@@ -163,7 +156,9 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
                 level_bump = self.options.tag_to_level.get(
                     tag, self.options.default_level_bump
                 )
-                log.debug("commit %s introduces a %s level_bump", commit.hexsha, level_bump)
+                log.debug(
+                    "commit %s introduces a %s level_bump", commit.hexsha, level_bump
+                )
                 break
         else:
             # some commits may not have a tag, e.g. if they belong to a PR that
@@ -181,7 +176,11 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         ]
         if migration_instructions:
             level_bump = LevelBump.MAJOR
-            log.debug("commit %s upgraded a %s level_bump due to migration_instructions", commit.hexsha, level_bump)
+            log.debug(
+                "commit %s upgraded to a %s level_bump due to migration_instructions",
+                commit.hexsha,
+                level_bump,
+            )
 
         return ParsedCommit(
             bump=level_bump,

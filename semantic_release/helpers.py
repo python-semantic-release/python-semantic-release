@@ -10,6 +10,9 @@ log = logging.getLogger(__name__)
 
 
 def format_arg(value: Any) -> str:
+    """
+    Helper to format an argument an argument for logging
+    """
     if type(value) == str:
         return f"'{value.strip()}'"
     else:
@@ -29,7 +32,8 @@ _FuncType = Callable[..., _R]
 
 def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncType[_R]]:
     """
-    Decorator which adds debug logging to a function.
+    Decorator which adds debug logging of a function's input arguments and return
+    value.
 
     The input arguments are logged before the function is called, and the
     return value is logged once it has completed.
@@ -40,7 +44,6 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
     def _logged_function(func: _FuncType[_R]) -> _FuncType[_R]:
         @wraps(func)
         def _wrapper(*args: Any, **kwargs: Any) -> _R:
-            # Log function name and arguments
             logger.debug(
                 "{function}({args}, {kwargs})".format(
                     function=func.__name__,
@@ -63,11 +66,12 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
     return _logged_function
 
 
-# LoggedFunction = logged_function
-
-
 @logged_function(log)
 def dynamic_import(import_path: str) -> Any:
+    """
+    Dynamically import an object from a conventionally formatted "module:attribute"
+    string
+    """
     log.debug("Trying to import %s", import_path)
     module_name, _, attr = import_path.split(":", maxsplit=1)
     module = importlib.import_module(module_name)
@@ -75,6 +79,10 @@ def dynamic_import(import_path: str) -> Any:
 
 
 class ParsedGitUrl(NamedTuple):
+    """
+    Container for the elements parsed from a git URL using GIT_URL_REGEX
+    """
+
     scheme: str
     netloc: str
     namespace: str
@@ -98,6 +106,11 @@ GIT_URL_REGEX = re.compile(
 
 
 def parse_git_url(url: str) -> ParsedGitUrl:
+    """
+    Attempt to parse a string as a git url, either https or ssh format, into a
+    ParsedGitUrl.
+    Raises ValueError if the url can't be parsed.
+    """
     log.debug("Parsing git url %r", url)
     urllib_split = urlsplit(url)
     if urllib_split.scheme:

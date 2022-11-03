@@ -1,3 +1,6 @@
+"""
+Helper code for interacting with a GitHub remote VCS
+"""
 import glob
 import logging
 import mimetypes
@@ -95,8 +98,6 @@ class Github(HvcsBase):
     def check_build_status(self, ref: str) -> bool:
         """Check build status
         https://docs.github.com/rest/reference/repos#get-the-combined-status-for-a-specific-reference
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param ref: The sha1 hash of the commit ref
         :return: Was the build status success?
         """
@@ -111,10 +112,9 @@ class Github(HvcsBase):
     ) -> bool:
         """Create a new release
         https://docs.github.com/rest/reference/repos#create-a-release
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param tag: Tag to create release for
         :param changelog: The release notes for this version
+        :param prerelease: Whether or not this release should be created as a prerelease
         :return: Whether the request succeeded
         """
         log.info("Creating release for tag %s", tag)
@@ -135,10 +135,8 @@ class Github(HvcsBase):
     def get_release_id_by_tag(self, tag: str) -> Optional[int]:
         """Get a release by its tag name
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param tag: Tag to get release for
-        :return: ID of found release
+        :return: ID of release, if found, else None
         """
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}"
@@ -154,8 +152,6 @@ class Github(HvcsBase):
     ) -> bool:
         """Edit a release with updated change notes
         https://docs.github.com/rest/reference/repos#update-a-release
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param id: ID of release to update
         :param changelog: The release notes for this version
         :return: Whether the request succeeded
@@ -170,8 +166,6 @@ class Github(HvcsBase):
     @logged_function(log)
     def create_or_update_release(self, tag: str, changelog: str) -> bool:
         """Post release changelog
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param version: The version number
         :param changelog: The release notes for this version
         :return: The status of the request
@@ -209,7 +203,7 @@ class Github(HvcsBase):
         https://docs.github.com/rest/reference/repos#upload-a-release-asset
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
-        :param label: Custom label for this file
+        :param label: Optional custom label for this file
         :return: The status of the request
         """
         url = self.asset_upload_url(release_id)
@@ -239,8 +233,6 @@ class Github(HvcsBase):
     @logged_function(log)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """Upload distributions to a release
-        :param owner: The owner namespace of the repository
-        :param repo_name The repository name
         :param version: Version to upload for
         :param path: Path to the dist directory
         :return: The number of distributions successfully uploaded

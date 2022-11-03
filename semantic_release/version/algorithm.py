@@ -138,7 +138,10 @@ def _increment_version(
             latest_version - latest_full_version_in_history
         )
         log.debug(
-            "diff_with_last_released_version: %s", diff_with_last_released_version
+            "diff between the latest version %s and the latest full release version %s is: %s",
+            latest_version,
+            latest_full_version_in_history,
+            diff_with_last_released_version,
         )
         # 6a i) if the level_bump > the level bump introduced by any prerelease tag before
         # e.g. 1.2.4-rc.3 -> 1.3.0-rc.1
@@ -177,7 +180,10 @@ def _increment_version(
             latest_version - latest_full_version_in_history
         )
         log.debug(
-            "diff_with_last_released_version: %s", diff_with_last_released_version
+            "diff between the latest version %s and the latest full release version %s is: %s",
+            latest_version,
+            latest_full_version_in_history,
+            diff_with_last_released_version,
         )
         if level_bump > diff_with_last_released_version:
             log.debug(
@@ -208,6 +214,10 @@ def next_version(
     prerelease: bool = False,
     major_on_zero: bool = True,
 ) -> Version:
+    """
+    Evaluate the history within `repo`, and based on the tags and commits in the repo
+    history, identify the next semantic version that should be applied to a release
+    """
     # Step 1. All tags, sorted descending by semver ordering rules
     all_git_tags_as_versions = tags_and_versions(repo.tags, translator)
     all_full_release_tags_and_versions = [

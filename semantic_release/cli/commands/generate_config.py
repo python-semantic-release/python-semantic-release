@@ -1,15 +1,17 @@
+import json
+
 import click
 import tomlkit
 
 from semantic_release.cli.config import RawConfig
 
 
-@click.command()
+@click.command(short_help="Generate semantic-release's default configuration")
 @click.option(
     "-f",
     "--format",
     "fmt",
-    type=click.Choice(["toml"], case_sensitive=False),
+    type=click.Choice(["toml", "json"], case_sensitive=False),
     default="toml",
     help="format for the config to be generated",
 )
@@ -17,11 +19,15 @@ from semantic_release.cli.config import RawConfig
 # how about push/no-push?
 def generate_config(fmt: str = "toml") -> None:
     """
-    This is the magic generate-config function that will bootstrap you a config file
-    Use as follows:
+    Generate default configuration for semantic-release, to help you get started
+    quickly. You can inspect the defaults, write to a file and then edit according to
+    your needs. For example, to append the default configuration to your pyproject.toml
+    file, you can use the following command:
 
-    semantic-release generate-config -f toml >> pyproject.toml
+        semantic-release generate-config -f toml >> pyproject.toml
     """
     config = RawConfig().dict(exclude_none=True)
     if fmt == "toml":
         print(tomlkit.dumps({"tool": {"semantic_release": config}}))
+    elif fmt == "json":
+        print(json.dumps({"semantic_release": config}, indent=4))

@@ -6,17 +6,17 @@ import click
 from twine.commands.upload import upload
 
 from semantic_release.cli.util import rprint
-from semantic_release.errors import InvalidConfiguration
 from semantic_release.version import tags_and_versions
 
 log = logging.getLogger(__name__)
 
 
-@click.command()
+@click.command(short_help="Build and publish a distribution")
 @click.pass_context
 def publish(ctx: click.Context) -> None:
     """
-    This is the magic changelog function that writes out your beautiful changelog
+    Build and publish a distribution to a Python package repository
+    or VCS release.
     """
     runtime = ctx.obj
     repo = runtime.repo

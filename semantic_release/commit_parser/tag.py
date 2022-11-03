@@ -31,9 +31,6 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
     Parse a commit message according to the 1.0 version of python-semantic-release.
     It expects a tag of some sort in the commit message and will use the rest of the first line
     as changelog content.
-    :param message: A string of a commit message.
-    :raises UnknownCommitMessageStyleError: If it does not recognise the commit style
-    :return: A tuple of (level to bump, type of change, scope of change, a tuple with descriptions)
     """
 
     parser_options = TagParserOptions
@@ -84,7 +81,11 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
         if breaking_descriptions:
             level = "breaking"
             level_bump = LevelBump.MAJOR
-            log.debug("commit %s upgraded a %s level_bump due to breaking_descriptions", commit.hexsha, level_bump)
+            log.debug(
+                "commit %s upgraded to a %s level_bump due to breaking_descriptions",
+                commit.hexsha,
+                level_bump,
+            )
 
         return ParsedCommit(
             bump=level_bump,

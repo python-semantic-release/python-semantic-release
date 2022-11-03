@@ -13,12 +13,12 @@ from semantic_release.cli.util import rprint
 log = logging.getLogger(__name__)
 
 
-@click.command()
+@click.command(short_help="Generate a changelog")
 # TODO: dry run?
 @click.pass_context
 def changelog(ctx: click.Context) -> None:
     """
-    This is the magic changelog function that writes out your beautiful changelog
+    Generate and optionally publish a changelog for your project
     """
     runtime = ctx.obj
     repo = runtime.repo

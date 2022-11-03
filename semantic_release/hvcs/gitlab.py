@@ -1,3 +1,6 @@
+"""
+Helper code for interacting with a Gitlab remote VCS
+"""
 import logging
 import mimetypes
 import os
@@ -61,7 +64,7 @@ class Gitlab(HvcsBase):
     @staticmethod
     def _domain_from_environment() -> Optional[str]:
         """
-        Use Gitlab-CI environment vars if available
+        Use Gitlab-CI environment varable to get the server domain, if available
         """
         if "CI_SERVER_URL" in os.environ:
             url = urlsplit(os.environ["CI_SERVER_URL"])
@@ -69,7 +72,10 @@ class Gitlab(HvcsBase):
         return os.getenv("CI_SERVER_HOST")
 
     def _get_repository_owner_and_name(self) -> Tuple[str, str]:
-        # Gitlab-CI context
+        """
+        Get the repository owner and name from GitLab CI environment variables, if
+        available, otherwise from parsing the remote url
+        """
         if "CI_PROJECT_NAMESPACE" in os.environ and "CI_PROJECT_NAME" in os.environ:
             log.debug("getting repository owner and name from environment variables")
             return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
@@ -78,8 +84,6 @@ class Gitlab(HvcsBase):
     @logged_function(log)
     def check_build_status(self, ref: str) -> bool:
         """Check last build status
-        :param owner: The owner namespace of the repository. It includes all groups and subgroups.
-        :param repo: The repository name
         :param ref: The sha1 hash of the commit ref
         :return: the status of the pipeline (False if a job failed)
         """
@@ -106,8 +110,6 @@ class Gitlab(HvcsBase):
     @logged_function(log)
     def create_release(self, tag: str, changelog: str) -> bool:
         """Post release changelog
-        :param owner: The owner namespace of the repository
-        :param repo: The repository name
         :param tag: Tag to create release for
         :param changelog: The release notes for this version
         :return: The status of the request
@@ -134,6 +136,9 @@ class Gitlab(HvcsBase):
             return False
 
     def remote_url(self, use_token: bool = True) -> str:
+        """
+        Get the remote url including the token for authentication if requested
+        """
         if not (self.token and use_token):
             return self._remote_url
         return f"https://gitlab-ci-token:{self.token}@{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"

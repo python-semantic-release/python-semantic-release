@@ -6,7 +6,9 @@ from requests.auth import AuthBase
 
 class TokenAuth(AuthBase):
     """
-    requests Authentication for token based authorization
+    requests Authentication for token based authorization.
+    This allows us to attach the Authorization header with
+    a token to a session.
     """
 
     def __init__(self, token: str) -> None:

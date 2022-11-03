@@ -2,6 +2,8 @@
 Angular commit style parser
 https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines
 """
+from __future__ import annotations
+
 import logging
 import re
 from typing import Tuple
@@ -32,6 +34,10 @@ LONG_TYPE_NAMES = {
 
 @dataclass
 class AngularParserOptions(ParserOptions):
+    """
+    Options dataclass for AngularCommitParser
+    """
+
     allowed_tags: Tuple[str, ...] = (
         "build",
         "chore",
@@ -50,6 +56,11 @@ class AngularParserOptions(ParserOptions):
 
 
 class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
+    """
+    A commit parser for projects conforming to the angular style of conventional
+    commits. See https://www.conventionalcommits.org/en/v1.0.0-beta.4/
+    """
+
     parser_options = AngularParserOptions
 
     def __init__(self, options: AngularParserOptions) -> None:
@@ -67,7 +78,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
 
     # TODO: maybe cache?
     def parse(self, commit: Commit) -> ParseResult:
-        # Attempt to parse the commit message with a regular expression
+        """
+        Attempt to parse the commit message with a regular expression into a
+        ParseResult
+        """
         message = str(commit.message)
         parsed = self.re_parser.match(message)
         if not parsed:

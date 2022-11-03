@@ -1,14 +1,14 @@
-"""Semantic Release
+"""Python Semantic Release
 """
-__version__ = "7.32.2"
-
 from typing import List
 
 from semantic_release.errors import (
+    CommitParseError as CommitParseError,
     InvalidConfiguration as InvalidConfiguration,
     SemanticReleaseBaseError as SemanticReleaseBaseError,
-    CommitParseError as CommitParseError,
 )
+
+__version__ = "7.32.2"
 
 
 def setup_hook(argv: List[str]) -> None:

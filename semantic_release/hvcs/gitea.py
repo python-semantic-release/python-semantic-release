@@ -1,3 +1,6 @@
+"""
+Helper code for interacting with a Gitea remote VCS
+"""
 import glob
 import logging
 import mimetypes
@@ -67,8 +70,6 @@ class Gitea(HvcsBase):
     def check_build_status(self, ref: str) -> bool:
         """Check build status
         https://gitea.com/api/swagger#/repository/repoCreateStatus
-        :param owner: The owner namespace of the repository
-        :param repo: The repository name
         :param ref: The sha1 hash of the commit ref
         :return: Was the build status success?
         """
@@ -86,10 +87,9 @@ class Gitea(HvcsBase):
     ) -> bool:
         """Create a new release
         https://gitea.com/api/swagger#/repository/repoCreateRelease
-        :param owner: The owner namespace of the repository
-        :param repo: The repository name
         :param tag: Tag to create release for
         :param changelog: The release notes for this version
+        :param prerelease: Whether or not this release should be specified as a prerelease
         :return: Whether the request succeeded
         """
         log.info("Creating release for tag %s", tag)
@@ -110,8 +110,6 @@ class Gitea(HvcsBase):
     def get_release_id_by_tag(self, tag: str) -> Optional[int]:
         """Get a release by its tag name
         https://gitea.com/api/swagger#/repository/repoGetReleaseByTag
-        :param owner: The owner namespace of the repository
-        :param repo: The repository name
         :param tag: Tag to get release for
         :return: ID of found release
         """
@@ -125,8 +123,6 @@ class Gitea(HvcsBase):
     def edit_release_changelog(self, release_id: int, changelog: str) -> bool:
         """Edit a release with updated change notes
         https://gitea.com/api/swagger#/repository/repoEditRelease
-        :param owner: The owner namespace of the repository
-        :param repo: The repository name
         :param id: ID of release to update
         :param changelog: The release notes for this version
         :return: Whether the request succeeded
@@ -141,8 +137,6 @@ class Gitea(HvcsBase):
     @logged_function(log)
     def create_or_update_release(self, tag: str, changelog: str) -> bool:
         """Post release changelog
-        :param owner: The owner namespace of the repository
-        :param repo: The repository name
         :param version: The version number
         :param changelog: The release notes for this version
         :return: The status of the request

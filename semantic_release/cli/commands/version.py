@@ -5,14 +5,13 @@ from typing import Optional
 import click
 
 from semantic_release.cli.config import RuntimeContext
-from semantic_release.cli.util import rprint
 from semantic_release.enums import LevelBump
 from semantic_release.version import next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
 
 
-@click.command()
+@click.command(short_help="Detect and apply a new version")
 @click.option(
     "--print", "print_only", is_flag=True, help="Print the next version and exit"
 )
@@ -22,9 +21,24 @@ log = logging.getLogger(__name__)
     is_flag=True,
     help="Force the next version to be a prerelease",
 )
-@click.option("--major", "force_level", flag_value="major")
-@click.option("--minor", "force_level", flag_value="minor")
-@click.option("--patch", "force_level", flag_value="patch")
+@click.option(
+    "--major",
+    "force_level",
+    flag_value="major",
+    help="force the next version to be a major release",
+)
+@click.option(
+    "--minor",
+    "force_level",
+    flag_value="minor",
+    help="force the next version to be a minor release",
+)
+@click.option(
+    "--patch",
+    "force_level",
+    flag_value="patch",
+    help="force the next version to be a patch release",
+)
 # A "--commit/--no-commit" option? Or is this better with the "--dry-run" flag?
 # how about push/no-push?
 @click.pass_context
@@ -35,8 +49,18 @@ def version(
     force_level: Optional[str] = None,
 ) -> None:
     """
-    This is the magic version function that gets the next version for you
-    and if you like, will write it to all the lovely files you configure.
+    Detect the semantically correct next version that should be applied to your
+    project.
+
+    \b
+    By default:
+      * Write this new version to the project metadata locations
+        specified in the configuration file
+      * Create a new commit with these locations and any other assets configured
+        to be included in a release
+      * Tag this commit according the configured format, with a tag that uniquely
+        identifies the version being released.
+      * Push the new tag and commit to the remote for the repository
     """
     runtime: RuntimeContext = ctx.obj
     repo = runtime.repo

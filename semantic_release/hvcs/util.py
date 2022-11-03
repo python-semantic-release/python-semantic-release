@@ -21,6 +21,7 @@ def build_requests_session(
     :param raise_for_status: If True, a hook to invoke raise_for_status be installed
     :param retry: If true, it will use default Retry configuration. if an integer, it will use default Retry
     configuration with given integer as total retry count. if Retry instance, it will use this instance.
+    :param auth: Optional TokenAuth instance to be used to provide the Authorization header to the session
     :return: configured requests Session
     """
     session = Session()
@@ -45,6 +46,11 @@ def build_requests_session(
 
 
 def suppress_http_error(func: Callable[..., bool]) -> Callable[..., bool]:
+    """
+    Suppress HTTP errors that are raised by a function call, converting them to return
+    False instead of erroring
+    """
+
     @wraps(func)
     def _wrapper(*a: Any, **kw: Any) -> bool:
         try:
@@ -62,7 +68,13 @@ _R = TypeVar("_R")
 def suppress_http_error_for_codes(
     *codes: int,
 ) -> Callable[[Callable[..., _R]], Callable[..., Optional[_R]]]:
-    def suppress_http_error_for_codes(
+    """
+    For the codes given, return a decorator that will suppress HTTPErrors that are
+    raised from responses that came with one of those status codes. The function will
+    return False instead of raising the HTTPError
+    """
+
+    def _suppress_http_error_for_codes(
         func: Callable[..., _R]
     ) -> Callable[..., Optional[_R]]:
         @wraps(func)
@@ -81,7 +93,7 @@ def suppress_http_error_for_codes(
 
         return _wrapper
 
-    return suppress_http_error_for_codes
+    return _suppress_http_error_for_codes
 
 
 suppress_not_found = suppress_http_error_for_codes(404)
