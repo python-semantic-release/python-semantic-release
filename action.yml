@@ -28,6 +28,12 @@ inputs:
   git_committer_email:
     description: 'The email address for the “committer” field'
     required: false
+  ssh_public_signing_key:
+    description: 'The ssh public key used to sign commits'
+    required: false
+  ssh_private_signing_key:
+    description: 'The ssh private key used to sign commits'
+    required: false
 
 runs:
   using: 'docker'
