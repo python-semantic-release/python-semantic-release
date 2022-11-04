@@ -56,6 +56,7 @@ Custom Users
 The name of the account used to commit. If customized, it must be associated with the provided token. 
 
 default: `github-actions`
+
 required: false
 
 .. _action-git-committer-email:
@@ -66,6 +67,7 @@ required: false
 The email of the account used to commit. If customized, it must be associated with the provided token. 
 
 default: `actions@github.com>`
+
 required: false
 
 .. _action-ssh-public-signing-key:
@@ -94,6 +96,7 @@ Additional Options
 ----------
 
 Sub-directory to cd into before running semantic-release
+
 required: false
 
 .. _action-additional-options:
