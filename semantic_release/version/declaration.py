@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import string
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Optional, Set, Union
@@ -140,6 +141,18 @@ class PatternVersionDeclaration(VersionDeclarationABC):
     provided in `search_text`.
     """
 
+    _VERSION_GROUP_NAME = "version"
+
+    def __init__(self, path: Union[Path, str], search_text: str) -> None:
+        super().__init__(path, search_text)
+        self.search_re = re.compile(self.search_text)
+        if self._VERSION_GROUP_NAME not in self.search_re.groupindex:
+            raise ValueError(
+                f"Invalid search text {self.search_text!r}; must use 'version' as a named group, "
+                "for example (?P<version>...) "
+                "For more info on named groups see https://docs.python.org/3/library/re.html"
+            )
+
     # The pattern should be a regular expression with a single group,
     # containing the version to replace.
     def parse(self) -> Set[Version]:
@@ -152,8 +165,8 @@ class PatternVersionDeclaration(VersionDeclarationABC):
         to check for this condition.
         """
         versions = {
-            Version.parse(m.group(1))
-            for m in re.finditer(self.search_text, self.content, re.MULTILINE)
+            Version.parse(m.group(self._VERSION_GROUP_NAME))
+            for m in self.search_re.finditer(self.content, re.MULTILINE)
         }
 
         log.debug(
@@ -179,14 +192,16 @@ class PatternVersionDeclaration(VersionDeclarationABC):
             s = m.string
             i, j = m.span()
             log.debug("match spans characters %s:%s", i, j)
-            ii, jj = m.span(1)
+            ii, jj = m.span(self._VERSION_GROUP_NAME)
             log.debug("version group spans characters %s:%s", ii, jj)
             return s[i:ii] + str(new_version) + s[jj:j]
 
-        new_content = re.sub(
-            self.search_text, swap_version, self.content, flags=re.MULTILINE
+        new_content, n_matches = self.search_re.subn(
+            swap_version, self.content, re.MULTILINE
         )
 
-        log.debug("path=%r pattern=%r num_matches=%r", self.path, self.search_text, n)
+        log.debug(
+            "path=%r pattern=%r num_matches=%r", self.path, self.search_text, n_matches
+        )
 
         return new_content

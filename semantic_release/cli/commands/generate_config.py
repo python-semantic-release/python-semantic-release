@@ -28,6 +28,6 @@ def generate_config(fmt: str = "toml") -> None:
     """
     config = RawConfig().dict(exclude_none=True)
     if fmt == "toml":
-        print(tomlkit.dumps({"tool": {"semantic_release": config}}))
+        click.echo(tomlkit.dumps({"tool": {"semantic_release": config}}))
     elif fmt == "json":
-        print(json.dumps({"semantic_release": config}, indent=4))
+        click.echo(json.dumps({"semantic_release": config}, indent=4))

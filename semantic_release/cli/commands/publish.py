@@ -5,7 +5,7 @@ import subprocess
 import click
 from twine.commands.upload import upload
 
-from semantic_release.cli.util import rprint
+from semantic_release.cli.util import noop_report
 from semantic_release.version import tags_and_versions
 
 log = logging.getLogger(__name__)
@@ -35,10 +35,7 @@ def publish(ctx: click.Context) -> None:
         )
 
     if runtime.global_cli_options.noop:
-        rprint(
-            "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
-            f"have run the build_command {build_command!r}"
-        )
+        noop_report(f"would have run the build_command {build_command!r}")
     else:
         try:
             log.info("Running build command %s", build_command)
@@ -47,9 +44,8 @@ def publish(ctx: click.Context) -> None:
             ctx.fail(str(exc))
 
     if runtime.global_cli_options.noop and upload_to_repository:
-        rprint(
-            "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
-            "have uploaded files matching any of the globs "
+        noop_report(
+            "would have uploaded files matching any of the globs "
             ", ".join(repr(g) for g in dist_glob_patterns) + " to your repository"
         )
     elif upload_to_repository:
@@ -58,9 +54,8 @@ def publish(ctx: click.Context) -> None:
 
     latest_tag = tags_and_versions(repo.tags, translator)[0][0]
     if upload_to_release and runtime.global_cli_options.noop:
-        rprint(
-            "[bold cyan]:shield: 'noop' mode is enabled, semantic-release would "
-            "have uploaded files matching any of the globs "
+        noop_report(
+            "would have uploaded files matching any of the globs "
             + ", ".join(repr(g) for g in dist_glob_patterns)
             + " to a remote VCS release, if supported"
         )

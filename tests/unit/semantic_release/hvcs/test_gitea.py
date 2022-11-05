@@ -1,6 +1,5 @@
 import base64
 import glob
-import mimetypes
 import os
 import re
 from unittest import mock
@@ -462,11 +461,13 @@ def test_edit_release_changelog(default_gitea_client, status_code, expected):
         (False, None, False, False),
     ],
 )
+@pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release(
     default_gitea_client,
     create_release_success,
     release_id,
     edit_release_success,
+    prerelease,
     expected,
 ):
     tag = "v1.0.0"
@@ -482,8 +483,11 @@ def test_create_or_update_release(
         mock_get_release_id_by_tag.return_value = release_id
         mock_edit_release_changelog.return_value = edit_release_success
         # client = Gitea(remote_url="git@gitea.com:something/somewhere.git")
-        assert default_gitea_client.create_or_update_release(tag, changelog) == expected
-        mock_create_release.assert_called_once_with(tag, changelog)
+        assert (
+            default_gitea_client.create_or_update_release(tag, changelog, prerelease)
+            == expected
+        )
+        mock_create_release.assert_called_once_with(tag, changelog, prerelease)
         if not create_release_success:
             mock_get_release_id_by_tag.assert_called_once_with(tag)
         if not create_release_success and release_id:

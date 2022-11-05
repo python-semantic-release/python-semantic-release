@@ -334,6 +334,16 @@ def test_remote_url(
     assert default_gl_client.remote_url(use_token=use_token) == expected
 
 
+def test_compare_url(default_gl_client):
+    assert default_gl_client.compare_url(
+        from_rev="revA", to_rev="revB"
+    ) == "https://{domain}/{owner}/{repo}/-/compare/revA...revB".format(
+        domain=default_gl_client.hvcs_domain,
+        owner=default_gl_client.owner,
+        repo=default_gl_client.repo_name,
+    )
+
+
 def test_commit_hash_url(default_gl_client):
     assert default_gl_client.commit_hash_url(
         REF

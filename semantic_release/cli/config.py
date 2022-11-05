@@ -6,6 +6,7 @@ import platform
 import re
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import twine.utils
@@ -17,6 +18,7 @@ from twine.settings import Settings as TwineSettings
 from typing_extensions import Literal
 
 from semantic_release.changelog import environment
+from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.commit_parser import (
     AngularCommitParser,
@@ -78,7 +80,7 @@ class ChangelogEnvironmentConfig(BaseModel):
 
 class ChangelogConfig(BaseModel):
     template_dir: str = "templates"
-    default_output_file: str = "CHANGELOG.md"
+    changelog_file: str = "CHANGELOG.md"
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
 
 
@@ -176,6 +178,8 @@ class GlobalCommandLineOptions:
     """
 
     noop: bool = False
+    verbosity: int = 0
+    config_file: str = DEFAULT_CONFIG_FILE
 
 
 ######
@@ -230,10 +234,10 @@ class RuntimeContext:
     commit_message: str
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: HvcsBase
+    changelog_file: Path
     ignore_token_for_push: bool
     template_environment: Environment
     template_dir: str
-    default_changelog_output_file: str
     build_command: str
     twine_settings: Optional[TwineSettings]
     dist_glob_patterns: Tuple[str, ...]
@@ -362,7 +366,7 @@ class RuntimeContext:
             try:
                 path, variable = decl.split(":", maxsplit=1)
                 # VersionDeclarationABC handles path existence check
-                search_text = rf"(?x){variable}\s*(:=|[:=])\s*(?P<quote>['\"]){SEMVER_REGEX.pattern}(?P=quote)"
+                search_text = rf"(?x){variable}\s*(:=|[:=])\s*(?P<quote>['\"])(?P<version>{SEMVER_REGEX.pattern})(?P=quote)"
                 pd = PatternVersionDeclaration(path, search_text)
             except ValueError as exc:
                 log.error("Invalid variable declaration %r", decl, exc_info=True)
@@ -393,6 +397,9 @@ class RuntimeContext:
             token_var=raw.remote.token_var or "",
         )
 
+        # changelog_file
+        changelog_file = Path(raw.changelog.changelog_file).resolve()
+
         template_environment = environment(
             template_dir=raw.changelog.template_dir, **raw.changelog.environment.dict()
         )
@@ -416,13 +423,13 @@ class RuntimeContext:
             build_command=raw.build_command,
             version_declarations=tuple(version_declarations),
             hvcs_client=hvcs_client,
+            changelog_file=changelog_file,
             assets=raw.assets,
             commit_message=raw.commit_message,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,
             template_dir=raw.changelog.template_dir,
             template_environment=template_environment,
-            default_changelog_output_file=raw.changelog.default_output_file,
             twine_settings=twine_settings,
             dist_glob_patterns=raw.upload.dist_glob_patterns,
             upload_to_repository=raw.upload.upload_to_repository,

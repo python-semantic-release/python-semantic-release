@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Union
+from typing import Callable, Iterable, List, Optional, Union
 
 from jinja2 import Environment, FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
@@ -70,7 +70,7 @@ def environment(
 # pylint: disable=redefined-outer-name
 def recursive_render(
     template_dir: str, environment: Environment, _root_dir: str = "."
-) -> None:
+) -> List[str]:
     for root, file in (
         (root, file)
         for root, _, files in os.walk(template_dir)
@@ -78,6 +78,7 @@ def recursive_render(
         if not any(elem.startswith(".") for elem in root.split(os.sep))
         and not file.startswith(".")
     ):
+        rendered_paths = []
         src_path = Path(root)
         output_path = (_root_dir / src_path.relative_to(template_dir)).resolve()
         log.info("Rendering templates from %s to %s", src_path, output_path)
@@ -96,6 +97,8 @@ def recursive_render(
                 str((output_path / output_filename).resolve()), "wb+"
             ) as output_file:
                 stream.dump(output_file, encoding="utf-8")
+
+            rendered_paths.append(output_file_path)
         else:
             src_file = str((src_path / file).resolve())
             target_file = str((output_path / file).resolve())
@@ -103,6 +106,8 @@ def recursive_render(
                 "source file %s is not a template, copying to %s", src_file, target_file
             )
             shutil.copyfile(src_file, target_file)
+            rendered_paths.append(target_file)
+    return rendered_paths
 
 
 # To avoid confusion on import

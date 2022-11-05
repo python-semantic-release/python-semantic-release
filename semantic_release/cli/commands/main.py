@@ -17,6 +17,7 @@ from semantic_release.cli.config import (
     RawConfig,
     RuntimeContext,
 )
+from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint
 from semantic_release.errors import InvalidConfiguration
 
@@ -43,6 +44,20 @@ def _read_toml(path: str) -> Dict[str, Any]:
         # "ignore_unknown_options": True,
     },
 )
+@click.version_option(
+    version=semantic_release.__version__,
+    prog_name="semantic-release",
+    help="Show the version of semantic-release and exit",
+)
+@click.option(
+    "-c",
+    "--config",
+    "config_file",
+    default=DEFAULT_CONFIG_FILE,
+    help="Specify a configuration file for semantic-release to use",
+    type=click.Path(exists=True),
+)
+@click.option("--noop", "noop", is_flag=True, help="Run semantic-release in no-op mode")
 @click.option(
     "-v",
     "--verbosity",
@@ -53,23 +68,10 @@ def _read_toml(path: str) -> Dict[str, Any]:
     show_default=True,
     type=click.IntRange(0, 2, clamp=True),
 )
-@click.version_option(
-    version=semantic_release.__version__,
-    prog_name="semantic-release",
-    help="Show the version of semantic-release and exit",
-)
-@click.option(
-    "-c",
-    "--config",
-    "config_file",
-    help="Specify a configuration file for semantic-release to use",
-    type=click.Path(exists=True),
-)
-@click.option("--noop", "noop", is_flag=True, help="Run semantic-release in no-op mode")
 @click.pass_context
 def main(
     ctx: click.Context,
-    config_file: Optional[str] = None,
+    config_file: str = DEFAULT_CONFIG_FILE,
     verbosity: int = 0,
     noop: bool = False,
 ) -> None:
@@ -95,7 +97,11 @@ def main(
         level=log_level,
         format=FORMAT,
         datefmt="[%X]",
-        handlers=[RichHandler(console=console, rich_tracebacks=True, tracebacks_suppress=[click])],
+        handlers=[
+            RichHandler(
+                console=console, rich_tracebacks=True, tracebacks_suppress=[click]
+            )
+        ],
     )
 
     log = logging.getLogger(__name__)
@@ -117,7 +123,9 @@ def main(
             ":shield: [bold cyan]You are running in no-operation mode, because the "
             "'--noop' flag was supplied"
         )
-    cli_options = GlobalCommandLineOptions(noop=noop)
+    cli_options = GlobalCommandLineOptions(
+        noop=noop, verbosity=verbosity, config_file=config_file
+    )
 
     try:
         if config_file and config_file.endswith(".toml"):
@@ -130,9 +138,6 @@ def main(
         elif config_file:
             *_, suffix = config_file.split(".")
             ctx.fail(f"{suffix!r} is not a supported configuration format")
-        else:
-            log.info("no config file specified, loading TOML configuration from pyproject.toml")
-            config_text = _read_toml("pyproject.toml")
     except (FileNotFoundError, InvalidConfiguration) as exc:
         ctx.fail(str(exc))
 

@@ -157,7 +157,7 @@ patch_tags = ["fix", "perf"]
 
 [tool.semantic_release.changelog]
 template_dir = "templates"
-default_output_file = "CHANGELOG.md"
+changelog_file = "CHANGELOG.md"
 
 [tool.semantic_release.changelog.environment]
 block_start_string = "{%"
@@ -181,7 +181,7 @@ prerelease_token = "rc"
 [tool.semantic_release.branches."8.0.x"]
 match = "8.0.x"
 prerelease = true
-prerelease_token = "rc"
+prerelease_token = "alpha"
 
 [tool.semantic_release.remote]
 name = "origin"

@@ -135,14 +135,16 @@ class Gitea(HvcsBase):
         return True
 
     @logged_function(log)
-    def create_or_update_release(self, tag: str, changelog: str) -> bool:
+    def create_or_update_release(
+        self, tag: str, changelog: str, prerelease: bool = False
+    ) -> bool:
         """Post release changelog
         :param version: The version number
         :param changelog: The release notes for this version
         :return: The status of the request
         """
         log.info("Creating release for %s", tag)
-        success = self.create_release(tag, changelog)
+        success = self.create_release(tag, changelog, prerelease)
 
         if not success:
             log.debug("Unsuccessful, looking for an existing release to update")

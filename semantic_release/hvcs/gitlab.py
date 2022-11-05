@@ -108,10 +108,13 @@ class Gitlab(HvcsBase):
         return True
 
     @logged_function(log)
-    def create_release(self, tag: str, changelog: str) -> bool:
+    def create_release(
+        self, tag: str, changelog: str, prerelease: bool = False
+    ) -> bool:
         """Post release changelog
         :param tag: Tag to create release for
         :param changelog: The release notes for this version
+        :param prerelease: This parameter has no effect
         :return: The status of the request
         """
         client = gitlab.Gitlab(self.api_url, private_token=self.token)
@@ -134,6 +137,9 @@ class Gitlab(HvcsBase):
                 self.repo_name,
             )
             return False
+
+    def compare_url(self, from_rev: str, to_rev: str) -> str:
+        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/compare/{from_rev}...{to_rev}"
 
     def remote_url(self, use_token: bool = True) -> str:
         """

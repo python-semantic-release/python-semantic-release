@@ -1,10 +1,16 @@
 import logging
 import os
+from textwrap import dedent, indent
 from typing import Optional
 
 import click
 
-from semantic_release.cli.config import RuntimeContext
+# NOTE: use backport with newer API than stdlib
+from importlib_resources import files
+
+from semantic_release.changelog import recursive_render, release_history
+from semantic_release.changelog.context import make_changelog_context
+from semantic_release.cli.util import noop_report
 from semantic_release.enums import LevelBump
 from semantic_release.version import next_version, tags_and_versions
 
@@ -39,15 +45,41 @@ log = logging.getLogger(__name__)
     flag_value="patch",
     help="force the next version to be a patch release",
 )
-# A "--commit/--no-commit" option? Or is this better with the "--dry-run" flag?
-# how about push/no-push?
+@click.option(
+    "--commit/--no-commit",
+    "commit_changes",
+    default=True,
+    help="Whether or not to commit changes locally",
+)
+@click.option(
+    "--changelog/--no-changelog",
+    "update_changelog",
+    default=True,
+    help="Whether or not to update the changelog",
+)
+@click.option(
+    "--push/--no-push",
+    "push_changes",
+    default=True,
+    help="Whether or not to push the new commit and tag to the remote",
+)
+@click.option(
+    "--vcs-release/--no-vcs-release",
+    "make_vcs_release",
+    default=True,
+    help="Whether or not to create a release in the remote VCS, if supported",
+)
 @click.pass_context
 def version(
     ctx: click.Context,
     print_only: bool = False,
     force_prerelease: bool = False,
     force_level: Optional[str] = None,
-) -> None:
+    commit_changes: bool = True,
+    update_changelog: bool = True,
+    push_changes: bool = True,
+    make_vcs_release: bool = True,
+) -> str:
     """
     Detect the semantically correct next version that should be applied to your
     project.
@@ -61,15 +93,26 @@ def version(
       * Tag this commit according the configured format, with a tag that uniquely
         identifies the version being released.
       * Push the new tag and commit to the remote for the repository
+      * Create a release (if supported) in the remote VCS for this tag
     """
-    runtime: RuntimeContext = ctx.obj
+    runtime = ctx.obj
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
     prerelease = force_prerelease or runtime.prerelease
+    hvcs_client = runtime.hvcs_client
+    changelog_file = runtime.changelog_file
+    env = runtime.template_environment
+    template_dir = runtime.template_dir
     assets = runtime.assets
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
+    opts = runtime.global_cli_options
+
+    # Only push if we're committing changes
+    if push_changes and not commit_changes:
+        log.warning("")
+    # Only make a release if we're pushing the changes
 
     if force_prerelease:
         log.warning("Forcing prerelease due to '--prerelease' command-line flag")
@@ -98,32 +141,135 @@ def version(
             major_on_zero=major_on_zero,
         )
     # TODO: if it's already the same/released?
-    print(str(v))
-    if print_only or runtime.global_cli_options.noop:
+    click.echo(str(v))
+    if print_only:
         ctx.exit(0)
-
-    for declaration in runtime.version_declarations:
-        new_content = declaration.replace(new_version=v)
-        declaration.path.write_text(new_content)
 
     working_dir = os.getcwd() if repo.working_dir is None else repo.working_dir
 
     paths = [
-        declaration.path.resolve().relative_to(working_dir)
+        str(declaration.path.resolve().relative_to(working_dir))
         for declaration in runtime.version_declarations
     ]
-    log.debug("versions declared in: %s", ", ".join(str(path) for path in paths))
-    repo.git.add(paths)
-    if assets:
-        repo.git.add(assets)
+    log.debug("versions declared in: %s", ", ".join(paths))
+    if opts.noop:
+        noop_report(
+            "would have updated versions in the following paths:"
+            + "".join(f"\n    {path}" for path in paths)
+        )
+    else:
+        for declaration in runtime.version_declarations:
+            new_content = declaration.replace(new_version=v)
+            declaration.path.write_text(new_content)
 
-    repo.git.commit(m=commit_message.format(version=v))
+    if commit_changes and opts.noop:
+        all_paths_to_add = paths + (assets if assets else [])
+        # Indents the newlines so that terminal formatting is happy - note the
+        # git commit line of the output is 24 spaces indented too
+        # Only this message needs such special handling because of the newlines
+        # that might be in a commit message between the subject and body
+        indented_commit_message = commit_message.format(version=v).replace(
+            "\n\n", "\n\n" + " " * 24
+        )
+        noop_report(
+            indent(
+                dedent(
+                    f"""
+                    would have run:
+                        git add {" ".join(all_paths_to_add)}
+                        git commit -m "{indented_commit_message}"
+                    """
+                ),
+                prefix=" " * 4,
+            )
+        )
+    elif commit_changes:
+        repo.git.add(paths)
+        if assets:
+            repo.git.add(assets)
 
-    repo.git.tag("-a", v.as_tag(), m=v.as_tag())
+        repo.git.commit(m=commit_message.format(version=v))
 
-    remote_url = runtime.hvcs_client.remote_url(
-        use_token=not runtime.ignore_token_for_push
-    )
-    # Wrap in GitCommandError handling - remove token
-    repo.git.push(remote_url, repo.active_branch.name)
-    repo.git.push("--tags", remote_url, repo.active_branch.name)
+        repo.git.tag("-a", v.as_tag(), m=v.as_tag())
+
+    if update_changelog:
+        rh = release_history(repo=repo, translator=translator, commit_parser=parser)
+        changelog_context = make_changelog_context(
+            hvcs_client=hvcs_client, release_history=rh
+        )
+        changelog_context.bind_to_environment(env)
+
+        if not os.path.exists(template_dir):
+            log.info(
+                "Path %r not found, using default changelog template", template_dir
+            )
+            changelog_text = (
+                files("semantic_release")
+                .joinpath("data/templates/CHANGELOG.md.j2")
+                .read_text(encoding="utf-8")
+            )
+            tmpl = env.from_string(changelog_text).stream()
+            if opts.noop:
+                noop_report(
+                    f"would have written your changelog to {changelog_file.relative_to(repo.working_dir)}"
+                )
+                ctx.exit(0)
+            with open(str(changelog_file), "w+", encoding="utf-8") as f:
+                tmpl.dump(f)
+
+            updated_paths = [changelog_file]
+        else:
+            if opts.noop:
+                noop_report(
+                    f"would have recursively rendered the template directory "
+                    f"{template_dir!r} relative to {repo.working_dir!r}"
+                )
+                ctx.exit(0)
+            updated_paths = recursive_render(
+                template_dir, environment=env, _root_dir=repo.working_dir
+            )
+
+        if commit_changes and opts.noop:
+            noop_report(
+                dedent(
+                    f"""
+                    would have run:
+                        git add {" ".join(updated_paths)}
+                        git commit --amend --no-edit
+                    """
+                )
+            )
+        if commit_changes:
+            repo.git.add(updated_paths)
+            repo.git.commit("--amend", "--no-edit")
+
+    if push_changes:
+        remote_url = runtime.hvcs_client.remote_url(
+            use_token=not runtime.ignore_token_for_push
+        )
+        active_branch = repo.active_branch.name
+        if opts.noop:
+            noop_report(
+                dedent(
+                    f"""
+                    would have run:
+                        git push {runtime.masker.mask(remote_url)} {active_branch}
+                        git push --tags {runtime.masker.mask(remote_url)} {active_branch}
+                    """
+                )
+            )
+        else:
+            # Wrap in GitCommandError handling - remove token
+            repo.git.push(remote_url, active_branch)
+            repo.git.push("--tags", remote_url, active_branch)
+
+    if make_vcs_release and opts.noop:
+        noop_report(f"would have created a release for the tag {v.as_tag()!r}")
+    elif make_vcs_release:
+        hvcs_client.create_or_update_release(
+            tag=v.as_tag(),
+            changelog=changelog_file.read_text(encoding="utf-8"),
+            prerelease=v.is_prerelease,
+        )
+
+    return str(v)
