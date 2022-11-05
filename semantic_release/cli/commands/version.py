@@ -111,8 +111,12 @@ def version(
 
     # Only push if we're committing changes
     if push_changes and not commit_changes:
-        log.warning("")
+        log.info("changes will not be pushed because --no-commit disables pushing")
+        push_changes &= commit_changes
     # Only make a release if we're pushing the changes
+    if make_vcs_release and not push_changes:
+        log.info("No vcs release will be created because pushing changes is disabled")
+        make_vcs_release &= push_changes
 
     if force_prerelease:
         log.warning("Forcing prerelease due to '--prerelease' command-line flag")
@@ -187,6 +191,9 @@ def version(
         repo.git.add(paths)
         if assets:
             repo.git.add(assets)
+
+        if not repo.index.diff("HEAD"):
+            ctx.fail("No files were changed by the version update")
 
         repo.git.commit(m=commit_message.format(version=v))
 

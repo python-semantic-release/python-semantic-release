@@ -186,7 +186,8 @@ prerelease_token = "alpha"
 [tool.semantic_release.remote]
 name = "origin"
 type = "github"
-ignore_token_for_push = false
+ignore_token_for_push = true
+token_var = "GH_TOKEN"
 
 [tool.semantic_release.upload]
 dist_glob_patterns = ["dist/*"]
