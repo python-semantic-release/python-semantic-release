@@ -8,7 +8,7 @@ from semantic_release.errors import (
     SemanticReleaseBaseError as SemanticReleaseBaseError,
 )
 
-__version__ = "7.32.2"
+__version__ = "8.0.0-alpha.1"
 
 
 def setup_hook(argv: List[str]) -> None:
