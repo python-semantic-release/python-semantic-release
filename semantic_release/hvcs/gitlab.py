@@ -109,11 +109,11 @@ class Gitlab(HvcsBase):
 
     @logged_function(log)
     def create_release(
-        self, tag: str, changelog: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False
     ) -> bool:
         """Post release changelog
         :param tag: Tag to create release for
-        :param changelog: The release notes for this version
+        :param release_notes: The release notes for this version
         :param prerelease: This parameter has no effect
         :return: The status of the request
         """
@@ -125,7 +125,7 @@ class Gitlab(HvcsBase):
                 {
                     "name": "Release " + tag,
                     "tag_name": tag,
-                    "description": changelog,
+                    "description": release_notes,
                 }
             )
             return True

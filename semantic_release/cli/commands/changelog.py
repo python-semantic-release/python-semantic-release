@@ -68,8 +68,19 @@ def changelog(ctx: click.Context, release_tag: Optional[str] = None) -> None:
     if release_tag and runtime.global_cli_options.noop:
         noop_report(f"would have posted changelog to the release for tag {release_tag}")
     elif release_tag:
-        changelog = changelog_file.read_text(encoding="utf-8")
+        v = translator.from_tag(release_tag)
+        try:
+            release = rh.released[v]
+        except KeyError:
+            ctx.fail(f"tag {release_tag} not in release history")
+
+        release_template = (
+            files("semantic_release")
+            .joinpath("data/templates/release_notes.md.j2")
+            .read_text(encoding="utf-8")
+        )
+        release_notes = env.from_string(release_template).render(version=v, release=release)
         version = translator.from_tag(release_tag)
         hvcs_client.create_or_update_release(
-            release_tag, changelog, prerelease=version.is_prerelease
+            release_tag, release_notes, prerelease=version.is_prerelease
         )

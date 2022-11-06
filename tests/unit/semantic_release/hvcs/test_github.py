@@ -334,12 +334,14 @@ def test_check_build_status(default_gh_client, resp_payload, status_code, expect
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_release(default_gh_client, status_code, prerelease, expected):
     tag = "v1.0.0"
-    changelog = "# TODO: Changelog"
+    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
             "POST", github_api_matcher, json={"status": "ok"}, status_code=status_code
         )
-        assert default_gh_client.create_release(tag, changelog, prerelease) == expected
+        assert (
+            default_gh_client.create_release(tag, release_notes, prerelease) == expected
+        )
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
@@ -354,7 +356,7 @@ def test_create_release(default_gh_client, status_code, prerelease, expected):
         assert m.last_request.json() == {
             "tag_name": tag,
             "name": tag,
-            "body": changelog,
+            "body": release_notes,
             "draft": False,
             "prerelease": prerelease,
         }
@@ -365,13 +367,13 @@ def test_should_create_release_using_token_or_netrc(default_gh_client, token):
     default_gh_client.token = token
     default_gh_client.session.auth = None if not token else TokenAuth(token)
     tag = "v1.0.0"
-    changelog = "# TODO: Changelog"
+    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m, netrc_file(
         machine=default_gh_client.DEFAULT_API_DOMAIN
     ) as netrc, mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True):
 
         m.register_uri("POST", github_api_matcher, json={}, status_code=201)
-        assert default_gh_client.create_release(tag, changelog)
+        assert default_gh_client.create_release(tag, release_notes)
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
@@ -399,7 +401,7 @@ def test_should_create_release_using_token_or_netrc(default_gh_client, token):
         assert m.last_request.json() == {
             "tag_name": tag,
             "name": tag,
-            "body": changelog,
+            "body": release_notes,
             "draft": False,
             "prerelease": False,
         }
@@ -411,7 +413,7 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
 
         with requests_mock.Mocker(session=client.session) as m:
             m.register_uri("POST", github_api_matcher, json={}, status_code=201)
-            assert client.create_release("v1.0.0", "# TODO: Changelog")
+            assert client.create_release("v1.0.0", "# TODO: Release Notes")
             assert m.called
             assert len(m.request_history) == 1
             assert m.last_request.method == "POST"
@@ -437,12 +439,12 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
         (503, False),
     ],
 )
-def test_edit_release_changelog(default_gh_client, status_code, expected):
+def test_edit_release_notes(default_gh_client, status_code, expected):
     release_id = 420
-    changelog = "# TODO: Changelog"
+    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri("POST", github_api_matcher, json={}, status_code=status_code)
-        assert default_gh_client.edit_release_changelog(420, changelog) == expected
+        assert default_gh_client.edit_release_notes(420, release_notes) == expected
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
@@ -455,7 +457,7 @@ def test_edit_release_changelog(default_gh_client, status_code, expected):
                 release_id=release_id,
             )
         )
-        assert m.last_request.json() == {"body": changelog}
+        assert m.last_request.json() == {"body": release_notes}
 
 
 @pytest.mark.parametrize(
@@ -512,29 +514,29 @@ def test_create_or_update_release(
     expected,
 ):
     tag = "v1.0.0"
-    changelog = "# TODO: Changelog"
+    release_notes = "# TODO: Release Notes"
     with mock.patch.object(
         default_gh_client, "create_release"
     ) as mock_create_release, mock.patch.object(
         default_gh_client, "get_release_id_by_tag"
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "edit_release_changelog"
-    ) as mock_edit_release_changelog:
+        default_gh_client, "edit_release_notes"
+    ) as mock_edit_release_notes:
         mock_create_release.return_value = create_release_success
         mock_get_release_id_by_tag.return_value = release_id
-        mock_edit_release_changelog.return_value = edit_release_success
+        mock_edit_release_notes.return_value = edit_release_success
         # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
-            default_gh_client.create_or_update_release(tag, changelog, prerelease)
+            default_gh_client.create_or_update_release(tag, release_notes, prerelease)
             == expected
         )
-        mock_create_release.assert_called_once_with(tag, changelog, prerelease)
+        mock_create_release.assert_called_once_with(tag, release_notes, prerelease)
         if not create_release_success:
             mock_get_release_id_by_tag.assert_called_once_with(tag)
         if not create_release_success and release_id:
-            mock_edit_release_changelog.assert_called_once_with(release_id, changelog)
+            mock_edit_release_notes.assert_called_once_with(release_id, release_notes)
         elif not create_release_success and not release_id:
-            mock_edit_release_changelog.assert_not_called()
+            mock_edit_release_notes.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -559,7 +561,9 @@ def test_upload_asset(default_gh_client, example_changelog_md, status_code, expe
         )
         assert (
             default_gh_client.upload_asset(
-                release_id=release_id, file=example_changelog_md.resolve(), label=label
+                release_id=release_id,
+                file=example_changelog_md.resolve(),
+                label=label,
             )
             == expected
         )

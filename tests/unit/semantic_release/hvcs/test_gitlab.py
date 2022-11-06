@@ -103,7 +103,7 @@ class _GitlabProject:
             def __init__(self, locked=False):
                 self.locked = locked
 
-            def set_release_description(self, changelog):
+            def set_release_description(self, release_notes):
                 if self.locked:
                     raise gitlab.exceptions.GitlabUpdateError
 
@@ -390,6 +390,6 @@ def test_check_build_status(default_gl_client, status, expected):
     ],
 )
 def test_create_release(default_gl_client, tag, expected):
-    changelog = "# TODO: Changelog"
+    release_notes = "# TODO: Release Notes"
     with mock_gitlab():
-        assert default_gl_client.create_release(tag, changelog) == expected
+        assert default_gl_client.create_release(tag, release_notes) == expected

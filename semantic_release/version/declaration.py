@@ -72,7 +72,7 @@ class VersionDeclarationABC(ABC):
         """
 
     def write(self, content: str) -> None:
-        """
+        r"""
         Write new content back to the source path.
         Use alongside .replace():
         >>> class MyVD(VersionDeclarationABC):
@@ -145,7 +145,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
 
     def __init__(self, path: Union[Path, str], search_text: str) -> None:
         super().__init__(path, search_text)
-        self.search_re = re.compile(self.search_text)
+        self.search_re = re.compile(self.search_text, flags=re.MULTILINE)
         if self._VERSION_GROUP_NAME not in self.search_re.groupindex:
             raise ValueError(
                 f"Invalid search text {self.search_text!r}; must use 'version' as a named group, "

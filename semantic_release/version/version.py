@@ -314,7 +314,8 @@ class Version:
         if self.patch != other.patch:
             return self.patch > other.patch
         # If just one is a prerelease, then self > other if other is the prerelease
-        if self.is_prerelease ^ other.is_prerelease:
+        # If neither are prereleases then they're equal (so return False)
+        if not (self.is_prerelease and other.is_prerelease):
             return other.is_prerelease
         # If both are prereleases...
         # According to the semver spec 11.4 there are many other rules for

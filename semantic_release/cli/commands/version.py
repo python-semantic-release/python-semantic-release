@@ -69,6 +69,12 @@ log = logging.getLogger(__name__)
     default=True,
     help="Whether or not to create a release in the remote VCS, if supported",
 )
+@click.option(
+    "--build-metadata",
+    "build_metadata",
+    default=os.getenv("PSR_BUILD_METADATA"),
+    help="Build metadata to append to the latest version",
+)
 @click.pass_context
 def version(
     ctx: click.Context,
@@ -79,6 +85,7 @@ def version(
     update_changelog: bool = True,
     push_changes: bool = True,
     make_vcs_release: bool = True,
+    build_metadata: Optional[str] = None,
 ) -> str:
     """
     Detect the semantically correct next version that should be applied to your
@@ -144,6 +151,10 @@ def version(
             prerelease=prerelease,
             major_on_zero=major_on_zero,
         )
+
+    if build_metadata:
+        v.build_metadata = build_metadata
+
     # TODO: if it's already the same/released?
     click.echo(str(v))
     if print_only:
@@ -199,12 +210,13 @@ def version(
 
         repo.git.tag("-a", v.as_tag(), m=v.as_tag())
 
+    rh = release_history(repo=repo, translator=translator, commit_parser=parser)
+    changelog_context = make_changelog_context(
+        hvcs_client=hvcs_client, release_history=rh
+    )
+    changelog_context.bind_to_environment(env)
+
     if update_changelog:
-        rh = release_history(repo=repo, translator=translator, commit_parser=parser)
-        changelog_context = make_changelog_context(
-            hvcs_client=hvcs_client, release_history=rh
-        )
-        changelog_context.bind_to_environment(env)
 
         if not os.path.exists(template_dir):
             log.info(
@@ -270,12 +282,20 @@ def version(
             repo.git.push(remote_url, active_branch)
             repo.git.push("--tags", remote_url, active_branch)
 
+    release = rh.released[v]
+    release_template = (
+        files("semantic_release")
+        .joinpath("data/templates/release_notes.md.j2")
+        .read_text(encoding="utf-8")
+    )
+    release_notes = env.from_string(release_template).render(version=v, release=release)
     if make_vcs_release and opts.noop:
         noop_report(f"would have created a release for the tag {v.as_tag()!r}")
+        log.info("Release notes: %s", release_notes)
     elif make_vcs_release:
         hvcs_client.create_or_update_release(
             tag=v.as_tag(),
-            changelog=changelog_file.read_text(encoding="utf-8"),
+            release_notes=release_notes,
             prerelease=v.is_prerelease,
         )
 

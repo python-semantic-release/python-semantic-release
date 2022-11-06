@@ -108,12 +108,12 @@ class Github(HvcsBase):
     @logged_function(log)
     @suppress_http_error
     def create_release(
-        self, tag: str, changelog: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False
     ) -> bool:
         """Create a new release
         https://docs.github.com/rest/reference/repos#create-a-release
         :param tag: Tag to create release for
-        :param changelog: The release notes for this version
+        :param release_notes: The release notes for this version
         :param prerelease: Whether or not this release should be created as a prerelease
         :return: Whether the request succeeded
         """
@@ -123,7 +123,7 @@ class Github(HvcsBase):
             json={
                 "tag_name": tag,
                 "name": tag,
-                "body": changelog,
+                "body": release_notes,
                 "draft": False,
                 "prerelease": prerelease,
             },
@@ -145,42 +145,42 @@ class Github(HvcsBase):
 
     @logged_function(log)
     @suppress_http_error
-    def edit_release_changelog(
+    def edit_release_notes(
         self,
         release_id: int,
-        changelog: str,
+        release_notes: str,
     ) -> bool:
         """Edit a release with updated change notes
         https://docs.github.com/rest/reference/repos#update-a-release
         :param id: ID of release to update
-        :param changelog: The release notes for this version
+        :param release_notes: The release notes for this version
         :return: Whether the request succeeded
         """
         log.info("Updating release %s", release_id)
         self.session.post(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
-            json={"body": changelog},
+            json={"body": release_notes},
         )
         return True
 
     @logged_function(log)
     def create_or_update_release(
-        self, tag: str, changelog: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False
     ) -> bool:
         """Post release changelog
         :param version: The version number
-        :param changelog: The release notes for this version
+        :param release_notes: The release notes for this version
         :return: The status of the request
         """
         log.info("Creating release for %s", tag)
-        success = self.create_release(tag, changelog, prerelease)
+        success = self.create_release(tag, release_notes, prerelease)
 
         if not success:
             log.debug("Unsuccessful, looking for an existing release to update")
             release_id = self.get_release_id_by_tag(tag)
             if release_id:
                 log.debug("Found existing release %s, updating", release_id)
-                success = self.edit_release_changelog(release_id, changelog)
+                success = self.edit_release_notes(release_id, release_notes)
             else:
                 log.debug("Existing release not found")
 
