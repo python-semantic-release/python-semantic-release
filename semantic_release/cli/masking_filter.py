@@ -35,21 +35,24 @@ class MaskingFilter(logging.Filter):
         return self
 
     def filter(self, record: logging.LogRecord) -> bool:
+        # Note if we blindly mask all types, we will actually cast arguments to
+        # log functions from external libraries to strings before they are
+        # formatted into the message - for example, a dependency calling
+        # log.debug("%d", 15) will raise a TypeError as this filter would
+        # otherwise convert 15 to "15", and "%d" % "15" raises the error.
+        # One may find a specific example of where this issue could manifest itself
+        # here: https://github.com/urllib3/urllib3/blob/a5b29ac1025f9bb30f2c9b756f3b171389c2c039/src/urllib3/connectionpool.py#L1003
+        # Anything which could reasonably be expected to be logged without being
+        # cast to a string should be excluded from the cast here.
         record.msg = self.mask(record.msg)
         if record.args is None:
             pass
         elif isinstance(record.args, dict):
-            record.args = {k: self.mask(str(v)) for k, v in record.args.items()}
+            record.args = {
+                k: v if type(v) in (bool, int, float) else self.mask(str(v))
+                for k, v in record.args.items()
+            }
         else:
-            # Note if we blindly mask all types, we will actually cast arguments to
-            # log functions from external libraries to strings before they are
-            # formatted into the message - for example, a dependency calling
-            # log.debug("%d", 15) will raise a TypeError as this filter would
-            # otherwise convert 15 to "15", and "%d" % "15" raises the error.
-            # One may find a specific example of where this issue could manifest itself
-            # here: https://github.com/urllib3/urllib3/blob/a5b29ac1025f9bb30f2c9b756f3b171389c2c039/src/urllib3/connectionpool.py#L1003
-            # Anything which could reasonably be expected to be logged without being
-            # cast to a string should be excluded from the cast here.
             record.args = tuple(
                 arg if type(arg) in (bool, int, float) else self.mask(str(arg))
                 for arg in record.args
