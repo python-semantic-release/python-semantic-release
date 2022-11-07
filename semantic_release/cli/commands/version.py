@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import logging
 import os
 from textwrap import dedent, indent
-from typing import Optional
 
 import click
 
@@ -80,12 +81,12 @@ def version(
     ctx: click.Context,
     print_only: bool = False,
     force_prerelease: bool = False,
-    force_level: Optional[str] = None,
+    force_level: str | None = None,
     commit_changes: bool = True,
     update_changelog: bool = True,
     push_changes: bool = True,
     make_vcs_release: bool = True,
-    build_metadata: Optional[str] = None,
+    build_metadata: str | None = None,
 ) -> str:
     """
     Detect the semantically correct next version that should be applied to your

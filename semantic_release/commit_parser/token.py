@@ -1,4 +1,6 @@
-from typing import List, NamedTuple, NoReturn, TypeVar, Union
+from __future__ import annotations
+
+from typing import NamedTuple, NoReturn, TypeVar, Union
 
 from git.objects.commit import Commit
 
@@ -10,8 +12,8 @@ class ParsedCommit(NamedTuple):
     bump: LevelBump
     type: str
     scope: str
-    descriptions: List[str]
-    breaking_descriptions: List[str]
+    descriptions: list[str]
+    breaking_descriptions: list[str]
     commit: Commit
 
 

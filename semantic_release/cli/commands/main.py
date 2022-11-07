@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import click
 import tomlkit
@@ -24,7 +26,7 @@ from semantic_release.errors import InvalidConfiguration
 FORMAT = "[%(module)s:%(funcName)s]: %(message)s"
 
 
-def _read_toml(path: str) -> Dict[str, Any]:
+def _read_toml(path: str) -> dict[str, Any]:
     raw_text = (Path() / path).resolve().read_text(encoding="utf-8")
     try:
         toml_text = tomlkit.loads(raw_text)

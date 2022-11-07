@@ -1,11 +1,12 @@
 """
 Helper code for interacting with a GitHub remote VCS
 """
+from __future__ import annotations
+
 import glob
 import logging
 import mimetypes
 import os
-from typing import Optional, Tuple, Union
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
@@ -43,8 +44,8 @@ class Github(HvcsBase):
     def __init__(
         self,
         remote_url: str,
-        hvcs_domain: Optional[str] = None,
-        hvcs_api_domain: Optional[str] = None,
+        hvcs_domain: str | None = None,
+        hvcs_api_domain: str | None = None,
         token_var: str = "GH_TOKEN",
     ) -> None:
 
@@ -69,7 +70,7 @@ class Github(HvcsBase):
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
 
-    def _get_repository_owner_and_name(self) -> Tuple[str, str]:
+    def _get_repository_owner_and_name(self) -> tuple[str, str]:
         # Github actions context
         if "GITHUB_REPOSITORY" in os.environ:
             log.debug("getting repository owner and name from environment variables")
@@ -132,7 +133,7 @@ class Github(HvcsBase):
 
     @logged_function(log)
     @suppress_not_found
-    def get_release_id_by_tag(self, tag: str) -> Optional[int]:
+    def get_release_id_by_tag(self, tag: str) -> int | None:
         """Get a release by its tag name
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
         :param tag: Tag to get release for
@@ -199,7 +200,7 @@ class Github(HvcsBase):
     @logged_function(log)
     @suppress_http_error
     def upload_asset(
-        self, release_id: int, file: str, label: Optional[str] = None
+        self, release_id: int, file: str, label: str | None = None
     ) -> bool:
         """Upload an asset to an existing release
         https://docs.github.com/rest/reference/repos#upload-a-release-asset
@@ -268,5 +269,5 @@ class Github(HvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/commit/{commit_hash}"
 
-    def pull_request_url(self, pr_number: Union[str, int]) -> str:
+    def pull_request_url(self, pr_number: str | int) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/issues/{pr_number}"

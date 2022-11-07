@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, NamedTuple, Optional
+from typing import NamedTuple
 
 from git.objects.tag import TagObject
 from git.repo.base import Repo
@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
 # Note: generic NamedTuples aren't yet supported by mypy
 # see https://github.com/python/mypy/issues/685
 class ReleaseHistory(NamedTuple):
-    unreleased: Dict[str, List[ParseResult]]
-    released: Dict[Version, Release]
+    unreleased: dict[str, list[ParseResult]]
+    released: dict[Version, Release]
 
     def __repr__(self) -> str:
         return (
@@ -42,7 +42,7 @@ class Release(TypedDict):
     tagger: Actor
     committer: Actor
     tagged_date: datetime
-    elements: Dict[str, List[ParseResult]]
+    elements: dict[str, list[ParseResult]]
 
 
 def release_history(
@@ -51,8 +51,8 @@ def release_history(
     commit_parser: CommitParser[ParseResult, ParserOptions],
 ) -> ReleaseHistory:
     all_git_tags_and_versions = tags_and_versions(repo.tags, translator)
-    unreleased: Dict[str, List[ParseResult]] = defaultdict(list)
-    released: Dict[Version, Release] = {}
+    unreleased: dict[str, list[ParseResult]] = defaultdict(list)
+    released: dict[Version, Release] = {}
 
     # Strategy:
     # Loop through commits in history, parsing as we go.
@@ -65,7 +65,7 @@ def release_history(
     # We do this until we encounter a commit which another tag matches.
 
     is_commit_released = False
-    the_version: Optional[Version] = None
+    the_version: Version | None = None
 
     for commit in repo.iter_commits():
         parse_result = commit_parser.parse(commit)

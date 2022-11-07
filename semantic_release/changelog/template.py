@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Union
+from typing import Callable, Iterable
 
 from jinja2 import Environment, FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
@@ -22,14 +24,14 @@ def environment(
     variable_end_string: str = "}}",
     comment_start_string: str = "{#",
     comment_end_string: str = "#}",
-    line_statement_prefix: Optional[str] = None,
-    line_comment_prefix: Optional[str] = None,
+    line_statement_prefix: str | None = None,
+    line_comment_prefix: str | None = None,
     trim_blocks: bool = False,
     lstrip_blocks: bool = False,
     newline_sequence: Literal["\n", "\r", "\r\n"] = "\n",
     keep_trailing_newline: bool = False,
     extensions: Iterable[str] = (),
-    autoescape: Union[bool, str] = True,
+    autoescape: bool | str = True,
 ) -> SandboxedEnvironment:
     """
     Create a jinja2.sandbox.SandboxedEnvironment with certain parameter resrictions;
@@ -41,7 +43,7 @@ def environment(
     See https://jinja.palletsprojects.com/en/3.1.x/api/#jinja2.Environment for full
     parameter descriptions
     """
-    autoescape_value: Union[bool, Callable[[Optional[str]], bool]]
+    autoescape_value: bool | Callable[[str | None], bool]
     if isinstance(autoescape, str):
         autoescape_value = dynamic_import(autoescape)
     else:
@@ -70,7 +72,7 @@ def environment(
 # pylint: disable=redefined-outer-name
 def recursive_render(
     template_dir: str, environment: Environment, _root_dir: str = "."
-) -> List[str]:
+) -> list[str]:
     for root, file in (
         (root, file)
         for root, _, files in os.walk(template_dir)

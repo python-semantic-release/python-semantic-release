@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 import os
-from typing import Optional
 
 import click
 
@@ -22,7 +23,7 @@ log = logging.getLogger(__name__)
     help="Post the generated changelog to the remote VCS's release for this tag",
 )
 @click.pass_context
-def changelog(ctx: click.Context, release_tag: Optional[str] = None) -> None:
+def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
     """
     Generate and optionally publish a changelog for your project
     """
@@ -79,7 +80,9 @@ def changelog(ctx: click.Context, release_tag: Optional[str] = None) -> None:
             .joinpath("data/templates/release_notes.md.j2")
             .read_text(encoding="utf-8")
         )
-        release_notes = env.from_string(release_template).render(version=v, release=release)
+        release_notes = env.from_string(release_template).render(
+            version=v, release=release
+        )
         version = translator.from_tag(release_tag)
         hvcs_client.create_or_update_release(
             release_tag, release_notes, prerelease=version.is_prerelease

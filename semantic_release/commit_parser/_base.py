@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, Generic, TypeVar
 
 from git.objects.commit import Commit
 
@@ -60,7 +62,7 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
                 ...
     """
 
-    parser_options: Type[_OPTS]
+    parser_options: type[_OPTS]
 
     def __init__(self, options: _OPTS) -> None:
         self.options = options

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 
 from jinja2 import Environment
 
@@ -12,7 +14,7 @@ class ChangelogContext:
     repo_name: str
     repo_owner: str
     history: ReleaseHistory
-    filters: Tuple[Callable[..., Any], ...] = ()
+    filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
         env.globals["context"] = self

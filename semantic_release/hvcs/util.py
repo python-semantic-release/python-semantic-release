@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import logging
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, TypeVar
 
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
@@ -13,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 def build_requests_session(
     raise_for_status: bool = True,
-    retry: Union[bool, int, Retry] = True,
-    auth: Optional[TokenAuth] = None,
+    retry: bool | int | Retry = True,
+    auth: TokenAuth | None = None,
 ) -> Session:
     """
     Create a requests session.
@@ -67,7 +69,7 @@ _R = TypeVar("_R")
 
 def suppress_http_error_for_codes(
     *codes: int,
-) -> Callable[[Callable[..., _R]], Callable[..., Optional[_R]]]:
+) -> Callable[[Callable[..., _R]], Callable[..., _R | None]]:
     """
     For the codes given, return a decorator that will suppress HTTPErrors that are
     raised from responses that came with one of those status codes. The function will
@@ -76,9 +78,9 @@ def suppress_http_error_for_codes(
 
     def _suppress_http_error_for_codes(
         func: Callable[..., _R]
-    ) -> Callable[..., Optional[_R]]:
+    ) -> Callable[..., _R | None]:
         @wraps(func)
-        def _wrapper(*a: Any, **kw: Any) -> Optional[_R]:
+        def _wrapper(*a: Any, **kw: Any) -> _R | None:
             try:
                 return func(*a, **kw)
             except HTTPError as err:

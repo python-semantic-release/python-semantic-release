@@ -1,6 +1,6 @@
 """Python Semantic Release
 """
-from typing import List
+from __future__ import annotations
 
 from semantic_release.errors import (
     CommitParseError as CommitParseError,
@@ -11,7 +11,7 @@ from semantic_release.errors import (
 __version__ = "8.0.0-alpha.1"
 
 
-def setup_hook(argv: List[str]) -> None:
+def setup_hook(argv: list[str]) -> None:
     """
     A hook to be used in setup.py to enable `python setup.py publish`.
 

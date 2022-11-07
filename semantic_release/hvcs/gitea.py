@@ -1,11 +1,12 @@
 """
 Helper code for interacting with a Gitea remote VCS
 """
+from __future__ import annotations
+
 import glob
 import logging
 import mimetypes
 import os
-from typing import Optional, Union
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
@@ -44,8 +45,8 @@ class Gitea(HvcsBase):
     def __init__(
         self,
         remote_url: str,
-        hvcs_domain: Optional[str] = None,
-        hvcs_api_domain: Optional[str] = None,
+        hvcs_domain: str | None = None,
+        hvcs_api_domain: str | None = None,
         token_var: str = "GITEA_TOKEN",
     ) -> None:
 
@@ -107,7 +108,7 @@ class Gitea(HvcsBase):
 
     @logged_function(log)
     @suppress_not_found
-    def get_release_id_by_tag(self, tag: str) -> Optional[int]:
+    def get_release_id_by_tag(self, tag: str) -> int | None:
         """Get a release by its tag name
         https://gitea.com/api/swagger#/repository/repoGetReleaseByTag
         :param tag: Tag to get release for
@@ -168,7 +169,7 @@ class Gitea(HvcsBase):
     @logged_function(log)
     @suppress_http_error
     def upload_asset(
-        self, release_id: int, file: str, label: Optional[str] = None
+        self, release_id: int, file: str, label: str | None = None
     ) -> bool:
         """Upload an asset to an existing release
         https://gitea.com/api/swagger#/repository/repoCreateReleaseAttachment
@@ -237,5 +238,5 @@ class Gitea(HvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/commit/{commit_hash}"
 
-    def pull_request_url(self, pr_number: Union[str, int]) -> str:
+    def pull_request_url(self, pr_number: str | int) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/pulls/{pr_number}"

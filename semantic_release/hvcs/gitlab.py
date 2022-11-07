@@ -1,10 +1,11 @@
 """
 Helper code for interacting with a Gitlab remote VCS
 """
+from __future__ import annotations
+
 import logging
 import mimetypes
 import os
-from typing import Optional, Tuple, Union
 from urllib.parse import urlsplit
 
 import gitlab
@@ -44,8 +45,8 @@ class Gitlab(HvcsBase):
     def __init__(
         self,
         remote_url: str,
-        hvcs_domain: Optional[str] = None,
-        hvcs_api_domain: Optional[str] = None,
+        hvcs_domain: str | None = None,
+        hvcs_api_domain: str | None = None,
         token_var: str = "GL_TOKEN",
     ) -> None:
         self._remote_url = remote_url
@@ -62,7 +63,7 @@ class Gitlab(HvcsBase):
         self.session = build_requests_session(auth=auth)
 
     @staticmethod
-    def _domain_from_environment() -> Optional[str]:
+    def _domain_from_environment() -> str | None:
         """
         Use Gitlab-CI environment varable to get the server domain, if available
         """
@@ -71,7 +72,7 @@ class Gitlab(HvcsBase):
             return f"{url.netloc}{url.path}".rstrip("/")
         return os.getenv("CI_SERVER_HOST")
 
-    def _get_repository_owner_and_name(self) -> Tuple[str, str]:
+    def _get_repository_owner_and_name(self) -> tuple[str, str]:
         """
         Get the repository owner and name from GitLab CI environment variables, if
         available, otherwise from parsing the remote url
@@ -152,5 +153,5 @@ class Gitlab(HvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/commit/{commit_hash}"
 
-    def pull_request_url(self, pr_number: Union[str, int]) -> str:
+    def pull_request_url(self, pr_number: str | int) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/issues/{pr_number}"

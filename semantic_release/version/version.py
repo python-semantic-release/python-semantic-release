@@ -4,7 +4,7 @@ import logging
 import re
 from functools import wraps
 from itertools import zip_longest
-from typing import Callable, Optional, Union, overload
+from typing import Callable, Union, overload
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
@@ -42,8 +42,8 @@ def _comparator(
 
 
 def _comparator(
-    method: Optional[VersionComparator] = None, *, type_guard: bool = True
-) -> Union[VersionComparator, Callable[[VersionComparator], VersionComparator]]:
+    method: VersionComparator | None = None, *, type_guard: bool = True
+) -> VersionComparator | Callable[[VersionComparator], VersionComparator]:
     """
     wrap a `Version` binop method to guard types and try to parse strings into Versions.
     use `type_guard = False` for `__eq__` and `__neq__` to make them return False if the
@@ -83,7 +83,7 @@ class Version:
         patch: int,
         *,
         prerelease_token: str = "rc",
-        prerelease_revision: Optional[int] = None,
+        prerelease_revision: int | None = None,
         build_metadata: str = "",
         tag_format: str = "v{version}",
     ) -> None:
@@ -372,7 +372,7 @@ class Version:
         return LevelBump.NO_RELEASE
 
     def to_prerelease(
-        self, token: Optional[str] = None, revision: Optional[int] = None
+        self, token: str | None = None, revision: int | None = None
     ) -> Version:
         return Version(
             self.major,

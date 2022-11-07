@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import defaultdict
-from typing import Iterable, Union
+from typing import Iterable
 
 # else:
 # from typing import Pattern
@@ -20,7 +20,7 @@ class MaskingFilter(logging.Filter):
     def __init__(
         self,
         _use_named_masks: bool = False,
-        **patterns: Iterable[Union[str, re.Pattern[str]]],
+        **patterns: Iterable[str | re.Pattern[str]],
     ) -> None:
         super().__init__()
         self._redact_patterns = defaultdict(set)

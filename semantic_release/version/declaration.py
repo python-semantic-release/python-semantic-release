@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import logging
 import re
-import string
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Optional, Set, Union
+from typing import Any
 
 import tomlkit
 from dotty_dict import Dotty  # type: ignore
@@ -21,12 +20,12 @@ class VersionDeclarationABC(ABC):
     within the source tree of the repository
     """
 
-    def __init__(self, path: Union[Path, str], search_text: str) -> None:
+    def __init__(self, path: Path | str, search_text: str) -> None:
         self.path = Path(path)
         if not self.path.exists():
             raise FileNotFoundError(f"path {self.path.resolve()!r} does not exist")
         self.search_text = search_text
-        self._content: Optional[str] = None
+        self._content: str | None = None
 
     @property
     def content(self) -> str:
@@ -52,7 +51,7 @@ class VersionDeclarationABC(ABC):
         self._content = None
 
     @abstractmethod
-    def parse(self) -> Set[Version]:
+    def parse(self) -> set[Version]:
         """
         Return a set of the versions which can be parsed from the file.
         Because a source can match in multiple places, this method returns a
@@ -101,7 +100,7 @@ class TomlVersionDeclaration(VersionDeclarationABC):
         loaded = tomlkit.loads(self.content)
         return Dotty(loaded)
 
-    def parse(self) -> Set[Version]:
+    def parse(self) -> set[Version]:
         """
         Look for the version in the source content
         """
@@ -143,7 +142,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
 
     _VERSION_GROUP_NAME = "version"
 
-    def __init__(self, path: Union[Path, str], search_text: str) -> None:
+    def __init__(self, path: Path | str, search_text: str) -> None:
         super().__init__(path, search_text)
         self.search_re = re.compile(self.search_text, flags=re.MULTILINE)
         if self._VERSION_GROUP_NAME not in self.search_re.groupindex:
@@ -155,7 +154,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
 
     # The pattern should be a regular expression with a single group,
     # containing the version to replace.
-    def parse(self) -> Set[Version]:
+    def parse(self) -> set[Version]:
         """
         Return the versions matching this pattern.
         Because a pattern can match in multiple places, this method returns a

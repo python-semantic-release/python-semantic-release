@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from queue import Queue
-from typing import Iterable, List, Optional, Set, Tuple, Union
+from typing import Iterable
 
 from git.objects.blob import Blob
 from git.objects.commit import Commit
@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 def tags_and_versions(
     tags: Iterable[Tag], translator: VersionTranslator
-) -> List[Tuple[Tag, Version]]:
+) -> list[tuple[Tag, Version]]:
     """
     Return a list of 2-tuples, where each element is a tuple (tag, version)
     from the tags in the Git repo and their corresponding `Version` according
@@ -39,9 +39,9 @@ def tags_and_versions(
 
 
 def _bfs_for_latest_version_in_history(
-    merge_base: Union[Commit, TagObject, Blob, Tree],
-    full_release_tags_and_versions: List[Tuple[Tag, Version]],
-) -> Optional[Version]:
+    merge_base: Commit | TagObject | Blob | Tree,
+    full_release_tags_and_versions: list[tuple[Tag, Version]],
+) -> Version | None:
     """
     Run a breadth-first search through the given `merge_base`'s parents,
     looking for the most recent version corresponding to a commit in the
@@ -51,7 +51,7 @@ def _bfs_for_latest_version_in_history(
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
-    def bfs(visited: Set[Commit], q: "Queue[Commit]") -> Optional[Version]:
+    def bfs(visited: set[Commit], q: "Queue[Commit]") -> Version | None:
 
         if q.empty():
             log.debug("queue is empty, returning none")
@@ -282,7 +282,7 @@ def next_version(
 
     # Step 4. Parse each commit since the last release and find any tags that have
     # been added since then.
-    parsed_levels: Set[LevelBump] = set()
+    parsed_levels: set[LevelBump] = set()
     latest_version = latest_full_version_in_history or Version(
         0, 0, 0, prerelease_token=translator.prerelease_token
     )

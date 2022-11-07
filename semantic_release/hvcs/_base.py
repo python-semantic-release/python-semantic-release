@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import os
 import warnings
-from typing import Optional, Tuple
 
 from semantic_release.helpers import parse_git_url
 from semantic_release.hvcs.token_auth import TokenAuth
@@ -40,8 +39,8 @@ class HvcsBase:
     def __init__(
         self,
         remote_url: str,
-        hvcs_domain: Optional[str] = None,
-        hvcs_api_domain: Optional[str] = None,
+        hvcs_domain: str | None = None,
+        hvcs_api_domain: str | None = None,
         token_var: str = "",
     ) -> None:
         self.hvcs_domain = hvcs_domain
@@ -51,7 +50,7 @@ class HvcsBase:
         self._remote_url = remote_url
         self.session = build_requests_session(auth=auth)
 
-    def _get_repository_owner_and_name(self) -> Tuple[str, str]:
+    def _get_repository_owner_and_name(self) -> tuple[str, str]:
         """
         Parse the repository's remote url to identify the repository
         owner and name
@@ -104,7 +103,7 @@ class HvcsBase:
         _not_supported(self, "create_release")
         return True
 
-    def get_release_id_by_tag(self, tag: str) -> Optional[int]:
+    def get_release_id_by_tag(self, tag: str) -> int | None:
         """
         Given a Git tag, return the ID (as the remote VCS defines it) of a corrsponding
         release in the remove VCS, if supported
@@ -129,7 +128,7 @@ class HvcsBase:
         _not_supported(self, "create_or_update_release")
         return True
 
-    def asset_upload_url(self, release_id: str) -> Optional[str]:
+    def asset_upload_url(self, release_id: str) -> str | None:
         """
         Return the URL to use to upload an asset to the given release id, if releases
         are supported by the remote VCS
@@ -138,7 +137,7 @@ class HvcsBase:
         return None
 
     def upload_asset(
-        self, release_id: int, file: str, label: Optional[str] = None
+        self, release_id: int, file: str, label: str | None = None
     ) -> bool:
         """
         Upload an asset (file) to a release with the given release_id, if releases are
