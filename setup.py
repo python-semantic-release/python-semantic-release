@@ -64,7 +64,7 @@ setup(
         ],
         "docs": ["Sphinx==1.3.6", "Jinja2==3.0.3"],
         "dev": ["tox", "isort", "black"],
-        "mypy": ["mypy", "types-requests"],
+        "mypy": ["mypy==0.982", "types-requests"],
     },
     entry_points="""
         [console_scripts]
