@@ -256,9 +256,9 @@ def tag_new_version(version: str):
 
 @LoggedFunction(logger)
 def push_new_version(
-    auth_token: str = None,
-    owner: str = None,
-    name: str = None,
+    auth_token: Optional[str] = None,
+    owner: Optional[str] = None,
+    name: Optional[str] = None,
     branch: str = "master",
     domain: str = "github.com",
 ):
