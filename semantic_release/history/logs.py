@@ -19,7 +19,7 @@ LEVELS = {
 
 
 @LoggedFunction(logger)
-def evaluate_version_bump(current_version: str, force: str = None) -> Optional[str]:
+def evaluate_version_bump(current_version: str, force: Optional[str] = None) -> Optional[str]:
     """
     Read git log since the last release to decide if we should make a major, minor or patch release.
 

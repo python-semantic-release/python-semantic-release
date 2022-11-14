@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from ..helpers import LoggedFunction
 from ..settings import config, current_changelog_components
@@ -16,7 +17,7 @@ def markdown_changelog(
     version: str,
     changelog: dict,
     header: bool = False,
-    previous_version: str = None,
+    previous_version: Optional[str] = None,
 ) -> str:
     """
     Generate a markdown version of the changelog.
