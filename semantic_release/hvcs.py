@@ -310,7 +310,7 @@ class Github(Base):
     @classmethod
     @LoggedFunction(logger)
     def upload_asset(
-        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+        cls, owner: str, repo: str, release_id: int, file: str, label: Optional[str] = None
     ) -> bool:
         """Upload an asset to an existing release
 
@@ -586,7 +586,7 @@ class Gitea(Base):
     @classmethod
     @LoggedFunction(logger)
     def upload_asset(
-        cls, owner: str, repo: str, release_id: int, file: str, label: str = None
+        cls, owner: str, repo: str, release_id: int, file: str, label: Optional[str] = None
     ) -> bool:
         """Upload an asset to an existing release
 
