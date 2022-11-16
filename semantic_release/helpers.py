@@ -92,7 +92,7 @@ class ParsedGitUrl(NamedTuple):
 GIT_URL_REGEX = re.compile(
     r"""
     ^
-    git@
+    (?P<user>[\w\d\-.]+)@
     (?P<netloc>[^:]+)
     :
     (?P<namespace>[\w\.@\:/\-~]+)
@@ -139,7 +139,7 @@ def parse_git_url(url: str) -> ParsedGitUrl:
     if not all((*m.group("netloc", "namespace"), repo_name)):
         raise ValueError(f"Bad url: {url!r}")
     return ParsedGitUrl(
-        scheme="git",
+        scheme="ssh",
         netloc=m.group("netloc"),
         namespace=m.group("namespace"),
         repo_name=repo_name,
