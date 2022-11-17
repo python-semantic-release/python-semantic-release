@@ -101,9 +101,12 @@ def generate_changelog(
     changes: dict = {"breaking": []}
 
     found_the_release = to_version is None
-    to_version_commit = to_version and get_formatted_commit(to_version)
-    from_version_commit = from_version and get_formatted_commit(from_version)
+    to_version_commit = to_version and get_formatted_commit(to_version).strip()
+    from_version_commit = from_version and get_formatted_commit(from_version).strip()
     for _hash, commit_message in get_commit_log(from_version, to_version):
+        # See https://github.com/relekang/python-semantic-release/issues/490 -
+        # commit messages (which we compare with ==) have a trailing newline
+        commit_message = commit_message.strip()
         if not found_the_release:
             # Skip until we find the last commit in this release
             # (we are looping in the order of newest -> oldest)
@@ -115,8 +118,6 @@ def generate_changelog(
                 )
                 found_the_release = True
 
-        # See https://github.com/relekang/python-semantic-release/issues/490 -
-        # commit messages (which we compare with ==) have a trailing newline
         if (
             from_version_commit
             and commit_message.strip() == from_version_commit.strip()
