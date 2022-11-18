@@ -118,10 +118,7 @@ def generate_changelog(
                 )
                 found_the_release = True
 
-        if (
-            from_version_commit
-            and commit_message.strip() == from_version_commit.strip()
-        ):
+        if (from_version_commit and commit_message == from_version_commit):
             # We reached the previous release
             logger.debug(f"{from_version} reached, ending changelog generation")
             break
