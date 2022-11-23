@@ -1,3 +1,4 @@
+---
 name: 'Python Semantic Release'
 
 description: 'Automatic Semantic Versioning for Python projects'
