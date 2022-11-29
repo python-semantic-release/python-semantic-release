@@ -1,10 +1,10 @@
 # This Dockerfile is only for GitHub Actions
-FROM python:3.9
+FROM python:3.10
 
 RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        git-lfs
+    git-lfs
 
 #install backported stable vesion of git, which supports ssh signing
 RUN echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list; \
