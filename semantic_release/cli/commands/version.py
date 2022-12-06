@@ -9,7 +9,7 @@ import click
 # NOTE: use backport with newer API than stdlib
 from importlib_resources import files
 
-from semantic_release.changelog import recursive_render, release_history
+from semantic_release.changelog import environment, recursive_render, release_history
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.cli.util import noop_report
 from semantic_release.enums import LevelBump
@@ -289,7 +289,12 @@ def version(
         .joinpath("data/templates/release_notes.md.j2")
         .read_text(encoding="utf-8")
     )
-    release_notes = env.from_string(release_template).render(version=v, release=release)
+    # Use a new, non-configurable environment for release notes - not user-configurable at the moment
+    release_note_environment = environment(template_dir=runtime.template_dir)
+    changelog_context.bind_to_environment(release_note_environment)
+    release_notes = release_note_environment.from_string(release_template).render(
+        version=v, release=release
+    )
     if make_vcs_release and opts.noop:
         noop_report(f"would have created a release for the tag {v.as_tag()!r}")
         log.info("Release notes: %s", release_notes)

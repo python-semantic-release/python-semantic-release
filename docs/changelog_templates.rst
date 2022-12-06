@@ -1,0 +1,290 @@
+.. _changelog-templates:
+
+Changelog Templates
+===================
+
+.. warning::
+    If you have an existing changelog in the location you have configured with
+    the :ref:`changelog_file <config-changelog-changelog-file>` setting,
+    or if you have a template inside your :ref:`template directory <config-changelog-template-dir>`
+    which will render to the location of an existing file, Python Semantic Release will
+    overwrite the contents of this file.
+
+    Please make sure to refer to :ref:`changelog-templates-migrating-existing-changelog`.
+
+Python Semantic Release can write a changelog for your project. By default, it uses an
+in-built template; once rendered this will be written to the location you configure with the 
+:ref:`changelog_file <config-changelog-changelog-file>` setting.
+
+However, Python Semantic Release is also capable of rendering an entire directory tree
+of templates during the changelog generation process. This directory is specified
+using the :ref:`template directory <config-changelog-template-dir>` setting.
+
+Python Semantic Release uses `Jinja`_ as its template engine, so you should refer to the
+`Template Designer Documentation`_ for guidance on how to customize the appearance of
+the files which are rendered during the release process. If you would like to customize
+the template environment itself, then certain options are available to you via
+:ref:`changelog environment configuration <config-changelog-environment>`.
+
+Changelogs are rendered during the :ref:`cmd-version` and :ref:`cmd-changelog` commands.
+You can disable changelog generation entirely during the :ref:`cmd-version` command by
+providing the :ref:`--no-changelog <cmd-version-option-changelog>` command-line option.
+
+The changelog template is re-rendered on each release.
+
+.. _Jinja: https://jinja.palletsprojects.com/en/3.1.x/
+.. _Template Designer Documentation: https://jinja.palletsprojects.com/en/3.1.x/templates/
+
+.. _changelog-templates-template-rendering:
+
+Template Rendering
+------------------
+
+.. _changelog-templates-template-rendering-directory-structure:
+
+Directory Structure:
+^^^^^^^^^^^^^^^^^^^^
+
+If you don't want to set up your own custom changelog template, you can have Python
+Semantic Release use its in-built template. If you would like to customize the
+appearance of the changelog, or to render additional files, then you will need to
+create a directory within your repository and set the :ref:`template_dir <config-changelog-template-dir>`
+setting to the name of this directory. The default name is ``"templates"``.
+
+.. note::
+   It is *strongly* recommended that you use a dedicated top-level folder for the
+   template directory.
+
+When the templates are rendered, files within the tree are output to the location
+within your repository that has the *same relative path* to the root as the *relative
+path of the template to the templates directory*. 
+
+Templates are identified by giving a ``.j2`` extension to the template file. Any such
+templates have the ``.j2`` extension removed from the target file. Therefore, to render
+an output file ``foo.csv``, you should create a template called ``foo.csv.j2`` within
+your template directory.
+
+.. note::
+   A file within your template directory which does *not* end in ``.j2`` will not
+   be treated as a template; it will be copied to its target location without being
+   rendered by the template engine.
+
+Files within the template directory are *excluded* from the rendering process if the
+file begins with a ``"."`` or if *any* of the folders containing this file begin with
+a ``"."``.
+
+.. _changelog-templates-template-rendering-directory-structure-example:
+
+Directory Structure (Example)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Suppose a project sets :ref:`template_dir <config-changelog-template-dir>` to
+``"templates"`` and has the following structure:
+
+.. code-block::
+
+    example-project
+    ├── src
+    │   └── example_project
+    │       └── __init__.py
+    └── templates
+        ├── CHANGELOG.md.j2
+        ├── .components
+        │   └── authors.md.j2
+        ├── .macros.j2
+        ├── src
+        │   └── example_project
+        │       └── data
+        │           └── data.json.j2
+        └── static
+            └── config.cfg
+
+After running a release with Python Semantic Release, the directory structure
+of the project will now look like this:
+
+.. code-block::
+
+    example-project
+    ├── CHANGELOG.md
+    ├── src
+    │   └── example_project
+    │       ├── data
+    │       │   └── data.json
+    │       └── __init__.py
+    ├── static
+    │   └── config.cfg
+    └── templates
+        ├── CHANGELOG.md.j2
+        ├── .components
+        │   └── authors.md.j2
+        ├── .macros.j2
+        ├── src
+        │   └── example_project
+        │       └── data
+        │           └── data.json.j2
+        └── static
+            └── config.cfg
+
+Note that:
+
+* There is no top-level ``.macros`` file created, because this file is excluded
+  from the rendering process.
+* There is no top-level ``.components`` directory created, because this folder and
+  all files and folders contained within it are excluded from the rendering process.
+* To render data files into the ``src/`` folder, the path to which the template should
+  be rendered has to be created within the ``templates`` directory.
+* The ``templates/static`` folder is created at the top-level of the project, and the
+  file ``templates/static/config.cfg`` is *copied, not rendered* to the new top-level
+  ``static`` folder.
+
+You may wish to leverage this behaviour to modularise your changelog template, to
+define macros in a separate file, or to reference static data which you would like
+to avoid duplicating between your template environment and the remainder of your
+project.
+
+.. _changelog-templates-template-rendering-template-context:
+
+Template Context:
+^^^^^^^^^^^^^^^^^
+
+Alongside the rendering of a directory tree, Python Semantic Release makes information
+about the history of the project available within the templating environment in order
+for it to be used to generate Changelogs and other such documents.
+
+The history of the project is made available via the global variable ``context``. In
+Python terms, ``context`` is a `dataclass`_ with the following attributes:
+
+* ``repo_name: str``: the name of the current repository parsed from the Git url.
+* ``repo_owner: str``: the owner of the current repository parsed from the Git url.
+* ``history: ReleaseHistory``: a :py:class:`semantic_release.changelog.ReleaseHistory` instance.
+  (See :ref:`changelog-templates-template-rendering-template-context-release-history`)
+* ``filters: Tuple[Callable[..., Any], ...]``: a tuple of filters for the template environment.
+  These are added to the environment's ``filters``, and therefore there should be no need to
+  access these from the ``context`` object inside the template.
+
+Currently, two filters are defined:
+
+* ``pull_request_url: Callable[[str], str]``: given a pull request number, return a URL
+  to the pull request in the remote.
+* ``pull_request_url: Callable[[str], str]``: given a commit hash, return a URL to the
+  commit in the remote.
+
+.. seealso::
+   * `Filters <https://jinja.palletsprojects.com/en/3.1.x/templates/#filters>`_
+
+.. _changelog-templates-template-rendering-template-context-release-history:
+
+``ReleaseHistory``
+""""""""""""""""""
+
+A ``ReleaseHistory`` instance has two attributes: ``released`` and ``unreleased``.
+
+The ``unreleased`` attribute is of type ``Dict[str, List[ParseResult]]``. Each commit
+in the current branch's commit history since the last release on this branch is grouped
+by the ``type`` attribute of the ``ParsedCommit`` returned by the commit parser,
+or if the parser returned a ``ParseError`` then the result is grouped under the
+``"unknown"`` key.
+
+For this reason, every element of ``ReleaseHistory.unreleased["unknown"]`` is a
+``ParseError``, and every element of every other value in ``ReleaseHistory.unreleased``
+is of type ``ParsedCommit``.
+
+Typically, commit types will be ``"feature"``, ``"fix"``, ``"breaking"``, though the
+specific types are determined by the parser. For example, the
+:py:class:`semantic_release.commit_parser.EmojiCommitParser` uses a textual
+representation of the emoji corresponding to the most significant change introduced
+in a commit (e.g. ``":boom:"``) as the different commit types. As a template author,
+you are free to customise how these are presented in the rendered template.
+
+.. note::
+   If you are using a custom commit parser following the guide at
+   :ref:`commit-parser-writing-your-own-parser`, your custom implementations of
+   :py:class:`semantic_release.ParseResult`, :py:class:`semantic_release.ParseError`
+   and :py:class:`semantic_release.ParsedCommit` will be used in place of the built-in
+   types.
+
+The ``released`` attribute is of type ``Dict[Version, Release]``. The keys of this
+dictionary correspond to each version released within this branch's history, and
+are of type ``semantic_release.Version``. You can use the ``as_tag()`` method to
+render these as the Git tag that they correspond to inside your template.
+
+A ``Release`` object has an ``elements`` attribute, which has the same
+structure as the ``unreleased`` attribute of a ``ReleaseHistory``; that is,
+``elements`` is of type ``Dict[str, List[ParseResult]]``, where every element
+of ``elements["unknown"]`` is a ``ParseError``, and elements of every other
+value correspond to the ``type`` attribute of the ``ParsedCommit`` returned
+by the commit parser.
+
+The commits represented within each ``ReleaseHistory.released[version].elements``
+grouping are the commits which were made between ``version`` and the release
+corresponding to the previous version. 
+That is, given two releases ``Version(1, 0, 0)`` and ``Version(1, 1, 0)``,
+``ReleaseHistory.released[Version(1, 0, 0)].elements`` contains only commits
+made after the release of ``Version(1, 0, 0)`` up to and including the release
+of ``Version(1, 1, 0)``.
+
+To maintain a consistent order of subsections in the changelog headed by the commit
+type, it's recommended to use Jinja's `dictsort <https://jinja.palletsprojects.com/en/3.1.x/templates/#jinja-filters.dictsort>`_
+filter.
+
+Each ``Release`` object also has the following attributes:
+
+* ``tagger: git.Actor``: The tagger who tagged the release.
+* ``committer: git.Actor``: The committer who made the release commit.
+* ``tagged_date: datetime``: The date and time at which the release was tagged.
+
+.. seealso::
+   * :ref:`commit-parser-builtin`
+   * :ref:`Commit Parser Tokens <commit-parser-tokens>`
+   * `git.Actor <https://gitpython.readthedocs.io/en/stable/reference.html#git.objects.util.Actor>`_
+   * `datetime.strftime Format Codes <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes>`_
+
+.. _dataclass: https://docs.python.org/3/library/dataclasses.html
+
+.. _changelog-templates-template-rendering-example:
+
+Changelog Template Example
+--------------------------
+
+Below is an example template that can be used to render a Changelog:
+
+.. code-block::
+
+    # CHANGELOG
+    {% if context.history.unreleased | length > 0 %}
+
+    {# UNRELEASED #}
+    ## Unreleased
+    {% for type_, commits in context.history.unreleased | dictsort %}
+    ### {{ type_ | capitalize }}
+    {% for commit in commits %}{% if type_ != "unknown" %}
+    * {{ commit.commit.message.rstrip() }} ([`{{ commit.commit.hexsha[:7] }}`]({{ commit.commit.hexsha | commit_hash_url }}))
+    {% else %}
+    * {{ commit.commit.message.rstrip() }} ([`{{ commit.commit.hexsha[:7] }}`]({{ commit.commit.hexsha | commit_hash_url }}))
+    {% endif %}{% endfor %}{% endfor %}
+
+    {% endif %}
+
+    {# RELEASED #}
+    {% for version, release in context.history.released.items() %}
+    ## {{ version.as_tag() }} ({{ release.tagged_date.strftime("%Y-%m-%d") }})
+    {% for type_, commits in release["elements"] | dictsort %}
+    ### {{ type_ | capitalize }}
+    {% for commit in commits %}{% if type_ != "unknown" %}
+    * {{ commit.commit.message.rstrip() }} ([`{{ commit.commit.hexsha[:7] }}`]({{ commit.commit.hexsha | commit_hash_url }}))
+    {% else %}
+    * {{ commit.commit.message.rstrip() }} ([`{{ commit.commit.hexsha[:7] }}`]({{ commit.commit.hexsha | commit_hash_url }}))
+    {% endif %}{% endfor %}{% endfor %}{% endfor %}
+
+.. _changelog-templates-migrating-existing-changelog:
+
+Migrating an Existing Changelog
+-------------------------------
+
+If you have an existing changelog that you would like to preserve, it's recommended
+that you add the contents of this file to your changelog template - either directly
+or via Jinja's `include <https://jinja.palletsprojects.com/en/3.1.x/templates/#include>`_
+tag. If you would like only the history from your next release onwards to be rendered
+into the changelog in addition to the existing changelog, you can add an `if statement
+<https://jinja.palletsprojects.com/en/3.1.x/templates/#if>`_ based upon the versions in
+the keys of ``context.released``.

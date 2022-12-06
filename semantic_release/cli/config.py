@@ -104,7 +104,7 @@ class UploadConfig(BaseModel):
     dist_glob_patterns: Tuple[str, ...] = ("dist/*",)
     pypi_token: MaybeFromEnv = EnvConfigVar(env="PYPI_TOKEN")
     upload_to_repository: bool = True
-    upload_to_release: bool = True
+    upload_to_vcs_release: bool = True
     # https://twine.readthedocs.io/en/stable/
     sign: bool = False
     sign_with: str = "gpg"
@@ -138,15 +138,12 @@ _PY = "py" if platform.system() == "Windows" else "python"
 
 
 class RawConfig(BaseModel):
-    logging_use_named_masks: bool = False
-    tag_format: str = "v{version}"
-    commit_parser: str = "angular"
-    commit_message: str = COMMIT_MESSAGE
-    build_command: str = f"{_PY} setup.py sdist bdist_wheel"
-    version_toml: Optional[Tuple[str, ...]] = None
-    version_variables: Optional[Tuple[str, ...]] = None
-    major_on_zero: bool = True
     assets: Tuple[str, ...] = ()
+    branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
+    build_command: str = f"{_PY} setup.py sdist bdist_wheel"
+    changelog: ChangelogConfig = ChangelogConfig()
+    commit_message: str = COMMIT_MESSAGE
+    commit_parser: str = "angular"
     # It's up to the parser_options() method to validate these
     commit_parser_options: Dict[str, Any] = {
         "allowed_tags": [
@@ -164,10 +161,13 @@ class RawConfig(BaseModel):
         "minor_tags": ["feat"],
         "patch_tags": ["fix", "perf"],
     }
-    changelog: ChangelogConfig = ChangelogConfig()
-    branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
+    logging_use_named_masks: bool = False
+    major_on_zero: bool = True
     remote: RemoteConfig = RemoteConfig()
+    tag_format: str = "v{version}"
     upload: UploadConfig = UploadConfig()
+    version_toml: Optional[Tuple[str, ...]] = None
+    version_variables: Optional[Tuple[str, ...]] = None
 
 
 @dataclass
@@ -242,7 +242,7 @@ class RuntimeContext:
     twine_settings: Optional[TwineSettings]
     dist_glob_patterns: Tuple[str, ...]
     upload_to_repository: bool
-    upload_to_release: bool
+    upload_to_vcs_release: bool
     global_cli_options: GlobalCommandLineOptions
     # This way the filter can be passed around if needed, so that another function
     # can accept the filter as an argument and call
@@ -433,7 +433,7 @@ class RuntimeContext:
             twine_settings=twine_settings,
             dist_glob_patterns=raw.upload.dist_glob_patterns,
             upload_to_repository=raw.upload.upload_to_repository,
-            upload_to_release=raw.upload.upload_to_release,
+            upload_to_vcs_release=raw.upload.upload_to_vcs_release,
             global_cli_options=global_cli_options,
             masker=masker,
         )

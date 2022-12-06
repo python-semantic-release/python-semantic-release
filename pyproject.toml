@@ -192,7 +192,7 @@ token_var = "GH_TOKEN"
 [tool.semantic_release.upload]
 dist_glob_patterns = ["dist/*"]
 upload_to_repository = false
-upload_to_release = false
+upload_to_vcs_release = false
 sign = false
 sign_with = "gpg"
 config_file = "~/.pypirc"

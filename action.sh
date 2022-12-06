@@ -4,7 +4,6 @@ set -e
 
 # Copy inputs into correctly-named environment variables
 export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
-export PYPI_TOKEN="${INPUT_PYPI_TOKEN}"
 export REPOSITORY_USERNAME="${INPUT_REPOSITORY_USERNAME}"
 export REPOSITORY_PASSWORD="${INPUT_REPOSITORY_PASSWORD}"
 export PATH="${PATH}:/semantic-release/.venv/bin"
@@ -42,7 +41,9 @@ fi
 
 # Run Semantic Release
 /semantic-release/.venv/bin/python \
-  -m semantic_release publish \
-  -v DEBUG \
+  -m semantic_release -v version \
   -D commit_author="$GIT_COMMITTER_NAME <$GIT_COMMITTER_EMAIL>" \
-  ${INPUT_ADDITIONAL_OPTIONS}
+  ${INPUT_ADDITIONAL_OPTIONS} && \
+  /semantic-release/.venv/bin/python \
+    -m semantic_release -v publish \
+

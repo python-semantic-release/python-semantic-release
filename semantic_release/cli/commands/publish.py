@@ -12,8 +12,24 @@ log = logging.getLogger(__name__)
 
 
 @click.command(short_help="Build and publish a distribution")
+@click.option(
+    "--upload-to-repository/--no-upload-to-repository",
+    "upload_to_repository",
+    default=True,
+    help="Whether or not to upload any built artefacts to the configured artefact repository",
+)
+@click.option(
+    "--upload-to-vcs-release/--no-upload-to-vcs-release",
+    "upload_to_vcs_release",
+    default=True,
+    help="Whether or not to upload any built artefacts to the latest release",
+)
 @click.pass_context
-def publish(ctx: click.Context) -> None:
+def publish(
+    ctx: click.Context,
+    upload_to_repository: bool = True,
+    upload_to_vcs_release: bool = True,
+) -> None:
     """
     Build and publish a distribution to a Python package repository
     or VCS release.
@@ -24,8 +40,8 @@ def publish(ctx: click.Context) -> None:
     translator = runtime.version_translator
     build_command = runtime.build_command
     dist_glob_patterns = runtime.dist_glob_patterns
-    upload_to_repository = runtime.upload_to_repository
-    upload_to_release = runtime.upload_to_release
+    upload_to_repository &= runtime.upload_to_repository
+    upload_to_vcs_release &= runtime.upload_to_vcs_release
     twine_settings = runtime.twine_settings
 
     if upload_to_repository and not twine_settings:
@@ -53,13 +69,13 @@ def publish(ctx: click.Context) -> None:
         upload(upload_settings=twine_settings, dists=dist_glob_patterns)
 
     latest_tag = tags_and_versions(repo.tags, translator)[0][0]
-    if upload_to_release and runtime.global_cli_options.noop:
+    if upload_to_vcs_release and runtime.global_cli_options.noop:
         noop_report(
             "would have uploaded files matching any of the globs "
             + ", ".join(repr(g) for g in dist_glob_patterns)
             + " to a remote VCS release, if supported"
         )
-    elif upload_to_release:
+    elif upload_to_vcs_release:
         log.info("Uploading distributions to release")
         for pattern in dist_glob_patterns:
             hvcs_client.upload_dists(tag=latest_tag, dist_glob=pattern)

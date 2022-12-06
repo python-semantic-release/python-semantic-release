@@ -5,7 +5,7 @@ from typing import Any, Generic, TypeVar
 
 from git.objects.commit import Commit
 
-from semantic_release.commit_parser.token import ParseResult
+from semantic_release.commit_parser.token import ParseResultType
 
 
 class ParserOptions:
@@ -13,11 +13,11 @@ class ParserOptions:
     ParserOptions should accept the keyword arguments they are interested in
     from configuration and process them as desired, ultimately creating attributes
     on an instance which can be accessed by the corresponding commit parser. For example,
-    >>> class MyParserOptions(BaseParserOptions):
+    >>> class MyParserOptions(ParserOptions):
     ...     def __init__(self, message_prefix: str) -> None:
     ...         self.prefix = message_prefix * 2
 
-    >>> class MyCommitParser(AbstractCommitParser
+    >>> class MyCommitParser(AbstractCommitParser):
     ...     parser_options = MyParserOptions
     ...     def parse(self, Commit):
     ...         print(self.options.prefix)
@@ -38,7 +38,7 @@ class ParserOptions:
 
 
 # TT = TokenType, a subclass of ParsedCommit
-_TT = TypeVar("_TT", bound=ParseResult)
+_TT = TypeVar("_TT", bound=ParseResultType)
 _OPTS = TypeVar("_OPTS", bound=ParserOptions)
 
 

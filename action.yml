@@ -1,3 +1,4 @@
+---
 name: 'Python Semantic Release'
 
 description: 'Automatic Semantic Versioning for Python projects'
@@ -13,9 +14,6 @@ inputs:
   github_token:
     description: 'GitHub token used to push release notes and new commits/tags'
     required: true
-  pypi_token:
-    description: 'PyPI API token'
-    required: false
   repository_username:
     description: 'Username with project access to push to Artifact Repository'
     required: false
@@ -24,9 +22,11 @@ inputs:
     required: false
   git_committer_name:
     description: 'The human name for the “committer” field'
+    default: "github-actions"
     required: false
   git_committer_email:
     description: 'The email address for the “committer” field'
+    default: "github-actions@github.com"
     required: false
   ssh_public_signing_key:
     description: 'The ssh public key used to sign commits'

@@ -1,19 +1,79 @@
 .. _commands:
 
 Commands
+========
+
+All commands accept a ``-h/--help`` option, which displays the help text for the
+command and exits immediately.
+
+``semantic-release`` does not allow interspersed arguments and options, which
+means that the options for ``semantic-release`` are not necessarily accepted
+one of the subcommands. In particular, the :ref:`cmd-main-options-noop` and
+:ref:`verbosity <cmd-main-options-verbosity>` flags must be given to the top-level
+``semantic-release`` command, before the name of the subcommand.
+
+For example:
+
+Incorrect::
+
+   semantic-release version --print --noop -vv
+
+Correct::
+
+   semantic-release -vv --noop version --print
+
+With the exception of :ref:`cmd-main` and :ref:`cmd-generate-config`, all
+commands require that you have set up your project's configuration. To help with
+this step, :ref:`cmd-generate-config` can create the default configuration for you,
+which will allow you to tweak it to your needs rather than write it from scratch.
+
+
+.. _cmd-main:
+
+``semantic-release``
+~~~~~~~~~~~~~~~~~~~~
+
+.. _cmd-main-options:
+
+Options:
 --------
 
-.. _cmd-changelog:
+.. _cmd-main-option-version:
 
-``semantic-release changelog``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``--version``
+**************
 
-Print the changelog to stdout.
+Display the version of Python Semantic Release and exit
 
-If the option ``--post`` is used and there is an authentication token configured
-for your vcs provider (:ref:`env-gh_token` for GitHub, :ref:`env-gl_token` for
-GitLab, :ref:`env-gitea_token` for
-Gitea), the changelog will be posted there too.
+.. _cmd-main-option-noop:
+
+``--noop``
+**********
+
+Use this flag to see what ``semantic-release`` intends to do without making changes
+to your project. When using this option, ``semantic-release`` can be run as many times
+as you wish without any side-effects.
+
+.. _cmd-main-option-verbosity:
+
+``-v/--verbose``
+******************
+
+Can be supplied more than once. Controls the verbosity of ``semantic-releases`` logging
+output (default level is ``WARNING``, use ``-v`` for ``INFO`` and ``-vv`` for ``DEBUG``).
+
+.. _cmd-main-option-config:
+
+``-c/--config [FILE]``
+********************
+
+Specify the configuration file which Python Semantic Release should use. This can
+be any of the supported formats at <<<<<<<<insert ref here>>>>>>>>>>
+
+**Default:** pyproject.toml
+
+.. seealso::
+   - :ref:`configuration`
 
 
 .. _cmd-version:
@@ -21,85 +81,278 @@ Gitea), the changelog will be posted there too.
 ``semantic-release version``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Figure out the new version number, update and commit it, and create a tag.
+Detect the semantically correct next version that should be applied to your
+project.
 
-This will not push anything to any remote. All changes are local.
+By default:
+  * Write this new version to the project metadata locations
+    specified in the configuration file
+  * Create a new commit with these locations and any other assets configured
+    to be included in a release
+  * Tag this commit according the configured format, with a tag that uniquely
+    identifies the version being released
+  * Push the new tag and commit to the remote for the repository
+  * Create a release (if supported) in the remote VCS for this tag
 
-.. _cmd-print-version:
+Changelog generation is done identically to the way it is done in :ref:`cmd-changelog`,
+but this command additionally ensures the updated changelog is included in the release
+commit that is made.
 
-``semantic-release print-version``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. seealso::
+    - :ref:`cmd-changelog`
+    - :ref:`changelog-templates`
+    - :ref:`config-tag-format`
+    - :ref:`config-assets`
+    - :ref:`config-version-toml`
+    - :ref:`config-version-variables`
 
-Print to standard output the new version number.
+.. _cmd-version-options:
 
-If the option ``--current`` is used, it will display the current version number.
+Options:
+--------
 
-It can be used to retrieve the next version number in a shell script during the build, before running the effective
-release, ie. to rename a distribution binary with the effective version::
+.. _cmd-version-option-print:
 
-    VERSION=$(semantic-release print-version)
+``--print``
+***********
+
+Print the next version that will be applied, respecting the other command line options
+that are supplied, and exit. This flag is useful if you just want to see what the next
+version will be.
+Note that instead of printing nothing at all, if no release will be made, the current
+version is printed.
+
+For example, you can experiment with which versions would be applied using the other
+command line options::
+    
+    semantic-release version --print
+    semantic-release version --patch --print
+    semantic-release version --prerelease --print
+
+.. _cmd-version-option-force-level:
+
+``--major/--minor/--patch``
+***************************
+
+Force the next version to increment the major, minor or patch digit, respectively.
+These flags are optional but mutually exclusive, so only one may be supplied, or none at all.
+Using these flags overrides the usual calculation for the next version; this can be useful, say,
+when a project wants to release its initial 1.0.0 version.
+
+Using these flags will **not** produce a prerelease, **regardless of your configuration or the
+current version**. To produce a prerelease with the appropriate digit incremented you should also
+supply the :ref:`cmd-version-option-prerelease` flag.
+
+These options are forceful overrides, but there is no action required for subsequent releases
+performed using the usual calculation algorithm.
+
+.. seealso::
+    - :ref:`configuration`
+    - :ref:`config-multibranch-releases`
+    - :ref:`config-branches-prerelease`
+
+.. _cmd-version-option-prerelease:
+
+``--prerelease``
+****************
+
+Force the next version to be a prerelease. As with :ref:`cmd-version-option-force-level`, this option
+is a forceful override, but no action is required to resume calculating versions as normal on the
+subsequent releases.
+
+The :ref:`config-root-prerelease-token` is idenitified using the configuration.
+
+.. _cmd-version-option-build-metadata:
+
+``--build-metadata [VALUE]``
+********************
+
+If given, append the value to the newly calculated version. This can be used, for example,
+to attach a run number from a CI service or a date to the version and tag that are created.
+
+This value can also be set using the environment variable :ref:`env-psr-build-metadata`
+
+For example, assuming a project is currently at version 1.2.3::
+    
+    $ semantic-release version --minor --print
+    1.3.0
+
+    $ semantic-release verison --minor --print --build-metadata "run.12345"
+    1.3.0+run.12345
+
+.. _cmd-version-option-commit:
+
+``--commit/--no-commit``
+************************
+
+Whether or not to perform a ``git commit`` on modifications to source files made by ``semantic-release`` during this
+command invokation, and to run ``git tag`` on this new commit with a tag corresponding to the new version.
+
+If ``--no-commit`` is supplied, a number of other options are also disabled; please see below.
+
+**Default:** ``--commit``
+
+.. seealso::
+   - :ref:`config-root-tag-format`
+
+.. _cmd-version-option-changelog:
+
+``--changelog/--no-changelog``
+******************************
+
+Whether or not to update the changelog file with changes introduced as part of the new
+version released.
+
+**Default:** ``--changelog``
+
+.. seealso::
+    - :ref:`config-changelog`
+    - :ref:`changelog-templates`
+
+.. _cmd-version-option-push:
+
+``--push/--no-push``
+********************
+
+Whether or not to push new commits and tags to the remote repository.
+
+**Default:** ``--no-push`` if :ref:`--no-commit <cmd-version-option-commit>` is also
+supplied, otherwise ``--push``
+
+.. _cmd-version-option-vcs-release:
+
+``--vcs-release/--no-vcs-release``
+**********************************
+
+Whether or not to create a "release" in the remote VCS service, if supported. Currently
+releases in GitHub and Gitea remotes are supported. If releases aren't supported in a
+remote VCS, this option will not cause a command failure, but will produce a warning.
+
+**Default:** ``--no-vcs-release`` if ``--no-push`` is supplied (including where this is
+implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
+
 
 .. _cmd-publish:
 
 ``semantic-release publish``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Publish will do a sequence of things:
+Build and publish a distribution to a Python package repository or VCS release.
+Runs :ref:`config-root-build-command` and uploads using :ref:`config-upload`
 
-#. Update changelog file.
-#. Run :ref:`cmd-version`.
-#. Push changes to git.
-#. Run :ref:`config-build_command` and upload the distribution file to your repository.
-#. Run :ref:`cmd-changelog` and post to your vcs provider.
-#. Attach the files created by :ref:`config-build_command` to GitHub releases.
+.. seealso::
+    - :ref:`config-upload`
+    - :ref:`config-root-build-command`
 
-Some of these steps may be disabled based on your configuration.
+.. _cmd-publish-options:
 
-.. _cmd-common-options:
+Options:
+--------
 
-Common Options
-~~~~~~~~~~~~~~
+.. _cmd-publish-option-upload-to-repository:
 
-Every command understands these flags:
+``--upload-to-repository/--no-upload-to-repository``
+****************************************************
 
-``--patch``
-...........
+Whether or not to upload any built artefacts to the configured Python package
+repository. Artefacts are uploaded using Twine_. This overrides the configuration
+setting of :ref:`config-upload-upload-to-repository`.
 
-Force a patch release, ignoring the version bump determined from commit messages.
+.. _Twine: https://twine.readthedocs.io/
 
-``--minor``
-...........
+**Default:** ``--upload-to-repository``
 
-Force a minor release, ignoring the version bump determined from commit messages.
+.. _cmd-publish-option-upload-to-vcs-release:
 
-``--major``
-...........
+``--upload-to-vcs-release/--no-upload-to-vcs-release``
+****************************************************
 
-Force a major release, ignoring the version bump determined from commit messages.
+Whether or not to upload any built artefacts to the configured remote VCS's
+latest release. This overrides the configuration setting of
+:ref:`config-upload-upload-to-vcs-release`.
 
-``--prerelease``
-...........
+**Default:** ``--upload-to-vcs-release``
 
-Makes the next release a prerelease, version bumps are still determined or can be forced,
-but the `prerelease_tag` (see :ref:`config-prerelease_tag`) will be appended to version number.
 
-``--noop``
-..........
+.. _cmd-generate-config:
 
-No operations mode. Do not take any actions, only print what will be done.
+``semantic-release generate-config``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``--retry``
-...........
+Generate default configuration for semantic-release, to help you get started
+quickly. You can inspect the defaults, write to a file and then edit according to
+your needs.
+For example, to append the default configuration to your pyproject.toml
+file, you can use the following command::
 
-Retry the same release, do not bump.
+    $ semantic-release generate-config -f toml >> pyproject.toml
 
-``--define``
-............
+If your project doesn't already leverage TOML files for configuration, it might better
+suit your project to use JSON instead::
 
-Override a configuration value. Takes an argument of the format
-``setting="value"``.
+    $ semantic-release generate-config -f json
 
-``--verbosity``
-...............
+If you would like to add JSON configuration to a shared file, e.g. ``package.json``, you
+can then simply add the output from this command as a **top-level** key to the file.
 
-Change the verbosity of Python Semantic Release's logging. See :ref:`debug-usage`.
+**Note:** Because there is no "null" or "nil" concept in TOML (see the relevant
+`GitHub issue`_), configuration settings which are ``None`` by default are omitted
+from the default configuration.
+
+.. _`GitHub issue`: https://github.com/toml-lang/toml/issues/30
+
+.. seealso::
+    - :ref:`configuration`
+    - :ref:`config-formats`
+
+.. _cmd-generate-config-options:
+
+Options:
+--------
+
+.. _cmd-generate-config-option-format:
+
+``-f/--format [FORMAT]``
+************************
+
+The format that the default configuration should be generated in. Valid choices are
+``toml`` and ``json`` (case-insensitive).
+
+**Default:** toml
+
+
+.. _cmd-changelog:
+
+``semantic-release changelog``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generate and optionally publish a changelog for your project. The changelog
+is generated based on a template which can be customized.
+
+Python Semantic Release uses Jinja_ as its templating engine; as a result templates
+need to be written according to the `Template Designer Documentation`_.
+
+.. _Jinja: https://jinja.palletsprojects.com/
+.. _`Template Designer Documentation`: https://jinja.palletsprojects.com/en/3.1.x/templates/
+
+.. seealso::
+    - :ref:`config-changelog`
+    - :ref:`config-changelog-environment`
+    - :ref:`changelog-templates`
+
+Options:
+--------
+
+.. _cmd-changelog-post-to-release-tag:
+
+``--post-to-release-tag [TAG]``
+*************************
+
+If supplied, attempt to find a release in the remote VCS corresponding to the Git tag
+``TAG``, and post the generated changelog to that release. If the tag exists but no
+corresponding release is found in the remote VCS, then Python Semantic Release will
+attempt to create one.
+
+If using this option, the relevant authentication token *must* be supplied via the
+relevant environment variable. For more information, see :ref:`env-vcs-tokens`.
+

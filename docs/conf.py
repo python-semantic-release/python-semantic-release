@@ -14,6 +14,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
+    # "sphinxcontrib.apidoc",
 ]
 
 templates_path = ["_templates"]
@@ -32,19 +33,21 @@ release = semantic_release.__version__
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 html_theme = "alabaster"
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
 htmlhelp_basename = "python-semantic-releasedoc"
 
 
 # -- Automatically run sphinx-apidoc --------------------------------------
 
+docs_path = os.path.dirname(__file__)
+apidoc_output_dir = os.path.join(docs_path, "api")
+apidoc_module_dir = os.path.join(docs_path, "..", "semantic_release")
+apidoc_separate_modules = True
+apidoc_module_first = True
+apidoc_extra_args = ["-d", "3"]
+
 
 def run_apidoc(_):
-    from sphinx import apidoc
-
-    docs_path = os.path.dirname(__file__)
-    apidoc_path = os.path.join(docs_path, "api")
-    module_path = os.path.join(docs_path, "..", "semantic_release")
 
     apidoc.main(
         [
@@ -53,15 +56,13 @@ def run_apidoc(_):
             "--separate",
             "-d",
             "3",
-            "-o",
-            apidoc_path,
-            module_path,
         ]
     )
 
 
 def setup(app):
-    app.connect("builder-inited", run_apidoc)
+    # app.connect("builder-inited", run_apidoc)
+    pass
 
 
 # -- Options for LaTeX output ---------------------------------------------

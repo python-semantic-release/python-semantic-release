@@ -23,27 +23,33 @@ from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint
 from semantic_release.errors import InvalidConfiguration
 
-FORMAT = "[%(module)s:%(funcName)s]: %(message)s"
+FORMAT = "[%(name)s] %(module)s:%(funcName)s: %(message)s"
 
 
 def _read_toml(path: str) -> dict[str, Any]:
     raw_text = (Path() / path).resolve().read_text(encoding="utf-8")
     try:
         toml_text = tomlkit.loads(raw_text)
-        return toml_text["tool"]["semantic_release"]  # type: ignore
-    except KeyError as exc:
-        raise InvalidConfiguration(
-            f"Missing key 'tool.semantic_release' in {path}"
-        ) from exc
     except tomlkit.exceptions.TOMLKitError as exc:
         raise InvalidConfiguration(f"File {path!r} contains invalid TOML") from exc
+
+    # Look for [tool.semantic_release]
+    cfg_text = toml_text.get("tool", {}).get("semantic_release")
+    if cfg_text is not None:
+        return cfg_text
+    # Look for [semantic_release]
+    cfg_text = toml_text.get("semantic_release")
+    if cfg_text is not None:
+        return cfg_text
+
+    raise InvalidConfiguration(
+        f"Missing keys 'tool.semantic_release' or 'semantic_release' in {path}"
+    )
 
 
 @click.group(
     context_settings={
         "help_option_names": ["-h", "--help"],
-        # "allow_interspersed_args": True,
-        # "ignore_unknown_options": True,
     },
 )
 @click.version_option(
@@ -62,7 +68,7 @@ def _read_toml(path: str) -> dict[str, Any]:
 @click.option("--noop", "noop", is_flag=True, help="Run semantic-release in no-op mode")
 @click.option(
     "-v",
-    "--verbosity",
+    "--verbose",
     "verbosity",
     help="Set logging verbosity",
     default=0,
