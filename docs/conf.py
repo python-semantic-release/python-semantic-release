@@ -2,10 +2,10 @@
 import os
 import sys
 
-import semantic_release  # noqa
-
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
+
+import semantic_release  # noqa
 
 # -- General configuration ------------------------------------------------
 
@@ -14,7 +14,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
-    # "sphinxcontrib.apidoc",
+    "sphinxcontrib.apidoc",
 ]
 
 templates_path = ["_templates"]
@@ -47,21 +47,7 @@ apidoc_module_first = True
 apidoc_extra_args = ["-d", "3"]
 
 
-def run_apidoc(_):
-
-    apidoc.main(
-        [
-            "--force",
-            "--module-first",
-            "--separate",
-            "-d",
-            "3",
-        ]
-    )
-
-
 def setup(app):
-    # app.connect("builder-inited", run_apidoc)
     pass
 
 
