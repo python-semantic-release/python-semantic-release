@@ -26,6 +26,18 @@ supply the token as the value of the ``repository_username`` instead,
 and if using only the token for authentication, remember to set the
 ``repository_username`` input equal to ``__token__``.
 
+.. _breaking-options-inputs:
+
+``additional_options``, ``version_options`` and ``publish_options``
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Because the purposes of the :ref:`cmd-version` and :ref:`cmd-publish` commands
+have changed, the GitHub action now performs both commands in sequence. For this
+reason, and because the usage of the CLI has changed, ``additional_options`` can
+now only supply flags to the main :ref:`cmd-main` command group, and two new inputs,
+``version_options`` and ``publish_options``, have been added to supply the
+required command-line options to the relevant commands in the GitHub Action.
+
 .. _breaking-commands:
 
 Commands

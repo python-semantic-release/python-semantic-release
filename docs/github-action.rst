@@ -99,6 +99,26 @@ required: false
 ``additional_options``
 """"""""""""""""""""""
 
-Additional options for the publish command. Example: --noop
+Additional options for the main ``semantic_release`` command. Example: ``-vv --noop``
+
+required: false
+
+default: ``-v``
+
+.. _action-version-options:
+
+``version_options``
+"""""""""""""""""""
+
+Additional options for the :ref:`cmd-version` command. Example: ``--patch``
+
+required: false
+
+.. _action-publish-options:
+
+``publish_options``
+"""""""""""""""""""
+
+Additional options for the :ref:`cmd-publish` command. Example: ``--no-upload-to-repository``
 
 required: false
