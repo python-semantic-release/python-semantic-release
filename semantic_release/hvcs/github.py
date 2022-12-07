@@ -44,7 +44,7 @@ class Github(HvcsBase):
         remote_url: str,
         hvcs_domain: str | None = None,
         hvcs_api_domain: str | None = None,
-        token_var: str = "GH_TOKEN",
+        token: str | None = None,
     ) -> None:
 
         self._remote_url = remote_url
@@ -64,7 +64,7 @@ class Github(HvcsBase):
 
         self.api_url = f"https://{self.hvcs_api_domain}"
 
-        self.token = os.getenv(token_var)
+        self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
 

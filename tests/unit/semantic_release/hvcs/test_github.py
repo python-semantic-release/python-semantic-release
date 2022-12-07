@@ -25,91 +25,38 @@ def default_gh_client():
 
 @pytest.mark.parametrize(
     (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, token_var, "
-        "expected_hvcs_domain, expected_hvcs_api_domain, expected_token"
+        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
+        "expected_hvcs_domain, expected_hvcs_api_domain"
     ),
     [
-        ({}, None, None, "", Github.DEFAULT_DOMAIN, Github.DEFAULT_API_DOMAIN, None),
+        ({}, None, None, Github.DEFAULT_DOMAIN, Github.DEFAULT_API_DOMAIN),
         (
             {"GITHUB_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
             None,
-            "",
             "special.custom.server/vcs/",
             Github.DEFAULT_API_DOMAIN,
-            None,
         ),
         (
             {"GITHUB_API_URL": "https://api.special.custom.server/"},
             None,
             None,
-            "",
             Github.DEFAULT_DOMAIN,
             "api.special.custom.server/",
-            None,
-        ),
-        (
-            {},
-            None,
-            None,
-            "GH_TOKEN",
-            Github.DEFAULT_DOMAIN,
-            Github.DEFAULT_API_DOMAIN,
-            None,
-        ),
-        (
-            {"GL_TOKEN": "abc123"},
-            None,
-            None,
-            "GH_TOKEN",
-            Github.DEFAULT_DOMAIN,
-            Github.DEFAULT_API_DOMAIN,
-            None,
-        ),
-        (
-            {"GITEA_TOKEN": "abc123"},
-            None,
-            None,
-            "GH_TOKEN",
-            Github.DEFAULT_DOMAIN,
-            Github.DEFAULT_API_DOMAIN,
-            None,
-        ),
-        (
-            {"GH_TOKEN": "aabbcc"},
-            None,
-            None,
-            "GH_TOKEN",
-            Github.DEFAULT_DOMAIN,
-            Github.DEFAULT_API_DOMAIN,
-            "aabbcc",
-        ),
-        (
-            {"PSR__GIT_TOKEN": "aabbcc"},
-            None,
-            None,
-            "PSR__GIT_TOKEN",
-            Github.DEFAULT_DOMAIN,
-            Github.DEFAULT_API_DOMAIN,
-            "aabbcc",
         ),
         (
             {"GITHUB_SERVER_URL": "https://special.custom.server/vcs/"},
             "https://example.com",
             None,
-            "",
             "https://example.com",
             Github.DEFAULT_API_DOMAIN,
-            None,
         ),
         (
             {"GITHUB_API_URL": "https://api.special.custom.server/"},
             None,
             "https://api.example.com",
-            "",
             Github.DEFAULT_DOMAIN,
             "https://api.example.com",
-            None,
         ),
     ],
 )
@@ -120,28 +67,28 @@ def default_gh_client():
         f"https://github.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git",
     ],
 )
+@pytest.mark.parametrize("token", ("abc123", None))
 def test_github_client_init(
     patched_os_environ,
     hvcs_domain,
     hvcs_api_domain,
-    token_var,
     expected_hvcs_domain,
     expected_hvcs_api_domain,
-    expected_token,
     remote_url,
+    token,
 ):
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         client = Github(
             remote_url=remote_url,
             hvcs_domain=hvcs_domain,
             hvcs_api_domain=hvcs_api_domain,
-            token_var=token_var,
+            token=token,
         )
 
         assert client.hvcs_domain == expected_hvcs_domain
         assert client.hvcs_api_domain == expected_hvcs_api_domain
         assert client.api_url == f"https://{client.hvcs_api_domain}"
-        assert client.token == expected_token
+        assert client.token == token
         assert client._remote_url == remote_url
         assert hasattr(client, "session") and isinstance(
             getattr(client, "session", None), Session
@@ -322,7 +269,9 @@ def test_check_build_status(default_gh_client, resp_payload, status_code, expect
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
 @pytest.mark.parametrize("prerelease", (True, False))
-def test_create_release_succeeds(default_gh_client, status_code, prerelease, mock_release_id):
+def test_create_release_succeeds(
+    default_gh_client, status_code, prerelease, mock_release_id
+):
     tag = "v1.0.0"
     release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
@@ -387,6 +336,7 @@ def test_create_release_fails(default_gh_client, prerelease, status_code):
             "draft": False,
             "prerelease": prerelease,
         }
+
 
 @pytest.mark.parametrize("token", (None, "super-token"))
 def test_should_create_release_using_token_or_netrc(default_gh_client, token):
@@ -510,6 +460,7 @@ def test_edit_release_notes_fails(default_gh_client, status_code):
         )
         assert m.last_request.json() == {"body": release_notes}
 
+
 @pytest.mark.parametrize(
     "resp_payload, status_code, expected",
     [
@@ -632,7 +583,9 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
 
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
-def test_upload_asset_succeeds(default_gh_client, example_changelog_md, status_code, mock_release_id):
+def test_upload_asset_succeeds(
+    default_gh_client, example_changelog_md, status_code, mock_release_id
+):
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
     with requests_mock.Mocker(session=default_gh_client.session) as m:

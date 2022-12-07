@@ -24,91 +24,38 @@ def default_gitea_client():
 
 @pytest.mark.parametrize(
     (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, token_var, "
-        "expected_hvcs_domain, expected_hvcs_api_domain, expected_token"
+        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
+        "expected_hvcs_domain, expected_hvcs_api_domain"
     ),
     [
-        ({}, None, None, "", Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_API_DOMAIN, None),
+        ({}, None, None, Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_API_DOMAIN),
         (
             {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
             None,
-            "",
             "special.custom.server/vcs/",
             Gitea.DEFAULT_API_DOMAIN,
-            None,
         ),
         (
             {"GITEA_API_URL": "https://api.special.custom.server/"},
             None,
             None,
-            "",
             Gitea.DEFAULT_DOMAIN,
             "api.special.custom.server/",
-            None,
-        ),
-        (
-            {},
-            None,
-            None,
-            "GITEA_TOKEN",
-            Gitea.DEFAULT_DOMAIN,
-            Gitea.DEFAULT_API_DOMAIN,
-            None,
-        ),
-        (
-            {"GH_TOKEN": "abc123"},
-            None,
-            None,
-            "GITEA_TOKEN",
-            Gitea.DEFAULT_DOMAIN,
-            Gitea.DEFAULT_API_DOMAIN,
-            None,
-        ),
-        (
-            {"GL_TOKEN": "abc123"},
-            None,
-            None,
-            "GITEA_TOKEN",
-            Gitea.DEFAULT_DOMAIN,
-            Gitea.DEFAULT_API_DOMAIN,
-            None,
-        ),
-        (
-            {"GITEA_TOKEN": "aabbcc"},
-            None,
-            None,
-            "GITEA_TOKEN",
-            Gitea.DEFAULT_DOMAIN,
-            Gitea.DEFAULT_API_DOMAIN,
-            "aabbcc",
-        ),
-        (
-            {"PSR__GIT_TOKEN": "aabbcc"},
-            None,
-            None,
-            "PSR__GIT_TOKEN",
-            Gitea.DEFAULT_DOMAIN,
-            Gitea.DEFAULT_API_DOMAIN,
-            "aabbcc",
         ),
         (
             {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
             "https://example.com",
             None,
-            "",
             "https://example.com",
             Gitea.DEFAULT_API_DOMAIN,
-            None,
         ),
         (
             {"GITEA_API_URL": "https://api.special.custom.server/"},
             None,
             "https://api.example.com",
-            "",
             Gitea.DEFAULT_DOMAIN,
             "https://api.example.com",
-            None,
         ),
     ],
 )
@@ -119,28 +66,28 @@ def default_gitea_client():
         f"https://gitea.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git",
     ],
 )
+@pytest.mark.parametrize("token", ("abc123", None))
 def test_gitea_client_init(
     patched_os_environ,
     hvcs_domain,
     hvcs_api_domain,
-    token_var,
     expected_hvcs_domain,
     expected_hvcs_api_domain,
-    expected_token,
     remote_url,
+    token,
 ):
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         client = Gitea(
             remote_url=remote_url,
             hvcs_domain=hvcs_domain,
             hvcs_api_domain=hvcs_api_domain,
-            token_var=token_var,
+            token=token,
         )
 
         assert client.hvcs_domain == expected_hvcs_domain
         assert client.hvcs_api_domain == expected_hvcs_api_domain
         assert client.api_url == f"https://{client.hvcs_api_domain}"
-        assert client.token == expected_token
+        assert client.token == token
         assert client._remote_url == remote_url
         assert hasattr(client, "session") and isinstance(
             getattr(client, "session", None), Session

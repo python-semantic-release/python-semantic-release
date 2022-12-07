@@ -47,7 +47,7 @@ class Gitlab(HvcsBase):
         remote_url: str,
         hvcs_domain: str | None = None,
         hvcs_api_domain: str | None = None,
-        token_var: str = "GL_TOKEN",
+        token: str | None = None,
     ) -> None:
         self._remote_url = remote_url
         self.hvcs_domain = (
@@ -58,7 +58,7 @@ class Gitlab(HvcsBase):
         )
         self.api_url = os.getenv("CI_SERVER_URL", f"https://{self.hvcs_api_domain}")
 
-        self.token = os.getenv(token_var)
+        self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
 

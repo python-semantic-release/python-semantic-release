@@ -114,7 +114,7 @@ class TomlVersionDeclaration(VersionDeclarationABC):
             )
             valid_version = Version.parse(maybe_version)
             return {valid_version}
-        # TODO: maybe raise error if not found?
+        # Maybe in future raise error if not found?
         return set()
 
     def replace(self, new_version: Version) -> str:

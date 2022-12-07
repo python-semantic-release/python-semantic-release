@@ -157,7 +157,7 @@ def version(
     if build_metadata:
         v.build_metadata = build_metadata
 
-    # TODO: if it's already the same/released?
+    # Perhaps this behaviour should change if no release should be made?
     click.echo(str(v))
     if print_only:
         ctx.exit(0)
@@ -305,16 +305,24 @@ def version(
         log.info("Release notes: %s", release_notes)
         noop_report(f"would have uploaded the following assets: {runtime.assets}")
     elif make_vcs_release:
-        release_id = hvcs_client.create_or_update_release(
-            tag=v.as_tag(),
-            release_notes=release_notes,
-            prerelease=v.is_prerelease,
-        )
+        try:
+            release_id = hvcs_client.create_or_update_release(
+                tag=v.as_tag(),
+                release_notes=release_notes,
+                prerelease=v.is_prerelease,
+            )
+        except Exception as e:
+            log.error("%s", str(e), exc_info=True)
+            ctx.fail(str(e))
         if not release_id:
             log.warning("release_id not identified, cannot upload assets")
         else:
             for asset in assets:
                 log.info("Uploading asset %s", asset)
-                hvcs_client.upload_asset(release_id, asset)
+                try:
+                    hvcs_client.upload_asset(release_id, asset)
+                except Exception as e:
+                    log.error("%s", str(e), exc_info=True)
+                    ctx.fail(str(e))
 
     return str(v)

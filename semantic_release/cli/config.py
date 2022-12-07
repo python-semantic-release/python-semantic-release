@@ -92,7 +92,7 @@ class BranchConfig(BaseModel):
 
 class RemoteConfig(BaseModel):
     name: str = "origin"
-    token_var: Optional[str] = None
+    token: MaybeFromEnv = EnvConfigVar(env="GH_TOKEN")
     url: Optional[MaybeFromEnv] = None
     type: HvcsClient = HvcsClient.GITHUB
     domain: Optional[str] = None
@@ -380,8 +380,6 @@ class RuntimeContext:
 
             version_declarations.append(pd)
 
-        # TODO: raw.version_pattern - do we format in SEMVER_REGEX?
-
         # hvcs_client
         hvcs_client_cls = _known_hvcs[raw.remote.type]
         raw_remote_url = raw.remote.url
@@ -392,13 +390,18 @@ class RuntimeContext:
             else repo.remote(raw.remote.name).url
         )
 
-        # TODO: maybe the env-handling here is duplicating
-        # the one in hvcs client & could be removed
+        token = cls.resolve_from_env(raw.remote.token)
+        if isinstance(raw.remote.token, EnvConfigVar) and not token:
+            log.warning(
+                "the token for the remote VCS is configured as stored in the %s environment variable, but it is empty",
+                raw.remote.token.env,
+            )
+
         hvcs_client = hvcs_client_cls(
             remote_url=remote_url,
             hvcs_domain=cls.resolve_from_env(raw.remote.domain),
             hvcs_api_domain=cls.resolve_from_env(raw.remote.api_domain),
-            token_var=raw.remote.token_var or "",
+            token=token,
         )
 
         # changelog_file

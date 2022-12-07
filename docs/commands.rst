@@ -8,8 +8,8 @@ command and exits immediately.
 
 ``semantic-release`` does not allow interspersed arguments and options, which
 means that the options for ``semantic-release`` are not necessarily accepted
-one of the subcommands. In particular, the :ref:`cmd-main-options-noop` and
-:ref:`verbosity <cmd-main-options-verbosity>` flags must be given to the top-level
+one of the subcommands. In particular, the :ref:`cmd-main-option-noop` and
+:ref:`cmd-main-option-verbosity` flags must be given to the top-level
 ``semantic-release`` command, before the name of the subcommand.
 
 For example:
@@ -148,8 +148,7 @@ performed using the usual calculation algorithm.
 
 .. seealso::
     - :ref:`configuration`
-    - :ref:`config-multibranch-releases`
-    - :ref:`config-branches-prerelease`
+    - :ref:`config-branches`
 
 .. _cmd-version-option-prerelease:
 
@@ -160,7 +159,8 @@ Force the next version to be a prerelease. As with :ref:`cmd-version-option-forc
 is a forceful override, but no action is required to resume calculating versions as normal on the
 subsequent releases.
 
-The :ref:`config-root-prerelease-token` is idenitified using the configuration.
+The prerelease token is idenitified using the
+:ref:`Multibranch Release Configuration <multibranch-releases-configuring>`
 
 .. _cmd-version-option-build-metadata:
 
@@ -170,7 +170,7 @@ The :ref:`config-root-prerelease-token` is idenitified using the configuration.
 If given, append the value to the newly calculated version. This can be used, for example,
 to attach a run number from a CI service or a date to the version and tag that are created.
 
-This value can also be set using the environment variable :ref:`env-psr-build-metadata`
+This value can also be set using the environment variable ``PSR_BUILD_METADATA``
 
 For example, assuming a project is currently at version 1.2.3::
     
@@ -193,7 +193,7 @@ If ``--no-commit`` is supplied, a number of other options are also disabled; ple
 **Default:** ``--commit``
 
 .. seealso::
-   - :ref:`config-root-tag-format`
+   - :ref:`tag_format <config-tag-format>`
 
 .. _cmd-version-option-changelog:
 
@@ -238,11 +238,11 @@ implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Build and publish a distribution to a Python package repository or VCS release.
-Runs :ref:`config-root-build-command` and uploads using :ref:`config-upload`
+Runs :ref:`config-build-command` and uploads using :ref:`config-upload`
 
 .. seealso::
     - :ref:`config-upload`
-    - :ref:`config-root-build-command`
+    - :ref:`config-build-command`
 
 .. _cmd-publish-options:
 
@@ -303,7 +303,6 @@ from the default configuration.
 
 .. seealso::
     - :ref:`configuration`
-    - :ref:`config-formats`
 
 .. _cmd-generate-config-options:
 
@@ -354,5 +353,5 @@ corresponding release is found in the remote VCS, then Python Semantic Release w
 attempt to create one.
 
 If using this option, the relevant authentication token *must* be supplied via the
-relevant environment variable. For more information, see :ref:`env-vcs-tokens`.
+relevant environment variable. For more information, see :ref:`index-creating-vcs-releases`.
 

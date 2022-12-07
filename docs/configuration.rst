@@ -298,7 +298,7 @@ specifed in ``file:variable`` format. For example:
 
 **Default:** ``[]``
 
-.. _config-version_toml:
+.. _config-version-toml:
 
 ``version_toml (List[str])``
 """"""""""""""""""""""""""""
@@ -531,15 +531,30 @@ pushing.
 
 **Default:** ``False``
 
-.. _config-remote-token-var:
+.. _config-remote-token:
 
-``token_var (Optional[str])``
-"""""""""""""""""""""""""""""
+``token`` (:ref:`Environment Variable <config-environment-variables>`)
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Environment variable from which to source the authentication token for the remote VCS.
-Common examples include ``"GH_TOKEN"``, ``"GITLAB_TOKEN"`` or ``"GITEA_TOKEN"``.
+Common examples include ``"GH_TOKEN"``, ``"GITLAB_TOKEN"`` or ``"GITEA_TOKEN"``, however
+you can choose to use a custom environment variable if you wish.
 
-**Default:** ``None`` (not specified)
+.. note::
+   By default, this is a **mandatory** environment variable that must be set before
+   using any functionality that requires authentication with your remote VCS. If you
+   are using this token to enable push access to the repository, it must also be set
+   before attempting to push.
+
+   If your push access is enabled via SSH keys instead, then you do not need to set
+   this environment variable in order to push the version increment, changelog and
+   modified source code assets to the remote using :ref:`cmd-version`. However,
+   you will need to disable release creation using the :ref:`cmd-version-option-vcs-release`
+   option, among other options, in order to use Python Semantic Release without
+   configuring the environment variable for your remote VCS authentication token.
+
+
+**Default:** ``{ env = "GH_TOKEN" }``
 
 
 .. _config-upload:

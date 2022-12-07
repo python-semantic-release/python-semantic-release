@@ -141,91 +141,38 @@ def default_gl_client():
 
 @pytest.mark.parametrize(
     (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, token_var, "
-        "expected_hvcs_domain, expected_hvcs_api_domain, expected_token"
+        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
+        "expected_hvcs_domain, expected_hvcs_api_domain"
     ),
     [
-        ({}, None, None, "", Gitlab.DEFAULT_DOMAIN, Gitlab.DEFAULT_DOMAIN, None),
+        ({}, None, None, Gitlab.DEFAULT_DOMAIN, Gitlab.DEFAULT_DOMAIN),
         (
             {"CI_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
             None,
-            "",
             "special.custom.server/vcs",
             "special.custom.server/vcs",
-            None,
         ),
         (
             {"CI_SERVER_HOST": "api.special.custom.server/"},
             None,
             None,
-            "",
             "api.special.custom.server/",
             "api.special.custom.server/",
-            None,
-        ),
-        (
-            {},
-            None,
-            None,
-            "GL_TOKEN",
-            Gitlab.DEFAULT_DOMAIN,
-            Gitlab.DEFAULT_DOMAIN,
-            None,
-        ),
-        (
-            {"GH_TOKEN": "abc123"},
-            None,
-            None,
-            "GL_TOKEN",
-            Gitlab.DEFAULT_DOMAIN,
-            Gitlab.DEFAULT_DOMAIN,
-            None,
-        ),
-        (
-            {"GITEA_TOKEN": "abc123"},
-            None,
-            None,
-            "GL_TOKEN",
-            Gitlab.DEFAULT_DOMAIN,
-            Gitlab.DEFAULT_DOMAIN,
-            None,
-        ),
-        (
-            {"GL_TOKEN": "aabbcc"},
-            None,
-            None,
-            "GL_TOKEN",
-            Gitlab.DEFAULT_DOMAIN,
-            Gitlab.DEFAULT_DOMAIN,
-            "aabbcc",
-        ),
-        (
-            {"PSR__GIT_TOKEN": "aabbcc"},
-            None,
-            None,
-            "PSR__GIT_TOKEN",
-            Gitlab.DEFAULT_DOMAIN,
-            Gitlab.DEFAULT_DOMAIN,
-            "aabbcc",
         ),
         (
             {"CI_SERVER_URL": "https://special.custom.server/vcs/"},
             "example.com",
             None,
-            "",
             "example.com",
             "example.com",
-            None,
         ),
         (
             {"CI_SERVER_URL": "https://api.special.custom.server/"},
             None,
             "api.example.com",
-            "",
             "api.special.custom.server",
             "api.example.com",
-            None,
         ),
     ],
 )
@@ -236,22 +183,22 @@ def default_gl_client():
         f"https://gitlab.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git",
     ],
 )
+@pytest.mark.parametrize("token", ("abc123", None))
 def test_gitlab_client_init(
     patched_os_environ,
     hvcs_domain,
     hvcs_api_domain,
-    token_var,
     expected_hvcs_domain,
     expected_hvcs_api_domain,
-    expected_token,
     remote_url,
+    token,
 ):
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         client = Gitlab(
             remote_url=remote_url,
             hvcs_domain=hvcs_domain,
             hvcs_api_domain=hvcs_api_domain,
-            token_var=token_var,
+            token=token,
         )
 
         assert client.hvcs_domain == expected_hvcs_domain
@@ -259,7 +206,7 @@ def test_gitlab_client_init(
         assert client.api_url == patched_os_environ.get(
             "CI_SERVER_URL", f"https://{client.hvcs_api_domain}"
         )
-        assert client.token == expected_token
+        assert client.token == token
         assert client._remote_url == remote_url
         assert hasattr(client, "session") and isinstance(
             getattr(client, "session", None), Session

@@ -76,7 +76,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             flags=re.VERBOSE | re.DOTALL,
         )
 
-    # TODO: maybe cache?
+    # Maybe this can be cached as an optimisation, similar to how
+    # mypy/pytest use their own caching directories, for very large commit
+    # histories?
+    # The problem is the cache likely won't be present in CI environments
     def parse(self, commit: Commit) -> ParseResult:
         """
         Attempt to parse the commit message with a regular expression into a
@@ -107,7 +110,6 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
 
         if parsed_break or breaking_descriptions:
             level_bump = LevelBump.MAJOR
-            # TODO: maybe this isn't the right thing to do
             parsed_type = "breaking"
         elif parsed_type in self.options.minor_tags:
             level_bump = LevelBump.MINOR

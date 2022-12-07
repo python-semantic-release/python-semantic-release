@@ -84,6 +84,10 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             version=v, release=release
         )
         version = translator.from_tag(release_tag)
-        hvcs_client.create_or_update_release(
-            release_tag, release_notes, prerelease=version.is_prerelease
-        )
+        try:
+            hvcs_client.create_or_update_release(
+                release_tag, release_notes, prerelease=version.is_prerelease
+            )
+        except Exception as e:
+            log.error("%s", str(e), exc_info=True)
+            ctx.fail(str(e))

@@ -41,11 +41,11 @@ class HvcsBase:
         remote_url: str,
         hvcs_domain: str | None = None,
         hvcs_api_domain: str | None = None,
-        token_var: str = "",
+        token: str | None = None,
     ) -> None:
         self.hvcs_domain = hvcs_domain
         self.hvcs_api_domain = hvcs_api_domain
-        self.token = os.getenv(token_var)
+        self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self._remote_url = remote_url
         self.session = build_requests_session(auth=auth)
