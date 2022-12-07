@@ -11,6 +11,7 @@ export GIT_COMMITTER_NAME="${INPUT_GIT_COMMITTER_NAME:="github-actions"}"
 export GIT_COMMITTER_EMAIL="${INPUT_GIT_COMMITTER_EMAIL:="github-actions@github.com"}"
 export SSH_PRIVATE_SIGNING_KEY="${INPUT_SSH_PRIVATE_SIGNING_KEY}"
 export SSH_PUBLIC_SIGNING_KEY="${INPUT_SSH_PUBLIC_SIGNING_KEY}"
+export GIT_COMMIT_AUTHOR="${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>"
 
 # Change to configured directory
 cd "${INPUT_DIRECTORY}"
@@ -41,9 +42,7 @@ fi
 
 # Run Semantic Release
 /semantic-release/.venv/bin/python \
-  -m semantic_release -v version \
-  -D commit_author="$GIT_COMMITTER_NAME <$GIT_COMMITTER_EMAIL>" \
-  ${INPUT_ADDITIONAL_OPTIONS} && \
+  -m semantic_release -v version ${INPUT_ADDITIONAL_OPTIONS} && \
   /semantic-release/.venv/bin/python \
     -m semantic_release -v publish \
 

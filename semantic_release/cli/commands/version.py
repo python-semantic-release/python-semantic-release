@@ -113,6 +113,7 @@ def version(
     env = runtime.template_environment
     template_dir = runtime.template_dir
     assets = runtime.assets
+    commit_author = runtime.commit_author
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
     opts = runtime.global_cli_options
@@ -207,7 +208,11 @@ def version(
         if not repo.index.diff("HEAD"):
             ctx.fail("No files were changed by the version update")
 
-        repo.git.commit(m=commit_message.format(version=v))
+        if commit_author:
+            repo.git.commit(m=commit_message.format(version=v), author=commit_author)
+        else:
+            # Use configured commit author
+            repo.git.commit(m=commit_message.format(version=v))
 
         repo.git.tag("-a", v.as_tag(), m=v.as_tag())
 

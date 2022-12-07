@@ -29,7 +29,7 @@ from semantic_release.commit_parser import (
     ScipyCommitParser,
     TagCommitParser,
 )
-from semantic_release.const import COMMIT_MESSAGE, SEMVER_REGEX
+from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
 from semantic_release.hvcs import Gitea, Github, Gitlab, HvcsBase
@@ -142,6 +142,9 @@ class RawConfig(BaseModel):
     branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
     build_command: str = f"{_PY} setup.py sdist bdist_wheel"
     changelog: ChangelogConfig = ChangelogConfig()
+    commit_author: MaybeFromEnv = EnvConfigVar(
+        env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR
+    )
     commit_message: str = COMMIT_MESSAGE
     commit_parser: str = "angular"
     # It's up to the parser_options() method to validate these
@@ -231,6 +234,7 @@ class RuntimeContext:
     major_on_zero: bool
     prerelease: bool
     assets: Tuple[str, ...]
+    commit_author: Optional[str]
     commit_message: str
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: HvcsBase
@@ -425,6 +429,7 @@ class RuntimeContext:
             hvcs_client=hvcs_client,
             changelog_file=changelog_file,
             assets=raw.assets,
+            commit_author=cls.resolve_from_env(raw.commit_author),
             commit_message=raw.commit_message,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,
