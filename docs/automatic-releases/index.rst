@@ -11,9 +11,11 @@ this package can be found below. Using a CI is the recommended approach.
 
 Guides
 ^^^^^^
-* :doc:`travis`
-* :doc:`github-actions`
-* :doc:`cronjobs`
+
+.. toctree::
+    travis
+    github-actions
+    cronjobs
 
 .. _automatic-checks:
 
@@ -55,7 +57,7 @@ The branch check, checks against the branch that circle-ci said it checked out, 
 branch.
 
 GitLab CI
-^^^^^^^^
+^^^^^^^^^
 *Condition:* Environment variable ``GITLAB_CI`` is ``'true'``
 
 Checks for gitlab-ci to ensure that the build is on the correct branch.

@@ -65,7 +65,7 @@ output (default level is ``WARNING``, use ``-v`` for ``INFO`` and ``-vv`` for ``
 .. _cmd-main-option-config:
 
 ``-c/--config [FILE]``
-********************
+**********************
 
 Specify the configuration file which Python Semantic Release should use. This can
 be any of the supported formats at <<<<<<<<insert ref here>>>>>>>>>>
@@ -165,7 +165,7 @@ The :ref:`config-root-prerelease-token` is idenitified using the configuration.
 .. _cmd-version-option-build-metadata:
 
 ``--build-metadata [VALUE]``
-********************
+****************************
 
 If given, append the value to the newly calculated version. This can be used, for example,
 to attach a run number from a CI service or a date to the version and tag that are created.
@@ -265,7 +265,7 @@ setting of :ref:`config-upload-upload-to-repository`.
 .. _cmd-publish-option-upload-to-vcs-release:
 
 ``--upload-to-vcs-release/--no-upload-to-vcs-release``
-****************************************************
+******************************************************
 
 Whether or not to upload any built artefacts to the configured remote VCS's
 latest release. This overrides the configuration setting of
@@ -343,10 +343,10 @@ need to be written according to the `Template Designer Documentation`_.
 Options:
 --------
 
-.. _cmd-changelog-post-to-release-tag:
+.. _cmd-changelog-option-post-to-release-tag:
 
 ``--post-to-release-tag [TAG]``
-*************************
+*******************************
 
 If supplied, attempt to find a release in the remote VCS corresponding to the Git tag
 ``TAG``, and post the generated changelog to that release. If the tag exists but no

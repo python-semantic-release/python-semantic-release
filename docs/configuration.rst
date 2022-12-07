@@ -152,7 +152,7 @@ Command to use when building the source code during :ref:`cmd-publish`
 .. _config-commit_author:
 
 ``commit_author (str)``
-"""""""""""""""""
+"""""""""""""""""""""""
 Author used in commits in the format ``name <email>``.
 
 .. note::
@@ -205,7 +205,7 @@ These options are passed directly to the ``parser_options`` method of
 :ref:`the commit parser <config-commit-parser>`, without validation
 or transformation.
 
-For more information, see :ref:`commit-parsing-custom-options`.
+For more information, see :ref:`commit-parsing-parser-options`.
 
 The default values are the defaults for :ref:`commit-parser-angular`
 
@@ -280,10 +280,10 @@ Format Key       Mandatory  Contents
 
 **Default:** ``"v{version}"``
 
-.. _config-version-variable:
+.. _config-version-variables:
 
 ``version_variables (List[str])``
-"""""""""""""""""""""
+"""""""""""""""""""""""""""""""""
 
 Each entry represents a location where the version is stored in the source code,
 specifed in ``file:variable`` format. For example:
@@ -301,7 +301,7 @@ specifed in ``file:variable`` format. For example:
 .. _config-version_toml:
 
 ``version_toml (List[str])``
-""""""""""""""""
+""""""""""""""""""""""""""""
 Similar to :ref:`config-version-variables`, but allows the version number to be
 identified safely in a toml file like ``pyproject.toml``, with each entry using
 dotted notation to indicate the key for which the value represents the version:
@@ -422,7 +422,7 @@ This setting is passed directly to the `jinja2.Environment`_ constructor.
 .. _config-changelog-environment-line-comment-prefix:
 
 ``line_comment_prefix (Optional[str])``
-"""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""
 
 This setting is passed directly to the `jinja2.Environment`_ constructor.
 
@@ -440,7 +440,7 @@ This setting is passed directly to the `jinja2.Environment`_ constructor.
 .. _config-changelog-environment-lstrip-blocks:
 
 ``lstrip_blocks (bool)``
-"""""""""""""""""""""""
+""""""""""""""""""""""""
 
 This setting is passed directly to the `jinja2.Environment`_ constructor.
 
@@ -571,7 +571,7 @@ Common examples include ``"GH_TOKEN"``, ``"GITLAB_TOKEN"`` or ``"GITEA_TOKEN"``.
 .. _config-upload-dist-glob-patterns:
 
 ``dist_glob_patterns (List[str])``
-""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""
 
 Once :ref:`config-build-command` has been run, any files matching any of these globs
 will be uploaded to your repository. Each item in this list should be a string

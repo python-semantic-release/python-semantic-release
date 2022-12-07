@@ -50,6 +50,27 @@ The default parser, which uses the `Angular commit style <https://github.com/ang
   - Multiple ``BREAKING CHANGE:`` paragraphs are supported
   - ``revert`` is not currently supported
 
+The default confiugration options for
+:py:class:`semantic_release.commit_parser.AngularCommitParser` are:
+
+.. code-block:: toml
+
+    [tool.semantic_release.commit_parser_options]
+    allowed_tags = [
+        "build",
+        "chore",
+        "ci",
+        "docs",
+        "feat",
+        "fix",
+        "perf",
+        "style",
+        "refactor",
+        "test",
+    ]
+    minor_tags = ["feat"]
+    patch_tags = ["fix", "perf"]
+
 .. _commit-parser-emoji:
 
 ``semantic_release.history.EmojiCommitParser``
@@ -66,6 +87,38 @@ See :ref:`config-major_emoji`, :ref:`config-minor_emoji` and
 :ref:`config-patch_emoji`. The default settings are for
 `Gitmoji <https://gitmoji.carloscuesta.me/>`_.
 
+The default confiugration options for
+:py:class:`semantic_release.commit_parser.EmojiCommitParser` are:
+
+.. code-block:: toml
+
+    [tool.semantic_release.commit_parser_options]
+    major_tags = [":boom:"]
+    minor_tags = [
+        ":sparkles:",
+        ":children_crossing:",
+        ":lipstick:",
+        ":iphone:",
+        ":egg:",
+        ":chart_with_upwards_trend:",
+    ]
+    patch_tags = [
+        ":ambulance:",
+        ":lock:",
+        ":bug:",
+        ":zap:",
+        ":goal_net:",
+        ":alien:",
+        ":wheelchair:",
+        ":speech_balloon:",
+        ":mag:",
+        ":apple:",
+        ":penguin:",
+        ":checkered_flag:",
+        ":robot:",
+        ":green_apple:",
+    ]
+
 .. _commit-parser-scipy:
 
 ``semantic_release.history.scipy_parser``
@@ -77,6 +130,33 @@ A parser for `scipy-style commits <scipy-style>`_ with the following differences
     a breaking change. Multiple ``BREAKING CHANGE`` paragraphs are supported.
   - A scope (following the tag in parentheses) is supported
 
+The default confiugration options for
+:py:class:`semantic_release.commit_parser.ScipyCommitParser` are:
+
+.. code-block:: toml
+
+    [tool.semantic_release.commit_parser_options]
+    allowed_tags = [
+        "API",
+        "DEP",
+        "ENH",
+        "REV",
+        "BUG",
+        "MAINT",
+        "BENCH",
+        "BLD",
+        "DEV",
+        "DOC",
+        "STY",
+        "TST",
+        "REL",
+        "FEAT",
+        "TEST",
+    ]
+    major_tags = ["API"]
+    minor_tags = ["DEP", "DEV", "ENH", "REV", "FEAT"]
+    patch_tags = ["BLD", "BUG", "MAINT"]
+
 .. _commit-parser-tag:
 
 ``semantic_release.history.TagCommitParser``
@@ -84,6 +164,15 @@ A parser for `scipy-style commits <scipy-style>`_ with the following differences
 
 The original parser from v1.0.0 of Python Semantic Release. Similar to the
 emoji parser above, but with less features.
+
+The default confiugration options for
+:py:class:`semantic_release.commit_parser.TagCommitParser` are:
+
+.. code-block:: toml
+
+    [tool.semantic_release.commit_parser_options]
+    minor_tag = ":sparkles:"
+    patch_tag = ":nut_and_bolt:"
 
 .. _commit-parser-writing-your-own-parser:
 
