@@ -303,11 +303,18 @@ def version(
     if make_vcs_release and opts.noop:
         noop_report(f"would have created a release for the tag {v.as_tag()!r}")
         log.info("Release notes: %s", release_notes)
+        noop_report(f"would have uploaded the following assets: {runtime.assets}")
     elif make_vcs_release:
-        hvcs_client.create_or_update_release(
+        release_id = hvcs_client.create_or_update_release(
             tag=v.as_tag(),
             release_notes=release_notes,
             prerelease=v.is_prerelease,
         )
+        if not release_id:
+            log.warning("release_id not identified, cannot upload assets")
+        else:
+            for asset in assets:
+                log.info("Uploading asset %s", asset)
+                hvcs_client.upload_asset(release_id, asset)
 
     return str(v)

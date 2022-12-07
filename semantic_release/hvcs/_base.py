@@ -96,12 +96,12 @@ class HvcsBase:
 
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> bool:
+    ) -> int:
         """
         Create a release in a remote VCS, if supported
         """
         _not_supported(self, "create_release")
-        return True
+        return -1
 
     def get_release_id_by_tag(self, tag: str) -> int | None:
         """
@@ -111,22 +111,22 @@ class HvcsBase:
         _not_supported(self, "get_release_id_by_tag")
         return None
 
-    def edit_release_notes(self, release_id: int, changelog: str) -> bool:
+    def edit_release_notes(self, release_id: int, changelog: str) -> int:
         """
         Edit the changelog associated with a release, if supported
         """
         _not_supported(self, "edit_release_notes")
-        return True
+        return -1
 
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> bool:
+    ) -> int:
         """
         Create or update a release for the given tag in a remote VCS, attaching the
         given changelog, if supported
         """
         _not_supported(self, "create_or_update_release")
-        return True
+        return -1
 
     def asset_upload_url(self, release_id: str) -> str | None:
         """

@@ -8,14 +8,12 @@ import logging
 import mimetypes
 import os
 
+from requests import HTTPError
+
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
-from semantic_release.hvcs.util import (
-    build_requests_session,
-    suppress_http_error,
-    suppress_not_found,
-)
+from semantic_release.hvcs.util import build_requests_session, suppress_not_found
 
 log = logging.getLogger(__name__)
 
@@ -95,7 +93,6 @@ class Github(HvcsBase):
         )
 
     @logged_function(log)
-    @suppress_http_error
     def check_build_status(self, ref: str) -> bool:
         """Check build status
         https://docs.github.com/rest/reference/repos#get-the-combined-status-for-a-specific-reference
@@ -103,14 +100,18 @@ class Github(HvcsBase):
         :return: Was the build status success?
         """
         url = f"{self.api_url}/repos/{self.owner}/{self.repo_name}/commits/{ref}/status"
-        response = self.session.get(url)
+        try:
+            response = self.session.get(url)
+        except HTTPError as err:
+            log.warning("error checking build status: %s", err)
+            return False
+
         return response.json().get("state") == "success"  # type: ignore
 
     @logged_function(log)
-    @suppress_http_error
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> bool:
+    ) -> int:
         """Create a new release
         https://docs.github.com/rest/reference/repos#create-a-release
         :param tag: Tag to create release for
@@ -119,7 +120,7 @@ class Github(HvcsBase):
         :return: Whether the request succeeded
         """
         log.info("Creating release for tag %s", tag)
-        self.session.post(
+        resp = self.session.post(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases",
             json={
                 "tag_name": tag,
@@ -129,7 +130,7 @@ class Github(HvcsBase):
                 "prerelease": prerelease,
             },
         )
-        return True
+        return resp.json()["id"]  # type: ignore
 
     @logged_function(log)
     @suppress_not_found
@@ -145,47 +146,49 @@ class Github(HvcsBase):
         return response.json().get("id")  # type: ignore
 
     @logged_function(log)
-    @suppress_http_error
     def edit_release_notes(
         self,
         release_id: int,
         release_notes: str,
-    ) -> bool:
+    ) -> int:
         """Edit a release with updated change notes
         https://docs.github.com/rest/reference/repos#update-a-release
         :param id: ID of release to update
         :param release_notes: The release notes for this version
-        :return: Whether the request succeeded
+        :return: The ID of the release that was edited
         """
         log.info("Updating release %s", release_id)
         self.session.post(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
             json={"body": release_notes},
         )
-        return True
+        return release_id
 
     @logged_function(log)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> bool:
+    ) -> int:
         """Post release changelog
         :param version: The version number
         :param release_notes: The release notes for this version
         :return: The status of the request
         """
         log.info("Creating release for %s", tag)
-        success = self.create_release(tag, release_notes, prerelease)
+        try:
+            return self.create_release(tag, release_notes, prerelease)
+        except HTTPError as err:
+            log.debug("error creating release: %s", err)
+            log.debug("looking for an existing release to update")
 
-        if not success:
-            log.debug("Unsuccessful, looking for an existing release to update")
-            release_id = self.get_release_id_by_tag(tag)
-            if release_id:
-                log.debug("Found existing release %s, updating", release_id)
-                success = self.edit_release_notes(release_id, release_notes)
-            else:
-                log.debug("Existing release not found")
+        release_id = self.get_release_id_by_tag(tag)
+        if release_id is None:
+            raise ValueError(
+                f"release id for tag {tag} not found, and could not be created"
+            )
 
-        return success
+        log.debug("Found existing release %s, updating", release_id)
+        # If this errors we let it die
+        return self.edit_release_notes(release_id, release_notes)
 
     @logged_function(log)
     def asset_upload_url(self, release_id: str) -> str:
@@ -198,7 +201,6 @@ class Github(HvcsBase):
         return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"
 
     @logged_function(log)
-    @suppress_http_error
     def upload_asset(
         self, release_id: int, file: str, label: str | None = None
     ) -> bool:
@@ -245,14 +247,18 @@ class Github(HvcsBase):
         release_id = self.get_release_id_by_tag(tag=tag)
         if not release_id:
             log.warning("No release corresponds to tag %s, can't upload dists", tag)
-            return False
+            return 0
 
         # Upload assets
         n_succeeded = 0
         for file_path in (
             f for f in glob.glob(dist_glob, recursive=True) if os.path.isfile(f)
         ):
-            n_succeeded += self.upload_asset(release_id, file_path)
+            try:
+                self.upload_asset(release_id, file_path)
+                n_succeeded += 1
+            except HTTPError:
+                log.error("error uploading asset %s", file_path, exc_info=True)
 
         return n_succeeded
 

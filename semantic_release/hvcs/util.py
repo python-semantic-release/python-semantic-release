@@ -47,23 +47,6 @@ def build_requests_session(
     return session
 
 
-def suppress_http_error(func: Callable[..., bool]) -> Callable[..., bool]:
-    """
-    Suppress HTTP errors that are raised by a function call, converting them to return
-    False instead of erroring
-    """
-
-    @wraps(func)
-    def _wrapper(*a: Any, **kw: Any) -> bool:
-        try:
-            return func(*a, **kw)
-        except HTTPError as err:
-            logger.warning("%s failed: %s", func.__qualname__, err)
-            return False
-
-    return _wrapper
-
-
 _R = TypeVar("_R")
 
 
