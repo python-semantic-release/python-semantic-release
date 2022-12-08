@@ -76,7 +76,7 @@ jobs:
         run: python -m black .
 
       - name: Install isort
-        run: python -m pip install "isort >=4,<5"
+        run: python -m pip install "isort >=5,<6"
 
       - name: Sort imports
         run: python -m isort -y -rc .
