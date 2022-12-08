@@ -2,11 +2,17 @@
 
 
 
-## v8.0.0-alpha.1 (2022-11-05)
+## v8.0.0-alpha.1 (2022-12-08)
 
 ### Breaking
 
 * feat!: Initial v8 rewrite ([`b2e3bef`](https://github.com/bernardcooke53/python-semantic-release/commit/b2e3bef6ea410aa809b289c487d8d69f40223f00))
+
+### Chore
+
+* chore: remove stale.yml
+
+It is spamming to much. We can bring it back if we get the time to fix the spamming. ([`08c535e`](https://github.com/bernardcooke53/python-semantic-release/commit/08c535e3280733e9e76af1783ce03bb5554c4136))
 
 ### Ci
 
@@ -18,11 +24,49 @@
 
 ### Feature
 
+* feat: psr8-81 | Add support for attaching additional assets to VCS release (#40) ([`28413e3`](https://github.com/bernardcooke53/python-semantic-release/commit/28413e34886725eed120cb97477cf2a66bc2660b))
+
+* feat: psr8-82 | re-add configurable commit author (#39) ([`c4a28fb`](https://github.com/bernardcooke53/python-semantic-release/commit/c4a28fbd103787a7ad7853c577f3a01a95142633))
+
+* feat: add signing options to action ([`31ad5eb`](https://github.com/bernardcooke53/python-semantic-release/commit/31ad5eb5a25f0ea703afc295351104aefd66cac1))
+
+* feat(repository): add support for TWINE_CERT (#522)
+
+Fixes #521 ([`d56e85d`](https://github.com/bernardcooke53/python-semantic-release/commit/d56e85d1f2ac66fb0b59af2178164ca915dbe163))
+
 * feat: Update action with configuration options (#518)
 
 Co-authored-by: Kevin Watson &lt;Kevmo92@users.noreply.github.com&gt; ([`4664afe`](https://github.com/bernardcooke53/python-semantic-release/commit/4664afe5f80a04834e398fefb841b166a51d95b7))
 
 ### Fix
+
+* fix: remove comments and bump isort in workflow ([`839b46d`](https://github.com/bernardcooke53/python-semantic-release/commit/839b46d61b379aaa7f0f0a2c091d34fd39586da3))
+
+* fix: remove comments and bump isort in workflow ([`153b293`](https://github.com/bernardcooke53/python-semantic-release/commit/153b2937c9ee4ee94a506ed33632fd3339714cb6))
+
+* fix: psr8-70 | clean up hvcs token auth mechanism (#43) ([`882fab2`](https://github.com/bernardcooke53/python-semantic-release/commit/882fab2aea7b01c722488fd8535baef151429ceb))
+
+* fix: psr8-84 | fix doc build warnings and add commit parser default options to docs (#42) ([`cdf46ed`](https://github.com/bernardcooke53/python-semantic-release/commit/cdf46eda6a42dc5f1376755e96c94cb45bb907bf))
+
+* fix: psr8-68 | Update issue template and re-add cli options via Github action (#41) ([`dace265`](https://github.com/bernardcooke53/python-semantic-release/commit/dace265fbe7524179e458f49777b6cd9ba82a632))
+
+* fix: psr8-83 | fix autodoc (#38) ([`6f20917`](https://github.com/bernardcooke53/python-semantic-release/commit/6f209176fe783eb3662a26590b64d82f693d59d2))
+
+* fix: bump Dockerfile to use Python 3.10 image (#536)
+
+Fixes #533
+
+Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`8f2185d`](https://github.com/bernardcooke53/python-semantic-release/commit/8f2185d570b3966b667ac591ae523812e9d2e00f))
+
+* fix: fix bug in git url regular expression (GIT_URL_REGEX) for the scp-like syntax for the ssh protocol (#36)
+
+This pattern incorrectly expected the user name preceeding the at sign &#39;@&#39; to always be &#39;git&#39;. However this could be any user name. see section &#39;4.1 Git on the Server - The Protocols&#39; at https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols
+
+Co-authored-by: U-NEO\johan &lt;johan.hammar@ombea.com&gt; ([`3ed1390`](https://github.com/bernardcooke53/python-semantic-release/commit/3ed1390373b9cbe2536f024123e39480e5fad1dd))
+
+* fix: fix mypy errors for publish ([`b40dd48`](https://github.com/bernardcooke53/python-semantic-release/commit/b40dd484387c1b3f78df53ee2d35e281e8e799c8))
+
+* fix: formatting in docs ([`2e8227a`](https://github.com/bernardcooke53/python-semantic-release/commit/2e8227a8a933683250f8dace019df15fdb35a857))
 
 * fix: update config files with token var info ([`2815730`](https://github.com/bernardcooke53/python-semantic-release/commit/2815730f39cb40a890d12277bedf4a5ac192a791))
 
@@ -30,11 +74,35 @@ Co-authored-by: Kevin Watson &lt;Kevmo92@users.noreply.github.com&gt; ([`4664afe
 
 * fix(action): fix environment variable names ([`3c66218`](https://github.com/bernardcooke53/python-semantic-release/commit/3c66218640044adf263fcf9b2714cfc4b99c2e90))
 
+### Style
+
+* style: beautify b40dd484387c1b3f78df53ee2d35e281e8e799c8 ([`2aab9bd`](https://github.com/bernardcooke53/python-semantic-release/commit/2aab9bd4fba532dfa632d2008bd10b2fe1e3eb05))
+
 ### Unknown
+
+* Merge branch &#39;python-semantic-release:master&#39; into 8.0.x ([`1b33d64`](https://github.com/bernardcooke53/python-semantic-release/commit/1b33d64f024c84617cc8577f1083fe72c0ac021a))
+
+* psr8-72 | rework documentation, remove pypi_token input from github action (#37)
+
+Also includes:
+* A tidy-up on some variable names (--verbosity -&gt; --verbose)
+* Some tweaks to the type-hinting for commit parsers
+* &#34;Exporting&#34; of the public API of each package via __init__ files importing what&#39;s public
+* A new Makefile target for the docs, livehtml, which helps seeing realtime changes in the browser when writing docs ([`0da7939`](https://github.com/bernardcooke53/python-semantic-release/commit/0da793939ba1c231e81bae83de2ba1250e7a477f))
+
+* Merge branch &#39;master&#39; into 8.0.x ([`2dd3f2b`](https://github.com/bernardcooke53/python-semantic-release/commit/2dd3f2b5df441493d52d988654bc11b867a125cf))
+
+* Merge branch &#39;master&#39; into 8.0.x ([`49f579a`](https://github.com/bernardcooke53/python-semantic-release/commit/49f579a18d50efabb054ccc30f7dbea39169bb1c))
+
+* psr8-71 | pep585 type annotations (#35) ([`f6c26c8`](https://github.com/bernardcooke53/python-semantic-release/commit/f6c26c84e942f7bb9d9af03c567d7e5b70e55899))
+
+* fix arg masking for kwargs ([`ed29129`](https://github.com/bernardcooke53/python-semantic-release/commit/ed29129b218f25d2ba9b796330dcaf809aa5fd3c))
+
+* fix 422 on release creation, logging error and add build metadata flag (#34) ([`67e8e0c`](https://github.com/bernardcooke53/python-semantic-release/commit/67e8e0c269047727a0d5e1d18a92e5ac9eb9082f))
 
 * 8.0.0-alpha.1
 
-Automatically generated by python-semantic-release ([`83055ac`](https://github.com/bernardcooke53/python-semantic-release/commit/83055acb78ce4605c7b2896014fd5046efac9d82))
+Automatically generated by python-semantic-release ([`2625d01`](https://github.com/bernardcooke53/python-semantic-release/commit/2625d01d611e284dfa64de61189a11f88863b720))
 
 * psr8-77 | add changelog posting flags to version and changelog commands (#33)
 
