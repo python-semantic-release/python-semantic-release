@@ -18,6 +18,20 @@ from semantic_release.version import next_version, tags_and_versions
 log = logging.getLogger(__name__)
 
 
+def is_forced_prerelease(
+    force_prerelease: bool, force_level: str | None, prerelease: bool
+) -> bool:
+    """
+    Determine if this release is forced to have prerelease on/off.
+    If ``force_prerelease`` is set then yes.
+    Otherwise if we are forcing a specific level bump without force_prerelease,
+    it's False.
+    Otherwise (``force_level is None``) use the value of ``prerelease``
+    """
+    log.debug(", ".join(f"{k} = {v}" for k, v in locals().items()))
+    return force_prerelease or ((force_level is None) and prerelease)
+
+
 @click.command(short_help="Detect and apply a new version")
 @click.option(
     "--print", "print_only", is_flag=True, help="Print the next version and exit"
@@ -27,6 +41,12 @@ log = logging.getLogger(__name__)
     "force_prerelease",
     is_flag=True,
     help="Force the next version to be a prerelease",
+)
+@click.option(
+    "--prerelease-token",
+    "prerelease_token",
+    default=None,
+    help="Force the next version to use this prerelease token, if it is a prerelease",
 )
 @click.option(
     "--major",
@@ -81,6 +101,7 @@ def version(
     ctx: click.Context,
     print_only: bool = False,
     force_prerelease: bool = False,
+    prerelease_token: str | None = None,
     force_level: str | None = None,
     commit_changes: bool = True,
     update_changelog: bool = True,
@@ -107,7 +128,11 @@ def version(
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
-    prerelease = force_prerelease or runtime.prerelease
+    prerelease = is_forced_prerelease(
+        force_prerelease=force_prerelease,
+        force_level=force_level,
+        prerelease=runtime.prerelease,
+    )
     hvcs_client = runtime.hvcs_client
     changelog_file = runtime.changelog_file
     env = runtime.template_environment
@@ -117,6 +142,10 @@ def version(
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
     opts = runtime.global_cli_options
+
+    if prerelease_token:
+        log.info("Forcing use of %s as the prerelease token", prerelease_token)
+        translator.prerelease_token = prerelease_token
 
     # Only push if we're committing changes
     if push_changes and not commit_changes:
@@ -129,6 +158,11 @@ def version(
 
     if force_prerelease:
         log.warning("Forcing prerelease due to '--prerelease' command-line flag")
+    elif force_level:
+        log.warning(
+            "Forcing prerelease=False due to '--%s' command-line flag and no '--prerelease' flag",
+            force_level,
+        )
 
     if force_level:
         level_bump = LevelBump.from_string(force_level)
@@ -142,8 +176,10 @@ def version(
         # We only turn the forced version into a prerelease if the user has specified
         # that that is what they want on the command-line; otherwise we assume they are
         # forcing a full release
-        if force_prerelease:
+        if prerelease:
             v = v.to_prerelease()
+        else:
+            v = v.finalize_version()
 
     else:
         v = next_version(

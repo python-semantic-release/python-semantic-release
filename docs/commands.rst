@@ -139,9 +139,11 @@ These flags are optional but mutually exclusive, so only one may be supplied, or
 Using these flags overrides the usual calculation for the next version; this can be useful, say,
 when a project wants to release its initial 1.0.0 version.
 
-Using these flags will **not** produce a prerelease, **regardless of your configuration or the
-current version**. To produce a prerelease with the appropriate digit incremented you should also
-supply the :ref:`cmd-version-option-prerelease` flag.
+.. warning::
+    Using these flags will override the value of prerelease, **regardless of your configuration or the
+    current version**. To produce a prerelease with the appropriate digit incremented you should also
+    supply the :ref:`cmd-version-option-prerelease` flag. If you do not, using these flags will force
+    a full (non-prerelease) version to be created.
 
 These options are forceful overrides, but there is no action required for subsequent releases
 performed using the usual calculation algorithm.
@@ -159,8 +161,16 @@ Force the next version to be a prerelease. As with :ref:`cmd-version-option-forc
 is a forceful override, but no action is required to resume calculating versions as normal on the
 subsequent releases.
 
-The prerelease token is idenitified using the
+If not specified in :ref:`cmd-version-option-prerelease-token`, the prerelease token is idenitified using the
 :ref:`Multibranch Release Configuration <multibranch-releases-configuring>`
+
+.. _cmd-version-option-prerelease-token:
+
+``--prerelease-token [VALUE]``
+******************************
+
+Force the next version to use the value as the prerelease token. This overrides the configured value if one is
+present. If not used during a release producing a prerelease version, this option has no effect.
 
 .. _cmd-version-option-build-metadata:
 
@@ -285,7 +295,7 @@ your needs.
 For example, to append the default configuration to your pyproject.toml
 file, you can use the following command::
 
-    $ semantic-release generate-config -f toml >> pyproject.toml
+    $ semantic-release generate-config -f toml --pyproject >> pyproject.toml
 
 If your project doesn't already leverage TOML files for configuration, it might better
 suit your project to use JSON instead::
@@ -318,6 +328,18 @@ The format that the default configuration should be generated in. Valid choices 
 ``toml`` and ``json`` (case-insensitive).
 
 **Default:** toml
+
+.. _cmd-generate-config-option-pyproject:
+
+``--pyproject``
+***************
+
+If used alongside ``--format json``, this option has no effect. When using
+``--format=toml``, if specified the configuration will sit under a top-level key
+of ``tool.semantic_release`` to comply with `PEP 518`_; otherwise, the configuration
+will sit under a top-level key of ``semantic_release``.
+
+.. _PEP 518: https://peps.python.org/pep-0518/#tool-table
 
 
 .. _cmd-changelog:

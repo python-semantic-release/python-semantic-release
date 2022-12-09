@@ -160,6 +160,7 @@ def _increment_version(
             level_bump,
             latest_full_version_in_history,
         )
+        log.debug("this release will increment the prerelease revision")
         return latest_version.to_prerelease(
             token=prerelease_token,
             revision=(

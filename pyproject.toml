@@ -39,7 +39,7 @@ dependencies = [
 semantic-release = "semantic_release.cli:main"
 
 [project.urls]
-"Project Url" = "http://github.com/relekang/python-semantic-release"
+"Project Url" = "http://github.com/python-semantic-release/python-semantic-release"
 Homepage = "https://python-semantic-release.readthedocs.io"
 
 [project.optional-dependencies]

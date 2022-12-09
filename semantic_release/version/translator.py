@@ -20,7 +20,7 @@ class VersionTranslator:
 
     @classmethod
     def _invert_tag_format_to_re(cls, tag_format: str) -> re.Pattern[str]:
-        """
+        r"""
         Unpick the "tag_format" format string and create a regex which can be used to
         convert a tag to a version string.
 

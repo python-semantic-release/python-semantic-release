@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import click
@@ -15,9 +17,13 @@ from semantic_release.cli.config import RawConfig
     default="toml",
     help="format for the config to be generated",
 )
-# A "--commit/--no-commit" option? Or is this better with the "--dry-run" flag?
-# how about push/no-push?
-def generate_config(fmt: str = "toml") -> None:
+@click.option(
+    "--pyproject",
+    "is_pyproject_toml",
+    is_flag=True,
+    help="Add TOML configuration under 'tool.semantic_release' instead of 'semantic_release'",
+)
+def generate_config(fmt: str = "toml", is_pyproject_toml: bool = False) -> None:
     """
     Generate default configuration for semantic-release, to help you get started
     quickly. You can inspect the defaults, write to a file and then edit according to
@@ -27,7 +33,13 @@ def generate_config(fmt: str = "toml") -> None:
         semantic-release generate-config -f toml >> pyproject.toml
     """
     config = RawConfig().dict(exclude_none=True)
+
+    config_dct = {"semantic_release": config}
+    if is_pyproject_toml and fmt == "toml":
+        config_dct = {"tool": config_dct}
+
     if fmt == "toml":
-        click.echo(tomlkit.dumps({"tool": {"semantic_release": config}}))
+        click.echo(tomlkit.dumps(config_dct))
+
     elif fmt == "json":
-        click.echo(json.dumps({"semantic_release": config}, indent=4))
+        click.echo(json.dumps(config_dct, indent=4))
