@@ -73,7 +73,7 @@ Python Semantic Release can be configured using a TOML or JSON file; the default
 ``pyproject.toml``, if you wish to use another file you will need to use the ``-c/--config`` option to
 specify the file.
 
-Set :ref:`config-version-variables` to a list, the only element of which should be the location of your
+Set :ref:`version_variables <config-version-variables>` to a list, the only element of which should be the location of your
 version variable inside any Python file, specified in standard ``module:attribute`` syntax:
 
 ``pyproject.toml``::
@@ -99,8 +99,6 @@ You can find out more about this in :ref:`commit-parsing`.
    - :ref:`upload_to_repository <config-upload-upload-to-repository>` - enable/disable uploading the
      packages to an artifact repository.
    - :ref:`remote.type <config-remote-type>` - specify the type of your remote VCS.
-
-.. Just throw a link to the configuration page, specifically the commit parsing part
 
 Setting up the changelog
 ------------------------

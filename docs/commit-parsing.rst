@@ -31,7 +31,7 @@ More information about the style can be found in the `angular commit guidelines`
 
 .. seealso::
   - :ref:`commit_parser <config-commit-parser>`
-  - :ref:`allowed_tags <config-commit-parser-allowed-tags>`
+  - :ref:`commit_parser_options <config-commit-parser-options>`
 
 .. _commit-parser-builtin:
 
@@ -83,9 +83,7 @@ If a commit contains multiple emojis, the one with the highest priority
 section for that commit. Commits containing no emojis go into an "Other"
 section.
 
-See :ref:`config-major_emoji`, :ref:`config-minor_emoji` and
-:ref:`config-patch_emoji`. The default settings are for
-`Gitmoji <https://gitmoji.carloscuesta.me/>`_.
+The default settings are for `Gitmoji <https://gitmoji.carloscuesta.me/>`_.
 
 The default confiugration options for
 :py:class:`semantic_release.commit_parser.EmojiCommitParser` are:
@@ -316,7 +314,7 @@ the following:
 * An ``__init__`` method which takes a single parameter, ``options``, that should be
   of the same type as the class' ``parser_options`` attribute.
 * A method, ``parse``, which takes a single parameter ``commit`` that is of type
-  `git.objects.commit.Commit <gitpython-commit-object>`_, and returns 
+  `git.objects.commit.Commit <https://gitpython.readthedocs.io/en/stable/reference.html#module-git.objects.commit>`_, and returns 
   :py:class:`semantic_release.token.ParseResult`, or a subclass of this.
 
 By default, the constructor for `semantic_release.CommitParser` will set the ``options``
@@ -350,7 +348,5 @@ Therefore, a custom commit parser could be implemented via:
             self, commit: git.object.commit.Commit
         ) -> semantic_release.ParseResult:
             ...
-
-.. _gitpython-commit-object: https://gitpython.readthedocs.io/en/stable/reference.html#module-git.objects.commit
 
 .. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits

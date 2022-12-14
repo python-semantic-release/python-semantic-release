@@ -54,7 +54,7 @@ Some settings can be configured via environment variables. In order to do this,
 you must indicate that Python Semantic Release should use a particular environment
 variable as follows.
 
-Suppose for example that you would like to set :ref:`password <config-upload-password>`.
+Suppose for example that you would like to set :ref:`upload.password <config-upload-password>`.
 It is possible to do so by pasting your repository password in plaintext into your
 configuration file (**Note: this is not advisable**):
 

@@ -56,7 +56,7 @@ error as this tag was already created against ``feature-1``.
 
 To get around this issue, you can pass the branch name as part of the build metadata:
 
-.. code-block:: :shell:
+.. code-block:: shell
 
    semantic-release version --build-metadata $(git branch --show-current)
 
