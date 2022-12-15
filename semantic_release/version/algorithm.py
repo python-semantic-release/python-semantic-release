@@ -122,7 +122,7 @@ def _increment_version(
     )
     if not major_on_zero and latest_version.major == 0:
         # if we are a 0.x.y release and have set `major_on_zero`,
-        # breaking changes should increment the minor di
+        # breaking changes should increment the minor digit
         # Correspondingly, we reduce the level that we increment the
         # version by.
         log.debug(

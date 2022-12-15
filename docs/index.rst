@@ -18,6 +18,7 @@ Documentation Contents
    troubleshooting
    contributors
    Internal API <api/modules>
+   Algorithm <algorithm>
    View on GitHub <https://github.com/python-semantic-release/python-semantic-release>
 
 Getting Started
