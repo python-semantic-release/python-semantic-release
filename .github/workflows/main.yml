@@ -78,8 +78,10 @@ jobs:
       - name: Install isort
         run: python -m pip install "isort >=5,<6"
 
+        # https://pycqa.github.io/isort/docs/upgrade_guides/5.0.0.html
+        # removed deprecated "-rc" and "-y" arguments
       - name: Sort imports
-        run: python -m isort -y -rc .
+        run: python -m isort .
 
       - name: Commit and push changes
         uses: github-actions-x/commit@v2.9
