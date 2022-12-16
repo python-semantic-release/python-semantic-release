@@ -20,7 +20,7 @@ from semantic_release.version import (
     Version as Version,
     VersionTranslator as VersionTranslator,
     next_version as next_version,
-    tags_and_versions as tags_and_versions
+    tags_and_versions as tags_and_versions,
 )
 
 __version__ = "8.0.0-alpha.1"

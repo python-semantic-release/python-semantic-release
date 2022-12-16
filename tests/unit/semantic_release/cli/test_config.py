@@ -34,7 +34,9 @@ def test_default_toml_config_valid(example_project):
         ({"GIT_COMMIT_AUTHOR": "foo <foo>"}, "foo <foo>"),
     ],
 )
-def test_commit_author_configurable(example_project, repo_with_no_tags_angular_commits, mock_env, expected_author):
+def test_commit_author_configurable(
+    example_project, repo_with_no_tags_angular_commits, mock_env, expected_author
+):
     pyproject_toml = example_project / "pyproject.toml"
     content = tomlkit.loads(pyproject_toml.read_text(encoding="utf-8"))
 

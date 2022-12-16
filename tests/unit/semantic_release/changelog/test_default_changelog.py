@@ -12,7 +12,9 @@ from semantic_release.version.translator import VersionTranslator
 from tests.const import COMMIT_MESSAGE
 
 default_changelog_template = (
-    files("tests").joinpath("unit/semantic_release/changelog/TEST_CHANGELOG.md.j2").read_text(encoding="utf-8")
+    files("tests")
+    .joinpath("unit/semantic_release/changelog/TEST_CHANGELOG.md.j2")
+    .read_text(encoding="utf-8")
 )
 
 today_as_str = datetime.now().strftime("%Y-%m-%d")
