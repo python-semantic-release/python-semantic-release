@@ -1,29 +1,15 @@
+.. _github-actions:
+
 Setting up python-semantic-release on GitHub Actions
 ====================================================
 
-Python Semantic Release includes a GitHub Action which runs the ``publish``
-command. The repository is set to `PyPi`.
+Python Semantic Release includes a GitHub Action which runs the ``version`` and
+``publish`` commands. The repository is set to `PyPI`. You can read the full set
+of inputs and the descriptions available in the `action definition`_.
 
-Inputs
-------
+Your project's configuration file will be used as normal.
 
-+--------------------------+----------------------------------------------------------------------------------------+
-| Input                    | Description                                                                            |
-+==========================+========================================================================================+
-| ``github_token``         | See :ref:`env-gh_token`. this is usually set to ``${{ secrets.GITHUB_TOKEN }}``.       |
-+--------------------------+----------------------------------------------------------------------------------------+
-| ``pypi_token``           | See :ref:`env-pypi_token`.                                                             |
-+--------------------------+----------------------------------------------------------------------------------------+
-| ``repository_username``  | See :ref:`env-repository_username`.                                                    |
-+--------------------------+----------------------------------------------------------------------------------------+
-| ``repository_password``  | See :ref:`env-repository_password`.                                                    |
-+--------------------------+----------------------------------------------------------------------------------------+
-| ``directory``            | A sub-directory to ``cd`` into before running. Defaults to the root of the repository. |
-+--------------------------+----------------------------------------------------------------------------------------+
-| ``additional_options``   | Additional :ref:`cmd-common-options` for the ``publish`` command. Example: ``--noop``  |
-+--------------------------+----------------------------------------------------------------------------------------+
-
-Other options are taken from your regular configuration file.
+.. _action definition: https://github.com/python-semantic-release/python-semantic-release/blob/master/action.yml
 
 Example Workflow
 ----------------
@@ -48,7 +34,7 @@ Example Workflow
            fetch-depth: 0
 
        - name: Python Semantic Release
-         uses: relekang/python-semantic-release@master
+         uses: python-semantic-release/python-semantic-release@master
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
            repository_username: __token__
@@ -88,7 +74,7 @@ multiple projects.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: relekang/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@master
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +82,7 @@ multiple projects.
        repository_password: ${{ secrets.PYPI_TOKEN }}
 
    - name: Release Project 2
-     uses: relekang/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@master
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -107,4 +93,4 @@ multiple projects.
   The release notes posted to GitHub will not currently distinguish which
   project they are from (see `this issue`_).
 
-.. _this issue: https://github.com/relekang/python-semantic-release/issues/168
+.. _this issue: https://github.com/python-semantic-release/python-semantic-release/issues/168
