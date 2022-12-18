@@ -19,6 +19,6 @@ RUN cd /semantic-release && \
     python -m venv /semantic-release/.venv && \
     /semantic-release/.venv/bin/pip install .
 
-RUN /semantic-release/.venv/bin/python -m semantic_release.cli --help
+RUN /semantic-release/.venv/bin/python -m semantic_release --help
 
 ENTRYPOINT ["/semantic-release/action.sh"]
