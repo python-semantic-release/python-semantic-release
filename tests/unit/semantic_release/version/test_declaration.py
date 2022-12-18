@@ -1,3 +1,4 @@
+import difflib
 from pathlib import Path
 from textwrap import dedent
 from unittest import mock
@@ -12,7 +13,6 @@ from semantic_release.version.declaration import (
 from semantic_release.version.version import Version
 
 from tests.const import EXAMPLE_PROJECT_VERSION
-from tests.helper import diff_strings
 
 
 def test_pyproject_toml_version_found(example_pyproject_toml):
@@ -58,12 +58,24 @@ def test_version_replace(decl_cls, config_file, search_text):
     new_decl = decl_cls(config_file.resolve(), search_text)
     assert new_decl.parse() == {new_version}
 
-    deleted, added = diff_strings(orig_content, new_decl.content)
-    # Expecting only the version to have changed
-    deleted_text = "".join(c for _, c in deleted)
-    added_text = "".join(c for _, c in added)
-    assert deleted_text == EXAMPLE_PROJECT_VERSION.replace(".", "")
-    assert added_text == str(new_version).replace(".", "")
+    d = difflib.Differ()
+    diff = list(
+        d.compare(
+            orig_content.splitlines(keepends=True),
+            new_decl.content.splitlines(keepends=True),
+        )
+    )
+    added = [line[2:] for line in diff if line.startswith("+ ")]
+    removed = [line[2:] for line in diff if line.startswith("- ")]
+
+    assert len(removed) == 1
+    assert len(added) == 1
+
+    (removed_line,) = removed
+    (added_line,) = added
+
+    # Line is unchanged apart from new version added
+    assert removed_line.replace(EXAMPLE_PROJECT_VERSION, str(new_version)) == added_line
 
 
 @pytest.mark.parametrize(

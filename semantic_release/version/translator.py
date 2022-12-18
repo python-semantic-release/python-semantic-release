@@ -72,12 +72,7 @@ class VersionTranslator:
                 f"Tag {tag!r} doesn't match tag format {self.tag_format!r}"
             )
         raw_version_str = tag_match.group("version")
-        m = self._VERSION_REGEX.fullmatch(raw_version_str)
-        if not m:
-            raise ValueError(
-                f"Tag {tag!r} doesn't match tag format {self.tag_format!r}"
-            )
-        return self.from_string(m.string)
+        return self.from_string(raw_version_str)
 
     def str_to_tag(self, version_str: str) -> str:
         """

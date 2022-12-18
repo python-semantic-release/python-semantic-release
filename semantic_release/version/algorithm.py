@@ -17,6 +17,7 @@ from semantic_release.commit_parser import (
     ParseResult,
     ParserOptions,
 )
+from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
@@ -229,10 +230,10 @@ def next_version(
         len(all_full_release_tags_and_versions),
     )
 
-    # Default initial version of 0.0.0
+    # Default initial version
     latest_full_release_tag, latest_full_release_version = next(
         iter(all_full_release_tags_and_versions),
-        (None, translator.from_string("0.0.0")),
+        (None, translator.from_string(DEFAULT_VERSION)),
     )
     if latest_full_release_tag is None:
         # Workaround - we can safely scan the extra commits on this

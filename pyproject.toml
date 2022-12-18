@@ -25,7 +25,6 @@ dependencies = [
   "gitpython>=3.0.8,<4",
   "twine>=4,<5",
   "requests>=2.25,<3",
-  "wheel",
   "jinja2>=3.1.2,<4",
   "python-gitlab>=2,<4",
   "tomlkit~=0.10",
@@ -59,6 +58,7 @@ mypy = ["mypy", "types-requests"]
 
 [tool.pytest.ini_options]
 addopts = [
+  "-nauto",
   "-ra",
   "--cache-clear",
   "--cov=semantic_release",
@@ -74,7 +74,7 @@ omit = ["*/tests/*"]
 
 [tool.isort]
 profile = "black"
-skip = [".tox", "venv"]
+skip = [".tox", "venv", ".venv"]
 combine_as_imports = true
 group_by_package = true
 default_section = "THIRDPARTY"
@@ -99,7 +99,7 @@ legacy_tox_ini = """
 [tox]
 envlist =
     mypy,
-    py{37,38,39,310},
+    py{37,38,39,310,311},
     coverage
 skipsdist = True
 
@@ -108,6 +108,7 @@ passenv = CI
 setenv =
     PYTHONPATH = {toxinidir}
     TESTING = True
+    PYTHONHASHSEED = 123456
 deps = .[test]
 commands =
     coverage run -p --source=semantic_release -m pytest -v {posargs:tests}

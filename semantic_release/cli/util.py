@@ -1,3 +1,6 @@
+"""
+Utilities for command-line functionality
+"""
 import sys
 from textwrap import dedent, indent
 

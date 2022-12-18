@@ -14,7 +14,7 @@ from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.token_auth import TokenAuth
 
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
-from tests.helper import netrc_file
+from tests.util import netrc_file
 
 
 @pytest.fixture

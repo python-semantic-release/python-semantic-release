@@ -73,6 +73,7 @@ def environment(
 def recursive_render(
     template_dir: str, environment: Environment, _root_dir: str = "."
 ) -> list[str]:
+    rendered_paths: list[str] = []
     for root, file in (
         (root, file)
         for root, _, files in os.walk(template_dir)
@@ -80,7 +81,6 @@ def recursive_render(
         if not any(elem.startswith(".") for elem in root.split(os.sep))
         and not file.startswith(".")
     ):
-        rendered_paths = []
         src_path = Path(root)
         output_path = (_root_dir / src_path.relative_to(template_dir)).resolve()
         log.info("Rendering templates from %s to %s", src_path, output_path)
@@ -90,14 +90,13 @@ def recursive_render(
             output_filename = file[:-3]
             # Strip off the template directory from the front of the root path -
             # that's the output location relative to the repo root
-            output_file_path = str((src_path / file).relative_to(template_dir))
+            src_file_path = str((src_path / file).relative_to(template_dir))
+            output_file_path = str((output_path / output_filename).resolve())
 
-            log.debug("rendering %s to %s", file, output_file_path)
-            stream = environment.get_template(output_file_path).stream()
+            log.debug("rendering %s to %s", src_file_path, output_file_path)
+            stream = environment.get_template(src_file_path).stream()
 
-            with open(
-                str((output_path / output_filename).resolve()), "wb+"
-            ) as output_file:
+            with open(output_file_path, "wb+") as output_file:
                 stream.dump(output_file, encoding="utf-8")
 
             rendered_paths.append(output_file_path)

@@ -28,9 +28,3 @@ class CommitParseError(SemanticReleaseBaseError):
     Raised when a commit cannot be parsed by a commit parser. Custom commit parsers
     should also raise this Exception
     """
-
-
-class CiVerificationError(SemanticReleaseBaseError):
-    """
-    Raised when consistency cannot be ensured within a CI environment
-    """

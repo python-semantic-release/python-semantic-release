@@ -11,7 +11,12 @@ from semantic_release.version import tags_and_versions
 log = logging.getLogger(__name__)
 
 
-@click.command(short_help="Build and publish a distribution")
+@click.command(
+    short_help="Build and publish a distribution",
+    context_settings={
+        "help_option_names": ["-h", "--help"],
+    },
+)
 @click.option(
     "--upload-to-repository/--no-upload-to-repository",
     "upload_to_repository",

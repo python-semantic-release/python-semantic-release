@@ -3,10 +3,8 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any
 
 import click
-import tomlkit
 from git import InvalidGitRepositoryError
 from git.repo.base import Repo
 from rich.console import Console
@@ -14,37 +12,18 @@ from rich.logging import RichHandler
 
 import semantic_release
 from semantic_release.cli.commands.generate_config import generate_config
+from semantic_release.cli.commands.verify_ci import verify_ci
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     RawConfig,
     RuntimeContext,
+    read_toml,
 )
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint
-from semantic_release.errors import InvalidConfiguration
+from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 
 FORMAT = "[%(name)s] %(module)s:%(funcName)s: %(message)s"
-
-
-def _read_toml(path: str) -> dict[str, Any]:
-    raw_text = (Path() / path).resolve().read_text(encoding="utf-8")
-    try:
-        toml_text = tomlkit.loads(raw_text)
-    except tomlkit.exceptions.TOMLKitError as exc:
-        raise InvalidConfiguration(f"File {path!r} contains invalid TOML") from exc
-
-    # Look for [tool.semantic_release]
-    cfg_text = toml_text.get("tool", {}).get("semantic_release")
-    if cfg_text is not None:
-        return cfg_text
-    # Look for [semantic_release]
-    cfg_text = toml_text.get("semantic_release")
-    if cfg_text is not None:
-        return cfg_text
-
-    raise InvalidConfiguration(
-        f"Missing keys 'tool.semantic_release' or 'semantic_release' in {path}"
-    )
 
 
 @click.group(
@@ -108,7 +87,7 @@ def main(
         handlers=[
             RichHandler(
                 console=console, rich_tracebacks=True, tracebacks_suppress=[click]
-            )
+            ),
         ],
     )
 
@@ -118,6 +97,11 @@ def main(
         # generate-config doesn't require any of the usual setup,
         # so exit out early and delegate to it
         log.debug("Forwarding to %s", generate_config.name)
+        return
+    if ctx.invoked_subcommand == verify_ci.name:
+        # generate-config doesn't require any of the usual setup,
+        # so exit out early and delegate to it
+        log.debug("Forwarding to %s", verify_ci.name)
         return
 
     log.debug("logging level set to: %s", logging.getLevelName(log_level))
@@ -137,10 +121,10 @@ def main(
 
     try:
         if config_file and config_file.endswith(".toml"):
-            rprint(f"Loading TOML configuration from {config_file}")
-            config_text = _read_toml(config_file)
+            log.info(f"Loading TOML configuration from {config_file}")
+            config_text = read_toml(config_file)
         elif config_file and config_file.endswith(".json"):
-            rprint(f"Loading JSON configuration from {config_file}")
+            log.info(f"Loading JSON configuration from {config_file}")
             raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
             config_text = json.loads(raw_text)["semantic_release"]
         elif config_file:
@@ -154,6 +138,9 @@ def main(
         runtime = RuntimeContext.from_raw_config(
             raw_config, repo=repo, global_cli_options=cli_options
         )
+    except NotAReleaseBranch as exc:
+        rprint(f"[bold red]{str(exc)}")
+        ctx.exit(2)
     except InvalidConfiguration as exc:
         ctx.fail(str(exc))
     ctx.obj = runtime

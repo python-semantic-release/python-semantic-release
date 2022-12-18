@@ -11,6 +11,7 @@ from semantic_release.commit_parser.scipy import (
 from semantic_release.enums import LevelBump
 
 from tests.const import SCIPY_FORMATTED_COMMIT_BODY_PARTS
+from tests.util import xdist_sort_hack
 
 
 @pytest.fixture
@@ -29,21 +30,23 @@ def scipy_tag(request):
 
 
 @pytest.fixture(
-    params=[
-        "scipy.stats.qmc: centered-discrepancy optimization of a Latin hypercube",
-        "inverse missing in idstn, idctn (#14479)",
-        "Merge pull request #14447 from AnirudhDagar/rename_ndimage_modules",
-        "Add tests for args kwarg in quad_vec",
-        "badge with version of the doc in the navbar (#14132)",
-        "Bump scipy from 1.7.0 to 1.7.1 (#28)",
-        "avoid nan if angle=0 in RotvecRotation",
-    ]
+    params=xdist_sort_hack(
+        [
+            "scipy.stats.qmc: centered-discrepancy optimization of a Latin hypercube",
+            "inverse missing in idstn, idctn (#14479)",
+            "Merge pull request #14447 from AnirudhDagar/rename_ndimage_modules",
+            "Add tests for args kwarg in quad_vec",
+            "badge with version of the doc in the navbar (#14132)",
+            "Bump scipy from 1.7.0 to 1.7.1 (#28)",
+            "avoid nan if angle=0 in RotvecRotation",
+        ]
+    )
 )
 def subject(request):
     return request.param
 
 
-@pytest.fixture(params=SCIPY_FORMATTED_COMMIT_BODY_PARTS)
+@pytest.fixture(params=xdist_sort_hack(SCIPY_FORMATTED_COMMIT_BODY_PARTS))
 def body_parts(request):
     return request.param
 
@@ -70,9 +73,13 @@ def valid_scipy_commit(scipy_tag, subject, body_parts):
 
 
 @pytest.fixture(
-    params=[
-        k for k, v in ScipyParserOptions().tag_to_level.items() if v is LevelBump.PATCH
-    ]
+    params=xdist_sort_hack(
+        [
+            k
+            for k, v in ScipyParserOptions().tag_to_level.items()
+            if v is LevelBump.PATCH
+        ]
+    )
 )
 def scipy_commits_patch(request, subject):
     yield [
@@ -82,9 +89,13 @@ def scipy_commits_patch(request, subject):
 
 
 @pytest.fixture(
-    params=[
-        k for k, v in ScipyParserOptions().tag_to_level.items() if v is LevelBump.MINOR
-    ]
+    params=xdist_sort_hack(
+        [
+            k
+            for k, v in ScipyParserOptions().tag_to_level.items()
+            if v is LevelBump.MINOR
+        ]
+    )
 )
 def scipy_commits_minor(request, subject, default_scipy_parser_options):
     patch_tags = [
@@ -108,9 +119,13 @@ def scipy_commits_minor(request, subject, default_scipy_parser_options):
 
 
 @pytest.fixture(
-    params=[
-        k for k, v in ScipyParserOptions().tag_to_level.items() if v is LevelBump.MAJOR
-    ]
+    params=xdist_sort_hack(
+        [
+            k
+            for k, v in ScipyParserOptions().tag_to_level.items()
+            if v is LevelBump.MAJOR
+        ]
+    )
 )
 def scipy_commits_major(request, subject, default_scipy_parser_options):
     patch_tags = [

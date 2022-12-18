@@ -6,13 +6,11 @@ from git import Actor
 from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.changelog.release_history import ReleaseHistory
-from semantic_release.commit_parser.angular import AngularCommitParser
-from semantic_release.version import translator
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
 from tests.const import ANGULAR_COMMITS_MINOR, COMMIT_MESSAGE
-from tests.helper import add_text_to_file
+from tests.util import add_text_to_file
 
 # NOTE: not testing parser correctness here, just that the right commits end up
 # in the right places. So we only compare that the commits with the messages
@@ -91,9 +89,9 @@ REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY = (
                 "feature": ["feat: add some more text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="0.2.0")],
             },
-            Version.parse("0.3.0-rc.1"): {
+            Version.parse("0.3.0-beta.1"): {
                 "feature": ["feat: (feature) add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.3.0-rc.1")],
+                "unknown": [COMMIT_MESSAGE.format(version="0.3.0-beta.1")],
             },
         },
     )
@@ -125,14 +123,14 @@ REPO_WITH_GIT_FLOW_EXPECTED_RELEASE_HISTORY = FakeReleaseHistoryElements(
             "fix": ["fix: (dev) add some more text\n"],
             "unknown": [COMMIT_MESSAGE.format(version="1.1.1")],
         },
-        Version.parse("1.2.0-rc.1"): {
+        Version.parse("1.2.0-alpha.1"): {
             "feature": ["feat: (feature) add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.2.0-rc.1")],
+            "unknown": [COMMIT_MESSAGE.format(version="1.2.0-alpha.1")],
         },
-        Version.parse("1.2.0-rc.2"): {
+        Version.parse("1.2.0-alpha.2"): {
             "feature": ["feat: (feature) add some more text\n"],
             "fix": ["fix: (feature) add some missing text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.2.0-rc.2")],
+            "unknown": [COMMIT_MESSAGE.format(version="1.2.0-alpha.2")],
         },
     },
 )

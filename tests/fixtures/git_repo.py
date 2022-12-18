@@ -3,7 +3,7 @@ from git import Actor, Repo
 from pytest_lazyfixture import lazy_fixture
 
 from tests.const import COMMIT_MESSAGE, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
-from tests.helper import add_text_to_file, shortuid
+from tests.util import add_text_to_file, shortuid
 
 
 @pytest.fixture
@@ -390,17 +390,18 @@ def repo_with_main_and_feature_branches_angular_commits(git_repo_factory, file_i
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
 
-    git_repo.create_head("feature")
-    git_repo.heads.feature.checkout()
+    git_repo.create_head("beta_testing")
+    git_repo.heads.beta_testing.checkout()
 
     # Do a prerelease on the branch
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="feat: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-rc.1"))
-    git_repo.git.tag("v0.3.0-rc.1", m="v0.3.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-beta.1"))
+    git_repo.git.tag("v0.3.0-beta.1", m="v0.3.0-beta.1")
 
-    assert git_repo.commit("v0.3.0-rc.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "beta_testing"
     yield git_repo
     git_repo.close()
 
@@ -439,17 +440,18 @@ def repo_with_main_and_feature_branches_emoji_commits(git_repo_factory, file_in_
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
 
-    git_repo.create_head("feature")
-    git_repo.heads.feature.checkout()
+    git_repo.create_head("beta_testing")
+    git_repo.heads.beta_testing.checkout()
 
     # Do a prerelease on the branch
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-rc.1"))
-    git_repo.git.tag("v0.3.0-rc.1", m="v0.3.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-beta.1"))
+    git_repo.git.tag("v0.3.0-beta.1", m="v0.3.0-beta.1")
 
-    assert git_repo.commit("v0.3.0-rc.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "beta_testing"
     yield git_repo
     git_repo.close()
 
@@ -488,17 +490,18 @@ def repo_with_main_and_feature_branches_scipy_commits(git_repo_factory, file_in_
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
 
-    git_repo.create_head("feature")
-    git_repo.heads.feature.checkout()
+    git_repo.create_head("beta_testing")
+    git_repo.heads.beta_testing.checkout()
 
     # Do a prerelease on the branch
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="ENH: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-rc.1"))
-    git_repo.git.tag("v0.3.0-rc.1", m="v0.3.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-beta.1"))
+    git_repo.git.tag("v0.3.0-beta.1", m="v0.3.0-beta.1")
 
-    assert git_repo.commit("v0.3.0-rc.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "beta_testing"
     yield git_repo
     git_repo.close()
 
@@ -537,17 +540,18 @@ def repo_with_main_and_feature_branches_tag_commits(git_repo_factory, file_in_re
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
 
-    git_repo.create_head("feature")
-    git_repo.heads.feature.checkout()
+    git_repo.create_head("beta_testing")
+    git_repo.heads.beta_testing.checkout()
 
     # Do a prerelease on the branch
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-rc.1"))
-    git_repo.git.tag("v0.3.0-rc.1", m="v0.3.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.3.0-beta.1"))
+    git_repo.git.tag("v0.3.0-beta.1", m="v0.3.0-beta.1")
 
-    assert git_repo.commit("v0.3.0-rc.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "beta_testing"
     yield git_repo
     git_repo.close()
 
@@ -610,18 +614,19 @@ def repo_with_git_flow_angular_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="feat: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.1"))
-    git_repo.git.tag("v1.2.0-rc.1", m="v1.2.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.1"))
+    git_repo.git.tag("v1.2.0-alpha.1", m="v1.2.0-alpha.1")
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="feat: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="fix: (feature) add some missing text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
-    git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.2"))
+    git_repo.git.tag("v1.2.0-alpha.2", m="v1.2.0-alpha.2")
 
-    assert git_repo.commit("v1.2.0-rc.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -684,18 +689,19 @@ def repo_with_git_flow_emoji_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.1"))
-    git_repo.git.tag("v1.2.0-rc.1", m="v1.2.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.1"))
+    git_repo.git.tag("v1.2.0-alpha.1", m="v1.2.0-alpha.1")
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":bug: (feature) add some missing text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
-    git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.2"))
+    git_repo.git.tag("v1.2.0-alpha.2", m="v1.2.0-alpha.2")
 
-    assert git_repo.commit("v1.2.0-rc.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -758,18 +764,19 @@ def repo_with_git_flow_scipy_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="ENH: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.1"))
-    git_repo.git.tag("v1.2.0-rc.1", m="v1.2.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.1"))
+    git_repo.git.tag("v1.2.0-alpha.1", m="v1.2.0-alpha.1")
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="ENH: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="MAINT: (feature) add some missing text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
-    git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.2"))
+    git_repo.git.tag("v1.2.0-alpha.2", m="v1.2.0-alpha.2")
 
-    assert git_repo.commit("v1.2.0-rc.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -834,18 +841,19 @@ def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.1"))
-    git_repo.git.tag("v1.2.0-rc.1", m="v1.2.0-rc.1")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.1"))
+    git_repo.git.tag("v1.2.0-alpha.1", m="v1.2.0-alpha.1")
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":sparkles: (feature) add some more text")
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":nut_and_bolt: (feature) add some missing text")
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-rc.2"))
-    git_repo.git.tag("v1.2.0-rc.2", m="v1.2.0-rc.2")
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.2.0-alpha.2"))
+    git_repo.git.tag("v1.2.0-alpha.2", m="v1.2.0-alpha.2")
 
-    assert git_repo.commit("v1.2.0-rc.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -928,6 +936,7 @@ def repo_with_git_flow_and_release_channels_angular_commits(
     git_repo.git.tag("v1.1.0-alpha.3", m="v1.1.0-alpha.3")
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -1010,6 +1019,7 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
     git_repo.git.tag("v1.1.0-alpha.3", m="v1.1.0-alpha.3")
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -1092,6 +1102,7 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
     git_repo.git.tag("v1.1.0-alpha.3", m="v1.1.0-alpha.3")
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()
 
@@ -1174,5 +1185,6 @@ def repo_with_git_flow_and_release_channels_tag_commits(git_repo_factory, file_i
     git_repo.git.tag("v1.1.0-alpha.3", m="v1.1.0-alpha.3")
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
     yield git_repo
     git_repo.close()

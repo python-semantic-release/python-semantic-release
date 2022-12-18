@@ -146,9 +146,9 @@ classifiers = [
 ]
 
 [tool.poetry.urls]
-"Repository" = "https://github.com/relekang/python-semantic-release"
-"Bug Tracker" = "https://github.com/relekang/python-semantic-release"
-"Homepage" = "https://github.com/relekang/python-semantic-release"
+"Repository" = "https://github.com/python-semantic-release/python-semantic-release"
+"Bug Tracker" = "https://github.com/python-semantic-release/python-semantic-release"
+"Homepage" = "https://github.com/python-semantic-release/python-semantic-release"
 
 [tool.poetry.scripts]
 hello-world = "hello-world:main"
@@ -177,11 +177,11 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.semantic_release]
-version_variable = [
+version_variables = [
     "src/{EXAMPLE_PROJECT_NAME}/__init__.py:__version__",
 ]
-version_toml = "pyproject.toml:tool.poetry.version"
-build_command = ["poetry", "build"]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+build_command = "poetry build"
 tag_format = "v{{version}}"
 commit_parser = "angular"
 commit_author = {{ env = "GIT_COMMIT_AUTHOR", default = "{DEFAULT_COMMIT_AUTHOR}" }}
@@ -228,10 +228,20 @@ match = "(main|master)"
 prerelease = false
 prerelease_token = "rc"
 
-[tool.semantic_release.branches.alpha]
-match = "psr8-*"
+[tool.semantic_release.branches.release-candidates]
+match = "rc-.*"
+prerelease = true
+prerelease_token = "rc"
+
+[tool.semantic_release.branches.features]
+match = "feat.*"
 prerelease = true
 prerelease_token = "alpha"
+
+[tool.semantic_release.branches.beta-testing]
+match = "beta.*"
+prerelease = true
+prerelease_token = "beta"
 
 [tool.semantic_release.remote]
 name = "origin"
@@ -328,7 +338,7 @@ long_description = file: README.md
 long_description_content_type = text/markdown
 author = semantic-release
 author_email = not-a.real@email.com
-url = https://github.com/relekang/python-semantic-release
+url = https://github.com/python-semantic-release/python-semantic-release
 python_requires = >=3.7
 
 
@@ -381,9 +391,6 @@ line_length=88
 
 [flake8]
 max-line-length = 88
-
-[semantic_release]
-version_variable = {EXAMPLE_PROJECT_NAME}/__init__.py:__version__
 """
 
 EXAMPLE_SETUP_PY_CONTENT = rf"""
@@ -416,7 +423,7 @@ except ImportError:
 setup(
     name="{EXAMPLE_PROJECT_NAME}",
     version="{EXAMPLE_PROJECT_VERSION}",
-    url="http://github.com/relekang/python-semantic-release",
+    url="http://github.com/python-semantic-release/python-semantic-release",
     author="semantic-release",
     author_email="not-a.real@email.com",
     description="Just an example",
@@ -434,9 +441,9 @@ setup(
         "wheel",
         "python-gitlab>=2,<4",
         # tomlkit used to be pinned to 0.7.0
-        # See https://github.com/relekang/python-semantic-release/issues/336
-        # and https://github.com/relekang/python-semantic-release/pull/337
-        # and https://github.com/relekang/python-semantic-release/issues/491
+        # See https://github.com/python-semantic-release/python-semantic-release/issues/336
+        # and https://github.com/python-semantic-release/python-semantic-release/pull/337
+        # and https://github.com/python-semantic-release/python-semantic-release/issues/491
         "tomlkit~=0.10",
         "dotty-dict>=1.3.0,<2",
         "dataclasses==0.8; python_version < '3.7.0'",

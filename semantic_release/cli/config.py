@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
+import tomlkit
 import twine.utils
 from git import Actor
 from git.repo.base import Repo
@@ -42,6 +43,27 @@ from semantic_release.version.declaration import (
 )
 
 log = logging.getLogger(__name__)
+
+
+def read_toml(path: str) -> dict[str, Any]:
+    raw_text = (Path() / path).resolve().read_text(encoding="utf-8")
+    try:
+        toml_text = tomlkit.loads(raw_text)
+    except tomlkit.exceptions.TOMLKitError as exc:
+        raise InvalidConfiguration(f"File {path!r} contains invalid TOML") from exc
+
+    # Look for [tool.semantic_release]
+    cfg_text = toml_text.get("tool", {}).get("semantic_release")
+    if cfg_text is not None:
+        return cfg_text
+    # Look for [semantic_release]
+    cfg_text = toml_text.get("semantic_release")
+    if cfg_text is not None:
+        return cfg_text
+
+    raise InvalidConfiguration(
+        f"Missing keys 'tool.semantic_release' or 'semantic_release' in {path}"
+    )
 
 
 class HvcsClient(str, Enum):

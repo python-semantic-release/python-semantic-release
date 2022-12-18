@@ -5,9 +5,6 @@ import re
 from collections import defaultdict
 from typing import Iterable
 
-# else:
-# from typing import Pattern
-
 log = logging.getLogger(__name__)
 
 

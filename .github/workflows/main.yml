@@ -36,7 +36,7 @@ jobs:
           python -m pip install pytest-github-actions-annotate-failures
 
       - name: pytest
-        run: python -m pytest -v tests
+        run: PYTHONHASHSEED=123345 python -m pytest -v tests
 
   mypy:
     runs-on: ubuntu-latest
@@ -77,7 +77,6 @@ jobs:
 
       - name: Install isort
         run: python -m pip install "isort >=5,<6"
-
         # https://pycqa.github.io/isort/docs/upgrade_guides/5.0.0.html
         # removed deprecated "-rc" and "-y" arguments
       - name: Sort imports

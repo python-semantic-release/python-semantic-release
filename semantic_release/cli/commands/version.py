@@ -2,20 +2,34 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import nullcontext
 from datetime import datetime
+from typing import TYPE_CHECKING, ContextManager
 
 import click
 
-# NOTE: use backport with newer API than stdlib
-from importlib_resources import files
-
 from semantic_release.changelog import ReleaseHistory, environment, recursive_render
 from semantic_release.changelog.context import make_changelog_context
-from semantic_release.cli.util import indented, noop_report
+from semantic_release.cli.common import (
+    render_default_changelog_file,
+    render_release_notes,
+)
+from semantic_release.cli.util import indented, noop_report, rprint
+from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.version import next_version, tags_and_versions
+from semantic_release.version import (
+    Version,
+    VersionTranslator,
+    next_version,
+    tags_and_versions,
+)
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from git import Repo
+
+    from semantic_release.version.declaration import VersionDeclarationABC
 
 
 def is_forced_prerelease(
@@ -32,7 +46,51 @@ def is_forced_prerelease(
     return force_prerelease or ((force_level is None) and prerelease)
 
 
-@click.command(short_help="Detect and apply a new version")
+def version_from_forced_level(
+    repo: Repo, level_bump: LevelBump, translator: VersionTranslator
+) -> Version:
+    ts_and_vs = tags_and_versions(repo.tags, translator)
+
+    # If we have no tags, return the default version
+    if not ts_and_vs:
+        return Version.parse(DEFAULT_VERSION).bump(level_bump)
+
+    _, latest_version = ts_and_vs[0]
+    return latest_version.bump(level_bump)
+
+
+def apply_version_to_source_files(
+    repo: Repo,
+    version_declarations: list[VersionDeclarationABC],
+    version: Version,
+    noop: bool = False,
+) -> list[str]:
+    working_dir = os.getcwd() if repo.working_dir is None else repo.working_dir
+
+    paths = [
+        str(declaration.path.resolve().relative_to(working_dir))
+        for declaration in version_declarations
+    ]
+    if noop:
+        noop_report(
+            "would have updated versions in the following paths:"
+            + "".join(f"\n    {path}" for path in paths)
+        )
+    else:
+        log.debug("writing version %s to source paths %s", version, paths)
+        for declaration in version_declarations:
+            new_content = declaration.replace(new_version=version)
+            declaration.path.write_text(new_content)
+
+    return paths
+
+
+@click.command(
+    short_help="Detect and apply a new version",
+    context_settings={
+        "help_option_names": ["-h", "--help"],
+    },
+)
 @click.option(
     "--print", "print_only", is_flag=True, help="Print the next version and exit"
 )
@@ -170,20 +228,22 @@ def version(
         log.warning(
             "Forcing a %s level bump due to '--force' command-line option", force_level
         )
-        ts_and_vs = tags_and_versions(repo.tags, translator)
-        _, latest_version = ts_and_vs[0]
-        v = latest_version.bump(level_bump)
+
+        new_version = version_from_forced_level(
+            repo=repo, level_bump=level_bump, translator=translator
+        )
 
         # We only turn the forced version into a prerelease if the user has specified
         # that that is what they want on the command-line; otherwise we assume they are
         # forcing a full release
-        if prerelease:
-            v = v.to_prerelease()
-        else:
-            v = v.finalize_version()
+        new_version = (
+            new_version.to_prerelease(token=translator.prerelease_token)
+            if prerelease
+            else new_version.finalize_version()
+        )
 
     else:
-        v = next_version(
+        new_version = next_version(
             repo=repo,
             translator=translator,
             commit_parser=parser,
@@ -192,40 +252,37 @@ def version(
         )
 
     if build_metadata:
-        v.build_metadata = build_metadata
+        new_version.build_metadata = build_metadata
 
-    # Perhaps this behaviour should change if no release should be made?
-    # Or perhaps a graceful exit if the tag already exists
-    click.echo(str(v))
+    # If the new version has already been released, we fail and abort
+    if new_version in {v for _, v in tags_and_versions(repo.tags, translator)}:
+        ctx.fail(
+            f"No release will be made, {str(new_version)} has already been released!"
+        )
+
     if print_only:
+        click.echo(str(new_version))
         ctx.exit(0)
 
-    working_dir = os.getcwd() if repo.working_dir is None else repo.working_dir
+    rprint(
+        f"[bold green]The next version is: [white]{str(new_version)}[/white]! :rocket:"
+    )
 
-    paths = [
-        str(declaration.path.resolve().relative_to(working_dir))
-        for declaration in runtime.version_declarations
-    ]
-    log.debug("versions declared in: %s", ", ".join(paths))
-    if opts.noop:
-        noop_report(
-            "would have updated versions in the following paths:"
-            + "".join(f"\n    {path}" for path in paths)
-        )
-    else:
-        for declaration in runtime.version_declarations:
-            new_content = declaration.replace(new_version=v)
-            declaration.path.write_text(new_content)
+    files_with_new_version_written = apply_version_to_source_files(
+        repo=repo,
+        version_declarations=runtime.version_declarations,
+        version=new_version,
+        noop=opts.noop,
+    )
+    all_paths_to_add = files_with_new_version_written + (assets or [])
 
-    all_paths_to_add = paths + (assets if assets else [])
-    # _head_is_new_release_commit = False
-
+    # Commit changes
     if commit_changes and opts.noop:
         # Indents the newlines so that terminal formatting is happy - note the
         # git commit line of the output is 24 spaces indented too
         # Only this message needs such special handling because of the newlines
         # that might be in a commit message between the subject and body
-        indented_commit_message = commit_message.format(version=v).replace(
+        indented_commit_message = commit_message.format(version=new_version).replace(
             "\n\n", "\n\n" + " " * 24
         )
         noop_report(
@@ -249,37 +306,37 @@ def version(
     )
 
     commit_date = datetime.now()
-    rh = rh.release(
-        v, tagger=commit_author, committer=commit_author, tagged_date=commit_date
-    )
+    try:
+        rh = rh.release(
+            new_version,
+            tagger=commit_author,
+            committer=commit_author,
+            tagged_date=commit_date,
+        )
+    except ValueError as ve:
+        ctx.fail(str(ve))
 
     changelog_context = make_changelog_context(
         hvcs_client=hvcs_client, release_history=rh
     )
     changelog_context.bind_to_environment(env)
 
+    updated_paths: list[str] = []
     if update_changelog:
-        updated_paths: list[str] = []
-
         if not os.path.exists(template_dir):
             log.info(
                 "Path %r not found, using default changelog template", template_dir
             )
-            changelog_text = (
-                files("semantic_release")
-                .joinpath("data/templates/CHANGELOG.md.j2")
-                .read_text(encoding="utf-8")
-            )
-            tmpl = env.from_string(changelog_text).stream()
             if opts.noop:
                 noop_report(
                     f"would have written your changelog to {changelog_file.relative_to(repo.working_dir)}"
                 )
             else:
+                changelog_text = render_default_changelog_file(env)
                 with open(str(changelog_file), "w+", encoding="utf-8") as f:
-                    tmpl.dump(f)
+                    f.write(changelog_text)
 
-            updated_paths.append(str(changelog_file.relative_to(repo.working_dir)))
+            updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
         else:
             if opts.noop:
                 noop_report(
@@ -289,7 +346,7 @@ def version(
                     "determined in no-op mode."
                 )
             else:
-                updated_paths += recursive_render(
+                updated_paths = recursive_render(
                     template_dir, environment=env, _root_dir=repo.working_dir
                 )
 
@@ -306,9 +363,23 @@ def version(
             # Anything changed here should be staged.
             repo.git.add(updated_paths)
 
-    # If there are any modifications to the source code of the repository, we make
-    # a release commit to commit the CHANGELOG and other files changed by rendering
-    # to the repo, which will be the new HEAD commit
+    def custom_git_environment() -> ContextManager[None]:
+        """
+        git.custom_environment is a context manager but
+        is not reentrant, so once we have "used" it
+        we need to throw it away and re-create it in
+        order to use it again
+        """
+        return (
+            nullcontext()
+            if not commit_author
+            else repo.git.custom_environment(
+                GIT_AUTHOR_NAME=commit_author.name,
+                GIT_AUTHOR_EMAIL=commit_author.email,
+                GIT_COMMITTER_NAME=commit_author.name,
+                GIT_COMMITTER_EMAIL=commit_author.email,
+            )
+        )
 
     # If we haven't modified any source code then we skip trying to make a commit
     # and any tag that we apply will be to the HEAD commit (made outside of
@@ -317,12 +388,17 @@ def version(
         log.info("No local changes to add to any commit, skipping")
 
     elif commit_changes and opts.noop:
-        command = "git commit -m '{commit_message.format(version=v)}'"
-        command += (
-            f" --author '{commit_author.name} <{commit_author.email}>'"
+        command = (
+            f"""\
+            GIT_AUTHOR_NAME={commit_author.name} \\
+                GIT_AUTHOR_EMAIL={commit_author.email} \\
+                GIT_COMMITTER_NAME={commit_author.name} \\
+                GIT_COMMITTER_EMAIL={commit_author.email} \\
+                """
             if commit_author
             else ""
         )
+        command += "git commit -m '{commit_message.format(version=v)}'"
 
         noop_report(
             indented(
@@ -334,11 +410,11 @@ def version(
         )
 
     elif commit_changes:
-        repo.git.commit(
-            m=commit_message.format(version=v),
-            author=f"{commit_author.name} <{commit_author.email}>",
-            date=int(commit_date.timestamp()),
-        )
+        with custom_git_environment():
+            repo.git.commit(
+                m=commit_message.format(version=new_version),
+                date=int(commit_date.timestamp()),
+            )
 
     # Run the tagging after potentially creating a new HEAD commit.
     # This way if no source code is modified, i.e. all metadata updates
@@ -350,12 +426,13 @@ def version(
             indented(
                 f"""
                 would have run:
-                    git tag -a {v.as_tag()} -m "{v.as_tag()}"
+                    git tag -a {new_version.as_tag()} -m "{new_version.as_tag()}"
                 """
             )
         )
     elif commit_changes:
-        repo.git.tag("-a", v.as_tag(), m=v.as_tag())
+        with custom_git_environment():
+            repo.git.tag("-a", new_version.as_tag(), m=new_version.as_tag())
 
     if push_changes:
         remote_url = runtime.hvcs_client.remote_url(
@@ -378,26 +455,25 @@ def version(
             repo.git.push("--tags", remote_url, active_branch)
 
     if make_vcs_release and opts.noop:
-        noop_report(f"would have created a release for the tag {v.as_tag()!r}")
+        noop_report(
+            f"would have created a release for the tag {new_version.as_tag()!r}"
+        )
         noop_report(f"would have uploaded the following assets: {runtime.assets}")
     elif make_vcs_release:
-        release = rh.released[v]
-        release_template = (
-            files("semantic_release")
-            .joinpath("data/templates/release_notes.md.j2")
-            .read_text(encoding="utf-8")
-        )
+        release = rh.released[new_version]
         # Use a new, non-configurable environment for release notes - not user-configurable at the moment
         release_note_environment = environment(template_dir=runtime.template_dir)
         changelog_context.bind_to_environment(release_note_environment)
-        release_notes = release_note_environment.from_string(release_template).render(
-            version=v, release=release
+        release_notes = render_release_notes(
+            template_environment=release_note_environment,
+            version=new_version,
+            release=release,
         )
         try:
             release_id = hvcs_client.create_or_update_release(
-                tag=v.as_tag(),
+                tag=new_version.as_tag(),
                 release_notes=release_notes,
-                prerelease=v.is_prerelease,
+                prerelease=new_version.is_prerelease,
             )
         except Exception as e:
             log.error("%s", str(e), exc_info=True)
@@ -413,4 +489,4 @@ def version(
                     log.error("%s", str(e), exc_info=True)
                     ctx.fail(str(e))
 
-    return str(v)
+    return str(new_version)

@@ -8,7 +8,12 @@ import tomlkit
 from semantic_release.cli.config import RawConfig
 
 
-@click.command(short_help="Generate semantic-release's default configuration")
+@click.command(
+    short_help="Generate semantic-release's default configuration",
+    context_settings={
+        "help_option_names": ["-h", "--help"],
+    },
+)
 @click.option(
     "-f",
     "--format",
