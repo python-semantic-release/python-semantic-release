@@ -7,8 +7,8 @@ If this is not the case, please refer to `Travis documentation`_ on how to do th
 1. Add python-semantic-release settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :doc:`../configuration` for details on configuring python-semantic-release.
-Make sure that at least you have set :ref:`config-version_variable` before continuing.
+See :doc:`../configuration` for details on how to configure Python Semantic Release.
+Make sure that at least you have set :ref:`config-version-variables` before continuing.
 
 2. Add environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,11 +16,12 @@ You will need to set up three environment variables in Travis. An easy way to do
 is to go to the settings page for your package and add them there. Make sure that the
 secret toggle is set correct for the ones that are secret.
 
-You will need to set :ref:`env-repository_password` to a PyPI API token and
-:ref:`env-repository_username` to `__token__`.
-Furthermore, you need to set :ref:`env-gh_token` with a personal access token for Github. It will
-need either ``repo`` or ``public_repo`` scope depending on whether the
-repository is private or public.
+You will need to set :ref:`upload.password <config-upload-password>` to a PyPI API token,
+following the guide on using environment variables for configuration, and
+:ref:`upload.username <config-upload-username>` to `__token__`.
+Furthermore, you need to set the :ref:`GH_TOKEN <index-creating-vcs-releases>` environment
+variable with a personal access token for Github. It will need either ``repo`` or
+``public_repo`` scope depending on whether the repository is private or public.
 
 More information on how to set environment variables can be found on
 `Travis documentation on environment variables`_.
@@ -35,7 +36,7 @@ The following should be added to your ``.travis.yml`` file.
     - git config --global user.name "semantic-release (via TravisCI)"
     - git config --global user.email "semantic-release@travis"
     - pip install python-semantic-release
-    - semantic-release publish
+    - semantic-release version && semantic-release publish
 
 
 The first line tells Travis that we want to run the listed tasks after a successful build.
