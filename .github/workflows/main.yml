@@ -110,7 +110,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.beautify.outputs.new_sha }}
       - name: Fetch master
-        run: git fetch --prune origin +refs/heads/master:refs/remotes/origin/master
+        run: git fetch --prune origin +refs/heads/${{ github.ref_name }}:refs/remotes/origin/${{ github.ref_name }}
       - name: Python Semantic Release
         uses: ./
         with:
