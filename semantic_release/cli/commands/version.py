@@ -215,8 +215,8 @@ def version(
             new_content = declaration.replace(new_version=v)
             declaration.path.write_text(new_content)
 
+    all_paths_to_add = paths + (assets if assets else [])
     if commit_changes and opts.noop:
-        all_paths_to_add = paths + (assets if assets else [])
         # Indents the newlines so that terminal formatting is happy - note the
         # git commit line of the output is 24 spaces indented too
         # Only this message needs such special handling because of the newlines
@@ -237,18 +237,7 @@ def version(
             )
         )
     elif commit_changes:
-        repo.git.add(paths)
-        if assets:
-            repo.git.add(assets)
-
-        if repo.index.diff("HEAD"):
-            if commit_author:
-                repo.git.commit(
-                    m=commit_message.format(version=v), author=commit_author
-                )
-            else:
-                # Use configured commit author
-                repo.git.commit(m=commit_message.format(version=v))
+        repo.git.add(all_paths_to_add)
 
     rh = release_history(repo=repo, translator=translator, commit_parser=parser)
     changelog_context = make_changelog_context(
@@ -294,16 +283,33 @@ def version(
                     f"""
                     would have run:
                         git add {" ".join(updated_paths)}
-                        git commit --amend --no-edit
                     """
                 )
             )
         elif commit_changes:
             repo.git.add(updated_paths)
-            repo.git.commit("--amend", "--no-edit")
 
-    # Note we have to run the tagging after potentially amending the HEAD commit
-    # Otherwise the hash changes and the tag we just created is orphaned
+    if not repo.index.diff("HEAD"):
+        log.info("No local changes to add to any commit, skipping")
+
+    elif commit_changes and opts.noop:
+        noop_report(
+            dedent(
+                f"""
+                would have run:
+                    git commit -m "{commit_message.format(version=v)}"{f' --author {commit_author}' if commit_author else ''}
+                """
+            )
+        )
+
+    elif commit_changes:
+        if commit_author:
+            repo.git.commit(m=commit_message.format(version=v), author=commit_author)
+        else:
+            # Use configured commit author
+            repo.git.commit(m=commit_message.format(version=v))
+
+    # Run the tagging after potentially creating a new HEAD commit
     if commit_changes and opts.noop:
         noop_report(
             dedent(
