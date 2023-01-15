@@ -56,7 +56,7 @@ setup(
     extras_require={
         "test": [
             "coverage>=5,<6",
-            "pytest>=5,<6",
+            "pytest>=7,<8",
             "pytest-xdist>=1,<2",
             "pytest-mock>=2,<3",
             "responses==0.13.3",
@@ -74,9 +74,10 @@ setup(
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )
