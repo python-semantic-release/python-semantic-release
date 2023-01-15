@@ -56,7 +56,7 @@ setup(
     extras_require={
         "test": [
             "coverage>=5,<6",
-            "pytest>=5,<6",
+            "pytest>=7,<8",
             "pytest-xdist>=1,<2",
             "pytest-mock>=2,<3",
             "responses==0.13.3",
