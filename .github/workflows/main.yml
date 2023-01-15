@@ -83,7 +83,7 @@ jobs:
         uses: github-actions-x/commit@v2.9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'style: beautify ${{ github.sha }}'
+          commit-message: "style: beautify ${{ github.sha }}"
           name: github-actions
           email: action@github.com
 
@@ -98,18 +98,18 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: push
     needs: [test, mypy, beautify]
-    if: github.repository == 'relekang/python-semantic-release'
+    if: github.repository == 'python-semantic-release/python-semantic-release'
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        ref: ${{ needs.beautify.outputs.new_sha }}
-    - name: Fetch master
-      run: git fetch --prune origin +refs/heads/master:refs/remotes/origin/master
-    - name: Python Semantic Release
-      uses: ./
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        repository_username: ${{ secrets.PYPI_USERNAME }}
-        repository_password: ${{ secrets.PYPI_PASSWORD }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.beautify.outputs.new_sha }}
+      - name: Fetch master
+        run: git fetch --prune origin +refs/heads/master:refs/remotes/origin/master
+      - name: Python Semantic Release
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_username: ${{ secrets.PYPI_USERNAME }}
+          repository_password: ${{ secrets.PYPI_PASSWORD }}
