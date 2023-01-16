@@ -59,6 +59,20 @@ Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`8f2185d`](http
 
 
 
+## v7.33.0 (2023-01-15)
+### Feature
+* Add signing options to action ([`31ad5eb`](https://github.com/python-semantic-release/python-semantic-release/commit/31ad5eb5a25f0ea703afc295351104aefd66cac1))
+* **repository:** Add support for TWINE_CERT ([#522](https://github.com/python-semantic-release/python-semantic-release/issues/522)) ([`d56e85d`](https://github.com/python-semantic-release/python-semantic-release/commit/d56e85d1f2ac66fb0b59af2178164ca915dbe163))
+* Update action with configuration options ([#518](https://github.com/python-semantic-release/python-semantic-release/issues/518)) ([`4664afe`](https://github.com/python-semantic-release/python-semantic-release/commit/4664afe5f80a04834e398fefb841b166a51d95b7))
+
+### Fix
+* Changelog release commit search logic ([#530](https://github.com/python-semantic-release/python-semantic-release/issues/530)) ([`efb3410`](https://github.com/python-semantic-release/python-semantic-release/commit/efb341036196c39b4694ca4bfa56c6b3e0827c6c))
+* Bump Dockerfile to use Python 3.10 image ([#536](https://github.com/python-semantic-release/python-semantic-release/issues/536)) ([`8f2185d`](https://github.com/python-semantic-release/python-semantic-release/commit/8f2185d570b3966b667ac591ae523812e9d2e00f))
+* Fix mypy errors for publish ([`b40dd48`](https://github.com/python-semantic-release/python-semantic-release/commit/b40dd484387c1b3f78df53ee2d35e281e8e799c8))
+* Formatting in docs ([`2e8227a`](https://github.com/python-semantic-release/python-semantic-release/commit/2e8227a8a933683250f8dace019df15fdb35a857))
+* Update documentaton ([`5cbdad2`](https://github.com/python-semantic-release/python-semantic-release/commit/5cbdad296034a792c9bf05e3700eac4f847eb469))
+* **action:** Fix environment variable names ([`3c66218`](https://github.com/python-semantic-release/python-semantic-release/commit/3c66218640044adf263fcf9b2714cfc4b99c2e90))
+
 ## v7.32.2 (2022-10-22)
 
 ### Ci
