@@ -299,6 +299,7 @@ def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **k
                 name,
                 current_version,
                 markdown_changelog(owner, name, current_version, log, header=False),
+                prerelease
             )
         else:
             logger.error("Missing token: cannot post changelog to HVCS")
@@ -404,7 +405,7 @@ def publish(
             # Update changelog on HVCS
             logger.info("Posting changelog to HVCS")
             try:
-                post_changelog(owner, name, new_version, changelog_md)
+                post_changelog(owner, name, new_version, changelog_md, prerelease)
             except GitError:
                 logger.error("Posting changelog failed")
         else:
