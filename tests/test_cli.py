@@ -373,6 +373,22 @@ def test_cli_print_version_prerelease(mocker, runner):
     assert result.exit_code == 0
 
 
+def test_cli_print_version_prerelease(mocker, runner):
+    mock_publish = mocker.patch("semantic_release.cli.publish")
+    result = runner.invoke(main, ["publish", "--prerelease"])
+    mock_publish.assert_called_once_with(
+        prerelease=True,
+        force_level=None,
+        prerelease_patch=True,
+        post=False,
+        retry=False,
+        noop=False,
+        define=(),
+    )
+
+    assert result.exit_code == 0
+
+
 def test_cli_print_version_current(mocker, runner):
     mock_print_version = mocker.patch("semantic_release.cli.print_version")
     result = runner.invoke(main, ["print-version", "--current"])
@@ -1180,7 +1196,9 @@ def test_publish_giterror_when_posting(mocker):
         header=False,
         previous_version="1.2.3",
     )
-    mock_post.assert_called_once_with("owner", "name", "new", "super md changelog", False)
+    mock_post.assert_called_once_with(
+        "owner", "name", "new", "super md changelog", False
+    )
 
 
 def test_changelog_should_call_functions(mocker, runner):
