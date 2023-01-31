@@ -8,7 +8,7 @@ import click
 # NOTE: use backport with newer API than stdlib
 from importlib_resources import files
 
-from semantic_release.changelog import recursive_render, release_history
+from semantic_release.changelog import ReleaseHistory, recursive_render
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.cli.util import noop_report
 
@@ -35,8 +35,14 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
     env = runtime.template_environment
     template_dir = runtime.template_dir
     changelog_file = runtime.changelog_file
+    changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
 
-    rh = release_history(repo=repo, translator=translator, commit_parser=parser)
+    rh = ReleaseHistory.from_git_history(
+        repo=repo,
+        translator=translator,
+        commit_parser=parser,
+        exclude_commit_patterns=changelog_excluded_commit_patterns,
+    )
     changelog_context = make_changelog_context(
         hvcs_client=hvcs_client, release_history=rh
     )

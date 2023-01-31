@@ -6,30 +6,109 @@ on:
     branches:
       - master
       - "8.0.x"
-      - "fix-v8-release"
 
 jobs:
-  test_issue:
-    name: Test not finding branch
+  test:
+    name: Python ${{ matrix.python-version }} tests
     runs-on: ubuntu-latest
-    concurrency: push
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
-      - name: Test things out
-        run: |
-          echo "github.base_ref : ${{ github.base_ref }}"
-          echo "github.ref: ${{ github.ref }}"
-          echo "github.ref_name: ${{ github.ref_name }}"
-          echo "github.ref_name: ${{ github.ref_name }}"
-          echo "github.ref_type: ${{ github.ref_name }}"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: ${{ needs.beautify.outputs.new_sha }}
-      - name: Fetch master
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
         run: |
-          git fetch --prune origin +refs/heads/${{ github.ref_name }}:refs/remotes/origin/${{ github.ref_name }} && \
-            git checkout -f ${{ github.ref_name }}
+          python -m pip install .[test]
+          python -m pip install pytest-github-actions-annotate-failures
+
+      - name: pytest
+        run: python -m pytest -v tests
+
+  mypy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Install mypy & stubs packages
+        run: python -m pip install .[mypy]
+      - name: mypy
+        run: python -m mypy --ignore-missing-imports semantic_release
+
+  beautify:
+    name: Beautify
+    runs-on: ubuntu-latest
+    concurrency: push
+    needs: [test, mypy]
+    outputs:
+      new_sha: ${{ steps.sha.outputs.SHA }}
+
+    steps:
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Black
+        run: python -m pip install black
+
+      - name: Beautify with Black
+        run: python -m black .
+
+      - name: Install isort
+        run: python -m pip install "isort >=5,<6"
+
+        # https://pycqa.github.io/isort/docs/upgrade_guides/5.0.0.html
+        # removed deprecated "-rc" and "-y" arguments
+      - name: Sort imports
+        run: python -m isort .
+
+      - name: Commit and push changes
+        uses: github-actions-x/commit@v2.9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "style: beautify ${{ github.sha }}"
+          name: github-actions
+          email: action@github.com
+
+      - name: Get new SHA
+        id: sha
+        run: |
+          new_sha=$(git rev-parse HEAD)
+          echo "SHA=$new_sha" >> $GITHUB_OUTPUT
+
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    concurrency: push
+    needs: [test, mypy, beautify]
+    if: github.repository == 'python-semantic-release/python-semantic-release'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
       - name: Python Semantic Release
         uses: ./
         with:

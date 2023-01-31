@@ -4,7 +4,7 @@ from datetime import datetime
 from importlib_resources import files
 
 from semantic_release.changelog.context import make_changelog_context
-from semantic_release.changelog.release_history import release_history
+from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.changelog.template import environment
 from semantic_release.hvcs import Github
 from semantic_release.version.translator import VersionTranslator
@@ -78,7 +78,7 @@ def test_default_changelog_template(
 ):
     repo = repo_with_git_flow_and_release_channels_angular_commits
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    rh = release_history(
+    rh = ReleaseHistory.from_git_history(
         repo=repo, translator=VersionTranslator(), commit_parser=default_angular_parser
     )
     context = make_changelog_context(

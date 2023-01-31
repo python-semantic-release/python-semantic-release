@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import twine.utils
+from git import Actor
 from git.repo.base import Repo
 from jinja2 import Environment
 from pydantic import BaseModel
@@ -81,6 +82,7 @@ class ChangelogEnvironmentConfig(BaseModel):
 class ChangelogConfig(BaseModel):
     template_dir: str = "templates"
     changelog_file: str = "CHANGELOG.md"
+    exclude_commit_patterns: Tuple[str, ...] = ()
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
 
 
@@ -234,8 +236,9 @@ class RuntimeContext:
     major_on_zero: bool
     prerelease: bool
     assets: Tuple[str, ...]
-    commit_author: Optional[str]
+    commit_author: Actor
     commit_message: str
+    changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: HvcsBase
     changelog_file: Path
@@ -352,6 +355,26 @@ class RuntimeContext:
         commit_parser = commit_parser_cls(
             options=commit_parser_cls.parser_options(**raw.commit_parser_options)
         )
+
+        # We always exclude PSR's own release commits from the Changelog
+        # when parsing commits
+        _psr_release_commit_re = re.compile(
+            raw.commit_message.replace(r"{version}", r"(?P<version>.*)")
+        )
+        changelog_excluded_commit_patterns = (
+            _psr_release_commit_re,
+            *(re.compile(pattern) for pattern in raw.changelog.exclude_commit_patterns),
+        )
+
+        _commit_author_str = cls.resolve_from_env(raw.commit_author) or ""
+        _commit_author_valid = Actor.name_email_regex.match(_commit_author_str)
+        if not _commit_author_valid:
+            raise ValueError(
+                f"Invalid git author: {_commit_author_str} should match {Actor.name_email_regex}"
+            )
+
+        commit_author = Actor(*_commit_author_valid.groups())
+
         version_declarations: List[VersionDeclarationABC] = []
         for decl in () if raw.version_toml is None else raw.version_toml:
             try:
@@ -396,6 +419,8 @@ class RuntimeContext:
                 "the token for the remote VCS is configured as stored in the %s environment variable, but it is empty",
                 raw.remote.token.env,
             )
+        elif not token:
+            log.debug("hvcs token is not set")
 
         hvcs_client = hvcs_client_cls(
             remote_url=remote_url,
@@ -432,8 +457,9 @@ class RuntimeContext:
             hvcs_client=hvcs_client,
             changelog_file=changelog_file,
             assets=raw.assets,
-            commit_author=cls.resolve_from_env(raw.commit_author),
+            commit_author=commit_author,
             commit_message=raw.commit_message,
+            changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,
             template_dir=raw.changelog.template_dir,

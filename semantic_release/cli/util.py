@@ -1,4 +1,5 @@
 import sys
+from textwrap import dedent, indent
 
 import rich
 
@@ -17,3 +18,14 @@ def noop_report(msg: str) -> None:
     """
     fullmsg = "[bold cyan]:shield: semantic-release 'noop' mode is enabled! " + msg
     rprint(fullmsg)
+
+
+def indented(msg: str, prefix: str = " " * 4) -> str:
+    """
+    Convenience function for text-formatting for the console.
+
+    Ensures the least indented line of the msg string is indented by ``prefix`` with
+    consistent alignment of the remainder of ``msg`` irrespective of the level of
+    indentation in the Python source code
+    """
+    return indent(dedent(msg), prefix=prefix)

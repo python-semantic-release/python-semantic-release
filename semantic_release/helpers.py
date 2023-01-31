@@ -2,7 +2,7 @@ import importlib
 import logging
 import re
 import string
-from functools import wraps
+from functools import lru_cache, wraps
 from typing import Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
@@ -105,6 +105,7 @@ GIT_URL_REGEX = re.compile(
 )
 
 
+@lru_cache(maxsize=512)
 def parse_git_url(url: str) -> ParsedGitUrl:
     """
     Attempt to parse a string as a git url, either https or ssh format, into a

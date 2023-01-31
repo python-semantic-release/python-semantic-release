@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import logging
 import os
-from textwrap import dedent, indent
+from datetime import datetime
 
 import click
 
 # NOTE: use backport with newer API than stdlib
 from importlib_resources import files
 
-from semantic_release.changelog import environment, recursive_render, release_history
+from semantic_release.changelog import ReleaseHistory, environment, recursive_render
 from semantic_release.changelog.context import make_changelog_context
-from semantic_release.cli.util import noop_report
+from semantic_release.cli.util import indented, noop_report
 from semantic_release.enums import LevelBump
 from semantic_release.version import next_version, tags_and_versions
 
@@ -135,6 +135,7 @@ def version(
     )
     hvcs_client = runtime.hvcs_client
     changelog_file = runtime.changelog_file
+    changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
     env = runtime.template_environment
     template_dir = runtime.template_dir
     assets = runtime.assets
@@ -216,6 +217,8 @@ def version(
             declaration.path.write_text(new_content)
 
     all_paths_to_add = paths + (assets if assets else [])
+    # _head_is_new_release_commit = False
+
     if commit_changes and opts.noop:
         # Indents the newlines so that terminal formatting is happy - note the
         # git commit line of the output is 24 spaces indented too
@@ -225,27 +228,49 @@ def version(
             "\n\n", "\n\n" + " " * 24
         )
         noop_report(
-            indent(
-                dedent(
-                    f"""
-                    would have run:
-                        git add {" ".join(all_paths_to_add)}
-                        git commit -m "{indented_commit_message}"
-                    """
-                ),
-                prefix=" " * 4,
+            indented(
+                f"""
+                would have run:
+                    git add {" ".join(all_paths_to_add)}
+                    git commit -m "{indented_commit_message}"
+                """
             )
         )
+
+    # We must run the commit now to have the release included in the "released"
+    # section of the release history when updating the changelog.
     elif commit_changes:
         repo.git.add(all_paths_to_add)
+        # if repo.index.diff("HEAD"):
+        #     if commit_author:
+        #         repo.git.commit(
+        #             m=commit_message.format(version=v), author=commit_author
+        #         )
+        #     else:
+        #         # Use configured commit author
+        #         repo.git.commit(m=commit_message.format(version=v))
 
-    rh = release_history(repo=repo, translator=translator, commit_parser=parser)
+        # _head_is_new_release_commit = True
+
+    rh = ReleaseHistory.from_git_history(
+        repo=repo,
+        translator=translator,
+        commit_parser=parser,
+        exclude_commit_patterns=changelog_excluded_commit_patterns,
+    )
+
+    commit_date = datetime.now()
+    rh = rh.release(
+        v, tagger=commit_author, committer=commit_author, tagged_date=commit_date
+    )
+
     changelog_context = make_changelog_context(
         hvcs_client=hvcs_client, release_history=rh
     )
     changelog_context.bind_to_environment(env)
 
     if update_changelog:
+        updated_paths: list[str] = []
 
         if not os.path.exists(template_dir):
             log.info(
@@ -261,25 +286,29 @@ def version(
                 noop_report(
                     f"would have written your changelog to {changelog_file.relative_to(repo.working_dir)}"
                 )
-                ctx.exit(0)
-            with open(str(changelog_file), "w+", encoding="utf-8") as f:
-                tmpl.dump(f)
+                # ctx.exit(0)
+            else:
+                with open(str(changelog_file), "w+", encoding="utf-8") as f:
+                    tmpl.dump(f)
 
-            updated_paths = [changelog_file]
+            updated_paths.append(str(changelog_file.relative_to(repo.working_dir)))
         else:
             if opts.noop:
                 noop_report(
                     f"would have recursively rendered the template directory "
-                    f"{template_dir!r} relative to {repo.working_dir!r}"
+                    f"{template_dir!r} relative to {repo.working_dir!r}. "
+                    "Paths which would be modified by this operation cannot be "
+                    "determined in no-op mode."
                 )
-                ctx.exit(0)
-            updated_paths = recursive_render(
-                template_dir, environment=env, _root_dir=repo.working_dir
-            )
+                # ctx.exit(0)
+            else:
+                updated_paths += recursive_render(
+                    template_dir, environment=env, _root_dir=repo.working_dir
+                )
 
         if commit_changes and opts.noop:
             noop_report(
-                dedent(
+                indented(
                     f"""
                     would have run:
                         git add {" ".join(updated_paths)}
@@ -287,32 +316,52 @@ def version(
                 )
             )
         elif commit_changes:
+            # Anything changed here should be staged.
             repo.git.add(updated_paths)
 
     if not repo.index.diff("HEAD"):
         log.info("No local changes to add to any commit, skipping")
 
     elif commit_changes and opts.noop:
+        # If we have already made a release commit for the metadata, then we amend that
+        # commit to include the changelog and any other source code that was changed as
+        # part of the rendering process. Otherwise we make a fresh commit to commit the
+        # CHANGELOG and other files changed by rendering to the repo, which will be the
+        # new HEAD commit
+        command = "git commit -m '{commit_message.format(version=v)}'"
+        command += (
+            f" --author '{commit_author.name} <{commit_author.email}>'"
+            if commit_author
+            else ""
+        )
+
         noop_report(
-            dedent(
+            indented(
                 f"""
                 would have run:
-                    git commit -m "{commit_message.format(version=v)}"{f' --author {commit_author}' if commit_author else ''}
+                    {command}
                 """
             )
         )
 
     elif commit_changes:
-        if commit_author:
-            repo.git.commit(m=commit_message.format(version=v), author=commit_author)
-        else:
-            # Use configured commit author
-            repo.git.commit(m=commit_message.format(version=v))
+        # If we have made any modifications to the source code of the Git repo,
+        # make a release commit. Otherwise we just tag HEAD as it was in the
+        # repo.
+        if repo.index.diff("HEAD"):
+            repo.git.commit(
+                m=commit_message.format(version=v),
+                author=f"{commit_author.name} <{commit_author.email}>",
+                date=int(commit_date.timestamp()),
+            )
 
-    # Run the tagging after potentially creating a new HEAD commit
+    # Run the tagging after potentially creating a new HEAD commit.
+    # This way if no source code is modified, i.e. all metadata updates
+    # are disabled, and the changelog generation is disabled or it's not
+    # modified, then the latest commit will be tagged as a release commit
     if commit_changes and opts.noop:
         noop_report(
-            dedent(
+            indented(
                 f"""
                 would have run:
                     git tag -a {v.as_tag()} -m "{v.as_tag()}"
@@ -329,7 +378,7 @@ def version(
         active_branch = repo.active_branch.name
         if opts.noop:
             noop_report(
-                dedent(
+                indented(
                     f"""
                     would have run:
                         git push {runtime.masker.mask(remote_url)} {active_branch}
