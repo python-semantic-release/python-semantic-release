@@ -47,4 +47,7 @@ def test_commit_author_configurable(
             repo=repo_with_no_tags_angular_commits,
             global_cli_options=GlobalCommandLineOptions(),
         )
-        assert runtime.commit_author == expected_author
+        assert (
+            f"{runtime.commit_author.name} <{runtime.commit_author.email}>"
+            == expected_author
+        )

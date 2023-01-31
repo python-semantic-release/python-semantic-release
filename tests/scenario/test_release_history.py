@@ -1,9 +1,12 @@
 from collections import namedtuple
+from datetime import datetime
 
 import pytest
+from git import Actor
 from pytest_lazyfixture import lazy_fixture
 
-from semantic_release.changelog.release_history import release_history
+from semantic_release.changelog.release_history import ReleaseHistory
+from semantic_release.commit_parser.angular import AngularCommitParser
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
@@ -212,7 +215,9 @@ def test_release_history(
 ):
     translator = VersionTranslator()
     # Nothing has unreleased commits currently
-    _, released = release_history(repo, translator, default_angular_parser)
+    _, released = ReleaseHistory.from_git_history(
+        repo, translator, default_angular_parser
+    )
     assert (
         expected_release_history.released.keys() == released.keys()
     ), "versions mismatched, missing: {missing}, extra: {extra}".format(
@@ -239,7 +244,7 @@ def test_release_history(
         repo.git.commit(m=commit_message)
 
     # Now we should have some unreleased commits, and nothing new released
-    new_unreleased, new_released = release_history(
+    new_unreleased, new_released = ReleaseHistory.from_git_history(
         repo, translator, default_angular_parser
     )
     actual_unreleased_messages = [
@@ -256,3 +261,43 @@ def test_release_history(
     assert (
         new_released == released
     ), "something that shouldn't be considered release has been released"
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture("repo_with_no_tags_angular_commits"),
+        lazy_fixture("repo_with_single_branch_angular_commits"),
+        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_with_git_flow_angular_commits"),
+        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+    ],
+)
+def test_release_history_releases(repo, default_angular_parser):
+    new_version = Version.parse("100.10.1")
+    actor = Actor("semantic-release", "semantic-release")
+    release_history = ReleaseHistory.from_git_history(
+        repo=repo,
+        translator=VersionTranslator(),
+        commit_parser=default_angular_parser,
+    )
+    tagged_date = datetime.now()
+    new_rh = release_history.release(
+        new_version,
+        committer=actor,
+        tagger=actor,
+        tagged_date=tagged_date,
+    )
+
+    assert new_rh is not release_history
+    assert new_rh.unreleased == {}
+    assert new_rh.released == {
+        new_version: {
+            "tagger": actor,
+            "committer": actor,
+            "tagged_date": tagged_date,
+            "elements": release_history.unreleased,
+        },
+        **release_history.released,
+    }

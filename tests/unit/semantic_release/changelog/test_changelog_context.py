@@ -3,7 +3,7 @@ from git.objects.base import Object
 from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.changelog import environment, make_changelog_context
-from semantic_release.changelog.release_history import release_history
+from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.hvcs import Gitea, Github, Gitlab
 from semantic_release.version.translator import VersionTranslator
 
@@ -138,7 +138,7 @@ def test_changelog_context(
     # so we shouldn't be re-testing that here.
     hvcs_client = hvcs_client_class(remote_url=repo.remote().url)
     env = environment(lstrip_blocks=True, keep_trailing_newline=True, trim_blocks=True)
-    rh = release_history(repo, VersionTranslator(), commit_parser)
+    rh = ReleaseHistory.from_git_history(repo, VersionTranslator(), commit_parser)
     context = make_changelog_context(hvcs_client=hvcs_client, release_history=rh)
     context.bind_to_environment(env)
     actual_content = env.from_string(changelog_template).render()

@@ -130,7 +130,10 @@ class Github(HvcsBase):
                 "prerelease": prerelease,
             },
         )
-        return resp.json()["id"]  # type: ignore
+
+        release_id: int = resp.json()["id"]  # type: ignore
+        log.info("Successfully created release with ID: %s", release_id)
+        return release_id
 
     @logged_function(log)
     @suppress_not_found

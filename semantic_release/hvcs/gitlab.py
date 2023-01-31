@@ -122,6 +122,7 @@ class Gitlab(HvcsBase):
         client.auth()
         try:
             log.info("Creating release for %s", tag)
+            # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
             client.projects.get(self.owner + "/" + self.repo_name).releases.create(
                 {
                     "name": "Release " + tag,
