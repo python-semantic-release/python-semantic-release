@@ -237,20 +237,8 @@ def version(
             )
         )
 
-    # We must run the commit now to have the release included in the "released"
-    # section of the release history when updating the changelog.
     elif commit_changes:
         repo.git.add(all_paths_to_add)
-        # if repo.index.diff("HEAD"):
-        #     if commit_author:
-        #         repo.git.commit(
-        #             m=commit_message.format(version=v), author=commit_author
-        #         )
-        #     else:
-        #         # Use configured commit author
-        #         repo.git.commit(m=commit_message.format(version=v))
-
-        # _head_is_new_release_commit = True
 
     rh = ReleaseHistory.from_git_history(
         repo=repo,
@@ -286,7 +274,6 @@ def version(
                 noop_report(
                     f"would have written your changelog to {changelog_file.relative_to(repo.working_dir)}"
                 )
-                # ctx.exit(0)
             else:
                 with open(str(changelog_file), "w+", encoding="utf-8") as f:
                     tmpl.dump(f)
@@ -300,7 +287,6 @@ def version(
                     "Paths which would be modified by this operation cannot be "
                     "determined in no-op mode."
                 )
-                # ctx.exit(0)
             else:
                 updated_paths += recursive_render(
                     template_dir, environment=env, _root_dir=repo.working_dir
@@ -319,15 +305,17 @@ def version(
             # Anything changed here should be staged.
             repo.git.add(updated_paths)
 
+    # If there are any modifications to the source code of the repository, we make
+    # a release commit to commit the CHANGELOG and other files changed by rendering
+    # to the repo, which will be the new HEAD commit
+
+    # If we haven't modified any source code then we skip trying to make a commit
+    # and any tag that we apply will be to the HEAD commit (made outside of
+    # running PSR
     if not repo.index.diff("HEAD"):
         log.info("No local changes to add to any commit, skipping")
 
     elif commit_changes and opts.noop:
-        # If we have already made a release commit for the metadata, then we amend that
-        # commit to include the changelog and any other source code that was changed as
-        # part of the rendering process. Otherwise we make a fresh commit to commit the
-        # CHANGELOG and other files changed by rendering to the repo, which will be the
-        # new HEAD commit
         command = "git commit -m '{commit_message.format(version=v)}'"
         command += (
             f" --author '{commit_author.name} <{commit_author.email}>'"
@@ -345,20 +333,17 @@ def version(
         )
 
     elif commit_changes:
-        # If we have made any modifications to the source code of the Git repo,
-        # make a release commit. Otherwise we just tag HEAD as it was in the
-        # repo.
-        if repo.index.diff("HEAD"):
-            repo.git.commit(
-                m=commit_message.format(version=v),
-                author=f"{commit_author.name} <{commit_author.email}>",
-                date=int(commit_date.timestamp()),
-            )
+        repo.git.commit(
+            m=commit_message.format(version=v),
+            author=f"{commit_author.name} <{commit_author.email}>",
+            date=int(commit_date.timestamp()),
+        )
 
     # Run the tagging after potentially creating a new HEAD commit.
     # This way if no source code is modified, i.e. all metadata updates
     # are disabled, and the changelog generation is disabled or it's not
-    # modified, then the latest commit will be tagged as a release commit
+    # modified, then the HEAD commit will be tagged as a release commit
+    # despite not being made by PSR
     if commit_changes and opts.noop:
         noop_report(
             indented(
