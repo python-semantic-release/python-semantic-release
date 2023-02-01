@@ -13,6 +13,9 @@ export GIT_COMMITTER_EMAIL="${INPUT_GIT_COMMITTER_EMAIL:="github-actions@github.
 export SSH_PRIVATE_SIGNING_KEY="${INPUT_SSH_PRIVATE_SIGNING_KEY}"
 export SSH_PUBLIC_SIGNING_KEY="${INPUT_SSH_PUBLIC_SIGNING_KEY}"
 
+# Fix unsafe
+git config --global --add safe.directory $(pwd)
+
 # Change to configured directory
 cd "${INPUT_DIRECTORY}"
 
