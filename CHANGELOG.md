@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.33.1 (2023-02-01)
+### Fix
+* **action:** Mark container fs as safe for git ([#552](https://github.com/python-semantic-release/python-semantic-release/issues/552)) ([`2a55f68`](https://github.com/python-semantic-release/python-semantic-release/commit/2a55f68e2b3cb9ffa9204c00ddbf12706af5c070))
+
 ## v7.33.0 (2023-01-15)
 ### Feature
 * Add signing options to action ([`31ad5eb`](https://github.com/python-semantic-release/python-semantic-release/commit/31ad5eb5a25f0ea703afc295351104aefd66cac1))
