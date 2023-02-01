@@ -315,7 +315,6 @@ def test_should_create_release_using_token_or_netrc(default_gitea_client, token)
     with requests_mock.Mocker(session=default_gitea_client.session) as m, netrc_file(
         machine=default_gitea_client.DEFAULT_DOMAIN
     ) as netrc, mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True):
-
         m.register_uri("POST", gitea_api_matcher, json={"id": 1}, status_code=201)
         assert default_gitea_client.create_release(tag, release_notes) == 1
         assert m.called

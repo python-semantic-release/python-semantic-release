@@ -46,7 +46,6 @@ class Github(HvcsBase):
         hvcs_api_domain: str | None = None,
         token: str | None = None,
     ) -> None:
-
         self._remote_url = remote_url
 
         # pylint: disable=line-too-long

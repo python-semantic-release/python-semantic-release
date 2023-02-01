@@ -186,7 +186,6 @@ def test_log_record_is_masked_with_nontrivial_args(default_masking_filter, rec, 
     ),
 )
 def test_log_messages_are_masked(default_masking_filter, log_level, tmp_path):
-
     buffer = io.StringIO()
 
     root = logging.getLogger()

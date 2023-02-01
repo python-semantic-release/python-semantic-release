@@ -47,7 +47,6 @@ class Gitea(HvcsBase):
         hvcs_api_domain: str | None = None,
         token: str | None = None,
     ) -> None:
-
         self._remote_url = remote_url
 
         self.hvcs_domain = hvcs_domain or os.getenv(

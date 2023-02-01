@@ -53,7 +53,6 @@ class ReleaseHistory:
         the_version: Version | None = None
 
         for commit in repo.iter_commits():
-
             # mypy will be happy if we make this an explicit string
             commit_message = str(commit.message)
             if any(pat.match(commit_message) for pat in exclude_commit_patterns):
@@ -71,7 +70,6 @@ class ReleaseHistory:
             log.debug("commit has type %s", commit_type)
 
             for tag, version in all_git_tags_and_versions:
-
                 if tag.commit == commit:
                     # we have found the latest commit introduced by this tag
                     # so we create a new Release entry

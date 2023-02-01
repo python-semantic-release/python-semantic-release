@@ -48,11 +48,11 @@ def _bfs_for_latest_version_in_history(
     `merge_base`'s parents' history. If no commits in the history correspond
     to a released version, return None
     """
+
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
     def bfs(visited: set[Commit], q: "Queue[Commit]") -> Version | None:
-
         if q.empty():
             log.debug("queue is empty, returning none")
             return None

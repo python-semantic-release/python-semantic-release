@@ -129,7 +129,6 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         )
 
     def parse(self, commit: Commit) -> ParseResult:
-
         message = str(commit.message)
         parsed = self.re_parser.match(message)
 
