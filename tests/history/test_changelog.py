@@ -141,7 +141,6 @@ def test_message_capitalization_is_configurable(
         "semantic_release.history.logs.get_commit_log",
         lambda *a, **kw: [commit],
     ):
-
         with mock.patch(
             "semantic_release.history.config.get",
             wrapped_config_get(changelog_capitalize=config_setting),

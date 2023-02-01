@@ -56,7 +56,6 @@ def test_markdown_changelog_gitlab():
     with mock.patch(
         "semantic_release.changelog.config.get", wrapped_config_get(hvcs="gitlab")
     ):
-
         assert markdown_changelog(
             "owner",
             "repo_name",
@@ -164,11 +163,9 @@ def test_get_changelog_sections():
     ],
 )
 def test_add_pr_link(message, hvcs, expected_output):
-
     with mock.patch(
         "semantic_release.changelog.config.get", wrapped_config_get(hvcs=hvcs)
     ):
-
         assert add_pr_link("owner", "name", message) == expected_output
 
 

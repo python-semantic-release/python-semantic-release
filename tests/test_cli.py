@@ -67,7 +67,6 @@ def test_version_by_commit_should_call_correct_functions(mocker):
 def test_version_by_tag_with_commit_version_number_should_call_correct_functions(
     mocker,
 ):
-
     mocker.patch(
         "semantic_release.cli.config.get",
         wrapped_config_get(
@@ -106,7 +105,6 @@ def test_version_by_tag_with_commit_version_number_should_call_correct_functions
 def test_version_by_tag_only_with_commit_version_number_should_call_correct_functions(
     mocker,
 ):
-
     mocker.patch(
         "semantic_release.cli.config.get",
         wrapped_config_get(

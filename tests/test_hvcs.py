@@ -186,7 +186,6 @@ def test_get_domain_should_have_expected_domain(
     ci_server_host,
     hvcs_api_domain,
 ):
-
     with mock.patch(
         "semantic_release.hvcs.config.get",
         wrapped_config_get(
@@ -202,7 +201,6 @@ def test_get_domain_should_have_expected_domain(
                 "CI_SERVER_HOST": ci_server_host,
             },
         ):
-
             assert get_hvcs().domain() == expected_domain
             assert get_hvcs().api_url() == expected_api_url
 
@@ -223,7 +221,6 @@ def test_ghe_domain_should_be_retrieved_from_env():
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
 def test_get_token():
-
     assert get_hvcs().token() == "token"
 
 
@@ -603,7 +600,6 @@ class GithubReleaseTests(TestCase):
 
 
 class GiteaReleaseTests(TestCase):
-
     url = "https://gitea.com/api/v1/repos/gitea/tea/releases"
     edit_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/1"
     get_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/tags/v1.0.0"
