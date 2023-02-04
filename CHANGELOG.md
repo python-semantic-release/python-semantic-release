@@ -2,12 +2,15 @@
 
 
 
-## v8.0.0-alpha.2 (2023-02-01)
+## v8.0.0-alpha.3 (2023-02-04)
+
+### Fix
+
+* fix: resolve bug in changelog logic, enable upload to pypi ([`f9e4bb2`](https://github.com/python-semantic-release/python-semantic-release/commit/f9e4bb20d576ecaaa75910e73ff2b2d132b445f0))
 
 ### Unknown
 
 * Merge branch &#39;master&#39; into 8.0.x ([`33e778a`](https://github.com/python-semantic-release/python-semantic-release/commit/33e778a61d613f86aec5976808b2f2df4c9e0b5f))
-
 
 
 ## v7.33.1 (2023-02-01)
