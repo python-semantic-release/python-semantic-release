@@ -190,13 +190,13 @@ token = { env = "GH_TOKEN" }
 
 [tool.semantic_release.upload]
 dist_glob_patterns = ["dist/*"]
-upload_to_repository = false
-upload_to_vcs_release = false
+upload_to_repository = true
+upload_to_vcs_release = true
 sign = false
 sign_with = "gpg"
 config_file = "~/.pypirc"
 skip_existing = false
-repository_name = "testpypi"
+repository_name = "pypi"
 disable_progress_bar = false
 
 [tool.semantic_release.upload.pypi_token]

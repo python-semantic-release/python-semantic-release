@@ -55,13 +55,6 @@ class ReleaseHistory:
         for commit in repo.iter_commits():
             # mypy will be happy if we make this an explicit string
             commit_message = str(commit.message)
-            if any(pat.match(commit_message) for pat in exclude_commit_patterns):
-                log.debug(
-                    "Skipping excluded commit %s (%s)",
-                    commit.hexsha,
-                    commit_message.replace("\n", " ")[:20],
-                )
-                continue
 
             parse_result = commit_parser.parse(commit)
             commit_type = (
@@ -104,6 +97,14 @@ class ReleaseHistory:
 
                     released.setdefault(the_version, release)
                     break
+
+            if any(pat.match(commit_message) for pat in exclude_commit_patterns):
+                log.debug(
+                    "Skipping excluded commit %s (%s)",
+                    commit.hexsha,
+                    commit_message.replace("\n", " ")[:20],
+                )
+                continue
 
             if not is_commit_released:
                 log.debug("adding commit %s to unreleased commits", commit.hexsha)
