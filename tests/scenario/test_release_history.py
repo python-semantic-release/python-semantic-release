@@ -7,6 +7,7 @@ from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.commit_parser.angular import AngularCommitParser
+from semantic_release.version import translator
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
@@ -301,3 +302,26 @@ def test_release_history_releases(repo, default_angular_parser):
         },
         **release_history.released,
     }
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture("repo_with_no_tags_angular_commits"),
+        lazy_fixture("repo_with_single_branch_angular_commits"),
+        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_with_git_flow_angular_commits"),
+        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+    ],
+)
+def test_all_matching_repo_tags_are_released(repo, default_angular_parser):
+    translator = VersionTranslator()
+    release_history = ReleaseHistory.from_git_history(
+        repo=repo,
+        translator=translator,
+        commit_parser=default_angular_parser,
+    )
+
+    for tag in repo.tags:
+        assert translator.from_tag(tag.name) in release_history.released
