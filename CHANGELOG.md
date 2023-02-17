@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.33.2 (2023-02-17)
+### Fix
+* Inconsistent versioning between print-version and publish ([#524](https://github.com/python-semantic-release/python-semantic-release/issues/524)) ([`17d60e9`](https://github.com/python-semantic-release/python-semantic-release/commit/17d60e9bf66f62e5845065486c9d5e450f74839a))
+
 ## v7.33.1 (2023-02-01)
 ### Fix
 * **action:** Mark container fs as safe for git ([#552](https://github.com/python-semantic-release/python-semantic-release/issues/552)) ([`2a55f68`](https://github.com/python-semantic-release/python-semantic-release/commit/2a55f68e2b3cb9ffa9204c00ddbf12706af5c070))
