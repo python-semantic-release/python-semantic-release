@@ -127,7 +127,7 @@ def print_version(
         return True
 
     # Find what the new version number should be
-    level_bump = evaluate_version_bump(current_version, force_level)
+    level_bump = evaluate_version_bump(current_release_version, force_level)
     new_version = get_new_version(
         current_version,
         current_release_version,
