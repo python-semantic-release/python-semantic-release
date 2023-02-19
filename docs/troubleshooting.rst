@@ -14,7 +14,7 @@ Things to check...
 Showing debug output
 ====================
 If you are having trouble with `semantic-release` there is a way to get more
-information during it's work.
+information during its work.
 
 By setting the ``--verbosity`` option to ``DEBUG`` you can display information
 from the inner workings of semantic-release.
