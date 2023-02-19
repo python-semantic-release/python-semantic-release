@@ -7,7 +7,7 @@ If this is not the case, please refer to `Travis documentation`_ on how to do th
 1. Add python-semantic-release settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :doc:`../configuration` for details on how to configure python-semantic-release.
+See :doc:`../configuration` for details on configuring python-semantic-release.
 Make sure that at least you have set :ref:`config-version_variable` before continuing.
 
 2. Add environment variables
@@ -38,11 +38,11 @@ The following should be added to your ``.travis.yml`` file.
     - semantic-release publish
 
 
-The first line tells Travis that we want to run the listed tasks after a success build.
+The first line tells Travis that we want to run the listed tasks after a successful build.
 The two first lines in after_success will configure git so that python-semantic-release
-will be able to commit on Travis. The third installs the latest version of pyhon-semantic-release.
+will be able to commit on Travis. The third installs the latest version of python-semantic-release.
 The last will run the publish command, which will publish a new version if the changes
-indicates that one is due.
+indicate that one is due.
 
 
 4. Push some changes
