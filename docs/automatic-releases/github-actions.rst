@@ -48,7 +48,7 @@ Example Workflow
            fetch-depth: 0
 
        - name: Python Semantic Release
-         uses: relekang/python-semantic-release@master
+         uses: python-semantic-release/python-semantic-release@master
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
            repository_username: __token__
@@ -88,7 +88,7 @@ multiple projects.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: relekang/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@master
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +96,7 @@ multiple projects.
        repository_password: ${{ secrets.PYPI_TOKEN }}
 
    - name: Release Project 2
-     uses: relekang/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@master
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -107,4 +107,4 @@ multiple projects.
   The release notes posted to GitHub will not currently distinguish which
   project they are from (see `this issue`_).
 
-.. _this issue: https://github.com/relekang/python-semantic-release/issues/168
+.. _this issue: https://github.com/python-semantic-release/python-semantic-release/issues/168
