@@ -357,7 +357,7 @@ def publish(
         if os.getenv("GITHUB_ACTIONS"):
             with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
                 print(f'released=true', file=fh)
-                print(f'version={new_version}"', file=fh)
+                print(f'version={new_version}', file=fh)
         log = generate_changelog(current_version)
         changelog_md = markdown_changelog(
             owner,
