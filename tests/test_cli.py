@@ -890,15 +890,15 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
     assert not mock_log.called
     assert mock_ci_check.called
 
-# builtin_open = open
-# def mock_open_github(*args, **kwargs):
-#     if args[0] == "github_output_file":
-#         # mocked open for path "foo"
-#         return mock.mock_open()(*args, **kwargs)
-#     # unpatched version for every other path
-#     return builtin_open(*args, **kwargs)
+builtin_open = open
+def mock_open_github(*args, **kwargs):
+    if args[0] == "github_output_file":
+        # mocked open for path "foo"
+        return mock.mock_open()(*args, **kwargs)
+    # unpatched version for every other path
+    return builtin_open(*args, **kwargs)
 
-# @mock.patch("builtins.open", mock_open_github)
+@mock.patch("builtins.open", mock_open_github)
 def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(fs, monkeypatch, mocker):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("GITHUB_OUTPUT", "github_output_file")
@@ -921,7 +921,7 @@ def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(f
     "released=false\n"
     "version=7.33.2\n"
     )
-    fs.create_file('github_output_file')
+    # fs.create_file('github_output_file')
     #mocker.patch('builtins.open', mock_open())
     publish()
 
