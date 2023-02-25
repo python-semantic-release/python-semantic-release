@@ -890,6 +890,8 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
     assert not mock_log.called
     assert mock_ci_check.called
 
+
+
 builtin_open = open
 def mock_open_github(*args, **kwargs):
     if args[0] == "github_output_file":
@@ -923,10 +925,9 @@ def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(m
     )
     # fs.create_file('github_output_file')
     #mocker.patch('builtins.open', mock_open())
-    with patch('builtins.open', mock_open_github) as github_mock_file:
-        publish()
-        print(type(github_mock_file))
-        assert 1 == 2
+    patch.object(builtins, "open", mock_open_github)
+    publish()
+    builtins.open.assert_called()
 
     
     # assert open("github_output_file").read() == mock_github_output_file_content
