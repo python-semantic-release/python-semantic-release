@@ -8,7 +8,7 @@ from semantic_release.repository import ArtifactRepo
 from . import mock, pytest, reset_config, wrapped_config_get
 from .mocks import mock_version_file
 from mock import mock_open
-import pyfakefs
+from mock import patch
 
 assert reset_config
 import builtins
@@ -923,10 +923,12 @@ def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(m
     )
     # fs.create_file('github_output_file')
     #mocker.patch('builtins.open', mock_open())
-    mocker.patch('builtins.open', mock_open_github)
-    publish()
+    with patch('builtins.open', mock_open_github) as github_mock_file:
+        publish()
+        print(type(github_mock_file))
+        assert 1 == 2
 
-    builtins.open.assert_called_with('github_output_file')
+    
     # assert open("github_output_file").read() == mock_github_output_file_content
     #mock.mock_open.assert_called_with('ABC')
     #mock.mock_open_1.assert_called_with('github_output_file')
