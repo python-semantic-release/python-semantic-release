@@ -434,7 +434,7 @@ def publish(
         if os.getenv("GITHUB_ACTIONS"):
             with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
                 print(f'released=false', file=fh)
-                print(f'version={current_version}"', file=fh)
+                print(f'version={current_version}', file=fh)
 
 
 def filter_output_for_secrets(message):
