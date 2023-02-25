@@ -1,6 +1,17 @@
-from click.testing import CliRunner
+from unittest.mock import ANY, mock_open
 
-from semantic_release.cli import changelog, main, print_version, publish, version
+from click.testing import CliRunner
+from mock import patch
+
+import semantic_release.cli
+from semantic_release.cli import (
+    changelog,
+    main,
+    print_version,
+    publish,
+    should_bump_version,
+    version,
+)
 from semantic_release.errors import GitError, ImproperConfigurationError
 from semantic_release.repository import ArtifactRepo
 
@@ -8,11 +19,21 @@ from . import mock, pytest, reset_config, wrapped_config_get
 from .mocks import mock_version_file
 
 assert reset_config
+import builtins
 
 
 @pytest.fixture
 def runner():
     return CliRunner()
+
+# Only mock open for github_output_file
+builtin_open = open
+def mock_open_github(*args, **kwargs):
+    if args[0] == "github_output_file":
+        # mocked open for path "foo"
+        return mock.mock_open()(*args, **kwargs)
+    # unpatched version for every other path
+    return builtin_open(*args, **kwargs)
 
 
 def test_main_should_call_correct_function(mocker, runner):
@@ -858,9 +879,11 @@ def test_publish_should_not_upload_to_repository_if_option_is_false(mocker):
     assert not mock_upload_release.called
 
 
-def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
+@mock.patch("builtins.open", side_effect=mock_open_github) 
+def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock, monkeypatch, mocker):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_OUTPUT", "github_output_file")
     mocker.patch("semantic_release.cli.checkout")
-    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
     mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
     mocker.patch("semantic_release.cli.generate_changelog")
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
@@ -868,13 +891,23 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
-    mock_should_bump_version = mocker.patch(
-        "semantic_release.cli.should_bump_version", return_value=False
+    mocker.patch("semantic_release.cli.get_new_version", return_value="1.0.2")
+    mocker.patch("semantic_release.cli.get_current_version", return_value="1.0.2")
+    spy_should_bump_version = mocker.spy(
+        semantic_release.cli, "should_bump_version"
     )
+    mocker.patch("semantic_release.cli.bump_version")
+
+    # Print is used to write to github actions output
+    spy_print = mocker.spy(builtins, "print")
 
     publish()
 
-    assert mock_should_bump_version.called
+    github_open_mock.assert_any_call('github_output_file', 'a')
+    spy_print.assert_any_call("version=1.0.2", file=ANY)
+    spy_print.assert_any_call("released=false", file=ANY)
+
+    assert spy_should_bump_version.spy_return == False
     assert not mock_push.called
     assert not mock_repository.called
     assert not mock_upload_release.called
@@ -882,7 +915,10 @@ def test_publish_should_do_nothing_when_not_should_bump_version(mocker):
     assert mock_ci_check.called
 
 
-def test_publish_should_call_functions(mocker):
+@mock.patch("builtins.open", side_effect=mock_open_github) 
+def test_publish_should_call_functions(github_open_mock, monkeypatch,mocker):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_OUTPUT", "github_output_file")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
     mock_should_bump_version = mocker.patch(
@@ -913,7 +949,14 @@ def test_publish_should_call_functions(mocker):
     mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
     mocker.patch("semantic_release.cli.check_token", lambda: True)
 
+    # Print is used to write to github actions output
+    spy_print = mocker.spy(builtins, "print")
+
     publish()
+    
+    github_open_mock.assert_any_call('github_output_file', 'a')
+    spy_print.assert_any_call("version=2.0.0", file=ANY)
+    spy_print.assert_any_call("released=true", file=ANY)
 
     assert mock_ci_check.called
     assert mock_push.called

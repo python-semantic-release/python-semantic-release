@@ -36,6 +36,12 @@ inputs:
     description: 'The ssh private key used to sign commits'
     required: false
 
+outputs:
+  released:
+    description: 'true if a release was mad, false otherwise'
+  version:
+    description: 'The current version if no release was made, otherwise the new version'
+
 runs:
   using: 'docker'
   image: 'Dockerfile'

@@ -220,6 +220,10 @@ def should_bump_version(
     """Test whether the version should be bumped."""
     if new_version == match_version and not retry:
         logger.info("No release will be made.")
+        if os.getenv("GITHUB_ACTIONS"):
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                print(f'released=false', file=fh)
+                print(f'version={match_version}', file=fh)
         return False
 
     if noop:
@@ -227,6 +231,10 @@ def should_bump_version(
             "No operation mode. Should have bumped "
             f"from {current_version} to {new_version}"
         )
+        if os.getenv("GITHUB_ACTIONS"):
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                print(f'released=false', file=fh)
+                print(f'version={match_version}', file=fh)
         return False
 
     if config.get("check_build_status"):
@@ -237,6 +245,10 @@ def should_bump_version(
             return False
         logger.info("The build was a success, continuing the release")
 
+    if os.getenv("GITHUB_ACTIONS"):
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            print(f'released=true', file=fh)
+            print(f'version={new_version}', file=fh)
     return True
 
 

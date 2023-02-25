@@ -23,6 +23,16 @@ Inputs
 | ``additional_options``   | Additional :ref:`cmd-common-options` for the ``publish`` command. Example: ``--noop``  |
 +--------------------------+----------------------------------------------------------------------------------------+
 
++--------------------------+----------------------------------------------------------------------------------------+
+| Outpput                  | Description                                                                            |
++==========================+========================================================================================+
+| ``released``             | Set to `true` if a release was made, otherwise set to `false`                          |
++--------------------------+----------------------------------------------------------------------------------------+
+| ``version``              | Set to the current version if no release was made, otherwise to the new version.       |
++--------------------------+----------------------------------------------------------------------------------------+
+
+
+
 Other options are taken from your regular configuration file.
 
 Example Workflow
