@@ -355,8 +355,9 @@ def publish(
         noop=noop,
     ):
         if os.getenv("GITHUB_ACTIONS"):
-            print(f"::set-output name=released::true")
-            print(f"::set-output name=version::{new_version}")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                print(f'released=true', file=fh)
+                print(f'version={new_version}"', file=fh)
         log = generate_changelog(current_version)
         changelog_md = markdown_changelog(
             owner,
@@ -431,8 +432,9 @@ def publish(
 
     else:
         if os.getenv("GITHUB_ACTIONS"):
-            print(f"::set-output name=released::false")
-            print(f"::set-output name=version::{current_version}")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                print(f'released=false', file=fh)
+                print(f'version={current_version}"', file=fh)
 
 
 def filter_output_for_secrets(message):
