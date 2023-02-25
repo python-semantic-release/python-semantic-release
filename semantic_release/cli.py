@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 import click_log
-
+import os
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
 
@@ -354,6 +354,9 @@ def publish(
         retry=retry,
         noop=noop,
     ):
+        if os.getenv("GITHUB_ACTIONS"):
+            print(f"::set-output name=released::true")
+            print(f"::set-output name=version::{new_version}")
         log = generate_changelog(current_version)
         changelog_md = markdown_changelog(
             owner,
@@ -426,7 +429,10 @@ def publish(
 
         logger.info("Publish has finished")
 
-    # else: Since version shows a message on failure, we do not need to print another.
+    else:
+        if os.getenv("GITHUB_ACTIONS"):
+            print(f"::set-output name=released::false")
+            print(f"::set-output name=version::{current_version}")
 
 
 def filter_output_for_secrets(message):
