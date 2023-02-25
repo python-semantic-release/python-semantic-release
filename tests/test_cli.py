@@ -898,8 +898,8 @@ def mock_open_github(*args, **kwargs):
     # unpatched version for every other path
     return builtin_open(*args, **kwargs)
 
-@mock.patch("builtins.open", mock_open_github)
-def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(fs, monkeypatch, mocker):
+#@mock.patch("builtins.open", mock_open_github)
+def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(monkeypatch, mocker):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("GITHUB_OUTPUT", "github_output_file")
     mocker.patch("semantic_release.cli.checkout")
@@ -923,9 +923,10 @@ def test_publish_should_do_nothing_when_not_should_bump_version_github_actions(f
     )
     # fs.create_file('github_output_file')
     #mocker.patch('builtins.open', mock_open())
+    mocker.patch('builtins.open', mock_open_github)
     publish()
 
-    #builtins.open.assert_called_with('github_output_file')
+    builtins.open.assert_called_with('github_output_file')
     # assert open("github_output_file").read() == mock_github_output_file_content
     #mock.mock_open.assert_called_with('ABC')
     #mock.mock_open_1.assert_called_with('github_output_file')
