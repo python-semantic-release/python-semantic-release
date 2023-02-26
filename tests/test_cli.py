@@ -1,4 +1,3 @@
-import os
 from unittest.mock import ANY, mock_open
 
 from click.testing import CliRunner
@@ -879,12 +878,12 @@ def test_publish_should_not_upload_to_repository_if_option_is_false(mocker):
     assert not mock_repository.called
     assert not mock_upload_release.called
 
+
 @mock.patch("builtins.open", side_effect=mock_open_github) 
 def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock, monkeypatch, mocker):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("GITHUB_OUTPUT", "github_output_file")
     mocker.patch("semantic_release.cli.checkout")
-    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
     mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
     mocker.patch("semantic_release.cli.generate_changelog")
     mock_log = mocker.patch("semantic_release.cli.post_changelog")
@@ -892,8 +891,8 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
-    mocker.patch("semantic_release.cli.get_new_version", return_value="1.0.0")
-    mocker.patch("semantic_release.cli.get_current_version", return_value="1.0.0")
+    mocker.patch("semantic_release.cli.get_new_version", return_value="1.0.1")
+    mocker.patch("semantic_release.cli.get_current_version", return_value="1.0.1")
     spy_should_bump_version = mocker.spy(
         semantic_release.cli, "should_bump_version"
     )
@@ -904,7 +903,7 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
     publish()
 
     github_open_mock.assert_any_call('github_output_file', 'a')
-    spy_print.assert_any_call("version=1.0.0", file=ANY)
+    spy_print.assert_any_call("version=1.0.1", file=ANY)
     spy_print.assert_any_call("released=false", file=ANY)
 
     assert spy_should_bump_version.spy_return == False
