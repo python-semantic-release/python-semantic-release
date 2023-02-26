@@ -1,7 +1,8 @@
 import os
 from click.testing import CliRunner
 
-from semantic_release.cli import changelog, main, print_version, publish, version
+import semantic_release.cli
+from semantic_release.cli import changelog, main, print_version, publish, version, should_bump_version
 from semantic_release.errors import GitError, ImproperConfigurationError
 from semantic_release.repository import ArtifactRepo
 
@@ -882,8 +883,10 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
-    mock_should_bump_version = mocker.patch(
-        "semantic_release.cli.should_bump_version", return_value=False
+    mocker.patch("semantic_release.cli.get_new_version", return_value="1.0.0")
+    mocker.patch("semantic_release.cli.get_current_version", return_value="1.0.0")
+    spy_should_bump_version = mocker.spy(
+        semantic_release.cli, "should_bump_version"
     )
 
     # Print is used to write to github actions output
@@ -891,11 +894,11 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
 
     publish()
 
-    github_open_mock.assert_called_with('github_output_file', 'a')
-    spy_print.assert_any_call("version=7.33.2", file=ANY)
+    github_open_mock.assert_any_call('github_output_file', 'a')
+    spy_print.assert_any_call("version=1.0.0", file=ANY)
     spy_print.assert_any_call("released=false", file=ANY)
 
-    assert mock_should_bump_version.called
+    assert spy_should_bump_version.spy_return == False
     assert not mock_push.called
     assert not mock_repository.called
     assert not mock_upload_release.called
@@ -942,9 +945,9 @@ def test_publish_should_call_functions(github_open_mock, monkeypatch,mocker):
 
     publish()
     
-    github_open_mock.assert_called_with('github_output_file', 'a')
-    spy_print.assert_any_call("version=7.33.2", file=ANY)
-    spy_print.assert_any_call("released=false", file=ANY)
+    github_open_mock.assert_any_call('github_output_file', 'a')
+    spy_print.assert_any_call("version=2.0.0", file=ANY)
+    spy_print.assert_any_call("released=true", file=ANY)
 
     assert mock_ci_check.called
     assert mock_push.called
