@@ -891,11 +891,12 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
     mock_upload_release = mocker.patch("semantic_release.cli.upload_to_release")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
-    mocker.patch("semantic_release.cli.get_new_version", return_value="1.0.1")
-    mocker.patch("semantic_release.cli.get_current_version", return_value="1.0.1")
+    mocker.patch("semantic_release.cli.get_new_version", return_value="1.0.2")
+    mocker.patch("semantic_release.cli.get_current_version", return_value="1.0.2")
     spy_should_bump_version = mocker.spy(
         semantic_release.cli, "should_bump_version"
     )
+    mocker.patch("semantic_release.cli.bump_version")
 
     # Print is used to write to github actions output
     spy_print = mocker.spy(builtins, "print")
@@ -903,7 +904,7 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
     publish()
 
     github_open_mock.assert_any_call('github_output_file', 'a')
-    spy_print.assert_any_call("version=1.0.1", file=ANY)
+    spy_print.assert_any_call("version=1.0.2", file=ANY)
     spy_print.assert_any_call("released=false", file=ANY)
 
     assert spy_should_bump_version.spy_return == False
