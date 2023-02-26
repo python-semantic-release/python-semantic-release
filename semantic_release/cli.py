@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 import click_log
-import os
+
 from semantic_release import ci_checks
 from semantic_release.errors import GitError, ImproperConfigurationError
 

@@ -1,18 +1,27 @@
 import os
+from unittest.mock import ANY, mock_open
+
 from click.testing import CliRunner
+from mock import patch
 
 import semantic_release.cli
-from semantic_release.cli import changelog, main, print_version, publish, version, should_bump_version
+from semantic_release.cli import (
+    changelog,
+    main,
+    print_version,
+    publish,
+    should_bump_version,
+    version,
+)
 from semantic_release.errors import GitError, ImproperConfigurationError
 from semantic_release.repository import ArtifactRepo
 
 from . import mock, pytest, reset_config, wrapped_config_get
 from .mocks import mock_version_file
-from unittest.mock import mock_open, ANY
-from mock import patch
 
 assert reset_config
 import builtins
+
 
 @pytest.fixture
 def runner():
