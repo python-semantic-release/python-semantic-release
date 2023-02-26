@@ -903,7 +903,10 @@ def test_publish_should_do_nothing_when_not_should_bump_version(github_open_mock
     assert mock_ci_check.called
 
 
-def test_publish_should_call_functions(mocker):
+@mock.patch("builtins.open", side_effect=mock_open_github) 
+def test_publish_should_call_functions(github_open_mock, monkeypatch,mocker):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_OUTPUT", "github_output_file")
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
     mock_should_bump_version = mocker.patch(
@@ -934,7 +937,14 @@ def test_publish_should_call_functions(mocker):
     mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
     mocker.patch("semantic_release.cli.check_token", lambda: True)
 
+    # Print is used to write to github actions output
+    spy_print = mocker.spy(builtins, "print")
+
     publish()
+    
+    github_open_mock.assert_called_with('github_output_file', 'a')
+    spy_print.assert_any_call("version=7.33.2", file=ANY)
+    spy_print.assert_any_call("released=false", file=ANY)
 
     assert mock_ci_check.called
     assert mock_push.called
