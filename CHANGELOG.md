@@ -2,9 +2,6 @@
 
 <!--next-version-placeholder-->
 
-## v1.0.2 (2023-02-26)
-
-
 ## v7.33.2 (2023-02-17)
 ### Fix
 * Inconsistent versioning between print-version and publish ([#524](https://github.com/python-semantic-release/python-semantic-release/issues/524)) ([`17d60e9`](https://github.com/python-semantic-release/python-semantic-release/commit/17d60e9bf66f62e5845065486c9d5e450f74839a))
