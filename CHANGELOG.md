@@ -2,6 +2,17 @@
 
 
 
+## v8.0.0-alpha.4 (2023-02-27)
+
+### Fix
+
+* fix: resolve loss of tag_format configuration ([`1933d04`](https://github.com/python-semantic-release/python-semantic-release/commit/1933d047da1fa3283c7c06edf1d01d6f7b2c73e7))
+
+### Test
+
+* test: add tests for ReleaseHistory.release ([`f225130`](https://github.com/python-semantic-release/python-semantic-release/commit/f225130d0b39783b59220ee5238442e531917189))
+
+
 ## v8.0.0-alpha.3 (2023-02-04)
 
 ### Fix
