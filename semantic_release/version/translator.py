@@ -84,3 +84,9 @@ class VersionTranslator:
         Formats a version string into a tag name
         """
         return self.tag_format.format(version=version_str)
+
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__qualname__}(tag_format={self.tag_format}, "
+            f"prerelease_token={self.prerelease_token})"
+        )

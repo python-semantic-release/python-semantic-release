@@ -285,7 +285,11 @@ def next_version(
     # been added since then.
     parsed_levels: set[LevelBump] = set()
     latest_version = latest_full_version_in_history or Version(
-        0, 0, 0, prerelease_token=translator.prerelease_token
+        0,
+        0,
+        0,
+        prerelease_token=translator.prerelease_token,
+        tag_format=translator.tag_format,
     )
 
     # N.B. these should be sorted so long as we iterate the commits in reverse order
@@ -353,7 +357,13 @@ def next_version(
         latest_full_version=latest_full_release_version,
         latest_full_version_in_history=(
             latest_full_version_in_history
-            or Version.parse("0.0.0", prerelease_token=translator.prerelease_token)
+            or Version(
+                0,
+                0,
+                0,
+                prerelease_token=translator.prerelease_token,
+                tag_format=translator.tag_format,
+            )
         ),
         level_bump=level_bump,
         prerelease=prerelease,

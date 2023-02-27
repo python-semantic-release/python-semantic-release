@@ -195,6 +195,7 @@ def version(
         v.build_metadata = build_metadata
 
     # Perhaps this behaviour should change if no release should be made?
+    # Or perhaps a graceful exit if the tag already exists
     click.echo(str(v))
     if print_only:
         ctx.exit(0)
