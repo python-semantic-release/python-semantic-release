@@ -117,7 +117,9 @@ def test_changelog_release_tag_not_in_history(
 
 @pytest.mark.usefixtures("repo_with_single_branch_and_prereleases_angular_commits")
 @pytest.mark.parametrize("args", [("--post-to-release-tag", "v0.1.0")])
-def test_changelog_post_to_release(args, tmp_path_factory, example_project, cli_runner):
+def test_changelog_post_to_release(
+    args, monkeypatch, tmp_path_factory, example_project, cli_runner
+):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
@@ -134,11 +136,14 @@ def test_changelog_post_to_release(args, tmp_path_factory, example_project, cli_
     session.mount("http://", mock_adapter)
     session.mount("https://", mock_adapter)
 
+    # Patch out env vars that affect changelog URLs but only get set in e.g.
+    # Github actions
     with mock.patch(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
-    ) as mocker:
-        # , requests_mock.Mocker(session=session) as mocker:
+    ) as mocker, monkeypatch.context() as m:
+        m.delenv("GITHUB_REPOSITORY", raising=False)
+        m.delenv("CI_PROJECT_NAMESPACE", raising=False)
         result = cli_runner.invoke(main, [changelog.name, *args])
 
     assert result.exit_code == 0
