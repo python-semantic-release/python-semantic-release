@@ -7,7 +7,10 @@ import click
 
 from semantic_release.changelog import ReleaseHistory, recursive_render
 from semantic_release.changelog.context import make_changelog_context
-from semantic_release.cli.common import render_default_changelog_file, render_release_notes
+from semantic_release.cli.common import (
+    render_default_changelog_file,
+    render_release_notes,
+)
 from semantic_release.cli.util import noop_report
 
 log = logging.getLogger(__name__)
@@ -80,7 +83,9 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
         except KeyError:
             ctx.fail(f"tag {release_tag} not in release history")
 
-        release_notes = render_release_notes(template_environment=env, version=v, release=release)
+        release_notes = render_release_notes(
+            template_environment=env, version=v, release=release
+        )
         version = translator.from_tag(release_tag)
         try:
             hvcs_client.create_or_update_release(
