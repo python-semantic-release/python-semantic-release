@@ -2,26 +2,111 @@
 
 
 
-## v8.0.0-alpha.4 (2023-02-27)
+## v8.0.0-alpha.5 (2023-04-17)
+
+### Breaking
+
+* refactor!: remove verify-ci command ([`6176b97`](https://github.com/python-semantic-release/python-semantic-release/commit/6176b97194c2bc15a17b39928f64e9b5b9d0377f))
+
+### Chore
+
+* chore(test): proper env patching for tests in CI ([`bcb27a4`](https://github.com/python-semantic-release/python-semantic-release/commit/bcb27a4a8ce4789d083226f088c1810f45cd4c77))
+
+### Feature
+
+* feat: various improvements
+
+* Added sorting to test parameterisation, so that pytest-xdist works again - dramatic speedup for testing
+* Reworked the CI verification code so it&#39;s a bit prettier
+* Added more testing for the version CLI command, and split some logic out of the command itself
+* Removed a redundant double-regex match in VersionTranslator and Version, for some speedup ([`e5df042`](https://github.com/python-semantic-release/python-semantic-release/commit/e5df042cdda76ec8d8df77e0742574d5f18c91be))
+
+### Style
+
+* style: beautify bcb27a4a8ce4789d083226f088c1810f45cd4c77 ([`0acfd91`](https://github.com/python-semantic-release/python-semantic-release/commit/0acfd913bd335c3d4143da994121fed18abe96a9))
+
+
+## v8.0.0-alpha.4 (2023-04-17)
 
 ### Fix
 
-* fix: resolve loss of tag_format configuration ([`1933d04`](https://github.com/python-semantic-release/python-semantic-release/commit/1933d047da1fa3283c7c06edf1d01d6f7b2c73e7))
+* fix: resolve loss of tag_format configuration ([`eb85e0e`](https://github.com/python-semantic-release/python-semantic-release/commit/eb85e0e03ebb58a20cfded044b215157bcca9b4a))
 
 ### Test
 
-* test: add tests for ReleaseHistory.release ([`f225130`](https://github.com/python-semantic-release/python-semantic-release/commit/f225130d0b39783b59220ee5238442e531917189))
+* test: add tests for ReleaseHistory.release ([`b5d5872`](https://github.com/python-semantic-release/python-semantic-release/commit/b5d587252bbdbfddd650cfe73bd1fd4861eea3cd))
 
 
-## v8.0.0-alpha.3 (2023-02-04)
+## v8.0.0-alpha.3 (2023-04-17)
 
 ### Fix
 
-* fix: resolve bug in changelog logic, enable upload to pypi ([`f9e4bb2`](https://github.com/python-semantic-release/python-semantic-release/commit/f9e4bb20d576ecaaa75910e73ff2b2d132b445f0))
+* fix: resolve bug in changelog logic, enable upload to pypi ([`bd314b3`](https://github.com/python-semantic-release/python-semantic-release/commit/bd314b3240f0c7302cd694c3aed0ba872a05941d))
 
-### Unknown
 
-* Merge branch &#39;master&#39; into 8.0.x ([`33e778a`](https://github.com/python-semantic-release/python-semantic-release/commit/33e778a61d613f86aec5976808b2f2df4c9e0b5f))
+## v8.0.0-alpha.2 (2023-04-17)
+
+### Fix
+
+* fix(action): quotation for git config command ([`45824cf`](https://github.com/python-semantic-release/python-semantic-release/commit/45824cf63f199ceffcc1617c3cfe003a4d0aa474))
+
+* fix(action): mark container fs as safe for git to operate on ([`51ea742`](https://github.com/python-semantic-release/python-semantic-release/commit/51ea74231fc9b22ca1bdcd8d4872047a1d44d73a))
+
+* fix: cleanup comments and unused logic ([`2fdceee`](https://github.com/python-semantic-release/python-semantic-release/commit/2fdceee674fd9db461c30a4ad6fa2ba426a620ac))
+
+* fix: correct logic for generating release notes (#550) ([`613528a`](https://github.com/python-semantic-release/python-semantic-release/commit/613528a6a1297da1362aa6fa6053972d2e34acd3))
+
+### Style
+
+* style: beautify 49080c510a68cccd2f6c7a8d540b483751901207 ([`c284292`](https://github.com/python-semantic-release/python-semantic-release/commit/c28429209b3fb147d3ac22af779b0374f89f302c))
+
+
+## v8.0.0-alpha.1 (2023-04-17)
+
+### Breaking
+
+* feat!: 8.0.x (#538)
+
+Co-authored-by: Johan &lt;johanhmr@gmail.com&gt;
+Co-authored-by: U-NEO\johan &lt;johan.hammar@ombea.com&gt; ([`c16bbe3`](https://github.com/python-semantic-release/python-semantic-release/commit/c16bbe3fc571f040e44faf19ee45e49b50e89b96))
+
+### Documentation
+
+* docs: update repository name (#559)
+
+In order to avoid &#39;Repository not found: relekang/python-semantic-release.&#39; ([`5cdb05e`](https://github.com/python-semantic-release/python-semantic-release/commit/5cdb05e20f17b12890e1487c42d317dcbadd06c8))
+
+* docs: spelling and grammar in `travis.rst` (#556)
+
+- spelling
+- subject-verb agreement
+- remove verbiage
+
+Signed-off-by: Vladislav Doster &lt;mvdoster@gmail.com&gt; ([`3a76e9d`](https://github.com/python-semantic-release/python-semantic-release/commit/3a76e9d7505c421009eb3e953c32cccac2e70e07))
+
+* docs: grammar in `docs/troubleshooting.rst` (#557)
+
+- change contraction to a possessive pronoun
+
+Signed-off-by: Vladislav Doster &lt;mvdoster@gmail.com&gt; ([`bbe754a`](https://github.com/python-semantic-release/python-semantic-release/commit/bbe754a3db9ce7132749e7902fe118b52f48ee42))
+
+### Fix
+
+* fix: remove commit amending behaviour
+
+this was not working when there were no source code changes to be made, as it lead
+to attempting to amend a HEAD commit that wasn&#39;t produced by PSR ([`ca17207`](https://github.com/python-semantic-release/python-semantic-release/commit/ca172075da9805d6d81ee503f28e4590a5f2c90f))
+
+* fix: resolve branch checkout logic in GHA ([`d09b960`](https://github.com/python-semantic-release/python-semantic-release/commit/d09b960683219a2be796395d2c4a7ec1671a2c58))
+
+* fix: correct Dockerfile CLI command and GHA fetch ([`88a3b42`](https://github.com/python-semantic-release/python-semantic-release/commit/88a3b4270daaf22f934832faf06f764cfd6790b8))
+
+
+## v7.33.2 (2023-02-17)
+
+### Fix
+
+* fix: inconsistent versioning between print-version and publish (#524) ([`17d60e9`](https://github.com/python-semantic-release/python-semantic-release/commit/17d60e9bf66f62e5845065486c9d5e450f74839a))
 
 
 ## v7.33.1 (2023-02-01)
@@ -37,28 +122,13 @@ See https://github.com/actions/runner-images/issues/6775#issuecomment-1409268124
 * style: beautify 2a55f68e2b3cb9ffa9204c00ddbf12706af5c070 ([`30ad440`](https://github.com/python-semantic-release/python-semantic-release/commit/30ad44019904c30aba86fb0d48dc88ce5e9eba39))
 
 
-## v8.0.0-alpha.2 (2023-02-01)
-
-### Fix
-
-* fix(action): quotation for git config command ([`6e35625`](https://github.com/python-semantic-release/python-semantic-release/commit/6e35625c59bea3d14d618a27e9cd390f553d7477))
-
-* fix(action): mark container fs as safe for git to operate on ([`49080c5`](https://github.com/python-semantic-release/python-semantic-release/commit/49080c510a68cccd2f6c7a8d540b483751901207))
-
-* fix: cleanup comments and unused logic ([`63e613e`](https://github.com/python-semantic-release/python-semantic-release/commit/63e613e8298f87e3fd54613c8a3de2f3ba519fc8))
-
-* fix: correct logic for generating release notes (#550) ([`74deffa`](https://github.com/python-semantic-release/python-semantic-release/commit/74deffab3ed1540a83c6038a4d3e0ce5c80dd60f))
-
-### Style
-
-* style: beautify 49080c510a68cccd2f6c7a8d540b483751901207 ([`8b99cf0`](https://github.com/python-semantic-release/python-semantic-release/commit/8b99cf0416b0ac4fe4e436f8355ad126eab07e1b))
-
-### Unknown
-
-* Merge branch &#39;master&#39; into 8.0.x ([`96cd31c`](https://github.com/python-semantic-release/python-semantic-release/commit/96cd31cce6f8c52d49b9d887ddb084478f7fdca4))
-
-
 ## v7.33.0 (2023-01-15)
+
+### Chore
+
+* chore: remove stale.yml
+
+It is spamming to much. We can bring it back if we get the time to fix the spamming. ([`08c535e`](https://github.com/python-semantic-release/python-semantic-release/commit/08c535e3280733e9e76af1783ce03bb5554c4136))
 
 ### Ci
 
@@ -72,37 +142,6 @@ GHA workflows are failing without this, due to
 https://github.com/actions/setup-python/issues/544\#issuecomment-1332535877
 
 * fix: upgrade pytest ([`8e4aa0e`](https://github.com/python-semantic-release/python-semantic-release/commit/8e4aa0e30438291ade98604a18aeb372f0d0b52f))
-
-### Fix
-
-* fix: changelog release commit search logic (#530)
-
-* Fixes changelog release commit search logic
-
-Running `semantic-release changelog` currently fails to identify &#34;the last commit in [a] release&#34; because the compared commit messages have superfluous whitespace.
-Likely related to the issue causing: https://github.com/relekang/python-semantic-release/issues/490
-
-* Removes a couple of extra `strip()`s. ([`efb3410`](https://github.com/python-semantic-release/python-semantic-release/commit/efb341036196c39b4694ca4bfa56c6b3e0827c6c))
-
-### Style
-
-* style: beautify 8e4aa0e30438291ade98604a18aeb372f0d0b52f ([`729c2a7`](https://github.com/python-semantic-release/python-semantic-release/commit/729c2a741705523ee16c0be790f54f013c07adcf))
-
-
-## v8.0.0-alpha.1 (2022-12-19)
-
-### Breaking
-
-* feat!: 8.0.x (#538)
-
-Co-authored-by: Johan &lt;johanhmr@gmail.com&gt;
-Co-authored-by: U-NEO\johan &lt;johan.hammar@ombea.com&gt; ([`24f1b45`](https://github.com/python-semantic-release/python-semantic-release/commit/24f1b45491782caec4ef18ed14e23b3d42993742))
-
-### Chore
-
-* chore: remove stale.yml
-
-It is spamming to much. We can bring it back if we get the time to fix the spamming. ([`08c535e`](https://github.com/python-semantic-release/python-semantic-release/commit/08c535e3280733e9e76af1783ce03bb5554c4136))
 
 ### Feature
 
@@ -118,14 +157,14 @@ Co-authored-by: Kevin Watson &lt;Kevmo92@users.noreply.github.com&gt; ([`4664afe
 
 ### Fix
 
-* fix: remove commit amending behaviour
+* fix: changelog release commit search logic (#530)
 
-this was not working when there were no source code changes to be made, as it lead
-to attempting to amend a HEAD commit that wasn&#39;t produced by PSR ([`d868d9f`](https://github.com/python-semantic-release/python-semantic-release/commit/d868d9fcf2c48398ebbdd30350e27269593928fc))
+* Fixes changelog release commit search logic
 
-* fix: resolve branch checkout logic in GHA ([`b1a07ac`](https://github.com/python-semantic-release/python-semantic-release/commit/b1a07ac049c66f2cdd18077090147ac54674dfca))
+Running `semantic-release changelog` currently fails to identify &#34;the last commit in [a] release&#34; because the compared commit messages have superfluous whitespace.
+Likely related to the issue causing: https://github.com/relekang/python-semantic-release/issues/490
 
-* fix: correct Dockerfile CLI command and GHA fetch ([`67c6946`](https://github.com/python-semantic-release/python-semantic-release/commit/67c6946900cd7074366a3663a397fe806ef68dff))
+* Removes a couple of extra `strip()`s. ([`efb3410`](https://github.com/python-semantic-release/python-semantic-release/commit/efb341036196c39b4694ca4bfa56c6b3e0827c6c))
 
 * fix: bump Dockerfile to use Python 3.10 image (#536)
 
@@ -142,6 +181,8 @@ Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`8f2185d`](http
 * fix(action): fix environment variable names ([`3c66218`](https://github.com/python-semantic-release/python-semantic-release/commit/3c66218640044adf263fcf9b2714cfc4b99c2e90))
 
 ### Style
+
+* style: beautify 8e4aa0e30438291ade98604a18aeb372f0d0b52f ([`729c2a7`](https://github.com/python-semantic-release/python-semantic-release/commit/729c2a741705523ee16c0be790f54f013c07adcf))
 
 * style: beautify b40dd484387c1b3f78df53ee2d35e281e8e799c8 ([`2aab9bd`](https://github.com/python-semantic-release/python-semantic-release/commit/2aab9bd4fba532dfa632d2008bd10b2fe1e3eb05))
 
