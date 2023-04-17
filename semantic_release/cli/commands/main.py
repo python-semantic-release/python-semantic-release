@@ -12,7 +12,6 @@ from rich.logging import RichHandler
 
 import semantic_release
 from semantic_release.cli.commands.generate_config import generate_config
-from semantic_release.cli.commands.verify_ci import verify_ci
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     RawConfig,
@@ -97,11 +96,6 @@ def main(
         # generate-config doesn't require any of the usual setup,
         # so exit out early and delegate to it
         log.debug("Forwarding to %s", generate_config.name)
-        return
-    if ctx.invoked_subcommand == verify_ci.name:
-        # generate-config doesn't require any of the usual setup,
-        # so exit out early and delegate to it
-        log.debug("Forwarding to %s", verify_ci.name)
         return
 
     log.debug("logging level set to: %s", logging.getLevelName(log_level))

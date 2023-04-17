@@ -84,6 +84,159 @@ You should run::
 With steps 1-5 being handled by the :ref:`cmd-version` command, and steps 6 and 7
 handled by the :ref:`cmd-publish` command.
 
+.. _breaking-commands-no-verify-ci:
+
+Removal of CI verifications
+"""""""""""""""""""""""""""
+
+Prior to v8, Python Semantic Release would perform some prerequisite verification
+of environment variables before performing any version changes using the ``publish``
+command. It's not feasible for Python Semantic Release to verify any possible CI
+environment fully, and these checks were only triggered if certain environment
+variables were set - they wouldn't fail locally.
+
+These checks previously raised :py:class:``semantic_release.CiVerificationError``, and
+were the only place in which this custom exception was used. Therefore, this exception
+has **also** been removed from Python Semantic Release in v8.
+
+If you were relying on this functionality, it's recommended that you add the following
+shell commands *before* invoking `semantic-release` to verify your environment:
+
+.. note::
+   In the following, $RELEASE_BRANCH refers to the git branch against which you run your
+   releases using Python Semantic Release. You will need to ensure it is set properly
+   (e.g. via ``export RELEASE_BRANCH=main`` and/or replace the variable with the branch
+   name you want to verify the CI environment for.
+
+.. _breaking-commands-no-verify-ci-travis:
+
+Travis
+~~~~~~
+
+**Condition**: environment variable ``TRAVIS=true``
+
+**Replacement**:
+
+.. code-block:: bash
+
+    if ! [[
+          $TRAVIS_BRANCH == $RELEASE_BRANCH  && \
+          $TRAVIS_PULL_REQUEST == 'false'
+        ]]; then
+      exit 1
+    fi
+
+
+.. _breaking-commands-no-verify-ci-semaphore:
+
+Semaphore
+~~~~~~~~~
+
+**Condition**: environment variable ``SEMAPHORE=true``
+
+**Replacement**:
+
+.. code-block:: bash
+
+    if ! [[
+            $BRANCH_NAME == $RELEASE_BRANCH && \
+            $SEMAPHORE_THREAD_RESULT != 'failed' && \
+            -n $PULL_REQUEST_NUMBER
+        ]]; then
+      exit 1
+    fi
+
+
+.. _breaking-commands-no-verify-ci-frigg:
+
+Frigg
+~~~~~
+
+**Condition**: environment variable ``FRIGG=true``
+
+**Replacement**:
+
+.. code-block:: bash
+
+    if ! [[
+          $FRIGG_BUILD_BRANCH == $RELEASE_BRANCH && \
+          -n $FRIGG_PULL_REQUEST
+        ]]; then
+      exit 1
+    fi
+
+.. _breaking-commands-no-verify-ci-circle-ci:
+
+Circle CI
+~~~~~~~~~
+
+**Condition**: environment variable ``CIRCLECI=true``
+
+**Replacement**:
+
+..  code-block:: bash
+    
+    if ! [[
+          $CIRCLE_BRANCH == $RELEASE_BRANCH && \
+          -n $CI_PULL_REQUEST
+        ]]; then
+      exit 1
+    fi
+
+.. _breaking-commands-no-verify-ci-gitlab-ci:
+
+GitLab CI
+~~~~~~~~~
+
+**Condition**: environment variable ``GITLAB_CI=true``
+
+**Replacement**:
+
+.. code-block:: bash
+    
+    if ! [[ $CI_COMMIT_REF_NAME == $RELEASE_BRANCH ]]; then
+      exit 1
+    fi
+
+.. _breaking-commands-no-verify-ci-bitbucket:
+
+**Condition**: environment variable ``BITBUCKET_BUILD_NUMBER`` is set
+
+**Replacement**:
+
+.. code-block:: bash
+
+    if ! [[
+          $BITBUCKET_BRANCH == $RELEASE_BRANCH && \
+          -n $BITBUCKET_PR_ID
+        ]]; then
+      exit 1
+    fi
+
+.. _breaking-commands-no-verify-ci-jenkins:
+
+Jenkins
+~~~~~~~
+
+**Condition**: environment variable ``JENKINS_URL`` is set
+
+**Replacement**:
+
+.. code-block:: bash
+    
+    if [[ -z $BRANCH_NAME ]]; then
+      BRANCH_NAME=$BRANCH_NAME
+    elif [[ -z $GIT_BRANCH ]]; then
+      BRANCH_NAME=$GIT_BRANCH
+    fi
+
+    if ! [[
+          $BRANCH_NAME == $RELEASE_BRANCH && \
+          -n $CHANGE_ID
+        ]]; then
+      exit 1
+    fi
+
 .. _breaking-commands-multibranch-releases:
 
 Multibranch releases
@@ -123,6 +276,7 @@ allow this customisation has grown significantly; it now uses templates in order
 fully open up customising the changelog's appearance.
 
 .. _Jinja: https://jinja.palletsprojects.com/en/3.1.x/
+
 
 .. _breaking-configuration:
 

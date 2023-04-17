@@ -1,19 +1,12 @@
 import pytest
 
-from semantic_release.cli import (
-    changelog,
-    generate_config,
-    main,
-    publish,
-    verify_ci,
-    version,
-)
+from semantic_release.cli import changelog, generate_config, main, publish, version
 
 
 @pytest.mark.parametrize("help_option", ("-h", "--help"))
 @pytest.mark.parametrize(
     "command",
-    (main, changelog, generate_config, publish, verify_ci, version),
+    (main, changelog, generate_config, publish, version),
     ids=lambda cmd: cmd.name,
 )
 def test_help(help_option, command, cli_runner):
