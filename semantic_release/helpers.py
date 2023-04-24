@@ -1,5 +1,5 @@
 import functools
-from typing import Union, List
+from typing import List, Union
 
 from requests import Session
 from requests.adapters import HTTPAdapter
