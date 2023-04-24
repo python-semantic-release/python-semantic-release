@@ -3,7 +3,7 @@ import logging
 import re
 from typing import Optional
 
-from ..helpers import LoggedFunction
+from ..helpers import LoggedFunction, trim_csv_str
 from ..settings import config
 from .parser_helpers import ParsedCommit, parse_paragraphs
 
@@ -34,9 +34,9 @@ def parse_commit_message(
 
     subject = message.split("\n")[0]
 
-    major = config.get("major_emoji").split(",")
-    minor = config.get("minor_emoji").split(",")
-    patch = config.get("patch_emoji").split(",")
+    major = trim_csv_str(config.get("major_emoji"))
+    minor = trim_csv_str(config.get("minor_emoji"))
+    patch = trim_csv_str(config.get("patch_emoji"))
     all_emojis = major + minor + patch
 
     use_textual_changelog_sections = config.get("use_textual_changelog_sections")

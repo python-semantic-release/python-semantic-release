@@ -1,5 +1,5 @@
 import functools
-from typing import Union
+from typing import Union, List
 
 from requests import Session
 from requests.adapters import HTTPAdapter
@@ -37,6 +37,16 @@ def build_requests_session(
         session.mount("http://", adapter)
         session.mount("https://", adapter)
     return session
+
+
+def trim_csv_str(csv_str: str) -> List[str]:
+    """
+    Trim whitespace from each value in a comma-separated string.
+
+    :param csv_str: Comma-separated string of values.
+    :return List of values with leading and trailing whitespace removed.
+    """
+    return [value.strip() for value in csv_str.split(",")]
 
 
 class LoggedFunction:
