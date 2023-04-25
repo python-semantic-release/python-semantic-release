@@ -25,6 +25,7 @@ def test_main_should_call_correct_function(mocker, runner):
         prerelease=False,
         prerelease_patch=True,
         retry=False,
+        changelog=False,
         define=(),
     )
     assert result.exit_code == 0
@@ -242,6 +243,7 @@ def test_force_major(mocker, runner):
         prerelease=False,
         prerelease_patch=True,
         retry=False,
+        changelog=False,
         define=(),
     )
     assert mock_version.call_args_list[0][1]["force_level"] == "major"
@@ -258,6 +260,7 @@ def test_force_minor(mocker, runner):
         prerelease=False,
         prerelease_patch=True,
         retry=False,
+        changelog=False,
         define=(),
     )
     assert mock_version.call_args_list[0][1]["force_level"] == "minor"
@@ -274,6 +277,7 @@ def test_force_patch(mocker, runner):
         prerelease=False,
         prerelease_patch=True,
         retry=False,
+        changelog=False,
         define=(),
     )
     assert mock_version.call_args_list[0][1]["force_level"] == "patch"
@@ -290,6 +294,21 @@ def test_retry(mocker, runner):
         prerelease=False,
         prerelease_patch=True,
         retry=True,
+        changelog=False,
+        define=(),
+    )
+    assert result.exit_code == 0
+
+
+def test_changelog_mode(mocker, runner):
+    mock_version = mocker.patch("semantic_release.cli.version")
+    result = runner.invoke(main, ["version", "--changelog"])
+    mock_version.assert_called_once_with(
+        noop=False,
+        post=False,
+        force_level=None,
+        retry=False,
+        changelog=True,
         define=(),
     )
     assert result.exit_code == 0
@@ -798,6 +817,52 @@ def test_publish_should_run_pre_commit_if_provided(mocker):
     publish()
 
     assert run_pre_commit.called
+
+
+def test_version_changelog(mocker):
+    mock_get_current = mocker.patch(
+        "semantic_release.cli.get_current_version", return_value="current"
+    )
+    mock_evaluate_bump = mocker.patch(
+        "semantic_release.cli.evaluate_version_bump", return_value="patch"
+    )
+    mock_get_new = mocker.patch(
+        "semantic_release.cli.get_new_version", return_value="new"
+    )
+    mock_get_owner_name = mocker.patch(
+        "semantic_release.cli.get_repository_owner_and_name",
+        return_value=("owner", "name"),
+    )
+    mock_generate = mocker.patch(
+        "semantic_release.cli.generate_changelog", return_value="super changelog"
+    )
+    mock_markdown = mocker.patch(
+        "semantic_release.cli.markdown_changelog", return_value="super md changelog"
+    )
+    mock_update_changelog_file = mocker.patch(
+        "semantic_release.cli.update_changelog_file"
+    )
+    # mocker.patch("semantic_release.cli.config.get", lambda *x: False)
+    mock_bump_version = mocker.patch("semantic_release.cli.bump_version")
+
+    result = version(noop=False, retry=False, force_level=False, changelog=True)
+
+    assert result
+    mock_get_current.assert_called_once_with()
+    mock_evaluate_bump.assert_called_once_with("current", False)
+    mock_get_new.assert_called_once_with("current", "patch")
+    mock_get_owner_name.assert_called_once_with()
+    mock_generate.assert_called_once_with("current")
+    mock_markdown.assert_called_once_with(
+        "owner",
+        "name",
+        "new",
+        "super changelog",
+        header=False,
+        previous_version="current",
+    )
+    mock_update_changelog_file.assert_called_once_with("new", "super md changelog")
+    mock_bump_version.assert_called_once_with("new", "patch")
 
 
 def test_publish_should_not_upload_to_pypi_if_option_is_false(mocker):

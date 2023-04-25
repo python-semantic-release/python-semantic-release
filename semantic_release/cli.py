@@ -155,6 +155,7 @@ def version(
     force_level=None,
     prerelease=False,
     prerelease_patch=True,
+    changelog=False,
     **kwargs,
 ):
     """
@@ -200,6 +201,19 @@ def version(
     if retry:
         # No need to make changes to the repo, we're just retrying.
         return True
+
+    if changelog:
+        owner, name = get_repository_owner_and_name()
+        log = generate_changelog(current_version)
+        changelog_md = markdown_changelog(
+            owner,
+            name,
+            new_version,
+            log,
+            header=False,
+            previous_version=current_version,
+        )
+        update_changelog_file(new_version, changelog_md)
 
     # Bump the version
     bump_version(new_version, level_bump)
@@ -512,6 +526,11 @@ def cmd_changelog(**kwargs):
 
 @main.command(name="version", help=version.__doc__)
 @common_options
+@click.option(
+    "--changelog",
+    is_flag=True,
+    help="Update the changelog as well.",
+)
 def cmd_version(**kwargs):
     try:
         return version(**kwargs)
