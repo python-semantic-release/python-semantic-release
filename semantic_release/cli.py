@@ -369,8 +369,9 @@ def publish(
             run_pre_commit()
 
         if not retry:
-            update_changelog_file(new_version, changelog_md)
-            update_additional_files()
+            if config.get("version_source") != "tag_only":
+                update_changelog_file(new_version, changelog_md)
+                update_additional_files()
             bump_version(new_version, level_bump)
         # A new version was released
         logger.info("Pushing new version")
