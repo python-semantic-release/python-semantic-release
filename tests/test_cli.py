@@ -928,6 +928,59 @@ def test_publish_should_call_functions(mocker):
     mock_checkout.assert_called_once_with("master")
 
 
+def test_publish_by_tag_only_should_not_call_update_functions(mocker):
+    mocker.patch(
+        "semantic_release.cli.config.get",
+        wrapped_config_get(version_source="tag_only"),
+    )
+    mock_push = mocker.patch("semantic_release.cli.push_new_version")
+    mock_checkout = mocker.patch("semantic_release.cli.checkout")
+    mock_should_bump_version = mocker.patch(
+        "semantic_release.cli.should_bump_version", return_value=True
+    )
+    mock_log = mocker.patch("semantic_release.cli.post_changelog")
+    mock_ci_check = mocker.patch("semantic_release.ci_checks.check")
+    mocker.patch.dict(
+        "os.environ",
+        {
+            "REPOSITORY_USERNAME": "repo-username",
+            "REPOSITORY_PASSWORD": "repo-password",
+        },
+    )
+    mock_repository = mocker.patch.object(ArtifactRepo, "upload")
+    mock_release = mocker.patch("semantic_release.cli.upload_to_release")
+    mock_build_dists = mocker.patch("semantic_release.cli.build_dists")
+    mock_remove_dists = mocker.patch("semantic_release.cli.remove_dists")
+    mocker.patch(
+        "semantic_release.cli.get_repository_owner_and_name",
+        return_value=("relekang", "python-semantic-release"),
+    )
+    mocker.patch("semantic_release.cli.evaluate_version_bump", lambda *x: "feature")
+    mocker.patch("semantic_release.cli.generate_changelog")
+    mocker.patch("semantic_release.cli.markdown_changelog", lambda *x, **y: "CHANGES")
+    mock_update_changelog_file = mocker.patch("semantic_release.cli.update_changelog_file")
+    mock_update_additional_files = mocker.patch("semantic_release.cli.update_additional_files")
+    mocker.patch("semantic_release.cli.bump_version")
+    mocker.patch("semantic_release.cli.get_new_version", lambda *x: "2.0.0")
+    mocker.patch("semantic_release.cli.check_token", lambda: True)
+
+    publish()
+
+    assert mock_ci_check.called
+    assert mock_push.called
+    assert mock_remove_dists.called
+    assert mock_build_dists.called
+    assert mock_repository.called
+    assert mock_release.called
+    assert mock_should_bump_version.called
+    mock_log.assert_called_once_with(
+        "relekang", "python-semantic-release", "2.0.0", "CHANGES"
+    )
+    mock_checkout.assert_called_once_with("master")
+    assert not mock_update_changelog_file.called
+    assert not mock_update_additional_files.called
+
+
 def test_publish_should_skip_build_when_command_is_empty(mocker):
     mock_push = mocker.patch("semantic_release.cli.push_new_version")
     mock_checkout = mocker.patch("semantic_release.cli.checkout")
