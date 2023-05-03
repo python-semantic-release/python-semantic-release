@@ -186,7 +186,6 @@ def test_get_domain_should_have_expected_domain(
     ci_server_host,
     hvcs_api_domain,
 ):
-
     with mock.patch(
         "semantic_release.hvcs.config.get",
         wrapped_config_get(
@@ -202,9 +201,58 @@ def test_get_domain_should_have_expected_domain(
                 "CI_SERVER_HOST": ci_server_host,
             },
         ):
-
             assert get_hvcs().domain() == expected_domain
             assert get_hvcs().api_url() == expected_api_url
+
+
+@responses.activate
+@pytest.mark.parametrize(
+    "hvcs,url,prerelease",
+    [
+        ("github", "https://api.github.com/repos/relekang/rmoq/releases", True),
+        ("github", "https://api.github.com/repos/relekang/rmoq/releases", False),
+        ("gitea", "https://gitea.com/api/v1/repos/gitea/tea/releases", True),
+        ("gitea", "https://gitea.com/api/v1/repos/gitea/tea/releases", False),
+    ]
+)
+def test_should_create_prerelease_if_asked_for(hvcs, url, prerelease):
+    with NamedTemporaryFile("w") as netrc_file:
+        if hvcs == "github":
+            netrc_file.write("machine api.github.com\n")
+        elif hvcs == "gitea":
+            netrc_file.write("machine gitea.com\n")
+        netrc_file.write("login username\n")
+        netrc_file.write("password password\n")
+
+        netrc_file.flush()
+
+        def request_callback(request):
+            payload = json.loads(request.body)
+            assert payload['tag_name'] == "v1.0.0"
+            assert payload['body'] == "text"
+            assert payload['draft'] is False
+            assert payload['prerelease'] is prerelease
+            auth_str = "Basic " + base64.encodebytes(b"username:password").decode("ascii").strip()
+            assert auth_str == request.headers.get("Authorization")
+            return 201, {}, json.dumps({})
+
+        responses.add_callback(
+            responses.POST,
+            url,
+            callback=request_callback,
+            content_type="application/json",
+        )
+
+        with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
+            if hvcs == 'github':
+                status = Github.post_release_changelog(
+                    "relekang", "rmoq", "1.0.0", "text", prerelease
+                )
+            elif hvcs == 'gitea':
+                status = Gitea.post_release_changelog(
+                    "gitea", "tea", "1.0.0", "text", prerelease
+                )
+            assert status is True
 
 
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="github"))
@@ -223,7 +271,6 @@ def test_ghe_domain_should_be_retrieved_from_env():
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="gitlab"))
 @mock.patch("os.environ", {"GL_TOKEN": "token"})
 def test_get_token():
-
     assert get_hvcs().token() == "token"
 
 
@@ -450,43 +497,6 @@ class GithubReleaseTests(TestCase):
                 self.assertTrue(status)
 
     @responses.activate
-    @mock.patch("semantic_release.hvcs.Github.token", return_value=None)
-    def test_should_create_prerelease_if_asked_for(self, mock_token):
-        with NamedTemporaryFile("w") as netrc_file:
-            netrc_file.write("machine api.github.com\n")
-            netrc_file.write("login username\n")
-            netrc_file.write("password password\n")
-
-            netrc_file.flush()
-
-            def request_callback(request):
-                payload = json.loads(request.body)
-                self.assertEqual(payload["tag_name"], "v1.0.0")
-                self.assertEqual(payload["body"], "text")
-                self.assertEqual(payload["draft"], False)
-                self.assertEqual(payload["prerelease"], True)
-                self.assertEqual(
-                    "Basic "
-                    + base64.encodebytes(b"username:password").decode("ascii").strip(),
-                    request.headers.get("Authorization"),
-                )
-
-                return 201, {}, json.dumps({})
-
-            responses.add_callback(
-                responses.POST,
-                self.url,
-                callback=request_callback,
-                content_type="application/json",
-            )
-
-            with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-                status = Github.post_release_changelog(
-                    "relekang", "rmoq", "1.0.0", "text", True
-                )
-                self.assertTrue(status)
-
-    @responses.activate
     def test_should_return_false_status_if_it_failed(self):
         responses.add(
             responses.POST,
@@ -640,7 +650,6 @@ class GithubReleaseTests(TestCase):
 
 
 class GiteaReleaseTests(TestCase):
-
     url = "https://gitea.com/api/v1/repos/gitea/tea/releases"
     edit_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/1"
     get_url = "https://gitea.com/api/v1/repos/gitea/tea/releases/tags/v1.0.0"
@@ -727,43 +736,6 @@ class GiteaReleaseTests(TestCase):
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
                 status = Gitea.post_release_changelog(
                     "gitea", "tea", "1.0.0", "text", False
-                )
-                self.assertTrue(status)
-
-    @responses.activate
-    @mock.patch("semantic_release.hvcs.Gitea.token", return_value=None)
-    def test_should_create_prerelease_if_asked_for(self, mock_token):
-        with NamedTemporaryFile("w") as netrc_file:
-            netrc_file.write("machine gitea.com\n")
-            netrc_file.write("login username\n")
-            netrc_file.write("password password\n")
-
-            netrc_file.flush()
-
-            def request_callback(request):
-                payload = json.loads(request.body)
-                self.assertEqual(payload["tag_name"], "v1.0.0")
-                self.assertEqual(payload["body"], "text")
-                self.assertEqual(payload["draft"], False)
-                self.assertEqual(payload["prerelease"], True)
-                self.assertEqual(
-                    "Basic "
-                    + base64.encodebytes(b"username:password").decode("ascii").strip(),
-                    request.headers.get("Authorization"),
-                )
-
-                return 201, {}, json.dumps({})
-
-            responses.add_callback(
-                responses.POST,
-                self.url,
-                callback=request_callback,
-                content_type="application/json",
-            )
-
-            with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-                status = Gitea.post_release_changelog(
-                    "gitea", "tea", "1.0.0", "text", True
                 )
                 self.assertTrue(status)
 
