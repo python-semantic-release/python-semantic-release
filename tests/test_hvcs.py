@@ -213,7 +213,7 @@ def test_get_domain_should_have_expected_domain(
         ("github", "https://api.github.com/repos/relekang/rmoq/releases", False),
         ("gitea", "https://gitea.com/api/v1/repos/gitea/tea/releases", True),
         ("gitea", "https://gitea.com/api/v1/repos/gitea/tea/releases", False),
-    ]
+    ],
 )
 def test_should_create_prerelease_if_asked_for(hvcs, url, prerelease):
     with NamedTemporaryFile("w") as netrc_file:
@@ -228,11 +228,14 @@ def test_should_create_prerelease_if_asked_for(hvcs, url, prerelease):
 
         def request_callback(request):
             payload = json.loads(request.body)
-            assert payload['tag_name'] == "v1.0.0"
-            assert payload['body'] == "text"
-            assert payload['draft'] is False
-            assert payload['prerelease'] is prerelease
-            auth_str = "Basic " + base64.encodebytes(b"username:password").decode("ascii").strip()
+            assert payload["tag_name"] == "v1.0.0"
+            assert payload["body"] == "text"
+            assert payload["draft"] is False
+            assert payload["prerelease"] is prerelease
+            auth_str = (
+                "Basic "
+                + base64.encodebytes(b"username:password").decode("ascii").strip()
+            )
             assert auth_str == request.headers.get("Authorization")
             return 201, {}, json.dumps({})
 
@@ -244,11 +247,11 @@ def test_should_create_prerelease_if_asked_for(hvcs, url, prerelease):
         )
 
         with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-            if hvcs == 'github':
+            if hvcs == "github":
                 status = Github.post_release_changelog(
                     "relekang", "rmoq", "1.0.0", "text", prerelease
                 )
-            elif hvcs == 'gitea':
+            elif hvcs == "gitea":
                 status = Gitea.post_release_changelog(
                     "gitea", "tea", "1.0.0", "text", prerelease
                 )

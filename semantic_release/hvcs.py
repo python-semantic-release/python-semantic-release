@@ -178,7 +178,9 @@ class Github(Base):
 
     @classmethod
     @LoggedFunction(logger)
-    def create_release(cls, owner: str, repo: str, tag: str, changelog: str, prerelease: bool) -> bool:
+    def create_release(
+        cls, owner: str, repo: str, tag: str, changelog: str, prerelease: bool
+    ) -> bool:
         """Create a new release
 
         https://docs.github.com/rest/reference/repos#create-a-release
@@ -484,7 +486,9 @@ class Gitea(Base):
 
     @classmethod
     @LoggedFunction(logger)
-    def create_release(cls, owner: str, repo: str, tag: str, changelog: str, prerelease: bool) -> bool:
+    def create_release(
+        cls, owner: str, repo: str, tag: str, changelog: str, prerelease: bool
+    ) -> bool:
         """Create a new release
 
         https://gitea.com/api/swagger#/repository/repoCreateRelease
@@ -792,7 +796,9 @@ def check_build_status(owner: str, repository: str, ref: str) -> bool:
     return get_hvcs().check_build_status(owner, repository, ref)
 
 
-def post_changelog(owner: str, repository: str, version: str, changelog: str, prerelease: bool) -> bool:
+def post_changelog(
+    owner: str, repository: str, version: str, changelog: str, prerelease: bool
+) -> bool:
     """
     Posts the changelog to the current hvcs release API
 
@@ -803,7 +809,9 @@ def post_changelog(owner: str, repository: str, version: str, changelog: str, pr
     :return: a tuple with success status and payload from hvcs
     """
     logger.debug(f"Posting release changelog for {owner}/{repository} {version}")
-    return get_hvcs().post_release_changelog(owner, repository, version, changelog, prerelease)
+    return get_hvcs().post_release_changelog(
+        owner, repository, version, changelog, prerelease
+    )
 
 
 def upload_to_release(owner: str, repository: str, version: str, path: str) -> bool:

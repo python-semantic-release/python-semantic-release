@@ -299,7 +299,7 @@ def changelog(*, unreleased=False, noop=False, post=False, prerelease=False, **k
                 name,
                 current_version,
                 markdown_changelog(owner, name, current_version, log, header=False),
-                prerelease
+                prerelease,
             )
         else:
             logger.error("Missing token: cannot post changelog to HVCS")
