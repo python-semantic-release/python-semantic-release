@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.33.4 (2023-05-14)
+### Fix
+* If prerelease, publish prerelease ([#587](https://github.com/python-semantic-release/python-semantic-release/issues/587)) ([`927da9f`](https://github.com/python-semantic-release/python-semantic-release/commit/927da9f8feb881e02bc08b33dc559bd8e7fc41ab))
+
 ## v7.33.3 (2023-04-24)
 ### Fix
 * Update Gitmojis according to official node module ([#582](https://github.com/python-semantic-release/python-semantic-release/issues/582)) ([`806fcfa`](https://github.com/python-semantic-release/python-semantic-release/commit/806fcfa4cfdd3df4b380afd015a68dc90d54215a))
