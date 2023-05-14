@@ -205,6 +205,56 @@ def test_get_domain_should_have_expected_domain(
             assert get_hvcs().api_url() == expected_api_url
 
 
+@responses.activate
+@pytest.mark.parametrize(
+    "hvcs,url,prerelease",
+    [
+        ("github", "https://api.github.com/repos/relekang/rmoq/releases", True),
+        ("github", "https://api.github.com/repos/relekang/rmoq/releases", False),
+        ("gitea", "https://gitea.com/api/v1/repos/gitea/tea/releases", True),
+        ("gitea", "https://gitea.com/api/v1/repos/gitea/tea/releases", False),
+    ]
+)
+def test_should_create_prerelease_if_asked_for(hvcs, url, prerelease):
+    with NamedTemporaryFile("w") as netrc_file:
+        if hvcs == "github":
+            netrc_file.write("machine api.github.com\n")
+        elif hvcs == "gitea":
+            netrc_file.write("machine gitea.com\n")
+        netrc_file.write("login username\n")
+        netrc_file.write("password password\n")
+
+        netrc_file.flush()
+
+        def request_callback(request):
+            payload = json.loads(request.body)
+            assert payload['tag_name'] == "v1.0.0"
+            assert payload['body'] == "text"
+            assert payload['draft'] is False
+            assert payload['prerelease'] is prerelease
+            auth_str = "Basic " + base64.encodebytes(b"username:password").decode("ascii").strip()
+            assert auth_str == request.headers.get("Authorization")
+            return 201, {}, json.dumps({})
+
+        responses.add_callback(
+            responses.POST,
+            url,
+            callback=request_callback,
+            content_type="application/json",
+        )
+
+        with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
+            if hvcs == 'github':
+                status = Github.post_release_changelog(
+                    "relekang", "rmoq", "1.0.0", "text", prerelease
+                )
+            elif hvcs == 'gitea':
+                status = Gitea.post_release_changelog(
+                    "gitea", "tea", "1.0.0", "text", prerelease
+                )
+            assert status is True
+
+
 @mock.patch("semantic_release.hvcs.config.get", wrapped_config_get(hvcs="github"))
 @mock.patch(
     "os.environ",
@@ -405,7 +455,7 @@ class GithubReleaseTests(TestCase):
 
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
                 status = Github.post_release_changelog(
-                    "relekang", "rmoq", "1.0.0", "text"
+                    "relekang", "rmoq", "1.0.0", "text", False
                 )
                 self.assertTrue(status)
 
@@ -442,7 +492,7 @@ class GithubReleaseTests(TestCase):
 
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
                 status = Github.post_release_changelog(
-                    "relekang", "rmoq", "1.0.0", "text"
+                    "relekang", "rmoq", "1.0.0", "text", False
                 )
                 self.assertTrue(status)
 
@@ -470,7 +520,7 @@ class GithubReleaseTests(TestCase):
             content_type="application/json",
         )
         self.assertFalse(
-            Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text")
+            Github.post_release_changelog("relekang", "rmoq", "1.0.0", "text", False)
         )
 
     @responses.activate
@@ -647,7 +697,9 @@ class GiteaReleaseTests(TestCase):
             )
 
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-                status = Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text")
+                status = Gitea.post_release_changelog(
+                    "gitea", "tea", "1.0.0", "text", False
+                )
                 self.assertTrue(status)
 
     @responses.activate
@@ -682,7 +734,9 @@ class GiteaReleaseTests(TestCase):
             )
 
             with mock.patch.dict(os.environ, {"NETRC": netrc_file.name}):
-                status = Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text")
+                status = Gitea.post_release_changelog(
+                    "gitea", "tea", "1.0.0", "text", False
+                )
                 self.assertTrue(status)
 
     @responses.activate
@@ -708,7 +762,9 @@ class GiteaReleaseTests(TestCase):
             body="{}",
             content_type="application/json",
         )
-        self.assertFalse(Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text"))
+        self.assertFalse(
+            Gitea.post_release_changelog("gitea", "tea", "1.0.0", "text", False)
+        )
 
     @responses.activate
     @mock.patch("semantic_release.hvcs.Gitea.token", return_value="super-token")
@@ -808,15 +864,21 @@ class GiteaReleaseTests(TestCase):
 class GitlabReleaseTests(TestCase):
     @mock_gitlab()
     def test_should_return_true_if_success(self, mock_auth, mock_project):
-        self.assertTrue(post_changelog("owner", "repo", "my_good_tag", "changelog"))
+        self.assertTrue(
+            post_changelog("owner", "repo", "my_good_tag", "changelog", False)
+        )
 
     @mock_gitlab()
     def test_should_return_false_if_bad_tag(self, mock_auth, mock_project):
-        self.assertFalse(post_changelog("owner", "repo", "my_bad_tag", "changelog"))
+        self.assertFalse(
+            post_changelog("owner", "repo", "my_bad_tag", "changelog", False)
+        )
 
     @mock_gitlab()
     def test_should_return_true_for_locked_tags(self, mock_auth, mock_project):
-        self.assertTrue(post_changelog("owner", "repo", "my_locked_tag", "changelog"))
+        self.assertTrue(
+            post_changelog("owner", "repo", "my_locked_tag", "changelog", False)
+        )
 
 
 def test_gitea_token():
