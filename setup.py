@@ -62,7 +62,7 @@ setup(
             "responses==0.13.3",
             "mock==1.3.0",
         ],
-        "docs": ["Sphinx==1.3.6", "Jinja2==3.0.3"],
+        "docs": ["Sphinx==1.8.6", "Jinja2==3.0.3"],
         "dev": ["tox", "isort", "black"],
         "mypy": ["mypy", "types-requests"],
     },
