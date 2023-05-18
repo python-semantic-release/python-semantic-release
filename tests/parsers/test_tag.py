@@ -24,7 +24,7 @@ def test_parser_return_minor_bump_level():
 
 
 def test_parser_return_patch_bump_level():
-    assert tag_parser(":nut_and_bolt: Fix regex in angular parser")[0] == 1
+    assert tag_parser(":wrench: Fix regex in angular parser")[0] == 1
 
 
 def test_parser_return_type_breaking_from_commit_message():
@@ -37,7 +37,7 @@ def test_parser_return_type_feature_from_commit_message():
 
 
 def test_parser_return_type_fix_from_commit_message():
-    assert tag_parser(":nut_and_bolt: ...")[1] == "fix"
+    assert tag_parser(":wrench: ...")[1] == "fix"
 
 
 def test_parser_return_subject_from_commit_message():
@@ -45,10 +45,10 @@ def test_parser_return_subject_from_commit_message():
 
 
 def test_parser_return_text_from_commit_message():
-    commit = ":nut_and_bolt: Fix regex in an parser\n\n{}".format(text)
+    commit = ":wrench: Fix regex in an parser\n\n{}".format(text)
     assert tag_parser(commit)[3][1] == text
 
 
 def test_parser_return_footer_from_commit_message():
-    commit = ":nut_and_bolt: Fix env \n\n{t[text]}\n\n{t[footer]}".format(t=globals())
+    commit = ":wrench: Fix env \n\n{t[text]}\n\n{t[footer]}".format(t=globals())
     assert tag_parser(commit)[3][2] == footer

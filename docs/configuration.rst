@@ -211,7 +211,7 @@ The following parsers are built in to Python Semantic Release:
 Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_parser` to
 create major releases.
 
-Default: `:boom:`
+Default: `💥,:boom:`
 
 .. _config-minor_emoji:
 
@@ -221,7 +221,7 @@ Default: `:boom:`
 Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_parser` to
 create minor releases.
 
-Default: `:sparkles:, :children_crossing:, :lipstick:, :iphone:, :egg:, :chart_with_upwards_trend:`
+Default: `✨,:sparkles:`
 
 .. _config-patch_emoji:
 
@@ -231,7 +231,7 @@ Default: `:sparkles:, :children_crossing:, :lipstick:, :iphone:, :egg:, :chart_w
 Comma-separated list of emojis used by :py:func:`semantic_release.history.emoji_parser` to
 create patch releases.
 
-Default: `:ambulance:, :lock:, :bug:, :zap:, :goal_net:, :alien:, :wheelchair:, :speech_balloon:, :mag:, :apple:, :penguin:, :checkered_flag:, :robot:, :green_apple:`
+Default: `⚡️,🐛,🚑️,💄,🔒️,⬇️,⬆️,📌,📈,➕,➖,🔧,🌐,✏️,⏪️,📦️,👽️,🍱,♿️,💬,🗃️ ,🚸,📱,🥚,⚗️,🔍️,🏷️ ,🚩,🥅,💫,🗑️ ,🛂,🩹,👔,:zap:,:bug:,:ambulance:,:lipstick:,:lock:,:arrow_down:,:arrow_up:,:pushpin:,:chart_with_upwards_trend:,:heavy_plus_sign:,:heavy_minus_sign:,:wrench:,:globe_with_meridians:,:pencil2:,:rewind:,:package:,:alien:,:bento:,:wheelchair:,:speech_balloon:,:card_file_box:,:children_crossing:,:iphone:,:egg:,:alembic:,:mag:,:label:,:triangular_flag_on_post:,:goal_net:,:dizzy:,:wastebasket:,:passport_control:,:adhesive_bandage:,:necktie:`
 
 .. _config-use_textual_changelog_sections:
 

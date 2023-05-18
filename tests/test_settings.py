@@ -33,7 +33,7 @@ class ConfigTests(TestCase):
         config = _config()
         mock_getcwd.assert_called_once_with()
         self.assertEqual(config.get("minor_tag"), ":sparkles:")
-        self.assertEqual(config.get("fix_tag"), ":nut_and_bolt:")
+        self.assertEqual(config.get("fix_tag"), ":wrench:")
         self.assertFalse(config.get("patch_without_tag"))
         self.assertTrue(config.get("major_on_zero"))
         self.assertFalse(config.get("check_build_status"))
