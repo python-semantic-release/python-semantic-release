@@ -30,7 +30,15 @@ Read more about the setup and configuration in our `getting started guide`_.
 .. _GitHub Action: https://python-semantic-release.readthedocs.io/en/latest/automatic-releases/github-actions.html
 .. _conda-forge: https://anaconda.org/conda-forge/python-semantic-release
 
-.. |Test Status| image:: https://img.shields.io/github/workflow/status/relekang/python-semantic-release/Test%20%26%20Release?label=Tests&logo=github
+.. |Test Status| image:: https://img.shields.io/github/actions/workflow/status/python-semantic-release/python-semantic-release/main.yml?branch=master&label=Test%20Status&logo=github
+   :target: https://github.com/python-semantic-release/python-semantic-release/actions/workflows/main.yml
+   :alt: test-status
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/python-semantic-release?label=PyPI&logo=pypi
+   :target: https://pypi.org/project/python-semantic-release/
+   :alt: pypi
 .. |conda-forge Version| image:: https://img.shields.io/conda/vn/conda-forge/python-semantic-release?logo=anaconda
-.. |Read the Docs Status| image:: https://img.shields.io/readthedocs/python-semantic-release?label=Read%20the%20Docs&logo=read-the-docs
+   :target: https://anaconda.org/conda-forge/python-semantic-release
+   :alt: conda-forge
+.. |Read the Docs Status| image:: https://img.shields.io/readthedocs/python-semantic-release?label=Read%20the%20Docs&logo=Read%20the%20Docs
+   :target: https://python-semantic-release.readthedocs.io/en/latest/
+   :alt: docs
