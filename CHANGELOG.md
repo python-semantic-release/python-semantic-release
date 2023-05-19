@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v7.33.5 (2023-05-19)
+### Fix
+* Update docs and default config for gitmoji changes ([#590](https://github.com/python-semantic-release/python-semantic-release/issues/590)) ([`192da6e`](https://github.com/python-semantic-release/python-semantic-release/commit/192da6e1352298b48630423d50191070a1c5ab24))
+
+### Documentation
+* Update broken badge and add links ([#591](https://github.com/python-semantic-release/python-semantic-release/issues/591)) ([`0c23447`](https://github.com/python-semantic-release/python-semantic-release/commit/0c234475d27ad887b19170c82deb80293b3a95f1))
+
 ## v7.33.4 (2023-05-14)
 ### Fix
 * If prerelease, publish prerelease ([#587](https://github.com/python-semantic-release/python-semantic-release/issues/587)) ([`927da9f`](https://github.com/python-semantic-release/python-semantic-release/commit/927da9f8feb881e02bc08b33dc559bd8e7fc41ab))
