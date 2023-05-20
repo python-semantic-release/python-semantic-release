@@ -10,13 +10,10 @@ from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import tomlkit
-import twine.utils
 from git import Actor
 from git.repo.base import Repo
 from jinja2 import Environment
 from pydantic import BaseModel
-from twine.exceptions import TwineException
-from twine.settings import Settings as TwineSettings
 from typing_extensions import Literal
 
 from semantic_release.changelog import environment
@@ -126,36 +123,7 @@ class RemoteConfig(BaseModel):
 
 class UploadConfig(BaseModel):
     dist_glob_patterns: Tuple[str, ...] = ("dist/*",)
-    pypi_token: MaybeFromEnv = EnvConfigVar(env="PYPI_TOKEN")
-    upload_to_repository: bool = True
     upload_to_vcs_release: bool = True
-    # https://twine.readthedocs.io/en/stable/
-    sign: bool = False
-    sign_with: str = "gpg"
-    identity: MaybeFromEnv = EnvConfigVar(env="GPG_IDENTITIY")
-    # https://twine.readthedocs.io/en/stable/#environment-variables
-    # NOTE: this is breaking, as it will no longer check PYPI_USERNAME
-    username: MaybeFromEnv = EnvConfigVar(
-        env="REPOSITORY_USERNAME", default_env="TWINE_USERNAME"
-    )
-    # NOTE: this is breaking, as it will no longer check PYPI_PASSWORD or PYPI_TOKEN
-    password: MaybeFromEnv = EnvConfigVar(
-        env="REPOSITORY_PASSWORD", default_env="TWINE_PASSWORD"
-    )
-    non_interactive: MaybeFromEnv = EnvConfigVar(
-        env="TWINE_NON_INTERACTIVE", default="true"
-    )
-    comment: Optional[str] = None
-    config_file: str = twine.utils.DEFAULT_CONFIG_FILE
-    skip_existing: bool = False
-    cacert: MaybeFromEnv = EnvConfigVar(env="TWINE_CERT")
-    client_cert: MaybeFromEnv = EnvConfigVar(env="TWINE_CLIENT_CERT")
-    repository_name: str = "pypi"
-    repository_url: MaybeFromEnv = EnvConfigVar(
-        env="REPOSITORY_URL", default_env="TWINE_REPOSITORY_URL"
-    )
-    verbose: bool = False
-    disable_progress_bar: bool = False
 
 
 _PY = "py" if platform.system() == "Windows" else "python"
@@ -164,7 +132,7 @@ _PY = "py" if platform.system() == "Windows" else "python"
 class RawConfig(BaseModel):
     assets: Tuple[str, ...] = ()
     branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
-    build_command: str = f"{_PY} setup.py sdist bdist_wheel"
+    build_command: Optional[str] = None
     changelog: ChangelogConfig = ChangelogConfig()
     commit_author: MaybeFromEnv = EnvConfigVar(
         env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR
@@ -245,12 +213,7 @@ _known_hvcs = {
 
 @dataclass
 class RuntimeContext:
-    _mask_attrs_: ClassVar[List[str]] = [
-        "hvcs_client.token",
-        "twine_settings.password",
-        "twine_settings.cacert",
-        "twine_settings.client_cert",
-    ]
+    _mask_attrs_: ClassVar[List[str]] = ["hvcs_client.token"]
 
     repo: Repo
     commit_parser: CommitParser[ParseResult, ParserOptions]
@@ -267,10 +230,8 @@ class RuntimeContext:
     ignore_token_for_push: bool
     template_environment: Environment
     template_dir: str
-    build_command: str
-    twine_settings: Optional[TwineSettings]
+    build_command: Optional[str]
     dist_glob_patterns: Tuple[str, ...]
-    upload_to_repository: bool
     upload_to_vcs_release: bool
     global_cli_options: GlobalCommandLineOptions
     # This way the filter can be passed around if needed, so that another function
@@ -306,51 +267,6 @@ class RuntimeContext:
             raise NotAReleaseBranch(
                 f"branch {active_branch!r} isn't in any release groups; no release will be made"
             )
-
-    @classmethod
-    def make_twine_settings(
-        cls, upload_config: UploadConfig
-    ) -> Optional[TwineSettings]:
-        settings = TwineSettings(
-            sign=upload_config.sign,
-            sign_with=upload_config.sign_with,
-            identity=cls.resolve_from_env(upload_config.identity),
-            username=cls.resolve_from_env(upload_config.username),
-            password=cls.resolve_from_env(upload_config.password),
-            non_interactive=(
-                False
-                if cls.resolve_from_env(upload_config.non_interactive)
-                in ("false", "0", 0)
-                else True
-            ),
-            comment=upload_config.comment,
-            config_file=upload_config.config_file,
-            skip_existing=upload_config.skip_existing,
-            cacert=cls.resolve_from_env(upload_config.cacert),
-            client_cert=cls.resolve_from_env(upload_config.client_cert),
-            repository_name=upload_config.repository_name,
-            repository_url=cls.resolve_from_env(upload_config.repository_url),
-            verbose=(
-                upload_config.verbose
-                or logging.getLogger("semantic_release").getEffectiveLevel()
-                <= logging.INFO
-            ),
-            disable_progress_bar=upload_config.disable_progress_bar,
-        )
-        try:
-            # Twine settings are lazy, so we trigger validation errors now if there
-            # are any
-            settings.username
-            settings.password
-            settings.config_file
-        except TwineException as err:
-            log.warning(
-                "TwineException: uploading to repositories will be unavailable (message: %r)",
-                str(err),
-            )
-            return None
-        else:
-            return settings
 
     def apply_log_masking(self, masker: MaskingFilter) -> MaskingFilter:
         for attr in self._mask_attrs_:
@@ -463,12 +379,6 @@ class RuntimeContext:
             tag_format=raw.tag_format, prerelease_token=branch_config.prerelease_token
         )
 
-        try:
-            twine_settings = cls.make_twine_settings(raw.upload)
-        except TwineException as err:
-            log.warning(str(err))
-            log.warning("uploading to repositories will be unavailable", exc_info=True)
-
         self = cls(
             repo=repo,
             commit_parser=commit_parser,
@@ -486,9 +396,7 @@ class RuntimeContext:
             ignore_token_for_push=raw.remote.ignore_token_for_push,
             template_dir=raw.changelog.template_dir,
             template_environment=template_environment,
-            twine_settings=twine_settings,
             dist_glob_patterns=raw.upload.dist_glob_patterns,
-            upload_to_repository=raw.upload.upload_to_repository,
             upload_to_vcs_release=raw.upload.upload_to_vcs_release,
             global_cli_options=global_cli_options,
             masker=masker,

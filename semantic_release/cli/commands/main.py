@@ -22,7 +22,7 @@ from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 
-FORMAT = "[%(name)s] %(module)s:%(funcName)s: %(message)s"
+FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
 
 
 @click.group(
@@ -114,14 +114,14 @@ def main(
     )
 
     try:
-        if config_file and config_file.endswith(".toml"):
+        if config_file.endswith(".toml"):
             log.info(f"Loading TOML configuration from {config_file}")
             config_text = read_toml(config_file)
-        elif config_file and config_file.endswith(".json"):
+        elif config_file.endswith(".json"):
             log.info(f"Loading JSON configuration from {config_file}")
             raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
             config_text = json.loads(raw_text)["semantic_release"]
-        elif config_file:
+        else:
             *_, suffix = config_file.split(".")
             ctx.fail(f"{suffix!r} is not a supported configuration format")
     except (FileNotFoundError, InvalidConfiguration) as exc:

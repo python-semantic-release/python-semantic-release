@@ -181,7 +181,7 @@ version_variables = [
     "src/{EXAMPLE_PROJECT_NAME}/__init__.py:__version__",
 ]
 version_toml = ["pyproject.toml:tool.poetry.version"]
-build_command = "poetry build"
+build_command = "bash -c \"echo 'Hello World'\""
 tag_format = "v{{version}}"
 commit_parser = "angular"
 commit_author = {{ env = "GIT_COMMIT_AUTHOR", default = "{DEFAULT_COMMIT_AUTHOR}" }}
@@ -250,42 +250,7 @@ ignore_token_for_push = false
 
 [tool.semantic_release.upload]
 dist_glob_patterns = ["dist/*"]
-upload_to_repository = false
-upload_to_release = false
-sign = false
-sign_with = "gpg"
-config_file = "~/.pypirc"
-skip_existing = false
-repository_name = "testpypi"
-disable_progress_bar = false
-
-[tool.semantic_release.upload.pypi_token]
-env = "PYPI_TOKEN"
-
-[tool.semantic_release.upload.identity]
-env = "GPG_IDENTITIY"
-
-[tool.semantic_release.upload.username]
-env = "REPOSITORY_USERNAME"
-default_env = "TWINE_USERNAME"
-
-[tool.semantic_release.upload.password]
-env = "REPOSITORY_PASSWORD"
-default_env = "TWINE_PASSWORD"
-
-[tool.semantic_release.upload.non_interactive]
-env = "TWINE_NON_INTERACTIVE"
-default = "true"
-
-[tool.semantic_release.upload.cacert]
-env = "TWINE_CERT"
-
-[tool.semantic_release.upload.client_cert]
-env = "TWINE_CLIENT_CERT"
-
-[tool.semantic_release.upload.repository_url]
-env = "REPOSITORY_URL"
-default_env = "TWINE_REPOSITORY_URL"
+upload_to_vcs_release = false
 
 [tool.isort]
 profile = "black"

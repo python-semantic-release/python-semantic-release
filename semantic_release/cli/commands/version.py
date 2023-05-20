@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import os
+import shlex
+import subprocess
 from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING, ContextManager
@@ -152,7 +154,7 @@ def apply_version_to_source_files(
     "--build-metadata",
     "build_metadata",
     default=os.getenv("PSR_BUILD_METADATA"),
-    help="Build metadata to append to the latest version",
+    help="Build metadata to append to the new version",
 )
 @click.pass_context
 def version(
@@ -200,6 +202,7 @@ def version(
     commit_author = runtime.commit_author
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
+    build_command = runtime.build_command
     opts = runtime.global_cli_options
 
     if prerelease_token:
@@ -275,6 +278,22 @@ def version(
         noop=opts.noop,
     )
     all_paths_to_add = files_with_new_version_written + (assets or [])
+
+    # Build distributions before committing any changes - this way if the
+    # build fails, modifications to the source code won't be committed
+    if not build_command:
+        rprint("[green]No build command specified, skipping")
+    if runtime.global_cli_options.noop:
+        noop_report(f"would have run the build_command {build_command!r}")
+    else:
+        try:
+            log.info("Running build command %s", build_command)
+            rprint(
+                f"[bold green]:hammer_and_wrench: Running build command: {build_command!r}"
+            )
+            subprocess.run(shlex.split(build_command), check=True)
+        except subprocess.CalledProcessError as exc:
+            ctx.fail(str(exc))
 
     # Commit changes
     if commit_changes and opts.noop:

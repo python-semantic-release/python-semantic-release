@@ -4,15 +4,10 @@ name: "Python Semantic Release"
 description: "Automatic Semantic Versioning for Python projects"
 
 inputs:
-  additional_options:
+  root_options:
     description: "Additional options for the main command. Example: -vv --noop"
     required: false
     default: "-v"
-  version_options:
-    description: "Additional options for the version command. Example: --patch"
-    required: false
-  publish_options:
-    description: "Additional options for the publish command. Example: --no-upload-to-repository"
   directory:
     description: "Sub-directory to cd into before running semantic-release"
     default: "."
@@ -20,12 +15,6 @@ inputs:
   github_token:
     description: "GitHub token used to push release notes and new commits/tags"
     required: true
-  repository_username:
-    description: "Username with project access to push to Artifact Repository"
-    required: false
-  repository_password:
-    description: "Password or token to the account specified in repository_username"
-    required: false
   git_committer_name:
     description: "The human name for the “committer” field"
     default: "github-actions"
@@ -40,6 +29,63 @@ inputs:
   ssh_private_signing_key:
     description: "The ssh private key used to sign commits"
     required: false
+
+  # `semantic-release version` comamnd line options
+  prerelease:
+    type: string
+    required: false
+    description: |
+      Force the next version to be a prerelease. Set to "true" or "false".
+    default: "false"
+
+  prerelease_token:
+    type: string
+    required: false
+    description: "Force the next version to use this prerelease token, if it is a prerelease"
+
+  force:
+    type: string
+    required: false
+    default: "false"
+    description: |
+      Force the next version to be a major release. Must be set to
+      one of "patch", "minor", or "major".
+
+  commit:
+    type: string
+    required: false
+    default: "true"
+    description: Whether or not to commit changes locally
+
+  push:
+    type: string
+    required: false
+    default: "true"
+    description: |
+      Whether or not to push local commits to the Git repository.
+      Defaults to "true", but when the "commit" input is "false"
+      this will also be set to "false" regardless of the value
+      supplied.
+
+  changelog:
+    type: string
+    required: false
+    default: "true"
+    description: |
+      Whether or not to update the changelog.
+
+  vcs_release:
+    type: string
+    required: false
+    default: "true"
+    description: |
+      Whether or not to create a release in the remote VCS, if supported
+
+  build_metadata:
+    type: string
+    required: false
+    description: |
+      Build metadata to append to the new version
 
 runs:
   using: "docker"

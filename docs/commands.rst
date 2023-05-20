@@ -257,33 +257,8 @@ Publish a distribution to a VCS release. Uploads using :ref:`config-upload`
 
 .. _cmd-publish-options:
 
-Options:
---------
-
-.. _cmd-publish-option-upload-to-repository:
-
-``--upload-to-repository/--no-upload-to-repository``
-****************************************************
-
-Whether or not to upload any built artefacts to the configured Python package
-repository. Artefacts are uploaded using Twine_. This overrides the configuration
-setting of :ref:`config-upload-upload-to-repository`.
-
-.. _Twine: https://twine.readthedocs.io/
-
-**Default:** ``--upload-to-repository``
-
-.. _cmd-publish-option-upload-to-vcs-release:
-
-``--upload-to-vcs-release/--no-upload-to-vcs-release``
-******************************************************
-
-Whether or not to upload any built artefacts to the configured remote VCS's
-latest release. This overrides the configuration setting of
-:ref:`config-upload-upload-to-vcs-release`.
-
-**Default:** ``--upload-to-vcs-release``
-
+.. Options:
+.. --------
 
 .. _cmd-generate-config:
 

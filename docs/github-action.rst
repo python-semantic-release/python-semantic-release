@@ -18,27 +18,6 @@ The GitHub token used to push release notes and new commits/tags.
 
 required: false
 
-Artifact Repository
--------------------
-
-.. _action-git-repository-username:
-
-``repository_username``
-"""""""""""""""""""""""
-
-The username with project access to push to Artifact Repository
-
-required: false
-
-.. _action-git-repository-password:
-
-``repository_password``
-"""""""""""""""""""""""
-
-The password or token to the account specified in repository_username
-
-required: false
-
 Custom Users
 ------------
 
@@ -94,31 +73,50 @@ Sub-directory to cd into before running semantic-release
 
 required: false
 
-.. _action-additional-options:
+.. _action-root-options:
 
-``additional_options``
+``root_options``
 """"""""""""""""""""""
 
-Additional options for the main ``semantic_release`` command. Example: ``-vv --noop``
+Additional options for the main ``semantic-release`` command. Example: ``-vv --noop``
 
 required: false
 
 default: ``-v``
 
-.. _action-version-options:
+Command Line Options
+--------------------
 
-``version_options``
-"""""""""""""""""""
+Other inputs which supply additional command-line options to the
+:ref:`version <cmd-version>` command can be optionally supplied, and have the same
+defaults as their corresponding command line option.
 
-Additional options for the :ref:`cmd-version` command. Example: ``--patch``
+In general, the input for an action corresponding to a command line option has the same
+name, with dashes (``-``) replaced by underscores.
 
-required: false
+The command line arguments ``--patch``, ``--minor`` and ``--major`` are mutually
+exclusive, and are supplied via the ``force`` input.
 
-.. _action-publish-options:
+Flags, which require either ``--<option>`` or ``--no-<option>`` to be passed on the
+command-line, should be specified using the option name (with dashes replaced by
+underscores), and set to the value ``"true"`` to supply ``--<option>`` on the
+command-line, and ``"false"`` to specify ``--no-<option>``.
+Any other values are not accepted.
 
-``publish_options``
-"""""""""""""""""""
+For command line options requiring a value, set the input to the required value.
 
-Additional options for the :ref:`cmd-publish` command. Example: ``--no-upload-to-repository``
+For example, to specify ``--patch --no-push --build-metadata abc123``, you should
+provide the following inputs:
 
-required: false
+.. code:: yaml
+
+   ---
+
+   # ... the rest of the workflow
+   - name: Python Semantic Release
+     uses: python-semantic-release/python-semantic-release@v8.0.0
+     with:
+       # ... other options
+       force: "patch"
+       push: "false"
+       build_metadata: "abc123"
