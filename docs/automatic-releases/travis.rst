@@ -50,7 +50,7 @@ indicate that one is due.
 ^^^^^^^^^^^^^^^^^^^^
 You are now ready to release automatically on Travis CI on every change to your master branch.
 
-Happy coding
+Happy coding!
 
 .. _Travis documentation: https://docs.travis-ci.com/
 .. _Travis documentation on environment variables: https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings

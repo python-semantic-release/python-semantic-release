@@ -68,7 +68,7 @@ output (default level is ``WARNING``, use ``-v`` for ``INFO`` and ``-vv`` for ``
 **********************
 
 Specify the configuration file which Python Semantic Release should use. This can
-be any of the supported formats at <<<<<<<<insert ref here>>>>>>>>>>
+be any of the supported formats valid for :ref:`cmd-generate-config-option-format`
 
 **Default:** pyproject.toml
 
@@ -85,8 +85,10 @@ Detect the semantically correct next version that should be applied to your
 project.
 
 By default:
+
   * Write this new version to the project metadata locations
     specified in the configuration file
+  * Build the project using :ref:`config-build-command`, if specified
   * Create a new commit with these locations and any other assets configured
     to be included in a release
   * Tag this commit according the configured format, with a tag that uniquely
@@ -247,8 +249,7 @@ implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
 ``semantic-release publish``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Build and publish a distribution to a Python package repository or VCS release.
-Runs :ref:`config-build-command` and uploads using :ref:`config-upload`
+Publish a distribution to a VCS release. Uploads using :ref:`config-upload`
 
 .. seealso::
     - :ref:`config-upload`

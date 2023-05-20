@@ -6,7 +6,7 @@ Documentation Contents
 .. toctree::
    :maxdepth: 1
 
-   .. What's New <whats_new_in_psr> - This could be ../CHANGELOG.rst
+   
    Migrating from Python Semantic Release v7 <migrating_from_v7>
    commands
    configuration
@@ -16,6 +16,7 @@ Documentation Contents
    automatic-releases/index
    Python Semantic Release GitHub Action <github-action>
    troubleshooting
+   contributing
    contributors
    Internal API <api/modules>
    Algorithm <algorithm>

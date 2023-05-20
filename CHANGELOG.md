@@ -102,6 +102,20 @@ to attempting to amend a HEAD commit that wasn&#39;t produced by PSR ([`ca17207`
 * fix: correct Dockerfile CLI command and GHA fetch ([`88a3b42`](https://github.com/python-semantic-release/python-semantic-release/commit/88a3b4270daaf22f934832faf06f764cfd6790b8))
 
 
+## v7.33.4 (2023-05-14)
+### Fix
+* If prerelease, publish prerelease ([#587](https://github.com/python-semantic-release/python-semantic-release/issues/587)) ([`927da9f`](https://github.com/python-semantic-release/python-semantic-release/commit/927da9f8feb881e02bc08b33dc559bd8e7fc41ab))
+
+## v7.33.3 (2023-04-24)
+### Fix
+* Update Gitmojis according to official node module ([#582](https://github.com/python-semantic-release/python-semantic-release/issues/582)) ([`806fcfa`](https://github.com/python-semantic-release/python-semantic-release/commit/806fcfa4cfdd3df4b380afd015a68dc90d54215a))
+* Trim emojis from config ([#583](https://github.com/python-semantic-release/python-semantic-release/issues/583)) ([`02902f7`](https://github.com/python-semantic-release/python-semantic-release/commit/02902f73ee961565c2470c000f00947d9ef06cb1))
+
+### Documentation
+* Update repository name ([#559](https://github.com/python-semantic-release/python-semantic-release/issues/559)) ([`5cdb05e`](https://github.com/python-semantic-release/python-semantic-release/commit/5cdb05e20f17b12890e1487c42d317dcbadd06c8))
+* Spelling and grammar in `travis.rst` ([#556](https://github.com/python-semantic-release/python-semantic-release/issues/556)) ([`3a76e9d`](https://github.com/python-semantic-release/python-semantic-release/commit/3a76e9d7505c421009eb3e953c32cccac2e70e07))
+* Grammar in `docs/troubleshooting.rst` ([#557](https://github.com/python-semantic-release/python-semantic-release/issues/557)) ([`bbe754a`](https://github.com/python-semantic-release/python-semantic-release/commit/bbe754a3db9ce7132749e7902fe118b52f48ee42))
+
 ## v7.33.2 (2023-02-17)
 
 ### Fix

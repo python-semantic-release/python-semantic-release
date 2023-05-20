@@ -17,6 +17,95 @@ fewer surprises.
 Python Semantic Release GitHub Action
 -------------------------------------
 
+.. _breaking-removed-artefact-upload:
+
+GitHub Action no longer publishes artefacts to PyPI or GitHub Releases
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Python Semantic Release no longer uploads distributions to PyPI - see
+:ref:`breaking-commands-repurposed-version-and-publish`. If you are
+using Python Semantic Release to publish release notes and artefacts to
+GitHub releases, there is a new GitHub Action `upload-to-gh-release`_
+which will perform this action for you.
+
+This means the following workflows perform the same actions, and if you
+are using the former, you will need to modify your workflow to include the
+steps in the latter.
+
+This workflow is written to use Python Semantic Release v7.33.5:
+
+.. code:: yaml
+
+   ---
+   name: Semantic Release
+
+   on:
+     push:
+       branches:
+         - main
+
+   jobs:
+     release:
+       runs-on: ubuntu-latest
+       concurrency: release
+
+       steps:
+       - uses: actions/checkout@v3
+         with:
+           fetch-depth: 0
+
+       # This action uses Python Semantic Release v7
+       - name: Python Semantic Release
+         uses: python-semantic-release/python-semantic-release@v7.33.5
+         with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
+           repository_username: __token__
+           repository_password: ${{ secrets.PYPI_TOKEN }}
+
+The following workflow achieves the same result using Python Semantic Release v8,
+the `upload-to-gh-release`_ GitHub Action, and the `pypa/gh-action-pypi-publish`_
+GitHub Action:
+
+.. code:: yaml
+
+   ---
+   name: Semantic Release
+
+   on:
+     push:
+       branches:
+         - master
+
+   jobs:
+     release:
+       runs-on: ubuntu-latest
+       concurrency: release
+       permissions:
+         id-token: write
+
+       steps:
+       - uses: actions/checkout@v3
+         with:
+           fetch-depth: 0
+
+       # This action uses Python Semantic Release v8
+       - name: Python Semantic Release
+         uses: python-semantic-release/python-semantic-release@v8.0.0
+         with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+       - name: Publish package distributions to PyPI
+         uses: pypa/gh-action-pypi-publish@release/v1
+
+       - name: Publish package distributions to GitHub Releases
+         uses: python-semantic-release/upload-to-gh-release@main
+         with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
+.. _upload-to-gh-release: https://github.com/python-semantic-release/upload-to-gh-release
+.. _pypa/gh-action-pypi-publish: https://github.com/pypa/gh-action-pypi-publish
+
 .. _breaking-github-action-removed-pypi-token:
 
 Removal of ``pypi_token`` input
@@ -58,13 +147,20 @@ performing every piece of automation provided. This has been changed - the ``ver
 command now handles determining the next version, applying the changes to the project
 metadata according to the configuration, writing a changelog, and committing/pushing
 changes to the remote Git repository. It also handles creating a release in the remote
-VCS. It does *not* publish software artefacts to remote repositories such as PyPI, and
-it does *not* publish software artefacts to releases in the remote version control
-system - this is still handled by the ``publish`` command.
+VCS. It does *not* publish software artefacts to remote repositories such as PyPI;
+the rationale behind this decision is simply that under the hood, Python Semantic Release
+used `twine`_ to upload artefacts to package indexes such as PyPI, and it's recommended
+to use twine directly via the command-line. From the twine
+`documentation<https://twine.readthedocs.io/en/stable/contributing.html#architectural-overview>`_:
 
-In fact, the ``publish`` command is now just a lightweight wrapper on `twine upload`_,
-plus the functionality to publish a software artefact (e.g. a wheel) to a release.
+   Twine is a command-line tool for interacting with PyPI securely over HTTPS.
 
+As a result Python Semantic Release no longer depends on twine internals.
+
+The ``publish`` command now handles publishing software artefacts to releases in the
+remote version control system.
+
+.. _twine: https://twine.readthedocs.io/en/stable
 .. _twine upload: https://twine.readthedocs.io/en/stable/#twine-upload
 
 To achieve a similar flow of logic such as
@@ -79,7 +175,9 @@ To achieve a similar flow of logic such as
 
 You should run::
 
-    semantic-release version && semantic-release publish
+    semantic-release version
+    twine upload dist/*  # or whichever path your distributions are placed in
+    semantic-release publish
 
 With steps 1-5 being handled by the :ref:`cmd-version` command, and steps 6 and 7
 handled by the :ref:`cmd-publish` command.

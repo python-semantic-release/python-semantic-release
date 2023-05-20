@@ -71,6 +71,7 @@ Implementation
    parser, then we **terminate the algorithm.**
 
 6. If we have not exited by this point, we know the following information:
+
   * The latest version, by `semver precedence`_, within the whole repository.
     Call this ``LV``. This might not be within the ancestry of HEAD.
   * The latest version, prerelease or non-prerelease, within the whole repository.
@@ -148,7 +149,7 @@ Implementation
     ii. If ``LV`` is a prerelease, then:
 
       1. Diff ``LV`` with ``LVHF``, to understand if the ``major``, ``minor`` or
-        ``patch`` digits have changed. Call this ``DIFF``
+         ``patch`` digits have changed. Call this ``DIFF``
 
       2. If ``DIFF`` is less semantically significant than ``level``, then
 
