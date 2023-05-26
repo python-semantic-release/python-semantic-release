@@ -32,23 +32,42 @@ def test_markdown_changelog():
         },
     ) == (
         # Expected output with the default configuration
-        "### Feature\n"
+        "### Feature\n\n"
         "* Add non-breaking super-feature ([`145`](https://github.com/owner/repo_name/"
         "commit/145))\n"
         "* Add super-feature ([`134`](https://github.com/owner/repo_name/commit/134))\n"
         "\n"
-        "### Fix\n"
+        "### Fix\n\n"
         "* Fix bug in super-feature ([#15](https://github.com/owner/repo_name/issues/15))"
         " ([`234`](https://github.com/owner/repo_name/"
         "commit/234))\n"
         "\n"
-        "### Breaking\n"
+        "### Breaking\n\n"
         "* Uses super-feature as default instead of dull-feature."
         " ([`21`](https://github.com/owner/repo_name/commit/21))\n"
         "\n"
-        "### Documentation\n"
+        "### Documentation\n\n"
         "* Document super-feature ([#189](https://github.com/owner/repo_name/issues/189))"
         " ([`0`](https://github.com/owner/repo_name/commit/0))"
+    )
+
+
+def test_markdown_changelog_with_header():    
+    assert markdown_changelog(
+        "owner",
+        "repo_name",
+        "1.0.1",
+        {
+            "fix": [("234", "Fix bug in super-feature (#15)")],
+        },
+        header=True,
+    ) == (
+        # Expected output with the default configuration
+        "## v1.0.1\n\n"
+        "### Fix\n\n"
+        "* Fix bug in super-feature ([#15](https://github.com/owner/repo_name/issues/15))"
+        " ([`234`](https://github.com/owner/repo_name/"
+        "commit/234))"
     )
 
 
@@ -71,14 +90,14 @@ def test_markdown_changelog_gitlab():
             },
         ) == (
             # Expected output with the default configuration
-            "### Feature\n"
+            "### Feature\n\n"
             "* Add non-breaking super-feature ([#1](https://gitlab.com/owner/"
             "repo_name/-/issues/1)) ([`145`](https://gitlab.com/owner/"
             "repo_name/-/commit/145))\n"
             "* Add super-feature ([`134`](https://gitlab.com/owner/repo_name/-/"
             "commit/134))\n"
             "\n"
-            "### Documentation\n"
+            "### Documentation\n\n"
             "* Document super-feature ([#189](https://gitlab.com/owner/repo_name/"
             "-/issues/189)) ([`0`](https://gitlab.com/owner/repo_name/"
             "-/commit/0))"
