@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v7.34.0 (2023-05-28)
+### Feature
+* Add option to only parse commits for current working directory ([#509](https://github.com/python-semantic-release/python-semantic-release/issues/509)) ([`cdf8116`](https://github.com/python-semantic-release/python-semantic-release/commit/cdf8116c1e415363b10a01f541873e04ad874220))
+
 ## v7.33.5 (2023-05-19)
 ### Fix
 * Update docs and default config for gitmoji changes ([#590](https://github.com/python-semantic-release/python-semantic-release/issues/590)) ([`192da6e`](https://github.com/python-semantic-release/python-semantic-release/commit/192da6e1352298b48630423d50191070a1c5ab24))
