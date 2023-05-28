@@ -34,7 +34,7 @@ def _config():
 
 def _config_from_ini(paths):
     parser = configparser.ConfigParser()
-    parser.read(paths)
+    parser.read(paths, encoding="utf-8")
 
     flags = {
         "changelog_capitalize",
@@ -69,7 +69,7 @@ def _config_from_ini(paths):
 def _config_from_pyproject(path):
     if os.path.isfile(path):
         try:
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 pyproject = tomlkit.loads(f.read())
             if pyproject:
                 return pyproject.get("tool", {}).get("semantic_release", {})

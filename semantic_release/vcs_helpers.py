@@ -182,11 +182,11 @@ def update_changelog_file(version: str, content_to_add: str):
     changelog_file = config.get("changelog_file")
     changelog_placeholder = config.get("changelog_placeholder")
     git_path = Path(os.getcwd(), changelog_file)
-    if not git_path.exists() or git_path.read_text().strip() == "":
+    if not git_path.exists() or git_path.read_text(encoding="utf-8").strip() == "":
         original_content = f"# Changelog\n\n{changelog_placeholder}\n"
         logger.warning(f"Changelog file not found: {git_path} - creating it.")
     else:
-        original_content = git_path.read_text()
+        original_content = git_path.read_text(encoding="utf-8")
     if (
         changelog_placeholder not in original_content
         and "# Changelog" in original_content

@@ -1230,7 +1230,7 @@ def test_overload_by_cli(mocker, runner):
         ],
     )
 
-    mock_read_text.assert_called_once_with()
+    mock_read_text.assert_called_once_with(encoding="utf-8")
     mock_read_text.reset_mock()
 
 
