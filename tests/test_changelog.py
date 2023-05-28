@@ -52,7 +52,7 @@ def test_markdown_changelog():
     )
 
 
-def test_markdown_changelog_with_header():    
+def test_markdown_changelog_with_header():
     assert markdown_changelog(
         "owner",
         "repo_name",
