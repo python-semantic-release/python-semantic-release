@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import platform
 import re
 from dataclasses import dataclass
 from enum import Enum
@@ -121,12 +120,9 @@ class RemoteConfig(BaseModel):
     ignore_token_for_push: bool = False
 
 
-class UploadConfig(BaseModel):
+class PublishConfig(BaseModel):
     dist_glob_patterns: Tuple[str, ...] = ("dist/*",)
     upload_to_vcs_release: bool = True
-
-
-_PY = "py" if platform.system() == "Windows" else "python"
 
 
 class RawConfig(BaseModel):
@@ -160,7 +156,7 @@ class RawConfig(BaseModel):
     major_on_zero: bool = True
     remote: RemoteConfig = RemoteConfig()
     tag_format: str = "v{version}"
-    upload: UploadConfig = UploadConfig()
+    publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
     version_variables: Optional[Tuple[str, ...]] = None
 
@@ -396,8 +392,8 @@ class RuntimeContext:
             ignore_token_for_push=raw.remote.ignore_token_for_push,
             template_dir=raw.changelog.template_dir,
             template_environment=template_environment,
-            dist_glob_patterns=raw.upload.dist_glob_patterns,
-            upload_to_vcs_release=raw.upload.upload_to_vcs_release,
+            dist_glob_patterns=raw.publish.dist_glob_patterns,
+            upload_to_vcs_release=raw.publish.upload_to_vcs_release,
             global_cli_options=global_cli_options,
             masker=masker,
         )

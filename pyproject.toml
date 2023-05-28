@@ -31,6 +31,7 @@ dependencies = [
   "dataclasses==0.8; python_version < '3.7.0'",
   "importlib-resources==5.7",
   "pydantic>=1.10.2,<2",
+  "rich>=12.5.1",
 ]
 
 [project.scripts]
@@ -192,6 +193,6 @@ type = "github"
 ignore_token_for_push = true
 token = { env = "GH_TOKEN" }
 
-[tool.semantic_release.upload]
+[tool.semantic_release.publish]
 dist_glob_patterns = ["dist/*"]
 upload_to_vcs_release = true

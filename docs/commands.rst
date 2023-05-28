@@ -249,10 +249,10 @@ implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
 ``semantic-release publish``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Publish a distribution to a VCS release. Uploads using :ref:`config-upload`
+Publish a distribution to a VCS release. Uploads using :ref:`config-publish`
 
 .. seealso::
-    - :ref:`config-upload`
+    - :ref:`config-publish`
     - :ref:`config-build-command`
 
 .. _cmd-publish-options:

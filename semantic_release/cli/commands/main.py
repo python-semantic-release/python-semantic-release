@@ -70,9 +70,6 @@ def main(
     Detect the next semantically correct version for a project based on the Git
     history, create and publish a changelog to a remote VCS, build a project.
 
-    If the project is written in Python, distributions can also be
-    uploaded to a remote Python package repository using twine.
-
     For more information, visit https://python-semantic-release.readthedocs.io/
     """
 

@@ -248,7 +248,7 @@ name = "origin"
 type = "github"
 ignore_token_for_push = false
 
-[tool.semantic_release.upload]
+[tool.semantic_release.publish]
 dist_glob_patterns = ["dist/*"]
 upload_to_vcs_release = false
 

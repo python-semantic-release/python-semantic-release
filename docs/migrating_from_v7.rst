@@ -474,7 +474,7 @@ key and raise an error if this is not the case.
 """""""""""""""""""""
 
 This option has been renamed to
-:ref:`upload_to_vcs_release <config-upload-upload-to-vcs-release>`.
+:ref:`upload_to_vcs_release <config-publish-upload-to-vcs-release>`.
 
 .. _breaking-custom-commit-parsers:
 

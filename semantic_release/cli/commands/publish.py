@@ -17,8 +17,7 @@ log = logging.getLogger(__name__)
 @click.pass_context
 def publish(ctx: click.Context) -> None:
     """
-    Build and publish a distribution to a Python package repository
-    or VCS release.
+    Build and publish a distribution to a VCS release.
     """
     runtime = ctx.obj
     repo = runtime.repo

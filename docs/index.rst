@@ -98,7 +98,7 @@ You can find out more about this in :ref:`commit-parsing`.
    - :ref:`config-branches` - Adding configuration for releases from multiple branches.
    - :ref:`commit_parser <config-commit-parser>` - use a different parser for commit messages.
      For example, Python Semantic Release also ships with emoji and scipy-style parsers.
-   - :ref:`upload_to_repository <config-upload-upload-to-repository>` - enable/disable uploading the
+   - :ref:`upload_to_repository <config-publish-upload-to-repository>` - enable/disable uploading the
      packages to an artifact repository.
    - :ref:`remote.type <config-remote-type>` - specify the type of your remote VCS.
 
@@ -146,7 +146,7 @@ environment variable.
 
 .. seealso::
    - :ref:`Changelog <config-changelog>` - customize your project's changelog.
-   - :ref:`upload_to_vcs_release <config-upload-upload-to-vcs-release>` -
+   - :ref:`upload_to_vcs_release <config-publish-upload-to-vcs-release>` -
      enable/disable uploading artefacts to VCS releases
    - :ref:`version --vcs-release/--no-vcs-release <cmd-version-option-vcs-release>` - enable/disable VCS release
      creation.
@@ -157,7 +157,7 @@ Distributing to PyPI or Custom Artefact Repositories
 Python Semantic Release supports building and uploading artefacts to repositories.
 Publishing is done using `twine <https://pypi.org/project/twine/>`_.
 There are a number of configuration options available - see the
-:ref:`upload configuration <config-upload>` for more information.
+:ref:`upload configuration <config-publish>` for more information.
 
 .. _running-from-setuppy:
 

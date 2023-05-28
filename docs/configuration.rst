@@ -54,7 +54,7 @@ Some settings can be configured via environment variables. In order to do this,
 you must indicate that Python Semantic Release should use a particular environment
 variable as follows.
 
-Suppose for example that you would like to set :ref:`upload.password <config-upload-password>`.
+Suppose for example that you would like to set :ref:`upload.password <config-publish-password>`.
 It is possible to do so by pasting your repository password in plaintext into your
 configuration file (**Note: this is not advisable**):
 
@@ -573,12 +573,12 @@ you can choose to use a custom environment variable if you wish.
 **Default:** ``{ env = "GH_TOKEN" }``
 
 
-.. _config-upload:
+.. _config-publish:
 
-``[tool.semantic_release.upload]``
+``[tool.semantic_release.publish]``
 **********************************
 
-.. _config-upload-dist-glob-patterns:
+.. _config-publish-dist-glob-patterns:
 
 ``dist_glob_patterns (List[str])``
 """"""""""""""""""""""""""""""""""
@@ -588,13 +588,13 @@ list should be a string containing a Unix-style glob pattern.
 
 **Default:** ``["dist/*"]``
 
-.. _config-upload-upload-to-vcs-release:
+.. _config-publish-upload-to-vcs-release:
 
 ``upload_to_vcs_release (bool)``
 """"""""""""""""""""""""""""""""
 
 If set to ``true``, upload artefacts matching
-:ref:`dist_glob_patterns <config-upload-dist-glob-patterns>` to the release created
+:ref:`dist_glob_patterns <config-publish-dist-glob-patterns>` to the release created
 in the remote VCS corresponding to the latest tag, if that is supported by the
 :ref:`VCS type <config-remote-type>`.
 
