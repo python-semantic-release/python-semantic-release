@@ -104,7 +104,9 @@ multiple projects.
        repository_password: ${{ secrets.PYPI_TOKEN }}
 
 .. note::
-  The release notes posted to GitHub will not currently distinguish which
-  project they are from (see `this issue`_).
+  There is only partly support for monorepo (see `this issue`_).
+  In order to use this action, you should at least configure (in each project):
+  ``use_only_cwd_commits = true`` and a unique ``tag_format``.
+  Only ``version_source = commit`` (default) is supported.
 
 .. _this issue: https://github.com/python-semantic-release/python-semantic-release/issues/168
