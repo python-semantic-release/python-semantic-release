@@ -31,7 +31,7 @@ def markdown_changelog(
     :param header: A boolean that decides whether a version number header should be included.
     :return: The markdown formatted changelog.
     """
-    output = f"## v{version}\n" if header else ""
+    output = f"## v{version}\n\n" if header else ""
 
     # Add the output of each component separated by a blank line
     output += "\n\n".join(
