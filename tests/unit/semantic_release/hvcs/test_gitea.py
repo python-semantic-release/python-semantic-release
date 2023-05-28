@@ -192,39 +192,6 @@ gitea_matcher = re.compile(rf"^https://{Gitea.DEFAULT_DOMAIN}")
 gitea_api_matcher = re.compile(rf"^https://{Gitea.DEFAULT_API_DOMAIN}")
 
 
-@pytest.mark.parametrize(
-    "resp_payload, status_code, expected",
-    [
-        ({"status": "success"}, 200, True),
-        ({"status": "pending"}, 200, False),
-        ({"status": "failed"}, 200, False),
-        ([{"status": "success"}] * 2, 200, True),
-        ([{"status": "pending"}] * 2, 200, False),
-        ([{"status": "failed"}] * 2, 200, False),
-        ({}, 404, False),
-    ],
-)
-def test_check_build_status(default_gitea_client, resp_payload, status_code, expected):
-    ref = "refA"
-    with requests_mock.Mocker(session=default_gitea_client.session) as m:
-        m.register_uri(
-            "GET", gitea_api_matcher, json=resp_payload, status_code=status_code
-        )
-        assert default_gitea_client.check_build_status(ref) == expected
-        assert m.called
-        assert len(m.request_history) == 1
-        assert m.last_request.method == "GET"
-        assert (
-            m.last_request.url
-            == "{api_url}/repos/{owner}/{repo_name}/statuses/{ref}".format(
-                api_url=default_gitea_client.api_url,
-                owner=default_gitea_client.owner,
-                repo_name=default_gitea_client.repo_name,
-                ref=ref,
-            )
-        )
-
-
 @pytest.mark.parametrize("status_code", (201,))
 @pytest.mark.parametrize("mock_release_id", range(3))
 @pytest.mark.parametrize("prerelease", (True, False))

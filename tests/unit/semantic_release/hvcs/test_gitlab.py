@@ -315,20 +315,6 @@ def test_pull_request_url(default_gl_client, pr_number):
 
 
 @pytest.mark.parametrize(
-    "status, expected",
-    [
-        ("pending", False),
-        ("failure", False),
-        ("allow_failure", True),
-        ("success", True),
-    ],
-)
-def test_check_build_status(default_gl_client, status, expected):
-    with mock_gitlab(status=status):
-        assert default_gl_client.check_build_status(REF) == expected
-
-
-@pytest.mark.parametrize(
     "tag, expected",
     [
         (A_GOOD_TAG, True),

@@ -83,32 +83,6 @@ class Gitlab(HvcsBase):
         return super()._get_repository_owner_and_name()
 
     @logged_function(log)
-    def check_build_status(self, ref: str) -> bool:
-        """Check last build status
-        :param ref: The sha1 hash of the commit ref
-        :return: the status of the pipeline (False if a job failed)
-        """
-        client = gitlab.Gitlab(self.api_url, private_token=self.token)
-        client.auth()
-        jobs = (
-            client.projects.get(f"{self.owner}/{self.repo_name}")
-            .commits.get(ref)
-            .statuses.list()
-        )
-        for job in jobs:
-            # "success" and "skipped" aren't considered
-            if job["status"] == "pending":  # type: ignore[index]
-                log.info(
-                    "Job %s is still in pending status",
-                    job["name"],  # type: ignore[index]
-                )
-                return False
-            if job["status"] == "failed" and not job["allow_failure"]:  # type: ignore[index]
-                log.info("Job %s failed", job["name"])  # type: ignore[index]
-                return False
-        return True
-
-    @logged_function(log)
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> bool:

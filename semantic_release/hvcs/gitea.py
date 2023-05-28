@@ -64,25 +64,6 @@ class Gitea(HvcsBase):
         self.session = build_requests_session(auth=auth)
 
     @logged_function(log)
-    def check_build_status(self, ref: str) -> bool:
-        """Check build status
-        https://gitea.com/api/swagger#/repository/repoCreateStatus
-        :param ref: The sha1 hash of the commit ref
-        :return: Was the build status success?
-        """
-        url = f"{self.api_url}/repos/{self.owner}/{self.repo_name}/statuses/{ref}"
-        try:
-            response = self.session.get(url)
-        except HTTPError as err:
-            log.warning("error checking build status: %s", err)
-            return False
-
-        data = response.json()
-        if isinstance(data, list):
-            return data[0].get("status") == "success"  # type: ignore
-        return data.get("status") == "success"  # type: ignore
-
-    @logged_function(log)
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:

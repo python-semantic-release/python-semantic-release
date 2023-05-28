@@ -335,6 +335,98 @@ Jenkins
       exit 1
     fi
 
+.. _breaking-removed-build-status-checking:
+
+Removal of Build Status Checking
+""""""""""""""""""""""""""""""""
+
+Prior to v8, Python Semantic Release contained a configuration option,
+``check_build_status``, which would attempt to prevent a release being made
+if it was possible to identify that a corresponding build pipeline was failing.
+For similar reasons to those motivating the removal of
+:ref:`CI Checks <breaking-commands-no-verify-ci>`, this feature has also been removed.
+
+If you are leveraging this feature in Python Semantic Release v7, the following
+bash commands will replace the functionality, and you can add these to your pipeline.
+You will need to install ``jq`` and ``curl`` to run these commands; they can be easily
+installed through your system's package manager, for example on Ubuntu:
+
+.. code-block:: bash
+
+   sudo apt update && sudo apt upgrade
+   sudo apt install -y curl jq
+
+On Windows, you can refer to the `installation guide for jq`_, and if ``curl`` is not already
+installed, you can download it from `the curl website`_
+
+.. _installation guide for jq: https://jqlang.github.io/jq/download/
+.. _the curl website: https://curl.se/
+
+.. _breaking-removed-build-status-checking-github:
+
+GitHub
+~~~~~~
+
+.. code-block:: bash
+
+   export RESP="$(
+     curl \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        -fSsL https://$GITHUB_API_DOMAIN/repos/$REPO_OWNER/$REPO_NAME/commits/$(git rev-parse HEAD)/status || exit 1
+   )"
+
+   if [ $(jq -r '.state' <<< "$RESP") != "success" ]; then
+      echo "Build status is not success" >&2
+      exit 1
+   fi
+
+Note that ``$GITHUB_API_DOMAIN`` is typically ``api.github.com`` unless you are using
+GitHub Enterprise with a custom domain name.
+
+.. _breaking-removed-build-status-checking-gitea:
+
+Gitea
+~~~~~
+
+.. code-block:: bash
+
+   export RESP="$(
+     curl \
+        -H "Authorization: token $GITEA_TOKEN" \
+        -fSsL https://$GITEA_DOMAIN/repos/$REPO_OWNER/$REPO_NAME/statuses/$(git rev-parse HEAD) || exit 1
+   )"
+
+   if [ $(jq -r '.state' <<< "$RESP") != "success" ]; then
+      echo "Build status is not success" >&2
+      exit 1
+   fi
+
+.. _breaking-removed-build-status-checking-gitlab:
+
+Gitlab
+~~~~~~
+
+.. code-block:: bash
+
+   export RESP="$(
+     curl \
+        -H "Authorization: token $GITLAB_TOKEN" \
+        -fSsL https://$GITLAB_DOMAIN/api/v4/projects/$PROJECT_ID/repository/commits/$(git rev-parse HEAD)/statuses
+   )"
+
+   for line in $(jq -r '.[] | [.name, .status, .allow_failure] | join("|")' <<<"$RESP"); do
+     IFS="|" read -r job_name job_status allow_failure <<<"$line"
+
+     if [ "$job_status" == "pending" ]; then
+        echo "job $job_name is pending" >&2
+        exit 1
+     elif [ "$job_status" == "failed" ] && [ ! "$allow_failure" == "true" ]; then
+        echo "job $job_name failed" >&2
+        exit 1
+     fi
+  done
+
+
 .. _breaking-commands-multibranch-releases:
 
 Multibranch releases

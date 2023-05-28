@@ -92,22 +92,6 @@ class Github(HvcsBase):
         )
 
     @logged_function(log)
-    def check_build_status(self, ref: str) -> bool:
-        """Check build status
-        https://docs.github.com/rest/reference/repos#get-the-combined-status-for-a-specific-reference
-        :param ref: The sha1 hash of the commit ref
-        :return: Was the build status success?
-        """
-        url = f"{self.api_url}/repos/{self.owner}/{self.repo_name}/commits/{ref}/status"
-        try:
-            response = self.session.get(url)
-        except HTTPError as err:
-            log.warning("error checking build status: %s", err)
-            return False
-
-        return response.json().get("state") == "success"  # type: ignore
-
-    @logged_function(log)
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:

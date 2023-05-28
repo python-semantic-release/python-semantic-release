@@ -233,39 +233,6 @@ github_matcher = re.compile(rf"^https://{Github.DEFAULT_DOMAIN}")
 github_api_matcher = re.compile(rf"^https://{Github.DEFAULT_API_DOMAIN}")
 
 
-@pytest.mark.parametrize(
-    "resp_payload, status_code, expected",
-    [
-        ({"state": "success"}, 200, True),
-        ({"state": "pending"}, 200, False),
-        ({"state": "failed"}, 200, False),
-        ({"error": "not found"}, 404, False),
-        ({"error": "too many requests"}, 429, False),
-        ({"error": "internal error"}, 500, False),
-        ({"error": "temporarily unavailable"}, 503, False),
-    ],
-)
-def test_check_build_status(default_gh_client, resp_payload, status_code, expected):
-    ref = "refA"
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        m.register_uri(
-            "GET", github_api_matcher, json=resp_payload, status_code=status_code
-        )
-        assert default_gh_client.check_build_status(ref) == expected
-        assert m.called
-        assert len(m.request_history) == 1
-        assert m.last_request.method == "GET"
-        assert (
-            m.last_request.url
-            == "{api_url}/repos/{owner}/{repo_name}/commits/{ref}/status".format(
-                api_url=default_gh_client.api_url,
-                owner=default_gh_client.owner,
-                repo_name=default_gh_client.repo_name,
-                ref=ref,
-            )
-        )
-
-
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
 @pytest.mark.parametrize("prerelease", (True, False))

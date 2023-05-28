@@ -78,14 +78,6 @@ class HvcsBase:
         _not_supported(self, "compare_url")
         return ""
 
-    def check_build_status(self, ref: str) -> bool:
-        """
-        Check the status of a build at `ref` in a remote VCS that reports build
-        statuses, such as GitHub Actions or GitLab CI
-        """
-        _not_supported(self, "check_build_status")
-        return True
-
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """
         Upload built distributions to a release on a remote VCS that
