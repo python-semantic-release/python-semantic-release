@@ -40,11 +40,11 @@ export VCS_RELEASE="${INPUT_VCS_RELEASE:="false"}"
 
 # Convert inputs to command line arguments
 export ARGS=()
-ARGS+=("$(eval_boolean_action_input "prerelease" "$PRERELEASE" "--prerelease" "--no-prerelease")") || exit 1
+ARGS+=("$(eval_boolean_action_input "prerelease" "$PRERELEASE" "--prerelease" "")") || exit 1
 ARGS+=("$(eval_boolean_action_input "commit" "$COMMIT" "--commit" "--no-commit")") || exit 1
 ARGS+=("$(eval_boolean_action_input "push" "$PUSH" "--push" "--no-push")") || exit 1
-ARGS+=("$(eval_boolean_action_input "changelog" "$CHANGELOG" "--prerelease" "--no-prerelease")") || exit 1
-ARGS+=("$(eval_boolean_action_input "vcs_release" "$VCS_RELEASE" "--prerelease" "--no-prerelease")") || exit 1
+ARGS+=("$(eval_boolean_action_input "changelog" "$CHANGELOG" "--changelog" "--no-changelog")") || exit 1
+ARGS+=("$(eval_boolean_action_input "vcs_release" "$VCS_RELEASE" "--vcs-release" "--no-vcs-release")") || exit 1
 
 # Handle --patch, --minor, --major
 # https://stackoverflow.com/a/47541882
