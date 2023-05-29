@@ -15,7 +15,7 @@ from pytest_lazyfixture import lazy_fixture
 from semantic_release.cli import main, version
 
 from tests.const import EXAMPLE_PROJECT_NAME
-from tests.util import flatten_dircmp
+from tests.util import actions_output_to_dict, flatten_dircmp
 
 
 @pytest.mark.parametrize(
@@ -642,3 +642,22 @@ def test_version_runs_build_command(
         patched_subprocess_run.assert_called_once_with(
             shlex.split(build_command), check=True
         )
+
+
+def test_version_writes_github_actions_output(
+    repo_with_git_flow_angular_commits, cli_runner, monkeypatch, tmp_path
+):
+    mock_output_file = tmp_path / "action.out"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
+    result = cli_runner.invoke(main, [version.name, "--patch", "--no-push"])
+    assert result.exit_code == 0
+
+    action_outputs = actions_output_to_dict(
+        mock_output_file.read_text(encoding="utf-8")
+    )
+    assert "released" in action_outputs
+    assert action_outputs["released"] == "true"
+    assert "version" in action_outputs
+    assert action_outputs["version"] == "1.2.1"
+    assert "tag" in action_outputs
+    assert action_outputs["tag"] == "v1.2.1"

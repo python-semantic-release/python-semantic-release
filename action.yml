@@ -87,6 +87,19 @@ inputs:
     description: |
       Build metadata to append to the new version
 
+outputs:
+  released:
+    description: |
+      "true" if a release was made, "false" otherwise
+
+  version:
+    description: |
+      The newly released version if one was made, otherwise the current version
+
+  tag:
+    description: |
+      The Git tag corresponding to the version output
+
 runs:
   using: "docker"
   image: "Dockerfile"

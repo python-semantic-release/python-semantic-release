@@ -5,9 +5,23 @@ Setting up python-semantic-release on GitHub Actions
 
 Python Semantic Release includes a GitHub Action which runs the ``version`` and
 ``publish`` commands. The repository is set to `PyPI`. You can read the full set
-of inputs and the descriptions available in the `action definition`_.
+of inputs available, and their descriptions in the `action definition`_.
 
 Your project's configuration file will be used as normal.
+
+The GitHub Action provudes the following outputs:
+
++-------------+-----------------------------------------------------------+
+| Output      | Description                                               |
++-------------+-----------------------------------------------------------+
+| released    | "true" if a release was made, "false" otherwise           |
++-------------+-----------------------------------------------------------+
+| version     | The newly released version if one was made, otherwise     |
+|             | the current version                                       |
++-------------+-----------------------------------------------------------+
+| tag         | The Git tag corresponding to the "version" output. The    |
+|             | format is dictated by your configuration.                 |
++-------------+-----------------------------------------------------------+
 
 .. _action definition: https://github.com/python-semantic-release/python-semantic-release/blob/master/action.yml
 
@@ -89,10 +103,3 @@ multiple projects.
        repository_username: __token__
        repository_password: ${{ secrets.PYPI_TOKEN }}
 
-.. note::
-  There is only partly support for monorepo (see `this issue`_).
-  In order to use this action, you should at least configure (in each project):
-  ``use_only_cwd_commits = true`` and a unique ``tag_format``.
-  Only ``version_source = commit`` (default) is supported.
-
-.. _this issue: https://github.com/python-semantic-release/python-semantic-release/issues/168

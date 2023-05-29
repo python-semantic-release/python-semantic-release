@@ -16,6 +16,7 @@ from semantic_release.cli.common import (
     render_default_changelog_file,
     render_release_notes,
 )
+from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
 from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
@@ -204,6 +205,9 @@ def version(
     major_on_zero = runtime.major_on_zero
     build_command = runtime.build_command
     opts = runtime.global_cli_options
+    gha_output = VersionGitHubActionsOutput()
+
+    ctx.call_on_close(gha_output.write_if_possible)
 
     if prerelease_token:
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
@@ -257,6 +261,8 @@ def version(
     if build_metadata:
         new_version.build_metadata = build_metadata
 
+    gha_output.released = False
+    gha_output.version = new_version
     # If the new version has already been released, we fail and abort
     if new_version in {v for _, v in tags_and_versions(repo.tags, translator)}:
         ctx.fail(
@@ -469,9 +475,10 @@ def version(
                 )
             )
         else:
-            # Wrap in GitCommandError handling - remove token
             repo.git.push(remote_url, active_branch)
             repo.git.push("--tags", remote_url, active_branch)
+
+    gha_output.released = True
 
     if make_vcs_release and opts.noop:
         noop_report(

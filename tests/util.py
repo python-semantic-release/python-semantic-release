@@ -5,9 +5,8 @@ import os
 import secrets
 import string
 from contextlib import contextmanager
-from itertools import zip_longest
 from tempfile import NamedTemporaryFile
-from typing import Iterable, Optional, TypeVar
+from typing import Iterable, TypeVar
 
 from git import Repo
 
@@ -63,3 +62,7 @@ def xdist_sort_hack(it: Iterable[_R]) -> Iterable[_R]:
     Being able to use `pytest -nauto` is a huge speedup on testing
     """
     return dict(enumerate(it)).values()
+
+
+def actions_output_to_dict(output: str) -> dict[str, str]:
+    return {line.split("=")[0]: line.split("=")[1] for line in output.splitlines()}
