@@ -4,7 +4,7 @@ name: Test & Release
 on:
   push:
     branches:
-      - master
+      - "8.0.x"
 
 jobs:
   test:
@@ -101,6 +101,8 @@ jobs:
     concurrency: push
     needs: [ test, mypy, beautify ]
     if: github.repository == 'python-semantic-release/python-semantic-release'
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v3
@@ -111,5 +113,18 @@ jobs:
         uses: ./
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_username: ${{ secrets.PYPI_USERNAME }}
-          repository_password: ${{ secrets.PYPI_PASSWORD }}
+
+      # https://github.com/pypa/gh-action-pypi-publish#specifying-a-different-username
+      # This will need converting to use trusted publishing at a later date
+      # see https://docs.pypi.org/trusted-publishers/
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          user: ${{ secrets.PYPI_USERNAME }}
+          password: ${{ secrets.PYPI_PASSWORD }}
+
+      - name: Publish package distributions to GitHub Releases
+        uses: python-semantic-release/upload-to-gh-release@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -51,8 +51,6 @@ Example Workflow
          uses: python-semantic-release/python-semantic-release@master
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
-           repository_username: __token__
-           repository_password: ${{ secrets.PYPI_TOKEN }}
 
 :ref:`env-repository_password` should be set as a secret on your repository's settings page.
 It is also possible to use username and password authentication in a similar fashion.
@@ -92,14 +90,10 @@ multiple projects.
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
-       repository_username: __token__
-       repository_password: ${{ secrets.PYPI_TOKEN }}
 
    - name: Release Project 2
      uses: python-semantic-release/python-semantic-release@master
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
-       repository_username: __token__
-       repository_password: ${{ secrets.PYPI_TOKEN }}
 
