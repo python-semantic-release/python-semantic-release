@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v7.34.2 (2023-05-29)
+### Fix
+
+* Open all files with explicit utf-8 encoding ([#596](https://github.com/python-semantic-release/python-semantic-release/issues/596)) ([`cb71f35`](https://github.com/python-semantic-release/python-semantic-release/commit/cb71f35c26c1655e675fa735fa880d39a2c8af9c))
+
 ## v7.34.1 (2023-05-28)
 ### Fix
 
