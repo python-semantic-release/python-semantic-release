@@ -115,7 +115,7 @@ class TomlVersionDeclaration(VersionDeclaration):
         self.key = key
 
     def _read(self) -> Dotty:
-        toml_doc = tomlkit.loads(self.path.read_text())
+        toml_doc = tomlkit.loads(self.path.read_text(encoding="utf-8"))
         return Dotty(toml_doc)
 
     def parse(self) -> Set[str]:
@@ -157,7 +157,7 @@ class PatternVersionDeclaration(VersionDeclaration):
         should be the same version in each place), but it falls on the caller
         to check for this condition.
         """
-        content = self.path.read_text()
+        content = self.path.read_text(encoding="utf-8")
 
         versions = {
             m.group(1) for m in re.finditer(self.pattern, content, re.MULTILINE)
@@ -178,7 +178,7 @@ class PatternVersionDeclaration(VersionDeclaration):
         :param new_version: The new version number as a string
         """
         n = 0
-        old_content = self.path.read_text()
+        old_content = self.path.read_text(encoding="utf-8")
 
         def swap_version(m):
             nonlocal n
