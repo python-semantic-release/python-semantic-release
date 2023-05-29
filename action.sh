@@ -49,7 +49,9 @@ ARGS+=("$(eval_boolean_action_input "vcs_release" "$VCS_RELEASE" "--prerelease" 
 # Handle --patch, --minor, --major
 # https://stackoverflow.com/a/47541882
 valid_force_levels=("patch" "minor" "major")
-if printf '%s\0' "${valid_force_levels[@]}" | grep -Fxzq "$INPUT_FORCE"; then
+if [ -z "$INPUT_FORCE" ]; then
+	true # do nothing if 'force' input is not set
+elif printf '%s\0' "${valid_force_levels[@]}" | grep -Fxzq "$INPUT_FORCE"; then
 	ARGS+=("--$INPUT_FORCE")
 else
 	printf "Error: Input 'force' must be one of: %s\n" "${valid_force_levels[@]}" >&2
