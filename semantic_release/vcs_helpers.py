@@ -208,7 +208,7 @@ def update_changelog_file(version: str, content_to_add: str):
             [
                 changelog_placeholder,
                 "",
-                f"## v{version} ({date.today():%Y-%m-%d})",
+                f"## v{version} ({date.today():%Y-%m-%d})\n",
                 content_to_add,
             ]
         ),

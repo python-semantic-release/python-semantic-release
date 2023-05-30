@@ -444,7 +444,7 @@ def test_update_changelog_file_ok(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        "## v1.0.0 (2015-08-04)\n"
+        "## v1.0.0 (2015-08-04)\n\n"
         "### Feature\n"
         "* Just a start"
     )
@@ -464,13 +464,13 @@ def test_update_changelog_file_ok(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n\n"
         "### Fix\n"
         "* Fix a bug\n"
         "### Feature\n"
         "* Add something awesome\n"
         "\n"
-        "## v1.0.0 (2015-08-04)\n"
+        "## v1.0.0 (2015-08-04)\n\n"
         "### Feature\n"
         "* Just a start"
     )
@@ -491,7 +491,7 @@ def test_update_changelog_file_missing_file(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n\n"
         "* Some new content\n"
     )
 
@@ -513,7 +513,7 @@ def test_update_changelog_file_missing_placeholder_but_containing_header(
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n\n"
         "* Some new content\n"
     )
 
@@ -531,7 +531,7 @@ def test_update_changelog_empty_file(mock_git, mocker):
         "\n"
         "<!--next-version-placeholder-->\n"
         "\n"
-        f"## v2.0.0 ({date.today():%Y-%m-%d})\n"
+        f"## v2.0.0 ({date.today():%Y-%m-%d})\n\n"
         "* Some new content\n"
     )
 
