@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v7.34.3 (2023-06-01)
+
+### Fix
+
+* Generate markdown linter compliant changelog headers & lists ([#597](https://github.com/python-semantic-release/python-semantic-release/issues/597)) ([`cc87400`](https://github.com/python-semantic-release/python-semantic-release/commit/cc87400d4a823350de7d02dc3172d2488c9517db))
+
 ## v7.34.2 (2023-05-29)
 ### Fix
 
