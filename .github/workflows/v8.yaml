@@ -113,6 +113,7 @@ jobs:
         uses: ./
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          root_options: "-vv"
 
       # https://github.com/pypa/gh-action-pypi-publish#specifying-a-different-username
       # This will need converting to use trusted publishing at a later date
