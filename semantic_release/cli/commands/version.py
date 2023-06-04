@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import logging
 import os
-import shlex
 import subprocess
 from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING, ContextManager
 
 import click
+import shellingham  # type: ignore[import]
 
 from semantic_release.changelog import ReleaseHistory, environment, recursive_render
 from semantic_release.changelog.context import make_changelog_context
@@ -18,7 +18,7 @@ from semantic_release.cli.common import (
 )
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
 from semantic_release.cli.util import indented, noop_report, rprint
-from semantic_release.const import DEFAULT_VERSION
+from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.version import (
     Version,
@@ -86,6 +86,21 @@ def apply_version_to_source_files(
             declaration.path.write_text(new_content)
 
     return paths
+
+
+def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
+    shell: str | None
+    try:
+        shell, _ = shellingham.detect_shell()
+    except shellingham.ShellDetectionFailure:
+        log.warning("failed to detect shell, using default shell: %s", DEFAULT_SHELL)
+        log.debug("stack trace", exc_info=True)
+        shell = DEFAULT_SHELL
+
+    if not shell:
+        raise TypeError("'shell' is None")
+
+    return subprocess.run([shell, "-c", cmd], check=check)
 
 
 @click.command(
@@ -290,14 +305,14 @@ def version(
     if not build_command:
         rprint("[green]No build command specified, skipping")
     if runtime.global_cli_options.noop:
-        noop_report(f"would have run the build_command {build_command!r}")
+        noop_report(f"would have run the build_command {build_command}")
     else:
         try:
             log.info("Running build command %s", build_command)
             rprint(
-                f"[bold green]:hammer_and_wrench: Running build command: {build_command!r}"
+                f"[bold green]:hammer_and_wrench: Running build command: {build_command}"
             )
-            subprocess.run(shlex.split(build_command), check=True)
+            shell(build_command, check=True)
         except subprocess.CalledProcessError as exc:
             ctx.fail(str(exc))
 
