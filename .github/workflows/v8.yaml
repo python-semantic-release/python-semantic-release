@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v3
@@ -55,9 +55,12 @@ jobs:
     name: Beautify
     runs-on: ubuntu-latest
     concurrency: push
-    needs: [ test, mypy ]
+    needs: [test, mypy]
     outputs:
       new_sha: ${{ steps.sha.outputs.SHA }}
+    permissions:
+      id-token: write
+      contents: write
 
     steps:
       - name: Set up Python 3.9
@@ -99,10 +102,12 @@ jobs:
     name: Semantic Release
     runs-on: ubuntu-latest
     concurrency: push
-    needs: [ test, mypy, beautify ]
+    needs: [test, mypy, beautify]
     if: github.repository == 'python-semantic-release/python-semantic-release'
     permissions:
+      # https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#metadata
       id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
