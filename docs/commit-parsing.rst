@@ -233,10 +233,6 @@ as the return type from an unsuccessful parse of a commit. :py:class:`semantic_r
   ``BREAKING CHANGE:``.
 * commit: The original commit object that was parsed.
 
-:py:class:`ParsedCommit` objects also make the commit ``message`` available as an
-attribute, though this is implemented as a :py:class:`property` referencing the
-``message`` attribute of the ``commit``.
-
 :py:class:`semantic_release.ParseError` is a `namedtuple`_ which has the following fields:
 
 * commit: The original commit object that was parsed.
@@ -245,6 +241,16 @@ attribute, though this is implemented as a :py:class:`property` referencing the
 In addition, :py:class:`semantic_release.ParseError` implements an additional method, ``raise_error``.
 This method raises a :py:class:`semantic_release.CommitParseError` with the message contained in the
 ``error`` field, as a convenience.
+
+:py:class:`ParsedCommit` and :py:class:`ParseError` objects also make the following
+attributes available, each implemented as a ``property`` which is computed, as a
+convenience for template authors - therefore custom implementations should ensure
+these properties can also be computed:
+
+* message: the ``message`` attribute of the ``commit``; where the message is of type ``bytes``
+  this should be decoded to a ``UTF-8`` string.
+* hexsha: the ``hexsha`` attribute of the ``commit``, representing its hash.
+* short_hash: the first 7 characters of the ``hexsha`` attribute of the ``commit``.
 
 In Python Semantic Release, the class :py:class:`semantic_release.ParseResult`
 is defined as ``ParseResultType[ParsedCommit, ParseError]``, as a convenient shorthand.

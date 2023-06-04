@@ -21,10 +21,31 @@ class ParsedCommit(NamedTuple):
         m = self.commit.message
         return m.decode("utf-8") if isinstance(m, bytes) else m
 
+    @property
+    def hexsha(self) -> str:
+        return self.commit.hexsha
+
+    @property
+    def short_hash(self) -> str:
+        return self.commit.hexsha[:7]
+
 
 class ParseError(NamedTuple):
     commit: Commit
     error: str
+
+    @property
+    def message(self) -> str:
+        m = self.commit.message
+        return m.decode("utf-8") if isinstance(m, bytes) else m
+
+    @property
+    def hexsha(self) -> str:
+        return self.commit.hexsha
+
+    @property
+    def short_hash(self) -> str:
+        return self.commit.hexsha[:7]
 
     def raise_error(self) -> NoReturn:
         raise CommitParseError(self.error)
