@@ -41,9 +41,12 @@ Example Workflow
      release:
        runs-on: ubuntu-latest
        concurrency: release
+       permissions:
+         id-token: write
+         contents: write
 
        steps:
-       - uses: actions/checkout@v2
+       - uses: actions/checkout@v3
          with:
            fetch-depth: 0
 
@@ -52,13 +55,16 @@ Example Workflow
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
 
-:ref:`env-repository_password` should be set as a secret on your repository's settings page.
-It is also possible to use username and password authentication in a similar fashion.
-
 ``concurrency`` is a
 `beta feature of GitHub Actions <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency>`_
 which disallows two or more release jobs to run in parallel. This prevents race
 conditions if there are multiple pushes in a short period of time.
+
+If you would like to use Python Semantic Release to create GitHub Releases against
+your repository, you will need to allow the additional ``contents: write`` permission.
+More information can be found in the `permissions for GitHub Apps documentation`_
+
+.. _permissions for GitHub Apps documentation: https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#contents
 
 .. warning::
   You must set `fetch-depth` to 0 when using ``actions/checkout@v2``, since
