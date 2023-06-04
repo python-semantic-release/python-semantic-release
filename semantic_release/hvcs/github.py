@@ -7,6 +7,7 @@ import glob
 import logging
 import mimetypes
 import os
+from functools import lru_cache
 
 from requests import HTTPError
 
@@ -67,6 +68,7 @@ class Github(HvcsBase):
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
 
+    @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
         # Github actions context
         if "GITHUB_REPOSITORY" in os.environ:

@@ -4,8 +4,8 @@ Common functionality and interface for interacting with Git remote VCS
 from __future__ import annotations
 
 import logging
-import os
 import warnings
+from functools import lru_cache
 
 from semantic_release.helpers import parse_git_url
 from semantic_release.hvcs.token_auth import TokenAuth
@@ -50,6 +50,7 @@ class HvcsBase:
         self._remote_url = remote_url
         self.session = build_requests_session(auth=auth)
 
+    @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
         """
         Parse the repository's remote url to identify the repository

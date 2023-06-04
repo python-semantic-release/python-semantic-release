@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 import mimetypes
 import os
+from functools import lru_cache
 from urllib.parse import urlsplit
 
 import gitlab
@@ -72,6 +73,7 @@ class Gitlab(HvcsBase):
             return f"{url.netloc}{url.path}".rstrip("/")
         return os.getenv("CI_SERVER_HOST")
 
+    @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
         """
         Get the repository owner and name from GitLab CI environment variables, if
