@@ -2,7 +2,7 @@
 {% for type_, commits in release["elements"] | dictsort %}
 ## {{ type_ | capitalize }}
 {% for commit in commits %}{% if type_ != "unknown" %}
-* {{ commit.commit.message.rstrip() }}
+* {{ commit.message.rstrip() }}
 {% else %}
-* {{ commit.commit.message.rstrip() }}
+* {{ commit.message.rstrip() }}
 {% endif %}{% endfor %}{% endfor %}

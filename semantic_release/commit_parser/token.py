@@ -16,6 +16,11 @@ class ParsedCommit(NamedTuple):
     breaking_descriptions: list[str]
     commit: Commit
 
+    @property
+    def message(self) -> str:
+        m = self.commit.message
+        return m.decode("utf-8") if isinstance(m, bytes) else m
+
 
 class ParseError(NamedTuple):
     commit: Commit

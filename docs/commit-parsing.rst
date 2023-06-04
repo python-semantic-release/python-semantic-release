@@ -233,6 +233,10 @@ as the return type from an unsuccessful parse of a commit. :py:class:`semantic_r
   ``BREAKING CHANGE:``.
 * commit: The original commit object that was parsed.
 
+:py:class:`ParsedCommit` objects also make the commit ``message`` available as an
+attribute, though this is implemented as a :py:class:`property` referencing the
+``message`` attribute of the ``commit``.
+
 :py:class:`semantic_release.ParseError` is a `namedtuple`_ which has the following fields:
 
 * commit: The original commit object that was parsed.
