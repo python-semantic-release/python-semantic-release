@@ -21,18 +21,18 @@ CHANGELOG_TEMPLATE = r"""
 {% for type_, commits in context.history.unreleased.items() %}
 ### {{ type_ | capitalize }}
 {% for commit in commits %}{% if type_ != "unknown" %}
-* {{ commit.message.rstrip() }} ([`{{ commit.hexsha[:7] }}`]({{ commit.hexsha | commit_hash_url }}))
+* {{ commit.message.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
 {% else %}
-* {{ commit.message.rstrip() }} ([`{{ commit.hexsha[:7] }}`]({{ commit.hexsha | commit_hash_url }}))
+* {{ commit.message.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
 {% endif %}{% endfor %}{% endfor %}{% endif %}
 {% for version, release in context.history.released.items() %}
 ## {{ version.as_tag() }} ({{ release.tagged_date.strftime("%Y-%m-%d") }})
 {% for type_, commits in release["elements"].items() %}
 ### {{ type_ | capitalize }}
 {% for commit in commits %}{% if type_ != "unknown" %}
-* {{ commit.message.rstrip() }} ([`{{ commit.hexsha[:7] }}`]({{ commit.hexsha | commit_hash_url }}))
+* {{ commit.message.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
 {% else %}
-* {{ commit.message.rstrip() }} ([`{{ commit.hexsha[:7] }}`]({{ commit.hexsha | commit_hash_url }}))
+* {{ commit.message.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
 {% endif %}{% endfor %}{% endfor %}{% endfor %}
 """
 

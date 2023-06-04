@@ -626,21 +626,25 @@ def test_version_build_metadata_triggers_new_version(repo, cli_runner):
     assert repo.git.tag(l=f"*{metadata_suffix}")
 
 
+@pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
 def test_version_runs_build_command(
-    repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml
+    repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml, shell
 ):
     config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
     build_command = config["tool"]["semantic_release"]["build_command"]
+    exe = shell.split("/")[-1]
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
-    ) as patched_subprocess_run:
+    ) as patched_subprocess_run, mock.patch(
+        "shellingham.detect_shell", return_value=(exe, shell)
+    ):
         result = cli_runner.invoke(
             main, [version.name, "--patch", "--no-push"]
         )  # force a new version
         assert result.exit_code == 0
 
         patched_subprocess_run.assert_called_once_with(
-            shlex.split(build_command), check=True
+            [exe, "-c", build_command], check=True
         )
 
 

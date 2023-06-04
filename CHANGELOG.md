@@ -116,6 +116,22 @@ to attempting to amend a HEAD commit that wasn&#39;t produced by PSR ([`ca17207`
 * Spelling and grammar in `travis.rst` ([#556](https://github.com/python-semantic-release/python-semantic-release/issues/556)) ([`3a76e9d`](https://github.com/python-semantic-release/python-semantic-release/commit/3a76e9d7505c421009eb3e953c32cccac2e70e07))
 * Grammar in `docs/troubleshooting.rst` ([#557](https://github.com/python-semantic-release/python-semantic-release/issues/557)) ([`bbe754a`](https://github.com/python-semantic-release/python-semantic-release/commit/bbe754a3db9ce7132749e7902fe118b52f48ee42))
 
+## v7.34.3 (2023-06-01)
+
+### Fix
+
+* Generate markdown linter compliant changelog headers & lists ([#597](https://github.com/python-semantic-release/python-semantic-release/issues/597)) ([`cc87400`](https://github.com/python-semantic-release/python-semantic-release/commit/cc87400d4a823350de7d02dc3172d2488c9517db))
+
+## v7.34.2 (2023-05-29)
+### Fix
+
+* Open all files with explicit utf-8 encoding ([#596](https://github.com/python-semantic-release/python-semantic-release/issues/596)) ([`cb71f35`](https://github.com/python-semantic-release/python-semantic-release/commit/cb71f35c26c1655e675fa735fa880d39a2c8af9c))
+
+## v7.34.1 (2023-05-28)
+### Fix
+
+* Generate markdown linter compliant changelog headers & lists ([#594](https://github.com/python-semantic-release/python-semantic-release/issues/594)) ([`9d9d403`](https://github.com/python-semantic-release/python-semantic-release/commit/9d9d40305c499c907335abe313e3ed122db0b154))
+
 ## v7.34.0 (2023-05-28)
 ### Feature
 * Add option to only parse commits for current working directory ([#509](https://github.com/python-semantic-release/python-semantic-release/issues/509)) ([`cdf8116`](https://github.com/python-semantic-release/python-semantic-release/commit/cdf8116c1e415363b10a01f541873e04ad874220))
