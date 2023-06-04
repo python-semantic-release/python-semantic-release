@@ -195,7 +195,7 @@ prerelease_token = "alpha"
 [tool.semantic_release.remote]
 name = "origin"
 type = "github"
-ignore_token_for_push = true
+ignore_token_for_push = false
 token = { env = "GH_TOKEN" }
 
 [tool.semantic_release.publish]

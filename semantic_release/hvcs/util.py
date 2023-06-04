@@ -42,6 +42,7 @@ def build_requests_session(
         session.mount("https://", adapter)
 
     if auth:
+        logger.debug("setting up default session authentication")
         session.auth = auth
 
     return session

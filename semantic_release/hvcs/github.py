@@ -250,6 +250,7 @@ class Github(HvcsBase):
 
     def remote_url(self, use_token: bool = True) -> str:
         if not (self.token and use_token):
+            log.info("requested to use token for push but no token set, ignoring...")
             return self._remote_url
         actor = os.getenv("GITHUB_ACTOR")
         return (
