@@ -95,8 +95,8 @@ jobs:
       - name: Get new SHA
         id: sha
         run: |
-          new_sha=$(git rev-parse HEAD)
-          echo "SHA=$new_sha" >> $GITHUB_OUTPUT
+          new_sha="$(git rev-parse HEAD)"
+          echo "SHA=$new_sha" >> "$GITHUB_OUTPUT"
 
   release:
     name: Semantic Release
@@ -115,6 +115,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
       - name: Python Semantic Release
+        id: release
         uses: ./
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -124,6 +125,8 @@ jobs:
       # This will need converting to use trusted publishing at a later date
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
+        id: pypi-publish
+        if: ${{ steps.release.outputs.released }} == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
@@ -131,6 +134,9 @@ jobs:
           password: ${{ secrets.PYPI_PASSWORD }}
 
       - name: Publish package distributions to GitHub Releases
+        id: github-release
+        if: ${{ steps.release.outputs.released }} == 'true'
         uses: python-semantic-release/upload-to-gh-release@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}
