@@ -217,7 +217,7 @@ def test_version_print(
     assert result.exit_code == 0
     assert tags_before == tags_after
     assert head_before == head_after
-    assert result.output.rstrip("\n") == expected_stdout
+    assert result.stdout.rstrip("\n") == expected_stdout
     dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
     differing_files = flatten_dircmp(dcmp)
     assert not differing_files
@@ -241,7 +241,7 @@ def test_version_already_released_no_push(repo, cli_runner):
     # to indicate that no release will be made
     result = cli_runner.invoke(main, ["--strict", version.name, "--no-push"])
     assert result.exit_code == 2
-    assert "no release will be made" in result.output.lower()
+    assert "no release will be made" in result.stderr.lower()
 
 
 @pytest.mark.parametrize(
@@ -455,7 +455,7 @@ def test_version_build_metadata_triggers_new_version(repo, cli_runner):
         main, ["--strict", version.name, "--no-push"]
     )
     assert no_metadata_result.exit_code == 2
-    assert "no release will be made" in no_metadata_result.output.lower()
+    assert "no release will be made" in no_metadata_result.stderr.lower()
 
     metadata_suffix = "build.abc-12345"
     result = cli_runner.invoke(
@@ -463,6 +463,15 @@ def test_version_build_metadata_triggers_new_version(repo, cli_runner):
     )
     assert result.exit_code == 0
     assert repo.git.tag(l=f"*{metadata_suffix}")
+
+
+def test_version_prints_current_version_if_no_new_version(
+    repo_with_git_flow_angular_commits, cli_runner
+):
+    result = cli_runner.invoke(main, [version.name, "--no-push"])
+    assert result.exit_code == 0
+    assert "no release will be made" in result.stderr.lower()
+    assert result.stdout == "1.2.0-alpha.2\n"
 
 
 @pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))

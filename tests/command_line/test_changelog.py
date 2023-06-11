@@ -112,7 +112,7 @@ def test_changelog_release_tag_not_in_history(
 
     result = cli_runner.invoke(main, [changelog.name, *args])
     assert result.exit_code == 2
-    assert "not in release history" in result.output.lower()
+    assert "not in release history" in result.stderr.lower()
 
 
 @pytest.mark.usefixtures("repo_with_single_branch_and_prereleases_angular_commits")
