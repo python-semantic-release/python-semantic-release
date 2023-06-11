@@ -2,6 +2,23 @@
 
 
 
+## v8.0.0-alpha.7 (2023-06-11)
+
+### Documentation
+
+* docs: convert to Furo theme ([`e02547e`](https://github.com/python-semantic-release/python-semantic-release/commit/e02547e6a7ace836398c2401f322207e37f560a4))
+
+* docs: update docs with additional required permissions ([`8d09c30`](https://github.com/python-semantic-release/python-semantic-release/commit/8d09c3055528867a8f6ae3eda0cff511f2b7c7b1))
+
+### Feature
+
+* feat: add --skip-build option ([`f3b7600`](https://github.com/python-semantic-release/python-semantic-release/commit/f3b7600332b2a391de0820872a7854945b6698fd))
+
+* feat: add Strict Mode ([`2a128de`](https://github.com/python-semantic-release/python-semantic-release/commit/2a128dedcfdd072791d9851e93d1af93d1845caa))
+
+* feat: add option to specify tag to publish to in publish command ([`89de15f`](https://github.com/python-semantic-release/python-semantic-release/commit/89de15f98f36adaabd25311259452c7e8182eee3))
+
+
 ## v8.0.0-alpha.6 (2023-06-04)
 
 ### Ci
