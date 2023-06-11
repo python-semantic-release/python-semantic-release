@@ -14,8 +14,14 @@ log = logging.getLogger(__name__)
         "help_option_names": ["-h", "--help"],
     },
 )
+@click.option(
+    "--tag",
+    "tag",
+    help="The tag associated with the release to publish to",
+    default="latest",
+)
 @click.pass_context
-def publish(ctx: click.Context) -> None:
+def publish(ctx: click.Context, tag: str = "latest") -> None:
     """
     Build and publish a distribution to a VCS release.
     """
@@ -25,7 +31,8 @@ def publish(ctx: click.Context) -> None:
     translator = runtime.version_translator
     dist_glob_patterns = runtime.dist_glob_patterns
 
-    latest_tag = tags_and_versions(repo.tags, translator)[0][0]
+    if tag == "latest":
+        tag = str(tags_and_versions(repo.tags, translator)[0][0])
     if runtime.global_cli_options.noop:
         noop_report(
             "would have uploaded files matching any of the globs "
@@ -36,4 +43,4 @@ def publish(ctx: click.Context) -> None:
 
     log.info("Uploading distributions to release")
     for pattern in dist_glob_patterns:
-        hvcs_client.upload_dists(tag=latest_tag, dist_glob=pattern)
+        hvcs_client.upload_dists(tag=tag, dist_glob=pattern)

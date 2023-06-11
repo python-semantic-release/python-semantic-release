@@ -3,7 +3,6 @@ from __future__ import annotations
 import difflib
 import filecmp
 import re
-import shlex
 import shutil
 from subprocess import CompletedProcess
 from unittest import mock

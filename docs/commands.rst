@@ -257,8 +257,20 @@ Publish a distribution to a VCS release. Uploads using :ref:`config-publish`
 
 .. _cmd-publish-options:
 
-.. Options:
-.. --------
+Options:
+--------
+
+.. _cmd-publish-option-tag:
+
+``--tag``
+*********
+
+The tag associated with the release to publish to. If not given or set to
+"latest", then Python Semantic Release will examine the Git tags in your
+repository to identify the latest version, and attempt to publish to a
+Release corresponding to this version.
+
+**Default:** "latest"
 
 .. _cmd-generate-config:
 
