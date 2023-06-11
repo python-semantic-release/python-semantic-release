@@ -171,6 +171,7 @@ class GlobalCommandLineOptions:
     noop: bool = False
     verbosity: int = 0
     config_file: str = DEFAULT_CONFIG_FILE
+    strict: bool = False
 
 
 ######

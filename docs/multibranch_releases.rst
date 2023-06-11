@@ -42,7 +42,7 @@ a situation may occur in the following scenario:
                    O ----------- O    <---- feature-2
                              "feat: 123"
 
-Support that Python Semantic Release has been configured to use the same
+Suppose that Python Semantic Release has been configured to use the same
 prerelease token ``"alpha"`` for all ``feature-*`` branches, and the default tag
 format ``"v{version}"``. In this case, running a pre-release from branch ``feature-1``
 will recognise that since the last release, ``1.1.0``, a **feature** has been

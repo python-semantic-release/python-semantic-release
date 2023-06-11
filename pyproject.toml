@@ -37,6 +37,7 @@ dependencies = [
 
 [project.scripts]
 semantic-release = "semantic_release.cli:main"
+psr = "semantic_release.cli:main"
 
 [project.urls]
 "Project Url" = "http://github.com/python-semantic-release/python-semantic-release"

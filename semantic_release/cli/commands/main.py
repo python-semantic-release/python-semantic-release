@@ -54,12 +54,20 @@ FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
     show_default=True,
     type=click.IntRange(0, 2, clamp=True),
 )
+@click.option(
+    "--strict",
+    "strict",
+    is_flag=True,
+    default=False,
+    help="Enable strict mode",
+)
 @click.pass_context
 def main(
     ctx: click.Context,
     config_file: str = DEFAULT_CONFIG_FILE,
     verbosity: int = 0,
     noop: bool = False,
+    strict: bool = False,
 ) -> None:
     """
     Python Semantic Release
@@ -106,9 +114,14 @@ def main(
             ":shield: [bold cyan]You are running in no-operation mode, because the "
             "'--noop' flag was supplied"
         )
+
     cli_options = GlobalCommandLineOptions(
-        noop=noop, verbosity=verbosity, config_file=config_file
+        noop=noop,
+        verbosity=verbosity,
+        config_file=config_file,
+        strict=strict,
     )
+    log.debug("global cli options: %s", cli_options)
 
     try:
         if config_file.endswith(".toml"):
@@ -130,8 +143,11 @@ def main(
             raw_config, repo=repo, global_cli_options=cli_options
         )
     except NotAReleaseBranch as exc:
-        rprint(f"[bold red]{str(exc)}")
-        ctx.exit(2)
+        rprint(f"[bold {'red' if strict else 'orange1'}]{str(exc)}")
+        # If not strict, exit 0 so other processes can continue. For example, in
+        # multibranch CI it might be desirable to run a non-release branch's pipeline
+        # without specifying conditional execution of PSR based on branch name
+        ctx.exit(2 if strict else 0)
     except InvalidConfiguration as exc:
         ctx.fail(str(exc))
     ctx.obj = runtime

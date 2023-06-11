@@ -278,14 +278,24 @@ def version(
 
     gha_output.released = False
     gha_output.version = new_version
-    # If the new version has already been released, we fail and abort
+
+    # Print the new version so that command-line output capture will work
+    click.echo(str(new_version))
+
+    # If the new version has already been released, we fail and abort if strict;
+    # otherwise we exit with 0.
     if new_version in {v for _, v in tags_and_versions(repo.tags, translator)}:
-        ctx.fail(
-            f"No release will be made, {str(new_version)} has already been released!"
-        )
+        if opts.strict:
+            ctx.fail(
+                f"No release will be made, {str(new_version)} has already been released!"
+            )
+        else:
+            rprint(
+                f"[bold orange1]No release will be made, {str(new_version)} has already been released!"
+            )
+            ctx.exit(0)
 
     if print_only:
-        click.echo(str(new_version))
         ctx.exit(0)
 
     rprint(

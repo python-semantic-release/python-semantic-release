@@ -12,14 +12,11 @@ Make sure that at least you have set :ref:`config-version-variables` before cont
 
 2. Add environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You will need to set up three environment variables in Travis. An easy way to do that
-is to go to the settings page for your package and add them there. Make sure that the
-secret toggle is set correct for the ones that are secret.
+You will need to set up an environment variable in Travis. An easy way to do that
+is to go to the settings page for your package and add it there. Make sure that the
+secret toggle is set correctly.
 
-You will need to set :ref:`upload.password <config-publish-password>` to a PyPI API token,
-following the guide on using environment variables for configuration, and
-:ref:`upload.username <config-publish-username>` to `__token__`.
-Furthermore, you need to set the :ref:`GH_TOKEN <index-creating-vcs-releases>` environment
+You need to set the :ref:`GH_TOKEN <index-creating-vcs-releases>` environment
 variable with a personal access token for Github. It will need either ``repo`` or
 ``public_repo`` scope depending on whether the repository is private or public.
 

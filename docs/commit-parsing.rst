@@ -284,7 +284,7 @@ available.
 .. _catching exceptions in Python is slower: https://docs.python.org/3/faq/design.html#how-fast-are-exceptions
 .. _namedtuple: https://docs.python.org/3.7/library/typing.html#typing.NamedTuple
 
-.. _commit-parser-parser-options:
+.. _commit-parsing-parser-options:
 
 Parser Options
 """"""""""""""
@@ -324,7 +324,7 @@ the following:
 * An ``__init__`` method which takes a single parameter, ``options``, that should be
   of the same type as the class' ``parser_options`` attribute.
 * A method, ``parse``, which takes a single parameter ``commit`` that is of type
-  `git.objects.commit.Commit <https://gitpython.readthedocs.io/en/stable/reference.html#module-git.objects.commit>`_, and returns 
+  `git.objects.commit.Commit <gitpython-commit-object>`_, and returns 
   :py:class:`semantic_release.token.ParseResult`, or a subclass of this.
 
 By default, the constructor for `semantic_release.CommitParser` will set the ``options``
@@ -360,3 +360,4 @@ Therefore, a custom commit parser could be implemented via:
             ...
 
 .. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
+.. _gitpython-commit-object: https://gitpython.readthedocs.io/en/stable/reference.html#module-git.objects.commit

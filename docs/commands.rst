@@ -75,6 +75,19 @@ be any of the supported formats valid for :ref:`cmd-generate-config-option-forma
 .. seealso::
    - :ref:`configuration`
 
+.. _cmd-main-option-strict:
+
+``--strict``
+************
+
+Enable Strict Mode. This will cause a number of conditions to produce a non-zero
+exit code when passed, where they would otherwise have produced an exit code of 0.
+Enabling this allows, for example, certain conditions to cause failure of a CI
+pipeline, while omitting this flag would allow the pipeline to continue to run.
+
+.. seealso::
+   - :ref:`strict-mode`
+
 
 .. _cmd-version:
 
