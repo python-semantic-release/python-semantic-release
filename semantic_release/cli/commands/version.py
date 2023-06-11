@@ -172,6 +172,13 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     default=os.getenv("PSR_BUILD_METADATA"),
     help="Build metadata to append to the new version",
 )
+@click.option(
+    "--skip-build",
+    "skip_build",
+    default=False,
+    is_flag=True,
+    help="Skip building the current project",
+)
 @click.pass_context
 def version(
     ctx: click.Context,
@@ -184,6 +191,7 @@ def version(
     push_changes: bool = True,
     make_vcs_release: bool = True,
     build_metadata: str | None = None,
+    skip_build: bool = False,
 ) -> str:
     """
     Detect the semantically correct next version that should be applied to your
@@ -312,9 +320,11 @@ def version(
 
     # Build distributions before committing any changes - this way if the
     # build fails, modifications to the source code won't be committed
-    if not build_command:
+    if skip_build:
+        rprint("[bold orange1]Skipping build due to --skip-build flag")
+    elif not build_command:
         rprint("[green]No build command specified, skipping")
-    if runtime.global_cli_options.noop:
+    elif runtime.global_cli_options.noop:
         noop_report(f"would have run the build_command {build_command}")
     else:
         try:

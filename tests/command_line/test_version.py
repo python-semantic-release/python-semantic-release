@@ -487,6 +487,20 @@ def test_version_runs_build_command(
         )
 
 
+def test_version_skips_build_command_with_skip_build(
+    repo_with_git_flow_angular_commits, cli_runner
+):
+    with mock.patch(
+        "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
+    ) as patched_subprocess_run:
+        result = cli_runner.invoke(
+            main, [version.name, "--patch", "--no-push", "--skip-build"]
+        )  # force a new version
+        assert result.exit_code == 0
+
+        patched_subprocess_run.assert_not_called()
+
+
 def test_version_writes_github_actions_output(
     repo_with_git_flow_angular_commits, cli_runner, monkeypatch, tmp_path
 ):

@@ -141,13 +141,12 @@ This setting is discussed in more detail at :ref:`multibranch-releases`
 
 .. _config-build-command:
 
-``build_command (str)``
+``build_command (Optional[str])``
 """""""""""""""""""""""
 
-Command to use when building the source code during :ref:`cmd-publish`
+Command to use when building the current project during :ref:`cmd-version`
 
-**Default:** ``"py setup.py sdist bdist_wheel"`` on Windows,
-``"python setup.py sdist bdist_wheel"`` on other operating systems
+**Default:** ``None`` (not specified)
 
 .. _config-commit_author:
 

@@ -2,7 +2,6 @@ from unittest import mock
 
 import pytest
 import tomlkit
-from git import Repo
 
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
