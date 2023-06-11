@@ -32,7 +32,7 @@ release = semantic_release.__version__
 
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
-html_theme = "alabaster"
+html_theme = "furo"
 # html_static_path = ["_static"]
 htmlhelp_basename = "python-semantic-releasedoc"
 
