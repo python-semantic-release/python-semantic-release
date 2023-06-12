@@ -126,7 +126,7 @@ class PublishConfig(BaseModel):
 
 
 class RawConfig(BaseModel):
-    assets: Tuple[str, ...] = ()
+    assets: List[str] = []
     branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
     build_command: Optional[str] = None
     changelog: ChangelogConfig = ChangelogConfig()
