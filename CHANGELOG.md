@@ -2,6 +2,29 @@
 
 
 
+## v8.0.0-alpha.8 (2023-06-13)
+
+### Ci
+
+* ci: pass tag output and conditionally execute publish steps ([`d568c69`](https://github.com/python-semantic-release/python-semantic-release/commit/d568c69db71bc756e3081a5f2e1331de3118a8e6))
+
+### Fix
+
+* fix: correct assets type in configuration (#603)
+
+* change raw config assets type
+
+* fix: correct assets type-annotation for RuntimeContext
+
+---------
+
+Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`0e85b94`](https://github.com/python-semantic-release/python-semantic-release/commit/0e85b94100d4168b8db61feea1ad0d19eed2f098))
+
+### Test
+
+* test: separate command line tests by stdout and stderr ([`01fa1b6`](https://github.com/python-semantic-release/python-semantic-release/commit/01fa1b61195223aac9d262d1d17bca462b5077f9))
+
+
 ## v8.0.0-alpha.7 (2023-06-11)
 
 ### Documentation
