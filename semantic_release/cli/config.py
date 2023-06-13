@@ -126,7 +126,7 @@ class PublishConfig(BaseModel):
 
 
 class RawConfig(BaseModel):
-    assets: Tuple[str, ...] = ()
+    assets: List[str] = []
     branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
     build_command: Optional[str] = None
     changelog: ChangelogConfig = ChangelogConfig()
@@ -217,7 +217,7 @@ class RuntimeContext:
     version_translator: VersionTranslator
     major_on_zero: bool
     prerelease: bool
-    assets: Tuple[str, ...]
+    assets: List[str]
     commit_author: Actor
     commit_message: str
     changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
