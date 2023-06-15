@@ -1,5 +1,5 @@
 # This Dockerfile is only for GitHub Actions
-FROM python:3.10
+FROM python:3.10-bullseye
 
 RUN set -ex; \
     apt-get update; \
