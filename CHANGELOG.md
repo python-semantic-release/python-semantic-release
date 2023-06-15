@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v7.34.4 (2023-06-15)
+
+### Fix
+
+* Docker build fails installing git ([#605](https://github.com/python-semantic-release/python-semantic-release/issues/605)) ([`9e3eb97`](https://github.com/python-semantic-release/python-semantic-release/commit/9e3eb979783bc39ca564c2967c6c77eecba682e6))
+
 ## v7.34.3 (2023-06-01)
 
 ### Fix
