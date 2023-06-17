@@ -38,7 +38,7 @@ setup(
         "click>=7,<9",
         "click_log>=0.3,<1",
         "gitpython>=3.0.8,<4",
-        "invoke>=1.4.1,<2",
+        "invoke>=1.4.1,<3",
         "semver>=2.10,<3",
         "twine>=3,<4",
         "requests>=2.25,<3",
