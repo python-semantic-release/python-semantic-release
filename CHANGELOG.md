@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v7.34.6 (2023-06-17)
+
+### Fix
+
+* Relax invoke dependency constraint ([`18ea200`](https://github.com/python-semantic-release/python-semantic-release/commit/18ea200633fd67e07f3d4121df5aa4c6dd29d154))
+
 ## v7.34.5 (2023-06-17)
 
 ### Fix
