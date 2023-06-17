@@ -17,7 +17,7 @@ from .helpers import LoggedFunction
 from .settings import config
 
 _repo: Optional[Repo]
-_sub_directory = "."
+_sub_directory = ""
 try:
     _repo = Repo(".", search_parent_directories=True)
     if config.get("use_only_cwd_commits") and config.get("version_source") == "commit":
