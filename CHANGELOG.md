@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v7.34.5 (2023-06-17)
+
+### Fix
+
+* Consider empty commits ([#608](https://github.com/python-semantic-release/python-semantic-release/issues/608)) ([`6f2e890`](https://github.com/python-semantic-release/python-semantic-release/commit/6f2e8909636595d3cb5e858f42c63820cda45974))
+
 ## v7.34.4 (2023-06-15)
 
 ### Fix
