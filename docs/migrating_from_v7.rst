@@ -90,15 +90,20 @@ GitHub Action:
 
        # This action uses Python Semantic Release v8
        - name: Python Semantic Release
+         id: release
          uses: python-semantic-release/python-semantic-release@v8.0.0
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
 
        - name: Publish package distributions to PyPI
          uses: pypa/gh-action-pypi-publish@release/v1
+         # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
+         # See https://github.com/actions/runner/issues/1173
+         if: steps.release.outputs.released == 'true'
 
        - name: Publish package distributions to GitHub Releases
          uses: python-semantic-release/upload-to-gh-release@main
+         if: steps.release.outputs.released == 'true'
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
 

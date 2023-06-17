@@ -3,7 +3,7 @@
 Strict Mode
 ===========
 
-Strict Mode is enabled by use of the :ref:`strict <_cmd-main-option-strict>` parameter
+Strict Mode is enabled by use of the :ref:`strict <cmd-main-option-strict>` parameter
 to the main command for Python Semantic Release. Strict Mode alters the behaviour of
 Python Semantic Release when certain conditions are encountered that prevent Python
 Semantic Release from perfoming an action. Typically, this will result in a warning
