@@ -80,6 +80,24 @@ Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`0e85b94`](htt
 * Merge branch &#39;master&#39; into 8.0.x ([`49d9e27`](https://github.com/python-semantic-release/python-semantic-release/commit/49d9e27d6c65ea769bb1a8c786b25a78515bf6b8))
 
 
+## v7.34.6 (2023-06-17)
+
+### Fix
+
+* Relax invoke dependency constraint ([`18ea200`](https://github.com/python-semantic-release/python-semantic-release/commit/18ea200633fd67e07f3d4121df5aa4c6dd29d154))
+
+## v7.34.5 (2023-06-17)
+
+### Fix
+
+* Consider empty commits ([#608](https://github.com/python-semantic-release/python-semantic-release/issues/608)) ([`6f2e890`](https://github.com/python-semantic-release/python-semantic-release/commit/6f2e8909636595d3cb5e858f42c63820cda45974))
+
+## v7.34.4 (2023-06-15)
+
+### Fix
+
+* Docker build fails installing git ([#605](https://github.com/python-semantic-release/python-semantic-release/issues/605)) ([`9e3eb97`](https://github.com/python-semantic-release/python-semantic-release/commit/9e3eb979783bc39ca564c2967c6c77eecba682e6))
+
 ## v7.34.3 (2023-06-01)
 
 ### Fix
