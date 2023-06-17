@@ -2,6 +2,17 @@
 
 
 
+## v8.0.0-rc.1 (2023-06-17)
+
+### Feature
+
+* feat: promote to rc ([`8b89ecd`](https://github.com/python-semantic-release/python-semantic-release/commit/8b89ecdcca8cf19035bfc8f186d812b9070c11a0))
+
+### Fix
+
+* fix: pin Debian version in Dockerfile ([`d17ec69`](https://github.com/python-semantic-release/python-semantic-release/commit/d17ec69ccaa8236da88b6bb7d70601cfbae3919d))
+
+
 ## v8.0.0-alpha.8 (2023-06-13)
 
 ### Ci
