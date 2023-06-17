@@ -192,7 +192,7 @@ prerelease_token = "rc"
 [tool.semantic_release.branches."8.0.x"]
 match = "8.0.x"
 prerelease = true
-prerelease_token = "alpha"
+prerelease_token = "rc"
 
 [tool.semantic_release.remote]
 name = "origin"
