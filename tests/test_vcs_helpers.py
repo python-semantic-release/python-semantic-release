@@ -14,6 +14,7 @@ from semantic_release.vcs_helpers import (
     get_current_head_hash,
     get_last_version,
     get_repository_owner_and_name,
+    ignore_commit,
     push_new_version,
     tag_new_version,
     update_additional_files,
@@ -628,3 +629,10 @@ def test_update_additional_files_two_in_config_one_change(mock_git, mocker):
     )
     update_additional_files()
     mock_git.add.assert_called_once_with("anotherfile.txt")
+
+
+def test_ignore_commit(mocker):
+    assert ignore_commit("Merge branch 'xx-fix-lockfile' into 'main'.", ("Merge branch",))
+    assert not ignore_commit(
+        "feat: Introducing status page", ("Merge branch", "fix: Lock file maintenance")
+    )

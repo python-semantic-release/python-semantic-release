@@ -91,7 +91,11 @@ def get_commit_log(from_rev=None, to_rev=None):
     elif to_rev:
         rev = f"{to_rev}..."
 
-    commit_ignore_prefixes = tuple(config.get("commit_ignore_prefixes").split(","))
+    commit_ignore_prefixes = (
+        tuple(config.get("commit_ignore_prefixes").split(","))
+        if config.get("commit_ignore_prefixes")
+        else ()
+    )
     for commit in repo().iter_commits(rev, paths=_sub_directory):
         message = commit.message.replace("\r\n", "\n")
         if commit_ignore_prefixes and ignore_commit(message, commit_ignore_prefixes):
