@@ -53,6 +53,15 @@ def get_formatted_commit(version: str) -> str:
     return message
 
 
+def ignore_commit(message: str, ignore_commit_prefixes: Tuple[str]) -> bool:
+    """
+    Checks if a commit message starts with one of the :ignore_commit_prefixes.
+    """
+    # remove leading/trailing blank lines
+    message = message.strip()
+    return message.startswith(ignore_commit_prefixes)
+
+
 def get_commit_log(from_rev=None, to_rev=None):
     """Yield all commit messages from last to first."""
     if from_rev:
@@ -82,8 +91,12 @@ def get_commit_log(from_rev=None, to_rev=None):
     elif to_rev:
         rev = f"{to_rev}..."
 
+    commit_ignore_prefixes = tuple(config.get("commit_ignore_prefixes").split(","))
     for commit in repo().iter_commits(rev, paths=_sub_directory):
-        yield (commit.hexsha, commit.message.replace("\r\n", "\n"))
+        message = commit.message.replace("\r\n", "\n")
+        if commit_ignore_prefixes and ignore_commit(message, commit_ignore_prefixes):
+            continue
+        yield (commit.hexsha, message)
 
 
 @LoggedFunction(logger)
