@@ -230,8 +230,6 @@ def version(
     opts = runtime.global_cli_options
     gha_output = VersionGitHubActionsOutput()
 
-    ctx.call_on_close(gha_output.write_if_possible)
-
     if prerelease_token:
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
         translator.prerelease_token = prerelease_token
@@ -286,6 +284,7 @@ def version(
 
     gha_output.released = False
     gha_output.version = new_version
+    ctx.call_on_close(gha_output.write_if_possible)
 
     # Print the new version so that command-line output capture will work
     click.echo(str(new_version))
