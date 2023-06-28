@@ -2,7 +2,34 @@
 
 
 
+## v8.0.0-rc.2 (2023-06-28)
+
+### Ci
+
+* ci: correct conditionals ([`eb8d53c`](https://github.com/python-semantic-release/python-semantic-release/commit/eb8d53cc86dd54041ed2b66868a8a7f91bf6bb0a))
+
+* ci: fix conditionals in workflow and update documentation ([`b15bddd`](https://github.com/python-semantic-release/python-semantic-release/commit/b15bdddf845aae6788b19c386f67138e040ed649))
+
+### Fix
+
+* fix: only call Github Action output callback once defaults are set ([`8c64cf9`](https://github.com/python-semantic-release/python-semantic-release/commit/8c64cf9940d37f10278432411b32d81ae2ced343))
+
+### Unknown
+
+* Merge branch &#39;master&#39; into 8.0.x ([`c6569a1`](https://github.com/python-semantic-release/python-semantic-release/commit/c6569a15e060f5a8053096f752d5ebb6a91eb784))
+
+
 ## v8.0.0-rc.1 (2023-06-17)
+
+
+## v7.34.6 (2023-06-17)
+
+### Fix
+
+* fix: relax invoke dependency constraint ([`18ea200`](https://github.com/python-semantic-release/python-semantic-release/commit/18ea200633fd67e07f3d4121df5aa4c6dd29d154))
+
+
+## v7.34.5 (2023-06-17)
 
 ### Feature
 
@@ -10,7 +37,23 @@
 
 ### Fix
 
+* fix: consider empty commits (#608) ([`6f2e890`](https://github.com/python-semantic-release/python-semantic-release/commit/6f2e8909636595d3cb5e858f42c63820cda45974))
+
 * fix: pin Debian version in Dockerfile ([`d17ec69`](https://github.com/python-semantic-release/python-semantic-release/commit/d17ec69ccaa8236da88b6bb7d70601cfbae3919d))
+
+
+## v7.34.4 (2023-06-15)
+
+### Fix
+
+* fix: docker build fails installing git (#605)
+
+git was installed from bullseye-backports, but base image is referencing latest python:3.10
+since bookworm was recently released, this now points at bookworm and installing the backport of git is actually trying to downgrade, resulting in this error:
+
+&gt; E: Packages were downgraded and -y was used without --allow-downgrades.
+
+&gt; ERROR: failed to solve: process &#34;/bin/sh -c echo \&#34;deb http://deb.debian.org/debian bullseye-backports main\&#34; &gt;&gt; /etc/apt/sources.list;     apt-get update;    apt-get install -y git/bullseye-backports&#34; did not complete successfully: exit code: 100 ([`9e3eb97`](https://github.com/python-semantic-release/python-semantic-release/commit/9e3eb979783bc39ca564c2967c6c77eecba682e6))
 
 
 ## v8.0.0-alpha.8 (2023-06-13)
@@ -79,24 +122,6 @@ Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`0e85b94`](htt
 
 * Merge branch &#39;master&#39; into 8.0.x ([`49d9e27`](https://github.com/python-semantic-release/python-semantic-release/commit/49d9e27d6c65ea769bb1a8c786b25a78515bf6b8))
 
-
-## v7.34.6 (2023-06-17)
-
-### Fix
-
-* Relax invoke dependency constraint ([`18ea200`](https://github.com/python-semantic-release/python-semantic-release/commit/18ea200633fd67e07f3d4121df5aa4c6dd29d154))
-
-## v7.34.5 (2023-06-17)
-
-### Fix
-
-* Consider empty commits ([#608](https://github.com/python-semantic-release/python-semantic-release/issues/608)) ([`6f2e890`](https://github.com/python-semantic-release/python-semantic-release/commit/6f2e8909636595d3cb5e858f42c63820cda45974))
-
-## v7.34.4 (2023-06-15)
-
-### Fix
-
-* Docker build fails installing git ([#605](https://github.com/python-semantic-release/python-semantic-release/issues/605)) ([`9e3eb97`](https://github.com/python-semantic-release/python-semantic-release/commit/9e3eb979783bc39ca564c2967c6c77eecba682e6))
 
 ## v7.34.3 (2023-06-01)
 
