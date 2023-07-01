@@ -41,10 +41,10 @@ Please provide debug logs for the command you are using with the `-vv` flag, e.g
 semantic-release -vv version
 ```
 
-If using GitHub actions, ensure the `additional_options` contains the `-vv` flag
-for verbosity.
+If using GitHub actions, ensure the `root_options` contains the `-vv` flag
+for verbosity, and attach your workflow definition.
 
 ## Additional context
 
 _Add any other information that could be useful, such as a link to your project
-(if public), or an example commit._
+(if public), links to a failing GitHub Action, or an example commit._
