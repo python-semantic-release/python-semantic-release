@@ -2,6 +2,23 @@
 
 
 
+## v8.0.0-rc.3 (2023-07-01)
+
+### Chore
+
+* chore: bump docs dependencies ([`2605b73`](https://github.com/python-semantic-release/python-semantic-release/commit/2605b73221e748c74088b46f2982acc46d446dce))
+
+* chore: tweak issue templates ([`b9827eb`](https://github.com/python-semantic-release/python-semantic-release/commit/b9827eb2bc59edadc84235b110646325645d0e86))
+
+### Ci
+
+* ci: remove separate v8 workflow ([`b739abf`](https://github.com/python-semantic-release/python-semantic-release/commit/b739abfce5cef3e76667eea7202da83bf49f3daa))
+
+### Fix
+
+* fix: create_or_update_release for Gitlab hvcs ([`ba5c0d7`](https://github.com/python-semantic-release/python-semantic-release/commit/ba5c0d761780ff773d306efadf0ab976d776c0b5))
+
+
 ## v8.0.0-rc.2 (2023-06-28)
 
 ### Ci
