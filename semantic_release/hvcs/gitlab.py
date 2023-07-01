@@ -87,34 +87,57 @@ class Gitlab(HvcsBase):
     @logged_function(log)
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> bool:
+    ) -> str:
         """Post release changelog
         :param tag: Tag to create release for
         :param release_notes: The release notes for this version
         :param prerelease: This parameter has no effect
-        :return: The status of the request
+        :return: The tag of the release
         """
         client = gitlab.Gitlab(self.api_url, private_token=self.token)
         client.auth()
+        log.info("Creating release for %s", tag)
+        # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
+        client.projects.get(self.owner + "/" + self.repo_name).releases.create(
+            {
+                "name": "Release " + tag,
+                "tag_name": tag,
+                "description": release_notes,
+            }
+        )
+        log.info("Successfully created release for %s", tag)
+        return tag
+
+    @logged_function(log)
+    def edit_release_notes(self, release_id: str, release_notes: str) -> str:  # type: ignore  # TODO make str types accepted here
+        client = gitlab.Gitlab(self.api_url, private_token=self.token)
+        client.auth()
+        log.info("Updating release %s", release_id)
+
+        client.projects.get(self.owner + "/" + self.repo_name).releases.update(
+            release_id,
+            {
+                "description": release_notes,
+            },
+        )
+        return release_id
+
+    @logged_function(log)
+    def create_or_update_release(
+        self, tag: str, release_notes: str, prerelease: bool = False
+    ) -> str:
         try:
-            log.info("Creating release for %s", tag)
-            # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
-            client.projects.get(self.owner + "/" + self.repo_name).releases.create(
-                {
-                    "name": "Release " + tag,
-                    "tag_name": tag,
-                    "description": release_notes,
-                }
+            return self.create_release(
+                tag=tag, release_notes=release_notes, prerelease=prerelease
             )
-            return True
         except gitlab.GitlabCreateError:
-            log.warning(
+            log.info(
                 "Release %s could not be created for project %s/%s",
                 tag,
                 self.owner,
                 self.repo_name,
             )
-            return False
+            return self.edit_release_notes(release_id=tag, release_notes=release_notes)
 
     def compare_url(self, from_rev: str, to_rev: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/compare/{from_rev}...{to_rev}"

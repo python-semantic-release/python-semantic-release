@@ -13,7 +13,7 @@ from requests import HTTPError, Response, Session
 from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.token_auth import TokenAuth
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
 from tests.util import netrc_file
 
 
@@ -240,7 +240,6 @@ def test_create_release_succeeds(
     default_gh_client, status_code, prerelease, mock_release_id
 ):
     tag = "v1.0.0"
-    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
             "POST",
@@ -249,7 +248,7 @@ def test_create_release_succeeds(
             status_code=status_code,
         )
         assert (
-            default_gh_client.create_release(tag, release_notes, prerelease)
+            default_gh_client.create_release(tag, RELEASE_NOTES, prerelease)
             == mock_release_id
         )
         assert m.called
@@ -266,7 +265,7 @@ def test_create_release_succeeds(
         assert m.last_request.json() == {
             "tag_name": tag,
             "name": tag,
-            "body": release_notes,
+            "body": RELEASE_NOTES,
             "draft": False,
             "prerelease": prerelease,
         }
@@ -276,14 +275,13 @@ def test_create_release_succeeds(
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_release_fails(default_gh_client, prerelease, status_code):
     tag = "v1.0.0"
-    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
             "POST", github_api_matcher, json={"id": 1}, status_code=status_code
         )
 
         with pytest.raises(HTTPError):
-            default_gh_client.create_release(tag, release_notes, prerelease)
+            default_gh_client.create_release(tag, RELEASE_NOTES, prerelease)
 
         assert m.called
         assert len(m.request_history) == 1
@@ -299,7 +297,7 @@ def test_create_release_fails(default_gh_client, prerelease, status_code):
         assert m.last_request.json() == {
             "tag_name": tag,
             "name": tag,
-            "body": release_notes,
+            "body": RELEASE_NOTES,
             "draft": False,
             "prerelease": prerelease,
         }
@@ -310,12 +308,11 @@ def test_should_create_release_using_token_or_netrc(default_gh_client, token):
     default_gh_client.token = token
     default_gh_client.session.auth = None if not token else TokenAuth(token)
     tag = "v1.0.0"
-    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m, netrc_file(
         machine=default_gh_client.DEFAULT_API_DOMAIN
     ) as netrc, mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True):
         m.register_uri("POST", github_api_matcher, json={"id": 1}, status_code=201)
-        assert default_gh_client.create_release(tag, release_notes) == 1
+        assert default_gh_client.create_release(tag, RELEASE_NOTES) == 1
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
@@ -343,7 +340,7 @@ def test_should_create_release_using_token_or_netrc(default_gh_client, token):
         assert m.last_request.json() == {
             "tag_name": tag,
             "name": tag,
-            "body": release_notes,
+            "body": RELEASE_NOTES,
             "draft": False,
             "prerelease": False,
         }
@@ -355,7 +352,7 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
 
         with requests_mock.Mocker(session=client.session) as m:
             m.register_uri("POST", github_api_matcher, json={"id": 1}, status_code=201)
-            assert client.create_release("v1.0.0", "# TODO: Release Notes") == 1
+            assert client.create_release("v1.0.0", RELEASE_NOTES) == 1
             assert m.called
             assert len(m.request_history) == 1
             assert m.last_request.method == "POST"
@@ -373,7 +370,6 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
 @pytest.mark.parametrize("status_code", [201])
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_edit_release_notes_succeeds(default_gh_client, status_code, mock_release_id):
-    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
             "POST",
@@ -382,7 +378,7 @@ def test_edit_release_notes_succeeds(default_gh_client, status_code, mock_releas
             status_code=status_code,
         )
         assert (
-            default_gh_client.edit_release_notes(mock_release_id, release_notes)
+            default_gh_client.edit_release_notes(mock_release_id, RELEASE_NOTES)
             == mock_release_id
         )
         assert m.called
@@ -397,20 +393,19 @@ def test_edit_release_notes_succeeds(default_gh_client, status_code, mock_releas
                 release_id=mock_release_id,
             )
         )
-        assert m.last_request.json() == {"body": release_notes}
+        assert m.last_request.json() == {"body": RELEASE_NOTES}
 
 
 @pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
 def test_edit_release_notes_fails(default_gh_client, status_code):
     release_id = 420
-    release_notes = "# TODO: Release Notes"
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
             "POST", github_api_matcher, json={"id": release_id}, status_code=status_code
         )
 
         with pytest.raises(HTTPError):
-            default_gh_client.edit_release_notes(release_id, release_notes)
+            default_gh_client.edit_release_notes(release_id, RELEASE_NOTES)
 
         assert m.called
         assert len(m.request_history) == 1
@@ -424,7 +419,7 @@ def test_edit_release_notes_fails(default_gh_client, status_code):
                 release_id=release_id,
             )
         )
-        assert m.last_request.json() == {"body": release_notes}
+        assert m.last_request.json() == {"body": RELEASE_NOTES}
 
 
 @pytest.mark.parametrize(
@@ -470,7 +465,6 @@ def test_create_or_update_release_when_create_succeeds(
     prerelease,
 ):
     tag = "v1.0.0"
-    release_notes = "# TODO: Release Notes"
     with mock.patch.object(
         default_gh_client, "create_release"
     ) as mock_create_release, mock.patch.object(
@@ -483,10 +477,10 @@ def test_create_or_update_release_when_create_succeeds(
         mock_edit_release_notes.return_value = mock_release_id
         # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
-            default_gh_client.create_or_update_release(tag, release_notes, prerelease)
+            default_gh_client.create_or_update_release(tag, RELEASE_NOTES, prerelease)
             == mock_release_id
         )
-        mock_create_release.assert_called_once_with(tag, release_notes, prerelease)
+        mock_create_release.assert_called_once_with(tag, RELEASE_NOTES, prerelease)
         mock_get_release_id_by_tag.assert_not_called()
         mock_edit_release_notes.assert_not_called()
 
@@ -499,7 +493,6 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
     prerelease,
 ):
     tag = "v1.0.0"
-    release_notes = "# TODO: Release Notes"
     not_found = HTTPError("404 Not Found", response=Response())
     not_found.response.status_code = 404
     with mock.patch.object(
@@ -514,11 +507,11 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
         mock_edit_release_notes.return_value = mock_release_id
         # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
-            default_gh_client.create_or_update_release(tag, release_notes, prerelease)
+            default_gh_client.create_or_update_release(tag, RELEASE_NOTES, prerelease)
             == mock_release_id
         )
         mock_get_release_id_by_tag.assert_called_once_with(tag)
-        mock_edit_release_notes.assert_called_once_with(mock_release_id, release_notes)
+        mock_edit_release_notes.assert_called_once_with(mock_release_id, RELEASE_NOTES)
 
 
 @pytest.mark.parametrize("prerelease", (True, False))
@@ -526,7 +519,6 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
     default_gh_client, prerelease
 ):
     tag = "v1.0.0"
-    release_notes = "# TODO: Release Notes"
     not_found = HTTPError("404 Not Found", response=Response())
     not_found.response.status_code = 404
     with mock.patch.object(
@@ -541,7 +533,7 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
         mock_edit_release_notes.return_value = None
 
         with pytest.raises(ValueError):
-            default_gh_client.create_or_update_release(tag, release_notes, prerelease)
+            default_gh_client.create_or_update_release(tag, RELEASE_NOTES, prerelease)
 
         mock_get_release_id_by_tag.assert_called_once_with(tag)
         mock_edit_release_notes.assert_not_called()

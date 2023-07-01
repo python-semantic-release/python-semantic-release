@@ -450,3 +450,5 @@ EXAMPLE_CHANGELOG_MD_CONTENT = r"""
 * Extra cookies to enhance your experience
 * ~Removed~ simplified cookie opt-out handling logic
 """
+
+RELEASE_NOTES = "# Release Notes"

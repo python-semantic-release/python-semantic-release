@@ -8,7 +8,7 @@ from requests import Session
 
 from semantic_release.hvcs.gitlab import Gitlab
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
 
 gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 
@@ -17,6 +17,8 @@ gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 A_GOOD_TAG = "v1.2.3"
 A_BAD_TAG = "v2.1.1-rc.1"
 A_LOCKED_TAG = "v0.9.0"
+A_MISSING_TAG = "v1.0.0+missing"
+AN_EXISTING_TAG = "v2.3.4+existing"
 # But note this is the only ref we're making a "fake" commit for, so
 # tests which need to query the remote for "a" ref, the exact sha for
 # which doesn't matter, all use this constant
@@ -92,12 +94,12 @@ class _GitlabProject:
             pass
 
         def get(self, tag):
-            if tag == A_GOOD_TAG:
+            if tag in (A_GOOD_TAG, AN_EXISTING_TAG):
                 return self._Tag()
             elif tag == A_LOCKED_TAG:
                 return self._Tag(locked=True)
             else:
-                raise gitlab.exceptions.GitlabGetError
+                raise gitlab.exceptions.GitlabGetError()
 
         class _Tag:
             def __init__(self, locked=False):
@@ -105,7 +107,7 @@ class _GitlabProject:
 
             def set_release_description(self, release_notes):
                 if self.locked:
-                    raise gitlab.exceptions.GitlabUpdateError
+                    raise gitlab.exceptions.GitlabUpdateError()
 
     class _Releases:
         def __init__(self):
@@ -115,7 +117,12 @@ class _GitlabProject:
             if input_["name"] and input_["tag_name"]:
                 if input_["tag_name"] in (A_GOOD_TAG, A_LOCKED_TAG):
                     return self._Release()
-            raise gitlab.exceptions.GitlabCreateError
+            raise gitlab.exceptions.GitlabCreateError()
+
+        def update(self, tag, new_data):
+            if tag == A_MISSING_TAG:
+                raise gitlab.exceptions.GitlabUpdateError()
+            return self._Release()
 
         class _Release:
             def __init__(self, locked=False):
@@ -314,15 +321,89 @@ def test_pull_request_url(default_gl_client, pr_number):
     )
 
 
-@pytest.mark.parametrize(
-    "tag, expected",
-    [
-        (A_GOOD_TAG, True),
-        (A_LOCKED_TAG, True),
-        (A_BAD_TAG, False),
-    ],
-)
-def test_create_release(default_gl_client, tag, expected):
-    release_notes = "# TODO: Release Notes"
+@pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
+def test_create_release_succeeds(default_gl_client, tag):
     with mock_gitlab():
-        assert default_gl_client.create_release(tag, release_notes) == expected
+        assert default_gl_client.create_release(tag, RELEASE_NOTES) == tag
+
+
+def test_create_release_fails_with_bad_tag(default_gl_client):
+    with mock_gitlab(), pytest.raises(gitlab.GitlabCreateError):
+        default_gl_client.create_release(A_BAD_TAG, RELEASE_NOTES)
+
+
+@pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
+def test_update_release_succeeds(default_gl_client, tag):
+    with mock_gitlab():
+        assert default_gl_client.edit_release_notes(tag, RELEASE_NOTES) == tag
+
+
+def test_update_release_fails_with_missing_tag(default_gl_client):
+    with mock_gitlab(), pytest.raises(gitlab.GitlabUpdateError):
+        default_gl_client.edit_release_notes(A_MISSING_TAG, RELEASE_NOTES)
+
+
+@pytest.mark.parametrize("prerelease", (True, False))
+def test_create_or_update_release_when_create_succeeds(default_gl_client, prerelease):
+    with mock.patch.object(
+        default_gl_client, "create_release"
+    ) as mock_create_release, mock.patch.object(
+        default_gl_client, "edit_release_notes"
+    ) as mock_edit_release_notes:
+        mock_create_release.return_value = A_GOOD_TAG
+        mock_edit_release_notes.return_value = A_GOOD_TAG
+        # client = Github(remote_url="git@github.com:something/somewhere.git")
+        assert (
+            default_gl_client.create_or_update_release(
+                A_GOOD_TAG, RELEASE_NOTES, prerelease
+            )
+            == A_GOOD_TAG
+        )
+        mock_create_release.assert_called_once_with(
+            tag=A_GOOD_TAG, release_notes=RELEASE_NOTES, prerelease=prerelease
+        )
+        mock_edit_release_notes.assert_not_called()
+
+
+@pytest.mark.parametrize("prerelease", (True, False))
+def test_create_or_update_release_when_create_fails_and_update_succeeds(
+    default_gl_client, prerelease
+):
+    bad_request = gitlab.GitlabCreateError("400 Bad Request")
+    with mock.patch.object(
+        default_gl_client, "create_release"
+    ) as mock_create_release, mock.patch.object(
+        default_gl_client, "edit_release_notes"
+    ) as mock_edit_release_notes:
+        mock_create_release.side_effect = bad_request
+        mock_edit_release_notes.return_value = A_GOOD_TAG
+        # client = Github(remote_url="git@github.com:something/somewhere.git")
+        assert (
+            default_gl_client.create_or_update_release(
+                A_GOOD_TAG, RELEASE_NOTES, prerelease
+            )
+            == A_GOOD_TAG
+        )
+        mock_edit_release_notes.assert_called_once_with(
+            release_id=A_GOOD_TAG, release_notes=RELEASE_NOTES
+        )
+
+
+@pytest.mark.parametrize("prerelease", (True, False))
+def test_create_or_update_release_when_create_fails_and_update_fails(
+    default_gl_client, prerelease
+):
+    bad_request = gitlab.GitlabCreateError("400 Bad Request")
+    not_found = gitlab.GitlabUpdateError("404 Not Found")
+    with mock.patch.object(
+        default_gl_client, "create_release"
+    ) as mock_create_release, mock.patch.object(
+        default_gl_client, "edit_release_notes"
+    ) as mock_edit_release_notes:
+        mock_create_release.side_effect = bad_request
+        mock_edit_release_notes.side_effect = not_found
+
+        with pytest.raises(gitlab.GitlabUpdateError):
+            default_gl_client.create_or_update_release(
+                A_GOOD_TAG, RELEASE_NOTES, prerelease
+            )

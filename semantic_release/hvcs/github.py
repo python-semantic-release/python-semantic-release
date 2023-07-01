@@ -102,7 +102,7 @@ class Github(HvcsBase):
         :param tag: Tag to create release for
         :param release_notes: The release notes for this version
         :param prerelease: Whether or not this release should be created as a prerelease
-        :return: Whether the request succeeded
+        :return: the ID of the release
         """
         log.info("Creating release for tag %s", tag)
         resp = self.session.post(
