@@ -45,7 +45,7 @@ Homepage = "https://python-semantic-release.readthedocs.io"
 
 [project.optional-dependencies]
 docs = [
-  "Sphinx==5.2.3",
+  "Sphinx<=8.0.0",
   "sphinxcontrib-apidoc==0.3.0",
   "sphinx-autobuild==2021.03.14",
   "furo>=2023.5.20",
