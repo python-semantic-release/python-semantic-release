@@ -82,8 +82,23 @@ def get_commit_log(from_rev=None, to_rev=None):
     elif to_rev:
         rev = f"{to_rev}..."
 
+    commit_filter = config.get("commit_filter")
+
     for commit in repo().iter_commits(rev, paths=_sub_directory):
-        yield (commit.hexsha, commit.message.replace("\r\n", "\n"))
+        if commit_filter:
+            # Select filter groups
+            filter_parts = re.search(r"(\s--filters=\[)([\w+,?]+)(\])$", commit.message)
+
+            if filter_parts:
+                filter_expression = filter_parts.group(1)+filter_parts.group(2)+filter_parts.group(3)
+                filter_list = filter_parts.group(2).split(",")
+                commit_message = commit.message.replace(filter_expression, "")
+                if commit_filter in filter_list:
+                    yield (commit.hexsha, commit_message.replace("\r\n", "\n"))
+            else:
+                yield (commit.hexsha, commit.message.replace("\r\n", "\n"))        
+        else:
+            yield (commit.hexsha, commit.message.replace("\r\n", "\n"))
 
 
 @LoggedFunction(logger)
