@@ -110,8 +110,8 @@ multiple projects.
   Only ``version_source = commit`` (default) is supported.
 
 In case, you also have shared files on your multiple projects and you want to
-differentiate your commits for each project, you can use ``commit_filter = [filter]``,
-it must be reflected as an usual commit message containing ``--[filter]`` expression
+differentiate your commits for each project, you can use ``commit_filter = component1``,
+it must be reflected as an usual commit message containing ``--filters=[component1]`` expression
 (separated by an empty space).
 
 .. _this issue: https://github.com/python-semantic-release/python-semantic-release/issues/168

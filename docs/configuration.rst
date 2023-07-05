@@ -581,7 +581,7 @@ Default: `false`
 
 ``commit_filter``
 ------------------------
-Only consider commit messages that are containing ``--[filter]`` (separated by an empty space).
+Only consider commit messages that are containing ``--filters=[component1,component2,...]`` (separated by an empty space).
 This can be helpful for a monorepo, where commits to one component should not trigger
 new versions picking unrelated commits and for all other components as well. Also it's helpful when
 you have shared files and you want that your changes affect more than one component.

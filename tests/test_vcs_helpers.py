@@ -38,13 +38,13 @@ def test_commit_filter(mocker):
             self.message = message
 
     mocker.patch("semantic_release.vcs_helpers.Repo.iter_commits", return_value=[
-        Commit("aaaaaaaaaaaaaaaaaaaa", "Commit message 1"),
-        Commit("bbbbbbbbbbbbbbbbbbbb", "Commit message 2 --test"),
-        Commit("cccccccccccccccccccc", "Commit message 3")
+        Commit("aaaaaaaaaaaaaaaaaaaa", "Commit message 1 --filters=[component1,component3]"),
+        Commit("bbbbbbbbbbbbbbbbbbbb", "Commit message 2 --filters=[component2]"),
+        Commit("cccccccccccccccccccc", "Commit message 3 --filters=[component4]")
         ])
     mocker.patch(
         "semantic_release.vcs_helpers.config.get",
-        wrapped_config_get(**{"commit_filter": "test"}),
+        wrapped_config_get(**{"commit_filter": "component2"}),
     )
     hexsha, message = next(get_commit_log())
     assert hexsha == "bbbbbbbbbbbbbbbbbbbb"
