@@ -578,5 +578,19 @@ Default: `false`
   Monorepo support is still only partly supported (see `this issue`_).
 
 .. _this issue: https://github.com/relekang/python-semantic-release/issues/168
-  
-  
+
+``commit_filter``
+------------------------
+Only consider commit messages that are containing ``--[filter]`` (separated by an empty space).
+This can be helpful for a monorepo, where commits to one component should not trigger
+new versions picking unrelated commits and for all other components as well. Also it's helpful when
+you have shared files and you want that your changes affect more than one component.
+
+Default: ``""``
+
+.. note::
+  Only valid if ``version_source = commit``.
+  You will probably also need to set a unique ``tag_format`` for each component.
+  Monorepo support is still only partly supported (see `this issue`_).
+
+.. _this issue: https://github.com/relekang/python-semantic-release/issues/168

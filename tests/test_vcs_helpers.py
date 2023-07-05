@@ -31,6 +31,24 @@ def mock_git(mocker):
 def test_first_commit_is_not_initial_commit():
     assert next(get_commit_log()) != "Initial commit"
 
+def test_commit_filter(mocker):
+    class Commit():
+        def __init__(self, hexsha, message):
+            self.hexsha = hexsha
+            self.message = message
+
+    mocker.patch("semantic_release.vcs_helpers.Repo.iter_commits", return_value=[
+        Commit("aaaaaaaaaaaaaaaaaaaa", "Commit message 1"),
+        Commit("bbbbbbbbbbbbbbbbbbbb", "Commit message 2 --test"),
+        Commit("cccccccccccccccccccc", "Commit message 3")
+        ])
+    mocker.patch(
+        "semantic_release.vcs_helpers.config.get",
+        wrapped_config_get(**{"commit_filter": "test"}),
+    )
+    hexsha, message = next(get_commit_log())
+    assert hexsha == "bbbbbbbbbbbbbbbbbbbb"
+    assert message == "Commit message 2"
 
 @pytest.mark.parametrize(
     "params",

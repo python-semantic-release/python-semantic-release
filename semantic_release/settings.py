@@ -51,6 +51,7 @@ def _config_from_ini(paths):
         "upload_to_release",
         "tag_commit",
         "use_only_cwd_commits",
+        "commit_filter",
     }
 
     # Iterate through the sections so that default values are applied
