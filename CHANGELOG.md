@@ -2,6 +2,13 @@
 
 
 
+## v8.0.0-rc.4 (2023-07-09)
+
+### Fix
+
+* fix(deps): add types-click, and downgrade sphinx/furo for 3.7 ([`126f12f`](https://github.com/python-semantic-release/python-semantic-release/commit/126f12f14068c1706b734ab066c0c4127cc1d456))
+
+
 ## v8.0.0-rc.3 (2023-07-01)
 
 ### Chore
