@@ -3,6 +3,7 @@ from typing import Optional
 
 from ..helpers import LoggedFunction
 from ..settings import config, current_changelog_components
+from ..vcs_helpers import get_formatted_tag
 
 from .changelog import changelog_headers, changelog_table  # noqa isort:skip
 from .compare import compare_url  # noqa isort:skip
@@ -31,7 +32,7 @@ def markdown_changelog(
     :param header: A boolean that decides whether a version number header should be included.
     :return: The markdown formatted changelog.
     """
-    output = f"## v{version}\n\n" if header else ""
+    output = f"## {get_formatted_tag(version)}\n\n" if header else ""
 
     # Add the output of each component separated by a blank line
     output += "\n\n".join(
