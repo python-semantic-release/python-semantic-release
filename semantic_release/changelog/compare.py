@@ -24,6 +24,6 @@ def compare_url(
 ) -> Optional[str]:
     if config.get("hvcs").lower() == "github" and previous_version:
         compare_url = get_github_compare_url(previous_version, version)
-        return f"**[See all commits in this version]({compare_url})**"
+        return f"**Full Changelog**: [`{get_formatted_tag(from_version)}...{get_formatted_tag(to_version)}`]({compare_url})"
 
     return None

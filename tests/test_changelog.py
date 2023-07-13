@@ -205,6 +205,6 @@ def test_compare_url():
         return_value=["owner", "name"],
     ):
         assert compare_url(previous_version="1.0.0", version="2.0.0") == (
-            "**[See all commits in this version]"
-            "(https://github.com/owner/name/compare/v1.0.0...v2.0.0)**"
+            "**Full Changelog**: [`v1.0.0...v2.0.0`]"
+            "(https://github.com/owner/name/compare/v1.0.0...v2.0.0)"
         )
