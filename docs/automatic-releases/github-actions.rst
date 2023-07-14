@@ -9,7 +9,7 @@ of inputs available, and their descriptions in the `action definition`_.
 
 Your project's configuration file will be used as normal.
 
-The GitHub Action provudes the following outputs:
+The GitHub Action provides the following outputs:
 
 +-------------+-----------------------------------------------------------+
 | Output      | Description                                               |
