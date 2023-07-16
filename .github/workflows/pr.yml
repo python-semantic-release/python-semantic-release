@@ -1,3 +1,4 @@
+---
 name: Checks
 
 on:
@@ -23,7 +24,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -33,7 +34,7 @@ jobs:
           python -m pip install pytest-github-actions-annotate-failures
 
       - name: pytest
-        run: python -m pytest -v tests
+        run: PYTHONHASHSEED=123345 python -m pytest -v tests
 
   mypy:
     runs-on: ubuntu-latest

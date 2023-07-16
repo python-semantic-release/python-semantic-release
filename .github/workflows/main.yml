@@ -1,9 +1,11 @@
+---
 name: Test & Release
 
 on:
   push:
     branches:
       - master
+      - "8.0.x"
 
 jobs:
   test:
@@ -11,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -24,7 +26,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -34,7 +36,7 @@ jobs:
           python -m pip install pytest-github-actions-annotate-failures
 
       - name: pytest
-        run: python -m pytest -v tests
+        run: PYTHONHASHSEED=123345 python -m pytest -v tests
 
   mypy:
     runs-on: ubuntu-latest
@@ -54,9 +56,12 @@ jobs:
     name: Beautify
     runs-on: ubuntu-latest
     concurrency: push
-    needs: [test, mypy]
+    needs: [ test, mypy ]
     outputs:
       new_sha: ${{ steps.sha.outputs.SHA }}
+    permissions:
+      id-token: write
+      contents: write
 
     steps:
       - name: Set up Python 3.9
@@ -74,10 +79,11 @@ jobs:
         run: python -m black .
 
       - name: Install isort
-        run: python -m pip install "isort >=4,<5"
-
+        run: python -m pip install "isort >=5,<6"
+        # https://pycqa.github.io/isort/docs/upgrade_guides/5.0.0.html
+        # removed deprecated "-rc" and "-y" arguments
       - name: Sort imports
-        run: python -m isort -y -rc .
+        run: python -m isort .
 
       - name: Commit and push changes
         uses: github-actions-x/commit@v2.9
@@ -97,19 +103,47 @@ jobs:
     name: Semantic Release
     runs-on: ubuntu-latest
     concurrency: push
-    needs: [test, mypy, beautify]
+    needs: [ test, mypy, beautify ]
     if: github.repository == 'python-semantic-release/python-semantic-release'
+    permissions:
+      # https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#metadata
+      id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: ${{ needs.beautify.outputs.new_sha }}
-      - name: Fetch master
-        run: git fetch --prune origin +refs/heads/master:refs/remotes/origin/master
+          ref: ${{ github.ref_name }}
       - name: Python Semantic Release
+        id: release
         uses: ./
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_username: ${{ secrets.PYPI_USERNAME }}
-          repository_password: ${{ secrets.PYPI_PASSWORD }}
+          root_options: "-vv"
+
+      # https://github.com/pypa/gh-action-pypi-publish#specifying-a-different-username
+      # This will need converting to use trusted publishing at a later date
+      # see https://docs.pypi.org/trusted-publishers/
+      - name: Publish package distributions to PyPI
+        id: pypi-publish
+
+        # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
+        # See https://github.com/actions/runner/issues/1173
+        if: steps.release.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          user: ${{ secrets.PYPI_USERNAME }}
+          password: ${{ secrets.PYPI_PASSWORD }}
+
+      - name: Publish package distributions to GitHub Releases
+        id: github-release
+
+        # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
+        # See https://github.com/actions/runner/issues/1173
+        if: steps.release.outputs.released == 'true'
+        uses: python-semantic-release/upload-to-gh-release@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}

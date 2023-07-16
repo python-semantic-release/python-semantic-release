@@ -4,24 +4,27 @@
 
 
 class SemanticReleaseBaseError(Exception):
-    pass
+    """
+    Base Exception from which all other custom Exceptions defined in semantic_release
+    inherit
+    """
 
 
-class ImproperConfigurationError(SemanticReleaseBaseError):
-    pass
+class InvalidConfiguration(SemanticReleaseBaseError):
+    """
+    Raised when configuration is deemed invalid
+    """
 
 
-class UnknownCommitMessageStyleError(SemanticReleaseBaseError):
-    pass
+class NotAReleaseBranch(InvalidConfiguration):
+    """
+    Raised when semantic_release is invoked on a branch which isn't configured for
+    releases
+    """
 
 
-class GitError(SemanticReleaseBaseError):
-    pass
-
-
-class CiVerificationError(SemanticReleaseBaseError):
-    pass
-
-
-class HvcsRepoParseError(SemanticReleaseBaseError):
-    pass
+class CommitParseError(SemanticReleaseBaseError):
+    """
+    Raised when a commit cannot be parsed by a commit parser. Custom commit parsers
+    should also raise this Exception
+    """

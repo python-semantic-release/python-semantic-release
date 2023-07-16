@@ -1,35 +1,40 @@
 .. _troubleshooting:
 
 Troubleshooting
-***************
-Things to check...
+===============
 
-- Check setup.cfg for :ref:`configuration`
-- Check all applicable :ref:`envvars`
-- Git tags beginning with ``v``. This is, depending on configuration, used
-  for getting the last version.
+- Check your configuration file for :ref:`configuration`
+- Check your Git tags match your :ref:`tag_format <config-tag-format>`; tags using
+  other formats are ignored during calculation of the next version.
 
-.. _debug-usage:
+.. _troubleshooting-verbosity:
 
-Showing debug output
+Increasing Verbosity
 ====================
-If you are having trouble with `semantic-release` there is a way to get more
-information during its work.
+If you are having trouble with Python Semantic Release or would like to see additional
+information about the actions that it is taking, you can use the top-level 
+:ref:`cmd-main-option-verbosity` option. This can be supplied multiple times to increase
+the logging verbosity of the :ref:`cmd-main` command or any of its subcommands during
+their execution. You can supply this as many times as you like, but supplying more than
+twice has no effect.
 
-By setting the ``--verbosity`` option to ``DEBUG`` you can display information
-from the inner workings of semantic-release.
+Supply :ref:`cmd-main-option-verbosity` once for ``INFO`` output, and twice for ``DEBUG``.
+
+For example::
+   
+    semantic-release -vv version --print
+
 
 .. note::
-  Debug output is always enabled on GitHub Actions using the built-in action.
+   The :ref:`cmd-main-option-verbosity` option must be supplied to the top-level
+   ``semantic-release`` command, before the name of any sub-command.
 
-::
-
-    semantic-release changelog --verbosity=DEBUG
 
 .. warning::
-  The ``=`` symbol is required between ``--verbosity`` and its argument, but
-  not when using the short form of ``-v``::
+   The volume of logs when using ``DEBUG`` verbosity may be significantly increased,
+   compared to ``INFO`` or the default ``WARNING``, and as a result executing commands
+   with ``semantic-release`` may be significantly slower than when using ``DEBUG``.
 
-    semantic-release changelog -v DEBUG
+.. note::
+   The provided GitHub action sets the verbosity level to INFO by default.
 
-  See `#227 <https://github.com/relekang/python-semantic-release/issues/227>`_.
