@@ -166,7 +166,7 @@ Currently, two filters are defined:
 
 * ``pull_request_url: Callable[[str], str]``: given a pull request number, return a URL
   to the pull request in the remote.
-* ``pull_request_url: Callable[[str], str]``: given a commit hash, return a URL to the
+* ``commit_hash_url: Callable[[str], str]``: given a commit hash, return a URL to the
   commit in the remote.
 
 .. seealso::
