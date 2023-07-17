@@ -17,25 +17,19 @@ from typing_extensions import Literal
 from semantic_release.changelog import environment
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.masking_filter import MaskingFilter
-from semantic_release.commit_parser import (
-    AngularCommitParser,
-    CommitParser,
-    EmojiCommitParser,
-    ParseResult,
-    ParserOptions,
-    ScipyCommitParser,
-    TagCommitParser,
-)
-from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
+from semantic_release.commit_parser import (AngularCommitParser, CommitParser,
+                                            EmojiCommitParser, ParseResult,
+                                            ParserOptions, ScipyCommitParser,
+                                            TagCommitParser)
+from semantic_release.const import (COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR,
+                                    SEMVER_REGEX)
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
 from semantic_release.hvcs import Gitea, Github, Gitlab, HvcsBase
 from semantic_release.version import VersionTranslator
-from semantic_release.version.declaration import (
-    PatternVersionDeclaration,
-    TomlVersionDeclaration,
-    VersionDeclarationABC,
-)
+from semantic_release.version.declaration import (PatternVersionDeclaration,
+                                                  TomlVersionDeclaration,
+                                                  VersionDeclarationABC)
 
 log = logging.getLogger(__name__)
 
