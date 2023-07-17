@@ -2,6 +2,19 @@
 
 
 
+## v8.0.1 (2023-07-17)
+
+### Documentation
+
+* docs: reduce readthedocs formats and add entries to migration from v7 guide ([`9b6ddfe`](https://github.com/python-semantic-release/python-semantic-release/commit/9b6ddfef448f9de30fa2845034f76655d34a9912))
+
+* docs(migration): fix hyperlink (#631) ([`5fbd52d`](https://github.com/python-semantic-release/python-semantic-release/commit/5fbd52d7de4982b5689651201a0e07b445158645))
+
+### Fix
+
+* fix: invalid version in Git history should not cause a release failure (#632) ([`254430b`](https://github.com/python-semantic-release/python-semantic-release/commit/254430b5cc5f032016b4c73168f0403c4d87541e))
+
+
 ## v8.0.0 (2023-07-16)
 
 ### Breaking
