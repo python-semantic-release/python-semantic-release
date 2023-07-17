@@ -77,16 +77,20 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
     if release_tag and runtime.global_cli_options.noop:
         noop_report(f"would have posted changelog to the release for tag {release_tag}")
     elif release_tag:
-        v = translator.from_tag(release_tag)
+        version = translator.from_tag(release_tag)
+        if not version:
+            ctx.fail(
+                f"Tag {release_tag!r} doesn't match tag format {translator.tag_format!r}"
+            )
+
         try:
-            release = rh.released[v]
+            release = rh.released[version]
         except KeyError:
             ctx.fail(f"tag {release_tag} not in release history")
 
         release_notes = render_release_notes(
-            template_environment=env, version=v, release=release
+            template_environment=env, version=version, release=release
         )
-        version = translator.from_tag(release_tag)
         try:
             hvcs_client.create_or_update_release(
                 release_tag, release_notes, prerelease=version.is_prerelease

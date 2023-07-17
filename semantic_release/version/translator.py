@@ -59,18 +59,16 @@ class VersionTranslator:
             prerelease_token=self.prerelease_token,
         )
 
-    def from_tag(self, tag: str) -> Version:
+    def from_tag(self, tag: str) -> Version | None:
         """
         Return a Version instance from a Git tag, if tag_format matches the format
-        which would have generated the tag from a version.
+        which would have generated the tag from a version. Otherwise return None.
         For example, a tag of 'v1.2.3' should be matched if `tag_format = 'v{version}`,
         but not if `tag_format = staging--v{version}`.
         """
         tag_match = self.from_tag_re.match(tag)
         if not tag_match:
-            raise ValueError(
-                f"Tag {tag!r} doesn't match tag format {self.tag_format!r}"
-            )
+            return None
         raw_version_str = tag_match.group("version")
         return self.from_string(raw_version_str)
 
