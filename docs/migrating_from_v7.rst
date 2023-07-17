@@ -187,6 +187,23 @@ You should run::
 With steps 1-5 being handled by the :ref:`cmd-version` command, and steps 6 and 7
 handled by the :ref:`cmd-publish` command.
 
+.. _breaking-removed-define-option:
+
+Removal of `-D/--define` command-line option
+""""""""""""""""""""""""""""""""""""""""""""
+
+It is no longer possible to override arbitrary configuration values using the `-D`/
+`--define` option. You should provide the appropriate values via a configuration
+file using :ref:`cmd-main-option-config` or via the available command-line options.
+
+This simplifies the command-line option parsing significantly and is less error-prone,
+which has resulted in previous issues (e.g. `#600`_) with overriddes on the command-line.
+Some of the configuration values expected by Python Semantic Release use complex data
+types such as lists or nested structures, which would be tedious and error-prone to
+specify using just command-line options.
+
+.. _#600: https://github.com/python-semantic-release/python-semantic-release/issues/600
+
 .. _breaking-commands-no-verify-ci:
 
 Removal of CI verifications
@@ -513,14 +530,6 @@ needs.
 .. _pip issue: https://github.com/pypa/pip/issues/8437#issuecomment-805313362
 
 
-.. _breaking-configuration-undeprecating-pypi-token:
-
-``pypi_token`` is un-deprecated
-"""""""""""""""""""""""""""""""
-
-As this is passed directly to `twine upload`_, the configuration option has been
-un-deprecated for consistency and to avoid confusion.
-
 .. _breaking-commit-parser-options:
 
 Commit parser options
@@ -555,6 +564,27 @@ You can always use Python Semantic Release to identify the next version to be cr
 for a project and store this in an environment variable like so::
 
     export VERSION=$(semantic-release version --print)
+
+.. _breaking-version-toml-type:
+
+``version_toml``
+""""""""""""""""
+
+This option will no longer accept a string or comma-separated string of version
+locations to be updated in TOML files. Instead, you must supply a ``List[str]``.
+For existing configurations using a single location in this option, you can
+simply wrap the value in ``[]``:
+
+.. code-block:: toml
+
+   # Python Semantic Release v7 configuration
+   [tool.semantic_release]
+   version_toml = "tool.poetry.version:{version}"
+
+   # Python Semantic Release v8 configuration
+   [tool.semantic_release]
+   version_toml = ["tool.poetry.version:{version}"]
+
 
 .. _breaking-tag-format-validation:
 

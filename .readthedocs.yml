@@ -1,8 +1,11 @@
+---
 version: 2
 
 sphinx:
   configuration: docs/conf.py
-formats: all
+  builder: html
+formats:
+  - htmlzip
 
 python:
   install:
@@ -10,3 +13,8 @@ python:
       path: .
       extra_requirements:
         - docs
+
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "3"
