@@ -156,7 +156,7 @@ VCS. It does *not* publish software artefacts to remote repositories such as PyP
 the rationale behind this decision is simply that under the hood, Python Semantic Release
 used `twine`_ to upload artefacts to package indexes such as PyPI, and it's recommended
 to use twine directly via the command-line. From the twine
-`documentation<https://twine.readthedocs.io/en/stable/contributing.html#architectural-overview>`_:
+`documentation <https://twine.readthedocs.io/en/stable/contributing.html#architectural-overview>`_:
 
    Twine is a command-line tool for interacting with PyPI securely over HTTPS.
 
