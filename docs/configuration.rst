@@ -264,14 +264,22 @@ From the `Semantic Versioning Specification`_:
 """"""""""""""""""""
 
 Specify the format to be used for the Git tag that will be added to the repo during
-a release invoked via :ref:`cmd-version`. The format string must include the mandatory
-format keys below, otherwise an exception will be thrown. It *may* include any of the
-optional format keys, in which case the contents described will be formatted into the
-specified location in the Git tag that is created.
+a release invoked via :ref:`cmd-version`. The format string is a regular expression,
+which also must include the format keys below, otherwise an exception will be thrown.
+It *may* include any of the optional format keys, in which case the contents
+described will be formatted into the specified location in the Git tag that is created.
+
+For example, ``"(dev|stg|prod)-v{version}"`` is a valid ``tag_format`` matching tags such
+as:
+
+- ``dev-v1.2.3``
+- ``stg-v0.1.0-rc.1``
+- ``prod-v2.0.0+20230701``
 
 This format will also be used for parsing tags already present in the repository into
-semantic versions, so unexpected behaviour can occur if the tag format changes at some
-point in the repository's history.
+semantic versions; therefore if the tag format changes at some point in the
+repository's history, historic versions that no longer match this pattern will not be
+considered as versions.
 
 ================ =========  ========
 Format Key       Mandatory  Contents
@@ -279,6 +287,8 @@ Format Key       Mandatory  Contents
 ``{version}``    Yes        The new semantic version number, for example ``1.2.3``, or
                             ``2.1.0-alpha.1+build.1234``
 ================ =========  ========
+
+Tags which do not match this format will not be considered as versions of your project.
 
 **Default:** ``"v{version}"``
 
