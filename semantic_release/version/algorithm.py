@@ -32,9 +32,26 @@ def tags_and_versions(
     Return a list of 2-tuples, where each element is a tuple (tag, version)
     from the tags in the Git repo and their corresponding `Version` according
     to `Version.from_tag`. The returned list is sorted according to semver
-    ordering rules
+    ordering rules.
+
+    Tags which are not matched by `translator` are ignored.
     """
-    ts_and_vs = [(t, translator.from_tag(t.name)) for t in tags]
+    ts_and_vs: list[tuple[Tag, Version]] = []
+    for tag in tags:
+        try:
+            version = translator.from_tag(tag.name)
+        except NotImplementedError as e:
+            log.warning(
+                "Couldn't parse tag %s as as Version: %s",
+                tag.name,
+                str(e),
+                exc_info=log.isEnabledFor(logging.DEBUG),
+            )
+            continue
+
+        if version:
+            ts_and_vs.append((tag, version))
+
     log.info("found %s previous tags", len(ts_and_vs))
     return sorted(ts_and_vs, reverse=True, key=lambda v: v[1])
 

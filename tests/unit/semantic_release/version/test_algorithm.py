@@ -57,6 +57,59 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
 
 
 @pytest.mark.parametrize(
+    "tag_format, invalid_tags, valid_tags",
+    [
+        (
+            "v{version}",
+            ("test-v1.1.0", "v1.1.0-test-test"),
+            [
+                "v1.0.0-rc.1",
+                "v1.0.0-beta.2",
+                "v1.0.0-beta.11",
+                "v1.0.0-alpha.1",
+                "v1.0.0-alpha.beta.1",
+                "v1.0.0",
+            ],
+        ),
+        (
+            r"(\w+--)?v{version}",
+            ("v1.1.0-test-test", "test_v1.1.0"),
+            [
+                "v1.0.0-rc.1",
+                "test--v1.1.0",
+                "v1.0.0-beta.2",
+                "v1.0.0-beta.11",
+                "v1.0.0-alpha.1",
+                "v1.0.0-alpha.beta.1",
+                "v1.0.0",
+            ],
+        ),
+        (
+            r"(?P<type>feature|fix)/v{version}--(?P<env>dev|stg|prod)",
+            ("v1.1.0--test", "test_v1.1.0", "docs/v1.2.0--dev"),
+            [
+                "feature/v1.0.0-rc.1--dev",
+                "fix/v1.1.0--stg",
+                "feature/v1.0.0-beta.2--stg",
+                "fix/v1.0.0-beta.11--dev",
+                "fix/v1.0.0-alpha.1--dev",
+                "feature/v1.0.0-alpha.beta.1--dev",
+                "feature/v1.0.0--prod",
+            ],
+        ),
+    ],
+)
+def test_tags_and_versions_ignores_invalid_tags_as_versions(
+    tag_format, invalid_tags, valid_tags
+):
+    repo = Repo()
+    translator = VersionTranslator(tag_format=tag_format)
+    tagrefs = [repo.tag(tag) for tag in (*valid_tags, *invalid_tags)]
+    actual = [t.name for t, _ in tags_and_versions(tagrefs, translator)]
+    assert set(actual) == set(valid_tags)
+
+
+@pytest.mark.parametrize(
     "latest_version, latest_full_version, latest_full_version_in_history, level_bump, "
     "prerelease, prerelease_token, expected_version",
     [
