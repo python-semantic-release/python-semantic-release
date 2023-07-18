@@ -57,9 +57,8 @@ def read_toml(path: str) -> dict[str, Any]:
     if cfg_text is not None:
         return cfg_text
 
-    raise InvalidConfiguration(
-        f"Missing keys 'tool.semantic_release' or 'semantic_release' in {path}"
-    )
+    log.info(f"Missing keys 'tool.semantic_release' or 'semantic_release' in {path}")
+    return {}
 
 
 class HvcsClient(str, Enum):

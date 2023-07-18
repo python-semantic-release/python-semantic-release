@@ -56,12 +56,19 @@ def example_project(tmp_path):
         template_dir.mkdir()
         changelog_md = tmp_path / "CHANGELOG.md"
         changelog_md.write_text(EXAMPLE_CHANGELOG_MD_CONTENT)
+        empty_toml = tmp_path / "empty.toml"
+        empty_toml.write_text("")
         yield tmp_path
 
 
 @pytest.fixture
 def example_pyproject_toml(example_project):
     yield example_project / "pyproject.toml"
+
+
+@pytest.fixture
+def example_empty_pyproject_toml(example_project):
+    yield example_project / "empty.toml"
 
 
 @pytest.fixture

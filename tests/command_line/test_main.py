@@ -30,3 +30,13 @@ def test_not_a_release_branch_exit_code_with_strict(
     repo_with_git_flow_angular_commits.git.checkout("-b", "branch-does-not-exist")
     result = cli_runner.invoke(main, ["--strict", "version", "--no-commit"])
     assert result.exit_code != 0
+
+
+@pytest.mark.usefixtures("example_empty_pyproject_toml")
+def test_no_config_section_works_fine(repo_with_git_flow_angular_commits, cli_runner):
+    # Don't generate an error when there is no semantic_release config section.
+    repo_with_git_flow_angular_commits.git.checkout("-b", "branch-does-not-exist")
+    result = cli_runner.invoke(
+        main, ["--config", "empty.toml", "version", "--no-commit"]
+    )
+    assert result.exit_code == 0
