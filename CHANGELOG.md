@@ -2,6 +2,21 @@
 
 
 
+## v8.0.2 (2023-07-18)
+
+### Documentation
+
+* docs: correct version_toml example in migrating_from_v7.rst (#641) ([`325d5e0`](https://github.com/python-semantic-release/python-semantic-release/commit/325d5e048bd89cb2a94c47029d4878b27311c0f0))
+
+* docs: clarify v8 breaking changes in GitHub action inputs (#643) ([`cda050c`](https://github.com/python-semantic-release/python-semantic-release/commit/cda050cd9e789d81458157ee240ff99ec65c6f25))
+
+* docs: better description for tag_format usage ([`2129b72`](https://github.com/python-semantic-release/python-semantic-release/commit/2129b729837eccc41a33dbb49785a8a30ce6b187))
+
+### Fix
+
+* fix: handle missing configuration (#644) ([`f15753c`](https://github.com/python-semantic-release/python-semantic-release/commit/f15753ce652f36cc03b108c667a26ab74bcbf95d))
+
+
 ## v8.0.1 (2023-07-17)
 
 ### Documentation
