@@ -579,11 +579,11 @@ simply wrap the value in ``[]``:
 
    # Python Semantic Release v7 configuration
    [tool.semantic_release]
-   version_toml = "tool.poetry.version:{version}"
+   version_toml = "pyproject.toml:tool.poetry.version"
 
    # Python Semantic Release v8 configuration
    [tool.semantic_release]
-   version_toml = ["tool.poetry.version:{version}"]
+   version_toml = ["pyproject.toml:tool.poetry.version"]
 
 
 .. _breaking-tag-format-validation:
