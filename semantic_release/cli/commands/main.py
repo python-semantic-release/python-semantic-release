@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 
 import click
+from click.core import ParameterSource
 from git import InvalidGitRepositoryError
 from git.repo.base import Repo
 from rich.console import Console
@@ -16,10 +16,9 @@ from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     RawConfig,
     RuntimeContext,
-    read_toml,
 )
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
-from semantic_release.cli.util import rprint
+from semantic_release.cli.util import load_raw_config_file, rprint
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 
 FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
@@ -41,7 +40,7 @@ FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
     "config_file",
     default=DEFAULT_CONFIG_FILE,
     help="Specify a configuration file for semantic-release to use",
-    type=click.Path(exists=True),
+    type=click.Path(),
 )
 @click.option("--noop", "noop", is_flag=True, help="Run semantic-release in no-op mode")
 @click.option(
@@ -123,19 +122,26 @@ def main(
     )
     log.debug("global cli options: %s", cli_options)
 
-    try:
-        if config_file.endswith(".toml"):
-            log.info(f"Loading TOML configuration from {config_file}")
-            config_text = read_toml(config_file)
-        elif config_file.endswith(".json"):
-            log.info(f"Loading JSON configuration from {config_file}")
-            raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
-            config_text = json.loads(raw_text)["semantic_release"]
-        else:
-            *_, suffix = config_file.split(".")
-            ctx.fail(f"{suffix!r} is not a supported configuration format")
-    except (FileNotFoundError, InvalidConfiguration) as exc:
-        ctx.fail(str(exc))
+    config_path = Path(config_file)
+    # default no config loaded
+    config_text = {}
+    if not config_path.exists():
+        if ctx.get_parameter_source("config_file") not in (
+            ParameterSource.DEFAULT,
+            ParameterSource.DEFAULT_MAP,
+        ):
+            ctx.fail(f"File {config_file} does not exist")
+
+        log.info(
+            "configuration file %s not found, using default configuration",
+            config_file,
+        )
+
+    else:
+        try:
+            config_text = load_raw_config_file(config_path)
+        except InvalidConfiguration as exc:
+            ctx.fail(str(exc))
 
     raw_config = RawConfig.parse_obj(config_text)
     try:

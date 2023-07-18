@@ -6,7 +6,7 @@ Configuration
 Configuration is read from a file which can be specified using the
 :ref:`--config <cmd-main-option-config>` option to :ref:`cmd-main`. Python Semantic
 Release currently supports either TOML- or JSON-formatted configuration, and will
-attempt to detect and parse the configuration based on the file extension.
+attempt to detect the configuration format and parse it.
 
 When using a JSON-format configuration file, Python Semantic Release looks for its
 settings beneath a top-level ``semantic_release`` key; when using a TOML-format
