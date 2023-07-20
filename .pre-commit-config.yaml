@@ -15,7 +15,7 @@ repos:
     hooks:
       - id: debug-statements
       - id: detect-aws-credentials
-        args: [ "--allow-missing-credentials" ]
+        args: ["--allow-missing-credentials"]
       - id: detect-private-key
       - id: check-builtin-literals
       - id: check-executables-have-shebangs
@@ -38,17 +38,17 @@ repos:
     rev: 1.15.0
     hooks:
       - id: blacken-docs
-        additional_dependencies: [ "black==23.7.0" ]
+        additional_dependencies: ["black==23.7.0"]
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.9.0
     hooks:
       - id: pyupgrade
-        args: [ "--py37-plus", "--keep-runtime-typing" ]
+        args: ["--py37-plus", "--keep-runtime-typing"]
 
   # Linters and validation
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.282
+    rev: v0.0.286
     hooks:
       - id: ruff
         args:
@@ -63,9 +63,9 @@ repos:
     rev: "v1.4.1"
     hooks:
       - id: mypy
-        args: [ "--config-file", "pyproject.toml" ]
+        args: ["--config-file", "pyproject.toml"]
         additional_dependencies:
-          - "pydantic>1.10.11,<2"
+          - "pydantic>=2,<3"
           - "types-requests"
         log_file: "mypy.log"
         files: "^semantic_release/.*"
@@ -105,7 +105,7 @@ repos:
           - "--quiet"
           - "semantic_release/"
         # Needed if using pyproject.toml for config
-        additional_dependencies: [ "bandit[toml]" ]
+        additional_dependencies: ["bandit[toml]"]
         pass_filenames: false
 
   # GHA linting

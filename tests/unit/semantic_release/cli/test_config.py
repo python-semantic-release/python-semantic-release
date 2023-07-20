@@ -13,12 +13,14 @@ from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 
 def test_default_toml_config_valid(example_project):
     default_config_file = example_project / "default.toml"
-    default_config_file.write_text(tomlkit.dumps(RawConfig().dict(exclude_none=True)))
+    default_config_file.write_text(
+        tomlkit.dumps(RawConfig().model_dump(exclude_none=True))
+    )
 
     written = default_config_file.read_text(encoding="utf-8")
-    loaded = tomlkit.loads(written)
+    loaded = tomlkit.loads(written).unwrap()
     # Check that we can load it correctly
-    parsed = RawConfig.parse_obj(loaded)
+    parsed = RawConfig.model_validate(loaded)
     assert parsed
     # Check the re-loaded internal representation is sufficient
     # There is an issue with BaseModel.__eq__ that means
@@ -37,10 +39,10 @@ def test_commit_author_configurable(
     example_project, repo_with_no_tags_angular_commits, mock_env, expected_author
 ):
     pyproject_toml = example_project / "pyproject.toml"
-    content = tomlkit.loads(pyproject_toml.read_text(encoding="utf-8"))
+    content = tomlkit.loads(pyproject_toml.read_text(encoding="utf-8")).unwrap()
 
     with mock.patch.dict("os.environ", mock_env):
-        raw = RawConfig.parse_obj(content)
+        raw = RawConfig.model_validate(content)
         runtime = RuntimeContext.from_raw_config(
             raw=raw,
             repo=repo_with_no_tags_angular_commits,

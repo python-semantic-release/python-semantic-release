@@ -484,7 +484,9 @@ def test_version_runs_build_command(
     repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml, shell
 ):
     config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = config["tool"]["semantic_release"]["build_command"]
+    build_command = config["tool"]["semantic_release"][  # type: ignore[attr-defined]
+        "build_command"
+    ]
     exe = shell.split("/")[-1]
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
