@@ -35,6 +35,8 @@ Implementation
 
 1. Parse all the Git tags of the repository into semantic versions, and **sort**
    in descending (most recent first) order according to `semver precedence`_.
+   Ignore any tags which do not correspond to valid semantic vesrions accroding
+   to ``tag_format``.
 
 
 2. Find the ``merge-base`` of HEAD and the latest tag according to the sort above.

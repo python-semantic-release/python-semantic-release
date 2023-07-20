@@ -14,6 +14,7 @@ from semantic_release.enums import LevelBump as LevelBump
 from semantic_release.errors import (
     CommitParseError as CommitParseError,
     InvalidConfiguration as InvalidConfiguration,
+    InvalidVersion as InvalidVersion,
     SemanticReleaseBaseError as SemanticReleaseBaseError,
 )
 from semantic_release.version import (

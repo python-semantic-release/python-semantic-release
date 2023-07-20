@@ -16,6 +16,13 @@ class InvalidConfiguration(SemanticReleaseBaseError):
     """
 
 
+class InvalidVersion(ValueError, SemanticReleaseBaseError):
+    """
+    Raised when Version.parse attempts to parse a string containing
+    an invalid version.
+    """
+
+
 class NotAReleaseBranch(InvalidConfiguration):
     """
     Raised when semantic_release is invoked on a branch which isn't configured for

@@ -72,6 +72,18 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
             ],
         ),
         (
+            "v{version}",
+            ("0.3", "0.4"),
+            [
+                "v1.0.0-rc.1",
+                "v1.0.0-beta.2",
+                "v1.0.0-beta.11",
+                "v1.0.0-alpha.1",
+                "v1.0.0-alpha.beta.1",
+                "v1.0.0",
+            ],
+        ),
+        (
             r"(\w+--)?v{version}",
             ("v1.1.0-test-test", "test_v1.1.0"),
             [
