@@ -119,7 +119,8 @@ Settings
 ``assets (List[str])``
 """"""""""""""""""""""
 
-One or more paths to additional assets that should be attached to VCS releases.
+One or more paths to additional assets that should committed to the remote repository
+in addition to any files modified by writing the new version.
 
 **Default:** ``[]``
 
