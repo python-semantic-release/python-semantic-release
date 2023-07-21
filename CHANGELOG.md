@@ -2,6 +2,13 @@
 
 
 
+## v8.0.3 (2023-07-21)
+
+### Fix
+
+* fix: skip unparseable versions when calculating next version (#649) ([`88f25ea`](https://github.com/python-semantic-release/python-semantic-release/commit/88f25eae62589cdf53dbc3dfcb167a3ae6cba2d3))
+
+
 ## v8.0.2 (2023-07-18)
 
 ### Documentation
