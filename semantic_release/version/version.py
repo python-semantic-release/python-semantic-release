@@ -8,16 +8,10 @@ from typing import Callable, Union, overload
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
+from semantic_release.errors import InvalidVersion
 from semantic_release.helpers import check_tag_format
 
 log = logging.getLogger(__name__)
-
-
-class InvalidVersion(ValueError):
-    """
-    Raised when Version.parse attempts to parse a string containing
-    an invalid version.
-    """
 
 
 # Very heavily inspired by semver.version:_comparator, I don't think there's

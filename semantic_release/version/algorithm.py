@@ -19,6 +19,7 @@ from semantic_release.commit_parser import (
 )
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
+from semantic_release.errors import InvalidVersion
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
@@ -40,7 +41,7 @@ def tags_and_versions(
     for tag in tags:
         try:
             version = translator.from_tag(tag.name)
-        except NotImplementedError as e:
+        except (NotImplementedError, InvalidVersion) as e:
             log.warning(
                 "Couldn't parse tag %s as as Version: %s",
                 tag.name,

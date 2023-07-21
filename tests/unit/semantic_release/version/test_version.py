@@ -4,7 +4,8 @@ import random
 import pytest
 
 from semantic_release.enums import LevelBump
-from semantic_release.version.version import InvalidVersion, Version
+from semantic_release.errors import InvalidVersion
+from semantic_release.version.version import Version
 
 random.seed(0)
 

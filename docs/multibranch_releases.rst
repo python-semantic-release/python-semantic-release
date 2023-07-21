@@ -68,6 +68,12 @@ but when merged to the branch configured to produce full releases (``main``), if
 released separately the changes from each branch would be released in two versions
 that would be considered different according to the semver specification.
 
+.. note::
+
+   If you have tags in your Git repository that are not valid semantic versions
+   (which have then been formatted into your :ref:`tag_format <config-tag-format>`),
+   these tags will be ignored for the purposes of calculating the next version.
+
 .. _prereleases: https://semver.org/#spec-item-9
 .. _build metadata MUST be ignored: https://semver.org/#spec-item-10
 
