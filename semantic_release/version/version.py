@@ -205,6 +205,9 @@ class Version:
     def as_tag(self) -> str:
         return self.tag_format.format(version=str(self))
 
+    def as_base_version(self) -> str:
+        return "v{version}".format(version=str(self))
+
     def bump(self, level: LevelBump) -> Version:
         """
         Return a new Version instance according to the level specified to bump.
