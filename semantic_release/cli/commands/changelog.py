@@ -15,6 +15,7 @@ from semantic_release.cli.util import noop_report
 
 log = logging.getLogger(__name__)
 
+CHANGELOG_PLACEHOLDER = "<!--next-version-placeholder-->"
 
 @click.command(
     short_help="Generate a changelog",
@@ -43,17 +44,6 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
     changelog_file = runtime.changelog_file
     changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
 
-    rh = ReleaseHistory.from_git_history(
-        repo=repo,
-        translator=translator,
-        commit_parser=parser,
-        exclude_commit_patterns=changelog_excluded_commit_patterns,
-    )
-    changelog_context = make_changelog_context(
-        hvcs_client=hvcs_client, release_history=rh
-    )
-    changelog_context.bind_to_environment(env)
-
     if not os.path.exists(template_dir):
         log.info("Path %r not found, using default changelog template", template_dir)
         if runtime.global_cli_options.noop:
@@ -62,10 +52,48 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             )
             ctx.exit(0)
 
-        changelog_text = render_default_changelog_file(env)
         with open(str(changelog_file), "w+", encoding="utf-8") as f:
-            f.write(changelog_text)
+            existed_changelog_text = f.read()
+            existed_changelog_sections = existed_changelog_text.split(CHANGELOG_PLACEHOLDER)
+            if len(existed_changelog_sections) > 1:
+                rh = ReleaseHistory.from_git_history(
+                    repo=repo,
+                    translator=translator,
+                    commit_parser=parser,
+                    exclude_commit_patterns=changelog_excluded_commit_patterns,
+                    only_last_release=True
+                )
+                changelog_context = make_changelog_context(
+                    hvcs_client=hvcs_client, release_history=rh
+                )
+                changelog_context.bind_to_environment(env)
+
+                changelog_text = render_default_changelog_file(env)
+
+                f.write(f"{changelog_text}{existed_changelog_sections[1]}")
+            else:
+                rh = ReleaseHistory.from_git_history(
+                    repo=repo,
+                    translator=translator,
+                    commit_parser=parser,
+                    exclude_commit_patterns=changelog_excluded_commit_patterns,
+                )
+                changelog_context = make_changelog_context(
+                    hvcs_client=hvcs_client, release_history=rh
+                )
+                changelog_context.bind_to_environment(env)
+
+                changelog_text = render_default_changelog_file(env)
+
+                f.write(changelog_text)
     else:
+        rh = ReleaseHistory.from_git_history(
+            repo=repo,
+            translator=translator,
+            commit_parser=parser,
+            exclude_commit_patterns=changelog_excluded_commit_patterns,
+        )
+
         if runtime.global_cli_options.noop:
             noop_report(
                 f"would have recursively rendered the template directory "

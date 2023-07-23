@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 
 def tags_and_versions(
-    tags: Iterable[Tag], translator: VersionTranslator
+    tags: Iterable[Tag], translator: VersionTranslator, only_last_release: bool = False
 ) -> list[tuple[Tag, Version]]:
     """
     Return a list of 2-tuples, where each element is a tuple (tag, version)
@@ -54,6 +54,10 @@ def tags_and_versions(
             ts_and_vs.append((tag, version))
 
     log.info("found %s previous tags", len(ts_and_vs))
+
+    if only_last_release:
+        return [sorted(ts_and_vs, reverse=True, key=lambda v: v[1])[0]]
+
     return sorted(ts_and_vs, reverse=True, key=lambda v: v[1])
 
 

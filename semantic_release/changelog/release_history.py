@@ -34,8 +34,9 @@ class ReleaseHistory:
         translator: VersionTranslator,
         commit_parser: CommitParser[ParseResult, ParserOptions],
         exclude_commit_patterns: Iterable[re.Pattern[str]] = (),
+        only_last_release: bool = False
     ) -> ReleaseHistory:
-        all_git_tags_and_versions = tags_and_versions(repo.tags, translator)
+        all_git_tags_and_versions = tags_and_versions(repo.tags, translator, only_last_release)
         unreleased: dict[str, list[ParseResult]] = defaultdict(list)
         released: dict[Version, Release] = {}
 
