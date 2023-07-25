@@ -190,14 +190,8 @@ class Github(HvcsBase):
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
         )
-        upload_url = response.json().get("upload_url")
-        log.debug(
-            "Successfully got upload_url for request %s, upload_url %s, status_code %s",
-            release_id,
-            upload_url,
-            response.status_code,
-        )
-        return upload_url
+        return f"{response.json().get('upload_url')}/assets"
+
 
     @logged_function(log)
     def upload_asset(

@@ -213,17 +213,6 @@ def test_pull_request_url(default_gh_client, pr_number):
     )
 
 
-def test_asset_upload_url(default_gh_client):
-    assert default_gh_client.asset_upload_url(
-        release_id=420
-    ) == "https://{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-        domain=default_gh_client.hvcs_api_domain,
-        owner=default_gh_client.owner,
-        repo=default_gh_client.repo_name,
-        release_id=420,
-    )
-
-
 ############
 # Tests which need http response mocking
 ############
@@ -231,6 +220,9 @@ def test_asset_upload_url(default_gh_client):
 
 github_matcher = re.compile(rf"^https://{Github.DEFAULT_DOMAIN}")
 github_api_matcher = re.compile(rf"^https://{Github.DEFAULT_API_DOMAIN}")
+github_upload_matcher = re.compile(
+    rf"^https://{Github.DEFAULT_API_DOMAIN.replace('api', 'uploads')}"
+)
 
 
 @pytest.mark.parametrize("status_code", (200, 201))
@@ -533,6 +525,43 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
         mock_edit_release_notes.assert_not_called()
 
 
+def test_asset_upload_url(default_gh_client):
+    release_id = 1
+    resp_payload = {
+        "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            up_url=default_gh_client.api_url.replace("api", "uploads"),
+            owner=default_gh_client.owner,
+            repo_name=default_gh_client.repo_name,
+            release_id=release_id
+        ),
+        "status": "success"
+    }
+    with requests_mock.Mocker(session=default_gh_client.session) as m:
+        m.register_uri(
+            "GET", github_api_matcher, json=resp_payload, status_code=200
+        )
+        assert default_gh_client.asset_upload_url(
+            release_id
+        ) == "https://uploads.{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+            domain=default_gh_client.hvcs_domain,
+            owner=default_gh_client.owner,
+            repo=default_gh_client.repo_name,
+            release_id=release_id,
+        )
+        assert m.called
+        assert len(m.request_history) == 1
+        assert m.last_request.method == "GET"
+        assert (
+            m.last_request.url
+            == "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+                api_url=default_gh_client.api_url,
+                owner=default_gh_client.owner,
+                repo_name=default_gh_client.repo_name,
+                release_id=1,
+            )
+        )
+
+
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_upload_asset_succeeds(
@@ -540,9 +569,21 @@ def test_upload_asset_succeeds(
 ):
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
+    json_get_up_url = {
+        "status": "ok",
+        "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            up_url=default_gh_client.api_url.replace("api", "uploads"),
+            owner=default_gh_client.owner,
+            repo_name=default_gh_client.repo_name,
+            release_id=mock_release_id,
+        ),
+    }
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
-            "POST", github_api_matcher, json={"status": "ok"}, status_code=status_code
+            "POST", github_upload_matcher, json={"status": "ok"}, status_code=status_code
+        )
+        m.register_uri(
+            "GET", github_api_matcher, json=json_get_up_url, status_code=status_code
         )
         assert (
             default_gh_client.upload_asset(
@@ -553,7 +594,7 @@ def test_upload_asset_succeeds(
             is True
         )
         assert m.called
-        assert len(m.request_history) == 1
+        assert len(m.request_history) == 2
         assert m.last_request.method == "POST"
         assert m.last_request.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
@@ -578,14 +619,25 @@ def test_upload_asset_fails(
 ):
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
+    json_get_up_url = {
+        "status": "ok",
+        "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            up_url=default_gh_client.api_url.replace("api", "uploads"),
+            owner=default_gh_client.owner,
+            repo_name=default_gh_client.repo_name,
+            release_id=mock_release_id,
+        ),
+    }
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
             "POST",
-            github_api_matcher,
+            github_upload_matcher,
             json={"message": "error"},
             status_code=status_code,
         )
-
+        m.register_uri(
+            "GET", github_api_matcher, json=json_get_up_url, status_code=200
+        )
         with pytest.raises(HTTPError):
             default_gh_client.upload_asset(
                 release_id=mock_release_id,
@@ -594,7 +646,7 @@ def test_upload_asset_fails(
             )
 
         assert m.called
-        assert len(m.request_history) == 1
+        assert len(m.request_history) == 2
         assert m.last_request.method == "POST"
         assert m.last_request.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
