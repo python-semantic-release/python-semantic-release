@@ -186,8 +186,18 @@ class Github(HvcsBase):
         :param release_id: ID of the release to upload to
         :return: URL found to upload for a release
         """
-        # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset
-        return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"  # noqa: E501
+        # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset ?
+        response = self.session.get(
+            f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
+        )
+        upload_url = response.json().get("upload_url")
+        log.debug(
+            "Successfully got upload_url for request %s, upload_url %s, status_code %s",
+            release_id,
+            upload_url,
+            response.status_code,
+        )
+        return upload_url
 
     @logged_function(log)
     def upload_asset(
