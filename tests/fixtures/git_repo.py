@@ -942,6 +942,89 @@ def repo_with_git_flow_and_release_channels_angular_commits(
 
 
 @pytest.fixture
+def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
+    git_repo_factory, file_in_repo
+):
+    git_repo = git_repo_factory()
+
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="Initial commit")
+
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.1.0"))
+    git_repo.git.tag("vpy0.1.0", m="vpy0.1.0")
+
+    # Do a prerelease
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="fix: add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="0.1.1-rc.1"))
+    git_repo.git.tag("vpy0.1.1-rc.1", m="vpy0.1.1-rc.1")
+
+    # Do a prerelease
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="feat!: add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.0.0-rc.1"))
+    git_repo.git.tag("vpy1.0.0-rc.1", m="vpy1.0.0-rc.1")
+
+    # Do a full release
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="feat: add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.0.0"))
+    git_repo.git.tag("vpy1.0.0", m="vpy1.0.0")
+
+    assert git_repo.commit("vpy1.0.0").hexsha == git_repo.head.commit.hexsha
+
+    # Suppose branch "dev" has prerelease suffix of "rc"
+    git_repo.create_head("dev")
+    git_repo.heads.dev.checkout()
+
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="feat: (dev) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.1.0-rc.1"))
+    git_repo.git.tag("vpy1.1.0-rc.1", m="vpy1.1.0-rc.1")
+
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="fix: (dev) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.1.0-rc.2"))
+    git_repo.git.tag("vpy1.1.0-rc.2", m="vpy1.1.0-rc.2")
+
+    assert git_repo.commit("vpy1.1.0-rc.2").hexsha == git_repo.head.commit.hexsha
+
+    # Suppose branch "feature" has prerelease suffix of "alpha"
+    git_repo.create_head("feature")
+    git_repo.heads.feature.checkout()
+
+    # Do a prerelease on the branch
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="feat: (feature) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.1.0-alpha.1"))
+    git_repo.git.tag("vpy1.1.0-alpha.1", m="vpy1.1.0-alpha.1")
+
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="feat: (feature) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.1.0-alpha.2"))
+    git_repo.git.tag("vpy1.1.0-alpha.2", m="vpy1.1.0-alpha.2")
+
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m="fix: (feature) add some more text")
+    add_text_to_file(git_repo, file_in_repo)
+    git_repo.git.commit(m=COMMIT_MESSAGE.format(version="1.1.0-alpha.3"))
+    git_repo.git.tag("vpy1.1.0-alpha.3", m="vpy1.1.0-alpha.3")
+
+    assert git_repo.commit("vpy1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
+    assert git_repo.active_branch.name == "feature"
+    yield git_repo
+    git_repo.close()
+
+
+@pytest.fixture
 def repo_with_git_flow_and_release_channels_emoji_commits(
     git_repo_factory, file_in_repo
 ):

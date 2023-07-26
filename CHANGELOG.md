@@ -2,6 +2,23 @@
 
 
 
+## v8.0.4 (2023-07-26)
+
+### Documentation
+
+* docs: clarify usage of assets config option (#655) ([`efa2b30`](https://github.com/python-semantic-release/python-semantic-release/commit/efa2b3019b41eb427f0e1c8faa21ad10664295d0))
+
+* docs: add Python 3.11 to classifiers in metadata (#651) ([`5a32a24`](https://github.com/python-semantic-release/python-semantic-release/commit/5a32a24bf4128c39903f0c5d3bd0cb1ccba57e18))
+
+### Fix
+
+* fix(changelog): use version as semver tag by default (#653) ([`5984c77`](https://github.com/python-semantic-release/python-semantic-release/commit/5984c7771edc37f0d7d57894adecc2591efc414d))
+
+### Style
+
+* style: beautify 5984c7771edc37f0d7d57894adecc2591efc414d ([`df91bad`](https://github.com/python-semantic-release/python-semantic-release/commit/df91bad58ccaf71ad31a61b1af6e69933b634adb))
+
+
 ## v8.0.3 (2023-07-21)
 
 ### Fix
