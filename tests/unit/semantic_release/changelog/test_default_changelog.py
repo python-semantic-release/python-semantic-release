@@ -87,3 +87,19 @@ def test_default_changelog_template(
     context.bind_to_environment(env)
     actual_content = env.from_string(default_changelog_template).render()
     assert actual_content == EXPECTED_CONTENT
+
+def test_default_changelog_template_using_tag_format(
+    repo_with_git_flow_and_release_channels_angular_commits_using_tag_format, default_angular_parser
+):
+    repo = repo_with_git_flow_and_release_channels_angular_commits_using_tag_format
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    rh = ReleaseHistory.from_git_history(
+        repo=repo, translator=VersionTranslator(tag_format="vpy{version}"), commit_parser=default_angular_parser
+    )
+    context = make_changelog_context(
+        hvcs_client=Github(remote_url=repo.remote().url), release_history=rh
+    )
+    context.bind_to_environment(env)
+
+    actual_content = env.from_string(default_changelog_template).render()
+    assert actual_content == EXPECTED_CONTENT
