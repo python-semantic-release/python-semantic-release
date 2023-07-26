@@ -192,7 +192,6 @@ class Github(HvcsBase):
         )
         return f"{response.json().get('upload_url')}/assets"
 
-
     @logged_function(log)
     def upload_asset(
         self, release_id: int, file: str, label: str | None = None
