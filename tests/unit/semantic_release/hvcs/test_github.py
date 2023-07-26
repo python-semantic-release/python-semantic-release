@@ -532,14 +532,12 @@ def test_asset_upload_url(default_gh_client):
             up_url=default_gh_client.api_url.replace("api", "uploads"),
             owner=default_gh_client.owner,
             repo_name=default_gh_client.repo_name,
-            release_id=release_id
+            release_id=release_id,
         ),
-        "status": "success"
+        "status": "success",
     }
     with requests_mock.Mocker(session=default_gh_client.session) as m:
-        m.register_uri(
-            "GET", github_api_matcher, json=resp_payload, status_code=200
-        )
+        m.register_uri("GET", github_api_matcher, json=resp_payload, status_code=200)
         assert default_gh_client.asset_upload_url(
             release_id
         ) == "https://uploads.{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
@@ -580,7 +578,10 @@ def test_upload_asset_succeeds(
     }
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri(
-            "POST", github_upload_matcher, json={"status": "ok"}, status_code=status_code
+            "POST",
+            github_upload_matcher,
+            json={"status": "ok"},
+            status_code=status_code,
         )
         m.register_uri(
             "GET", github_api_matcher, json=json_get_up_url, status_code=status_code
@@ -595,7 +596,7 @@ def test_upload_asset_succeeds(
         )
         assert m.called
         assert len(m.request_history) == 2
-        post_req = m.last_request.copy() # Reference of m.last_request is not fix
+        post_req = m.last_request.copy()  # Reference of m.last_request is not fix
         assert post_req.method == "POST"
         assert post_req.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
@@ -636,9 +637,7 @@ def test_upload_asset_fails(
             json={"message": "error"},
             status_code=status_code,
         )
-        m.register_uri(
-            "GET", github_api_matcher, json=json_get_up_url, status_code=200
-        )
+        m.register_uri("GET", github_api_matcher, json=json_get_up_url, status_code=200)
         with pytest.raises(HTTPError):
             default_gh_client.upload_asset(
                 release_id=mock_release_id,
