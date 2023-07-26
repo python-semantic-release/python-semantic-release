@@ -595,8 +595,9 @@ def test_upload_asset_succeeds(
         )
         assert m.called
         assert len(m.request_history) == 2
-        assert m.last_request.method == "POST"
-        assert m.last_request.url == "{url}?{params}".format(
+        post_req = m.last_request.copy() # Reference of m.last_request is not fix
+        assert post_req.method == "POST"
+        assert post_req.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
             params=urlencode(urlparams),
         )
@@ -608,8 +609,8 @@ def test_upload_asset_succeeds(
                 example_changelog_md.resolve(), strict=False
             )[0]
             or "application/octet-stream"
-        }.items() <= m.last_request.headers.items()
-        assert m.last_request.body == example_changelog_md.read_bytes()
+        }.items() <= post_req.headers.items()
+        assert post_req.body == example_changelog_md.read_bytes()
 
 
 @pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
@@ -647,8 +648,9 @@ def test_upload_asset_fails(
 
         assert m.called
         assert len(m.request_history) == 2
-        assert m.last_request.method == "POST"
-        assert m.last_request.url == "{url}?{params}".format(
+        post_req = m.last_request.copy()
+        assert post_req.method == "POST"
+        assert post_req.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
             params=urlencode(urlparams),
         )
@@ -660,8 +662,8 @@ def test_upload_asset_fails(
                 example_changelog_md.resolve(), strict=False
             )[0]
             or "application/octet-stream"
-        }.items() <= m.last_request.headers.items()
-        assert m.last_request.body == example_changelog_md.read_bytes()
+        }.items() <= post_req.headers.items()
+        assert post_req.body == example_changelog_md.read_bytes()
 
 
 # Note - mocking as the logic for uploading an asset
