@@ -52,8 +52,10 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             )
             ctx.exit(0)
 
-        with open(str(changelog_file), "w+", encoding="utf-8") as f:
+        with open(str(changelog_file), "a+", encoding="utf-8") as f:
+            f.seek(0)
             existed_changelog_text = f.read()
+            f.truncate()
             existed_changelog_sections = existed_changelog_text.split(CHANGELOG_PLACEHOLDER)
             if len(existed_changelog_sections) > 1:
                 rh = ReleaseHistory.from_git_history(
@@ -93,6 +95,10 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             commit_parser=parser,
             exclude_commit_patterns=changelog_excluded_commit_patterns,
         )
+        changelog_context = make_changelog_context(
+            hvcs_client=hvcs_client, release_history=rh
+        )
+        changelog_context.bind_to_environment(env)
 
         if runtime.global_cli_options.noop:
             noop_report(
