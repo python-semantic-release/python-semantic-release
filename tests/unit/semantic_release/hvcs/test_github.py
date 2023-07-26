@@ -527,12 +527,14 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
 
 def test_asset_upload_url(default_gh_client):
     release_id = 1
+    # '{?name,label}' are added by github.com at least, maybe custom too
+    # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release
     resp_payload = {
-        "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-            up_url=default_gh_client.api_url.replace("api", "uploads"),
-            owner=default_gh_client.owner,
-            repo_name=default_gh_client.repo_name,
-            release_id=release_id,
+        "upload_url": (
+            f"{default_gh_client.api_url.replace('api', 'uploads')}/repos/"
+            f"{default_gh_client.owner}/{default_gh_client.repo_name}/"
+            f"releases/{release_id}/"
+            "assets{?name,label}"
         ),
         "status": "success",
     }
