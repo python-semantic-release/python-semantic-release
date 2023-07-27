@@ -598,8 +598,10 @@ def test_upload_asset_succeeds(
         assert len(m.request_history) == 2
         post_req = m.last_request  # Reference of m.last_request is not fix
         assert isinstance(m.last_request, requests_mock.request._RequestObjectProxy)
-        assert m.last_request.method == "POST" # FIXME Response to PR 661
-        assert m.last_request.method == "POST" # last request does not seem to be a generator
+        assert m.last_request.method == "POST"  # FIXME Response to PR 661
+        assert (
+            m.last_request.method == "POST"
+        )  # last request does not seem to be a generator
         assert m.last_request.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
             params=urlencode(urlparams),
@@ -609,7 +611,7 @@ def test_upload_asset_succeeds(
         # 2 - POST uploads.github.com -> Uploads assets
         # call to m.last_request.url seems to change the m.last_request reference to the older request
         # A bug of requests_mock ?
-        assert m.last_request.method == "GET" # FIXME Response to PR 661
+        assert m.last_request.method == "GET"  # FIXME Response to PR 661
         # ^ You shall not pass
 
         # Check if content-type header was correctly set according to
