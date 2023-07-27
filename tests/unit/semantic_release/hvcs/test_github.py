@@ -220,9 +220,7 @@ def test_pull_request_url(default_gh_client, pr_number):
 
 github_matcher = re.compile(rf"^https://{Github.DEFAULT_DOMAIN}")
 github_api_matcher = re.compile(rf"^https://{Github.DEFAULT_API_DOMAIN}")
-github_upload_matcher = re.compile(
-    rf"^https://{Github.DEFAULT_API_DOMAIN.replace('api', 'uploads')}"
-)
+github_upload_matcher = re.compile(rf"^https://{Github.DEFAULT_UPLOAD_DOMAIN}")
 
 
 @pytest.mark.parametrize("status_code", (200, 201))
@@ -531,7 +529,7 @@ def test_asset_upload_url(default_gh_client):
     # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release
     resp_payload = {
         "upload_url": (
-            f"{default_gh_client.api_url.replace('api', 'uploads')}/repos/"
+            f"{default_gh_client.upload_url}/repos/"
             f"{default_gh_client.owner}/{default_gh_client.repo_name}/"
             f"releases/{release_id}/"
             "assets{?name,label}"
@@ -572,7 +570,7 @@ def test_upload_asset_succeeds(
     json_get_up_url = {
         "status": "ok",
         "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-            up_url=default_gh_client.api_url.replace("api", "uploads"),
+            up_url=default_gh_client.upload_url,
             owner=default_gh_client.owner,
             repo_name=default_gh_client.repo_name,
             release_id=mock_release_id,
@@ -598,12 +596,21 @@ def test_upload_asset_succeeds(
         )
         assert m.called
         assert len(m.request_history) == 2
-        post_req = m.last_request.copy()  # Reference of m.last_request is not fix
-        assert post_req.method == "POST"
-        assert post_req.url == "{url}?{params}".format(
+        post_req = m.last_request  # Reference of m.last_request is not fix
+        assert isinstance(m.last_request, requests_mock.request._RequestObjectProxy)
+        assert m.last_request.method == "POST" # FIXME Response to PR 661
+        assert m.last_request.method == "POST" # last request does not seem to be a generator
+        assert m.last_request.url == "{url}?{params}".format(
             url=default_gh_client.asset_upload_url(mock_release_id),
             params=urlencode(urlparams),
         )
+        # There are two requests made
+        # 1 - GET api.github.com -> get release info
+        # 2 - POST uploads.github.com -> Uploads assets
+        # call to m.last_request.url seems to change the m.last_request reference to the older request
+        # A bug of requests_mock ?
+        assert m.last_request.method == "GET" # FIXME Response to PR 661
+        # ^ You shall not pass
 
         # Check if content-type header was correctly set according to
         # mimetypes - not retesting guessing functionality
@@ -626,7 +633,7 @@ def test_upload_asset_fails(
     json_get_up_url = {
         "status": "ok",
         "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-            up_url=default_gh_client.api_url.replace("api", "uploads"),
+            up_url=default_gh_client.upload_url,
             owner=default_gh_client.owner,
             repo_name=default_gh_client.repo_name,
             release_id=mock_release_id,

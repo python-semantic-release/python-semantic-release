@@ -36,6 +36,7 @@ class Github(HvcsBase):
 
     DEFAULT_DOMAIN = "github.com"
     DEFAULT_API_DOMAIN = "api.github.com"
+    DEFAULT_UPLOAD_DOMAIN = "uploads.github.com"
 
     def __init__(
         self,
@@ -59,6 +60,7 @@ class Github(HvcsBase):
         ).replace("https://", "")
 
         self.api_url = f"https://{self.hvcs_api_domain}"
+        self.upload_url = f"https://{self.DEFAULT_UPLOAD_DOMAIN}"
 
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)
@@ -179,12 +181,12 @@ class Github(HvcsBase):
         return self.edit_release_notes(release_id, release_notes)
 
     @logged_function(log)
-    def asset_upload_url(self, release_id: str) -> str:
-        """
-        Get the correct upload url for a release
+    @suppress_not_found
+    def asset_upload_url(self, release_id: str) -> str | None:
+        """Get the correct upload url for a release
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
         :param release_id: ID of the release to upload to
-        :return: URL found to upload for a release
+        :return: URL to upload for a release if found, else None
         """
         # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset ?
         response = self.session.get(
@@ -205,6 +207,11 @@ class Github(HvcsBase):
         :return: The status of the request
         """
         url = self.asset_upload_url(release_id)
+        if url is None:
+            raise HTTPError(
+                f"There is no associated url for uploading asset for release {release_id}. "
+                f"Release url: {self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
+            )
         content_type = (
             mimetypes.guess_type(file, strict=False)[0] or "application/octet-stream"
         )
