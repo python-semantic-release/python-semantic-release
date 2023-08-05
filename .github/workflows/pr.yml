@@ -36,7 +36,7 @@ jobs:
       - name: pytest
         run: PYTHONHASHSEED=123345 python -m pytest -v tests
 
-  mypy:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -45,8 +45,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
-      - name: Install mypy & stubs packages
-        run: python -m pip install .[mypy]
+      - name: Install mypy & dev packages
+        run: python -m pip install .[dev, mypy]
+      - name: ruff
+        run: python -m ruff check .
       - name: mypy
         run: python -m mypy --ignore-missing-imports semantic_release
 

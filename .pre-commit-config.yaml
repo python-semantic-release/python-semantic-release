@@ -1,0 +1,117 @@
+---
+default_language_version:
+  python: python3.8
+
+repos:
+  # Meta hooks
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+  # Security & credential scanning/alerting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: debug-statements
+      - id: detect-aws-credentials
+        args: [ "--allow-missing-credentials" ]
+      - id: detect-private-key
+      - id: check-builtin-literals
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-yaml
+      - id: check-toml
+      - id: check-case-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+      - id: check-ast
+
+  # Formatters that may modify source files automatically
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+  - repo: https://github.com/adamchainz/blacken-docs
+    rev: 1.15.0
+    hooks:
+      - id: blacken-docs
+        additional_dependencies: [ "black==23.7.0" ]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.9.0
+    hooks:
+      - id: pyupgrade
+        args: [ "--py37-plus", "--keep-runtime-typing" ]
+
+  # Linters and validation
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.282
+    hooks:
+      - id: ruff
+        args:
+          - "--fix"
+          - "--exit-non-zero-on-fix"
+          - "--statistics"
+          - "--format=text"
+          - "."
+        pass_filenames: false
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.4.1"
+    hooks:
+      - id: mypy
+        args: [ "--config-file", "pyproject.toml" ]
+        additional_dependencies:
+          - "pydantic>1.10.11,<2"
+          - "types-requests"
+        log_file: "mypy.log"
+        files: "^semantic_release/.*"
+        pass_filenames: false
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      # - id: python-use-type-annotations
+      - id: python-check-blanket-noqa
+      - id: python-check-blanket-type-ignore
+      - id: python-check-mock-methods
+      - id: python-no-eval
+      - id: python-no-log-warn
+      - id: rst-backticks
+      - id: rst-directive-colons
+      - id: rst-inline-touching-normal
+
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: "v2.7"
+    hooks:
+      - id: vulture
+        args:
+          - --min-confidence
+          - "100"
+          - --sort-by-size
+          - "semantic_release"
+          - "tests"
+
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args:
+          - "-c"
+          - "pyproject.toml"
+          - "--quiet"
+          - "semantic_release/"
+        # Needed if using pyproject.toml for config
+        additional_dependencies: [ "bandit[toml]" ]
+        pass_filenames: false
+
+  # GHA linting
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: "0.23.3"
+    hooks:
+      - id: check-github-workflows
+      - id: check-readthedocs
+      - id: check-dependabot
