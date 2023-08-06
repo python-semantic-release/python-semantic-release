@@ -84,7 +84,7 @@ class ChangelogConfig(BaseModel):
 
 class BranchConfig(BaseModel):
     match: str = "(main|master)"
-    prerelease_token = "rc"
+    prerelease_token = "rc"  # noqa: S105
     prerelease: bool = False
 
 
@@ -238,10 +238,11 @@ class RuntimeContext:
                 options.match,
                 active_branch,
             )
-        else:
-            raise NotAReleaseBranch(
-                f"branch {active_branch!r} isn't in any release groups; no release will be made"
-            )
+
+        raise NotAReleaseBranch(
+            f"branch {active_branch!r} isn't in any release groups; "
+            "no release will be made"
+        )
 
     def apply_log_masking(self, masker: MaskingFilter) -> MaskingFilter:
         for attr in self._mask_attrs_:
@@ -283,19 +284,20 @@ class RuntimeContext:
         _commit_author_valid = Actor.name_email_regex.match(_commit_author_str)
         if not _commit_author_valid:
             raise ValueError(
-                f"Invalid git author: {_commit_author_str} should match {Actor.name_email_regex}"
+                f"Invalid git author: {_commit_author_str} "
+                f"should match {Actor.name_email_regex}"
             )
 
         commit_author = Actor(*_commit_author_valid.groups())
 
-        version_declarations: List[VersionDeclarationABC] = []
+        version_declarations: list[VersionDeclarationABC] = []
         for decl in () if raw.version_toml is None else raw.version_toml:
             try:
                 path, search_text = decl.split(":", maxsplit=1)
                 # VersionDeclarationABC handles path existence check
                 vd = TomlVersionDeclaration(path, search_text)
             except ValueError as exc:
-                log.error("Invalid TOML declaration %r", decl, exc_info=True)
+                log.exception("Invalid TOML declaration %r", decl)
                 raise InvalidConfiguration(
                     f"Invalid TOML declaration {decl!r}"
                 ) from exc
@@ -306,10 +308,10 @@ class RuntimeContext:
             try:
                 path, variable = decl.split(":", maxsplit=1)
                 # VersionDeclarationABC handles path existence check
-                search_text = rf"(?x){variable}\s*(:=|[:=])\s*(?P<quote>['\"])(?P<version>{SEMVER_REGEX.pattern})(?P=quote)"
+                search_text = rf"(?x){variable}\s*(:=|[:=])\s*(?P<quote>['\"])(?P<version>{SEMVER_REGEX.pattern})(?P=quote)"  # noqa: E501
                 pd = PatternVersionDeclaration(path, search_text)
             except ValueError as exc:
-                log.error("Invalid variable declaration %r", decl, exc_info=True)
+                log.exception("Invalid variable declaration %r", decl)
                 raise InvalidConfiguration(
                     f"Invalid variable declaration {decl!r}"
                 ) from exc
@@ -329,7 +331,8 @@ class RuntimeContext:
         token = cls.resolve_from_env(raw.remote.token)
         if isinstance(raw.remote.token, EnvConfigVar) and not token:
             log.warning(
-                "the token for the remote VCS is configured as stored in the %s environment variable, but it is empty",
+                "the token for the remote VCS is configured as stored in the %s "
+                "environment variable, but it is empty",
                 raw.remote.token.env,
             )
         elif not token:

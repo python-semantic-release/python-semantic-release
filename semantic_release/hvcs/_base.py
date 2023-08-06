@@ -1,6 +1,4 @@
-"""
-Common functionality and interface for interacting with Git remote VCS
-"""
+"""Common functionality and interface for interacting with Git remote VCS"""
 from __future__ import annotations
 
 import logging
@@ -23,7 +21,6 @@ def _not_supported(self: HvcsBase, method_name: str) -> None:
     )
 
 
-# pylint: disable=unused-argument
 class HvcsBase:
     """
     Interface for subclasses interacting with a remote VCS
@@ -72,8 +69,10 @@ class HvcsBase:
     def compare_url(self, from_rev: str, to_rev: str) -> str:
         """
         Get the comparison link between two version tags.
-        :param from_rev: The older version to compare. Can be a commit sha, tag or branch name.
-        :param to_rev: The newer version to compare. Can be a commit sha, tag or branch name.
+        :param from_rev: The older version to compare. Can be a commit sha, tag or
+                        branch name.
+        :param to_rev: The newer version to compare. Can be a commit sha, tag or
+                       branch name.
         :return: Link to view a comparison between the two versions.
         """
         _not_supported(self, "compare_url")
@@ -90,9 +89,7 @@ class HvcsBase:
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int | str:
-        """
-        Create a release in a remote VCS, if supported
-        """
+        """Create a release in a remote VCS, if supported"""
         _not_supported(self, "create_release")
         return -1
 
@@ -105,9 +102,7 @@ class HvcsBase:
         return None
 
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
-        """
-        Edit the changelog associated with a release, if supported
-        """
+        """Edit the changelog associated with a release, if supported"""
         _not_supported(self, "edit_release_notes")
         return -1
 

@@ -39,4 +39,3 @@ that runs the cronjob has push access to the repository and upload access to an 
 4. Add cronjob::
 
     /bin/bash -c "cd <path> && source semantic_release/bin/activate && ./publish 2>&1 >> releases.log"
-

@@ -38,9 +38,9 @@ Custom Users
 ``git_committer_name``
 """"""""""""""""""""""
 
-The name of the account used to commit. If customized, it must be associated with the provided token. 
+The name of the account used to commit. If customized, it must be associated with the provided token.
 
-default: `github-actions`
+default: ``github-actions``
 
 required: false
 
@@ -49,9 +49,9 @@ required: false
 ``git_committer_email``
 """""""""""""""""""""""
 
-The email of the account used to commit. If customized, it must be associated with the provided token. 
+The email of the account used to commit. If customized, it must be associated with the provided token.
 
-default: `actions@github.com>`
+default: ``actions@github.com>``
 
 required: false
 
@@ -60,7 +60,7 @@ required: false
 ``ssh_public_signing_key``
 """"""""""""""""""""""""""
 
-The public key used to verify a commit. If customized, it must be associated with the same account as the provided token. 
+The public key used to verify a commit. If customized, it must be associated with the same account as the provided token.
 
 required: false
 
@@ -69,7 +69,7 @@ required: false
 ``ssh_private_signing_key``
 """""""""""""""""""""""""""
 
-The private key used to verify a commit. If customized, it must be associated with the same account as the provided token. 
+The private key used to verify a commit. If customized, it must be associated with the same account as the provided token.
 
 required: false
 

@@ -2,26 +2,30 @@ from __future__ import annotations
 
 import logging
 from queue import Queue
-from typing import Iterable
-
-from git.objects.blob import Blob
-from git.objects.commit import Commit
-from git.objects.tag import TagObject
-from git.objects.tree import Tree
-from git.refs.tag import Tag
-from git.repo.base import Repo
+from typing import TYPE_CHECKING, Iterable
 
 from semantic_release.commit_parser import (
-    CommitParser,
     ParsedCommit,
-    ParseResult,
-    ParserOptions,
 )
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidVersion
-from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
+
+if TYPE_CHECKING:
+    from git.objects.blob import Blob
+    from git.objects.commit import Commit
+    from git.objects.tag import TagObject
+    from git.objects.tree import Tree
+    from git.refs.tag import Tag
+    from git.repo.base import Repo
+
+    from semantic_release.commit_parser import (
+        CommitParser,
+        ParseResult,
+        ParserOptions,
+    )
+    from semantic_release.version.translator import VersionTranslator
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +75,7 @@ def _bfs_for_latest_version_in_history(
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
-    def bfs(visited: set[Commit], q: "Queue[Commit]") -> Version | None:
+    def bfs(visited: set[Commit], q: Queue[Commit]) -> Version | None:
         if q.empty():
             log.debug("queue is empty, returning none")
             return None
@@ -135,7 +139,6 @@ def _increment_version(
     `latest_full_version_in_history`, correspondingly, is the latest full release which
     is in this branch's history.
     """
-
     log.debug(
         "_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in locals().items())
     )
@@ -157,16 +160,18 @@ def _increment_version(
             latest_version - latest_full_version_in_history
         )
         log.debug(
-            "diff between the latest version %s and the latest full release version %s is: %s",
+            "diff between the latest version %s and the latest full release version %s "
+            "is: %s",
             latest_version,
             latest_full_version_in_history,
             diff_with_last_released_version,
         )
-        # 6a i) if the level_bump > the level bump introduced by any prerelease tag before
-        # e.g. 1.2.4-rc.3 -> 1.3.0-rc.1
+        # 6a i) if the level_bump > the level bump introduced by any prerelease tag
+        # before e.g. 1.2.4-rc.3 -> 1.3.0-rc.1
         if level_bump > diff_with_last_released_version:
             log.debug(
-                "this release has a greater bump than any change since the last full release, %s",
+                "this release has a greater bump than any change since the last full "
+                "release, %s",
                 latest_full_version_in_history,
             )
             return target_final_version.bump(level_bump).to_prerelease(
@@ -175,7 +180,8 @@ def _increment_version(
 
         # 6a ii) if level_bump <= the level bump introduced by prerelease tag
         log.debug(
-            "there has already been at least a %s release since the last full release %s",
+            "there has already been at least a %s release since the last full "
+            "release %s",
             level_bump,
             latest_full_version_in_history,
         )
@@ -200,19 +206,22 @@ def _increment_version(
             latest_version - latest_full_version_in_history
         )
         log.debug(
-            "diff between the latest version %s and the latest full release version %s is: %s",
+            "diff between the latest version %s and the latest full release version %s "
+            "is: %s",
             latest_version,
             latest_full_version_in_history,
             diff_with_last_released_version,
         )
         if level_bump > diff_with_last_released_version:
             log.debug(
-                "this release has a greater bump than any change since the last full release, %s",
+                "this release has a greater bump than any change since the last full "
+                "release, %s",
                 latest_full_version_in_history,
             )
             return latest_version.bump(level_bump).finalize_version()
         log.debug(
-            "there has already been at least a %s release since the last full release %s",
+            "there has already been at least a %s release since the last full "
+            "release %s",
             level_bump,
             latest_full_version_in_history,
         )
@@ -282,7 +291,8 @@ def next_version(
             "None" if latest_full_release_tag is None else latest_full_release_tag.name
         )
         raise ValueError(
-            f"The merge_base found by merge_base({str_tag_name}, {repo.active_branch}) is None"
+            f"The merge_base found by merge_base({str_tag_name}, {repo.active_branch}) "
+            "is None"
         )
 
     latest_full_version_in_history = _bfs_for_latest_version_in_history(
@@ -362,7 +372,8 @@ def next_version(
         break
 
     log.debug(
-        "parsed the following distinct levels from the commits since the last release: %s",
+        "parsed the following distinct levels from the commits since the last release: "
+        "%s",
         parsed_levels,
     )
     level_bump = max(parsed_levels, default=LevelBump.NO_RELEASE)

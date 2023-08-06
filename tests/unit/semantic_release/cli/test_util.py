@@ -75,7 +75,7 @@ def raw_toml_config_file(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ def raw_pyproject_toml_config_file(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.fixture
@@ -111,7 +111,7 @@ def raw_json_config_file(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.fixture
@@ -130,7 +130,7 @@ def invalid_toml_config_file(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.fixture
@@ -147,7 +147,7 @@ def invalid_json_config_file(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.fixture
@@ -168,7 +168,7 @@ def invalid_other_config_file(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.mark.parametrize(
@@ -181,7 +181,7 @@ def invalid_other_config_file(tmp_path):
         ),
         (
             lazy_fixture("raw_json_config_file"),
-            {"semantic_release": {"foo": "bar", "abc": {"bar": "baz"}}},
+            {"foo": "bar", "abc": {"bar": "baz"}},
         ),
     ],
 )
@@ -197,6 +197,6 @@ def test_load_raw_config_file_loads_config(raw_config_file, expected):
         lazy_fixture("invalid_other_config_file"),
     ],
 )
-def test_load_raw_config_file_loads_config(raw_config_file):
+def test_load_raw_invalid_config_file_raises_error(raw_config_file):
     with pytest.raises(InvalidConfiguration):
         load_raw_config_file(raw_config_file)

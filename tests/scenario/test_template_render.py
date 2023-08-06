@@ -41,7 +41,7 @@ def _strip_trailing_j2(path: Path) -> Path:
 def normal_template(example_project_template_dir):
     template = example_project_template_dir / "normal.yaml.j2"
     template.write_text(NORMAL_TEMPLATE_SRC)
-    yield template
+    return template
 
 
 @pytest.fixture
@@ -50,44 +50,44 @@ def long_directory_path(example_project_template_dir):
     # constant string, so no issue with / vs \ on Windows
     d = example_project_template_dir / "long" / "dir" / "path"
     os.makedirs(str(d.resolve()), exist_ok=True)
-    yield d
+    return d
 
 
 @pytest.fixture
 def deeply_nested_file(long_directory_path):
     file = long_directory_path / "buried.txt"
     file.write_text(PLAINTEXT_FILE_CONTENT)
-    yield file
+    return file
 
 
 @pytest.fixture
 def hidden_file(example_project_template_dir):
     file = example_project_template_dir / ".hidden"
     file.write_text("I shouldn't be present")
-    yield file
+    return file
 
 
 @pytest.fixture
 def directory_path_with_hidden_subfolder(example_project_template_dir):
     d = example_project_template_dir / "path" / ".subfolder" / "hidden"
     os.makedirs(str(d.resolve()), exist_ok=True)
-    yield d
+    return d
 
 
 @pytest.fixture
 def excluded_file(directory_path_with_hidden_subfolder):
     file = directory_path_with_hidden_subfolder / "excluded.txt"
     file.write_text("I shouldn't be present")
-    yield file
+    return file
 
 
+@pytest.mark.usefixtures("excluded_file")
 def test_recursive_render(
     example_project,
     example_project_template_dir,
     normal_template,
     deeply_nested_file,
     hidden_file,
-    excluded_file,
 ):
     tmpl_dir = str(example_project_template_dir.resolve())
     env = environment(template_dir=tmpl_dir)
@@ -119,14 +119,12 @@ def test_recursive_render(
     assert not (example_project / "path").exists()
 
     assert set(example_project.rglob("**/*")) == preexisting_paths.union(
-        (
-            example_project / p
-            for t in (
-                rendered_normal_template,
-                rendered_deeply_nested,
-            )
-            for p in itertools.accumulate(
-                t.relative_to(example_project).parts, func=lambda *a: os.sep.join(a)
-            )
+        example_project / p
+        for t in (
+            rendered_normal_template,
+            rendered_deeply_nested,
+        )
+        for p in itertools.accumulate(
+            t.relative_to(example_project).parts, func=lambda *a: os.sep.join(a)
         )
     )

@@ -4,13 +4,16 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import TYPE_CHECKING, Callable, Iterable
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
-from typing_extensions import Literal
 
 from semantic_release.helpers import dynamic_import
+
+if TYPE_CHECKING:
+    from jinja2 import Environment
+    from typing_extensions import Literal
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +37,9 @@ def environment(
     autoescape: bool | str = True,
 ) -> SandboxedEnvironment:
     """
-    Create a jinja2.sandbox.SandboxedEnvironment with certain parameter resrictions;
-    for example the Loader is fixed to FileSystemLoader, although the searchpath
+    Create a jinja2.sandbox.SandboxedEnvironment with certain parameter resrictions.
+
+    For example the Loader is fixed to FileSystemLoader, although the searchpath
     is configurable.
 
     ``autoescape`` can be a string in which case it should follow the convention
@@ -109,7 +113,3 @@ def recursive_render(
             shutil.copyfile(src_file, target_file)
             rendered_paths.append(target_file)
     return rendered_paths
-
-
-# To avoid confusion on import
-del Environment

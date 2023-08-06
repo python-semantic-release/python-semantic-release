@@ -15,10 +15,13 @@ def test_version_github_actions_output_format(released):
     output.released = released
 
     text = output.to_output_text()
+    # fmt: off
     assert (
-        text
-        == f"released={str(released).lower()}\nversion={str(version)}\ntag={version.as_tag()}"
+        text == f"released={str(released).lower()}\n"
+                f"version={version!s}\n"
+                f"tag={version.as_tag()}"
     )
+    # fmt: on
 
 
 def test_version_github_actions_output_fails_if_missing_output():

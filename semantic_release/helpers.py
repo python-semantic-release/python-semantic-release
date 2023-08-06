@@ -10,13 +10,10 @@ log = logging.getLogger(__name__)
 
 
 def format_arg(value: Any) -> str:
-    """
-    Helper to format an argument an argument for logging
-    """
+    """Helper to format an argument an argument for logging"""
     if type(value) == str:
         return f"'{value.strip()}'"
-    else:
-        return str(value)
+    return str(value)
 
 
 def check_tag_format(tag_format: str) -> None:
@@ -45,13 +42,10 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
         @wraps(func)
         def _wrapper(*args: Any, **kwargs: Any) -> _R:
             logger.debug(
-                "{function}({args}, {kwargs})".format(
-                    function=func.__name__,
-                    args=", ".join([format_arg(x) for x in args]),
-                    kwargs=", ".join(
-                        [f"{k}={format_arg(v)}" for k, v in kwargs.items()]
-                    ),
-                )
+                "%s(%s, %s)",
+                func.__name__,
+                ", ".join([format_arg(x) for x in args]),
+                ", ".join([f"{k}={format_arg(v)}" for k, v in kwargs.items()]),
             )
 
             # Call function
@@ -79,9 +73,7 @@ def dynamic_import(import_path: str) -> Any:
 
 
 class ParsedGitUrl(NamedTuple):
-    """
-    Container for the elements parsed from a git URL using GIT_URL_REGEX
-    """
+    """Container for the elements parsed from a git URL using GIT_URL_REGEX"""
 
     scheme: str
     netloc: str
@@ -100,7 +92,7 @@ GIT_URL_REGEX = re.compile(
     (?P<repo_name>[\w\.\_\-]+)  # Note this also catches the ".git" at the end if present
     /?
     $
-    """,
+    """,  # noqa: E501
     flags=re.VERBOSE,
 )
 

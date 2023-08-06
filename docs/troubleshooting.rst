@@ -12,7 +12,7 @@ Troubleshooting
 Increasing Verbosity
 ====================
 If you are having trouble with Python Semantic Release or would like to see additional
-information about the actions that it is taking, you can use the top-level 
+information about the actions that it is taking, you can use the top-level
 :ref:`cmd-main-option-verbosity` option. This can be supplied multiple times to increase
 the logging verbosity of the :ref:`cmd-main` command or any of its subcommands during
 their execution. You can supply this as many times as you like, but supplying more than
@@ -21,7 +21,7 @@ twice has no effect.
 Supply :ref:`cmd-main-option-verbosity` once for ``INFO`` output, and twice for ``DEBUG``.
 
 For example::
-   
+
     semantic-release -vv version --print
 
 
@@ -37,4 +37,3 @@ For example::
 
 .. note::
    The provided GitHub action sets the verbosity level to INFO by default.
-

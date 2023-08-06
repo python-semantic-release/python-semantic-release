@@ -8,12 +8,12 @@ from tests.unit.semantic_release.commit_parser.helper import make_commit
 
 @pytest.fixture
 def default_options():
-    yield EmojiCommitParser.parser_options()
+    return EmojiCommitParser.parser_options()
 
 
 @pytest.fixture
 def default_emoji_parser(default_options):
-    yield EmojiCommitParser(default_options)
+    return EmojiCommitParser(default_options)
 
 
 @pytest.mark.parametrize(
@@ -29,7 +29,7 @@ def default_emoji_parser(default_options):
         ),
         # Minor bump
         (
-            ":sparkles: Add a new feature\n\n" "Some description of the feature",
+            ":sparkles: Add a new feature\n\nSome description of the feature",
             LevelBump.MINOR,
             ":sparkles:",
             [":sparkles: Add a new feature", "Some description of the feature"],
@@ -37,7 +37,7 @@ def default_emoji_parser(default_options):
         ),
         # Patch bump
         (
-            ":bug: Fixing a bug\n\n" "The bug is finally gone!",
+            ":bug: Fixing a bug\n\nThe bug is finally gone!",
             LevelBump.PATCH,
             ":bug:",
             [":bug: Fixing a bug", "The bug is finally gone!"],

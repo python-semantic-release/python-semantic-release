@@ -1,6 +1,4 @@
-"""
-Utilities for command-line functionality
-"""
+"""Utilities for command-line functionality"""
 from __future__ import annotations
 
 import json
@@ -20,9 +18,7 @@ log = logging.getLogger(__name__)
 
 
 def rprint(msg: str) -> None:
-    """
-    Rich-prints to stderr so that redirection of command output isn't cluttered
-    """
+    """Rich-prints to stderr so that redirection of command output isn't cluttered"""
     rich.print(msg, file=sys.stderr)
 
 
@@ -62,8 +58,7 @@ def parse_toml(raw_text: str) -> dict[Any, Any]:
     cfg_text = toml_text.get("tool", {}).get("semantic_release")
     if cfg_text is not None:
         return cfg_text
-    # Look for [semantic_release] or return {} if not
-    # found
+    # Look for [semantic_release] or return {} if not found
     return toml_text.get("semantic_release", {})
 
 
@@ -80,7 +75,6 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
     This function will also raise FileNotFoundError if it is raised
     while trying to read the specified configuration file
     """
-
     log.info("Loading configuration from %s", config_file)
     raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
     try:
@@ -93,10 +87,11 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
             # could be a "parse_json" function but it's a one-liner here
             return json.loads(raw_text)["semantic_release"]
         except KeyError:
-            # valid configuration, but no "semantic_release" or "tool.semantic_release" top
-            # level key
+            # valid configuration, but no "semantic_release" or "tool.semantic_release"
+            # top level key
             log.debug(
-                "configuration has no 'semantic_release' or 'tool.semantic_release' top-level key"
+                "configuration has no 'semantic_release' or 'tool.semantic_release' "
+                "top-level key"
             )
             return {}
         except json.JSONDecodeError as jde:
@@ -105,8 +100,8 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
                     f"""
                     None of the supported configuration parsers were able to parse
                     the configuration file {config_file}:
-                    * TOML: {str(e)}
-                    * JSON: {str(jde)}
+                    * TOML: {e!s}
+                    * JSON: {jde!s}
                     """
                 )
             ) from jde

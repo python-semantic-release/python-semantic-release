@@ -50,10 +50,10 @@ Implementation
    If no such tag is found, see 4a).
    Else, suppose that tag corresponds to a commit ``L`` - goto 4b).
 
-4. 
+4.
     a. If no commit corresponding to the last non-prerelease version is found,
        the entire history of the repository is considered. We parse every commit
-       that is an ancestor of HEAD to determine the type of change introduced - 
+       that is an ancestor of HEAD to determine the type of change introduced -
        either ``major``, ``minor``, ``patch``, ``prerelease_revision`` or
        ``no_release``. We store this levels in a ``set`` as we only require
        the distinct types of change that were introduced.
@@ -61,7 +61,7 @@ Implementation
        last non-prerelease was tagged, then we parse only the commits from HEAD
        as far back as ``L``, to understand what changes have been introduced
        since the previous non-prerelease. We store these levels - either
-       ``major``, ``minor``, ``patch``, ``prerelease_revision``, or 
+       ``major``, ``minor``, ``patch``, ``prerelease_revision``, or
        ``no_release``, in a set, as we only require the distinct types of change
        that were introduced.
 
@@ -96,7 +96,7 @@ Implementation
      ``level`` is ``major``, reduce ``level`` to ``minor``.
 
   b. If ``prerelease=True``, then
-      
+
      i. Diff ``LV`` with ``LVHF``, to understand if the ``major``, ``minor`` or
         ``patch`` digits have changed. For example, diffing ``1.2.1`` and
         ``1.2.0`` is a ``patch`` diff, while diffing ``2.1.1`` and ``1.17.2`` is
@@ -108,8 +108,8 @@ Implementation
          1. Increment the digit of ``LVF`` corresponding to ``level``, for example
             the minor digit if ``level=minor``, setting all less significant
             digits to zero.
-         
-         2. Add ``prerelease_token`` as a suffix result of 1., together with a 
+
+         2. Add ``prerelease_token`` as a suffix result of 1., together with a
             prerelease revision number of ``1``. Return this new version and
             **terminate the algorithm.**
 
@@ -158,7 +158,7 @@ Implementation
         i. Increment the digit of ``LV`` corresponding to ``level``, for example
            the minor digit if ``level=minor``, setting all less significant
            digits to zero.
-           
+
         ii. Remove the prerelease token and revision number from the result of i.,
             ("Finalize" the result of i.) return the result and **terminate the
             algorithm.**
@@ -177,7 +177,7 @@ Implementation
 Complexity
 ~~~~~~~~~~
 
-**Space:** 
+**Space:**
 
 A list of parsed tags takes ``O(number of tags)`` in space. Parsing each commit during
 the breadth-first search between ``merge-base`` and the latest tag in the ancestry

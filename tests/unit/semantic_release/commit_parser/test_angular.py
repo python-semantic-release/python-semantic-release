@@ -9,12 +9,12 @@ from tests.unit.semantic_release.commit_parser.helper import make_commit
 
 @pytest.fixture
 def default_options():
-    yield AngularCommitParser.parser_options()
+    return AngularCommitParser.parser_options()
 
 
 @pytest.fixture
 def default_angular_parser(default_options):
-    yield AngularCommitParser(default_options)
+    return AngularCommitParser(default_options)
 
 
 def test_parser_raises_unknown_message_style(default_angular_parser):
@@ -33,7 +33,8 @@ def test_parser_raises_unknown_message_style(default_angular_parser):
         ("feat(parsers): Add new parser pattern\n\nBREAKING CHANGE: ", LevelBump.MAJOR),
         ("feat(parsers)!: Add new parser pattern", LevelBump.MAJOR),
         (
-            "feat(parsers): Add new parser pattern\n\nNew pattern is awesome\n\nBREAKING CHANGE: \n",
+            "feat(parsers): Add new parser pattern\n\nNew pattern is awesome\n\n"
+            "BREAKING CHANGE: \n",
             LevelBump.MAJOR,
         ),
         (
@@ -113,9 +114,7 @@ _footer = "Closes #400"
             ["Add a test for angular parser"],
         ),
         (
-            "fix(tox): Fix env \n\n{text}\n\n{footer}".format(
-                text=_long_text, footer=_footer
-            ),
+            f"fix(tox): Fix env \n\n{_long_text}\n\n{_footer}",
             ["Fix env ", _long_text, _footer],
         ),
         ("fix: superfix", ["superfix"]),
@@ -158,10 +157,12 @@ def test_parser_custom_allowed_types():
     parser = AngularCommitParser(options)
 
     res1 = parser.parse(make_commit("custom: ..."))
-    assert isinstance(res1, ParsedCommit) and res1.bump is LevelBump.NO_RELEASE
+    assert isinstance(res1, ParsedCommit)
+    assert res1.bump is LevelBump.NO_RELEASE
 
     res2 = parser.parse(make_commit("custom(parser): ..."))
-    assert isinstance(res2, ParsedCommit) and res2.type == "custom"
+    assert isinstance(res2, ParsedCommit)
+    assert res2.type == "custom"
 
     assert isinstance(parser.parse(make_commit("feat(parser): ...")), ParseError)
 
@@ -170,11 +171,13 @@ def test_parser_custom_minor_tags():
     options = AngularCommitParser.parser_options(minor_tags=("docs",))
     parser = AngularCommitParser(options)
     res = parser.parse(make_commit("docs: write some docs"))
-    assert isinstance(res, ParsedCommit) and res.bump is LevelBump.MINOR
+    assert isinstance(res, ParsedCommit)
+    assert res.bump is LevelBump.MINOR
 
 
 def test_parser_custom_patch_tags():
     options = AngularCommitParser.parser_options(patch_tags=("test",))
     parser = AngularCommitParser(options)
     res = parser.parse(make_commit("test(this): added a test"))
-    assert isinstance(res, ParsedCommit) and res.bump is LevelBump.PATCH
+    assert isinstance(res, ParsedCommit)
+    assert res.bump is LevelBump.PATCH

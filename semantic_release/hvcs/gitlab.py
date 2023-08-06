@@ -1,6 +1,4 @@
-"""
-Helper code for interacting with a Gitlab remote VCS
-"""
+"""Helper code for interacting with a Gitlab remote VCS"""
 from __future__ import annotations
 
 import logging
@@ -42,7 +40,6 @@ class Gitlab(HvcsBase):
 
     DEFAULT_DOMAIN = "gitlab.com"
 
-    # pylint: disable=super-init-not-called
     def __init__(
         self,
         remote_url: str,
@@ -65,9 +62,7 @@ class Gitlab(HvcsBase):
 
     @staticmethod
     def _domain_from_environment() -> str | None:
-        """
-        Use Gitlab-CI environment varable to get the server domain, if available
-        """
+        """Use Gitlab-CI environment varable to get the server domain, if available"""
         if "CI_SERVER_URL" in os.environ:
             url = urlsplit(os.environ["CI_SERVER_URL"])
             return f"{url.netloc}{url.path}".rstrip("/")
@@ -86,9 +81,10 @@ class Gitlab(HvcsBase):
 
     @logged_function(log)
     def create_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False  # noqa: ARG002
     ) -> str:
-        """Post release changelog
+        """
+        Post release changelog
         :param tag: Tag to create release for
         :param release_notes: The release notes for this version
         :param prerelease: This parameter has no effect
@@ -108,8 +104,13 @@ class Gitlab(HvcsBase):
         log.info("Successfully created release for %s", tag)
         return tag
 
+    # TODO: make str types accepted here
     @logged_function(log)
-    def edit_release_notes(self, release_id: str, release_notes: str) -> str:  # type: ignore  # TODO make str types accepted here
+    def edit_release_notes(  # type: ignore[override]
+        self,
+        release_id: str,
+        release_notes: str,
+    ) -> str:
         client = gitlab.Gitlab(self.api_url, private_token=self.token)
         client.auth()
         log.info("Updating release %s", release_id)
@@ -143,9 +144,7 @@ class Gitlab(HvcsBase):
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/compare/{from_rev}...{to_rev}"
 
     def remote_url(self, use_token: bool = True) -> str:
-        """
-        Get the remote url including the token for authentication if requested
-        """
+        """Get the remote url including the token for authentication if requested"""
         if not (self.token and use_token):
             return self._remote_url
         return f"https://gitlab-ci-token:{self.token}@{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"

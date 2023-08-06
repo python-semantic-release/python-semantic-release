@@ -96,16 +96,15 @@ class _GitlabProject:
         def get(self, tag):
             if tag in (A_GOOD_TAG, AN_EXISTING_TAG):
                 return self._Tag()
-            elif tag == A_LOCKED_TAG:
+            if tag == A_LOCKED_TAG:
                 return self._Tag(locked=True)
-            else:
-                raise gitlab.exceptions.GitlabGetError()
+            raise gitlab.exceptions.GitlabGetError()
 
         class _Tag:
             def __init__(self, locked=False):
                 self.locked = locked
 
-            def set_release_description(self, release_notes):
+            def set_release_description(self, _):
                 if self.locked:
                     raise gitlab.exceptions.GitlabUpdateError()
 
@@ -114,12 +113,15 @@ class _GitlabProject:
             pass
 
         def create(self, input_):
-            if input_["name"] and input_["tag_name"]:
-                if input_["tag_name"] in (A_GOOD_TAG, A_LOCKED_TAG):
-                    return self._Release()
+            if (
+                input_["name"]
+                and input_["tag_name"]
+                and input_["tag_name"] in (A_GOOD_TAG, A_LOCKED_TAG)
+            ):
+                return self._Release()
             raise gitlab.exceptions.GitlabCreateError()
 
-        def update(self, tag, new_data):
+        def update(self, tag, _):
             if tag == A_MISSING_TAG:
                 raise gitlab.exceptions.GitlabUpdateError()
             return self._Release()
@@ -143,7 +145,7 @@ def mock_gitlab(status: str = "success"):
 @pytest.fixture
 def default_gl_client():
     remote_url = f"git@gitlab.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
-    yield Gitlab(remote_url=remote_url)
+    return Gitlab(remote_url=remote_url)
 
 
 @pytest.mark.parametrize(
@@ -215,9 +217,8 @@ def test_gitlab_client_init(
         )
         assert client.token == token
         assert client._remote_url == remote_url
-        assert hasattr(client, "session") and isinstance(
-            getattr(client, "session", None), Session
-        )
+        assert hasattr(client, "session")
+        assert isinstance(getattr(client, "session", None), Session)
 
 
 @pytest.mark.parametrize(
@@ -280,7 +281,8 @@ def test_remote_url(
     default_gl_client,
     use_token,
     token,
-    _remote_url,
+    # TODO: linter thinks this is a fixture not a param - why?
+    _remote_url,  # noqa: PT019
     expected,
 ):
     default_gl_client._remote_url = _remote_url
@@ -352,7 +354,6 @@ def test_create_or_update_release_when_create_succeeds(default_gl_client, prerel
     ) as mock_edit_release_notes:
         mock_create_release.return_value = A_GOOD_TAG
         mock_edit_release_notes.return_value = A_GOOD_TAG
-        # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
             default_gl_client.create_or_update_release(
                 A_GOOD_TAG, RELEASE_NOTES, prerelease
@@ -377,7 +378,6 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
     ) as mock_edit_release_notes:
         mock_create_release.side_effect = bad_request
         mock_edit_release_notes.return_value = A_GOOD_TAG
-        # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
             default_gl_client.create_or_update_release(
                 A_GOOD_TAG, RELEASE_NOTES, prerelease

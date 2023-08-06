@@ -6,15 +6,17 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
-from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
+
+if TYPE_CHECKING:
+    from git.objects.commit import Commit
 
 log = logging.getLogger(__name__)
 
@@ -34,9 +36,7 @@ LONG_TYPE_NAMES = {
 
 @dataclass
 class AngularParserOptions(ParserOptions):
-    """
-    Options dataclass for AngularCommitParser
-    """
+    """Options dataclass for AngularCommitParser"""
 
     allowed_tags: Tuple[str, ...] = (
         "build",

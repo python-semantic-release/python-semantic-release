@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import tomlkit
-from dotty_dict import Dotty  # type: ignore
+from dotty_dict import Dotty
 
 from semantic_release.version.version import Version
 
@@ -41,11 +41,11 @@ class VersionDeclarationABC(ABC):
         return self._content
 
     # mypy doesn't like properties?
-    @content.setter  # type: ignore
+    @content.setter  # type: ignore[attr-defined]
     def _(self, _: Any) -> None:
         raise AttributeError("'content' cannot be set directly")
 
-    @content.deleter  # type: ignore
+    @content.deleter  # type: ignore[attr-defined]
     def _(self) -> None:
         log.debug("resetting instance-stored source file contents")
         self._content = None
@@ -89,21 +89,15 @@ class VersionDeclarationABC(ABC):
 
 
 class TomlVersionDeclaration(VersionDeclarationABC):
-    """
-    VersionDeclarationABC implementation which manages toml-format source files.
-    """
+    """VersionDeclarationABC implementation which manages toml-format source files."""
 
     def _load(self) -> Dotty:
-        """
-        Load the content of the source file into a Dotty for easier searching
-        """
+        """Load the content of the source file into a Dotty for easier searching"""
         loaded = tomlkit.loads(self.content)
         return Dotty(loaded)
 
     def parse(self) -> set[Version]:
-        """
-        Look for the version in the source content
-        """
+        """Look for the version in the source content"""
         content = self._load()
         maybe_version = content.get(self.search_text)
         if maybe_version is not None:
@@ -147,9 +141,9 @@ class PatternVersionDeclaration(VersionDeclarationABC):
         self.search_re = re.compile(self.search_text, flags=re.MULTILINE)
         if self._VERSION_GROUP_NAME not in self.search_re.groupindex:
             raise ValueError(
-                f"Invalid search text {self.search_text!r}; must use 'version' as a named group, "
-                "for example (?P<version>...) "
-                "For more info on named groups see https://docs.python.org/3/library/re.html"
+                f"Invalid search text {self.search_text!r}; must use 'version' as a "
+                "named group, for example (?P<version>...) . For more info on named "
+                "groups see https://docs.python.org/3/library/re.html"
             )
 
     # The pattern should be a regular expression with a single group,

@@ -9,12 +9,12 @@ from tests.unit.semantic_release.commit_parser.helper import make_commit
 
 @pytest.fixture
 def default_options():
-    yield TagCommitParser.parser_options()
+    return TagCommitParser.parser_options()
 
 
 @pytest.fixture
 def default_tag_parser(default_options):
-    yield TagCommitParser(default_options)
+    return TagCommitParser(default_options)
 
 
 text = (
@@ -45,7 +45,7 @@ def test_parser_raises_unknown_message_style(default_tag_parser):
             ["Add emoji parser"],
         ),
         (
-            ":nut_and_bolt: Fix regex in angular parser\n\n{text}".format(text=text),
+            f":nut_and_bolt: Fix regex in angular parser\n\n{text}",
             LevelBump.PATCH,
             "fix",
             ["Fix regex in angular parser", text],
@@ -57,9 +57,7 @@ def test_parser_raises_unknown_message_style(default_tag_parser):
             ["Fix regex in angular parser"],
         ),
         (
-            ":nut_and_bolt: Fix regex in angular parser\n\n{text}\n\n{footer}".format(
-                text=text, footer=footer
-            ),
+            f":nut_and_bolt: Fix regex in angular parser\n\n{text}\n\n{footer}",
             LevelBump.PATCH,
             "fix",
             ["Fix regex in angular parser", text, footer],

@@ -47,7 +47,7 @@ def _comparator(
         return lambda method: _comparator(method, type_guard=type_guard)
 
     @wraps(method)
-    def _wrapper(self: "Version", other: VersionComparable) -> bool:
+    def _wrapper(self: Version, other: VersionComparable) -> bool:
         if not isinstance(other, (str, Version)):
             return False if not type_guard else NotImplemented
         if isinstance(other, str):
@@ -62,7 +62,7 @@ def _comparator(
         else:
             other_v = other
 
-        return method(self, other_v)  # type: ignore
+        return method(self, other_v)  # type: ignore[misc]
 
     return _wrapper
 
@@ -76,7 +76,7 @@ class Version:
         minor: int,
         patch: int,
         *,
-        prerelease_token: str = "rc",
+        prerelease_token: str = "rc",  # noqa: S107
         prerelease_revision: int | None = None,
         build_metadata: str = "",
         tag_format: str = "v{version}",
@@ -104,7 +104,7 @@ class Version:
         cls,
         version_str: str,
         tag_format: str = "v{version}",
-        prerelease_token: str = "rc",
+        prerelease_token: str = "rc",  # noqa: S107
     ) -> Version:
         """
         Parse version string to a Version instance.
@@ -128,11 +128,13 @@ class Version:
             if not pm:
                 raise NotImplementedError(
                     f"{cls.__qualname__} currently supports only prereleases "
-                    r"of the format (-([a-zA-Z0-9-])\.\(\d+)), for example '1.2.3-my-custom-3rc.4'."
+                    r"of the format (-([a-zA-Z0-9-])\.\(\d+)), for example "
+                    r"'1.2.3-my-custom-3rc.4'."
                 )
             prerelease_token, prerelease_revision = pm.groups()
             log.debug(
-                "parsed prerelease_token %s, prerelease_revision %s from version string %s",
+                "parsed prerelease_token %s, prerelease_revision %s from version "
+                "string %s",
                 prerelease_token,
                 prerelease_revision,
                 version_str,
@@ -206,7 +208,7 @@ class Version:
         return self.tag_format.format(version=str(self))
 
     def as_semver_tag(self) -> str:
-        return "v{version}".format(version=str(self))
+        return f"v{self!s}"
 
     def bump(self, level: LevelBump) -> Version:
         """
@@ -257,15 +259,15 @@ class Version:
                 tag_format=self.tag_format,
             )
         # for consistency, this creates a new instance regardless
-        if level is LevelBump.NO_RELEASE:
-            return Version(
-                self.major,
-                self.minor,
-                self.patch,
-                prerelease_token=self.prerelease_token,
-                prerelease_revision=self.prerelease_revision,
-                tag_format=self.tag_format,
-            )
+        # only other option is level is LevelBump.NO_RELEASE
+        return Version(
+            self.major,
+            self.minor,
+            self.patch,
+            prerelease_token=self.prerelease_token,
+            prerelease_revision=self.prerelease_revision,
+            tag_format=self.tag_format,
+        )
 
     # Enables Version + LevelBump.<level>
     __add__ = bump
@@ -277,7 +279,7 @@ class Version:
         return hash(self.__repr__())
 
     @_comparator(type_guard=False)
-    def __eq__(self, other: Version) -> bool:  # type: ignore
+    def __eq__(self, other: Version) -> bool:  # type: ignore[override]
         # https://semver.org/#spec-item-11 -
         # build metadata is not used for comparison
         return all(
@@ -295,9 +297,10 @@ class Version:
     def __neq__(self, other: Version) -> bool:
         return not self.__eq__(other)
 
-    # mypy wants to compare signature types with __lt__ but can't because of the decorator
+    # mypy wants to compare signature types with __lt__,
+    # but can't because of the decorator
     @_comparator
-    def __gt__(self, other: Version) -> bool:  # type: ignore
+    def __gt__(self, other: Version) -> bool:  # type: ignore[has-type]
         # https://semver.org/#spec-item-11 -
         # build metadata is not used for comparison
 
@@ -327,18 +330,19 @@ class Version:
                 if self_tk == other_tk:
                     continue
                 if (self_tk is None) ^ (other_tk is None):
-                    # Longest (i.e. non-None) is greater
+                    # Longest token (i.e. non-None) is greater
                     return other_tk is None
                 # Lexical sort, e.g. "rc" > "beta" > "alpha"
                 # we have eliminated that one or both might be None above,
                 # but mypy doesn't recognise this
-                return self_tk > other_tk  # type: ignore
+                return self_tk > other_tk  # type: ignore[operator]
         # We have eliminated that one or both aren't prereleases by the above
-        return self.prerelease_revision > other.prerelease_revision  # type: ignore
+        return self.prerelease_revision > other.prerelease_revision  # type: ignore[operator]  # noqa: E501
 
-    # mypy wants to compare signature types with __le__ but can't because of the decorator
+    # mypy wants to compare signature types with __le__,
+    # but can't because of the decorator
     @_comparator
-    def __ge__(self, other: Version) -> bool:  # type: ignore
+    def __ge__(self, other: Version) -> bool:  # type: ignore[has-type]
         return self.__gt__(other) or self.__eq__(other)
 
     @_comparator

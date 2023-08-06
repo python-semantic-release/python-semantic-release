@@ -79,7 +79,6 @@ def main(
 
     For more information, visit https://python-semantic-release.readthedocs.io/
     """
-
     console = Console(stderr=True)
 
     log_level = [logging.WARNING, logging.INFO, logging.DEBUG][verbosity]
@@ -149,7 +148,7 @@ def main(
             raw_config, repo=repo, global_cli_options=cli_options
         )
     except NotAReleaseBranch as exc:
-        rprint(f"[bold {'red' if strict else 'orange1'}]{str(exc)}")
+        rprint(f"[bold {'red' if strict else 'orange1'}]{exc!s}")
         # If not strict, exit 0 so other processes can continue. For example, in
         # multibranch CI it might be desirable to run a non-release branch's pipeline
         # without specifying conditional execution of PSR based on branch name

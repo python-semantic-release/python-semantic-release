@@ -20,7 +20,7 @@ from tests.util import netrc_file
 @pytest.fixture
 def default_gh_client():
     remote_url = f"git@github.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
-    yield Github(remote_url=remote_url)
+    return Github(remote_url=remote_url)
 
 
 @pytest.mark.parametrize(
@@ -90,9 +90,8 @@ def test_github_client_init(
         assert client.api_url == f"https://{client.hvcs_api_domain}"
         assert client.token == token
         assert client._remote_url == remote_url
-        assert hasattr(client, "session") and isinstance(
-            getattr(client, "session", None), Session
-        )
+        assert hasattr(client, "session")
+        assert isinstance(getattr(client, "session", None), Session)
 
 
 @pytest.mark.parametrize(
@@ -176,12 +175,13 @@ def test_compare_url(default_gh_client):
     ],
 )
 def test_remote_url(
-    default_gh_client,
     patched_os_environ,
     use_token,
     token,
-    _remote_url,
+    # TODO: linter thinks this is a fixture not a param - why?
+    _remote_url,  # noqa: PT019
     expected,
+    default_gh_client,
 ):
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         default_gh_client._remote_url = _remote_url
@@ -358,11 +358,7 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
             assert m.last_request.method == "POST"
             assert (
                 m.last_request.url
-                == "{api_url}/repos/{owner}/{repo_name}/releases".format(
-                    api_url=client.api_url,
-                    owner=client.owner,
-                    repo_name=client.repo_name,
-                )
+                == f"{client.api_url}/repos/{client.owner}/{client.repo_name}/releases"
             )
             assert "Authorization" not in m.last_request.headers
 
@@ -475,7 +471,6 @@ def test_create_or_update_release_when_create_succeeds(
         mock_create_release.return_value = mock_release_id
         mock_get_release_id_by_tag.return_value = mock_release_id
         mock_edit_release_notes.return_value = mock_release_id
-        # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
             default_gh_client.create_or_update_release(tag, RELEASE_NOTES, prerelease)
             == mock_release_id
@@ -505,7 +500,6 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
         mock_create_release.side_effect = not_found
         mock_get_release_id_by_tag.return_value = mock_release_id
         mock_edit_release_notes.return_value = mock_release_id
-        # client = Github(remote_url="git@github.com:something/somewhere.git")
         assert (
             default_gh_client.create_or_update_release(tag, RELEASE_NOTES, prerelease)
             == mock_release_id
@@ -556,7 +550,7 @@ def test_upload_asset_succeeds(
                 file=example_changelog_md.resolve(),
                 label=label,
             )
-            == True
+            is True
         )
         assert m.called
         assert len(m.request_history) == 1

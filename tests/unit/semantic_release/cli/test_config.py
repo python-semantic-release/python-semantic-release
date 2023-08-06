@@ -39,7 +39,7 @@ def test_commit_author_configurable(
     pyproject_toml = example_project / "pyproject.toml"
     content = tomlkit.loads(pyproject_toml.read_text(encoding="utf-8"))
 
-    with mock.patch.dict("os.environ", mock_env) as patched_env:
+    with mock.patch.dict("os.environ", mock_env):
         raw = RawConfig.parse_obj(content)
         runtime = RuntimeContext.from_raw_config(
             raw=raw,

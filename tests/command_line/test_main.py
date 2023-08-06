@@ -50,7 +50,7 @@ def toml_file_with_no_configuration_for_psr(tmp_path):
         )
     )
 
-    yield path
+    return path
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ def json_file_with_no_configuration_for_psr(tmp_path):
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"foo": [1, 2, 3]}))
 
-    yield path
+    return path
 
 
 @pytest.mark.usefixtures("repo_with_git_flow_angular_commits")

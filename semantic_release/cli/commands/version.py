@@ -22,7 +22,6 @@ from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.version import (
     Version,
-    VersionTranslator,
     next_version,
     tags_and_versions,
 )
@@ -32,6 +31,9 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from git import Repo
 
+    from semantic_release.version import (
+        VersionTranslator,
+    )
     from semantic_release.version.declaration import VersionDeclarationABC
 
 
@@ -100,7 +102,7 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     if not shell:
         raise TypeError("'shell' is None")
 
-    return subprocess.run([shell, "-c", cmd], check=check)
+    return subprocess.run([shell, "-c", cmd], check=check)  # noqa: S603
 
 
 @click.command(
@@ -180,7 +182,7 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     help="Skip building the current project",
 )
 @click.pass_context
-def version(
+def version(  # noqa: C901
     ctx: click.Context,
     print_only: bool = False,
     force_prerelease: bool = False,
@@ -193,7 +195,7 @@ def version(
     build_metadata: str | None = None,
     skip_build: bool = False,
 ) -> str:
-    """
+    r"""
     Detect the semantically correct next version that should be applied to your
     project.
 
@@ -247,7 +249,8 @@ def version(
         log.warning("Forcing prerelease due to '--prerelease' command-line flag")
     elif force_level:
         log.warning(
-            "Forcing prerelease=False due to '--%s' command-line flag and no '--prerelease' flag",
+            "Forcing prerelease=False due to '--%s' command-line flag and no "
+            "'--prerelease' flag",
             force_level,
         )
 
@@ -294,20 +297,20 @@ def version(
     if new_version in {v for _, v in tags_and_versions(repo.tags, translator)}:
         if opts.strict:
             ctx.fail(
-                f"No release will be made, {str(new_version)} has already been released!"
+                f"No release will be made, {new_version!s} has already been "
+                "released!"
             )
         else:
             rprint(
-                f"[bold orange1]No release will be made, {str(new_version)} has already been released!"
+                f"[bold orange1]No release will be made, {new_version!s} has "
+                "already been released!"
             )
             ctx.exit(0)
 
     if print_only:
         ctx.exit(0)
 
-    rprint(
-        f"[bold green]The next version is: [white]{str(new_version)}[/white]! :rocket:"
-    )
+    rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
 
     files_with_new_version_written = apply_version_to_source_files(
         repo=repo,
@@ -329,7 +332,8 @@ def version(
         try:
             log.info("Running build command %s", build_command)
             rprint(
-                f"[bold green]:hammer_and_wrench: Running build command: {build_command}"
+                "[bold green]:hammer_and_wrench: Running build command: "
+                + build_command
             )
             shell(build_command, check=True)
         except subprocess.CalledProcessError as exc:
@@ -388,7 +392,8 @@ def version(
             )
             if opts.noop:
                 noop_report(
-                    f"would have written your changelog to {changelog_file.relative_to(repo.working_dir)}"
+                    "would have written your changelog to "
+                    + str(changelog_file.relative_to(repo.working_dir))
                 )
             else:
                 changelog_text = render_default_changelog_file(env)
@@ -505,7 +510,7 @@ def version(
                     would have run:
                         git push {runtime.masker.mask(remote_url)} {active_branch}
                         git push --tags {runtime.masker.mask(remote_url)} {active_branch}
-                    """
+                    """  # noqa: E501
                 )
             )
         else:
@@ -521,7 +526,8 @@ def version(
         noop_report(f"would have uploaded the following assets: {runtime.assets}")
     elif make_vcs_release:
         release = rh.released[new_version]
-        # Use a new, non-configurable environment for release notes - not user-configurable at the moment
+        # Use a new, non-configurable environment for release notes -
+        # not user-configurable at the moment
         release_note_environment = environment(template_dir=runtime.template_dir)
         changelog_context.bind_to_environment(release_note_environment)
         release_notes = render_release_notes(
@@ -536,7 +542,7 @@ def version(
                 prerelease=new_version.is_prerelease,
             )
         except Exception as e:
-            log.error("%s", str(e), exc_info=True)
+            log.exception(e)
             ctx.fail(str(e))
         if not release_id:
             log.warning("release_id not identified, cannot upload assets")
@@ -546,7 +552,7 @@ def version(
                 try:
                     hvcs_client.upload_asset(release_id, asset)
                 except Exception as e:
-                    log.error("%s", str(e), exc_info=True)
+                    log.exception(e)
                     ctx.fail(str(e))
 
     return str(new_version)

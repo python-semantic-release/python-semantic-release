@@ -42,11 +42,11 @@ def test_version_noop_is_noop(tmp_path_factory, example_project, repo, cli_runne
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
 
     head_before = repo.head.commit
-    tags_before = sorted(list(repo.tags), key=lambda tag: tag.name)
+    tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
     result = cli_runner.invoke(main, ["--noop", version.name])
 
-    tags_after = sorted(list(repo.tags), key=lambda tag: tag.name)
+    tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
 
     assert result.exit_code == 0
@@ -207,11 +207,11 @@ def test_version_print(
     shutil.rmtree(str(tempdir.resolve()))
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
     head_before = repo.head.commit
-    tags_before = sorted(list(repo.tags), key=lambda tag: tag.name)
+    tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
     result = cli_runner.invoke(main, [version.name, *cli_args, "--print"])
 
-    tags_after = sorted(list(repo.tags), key=lambda tag: tag.name)
+    tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
 
     assert result.exit_code == 0
@@ -227,7 +227,7 @@ def test_version_print(
     "repo",
     [
         # This project is yet to add any tags, so a release would be triggered
-        # lazy_fixture("repo_with_no_tags_angular_commits"),
+        # so excluding lazy_fixture("repo_with_no_tags_angular_commits"),
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
         lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
@@ -382,11 +382,11 @@ def test_version_no_push_force_level(
     shutil.rmtree(str(tempdir.resolve()))
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
     head_before = repo.head.commit
-    tags_before = sorted(list(repo.tags), key=lambda tag: tag.name)
+    tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
     result = cli_runner.invoke(main, [version.name, *cli_args, "--no-push"])
 
-    tags_after = sorted(list(repo.tags), key=lambda tag: tag.name)
+    tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
 
     assert result.exit_code == 0
@@ -412,8 +412,12 @@ def test_version_no_push_force_level(
         (tempdir / "pyproject.toml").read_text(encoding="utf-8")
     )
 
-    old_pyproject_toml["tool"]["poetry"].pop("version")  # type: ignore
-    new_version = new_pyproject_toml["tool"]["poetry"].pop("version")  # type: ignore
+    old_pyproject_toml["tool"]["poetry"].pop("version")  # type: ignore[attr-defined]
+    new_version = new_pyproject_toml["tool"][  # type: ignore[attr-defined]
+        "poetry"
+    ].pop(  # type: ignore[attr-defined]
+        "version"
+    )
 
     assert old_pyproject_toml == new_pyproject_toml
     assert new_version == expected_new_version
@@ -435,7 +439,8 @@ def test_version_no_push_force_level(
     added = [line[2:] for line in diff if line.startswith("+ ")]
     removed = [line[2:] for line in diff if line.startswith("- ")]
 
-    assert len(removed) == 1 and re.match('__version__ = ".*"', removed[0])
+    assert len(removed) == 1
+    assert re.match('__version__ = ".*"', removed[0])
     assert added == [f'__version__ = "{expected_new_version}"\n']
 
 

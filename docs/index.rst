@@ -5,7 +5,7 @@ Documentation Contents
 
 .. toctree::
    :maxdepth: 1
-   
+
    commands
    Strict Mode <strict_mode>
    configuration
@@ -36,7 +36,7 @@ Generating your configuration
 -----------------------------
 
 Python Semantic Release ships with a command-line interface, ``semantic-release``. You can
-inspect the default configuration in your terminal by running 
+inspect the default configuration in your terminal by running
 
 ``semantic-release generate-config``
 
@@ -175,4 +175,3 @@ Running on CI
 
 Getting a fully automated setup with releases from CI can be helpful for some
 projects.  See :ref:`automatic`.
-

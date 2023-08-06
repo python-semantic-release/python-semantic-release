@@ -54,5 +54,5 @@ def test_template_env_configurable(format_map, subjects):
         <h1>This is an example template document</h1>
 
         <h2>The title is {title.upper()}</h2>
-        {(newline + " " * 8).join(f'<p>This is a paragraph about {subject}</p>' for subject in subjects)}"""
+        {(newline + " " * 8).join(f'<p>This is a paragraph about {subject}</p>' for subject in subjects)}"""  # noqa: E501
     )
