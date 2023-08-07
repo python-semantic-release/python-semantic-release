@@ -327,7 +327,7 @@ class RuntimeContext:
         )
 
         token = cls.resolve_from_env(raw.remote.token)
-        if isinstance(raw.remote.token, EnvConfigVar) and not token:
+        if isinstance(raw.remote.token, EnvConfigVar) and not raw.remote.ignore_token_for_push and not token:
             log.warning(
                 "the token for the remote VCS is configured as stored in the %s environment variable, but it is empty",
                 raw.remote.token.env,
