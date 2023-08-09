@@ -146,38 +146,109 @@ command line options::
 
 .. _cmd-version-option-force-level:
 
-``--major/--minor/--patch``
-***************************
+``--major/--minor/--patch/--prerelease``
+****************************************
 
-Force the next version to increment the major, minor or patch digit, respectively.
-These flags are optional but mutually exclusive, so only one may be supplied, or none at all.
-Using these flags overrides the usual calculation for the next version; this can be useful, say,
-when a project wants to release its initial 1.0.0 version.
+Force the next version to increment the major, minor or patch digits, or the prerelease revision,
+respectively. These flags are optional but mutually exclusive, so only one may be supplied, or
+none at all. Using these flags overrides the usual calculation for the next version; this can
+be useful, say, when a project wants to release its initial 1.0.0 version.
 
 .. warning::
-    Using these flags will override the value of prerelease, **regardless of your configuration or the
-    current version**. To produce a prerelease with the appropriate digit incremented you should also
-    supply the :ref:`cmd-version-option-prerelease` flag. If you do not, using these flags will force
+
+    Using these flags will override the configured value of ``prerelease`` (configured
+    in your :ref:`Release Group<multibranch-releases-configuring>`),
+    **regardless of your configuration or the current version**.
+
+    To produce a prerelease with the appropriate digit incremented you should also
+    supply the :ref:`cmd-version-option-as-prerelease` flag. If you do not, using these flags will force
     a full (non-prerelease) version to be created.
+
+For example, suppose your project's current version is ``0.2.1-rc.1``. The following
+shows how these options can be combined with ``--as-prerelease`` to force different
+versions:
+
+.. code-block:: bash
+
+   semantic-release version --prerelease --print
+   "0.2.1-rc.2"
+
+   semantic-release version --patch --print
+   "0.2.2"
+
+   semantic-release version --minor --print
+   "0.3.0"
+
+   semantic-release version --major --print
+   "1.0.0"
+
+   semantic-release version --minor --as-prerelease --print
+   "0.3.0-rc.1"
+
+   semantic-release version --prerelease --as-prerelease --print
+   "0.2.1-rc.2"
 
 These options are forceful overrides, but there is no action required for subsequent releases
 performed using the usual calculation algorithm.
+
+Supplying ``--prerelease`` will cause Python Semantic Release to scan your project history
+for any previous prereleases with the same major, minor and patch versions as the latest
+version and the same :ref:`prerelease token<cmd-version-option-prerelease-token>` as the
+one passed by command-line or configuration. If one is not found, ``--prerelease`` will
+produce the next version according to the following format:
+
+.. code-block:: python
+
+    f"{latest_version.major}.{latest_version.minor}.{latest_version.patch}-{prerelease_token}.1"
+
+However, if Python Semantic Release identifies a previous *prerelease* version with the same
+major, minor and patch digits as the latest version, *and* the same prerelease token as the
+one supplied by command-line or configuration, then Python Semantic Release will increment
+the revision found on that previous prerelease version in its new version.
+
+For example, if ``"0.2.1-rc.1"`` and already exists as a previous version, and the latest version
+is ``"0.2.1"``, invoking the following command will produce ``"0.2.1-rc.2"``:
+
+.. code-block:: bash
+
+   semantic-release version --prerelease --prerelease-token "rc" --print
+
+.. warning::
+
+   This is true irrespective of the branch from which ``"0.2.1-rc.1"`` was released from.
+   The check for previous prereleases "leading up to" this normal version is intended to
+   help prevent collisions in git tags to an extent, but isn't foolproof. As the example
+   shows it is possible to release a prerelease for a normal version that's already been
+   released when using this flag, which would in turn be ignored by tools selecting
+   versions by `SemVer precedence rules`_.
+
+
+.. _SemVer precedence rules: https://semver.org/#spec-item-11
+
 
 .. seealso::
     - :ref:`configuration`
     - :ref:`config-branches`
 
-.. _cmd-version-option-prerelease:
+.. _cmd-version-option-as-prerelease:
 
-``--prerelease``
-****************
+``--as-prerelease``
+*******************
 
-Force the next version to be a prerelease. As with :ref:`cmd-version-option-force-level`, this option
+After performing the normal calculation of the next version, convert the resulting next version
+to a prerelease before applying it. As with :ref:`cmd-version-option-force-level`, this option
 is a forceful override, but no action is required to resume calculating versions as normal on the
-subsequent releases.
+subsequent releases. The main distinction between ``--prerelease`` and ``--as-prerelease`` is that
+the latter will not *force* a new version if one would not have been released without supplying
+the flag.
+
+This can be useful when making a single prerelease on a branch that would typically release
+normal versions.
 
 If not specified in :ref:`cmd-version-option-prerelease-token`, the prerelease token is idenitified using the
 :ref:`Multibranch Release Configuration <multibranch-releases-configuring>`
+
+See the examples alongside :ref:`cmd-version-option-force-level` for how to use this flag.
 
 .. _cmd-version-option-prerelease-token:
 

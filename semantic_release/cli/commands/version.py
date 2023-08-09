@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 
 def is_forced_prerelease(
-    force_prerelease: bool, force_level: str | None, prerelease: bool
+    as_prerelease: bool, forced_level_bump: LevelBump | None, prerelease: bool
 ) -> bool:
     """
     Determine if this release is forced to have prerelease on/off.
@@ -46,20 +46,49 @@ def is_forced_prerelease(
     Otherwise (``force_level is None``) use the value of ``prerelease``
     """
     log.debug(", ".join(f"{k} = {v}" for k, v in locals().items()))
-    return force_prerelease or ((force_level is None) and prerelease)
+    return (
+        as_prerelease
+        or forced_level_bump is LevelBump.PRERELEASE_REVISION
+        or ((forced_level_bump is None) and prerelease)
+    )
 
 
 def version_from_forced_level(
-    repo: Repo, level_bump: LevelBump, translator: VersionTranslator
+    repo: Repo, forced_level_bump: LevelBump, translator: VersionTranslator
 ) -> Version:
     ts_and_vs = tags_and_versions(repo.tags, translator)
 
     # If we have no tags, return the default version
     if not ts_and_vs:
-        return Version.parse(DEFAULT_VERSION).bump(level_bump)
+        return Version.parse(DEFAULT_VERSION).bump(forced_level_bump)
 
     _, latest_version = ts_and_vs[0]
-    return latest_version.bump(level_bump)
+    if forced_level_bump is not LevelBump.PRERELEASE_REVISION:
+        return latest_version.bump(forced_level_bump)
+
+    # We need to find the latest version with the prerelease token
+    # we're looking for, and return that version + an increment to
+    # the prerelease revision.
+
+    # NOTE this can probably be cleaned up.
+    # ts_and_vs are in order, so check if we're looking at prereleases
+    # for the same (major, minor, patch) as the latest version.
+    # If we are, we can increment the revision and we're done. If
+    # we don't find a prerelease targeting this version with the same
+    # token as the one we're looking to prerelease, we can use revision 1.
+    for _, version in ts_and_vs:
+        if not (
+            version.major == latest_version.major
+            and version.minor == latest_version.minor
+            and version.patch == latest_version.patch
+        ):
+            break
+        if (
+            version.is_prerelease
+            and version.prerelease_token == translator.prerelease_token
+        ):
+            return version.bump(LevelBump.PRERELEASE_REVISION)
+    return latest_version.to_prerelease(token=translator.prerelease_token, revision=1)
 
 
 def apply_version_to_source_files(
@@ -113,10 +142,10 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     "--print", "print_only", is_flag=True, help="Print the next version and exit"
 )
 @click.option(
-    "--prerelease",
-    "force_prerelease",
+    "--as-prerelease",
+    "as_prerelease",
     is_flag=True,
-    help="Force the next version to be a prerelease",
+    help="Ensure the next version to be released is a prerelease version",
 )
 @click.option(
     "--prerelease-token",
@@ -128,19 +157,25 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     "--major",
     "force_level",
     flag_value="major",
-    help="force the next version to be a major release",
+    help="Force the next version to be a major release",
 )
 @click.option(
     "--minor",
     "force_level",
     flag_value="minor",
-    help="force the next version to be a minor release",
+    help="Force the next version to be a minor release",
 )
 @click.option(
     "--patch",
     "force_level",
     flag_value="patch",
-    help="force the next version to be a patch release",
+    help="Force the next version to be a patch release",
+)
+@click.option(
+    "--prerelease",
+    "force_level",
+    flag_value="prerelease_revision",
+    help="Force the next version to be a prerelease",
 )
 @click.option(
     "--commit/--no-commit",
@@ -183,7 +218,7 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
 def version(
     ctx: click.Context,
     print_only: bool = False,
-    force_prerelease: bool = False,
+    as_prerelease: bool = False,
     prerelease_token: str | None = None,
     force_level: str | None = None,
     commit_changes: bool = True,
@@ -212,9 +247,10 @@ def version(
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
+    forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
     prerelease = is_forced_prerelease(
-        force_prerelease=force_prerelease,
-        force_level=force_level,
+        as_prerelease=as_prerelease,
+        forced_level_bump=forced_level_bump,
         prerelease=runtime.prerelease,
     )
     hvcs_client = runtime.hvcs_client
@@ -243,22 +279,17 @@ def version(
         log.info("No vcs release will be created because pushing changes is disabled")
         make_vcs_release &= push_changes
 
-    if force_prerelease:
-        log.warning("Forcing prerelease due to '--prerelease' command-line flag")
-    elif force_level:
+    if forced_level_bump:
         log.warning(
-            "Forcing prerelease=False due to '--%s' command-line flag and no '--prerelease' flag",
+            "Forcing a '%s' release due to '--%s' command-line flag",
             force_level,
-        )
-
-    if force_level:
-        level_bump = LevelBump.from_string(force_level)
-        log.warning(
-            "Forcing a %s level bump due to '--force' command-line option", force_level
+            force_level
+            if forced_level_bump is not LevelBump.PRERELEASE_REVISION
+            else "prerelease",
         )
 
         new_version = version_from_forced_level(
-            repo=repo, level_bump=level_bump, translator=translator
+            repo=repo, forced_level_bump=forced_level_bump, translator=translator
         )
 
         # We only turn the forced version into a prerelease if the user has specified
@@ -281,6 +312,16 @@ def version(
 
     if build_metadata:
         new_version.build_metadata = build_metadata
+
+    if as_prerelease:
+        before_conversion, new_version = new_version, new_version.to_prerelease(
+            token=translator.prerelease_token
+        )
+        log.info(
+            "Converting %s to %s due to '--as-prerelease' command-line option",
+            before_conversion,
+            new_version,
+        )
 
     gha_output.released = False
     gha_output.version = new_version
