@@ -2,6 +2,25 @@
 
 
 
+## v8.0.5 (2023-08-10)
+
+### Documentation
+
+* docs: fix typo missing &#39;s&#39; in version_variable[s] in configuration.rst (#668) ([`879186a`](https://github.com/python-semantic-release/python-semantic-release/commit/879186aa09a3bea8bbe2b472f892cf7c0712e557))
+
+### Fix
+
+* fix: don&#39;t warn about vcs token if ignore_token_for_push is true. (#670)
+
+* fix: don&#39;t warn about vcs token if ignore_token_for_push is true.
+
+* docs: `password` should be `token`. ([`f1a54a6`](https://github.com/python-semantic-release/python-semantic-release/commit/f1a54a6c9a05b225b6474d50cd610eca19ec0c34))
+
+### Style
+
+* style: beautify f1a54a6c9a05b225b6474d50cd610eca19ec0c34 ([`0280e10`](https://github.com/python-semantic-release/python-semantic-release/commit/0280e104fcf8af3ed1341461d1eb9c1e83b5e4be))
+
+
 ## v8.0.4 (2023-07-26)
 
 ### Documentation
