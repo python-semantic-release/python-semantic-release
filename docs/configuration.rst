@@ -304,7 +304,7 @@ specifed in ``file:variable`` format. For example:
 .. code-block:: toml
 
     [tool.semantic_release]
-    version_variable = [
+    version_variables = [
         "semantic_release/__init__.py:__version__",
         "docs/conf.py:version",
     ]
