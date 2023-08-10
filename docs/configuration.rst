@@ -66,13 +66,13 @@ configuration file (**Note: this is not advisable**):
 Unfortunately, this configuration lives in your Git repository along with your source
 code, and this would represent insecure management of your password. It is recommended
 to use an environment variable to provide the required password. Suppose you would
-like to specify that should be read from the environment variable ``GH_TOKEN``. 
+like to specify that should be read from the environment variable ``GH_TOKEN``.
 In this case, you should modify your configuration to the following:
 
 .. code-block:: toml
 
     [tool.semantic_release.remote]
-    password = { env = "GH_TOKEN" }
+    token = { env = "GH_TOKEN" }
 
 This is equivalent to the default:
 
