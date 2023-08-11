@@ -58,6 +58,7 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             f.truncate()
             existed_changelog_sections = existed_changelog_text.split(CHANGELOG_PLACEHOLDER)
             if len(existed_changelog_sections) > 1:
+                log.warning("Deprecation: Placeholder is detected, only new changes will be added.")
                 rh = ReleaseHistory.from_git_history(
                     repo=repo,
                     translator=translator,
