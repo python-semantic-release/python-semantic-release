@@ -36,8 +36,8 @@ class Gitea(HvcsBase):
     """Gitea helper class"""
 
     DEFAULT_DOMAIN = "gitea.com"
-    DEFAULT_API_PATH = "/api/v1"
-    DEFAULT_API_DOMAIN = f"{DEFAULT_DOMAIN}{DEFAULT_API_PATH}"
+    DEFAULT_API_PATH = "api/v1"
+    DEFAULT_API_DOMAIN = f"{DEFAULT_DOMAIN}/{DEFAULT_API_PATH}"
 
     # pylint: disable=super-init-not-called
     def __init__(
@@ -53,9 +53,13 @@ class Gitea(HvcsBase):
             "GITEA_SERVER_URL", self.DEFAULT_DOMAIN
         ).replace("https://", "")
 
-        self.hvcs_api_domain = hvcs_api_domain or os.getenv(
-            "GITEA_API_URL", self.DEFAULT_API_DOMAIN
-        ).replace("https://", "")
+        self.hvcs_api_domain = (
+            hvcs_api_domain
+            or os.getenv("GITEA_API_URL", "").replace("https://", "")
+            or (
+                f"{self.hvcs_domain}{'' if self.hvcs_domain[-1] == '/' else '/'}{self.DEFAULT_API_PATH}"
+            )
+        )
 
         self.api_url = f"https://{self.hvcs_api_domain}"
 
