@@ -53,9 +53,13 @@ class Gitea(HvcsBase):
             "GITEA_SERVER_URL", self.DEFAULT_DOMAIN
         ).replace("https://", "")
 
-        self.hvcs_api_domain = hvcs_api_domain or os.getenv(
-            "GITEA_API_URL", self.DEFAULT_API_DOMAIN
-        ).replace("https://", "")
+        self.hvcs_api_domain = (
+            hvcs_api_domain
+            or os.getenv("GITEA_API_URL", "").replace("https://", "")
+            or (
+                f"{self.hvcs_domain}{'' if self.hvcs_domain[-1] == '/' else '/'}{self.DEFAULT_API_PATH}"
+            )
+        )
 
         self.api_url = f"https://{self.hvcs_api_domain}"
 
