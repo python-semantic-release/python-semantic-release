@@ -56,7 +56,7 @@ class Gitlab(HvcsBase):
         self.hvcs_domain = (
             hvcs_domain or self._domain_from_environment() or self.DEFAULT_DOMAIN
         )
-        self.hvcs_api_domain = hvcs_api_domain or self.hvcs_domain.replace(
+        self.hvcs_api_domain = (hvcs_api_domain or self.hvcs_domain).replace(
             "https://", ""
         )
         self.api_url = os.getenv("CI_SERVER_URL", f"https://{self.hvcs_api_domain}")
