@@ -47,7 +47,7 @@ def default_gitea_client():
             {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
             "https://example.com",
             None,
-            "https://example.com",
+            "example.com",
             Gitea.DEFAULT_API_DOMAIN,
         ),
         (
@@ -55,7 +55,7 @@ def default_gitea_client():
             None,
             "https://api.example.com",
             Gitea.DEFAULT_DOMAIN,
-            "https://api.example.com",
+            "api.example.com",
         ),
     ],
 )
