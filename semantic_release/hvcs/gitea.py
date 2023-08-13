@@ -1,6 +1,4 @@
-"""
-Helper code for interacting with a Gitea remote VCS
-"""
+"""Helper code for interacting with a Gitea remote VCS"""
 from __future__ import annotations
 
 import glob
@@ -67,11 +65,13 @@ class Gitea(HvcsBase):
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:
-        """Create a new release
+        """
+        Create a new release
         https://gitea.com/api/swagger#/repository/repoCreateRelease
         :param tag: Tag to create release for
         :param release_notes: The release notes for this version
-        :param prerelease: Whether or not this release should be specified as a prerelease
+        :param prerelease: Whether or not this release should be specified as a
+                           prerelease
         :return: Whether the request succeeded
         """
         log.info("Creating release for tag %s", tag)
@@ -85,12 +85,13 @@ class Gitea(HvcsBase):
                 "prerelease": prerelease,
             },
         )
-        return resp.json()["id"]  # type: ignore
+        return resp.json()["id"]
 
     @logged_function(log)
     @suppress_not_found
     def get_release_id_by_tag(self, tag: str) -> int | None:
-        """Get a release by its tag name
+        """
+        Get a release by its tag name
         https://gitea.com/api/swagger#/repository/repoGetReleaseByTag
         :param tag: Tag to get release for
         :return: ID of found release
@@ -98,11 +99,12 @@ class Gitea(HvcsBase):
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}"
         )
-        return response.json().get("id")  # type: ignore
+        return response.json().get("id")
 
     @logged_function(log)
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
-        """Edit a release with updated change notes
+        """
+        Edit a release with updated change notes
         https://gitea.com/api/swagger#/repository/repoEditRelease
         :param id: ID of release to update
         :param release_notes: The release notes for this version
@@ -119,7 +121,8 @@ class Gitea(HvcsBase):
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:
-        """Post release changelog
+        """
+        Post release changelog
         :param version: The version number
         :param changelog: The release notes for this version
         :return: The status of the request
@@ -142,17 +145,19 @@ class Gitea(HvcsBase):
 
     @logged_function(log)
     def asset_upload_url(self, release_id: str) -> str:
-        """Get the correct upload url for a release
+        """
+        Get the correct upload url for a release
         https://gitea.com/api/swagger#/repository/repoCreateReleaseAttachment
         :param release_id: ID of the release to upload to
         """
-        return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"
+        return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"  # noqa: E501
 
     @logged_function(log)
     def upload_asset(
-        self, release_id: int, file: str, label: str | None = None
+        self, release_id: int, file: str, label: str | None = None  # noqa: ARG002
     ) -> bool:
-        """Upload an asset to an existing release
+        """
+        Upload an asset to an existing release
         https://gitea.com/api/swagger#/repository/repoCreateReleaseAttachment
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
@@ -188,12 +193,12 @@ class Gitea(HvcsBase):
 
     @logged_function(log)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
-        """Upload distributions to a release
+        """
+        Upload distributions to a release
         :param tag: Tag to upload for
         :param path: Path to the dist directory
         :return: The number of distributions successfully uploaded
         """
-
         # Find the release corresponding to this tag
         release_id = self.get_release_id_by_tag(tag=tag)
         if not release_id:
@@ -208,8 +213,8 @@ class Gitea(HvcsBase):
             try:
                 self.upload_asset(release_id, file_path)
                 n_succeeded += 1
-            except HTTPError:
-                log.error("error uploading asset %s", file_path, exc_info=True)
+            except HTTPError:  # noqa: PERF203
+                log.exception("error uploading asset %s", file_path)
 
         return n_succeeded
 

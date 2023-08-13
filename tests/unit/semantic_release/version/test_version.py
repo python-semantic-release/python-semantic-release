@@ -73,7 +73,8 @@ def test_version_parse_succeeds(version_parts):
         "17.0.3-custom_token.12",
         "9",
         "4.1.2!-major",
-        "%.*.?" "M2.m3.p1",
+        "%.*.?",
+        "M2.m3.p1",
     ],
 )
 def test_version_parse_fails(bad_version):
@@ -149,9 +150,9 @@ def test_version_eq_succeeds(a_version):
         operator.lt,
         operator.le,
         operator.ne,
-        lambda l, r: not l >= r,
-        lambda l, r: not l > r,
-        lambda l, r: not l == r,
+        lambda left, right: left < right,
+        lambda left, right: left <= right,
+        lambda left, right: left != right,
     ],
 )
 def test_version_comparator_succeeds(lower_version, upper_version, op):

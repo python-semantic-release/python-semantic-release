@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
 
-import semantic_release  # noqa
+import semantic_release  # noqa: E402
 
 # -- General configuration ------------------------------------------------
 
@@ -21,19 +20,15 @@ templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
 project = "python-semantic-release"
-copyright = "2020, Rolf Erik Lekang"
+copyright = "2020, Rolf Erik Lekang"  # noqa: A001
 
 version = semantic_release.__version__
 release = semantic_release.__version__
 
-# language = None
-# today = ''
-# today_fmt = '%B %d, %Y'
 
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 html_theme = "furo"
-# html_static_path = ["_static"]
 htmlhelp_basename = "python-semantic-releasedoc"
 
 
@@ -47,7 +42,7 @@ apidoc_module_first = True
 apidoc_extra_args = ["-d", "3"]
 
 
-def setup(app):
+def setup(app):  # noqa: ARG001,ANN001,ANN201
     pass
 
 

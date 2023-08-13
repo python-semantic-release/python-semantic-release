@@ -4,12 +4,11 @@ import pytest
 
 from semantic_release.cli import main, publish
 from semantic_release.hvcs import Github
-from semantic_release.version import tags_and_versions
 
 
+@pytest.mark.usefixtures("repo_with_single_branch_angular_commits")
 @pytest.mark.parametrize("cmd_args", [(), ("--tag", "latest")])
 def test_publish_latest_uses_latest_tag(
-    repo_with_single_branch_angular_commits,
     cli_runner,
     cmd_args,
 ):
@@ -24,7 +23,8 @@ def test_publish_latest_uses_latest_tag(
     mocked_upload_dists.assert_called_once_with(tag="v1.0.0", dist_glob="dist/*")
 
 
-def test_publish_to_tag_uses_tag(repo_with_single_branch_angular_commits, cli_runner):
+@pytest.mark.usefixtures("repo_with_single_branch_angular_commits")
+def test_publish_to_tag_uses_tag(cli_runner):
     tag = "v99.999.9999+build.1234"
     with mock.patch.object(Github, "upload_dists") as mocked_upload_dists, mock.patch(
         "semantic_release.cli.commands.publish.tags_and_versions",
@@ -34,4 +34,4 @@ def test_publish_to_tag_uses_tag(repo_with_single_branch_angular_commits, cli_ru
         assert result.exit_code == 0
 
     mock_tags_and_versions.assert_not_called()
-    assert mocked_upload_dists.called_once_with(tag=tag, dist_glob="dist/*")
+    mocked_upload_dists.assert_called_once_with(tag=tag, dist_glob="dist/*")

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import filecmp
 import os
 import secrets
 import string
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
-from typing import Iterable, TypeVar
+from typing import TYPE_CHECKING, Iterable, TypeVar
 
-from git import Repo
+if TYPE_CHECKING:
+    import filecmp
+
+    from git import Repo
 
 
 def shortuid(length: int = 8) -> str:
@@ -42,8 +44,8 @@ def netrc_file(machine: str) -> NamedTemporaryFile:
 
 def flatten_dircmp(dcmp: filecmp.dircmp) -> list[str]:
     return dcmp.diff_files + [
-        os.sep.join((dir, file))
-        for dir, cmp in dcmp.subdirs.items()
+        os.sep.join((directory, file))
+        for directory, cmp in dcmp.subdirs.items()
         for file in flatten_dircmp(cmp)
     ]
 
@@ -54,6 +56,7 @@ _R = TypeVar("_R")
 def xdist_sort_hack(it: Iterable[_R]) -> Iterable[_R]:
     """
     hack for pytest-xdist
+
     https://pytest-xdist.readthedocs.io/en/latest/known-limitations.html#workarounds
 
     taking an iterable of params for a pytest.mark.parametrize decorator, this

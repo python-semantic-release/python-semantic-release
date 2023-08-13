@@ -189,11 +189,11 @@ handled by the :ref:`cmd-publish` command.
 
 .. _breaking-removed-define-option:
 
-Removal of `-D/--define` command-line option
-""""""""""""""""""""""""""""""""""""""""""""
+Removal of ``-D/--define`` command-line option
+""""""""""""""""""""""""""""""""""""""""""""""
 
-It is no longer possible to override arbitrary configuration values using the `-D`/
-`--define` option. You should provide the appropriate values via a configuration
+It is no longer possible to override arbitrary configuration values using the ``-D``/
+``--define`` option. You should provide the appropriate values via a configuration
 file using :ref:`cmd-main-option-config` or via the available command-line options.
 
 This simplifies the command-line option parsing significantly and is less error-prone,
@@ -220,7 +220,7 @@ were the only place in which this custom exception was used. Therefore, this exc
 has **also** been removed from Python Semantic Release in v8.
 
 If you were relying on this functionality, it's recommended that you add the following
-shell commands *before* invoking `semantic-release` to verify your environment:
+shell commands *before* invoking ``semantic-release`` to verify your environment:
 
 .. note::
    In the following, $RELEASE_BRANCH refers to the git branch against which you run your
@@ -295,7 +295,7 @@ Circle CI
 **Replacement**:
 
 ..  code-block:: bash
-    
+
     if ! [[
           $CIRCLE_BRANCH == $RELEASE_BRANCH && \
           -n $CI_PULL_REQUEST
@@ -313,7 +313,7 @@ GitLab CI
 **Replacement**:
 
 .. code-block:: bash
-    
+
     if ! [[ $CI_COMMIT_REF_NAME == $RELEASE_BRANCH ]]; then
       exit 1
     fi
@@ -343,7 +343,7 @@ Jenkins
 **Replacement**:
 
 .. code-block:: bash
-    
+
     if [[ -z $BRANCH_NAME ]]; then
       BRANCH_NAME=$BRANCH_NAME
     elif [[ -z $GIT_BRANCH ]]; then
@@ -495,7 +495,7 @@ fully open up customising the changelog's appearance.
 Configuration
 -------------
 
-The configuration structure has been completely reworked, so you should read 
+The configuration structure has been completely reworked, so you should read
 :ref:`configuration` carefully during the process of upgrading to v8+. However,
 some common pitfalls and potential sources of confusion are summarised here.
 
@@ -617,11 +617,10 @@ Previously, a custom commit parser had to satisfy the following criteria:
     :py:class:`semantic_release.history.parser_helpers.ParsedCommit` if the commit is
     parsed successfully, or raise a
     :py:class:`semantic_release.UnknownCommitMessageStyleError` if parsing is
-    unsuccessful. 
+    unsuccessful.
 
 It is still possible to implement custom commit parsers, but the interface for doing
 so has been modified with stronger support for Python type annotations and broader
 input provided to the parser to enable capturing more information from each commit,
 such as the commit's date and author, if desired. A full guide to implementing a
 custom commit parser can be found at :ref:`commit-parser-writing-your-own-parser`.
-

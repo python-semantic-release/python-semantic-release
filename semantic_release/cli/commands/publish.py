@@ -22,9 +22,7 @@ log = logging.getLogger(__name__)
 )
 @click.pass_context
 def publish(ctx: click.Context, tag: str = "latest") -> None:
-    """
-    Build and publish a distribution to a VCS release.
-    """
+    """Build and publish a distribution to a VCS release."""
     runtime = ctx.obj
     repo = runtime.repo
     hvcs_client = runtime.hvcs_client

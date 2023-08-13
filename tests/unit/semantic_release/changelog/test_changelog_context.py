@@ -34,7 +34,7 @@ CHANGELOG_TEMPLATE = r"""
 {% else %}
 * {{ commit.message.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
 {% endif %}{% endfor %}{% endfor %}{% endfor %}
-"""
+"""  # noqa: E501
 
 EXPECTED_CHANGELOG_CONTENT_ANGULAR = r"""
 # CHANGELOG
@@ -129,9 +129,8 @@ EXPECTED_CHANGELOG_CONTENT_TAG = r"""
     ],
 )
 @pytest.mark.parametrize("hvcs_client_class", (Github, Gitlab, Gitea))
-def test_changelog_context(
-    repo, changelog_template, commit_parser, expected_changelog, hvcs_client_class
-):
+@pytest.mark.usefixtures("expected_changelog")
+def test_changelog_context(repo, changelog_template, commit_parser, hvcs_client_class):
     # NOTE: this test only checks that the changelog can be rendered with the
     # contextual information we claim to offer. Testing that templates render
     # appropriately is the responsibility of the template engine's authors,

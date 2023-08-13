@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
-
-from git.objects.commit import Commit
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from semantic_release.commit_parser.token import ParseResultType
+
+if TYPE_CHECKING:
+    from git.objects.commit import Commit
 
 
 class ParserOptions:
     """
     ParserOptions should accept the keyword arguments they are interested in
     from configuration and process them as desired, ultimately creating attributes
-    on an instance which can be accessed by the corresponding commit parser. For example,
+    on an instance which can be accessed by the corresponding commit parser.
+
+    For example:
     >>> class MyParserOptions(ParserOptions):
     ...     def __init__(self, message_prefix: str) -> None:
     ...         self.prefix = message_prefix * 2

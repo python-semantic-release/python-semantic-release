@@ -13,7 +13,7 @@ Changelog Templates
     Please make sure to refer to :ref:`changelog-templates-migrating-existing-changelog`.
 
 Python Semantic Release can write a changelog for your project. By default, it uses an
-in-built template; once rendered this will be written to the location you configure with the 
+in-built template; once rendered this will be written to the location you configure with the
 :ref:`changelog_file <config-changelog-changelog-file>` setting.
 
 However, Python Semantic Release is also capable of rendering an entire directory tree
@@ -57,7 +57,7 @@ setting to the name of this directory. The default name is ``"templates"``.
 
 When the templates are rendered, files within the tree are output to the location
 within your repository that has the *same relative path* to the root as the *relative
-path of the template to the templates directory*. 
+path of the template to the templates directory*.
 
 Templates are identified by giving a ``.j2`` extension to the template file. Any such
 templates have the ``.j2`` extension removed from the target file. Therefore, to render
@@ -217,7 +217,7 @@ by the commit parser.
 
 The commits represented within each ``ReleaseHistory.released[version].elements``
 grouping are the commits which were made between ``version`` and the release
-corresponding to the previous version. 
+corresponding to the previous version.
 That is, given two releases ``Version(1, 0, 0)`` and ``Version(1, 1, 0)``,
 ``ReleaseHistory.released[Version(1, 0, 0)].elements`` contains only commits
 made after the release of ``Version(1, 0, 0)`` up to and including the release

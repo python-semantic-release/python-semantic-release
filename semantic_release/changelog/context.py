@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
-from jinja2 import Environment
+if TYPE_CHECKING:
+    from jinja2 import Environment
 
-from semantic_release.changelog.release_history import ReleaseHistory
-from semantic_release.hvcs._base import HvcsBase
+    from semantic_release.changelog.release_history import ReleaseHistory
+    from semantic_release.hvcs._base import HvcsBase
 
 
 @dataclass

@@ -13,19 +13,17 @@ from tests.const import (
 
 @pytest.fixture
 def a_full_version() -> Version:
-    yield Version.parse(A_FULL_VERSION_STRING)
+    return Version.parse(A_FULL_VERSION_STRING)
 
 
 @pytest.fixture
 def a_prerelease_version() -> Version:
-    yield Version.parse(A_PRERELEASE_VERSION_STRING)
+    return Version.parse(A_PRERELEASE_VERSION_STRING)
 
 
 @pytest.fixture
-def a_full_version_with_build_metadata(
-    A_FULL_VERSION_STRING_WITH_BUILD_METADATA,
-) -> Version:
-    yield Version.parse(A_FULL_VERSION_STRING_WITH_BUILD_METADATA)
+def a_full_version_with_build_metadata() -> Version:
+    return Version.parse(A_FULL_VERSION_STRING_WITH_BUILD_METADATA)
 
 
 @pytest.mark.parametrize(

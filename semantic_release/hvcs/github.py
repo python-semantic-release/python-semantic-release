@@ -1,6 +1,4 @@
-"""
-Helper code for interacting with a GitHub remote VCS
-"""
+"""Helper code for interacting with a GitHub remote VCS"""
 from __future__ import annotations
 
 import glob
@@ -39,7 +37,6 @@ class Github(HvcsBase):
     DEFAULT_DOMAIN = "github.com"
     DEFAULT_API_DOMAIN = "api.github.com"
 
-    # pylint: disable=super-init-not-called
     def __init__(
         self,
         remote_url: str,
@@ -49,7 +46,6 @@ class Github(HvcsBase):
     ) -> None:
         self._remote_url = remote_url
 
-        # pylint: disable=line-too-long
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
         self.hvcs_domain = hvcs_domain or os.getenv(
             "GITHUB_SERVER_URL", self.DEFAULT_DOMAIN
@@ -97,7 +93,8 @@ class Github(HvcsBase):
     def create_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:
-        """Create a new release
+        """
+        Create a new release
         https://docs.github.com/rest/reference/repos#create-a-release
         :param tag: Tag to create release for
         :param release_notes: The release notes for this version
@@ -116,14 +113,15 @@ class Github(HvcsBase):
             },
         )
 
-        release_id: int = resp.json()["id"]  # type: ignore
+        release_id: int = resp.json()["id"]
         log.info("Successfully created release with ID: %s", release_id)
         return release_id
 
     @logged_function(log)
     @suppress_not_found
     def get_release_id_by_tag(self, tag: str) -> int | None:
-        """Get a release by its tag name
+        """
+        Get a release by its tag name
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
         :param tag: Tag to get release for
         :return: ID of release, if found, else None
@@ -131,7 +129,7 @@ class Github(HvcsBase):
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}"
         )
-        return response.json().get("id")  # type: ignore
+        return response.json().get("id")
 
     @logged_function(log)
     def edit_release_notes(
@@ -139,7 +137,8 @@ class Github(HvcsBase):
         release_id: int,
         release_notes: str,
     ) -> int:
-        """Edit a release with updated change notes
+        """
+        Edit a release with updated change notes
         https://docs.github.com/rest/reference/repos#update-a-release
         :param id: ID of release to update
         :param release_notes: The release notes for this version
@@ -156,7 +155,8 @@ class Github(HvcsBase):
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:
-        """Post release changelog
+        """
+        Post release changelog
         :param version: The version number
         :param release_notes: The release notes for this version
         :return: The status of the request
@@ -180,19 +180,21 @@ class Github(HvcsBase):
 
     @logged_function(log)
     def asset_upload_url(self, release_id: str) -> str:
-        """Get the correct upload url for a release
+        """
+        Get the correct upload url for a release
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
         :param release_id: ID of the release to upload to
         :return: URL found to upload for a release
         """
-        # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset ?
-        return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"
+        # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset
+        return f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets"  # noqa: E501
 
     @logged_function(log)
     def upload_asset(
         self, release_id: int, file: str, label: str | None = None
     ) -> bool:
-        """Upload an asset to an existing release
+        """
+        Upload an asset to an existing release
         https://docs.github.com/rest/reference/repos#upload-a-release-asset
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
@@ -225,12 +227,12 @@ class Github(HvcsBase):
 
     @logged_function(log)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
-        """Upload distributions to a release
+        """
+        Upload distributions to a release
         :param version: Version to upload for
         :param path: Path to the dist directory
         :return: The number of distributions successfully uploaded
         """
-
         # Find the release corresponding to this version
         release_id = self.get_release_id_by_tag(tag=tag)
         if not release_id:
@@ -245,8 +247,8 @@ class Github(HvcsBase):
             try:
                 self.upload_asset(release_id, file_path)
                 n_succeeded += 1
-            except HTTPError:
-                log.error("error uploading asset %s", file_path, exc_info=True)
+            except HTTPError:  # noqa: PERF203
+                log.exception("error uploading asset %s", file_path)
 
         return n_succeeded
 

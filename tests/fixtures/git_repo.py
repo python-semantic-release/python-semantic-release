@@ -8,28 +8,27 @@ from tests.util import add_text_to_file, shortuid
 
 @pytest.fixture
 def commit_author():
-    yield Actor(name="semantic release testing", email="not_a_real@email.com")
+    return Actor(name="semantic release testing", email="not_a_real@email.com")
 
 
 @pytest.fixture
 def file_in_repo():
-    yield f"file-{shortuid()}.txt"
+    return f"file-{shortuid()}.txt"
 
 
 @pytest.fixture
 def example_git_ssh_url():
-    yield f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    return f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
 
 
 @pytest.fixture
 def example_git_https_url():
-    yield f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}"
+    return f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}"
 
 
 @pytest.fixture(
     # For the moment there's no value in re-running every test that wants a repo
     # twice, once with a different URL format
-    # params=[lazy_fixture("example_git_ssh_url"), lazy_fixture("example_git_https_url")]
     params=[lazy_fixture("example_git_ssh_url")]
 )
 def git_repo_factory(request, example_project):
@@ -51,7 +50,7 @@ def git_repo_factory(request, example_project):
         repo.create_remote(name="origin", url=request.param)
         return repo
 
-    yield git_repo
+    return git_repo
 
 
 @pytest.fixture

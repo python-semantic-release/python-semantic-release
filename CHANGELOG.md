@@ -1983,12 +1983,12 @@ Any issues which are labelled as a question will be closed after two weeks of in
 
 * ci: pass SHA from beautify to release
 
-Checkout the current SHA from the end of the beautify job for releasing, 
-instead of master. This will either be the same as the commit we are 
-running for, or the SHA of a style commit. This prevents releasing of 
+Checkout the current SHA from the end of the beautify job for releasing,
+instead of master. This will either be the same as the commit we are
+running for, or the SHA of a style commit. This prevents releasing of
 untested code.
 
-See 
+See
 https://github.community/t5/GitHub-Actions/Checkout-commit-pushed-by-previous-job/m-p/55847#M9670 ([`76e34b6`](https://github.com/python-semantic-release/python-semantic-release/commit/76e34b6b52b8019e87eaddf295d0781b6aa51541))
 
 ### Documentation
@@ -2066,15 +2066,15 @@ This was missed in 213530fb0c914e274b81d1dacf38ea7322b5b91f ([`3084249`](https:/
 
 * refactor(debug): use logging and click_log instead of ndebug
 
-BREAKING CHANGE: `DEBUG=&#34;*&#34;` no longer has an effect, instead use 
+BREAKING CHANGE: `DEBUG=&#34;*&#34;` no longer has an effect, instead use
 `--verbosity DEBUG`. ([`15b1f65`](https://github.com/python-semantic-release/python-semantic-release/commit/15b1f650f29761e1ab2a91b767cbff79b2057a4c))
 
 ### Build
 
 * build(pip): store requirements in setup.py
 
-Remove the requirements directory and instead store all required 
-libraries directly inside setup.py. Development, testing and docs 
+Remove the requirements directory and instead store all required
+libraries directly inside setup.py. Development, testing and docs
 dependencies are included as extras. ([`401468f`](https://github.com/python-semantic-release/python-semantic-release/commit/401468f312cf4f3b52006c68c58c4645b5e19802))
 
 ### Chore
@@ -2087,12 +2087,12 @@ Allow mypy and coverage to run on any Python version. ([`28feba6`](https://githu
 
 * ci: always checkout most recent commit to release
 
-This should pull a beautify commit if one has been created, allowing the 
+This should pull a beautify commit if one has been created, allowing the
 new version to be pushed. ([`6c98aab`](https://github.com/python-semantic-release/python-semantic-release/commit/6c98aab932724e3aab08e68b75439bc8c31bd877))
 
 * ci: cache testing dependencies
 
-This should help improve the speed of the testing workflow by caching 
+This should help improve the speed of the testing workflow by caching
 downloaded dependencies. ([`4f53e35`](https://github.com/python-semantic-release/python-semantic-release/commit/4f53e351960a6b658f50265384c9e8f678718f68))
 
 * ci: move beautification to separate workflow
@@ -2109,7 +2109,7 @@ Run isort and Black on pushes to master. Any edits made are committed. isort and
 
 * docs: include README.rst in index.rst
 
-These files were very similar so it makes sense to simply include one 
+These files were very similar so it makes sense to simply include one
 inside the other. ([`8673a9d`](https://github.com/python-semantic-release/python-semantic-release/commit/8673a9d92a9bf348bb3409e002a830741396c8ca))
 
 * docs: rewrite README.rst ([`e049772`](https://github.com/python-semantic-release/python-semantic-release/commit/e049772cf14cdd49538cf357db467f0bf3fe9587))
@@ -2139,12 +2139,12 @@ inside the other. ([`8673a9d`](https://github.com/python-semantic-release/python
 
 * ci: fetch full history in release job
 
-I didn&#39;t realise that actions/checkout@v2 only fetches 1 commit by 
+I didn&#39;t realise that actions/checkout@v2 only fetches 1 commit by
 default. ([`a02a9b7`](https://github.com/python-semantic-release/python-semantic-release/commit/a02a9b7e34d8e7f8bb3b9c8aa1b5e1ef8bdd406c))
 
 * ci: run tests on pull_request
 
-The tests didn&#39;t run for #211 which caused a flake8 failure to be 
+The tests didn&#39;t run for #211 which caused a flake8 failure to be
 missed. ([`32fd77e`](https://github.com/python-semantic-release/python-semantic-release/commit/32fd77ed835bcfc943abeacec4e327df045b2ec9))
 
 * ci: run tests on GitHub Actions ([`39ff283`](https://github.com/python-semantic-release/python-semantic-release/commit/39ff283312a0c686bfc5be71e1da9b6456652d95))
@@ -2167,7 +2167,7 @@ Automatically create pages in the API docs section using sphinx-autodoc. This is
 
 * style: fix styling from 2997908
 
-These code style problems were introduced because tests didn&#39;t run on 
+These code style problems were introduced because tests didn&#39;t run on
 #211. ([`172391e`](https://github.com/python-semantic-release/python-semantic-release/commit/172391ec5b5e490081b9b0ea58a94dfd5be33937))
 
 
@@ -2220,7 +2220,7 @@ These code style problems were introduced because tests didn&#39;t run on
 
 * refactor(history): use a named tuple for parsed commits
 
-This improves readability as we can use attributes such as &#39;bump&#39; and 
+This improves readability as we can use attributes such as &#39;bump&#39; and
 &#39;descriptions&#39; instead of confusing numeric indices. ([`bff40d5`](https://github.com/python-semantic-release/python-semantic-release/commit/bff40d53174ffe27451d82132c31b112c7bee9fd))
 
 
@@ -2362,7 +2362,7 @@ Fixes #181 ([`0fddbe2`](https://github.com/python-semantic-release/python-semant
 
 * refactor(github): create upload_asset function
 
-Create a function to call the asset upload API. This will soon be used 
+Create a function to call the asset upload API. This will soon be used
 to upload assets specified by the user.
 
 * refactor(github): infer Content-Type from file extension
@@ -2371,13 +2371,13 @@ Infer the Content-Type header based on the file extension instead of setting it 
 
 * refactor(pypi): move building of dists to cli.py
 
-Refactor to have the building/removal of distributions in cli.py instead 
-of within the upload_to_pypi function. This makes way for uploading to 
+Refactor to have the building/removal of distributions in cli.py instead
+of within the upload_to_pypi function. This makes way for uploading to
 other locations, such as GitHub Releases, too.
 
 * feat(github): upload dists to release
 
-Upload Python wheels to the GitHub release. Configured with the option 
+Upload Python wheels to the GitHub release. Configured with the option
 upload_to_release, on by default if using GitHub.
 
 * docs: document upload_to_release config option
@@ -2419,7 +2419,7 @@ application/octet-stream is more generic, but it is better than using a non-offi
 
 * feat(history): capitalize changelog messages
 
-Capitalize the first letter of messages in the changelog regardless of 
+Capitalize the first letter of messages in the changelog regardless of
 whether they are capitalized in the commit itself. ([`1a8e306`](https://github.com/python-semantic-release/python-semantic-release/commit/1a8e3060b8f6d6362c27903dcfc69d17db5f1d36))
 
 ### Fix
@@ -2457,7 +2457,7 @@ Fix the syntax of a broken bullet-point list in README.rst. ([`7aa572b`](https:/
 
 * fix(github): send token in request header
 
-Use an Authorization header instead of deprecated query parameter 
+Use an Authorization header instead of deprecated query parameter
 authorization.
 
 Fixes relekang/python-semantic-release#167 ([`be9972a`](https://github.com/python-semantic-release/python-semantic-release/commit/be9972a7b1fb183f738fb31bd370adb30281e4d5))
@@ -2742,9 +2742,9 @@ The commands is lacking from the documentation. ([`b6fa04d`](https://github.com/
 
 ### Refactor
 
-* refactor: added debug to hvcshvcs 
+* refactor: added debug to hvcshvcs
 
- 
+
 module did not have any debug ([`0c6237b`](https://github.com/python-semantic-release/python-semantic-release/commit/0c6237bc01ec39608fb768925091c755d9bb25bd))
 
 * refactor: fix import sorting ([`01e4c5d`](https://github.com/python-semantic-release/python-semantic-release/commit/01e4c5d743f2f237d2c85481118e467d4f5fde15))

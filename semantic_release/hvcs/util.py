@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry  # type: ignore
+from requests.packages.urllib3.util.retry import Retry  # type: ignore[import]
 
-from semantic_release.hvcs.token_auth import TokenAuth
+if TYPE_CHECKING:
+    from semantic_release.hvcs.token_auth import TokenAuth
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,11 @@ def build_requests_session(
     """
     Create a requests session.
     :param raise_for_status: If True, a hook to invoke raise_for_status be installed
-    :param retry: If true, it will use default Retry configuration. if an integer, it will use default Retry
-    configuration with given integer as total retry count. if Retry instance, it will use this instance.
-    :param auth: Optional TokenAuth instance to be used to provide the Authorization header to the session
+    :param retry: If true, it will use default Retry configuration. if an integer, it
+                  will use default Retry configuration with given integer as total retry
+                  count. if Retry instance, it will use this instance.
+    :param auth: Optional TokenAuth instance to be used to provide the Authorization
+                 header to the session
     :return: configured requests Session
     """
     session = Session()

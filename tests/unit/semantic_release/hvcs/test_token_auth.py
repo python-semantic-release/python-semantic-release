@@ -6,7 +6,7 @@ from semantic_release.hvcs.token_auth import TokenAuth
 
 @pytest.fixture
 def example_request():
-    yield Request(
+    return Request(
         "GET",
         url="http://example.com",
         headers={
