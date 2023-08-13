@@ -1,5 +1,3 @@
-from typing import Any
-
 from requests import PreparedRequest
 from requests.auth import AuthBase
 
@@ -14,10 +12,10 @@ class TokenAuth(AuthBase):
     def __init__(self, token: str) -> None:
         self.token = token
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return self.token == getattr(other, "token", None)
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
     def __call__(self, req: PreparedRequest) -> PreparedRequest:

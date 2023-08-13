@@ -197,6 +197,10 @@ ignore = [
   "DTZ",
   # flake8-errmsg
   "EM",
+  # don't compare types, use isinstance()
+  # sometimes using type(x) == y is deliberately chosen to exclude
+  # subclasses
+  "E721",
   # flake8-fixme
   "FIX",
   # flake8-boolean-trap

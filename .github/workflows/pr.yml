@@ -50,7 +50,7 @@ jobs:
           python -m pip install ".[dev, mypy]"
       - name: ruff
         run: |
-          python -m ruff check .
+          python -m ruff check . --config pyproject.toml --diff --show-source
       - name: mypy
         run: python -m mypy --ignore-missing-imports semantic_release
 
