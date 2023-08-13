@@ -8,7 +8,7 @@ updates:
       day: "monday"
       time: "18:00"
     commit-message:
-      prefix: "fix(deps)"
+      prefix: "build"
       include: "scope"
     labels:
       - dependencies
