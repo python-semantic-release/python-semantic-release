@@ -84,7 +84,7 @@ class ChangelogConfig(BaseModel):
 
 class BranchConfig(BaseModel):
     match: str = "(main|master)"
-    prerelease_token = "rc"  # noqa: S105
+    prerelease_token: str = "rc"  # noqa: S105
     prerelease: bool = False
 
 

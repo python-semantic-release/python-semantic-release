@@ -183,12 +183,13 @@ class Github(HvcsBase):
     @logged_function(log)
     @suppress_not_found
     def asset_upload_url(self, release_id: str) -> str | None:
-        """Get the correct upload url for a release
+        """
+        Get the correct upload url for a release
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
         :param release_id: ID of the release to upload to
         :return: URL to upload for a release if found, else None
         """
-        # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset ?
+        # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset
         response = self.session.get(
             f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
         )
@@ -209,8 +210,9 @@ class Github(HvcsBase):
         url = self.asset_upload_url(release_id)
         if url is None:
             raise HTTPError(
-                f"There is no associated url for uploading asset for release {release_id}. "
-                f"Release url: {self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
+                "There is no associated url for uploading asset for release "
+                f"{release_id}. Release url: "
+                f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
             )
         content_type = (
             mimetypes.guess_type(file, strict=False)[0] or "application/octet-stream"
