@@ -1,7 +1,7 @@
 Python Semantic Release
 ***********************
 
-|Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status|
+|Black| |Ruff| |Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status| |Pre-Commit Enabled|
 
 Automatic Semantic Versioning for Python projects. This is a Python
 implementation of `semantic-release`_ for JS by Stephan Bönnemann. If
