@@ -2,6 +2,15 @@
 
 
 
+## v8.0.7 (2023-08-16)
+
+### Fix
+
+* fix: use correct upload url for github (#661)
+
+Co-authored-by: github-actions &lt;action@github.com&gt; ([`8a515ca`](https://github.com/python-semantic-release/python-semantic-release/commit/8a515caf1f993aa653e024beda2fdb9e629cc42a))
+
+
 ## v8.0.6 (2023-08-13)
 
 ### Build
