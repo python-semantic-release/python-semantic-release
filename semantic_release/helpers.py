@@ -67,7 +67,7 @@ def dynamic_import(import_path: str) -> Any:
     string
     """
     log.debug("Trying to import %s", import_path)
-    module_name, _, attr = import_path.split(":", maxsplit=1)
+    module_name, attr = import_path.split(":", maxsplit=1)
     module = importlib.import_module(module_name)
     return getattr(module, attr)
 
