@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Iterable, Iterator
 
 from git.objects.tag import TagObject
+from git.refs.tag import Tag
 from git.repo.base import Repo
 from git.util import Actor
 
@@ -36,7 +37,12 @@ class ReleaseHistory:
         exclude_commit_patterns: Iterable[re.Pattern[str]] = (),
         only_last_release: bool = False
     ) -> ReleaseHistory:
-        all_git_tags_and_versions = tags_and_versions(repo.tags, translator, only_last_release)
+        all_git_tags_and_versions: list[tuple[Tag, Version]] | None = None
+        if only_last_release :
+            all_git_tags_and_versions = [tags_and_versions(repo.tags, translator)[0]]
+        else:
+            all_git_tags_and_versions = tags_and_versions(repo.tags, translator)
+
         unreleased: dict[str, list[ParseResult]] = defaultdict(list)
         released: dict[Version, Release] = {}
 
