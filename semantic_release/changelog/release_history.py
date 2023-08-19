@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import logging
-import re
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Iterable, Iterator
+from typing import TYPE_CHECKING, Iterable, Iterator
 
 from git.objects.tag import TagObject
 from git.refs.tag import Tag
@@ -15,14 +14,23 @@ from git.util import Actor
 from typing_extensions import TypedDict
 
 from semantic_release.commit_parser import (
-    CommitParser,
     ParseError,
-    ParseResult,
-    ParserOptions,
 )
 from semantic_release.version.algorithm import tags_and_versions
-from semantic_release.version.translator import VersionTranslator
-from semantic_release.version.version import Version
+
+if TYPE_CHECKING:
+    import re
+
+    from git.repo.base import Repo
+    from git.util import Actor
+
+    from semantic_release.commit_parser import (
+        CommitParser,
+        ParseResult,
+        ParserOptions,
+    )
+    from semantic_release.version.translator import VersionTranslator
+    from semantic_release.version.version import Version
 
 log = logging.getLogger(__name__)
 
@@ -143,6 +151,7 @@ class ReleaseHistory:
     ) -> Iterator[dict[str, list[ParseResult]] | dict[Version, Release]]:
         """
         Enables unpacking:
+
         >>> rh = ReleaseHistory(...)
         >>> unreleased, released = rh
         """

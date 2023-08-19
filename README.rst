@@ -1,7 +1,7 @@
 Python Semantic Release
 ***********************
 
-|Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status|
+|Black| |Ruff| |Test Status| |PyPI Version| |conda-forge version| |Read the Docs Status| |Pre-Commit Enabled|
 
 Automatic Semantic Versioning for Python projects. This is a Python
 implementation of `semantic-release`_ for JS by Stephan Bönnemann. If
@@ -30,6 +30,9 @@ Read more about the setup and configuration in our `getting started guide`_.
 .. _GitHub Action: https://python-semantic-release.readthedocs.io/en/latest/automatic-releases/github-actions.html
 .. _conda-forge: https://anaconda.org/conda-forge/python-semantic-release
 
+.. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: black
 .. |Test Status| image:: https://img.shields.io/github/actions/workflow/status/python-semantic-release/python-semantic-release/main.yml?branch=master&label=Test%20Status&logo=github
    :target: https://github.com/python-semantic-release/python-semantic-release/actions/workflows/main.yml
    :alt: test-status
@@ -42,3 +45,9 @@ Read more about the setup and configuration in our `getting started guide`_.
 .. |Read the Docs Status| image:: https://img.shields.io/readthedocs/python-semantic-release?label=Read%20the%20Docs&logo=Read%20the%20Docs
    :target: https://python-semantic-release.readthedocs.io/en/latest/
    :alt: docs
+.. |Pre-Commit Enabled| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit
+   :target: https://github.com/pre-commit/pre-commit
+   :alt: pre-commit
+.. |Ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff

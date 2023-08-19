@@ -26,7 +26,10 @@ from semantic_release.cli.config import RawConfig
     "--pyproject",
     "is_pyproject_toml",
     is_flag=True,
-    help="Add TOML configuration under 'tool.semantic_release' instead of 'semantic_release'",
+    help=(
+        "Add TOML configuration under 'tool.semantic_release' instead of "
+        "'semantic_release'"
+    ),
 )
 def generate_config(fmt: str = "toml", is_pyproject_toml: bool = False) -> None:
     """

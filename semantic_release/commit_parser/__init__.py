@@ -1,26 +1,26 @@
 from semantic_release.commit_parser._base import (
-    CommitParser as CommitParser,
-    ParserOptions as ParserOptions,
+    CommitParser,
+    ParserOptions,
 )
 from semantic_release.commit_parser.angular import (
-    AngularCommitParser as AngularCommitParser,
-    AngularParserOptions as AngularParserOptions,
+    AngularCommitParser,
+    AngularParserOptions,
 )
 from semantic_release.commit_parser.emoji import (
-    EmojiCommitParser as EmojiCommitParser,
-    EmojiParserOptions as EmojiParserOptions,
+    EmojiCommitParser,
+    EmojiParserOptions,
 )
 from semantic_release.commit_parser.scipy import (
-    ScipyCommitParser as ScipyCommitParser,
-    ScipyParserOptions as ScipyParserOptions,
+    ScipyCommitParser,
+    ScipyParserOptions,
 )
 from semantic_release.commit_parser.tag import (
-    TagCommitParser as TagCommitParser,
-    TagParserOptions as TagParserOptions,
+    TagCommitParser,
+    TagParserOptions,
 )
 from semantic_release.commit_parser.token import (
-    ParsedCommit as ParsedCommit,
-    ParseError as ParseError,
-    ParseResult as ParseResult,
-    ParseResultType as ParseResultType,
+    ParsedCommit,
+    ParseError,
+    ParseResult,
+    ParseResultType,
 )

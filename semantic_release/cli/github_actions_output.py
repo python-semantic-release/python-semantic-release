@@ -62,7 +62,7 @@ class VersionGitHubActionsOutput:
             "version": str(self.version),
             "tag": self.tag,
         }
-        return "\n".join(f"{key}={str(value)}" for key, value in outputs.items())
+        return "\n".join(f"{key}={value!s}" for key, value in outputs.items())
 
     def write_if_possible(self, filename: str | None = None) -> None:
         output_file = filename or os.getenv(self.OUTPUT_ENV_VAR)

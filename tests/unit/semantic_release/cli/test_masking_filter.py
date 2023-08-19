@@ -1,11 +1,8 @@
-import contextlib
 import io
-import itertools
 import logging
 import random
 import re
 import string
-import sys
 from logging import LogRecord
 
 import pytest
@@ -27,7 +24,7 @@ def _random_string(length: int = 10) -> str:
 
 @pytest.fixture
 def default_masking_filter():
-    yield MaskingFilter()
+    return MaskingFilter()
 
 
 @pytest.mark.parametrize(
@@ -135,7 +132,7 @@ def test_log_record_is_masked_with_simple_args(default_masking_filter, rec, mask
         ) == default_masking_filter.mask(rec.getMessage())
     elif isinstance(rec.args, dict):
         assert rec.msg % {
-            k: default_masking_filter.REPLACE_STR for k in rec.args.keys()
+            k: default_masking_filter.REPLACE_STR for k in rec.args
         } == default_masking_filter.mask(rec.getMessage())
 
 
@@ -169,7 +166,8 @@ def test_log_record_is_masked_with_nontrivial_args(default_masking_filter, rec, 
     for mask in masked:
         default_masking_filter.add_mask_for(mask)
 
-    assert any(secret in rec.getMessage() for secret in _secrets) and all(
+    assert any(secret in rec.getMessage() for secret in _secrets)
+    assert all(
         secret not in default_masking_filter.mask(rec.getMessage())
         for secret in _secrets
     )

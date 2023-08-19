@@ -44,6 +44,6 @@ def test_get_repository_name(remote_url, owner):
 def test_hvcs_parse_error(bad_url):
     client = HvcsBase(bad_url)
     with pytest.raises(ValueError):
-        client.repo_name
+        _ = client.repo_name
     with pytest.raises(ValueError):
-        client.owner
+        _ = client.owner

@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 # Updated/adapted for Python3
 class MaskingFilter(logging.Filter):
     REPLACE_STR = "*" * 4
-    _UNWANTED = [s for obj in ("", None) for s in (repr(obj), str(obj))]
+    _UNWANTED = frozenset([s for obj in ("", None) for s in (repr(obj), str(obj))])
 
     def __init__(
         self,

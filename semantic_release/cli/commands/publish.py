@@ -22,9 +22,7 @@ log = logging.getLogger(__name__)
 )
 @click.pass_context
 def publish(ctx: click.Context, tag: str = "latest") -> None:
-    """
-    Build and publish a distribution to a VCS release.
-    """
+    """Build and publish a distribution to a VCS release."""
     runtime = ctx.obj
     repo = runtime.repo
     hvcs_client = runtime.hvcs_client
@@ -32,7 +30,13 @@ def publish(ctx: click.Context, tag: str = "latest") -> None:
     dist_glob_patterns = runtime.dist_glob_patterns
 
     if tag == "latest":
-        tag = str(tags_and_versions(repo.tags, translator)[0][0])
+        try:
+            tag = str(tags_and_versions(repo.tags, translator)[0][0])
+        except IndexError:
+            ctx.fail(
+                f"No tags found with format {translator.tag_format!r}, couldn't "
+                "identify latest version"
+            )
     if runtime.global_cli_options.noop:
         noop_report(
             "would have uploaded files matching any of the globs "

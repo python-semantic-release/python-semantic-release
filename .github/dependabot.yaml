@@ -1,0 +1,16 @@
+---
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "18:00"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    rebase-strategy: auto

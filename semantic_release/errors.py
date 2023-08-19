@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Custom Errors
-"""
+"""Custom Errors"""
 
 
 class SemanticReleaseBaseError(Exception):
@@ -11,9 +9,7 @@ class SemanticReleaseBaseError(Exception):
 
 
 class InvalidConfiguration(SemanticReleaseBaseError):
-    """
-    Raised when configuration is deemed invalid
-    """
+    """Raised when configuration is deemed invalid"""
 
 
 class InvalidVersion(ValueError, SemanticReleaseBaseError):

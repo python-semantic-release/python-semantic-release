@@ -2,6 +2,103 @@
 
 
 
+## v8.0.7 (2023-08-16)
+
+### Fix
+
+* fix: use correct upload url for github (#661)
+
+Co-authored-by: github-actions &lt;action@github.com&gt; ([`8a515ca`](https://github.com/python-semantic-release/python-semantic-release/commit/8a515caf1f993aa653e024beda2fdb9e629cc42a))
+
+
+## v8.0.6 (2023-08-13)
+
+### Build
+
+* build(deps-dev): update pytest-xdist requirement (#677)
+
+Updates the requirements on [pytest-xdist](https://github.com/pytest-dev/pytest-xdist) to permit the latest version.
+- [Changelog](https://github.com/pytest-dev/pytest-xdist/blob/master/CHANGELOG.rst)
+- [Commits](https://github.com/pytest-dev/pytest-xdist/compare/v2.0.0...v3.3.1)
+
+---
+updated-dependencies:
+- dependency-name: pytest-xdist
+  dependency-type: direct:production
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`9ec6321`](https://github.com/python-semantic-release/python-semantic-release/commit/9ec63215c8d60230ff90c06096d8f37956bd156a))
+
+* build(deps-dev): update coverage[toml] requirement (#678)
+
+Updates the requirements on [coverage[toml]](https://github.com/nedbat/coveragepy) to permit the latest version.
+- [Release notes](https://github.com/nedbat/coveragepy/releases)
+- [Changelog](https://github.com/nedbat/coveragepy/blob/master/CHANGES.rst)
+- [Commits](https://github.com/nedbat/coveragepy/compare/6.0...7.3.0)
+
+---
+updated-dependencies:
+- dependency-name: coverage[toml]
+  dependency-type: direct:production
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`3561a97`](https://github.com/python-semantic-release/python-semantic-release/commit/3561a977fc56ec4bb12c9a894c0072cd8a3519fa))
+
+* build(deps-dev): bump responses from 0.21.0 to 0.23.3 (#680)
+
+Bumps [responses](https://github.com/getsentry/responses) from 0.21.0 to 0.23.3.
+- [Release notes](https://github.com/getsentry/responses/releases)
+- [Changelog](https://github.com/getsentry/responses/blob/master/CHANGES)
+- [Commits](https://github.com/getsentry/responses/compare/0.21.0...0.23.3)
+
+---
+updated-dependencies:
+- dependency-name: responses
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`dd6946c`](https://github.com/python-semantic-release/python-semantic-release/commit/dd6946cd479f646f3af028b92ca83db8fc4c0c66))
+
+### Chore
+
+* chore: clean up dependabot commit messages ([`5981a45`](https://github.com/python-semantic-release/python-semantic-release/commit/5981a45373ce623fc4e74326a4acb6bb97129adc))
+
+* chore: remove redundant flake8 config and add missing README badges ([`101e182`](https://github.com/python-semantic-release/python-semantic-release/commit/101e182a238f8b15221ae093c37206ebdd1eeb25))
+
+* chore(deps): remove obsolete dataclasses dependency (#674) ([`d70fe75`](https://github.com/python-semantic-release/python-semantic-release/commit/d70fe7508ed0f0689d8e8cb631d8b9c0d680838c))
+
+### Ci
+
+* ci: add precommit dependabot ruff (#673) ([`2ad5c41`](https://github.com/python-semantic-release/python-semantic-release/commit/2ad5c41e6cab96d17eb72f57dbe5422f434f6b58))
+
+### Fix
+
+* fix(publish): improve error message when no tags found (#683) ([`bdc06ea`](https://github.com/python-semantic-release/python-semantic-release/commit/bdc06ea061c19134d5d74bd9f168700dd5d9bcf5))
+
+
+## v8.0.5 (2023-08-10)
+
+### Documentation
+
+* docs: fix typo missing &#39;s&#39; in version_variable[s] in configuration.rst (#668) ([`879186a`](https://github.com/python-semantic-release/python-semantic-release/commit/879186aa09a3bea8bbe2b472f892cf7c0712e557))
+
+### Fix
+
+* fix: don&#39;t warn about vcs token if ignore_token_for_push is true. (#670)
+
+* fix: don&#39;t warn about vcs token if ignore_token_for_push is true.
+
+* docs: `password` should be `token`. ([`f1a54a6`](https://github.com/python-semantic-release/python-semantic-release/commit/f1a54a6c9a05b225b6474d50cd610eca19ec0c34))
+
+### Style
+
+* style: beautify f1a54a6c9a05b225b6474d50cd610eca19ec0c34 ([`0280e10`](https://github.com/python-semantic-release/python-semantic-release/commit/0280e104fcf8af3ed1341461d1eb9c1e83b5e4be))
+
+
 ## v8.0.4 (2023-07-26)
 
 ### Documentation

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import NamedTuple, NoReturn, TypeVar, Union
+from typing import TYPE_CHECKING, NamedTuple, NoReturn, TypeVar, Union
 
-from git.objects.commit import Commit
-
-from semantic_release.enums import LevelBump
 from semantic_release.errors import CommitParseError
+
+if TYPE_CHECKING:
+    from git.objects.commit import Commit
+
+    from semantic_release.enums import LevelBump
 
 
 class ParsedCommit(NamedTuple):
@@ -55,6 +57,6 @@ _T = TypeVar("_T", bound=ParsedCommit)
 _E = TypeVar("_E", bound=ParseError)
 
 # For extensions, this type can be used to build an alias
-# e.g. CustomParseResult = ParseResultType[CustomParsedCommit, ParseError]
+# for example CustomParseResult = ParseResultType[CustomParsedCommit, ParseError]
 ParseResultType = Union[_T, _E]
 ParseResult = ParseResultType[ParsedCommit, ParseError]

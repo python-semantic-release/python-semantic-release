@@ -31,9 +31,7 @@ CHANGELOG_PLACEHOLDER = "<!--next-version-placeholder-->"
 )
 @click.pass_context
 def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
-    """
-    Generate and optionally publish a changelog for your project
-    """
+    """Generate and optionally publish a changelog for your project"""
     runtime = ctx.obj
     repo = runtime.repo
     parser = runtime.commit_parser
@@ -48,7 +46,8 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
         log.info("Path %r not found, using default changelog template", template_dir)
         if runtime.global_cli_options.noop:
             noop_report(
-                f"would have written your changelog to {changelog_file.relative_to(repo.working_dir)}"
+                "would have written your changelog to "
+                + str(changelog_file.relative_to(repo.working_dir))
             )
             ctx.exit(0)
 
@@ -115,7 +114,8 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
         version = translator.from_tag(release_tag)
         if not version:
             ctx.fail(
-                f"Tag {release_tag!r} doesn't match tag format {translator.tag_format!r}"
+                f"Tag {release_tag!r} doesn't match tag format "
+                f"{translator.tag_format!r}"
             )
 
         try:
@@ -131,5 +131,5 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
                 release_tag, release_notes, prerelease=version.is_prerelease
             )
         except Exception as e:
-            log.error("%s", str(e), exc_info=True)
+            log.exception(e)
             ctx.fail(str(e))

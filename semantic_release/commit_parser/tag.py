@@ -29,8 +29,8 @@ def _logged_parse_error(commit: Commit, error: str) -> ParseError:
 class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
     """
     Parse a commit message according to the 1.0 version of python-semantic-release.
-    It expects a tag of some sort in the commit message and will use the rest of the first line
-    as changelog content.
+    It expects a tag of some sort in the commit message and will use the rest of the
+    first line as changelog content.
     """
 
     parser_options = TagParserOptions

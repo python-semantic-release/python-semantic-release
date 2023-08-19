@@ -4,7 +4,7 @@ Setting up python-semantic-release on GitHub Actions
 ====================================================
 
 Python Semantic Release includes a GitHub Action which runs the ``version`` and
-``publish`` commands. The repository is set to `PyPI`. You can read the full set
+``publish`` commands. The repository is set to ``PyPI``. You can read the full set
 of inputs available, and their descriptions in the `action definition`_.
 
 Your project's configuration file will be used as normal.
@@ -67,7 +67,7 @@ More information can be found in the `permissions for GitHub Apps documentation`
 .. _permissions for GitHub Apps documentation: https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#contents
 
 .. warning::
-  You must set `fetch-depth` to 0 when using ``actions/checkout@v2``, since
+  You must set ``fetch-depth`` to 0 when using ``actions/checkout@v2``, since
   Python Semantic Release needs access to the full history to determine whether
   a release should be made.
 
@@ -102,4 +102,3 @@ multiple projects.
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
-

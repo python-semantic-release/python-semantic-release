@@ -48,7 +48,8 @@ from tests.util import add_text_to_file, xdist_sort_hack
             )
             for (repo_fixture_name, parser_fixture_name, translator), values in {
                 # Latest version for repo_with_git_flow is currently 1.2.0-rc.2
-                # The last full release version was 1.1.1, so it's had a minor prerelease
+                # The last full release version was 1.1.1, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_angular_commits",
                     "default_angular_parser",
@@ -68,8 +69,10 @@ from tests.util import add_text_to_file, xdist_sort_hack
                     (ANGULAR_COMMITS_MAJOR, False, "2.0.0"),
                     (ANGULAR_COMMITS_MAJOR, True, "2.0.0-alpha.1"),
                 ],
-                # Latest version for repo_with_git_flow_and_release_channels is currently 1.1.0-alpha.3
-                # The last full release version was 1.0.0, so it's had a minor prerelease
+                # Latest version for repo_with_git_flow_and_release_channels is
+                # currently 1.1.0-alpha.3
+                # The last full release version was 1.0.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_and_release_channels_angular_commits",
                     "default_angular_parser",
@@ -133,7 +136,8 @@ def test_algorithm_no_zero_dot_versions_angular(
             )
             for (repo_fixture_name, parser_fixture_name, translator), values in {
                 # Latest version for repo_with_git_flow is currently 1.2.0-alpha.2
-                # The last full release version was 1.1.1, so it's had a minor prerelease
+                # The last full release version was 1.1.1, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_emoji_commits",
                     "default_emoji_parser",
@@ -153,8 +157,10 @@ def test_algorithm_no_zero_dot_versions_angular(
                     (EMOJI_COMMITS_MAJOR, False, "2.0.0"),
                     (EMOJI_COMMITS_MAJOR, True, "2.0.0-alpha.1"),
                 ],
-                # Latest version for repo_with_git_flow_and_release_channels is currently 1.1.0-alpha.3
-                # The last full release version was 1.0.0, so it's had a minor prerelease
+                # Latest version for repo_with_git_flow_and_release_channels is
+                # currently 1.1.0-alpha.3
+                # The last full release version was 1.0.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_and_release_channels_emoji_commits",
                     "default_emoji_parser",
@@ -218,7 +224,8 @@ def test_algorithm_no_zero_dot_versions_emoji(
             )
             for (repo_fixture_name, parser_fixture_name, translator), values in {
                 # Latest version for repo_with_git_flow is currently 1.2.0-alpha.2
-                # The last full release version was 1.1.1, so it's had a minor prerelease
+                # The last full release version was 1.1.1, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_scipy_commits",
                     "default_scipy_parser",
@@ -238,8 +245,10 @@ def test_algorithm_no_zero_dot_versions_emoji(
                     (lazy_fixture("scipy_commits_major"), False, "2.0.0"),
                     (lazy_fixture("scipy_commits_major"), True, "2.0.0-alpha.1"),
                 ],
-                # Latest version for repo_with_git_flow_and_release_channels is currently 1.1.0-alpha.3
-                # The last full release version was 1.0.0, so it's had a minor prerelease
+                # Latest version for repo_with_git_flow_and_release_channels is
+                # currently 1.1.0-alpha.3
+                # The last full release version was 1.0.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_and_release_channels_scipy_commits",
                     "default_scipy_parser",
@@ -303,7 +312,8 @@ def test_algorithm_no_zero_dot_versions_scipy(
             )
             for (repo_fixture_name, parser_fixture_name, translator), values in {
                 # Latest version for repo_with_git_flow is currently 1.2.0-rc.2
-                # The last full release version was 1.1.1, so it's had a minor prerelease
+                # The last full release version was 1.1.1, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_tag_commits",
                     "default_tag_parser",
@@ -323,8 +333,10 @@ def test_algorithm_no_zero_dot_versions_scipy(
                     (TAG_COMMITS_MAJOR, False, "2.0.0"),
                     (TAG_COMMITS_MAJOR, True, "2.0.0-alpha.1"),
                 ],
-                # Latest version for repo_with_git_flow_and_release_channels is currently 1.1.0-alpha.3
-                # The last full release version was 1.0.0, so it's had a minor prerelease
+                # Latest version for repo_with_git_flow_and_release_channels is
+                # currently 1.1.0-alpha.3
+                # The last full release version was 1.0.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_git_flow_and_release_channels_tag_commits",
                     "default_tag_parser",
@@ -436,7 +448,8 @@ def test_algorithm_no_zero_dot_versions_tag(
                     (ANGULAR_COMMITS_MAJOR, False, False, "0.2.0"),
                     (ANGULAR_COMMITS_MAJOR, False, True, "1.0.0"),
                 ],
-                # Latest version for repo_with_single_branch_and_prereleases is currently 0.2.0
+                # Latest version for repo_with_single_branch_and_prereleases is
+                # currently 0.2.0
                 (
                     "repo_with_single_branch_and_prereleases_angular_commits",
                     "default_angular_parser",
@@ -469,8 +482,10 @@ def test_algorithm_no_zero_dot_versions_tag(
                     (ANGULAR_COMMITS_MAJOR, False, False, "0.3.0"),
                     (ANGULAR_COMMITS_MAJOR, True, False, "0.3.0-rc.1"),
                 ],
-                # Latest version for repo_with_main_and_feature_branches is currently 0.3.0-rc.1.
-                # The last full release version was 0.2.0, so it's had a minor prerelease
+                # Latest version for repo_with_main_and_feature_branches is currently
+                # 0.3.0-rc.1.
+                # The last full release version was 0.2.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_main_and_feature_branches_angular_commits",
                     "default_angular_parser",
@@ -604,7 +619,8 @@ def test_algorithm_with_zero_dot_versions_angular(
                     (EMOJI_COMMITS_MAJOR, False, False, "0.2.0"),
                     (EMOJI_COMMITS_MAJOR, False, True, "1.0.0"),
                 ],
-                # Latest version for repo_with_single_branch_and_prereleases is currently 0.2.0
+                # Latest version for repo_with_single_branch_and_prereleases is
+                # currently 0.2.0
                 (
                     "repo_with_single_branch_and_prereleases_emoji_commits",
                     "default_emoji_parser",
@@ -637,8 +653,10 @@ def test_algorithm_with_zero_dot_versions_angular(
                     (EMOJI_COMMITS_MAJOR, False, False, "0.3.0"),
                     (EMOJI_COMMITS_MAJOR, True, False, "0.3.0-rc.1"),
                 ],
-                # Latest version for repo_with_main_and_feature_branches is currently 0.3.0-beta.1.
-                # The last full release version was 0.2.0, so it's had a minor prerelease
+                # Latest version for repo_with_main_and_feature_branches is currently
+                # 0.3.0-beta.1.
+                # The last full release version was 0.2.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_main_and_feature_branches_emoji_commits",
                     "default_emoji_parser",
@@ -782,7 +800,8 @@ def test_algorithm_with_zero_dot_versions_emoji(
                     (lazy_fixture("scipy_commits_major"), False, False, "0.2.0"),
                     (lazy_fixture("scipy_commits_major"), False, True, "1.0.0"),
                 ],
-                # Latest version for repo_with_single_branch_and_prereleases is currently 0.2.0
+                # Latest version for repo_with_single_branch_and_prereleases is
+                # currently 0.2.0
                 (
                     "repo_with_single_branch_and_prereleases_scipy_commits",
                     "default_scipy_parser",
@@ -835,8 +854,10 @@ def test_algorithm_with_zero_dot_versions_emoji(
                     (lazy_fixture("scipy_commits_major"), False, False, "0.3.0"),
                     (lazy_fixture("scipy_commits_major"), True, False, "0.3.0-rc.1"),
                 ],
-                # Latest version for repo_with_main_and_feature_branches is currently 0.3.0-rc.1.
-                # The last full release version was 0.2.0, so it's had a minor prerelease
+                # Latest version for repo_with_main_and_feature_branches is currently
+                # 0.3.0-rc.1.
+                # The last full release version was 0.2.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_main_and_feature_branches_scipy_commits",
                     "default_scipy_parser",
@@ -990,7 +1011,8 @@ def test_algorithm_with_zero_dot_versions_scipy(
                     (TAG_COMMITS_MAJOR, False, False, "0.2.0"),
                     (TAG_COMMITS_MAJOR, False, True, "1.0.0"),
                 ],
-                # Latest version for repo_with_single_branch_and_prereleases is currently 0.2.0
+                # Latest version for repo_with_single_branch_and_prereleases is
+                # currently 0.2.0
                 (
                     "repo_with_single_branch_and_prereleases_tag_commits",
                     "default_tag_parser",
@@ -1023,8 +1045,10 @@ def test_algorithm_with_zero_dot_versions_scipy(
                     (TAG_COMMITS_MAJOR, False, False, "0.3.0"),
                     (TAG_COMMITS_MAJOR, True, False, "0.3.0-rc.1"),
                 ],
-                # Latest version for repo_with_main_and_feature_branches is currently 0.3.0-beta.1.
-                # The last full release version was 0.2.0, so it's had a minor prerelease
+                # Latest version for repo_with_main_and_feature_branches is currently
+                # 0.3.0-beta.1.
+                # The last full release version was 0.2.0, so it's had a minor
+                # prerelease
                 (
                     "repo_with_main_and_feature_branches_tag_commits",
                     "default_tag_parser",

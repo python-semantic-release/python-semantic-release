@@ -16,12 +16,12 @@ from tests.util import xdist_sort_hack
 
 @pytest.fixture
 def default_scipy_parser_options():
-    yield ScipyCommitParser.parser_options()
+    return ScipyCommitParser.parser_options()
 
 
 @pytest.fixture
 def default_scipy_parser(default_scipy_parser_options):
-    yield ScipyCommitParser(default_scipy_parser_options)
+    return ScipyCommitParser(default_scipy_parser_options)
 
 
 @pytest.fixture(params=tag_to_section.keys())
@@ -51,7 +51,7 @@ def body_parts(request):
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def expected_response_scipy(
     default_scipy_parser_options, scipy_tag, subject, body_parts
 ):
@@ -63,8 +63,7 @@ def expected_response_scipy(
 
 def _make_scipy_commit(scipy_tag, subject, body_parts):
     body = "\n\n".join(body_parts)
-    commit_msg = f"{scipy_tag}: {subject}\n\n{body}"
-    return commit_msg
+    return f"{scipy_tag}: {subject}\n\n{body}"
 
 
 @pytest.fixture
@@ -82,7 +81,7 @@ def valid_scipy_commit(scipy_tag, subject, body_parts):
     )
 )
 def scipy_commits_patch(request, subject):
-    yield [
+    return [
         _make_scipy_commit(request.param, subject, body_parts)
         for body_parts in SCIPY_FORMATTED_COMMIT_BODY_PARTS
     ]

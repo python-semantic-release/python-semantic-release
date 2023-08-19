@@ -139,7 +139,7 @@ version is printed.
 
 For example, you can experiment with which versions would be applied using the other
 command line options::
-    
+
     semantic-release version --print
     semantic-release version --patch --print
     semantic-release version --prerelease --print
@@ -198,7 +198,7 @@ to attach a run number from a CI service or a date to the version and tag that a
 This value can also be set using the environment variable ``PSR_BUILD_METADATA``
 
 For example, assuming a project is currently at version 1.2.3::
-    
+
     $ semantic-release version --minor --print
     1.3.0
 
@@ -381,4 +381,3 @@ attempt to create one.
 
 If using this option, the relevant authentication token *must* be supplied via the
 relevant environment variable. For more information, see :ref:`index-creating-vcs-releases`.
-

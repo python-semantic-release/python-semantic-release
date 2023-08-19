@@ -34,17 +34,20 @@ Supported Changelog Sections::
 
 .. _`scipy-style`: https://docs.scipy.org/doc/scipy/reference/dev/contributor/development_workflow.html#writing-the-commit-message
 """
+from __future__ import annotations
 
 import logging
 import re
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
-from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
 from semantic_release.enums import LevelBump
+
+if TYPE_CHECKING:
+    from git.objects.commit import Commit
 
 log = logging.getLogger(__name__)
 
@@ -111,9 +114,7 @@ class ScipyParserOptions(ParserOptions):
 
 
 class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
-    """
-    Parser for scipy-style commit messages
-    """
+    """Parser for scipy-style commit messages"""
 
     parser_options = ScipyParserOptions
 

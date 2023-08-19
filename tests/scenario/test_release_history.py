@@ -1,5 +1,7 @@
-from collections import namedtuple
+from __future__ import annotations
+
 from datetime import datetime
+from typing import NamedTuple
 
 import pytest
 from git import Actor
@@ -17,12 +19,13 @@ from tests.util import add_text_to_file
 # we anticipate are in the right place, rather than by hash
 # So we are only using the angular parser
 
+
 # We are also currently only testing that the "elements" key of the releases
 # is correct, i.e. the commits are in the right place - the other fields
 # will need special attention of their own later
-FakeReleaseHistoryElements = namedtuple(
-    "FakeReleaseHistoryElements", "unreleased released"
-)
+class FakeReleaseHistoryElements(NamedTuple):
+    unreleased: dict[str, list[str]]
+    released: dict[Version, dict[str, list[str]]]
 
 
 REPO_WITH_NO_TAGS_EXPECTED_RELEASE_HISTORY = FakeReleaseHistoryElements(

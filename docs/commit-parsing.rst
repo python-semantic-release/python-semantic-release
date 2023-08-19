@@ -179,7 +179,7 @@ Writing your own parser
 
 If you would prefer to use an alternative commit style, for example to adjust the
 different ``type`` values that are associated with a particular commit, this is
-possible. 
+possible.
 
 The :ref:`commit_parser <config-commit-parser>` option, if set to a string which
 does not match one of Python Semantic Release's inbuilt commit parsers, will be
@@ -294,8 +294,8 @@ To provide options to the commit parser which is configured in the :ref:`configu
 class. Each parser built into Python Semantic Release has a corresponding "options" class, which
 subclasses :py:class:`semantic_release.ParserOptions`.
 
-The configuration in `commit_parser_options <config-commit-parser-options>` is passed to the
-"options" class which is specified by the configured `commit_parser <config-commit-parser>` -
+The configuration in :ref:`commit_parser_options <config-commit-parser-options>` is passed to the
+"options" class which is specified by the configured :ref:`commit_parser <config-commit-parser>` -
 more information on how this is specified is below.
 
 The "options" class is used to validate the options which are configured in the repository,
@@ -324,10 +324,10 @@ the following:
 * An ``__init__`` method which takes a single parameter, ``options``, that should be
   of the same type as the class' ``parser_options`` attribute.
 * A method, ``parse``, which takes a single parameter ``commit`` that is of type
-  `git.objects.commit.Commit <gitpython-commit-object>`_, and returns 
+  `git.objects.commit.Commit <gitpython-commit-object>`_, and returns
   :py:class:`semantic_release.token.ParseResult`, or a subclass of this.
 
-By default, the constructor for `semantic_release.CommitParser` will set the ``options``
+By default, the constructor for ``semantic_release.CommitParser`` will set the ``options``
 parameter on the ``options`` attribute of the parser, so there is no need to override
 this in order to access ``self.options`` during the ``parse`` method. However, if you
 have any parsing logic that needs to be done only once, it may be a good idea to
@@ -350,13 +350,9 @@ Therefore, a custom commit parser could be implemented via:
 
 
     class MyCommitParser(
-        semantic_release.CommitParser[
-            semantic_release.ParseResult, MyParserOptions
-        ]
+        semantic_release.CommitParser[semantic_release.ParseResult, MyParserOptions]
     ):
-        def parse(
-            self, commit: git.object.commit.Commit
-        ) -> semantic_release.ParseResult:
+        def parse(self, commit: git.object.commit.Commit) -> semantic_release.ParseResult:
             ...
 
 .. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits

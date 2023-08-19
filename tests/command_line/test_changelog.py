@@ -36,7 +36,8 @@ def test_changelog_noop_is_noop(
     shutil.rmtree(str(tempdir.resolve()))
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
 
-    # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're made
+    # Set up a requests HTTP session so we can catch the HTTP calls and ensure
+    # they're made
 
     session = Session()
     session.hooks = {"response": [lambda r, *_, **__: r.raise_for_status()]}
@@ -50,7 +51,6 @@ def test_changelog_noop_is_noop(
 
     with mock.patch(
         "semantic_release.hvcs.github.build_requests_session",
-        # new=mocked_build_requests_session,
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
         result = cli_runner.invoke(main, ["--noop", changelog.name, *args])
@@ -63,7 +63,6 @@ def test_changelog_noop_is_noop(
     assert not differing_files
 
     if args:
-        # mocked.assert_called_once()
         assert not mocker.called
         assert not mock_adapter.called
 
@@ -124,7 +123,8 @@ def test_changelog_post_to_release(
     shutil.rmtree(str(tempdir.resolve()))
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
 
-    # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're made
+    # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're
+    # made
 
     session = Session()
     session.hooks = {"response": [lambda r, *_, **__: r.raise_for_status()]}

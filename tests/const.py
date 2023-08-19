@@ -104,7 +104,8 @@ TAG_COMMITS_PATCH = [
     "fix\n",
     "fix\n",
     "fix\n",
-    ":persevere: fix\n" ":nut_and_bolt: release the bugfix-fix\n",
+    ":persevere: fix\n",
+    ":nut_and_bolt: release the bugfix-fix\n",
 ]
 TAG_COMMITS_MINOR = [
     ":sparkles: something special\n",
@@ -119,7 +120,8 @@ TAG_COMMITS_MINOR = [
 TAG_COMMITS_MAJOR = TAG_COMMITS_MINOR.copy()
 TAG_COMMITS_MAJOR.insert(
     4,
-    ":nut_and_bolt: big change\n\nBREAKING CHANGE: reworked something for previous feature\n",
+    ":nut_and_bolt: big change\n\nBREAKING CHANGE: reworked something for previous "
+    "feature\n",
 )
 
 EXAMPLE_PROJECT_NAME = "example"
