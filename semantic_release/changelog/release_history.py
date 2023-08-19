@@ -6,9 +6,6 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Iterable, Iterator
 
 from git.objects.tag import TagObject
-from git.refs.tag import Tag
-from git.repo.base import Repo
-from git.util import Actor
 
 # For Python3.7 compatibility
 from typing_extensions import TypedDict
@@ -21,6 +18,7 @@ from semantic_release.version.algorithm import tags_and_versions
 if TYPE_CHECKING:
     import re
 
+    from git.refs.tag import Tag
     from git.repo.base import Repo
     from git.util import Actor
 
