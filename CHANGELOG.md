@@ -2,6 +2,19 @@
 
 
 
+## v8.0.8 (2023-08-26)
+
+### Chore
+
+* chore: remove duplicate test cases ([`249cec7`](https://github.com/python-semantic-release/python-semantic-release/commit/249cec7e4638770dad00d49ab1d982fd2e20a9a2))
+
+* chore: fix lint errors and pin ruff ([`f16b090`](https://github.com/python-semantic-release/python-semantic-release/commit/f16b090db0aa74da542d49dfdfedef8d41ae4f95))
+
+### Fix
+
+* fix: dynamic_import() import path split (#686) ([`1007a06`](https://github.com/python-semantic-release/python-semantic-release/commit/1007a06d1e16beef6d18f44ff2e0e09921854b54))
+
+
 ## v8.0.7 (2023-08-16)
 
 ### Fix
