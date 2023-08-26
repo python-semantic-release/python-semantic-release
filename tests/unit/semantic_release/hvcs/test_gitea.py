@@ -130,14 +130,14 @@ def test_gitea_get_repository_owner_and_name(default_gitea_client):
         (
             False,
             "aabbcc",
-            "git@gitea.com:custom/example.git",
-            "git@gitea.com:custom/example.git",
+            "git@mydomain.com:custom/example.git",
+            "git@mydomain.com:custom/example.git",
         ),
         (
             True,
             "aabbcc",
-            "git@gitea.com:custom/example.git",
-            "https://aabbcc@gitea.com/custom/example.git",
+            "git@mydomain.com:custom/example.git",
+            "https://aabbcc@mydomain.com/custom/example.git",
         ),
     ],
 )

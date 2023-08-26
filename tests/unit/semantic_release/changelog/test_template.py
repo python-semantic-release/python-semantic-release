@@ -30,12 +30,12 @@ EXAMPLE_TEMPLATE_FORMAT_STR = """
             "comment_end_string": "#}",
         },
         {
-            "block_start_string": "{%",
-            "block_end_string": "%}",
+            "block_start_string": "{[",
+            "block_end_string": "]}",
             "variable_start_string": "{{",
             "variable_end_string": "}}",
-            "comment_start_string": "{#",
-            "comment_end_string": "#}",
+            "comment_start_string": "/*",
+            "comment_end_string": "*/",
         },
     ],
 )
