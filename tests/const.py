@@ -445,7 +445,7 @@ setup(
 EXAMPLE_CHANGELOG_MD_CONTENT = r"""
 # CHANGELOG.md
 
-## This is an example changlog
+## This is an example changelog
 
 ## v1.0.0
 * Various bugfixes, security enhancements

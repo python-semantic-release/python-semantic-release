@@ -62,7 +62,7 @@ class Gitlab(HvcsBase):
 
     @staticmethod
     def _domain_from_environment() -> str | None:
-        """Use Gitlab-CI environment varable to get the server domain, if available"""
+        """Use Gitlab-CI environment variable to get the server domain, if available"""
         if "CI_SERVER_URL" in os.environ:
             url = urlsplit(os.environ["CI_SERVER_URL"])
             return f"{url.netloc}{url.path}".rstrip("/")

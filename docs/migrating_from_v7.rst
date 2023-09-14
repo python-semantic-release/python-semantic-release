@@ -197,7 +197,7 @@ It is no longer possible to override arbitrary configuration values using the ``
 file using :ref:`cmd-main-option-config` or via the available command-line options.
 
 This simplifies the command-line option parsing significantly and is less error-prone,
-which has resulted in previous issues (e.g. `#600`_) with overriddes on the command-line.
+which has resulted in previous issues (e.g. `#600`_) with overrides on the command-line.
 Some of the configuration values expected by Python Semantic Release use complex data
 types such as lists or nested structures, which would be tedious and error-prone to
 specify using just command-line options.

@@ -83,7 +83,7 @@ Configuring Multibranch Releases
 --------------------------------
 
 Within your configuration file, you can create one or more groups of branches
-(*"release groups"*) that produce a certain type of release. Options are confiugred
+(*"release groups"*) that produce a certain type of release. Options are configured
 at the group level, and the group to use is chosen based on the *current branch name*
 against which Python Semantic Release is running.
 

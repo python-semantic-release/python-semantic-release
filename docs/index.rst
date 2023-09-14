@@ -40,7 +40,7 @@ inspect the default configuration in your terminal by running
 
 ``semantic-release generate-config``
 
-You can also use the :ref:`-f/--format <cmd-generate-config-option-format>` option to specify what foramt you would like this configuration
+You can also use the :ref:`-f/--format <cmd-generate-config-option-format>` option to specify what format you would like this configuration
 to be. The default is TOML, but JSON can also be used.
 
 You can append the configuration to your existing ``pyproject.toml`` file using a standard redirect,
