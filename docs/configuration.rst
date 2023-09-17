@@ -299,7 +299,7 @@ Tags which do not match this format will not be considered as versions of your p
 """""""""""""""""""""""""""""""""
 
 Each entry represents a location where the version is stored in the source code,
-specifed in ``file:variable`` format. For example:
+specified in ``file:variable`` format. For example:
 
 .. code-block:: toml
 

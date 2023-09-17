@@ -202,7 +202,7 @@ For example, assuming a project is currently at version 1.2.3::
     $ semantic-release version --minor --print
     1.3.0
 
-    $ semantic-release verison --minor --print --build-metadata "run.12345"
+    $ semantic-release version --minor --print --build-metadata "run.12345"
     1.3.0+run.12345
 
 .. _cmd-version-option-commit:
@@ -211,7 +211,7 @@ For example, assuming a project is currently at version 1.2.3::
 ************************
 
 Whether or not to perform a ``git commit`` on modifications to source files made by ``semantic-release`` during this
-command invokation, and to run ``git tag`` on this new commit with a tag corresponding to the new version.
+command invocation, and to run ``git tag`` on this new commit with a tag corresponding to the new version.
 
 If ``--no-commit`` is supplied, a number of other options are also disabled; please see below.
 

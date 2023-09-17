@@ -6,7 +6,7 @@ RUN set -ex; \
     apt-get install -y --no-install-recommends \
     git-lfs
 
-#install backported stable vesion of git, which supports ssh signing
+# install backported stable version of git, which supports ssh signing
 RUN echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list; \
     apt-get update;\
     apt-get install -y git/bullseye-backports
