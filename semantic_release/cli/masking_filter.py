@@ -57,6 +57,11 @@ class MaskingFilter(logging.Filter):
         return True
 
     def mask(self, msg: str) -> str:
+        if not isinstance(msg, str):
+            log.debug(  # type: ignore[unreachable]
+                "cannot mask object of type %s", type(msg)
+            )
+            return msg
         for mask, values in self._redact_patterns.items():
             repl_string = (
                 self.REPLACE_STR
