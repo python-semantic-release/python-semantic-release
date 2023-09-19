@@ -2,6 +2,32 @@
 
 
 
+## v8.1.1 (2023-09-19)
+
+### Build
+
+* build(deps-dev): bump ruff from 0.0.286 to 0.0.290 (#713)
+
+Bumps [ruff](https://github.com/astral-sh/ruff) from 0.0.286 to 0.0.290.
+- [Release notes](https://github.com/astral-sh/ruff/releases)
+- [Changelog](https://github.com/astral-sh/ruff/blob/main/BREAKING_CHANGES.md)
+- [Commits](https://github.com/astral-sh/ruff/compare/v0.0.286...v0.0.290)
+
+---
+updated-dependencies:
+- dependency-name: ruff
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`6b288f2`](https://github.com/python-semantic-release/python-semantic-release/commit/6b288f2033366a8a2d6e730938df3606fa5ca5a7))
+
+### Fix
+
+* fix: attribute error when logging non-strings (#711) ([`75e6e48`](https://github.com/python-semantic-release/python-semantic-release/commit/75e6e48129da8238a62d5eccac1ae55d0fee0f9f))
+
+
 ## v8.1.0 (2023-09-19)
 
 ### Build
