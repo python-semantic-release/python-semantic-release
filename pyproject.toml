@@ -41,8 +41,11 @@ semantic-release = "semantic_release.cli:main"
 psr = "semantic_release.cli:main"
 
 [project.urls]
-"Project Url" = "http://github.com/python-semantic-release/python-semantic-release"
-Homepage = "https://python-semantic-release.readthedocs.io"
+changelog = "https://github.com/python-semantic-release/python-semantic-release/blob/master/CHANGELOG.md"
+documentation = "https://python-semantic-release.readthedocs.io"
+homepage = "https://python-semantic-release.readthedocs.io"
+issues = "https://github.com/python-semantic-release/python-semantic-release/issues"
+repository = "http://github.com/python-semantic-release/python-semantic-release.git"
 
 [project.optional-dependencies]
 docs = [
