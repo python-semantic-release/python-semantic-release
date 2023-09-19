@@ -50,7 +50,7 @@ def parse_toml(raw_text: str) -> dict[Any, Any]:
     or "tool.semantic_release" keys
     """
     try:
-        toml_text = tomlkit.loads(raw_text)
+        toml_text = tomlkit.loads(raw_text).unwrap()
     except TOMLKitError as exc:
         raise InvalidConfiguration(str(exc)) from exc
 
@@ -67,7 +67,7 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
     Load raw configuration as a dict from the filename specified
     by config_filename, trying the following parsing methods:
 
-    1. try to parse with tomlkit.load (guessing it's a TOML file)
+    1. try to parse with tomli.load (guessing it's a TOML file)
     2. try to parse with json.load (guessing it's a JSON file)
     3. raise InvalidConfiguration if none of the above parsing
        methods work

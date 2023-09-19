@@ -16,7 +16,7 @@ def test_generate_config_toml(cli_runner, args):
     assert (
         result.output.strip()
         == tomlkit.dumps(
-            {"semantic_release": RawConfig().dict(exclude_none=True)}
+            {"semantic_release": RawConfig().model_dump(exclude_none=True)}
         ).strip()
     )
 
@@ -28,7 +28,7 @@ def test_generate_config_json(cli_runner, args):
     assert (
         result.output.strip()
         == json.dumps(
-            {"semantic_release": RawConfig().dict(exclude_none=True)}, indent=4
+            {"semantic_release": RawConfig().model_dump(exclude_none=True)}, indent=4
         ).strip()
     )
 
@@ -39,6 +39,6 @@ def test_generate_config_pyproject_toml(cli_runner):
     assert (
         result.output.strip()
         == tomlkit.dumps(
-            {"tool": {"semantic_release": RawConfig().dict(exclude_none=True)}}
+            {"tool": {"semantic_release": RawConfig().model_dump(exclude_none=True)}}
         ).strip()
     )

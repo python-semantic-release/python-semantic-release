@@ -353,7 +353,8 @@ class RuntimeContext:
         changelog_file = Path(raw.changelog.changelog_file).resolve()
 
         template_environment = environment(
-            template_dir=raw.changelog.template_dir, **raw.changelog.environment.dict()
+            template_dir=raw.changelog.template_dir,
+            **raw.changelog.environment.model_dump(),
         )
 
         # version_translator
