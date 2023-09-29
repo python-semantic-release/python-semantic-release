@@ -87,15 +87,18 @@ inputs:
       Build metadata to append to the new version
 
 outputs:
+  value: ${{ steps.semrel.outputs.released }}
   released:
     description: |
       "true" if a release was made, "false" otherwise
 
   version:
+    value: ${{ steps.semrel.outputs.released }}
     description: |
       The newly released version if one was made, otherwise the current version
 
   tag:
+    value: ${{ steps.semrel.outputs.tag }}
     description: |
       The Git tag corresponding to the version output
 
@@ -111,6 +114,7 @@ runs:
         semantic-release --help
       shell: bash
     - run: action.sh
+      id: semrel
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github_token }}
