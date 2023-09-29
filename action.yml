@@ -87,8 +87,8 @@ inputs:
       Build metadata to append to the new version
 
 outputs:
-  value: ${{ steps.semrel.outputs.released }}
   released:
+    value: ${{ steps.semrel.outputs.released }}
     description: |
       "true" if a release was made, "false" otherwise
 
