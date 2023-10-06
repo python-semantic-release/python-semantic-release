@@ -102,7 +102,7 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     if not shell:
         raise TypeError("'shell' is None")
 
-    return subprocess.run([shell, "-c", cmd], check=check)  # noqa: S603
+    return subprocess.run([shell, "-c" if shell != "cmd" else "/c", cmd], check=check)  # noqa: S603
 
 
 @click.command(
