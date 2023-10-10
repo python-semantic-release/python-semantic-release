@@ -94,7 +94,7 @@ legacy_tox_ini = """
 [tox]
 envlist =
     mypy,
-    py{37,38,39,310,311},
+    py{37,38,39,310,311,312},
     coverage
     ruff
 skipsdist = True
