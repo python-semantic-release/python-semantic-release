@@ -20,20 +20,14 @@ from semantic_release.cli.github_actions_output import VersionGitHubActionsOutpu
 from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.version import (
-    Version,
-    next_version,
-    tags_and_versions,
-)
+from semantic_release.version import Version, next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from git import Repo
 
-    from semantic_release.version import (
-        VersionTranslator,
-    )
+    from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
 
 
@@ -102,7 +96,10 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     if not shell:
         raise TypeError("'shell' is None")
 
-    return subprocess.run([shell, "-c" if shell != "cmd" else "/c", cmd], check=check)  # noqa: S603
+    return subprocess.run(
+        [shell, "-c" if shell != "cmd" else "/c", cmd],  # noqa: S603
+        check=check,
+    )
 
 
 @click.command(

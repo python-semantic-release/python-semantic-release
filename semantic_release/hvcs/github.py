@@ -209,7 +209,7 @@ class Github(HvcsBase):
         """
         url = self.asset_upload_url(release_id)
         if url is None:
-            raise HTTPError(
+            raise ValueError(
                 "There is no associated url for uploading asset for release "
                 f"{release_id}. Release url: "
                 f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
