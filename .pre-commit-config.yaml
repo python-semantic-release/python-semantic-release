@@ -1,6 +1,6 @@
 ---
 default_language_version:
-  python: python3.8
+  python: python3
 
 repos:
   # Meta hooks
@@ -11,7 +11,7 @@ repos:
 
   # Security & credential scanning/alerting
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: debug-statements
       - id: detect-aws-credentials
@@ -31,24 +31,24 @@ repos:
 
   # Formatters that may modify source files automatically
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.9.1
     hooks:
       - id: black
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: 1.15.0
+    rev: 1.16.0
     hooks:
       - id: blacken-docs
         additional_dependencies: ["black==23.7.0"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.9.0
+    rev: v3.15.0
     hooks:
       - id: pyupgrade
         args: ["--py37-plus", "--keep-runtime-typing"]
 
   # Linters and validation
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.286
+    rev: v0.0.292
     hooks:
       - id: ruff
         args:
@@ -60,7 +60,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.4.1"
+    rev: "v1.5.1"
     hooks:
       - id: mypy
         args: ["--config-file", "pyproject.toml"]
@@ -85,7 +85,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/jendrikseipp/vulture
-    rev: "v2.7"
+    rev: "v2.10"
     hooks:
       - id: vulture
         args:
@@ -110,7 +110,7 @@ repos:
 
   # GHA linting
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.23.3"
+    rev: "0.27.0"
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
