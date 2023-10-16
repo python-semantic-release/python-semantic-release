@@ -16,7 +16,7 @@ def render_default_changelog_file(template_environment: Environment) -> str:
     return tmpl.render()
 
 
-def render_release_notes(
+def render_default_release_notes(
     template_environment: Environment, version: Version, release: Release
 ) -> str:
     release_template = (

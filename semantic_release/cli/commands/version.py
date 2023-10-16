@@ -14,7 +14,7 @@ from semantic_release.changelog import ReleaseHistory, environment, recursive_re
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.cli.common import (
     render_default_changelog_file,
-    render_release_notes,
+    render_default_release_notes,
 )
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
 from semantic_release.cli.util import indented, noop_report, rprint
@@ -527,7 +527,7 @@ def version(  # noqa: C901
         # not user-configurable at the moment
         release_note_environment = environment(template_dir=runtime.template_dir)
         changelog_context.bind_to_environment(release_note_environment)
-        release_notes = render_release_notes(
+        release_notes = render_default_release_notes(
             template_environment=release_note_environment,
             version=new_version,
             release=release,
