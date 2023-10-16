@@ -11,6 +11,7 @@ from tests.const import (
     EXAMPLE_PROJECT_NAME,
     EXAMPLE_PROJECT_VERSION,
     EXAMPLE_PYPROJECT_TOML_CONTENT,
+    EXAMPLE_RELEASE_NOTES_TEMPLATE,
     EXAMPLE_SETUP_CFG_CONTENT,
     EXAMPLE_SETUP_PY_CONTENT,
 )
@@ -57,6 +58,14 @@ def example_project(tmp_path):
         changelog_md = tmp_path / "CHANGELOG.md"
         changelog_md.write_text(EXAMPLE_CHANGELOG_MD_CONTENT)
         yield tmp_path
+
+
+@pytest.fixture
+def example_project_with_release_notes_template(example_project: Path) -> Path:
+    template_dir = example_project / "templates"
+    release_notes_j2 = template_dir / ".release_notes.md.j2"
+    release_notes_j2.write_text(EXAMPLE_RELEASE_NOTES_TEMPLATE)
+    return example_project
 
 
 @pytest.fixture
