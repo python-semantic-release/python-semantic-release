@@ -3,7 +3,7 @@ from __future__ import annotations
 import filecmp
 import os
 import shutil
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
@@ -11,16 +11,7 @@ import requests_mock
 from pytest_lazyfixture import lazy_fixture
 from requests import Session
 
-from semantic_release.changelog.context import make_changelog_context
-from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli import changelog, main
-from semantic_release.cli.config import (
-    GlobalCommandLineOptions,
-    RawConfig,
-    RuntimeContext,
-)
-from semantic_release.cli.const import DEFAULT_CONFIG_FILE
-from semantic_release.cli.util import load_raw_config_file
 from semantic_release.hvcs import Github
 
 from tests.const import (
@@ -31,47 +22,12 @@ from tests.const import (
 from tests.util import flatten_dircmp
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
-    from git.repo import Repo
 
-
-@pytest.fixture
-def mocked_session_post() -> Generator[MagicMock, Any, None]:
-    """Mock the `post()` method in `requests.Session`."""
-    with mock.patch("requests.sessions.Session.post") as mocked_session:
-        yield mocked_session
-
-
-@pytest.fixture
-def runtime_context(
-    example_project_with_release_notes_template: Path,
-    repo_with_single_branch_and_prereleases_angular_commits: Repo,
-) -> RuntimeContext:
-    config_path = example_project_with_release_notes_template / DEFAULT_CONFIG_FILE
-    cli_options = GlobalCommandLineOptions(
-        noop=False, verbosity=0, strict=False, config_file=config_path
-    )
-    config_text = load_raw_config_file(config_path)
-    raw_config = RawConfig.model_validate(config_text)
-    return RuntimeContext.from_raw_config(
-        raw_config, repo_with_single_branch_and_prereleases_angular_commits, cli_options
-    )
-
-
-@pytest.fixture
-def release_history(runtime_context: RuntimeContext) -> ReleaseHistory:
-    rh = ReleaseHistory.from_git_history(
-        runtime_context.repo,
-        runtime_context.version_translator,
-        runtime_context.commit_parser,
-        runtime_context.changelog_excluded_commit_patterns,
-    )
-    changelog_context = make_changelog_context(runtime_context.hvcs_client, rh)
-    changelog_context.bind_to_environment(runtime_context.template_environment)
-    return rh
+    from semantic_release.changelog.release_history import ReleaseHistory
+    from semantic_release.cli.config import RuntimeContext
 
 
 @pytest.mark.parametrize(
