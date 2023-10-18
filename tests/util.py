@@ -7,10 +7,15 @@ from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Iterable, TypeVar
 
+from semantic_release.changelog.context import make_changelog_context
+from semantic_release.changelog.release_history import ReleaseHistory
+
 if TYPE_CHECKING:
     import filecmp
 
     from git import Repo
+
+    from semantic_release.cli.config import RuntimeContext
 
 
 def shortuid(length: int = 8) -> str:
@@ -69,3 +74,15 @@ def xdist_sort_hack(it: Iterable[_R]) -> Iterable[_R]:
 
 def actions_output_to_dict(output: str) -> dict[str, str]:
     return {line.split("=")[0]: line.split("=")[1] for line in output.splitlines()}
+
+
+def get_release_history_from_context(runtime_context: RuntimeContext) -> ReleaseHistory:
+    rh = ReleaseHistory.from_git_history(
+        runtime_context.repo,
+        runtime_context.version_translator,
+        runtime_context.commit_parser,
+        runtime_context.changelog_excluded_commit_patterns,
+    )
+    changelog_context = make_changelog_context(runtime_context.hvcs_client, rh)
+    changelog_context.bind_to_environment(runtime_context.template_environment)
+    return rh

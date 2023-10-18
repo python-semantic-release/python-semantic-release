@@ -1,14 +1,11 @@
-from pathlib import Path
-from typing import Any, Generator
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Generator
 from unittest import mock
-from unittest.mock import MagicMock
 
 import pytest
 from click.testing import CliRunner
-from git.repo import Repo
 
-from semantic_release.changelog.context import make_changelog_context
-from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     RawConfig,
@@ -16,6 +13,16 @@ from semantic_release.cli.config import (
 )
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import load_raw_config_file
+
+from tests.util import get_release_history_from_context
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from git.repo import Repo
+
+    from semantic_release.changelog.release_history import ReleaseHistory
 
 
 @pytest.fixture
@@ -31,29 +38,41 @@ def mocked_session_post() -> Generator[MagicMock, Any, None]:
 
 
 @pytest.fixture
-def runtime_context(
-    example_project_with_release_notes_template: Path,
-    repo_with_single_branch_and_prereleases_angular_commits: Repo,
-) -> RuntimeContext:
-    config_path = example_project_with_release_notes_template / DEFAULT_CONFIG_FILE
-    cli_options = GlobalCommandLineOptions(
-        noop=False, verbosity=0, strict=False, config_file=config_path
-    )
+def config_path(example_project: Path) -> Path:
+    return example_project / DEFAULT_CONFIG_FILE
+
+
+@pytest.fixture
+def raw_config(config_path: Path) -> RawConfig:
     config_text = load_raw_config_file(config_path)
-    raw_config = RawConfig.model_validate(config_text)
-    return RuntimeContext.from_raw_config(
-        raw_config, repo_with_single_branch_and_prereleases_angular_commits, cli_options
+    return RawConfig.model_validate(config_text)
+
+
+@pytest.fixture
+def cli_options(config_path: Path) -> GlobalCommandLineOptions:
+    return GlobalCommandLineOptions(
+        noop=False,
+        verbosity=0,
+        strict=False,
+        config_file=config_path,
     )
 
 
 @pytest.fixture
-def release_history(runtime_context: RuntimeContext) -> ReleaseHistory:
-    rh = ReleaseHistory.from_git_history(
-        runtime_context.repo,
-        runtime_context.version_translator,
-        runtime_context.commit_parser,
-        runtime_context.changelog_excluded_commit_patterns,
+def runtime_context_with_tags(
+    # note (1/2): the following fixture must precede the `raw_config` fixture...
+    repo_with_single_branch_and_prereleases_angular_commits: Repo,
+    # note (2/2): ... so that the config file gets updated before it is read:
+    raw_config: RawConfig,
+    cli_options: GlobalCommandLineOptions,
+) -> RuntimeContext:
+    return RuntimeContext.from_raw_config(
+        raw_config,
+        repo_with_single_branch_and_prereleases_angular_commits,
+        cli_options,
     )
-    changelog_context = make_changelog_context(runtime_context.hvcs_client, rh)
-    changelog_context.bind_to_environment(runtime_context.template_environment)
-    return rh
+
+
+@pytest.fixture
+def release_history(runtime_context_with_tags: RuntimeContext) -> ReleaseHistory:
+    return get_release_history_from_context(runtime_context_with_tags)

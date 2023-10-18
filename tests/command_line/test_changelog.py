@@ -174,19 +174,19 @@ def test_changelog_post_to_release(
 
 def test_custom_release_notes_template(
     release_history: ReleaseHistory,
-    runtime_context: RuntimeContext,
+    runtime_context_with_tags: RuntimeContext,
     mocked_session_post: MagicMock,
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
     # Arrange
-    tag = runtime_context.repo.tags[-1].name
-    version = runtime_context.version_translator.from_tag(tag)
+    tag = runtime_context_with_tags.repo.tags[-1].name
+    version = runtime_context_with_tags.version_translator.from_tag(tag)
     release = release_history.released[version]
 
     # Act
     resp = cli_runner.invoke(main, [changelog.name, "--post-to-release-tag", tag])
-    expected_release_notes = runtime_context.template_environment.from_string(
+    expected_release_notes = runtime_context_with_tags.template_environment.from_string(
         EXAMPLE_RELEASE_NOTES_TEMPLATE
     ).render(version=version, release=release)
 
