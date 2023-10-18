@@ -172,6 +172,7 @@ def test_changelog_post_to_release(
     )
 
 
+@pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     release_history: ReleaseHistory,
     runtime_context_with_tags: RuntimeContext,

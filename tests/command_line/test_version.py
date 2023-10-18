@@ -561,6 +561,7 @@ def test_version_exit_code_when_not_strict(
     assert result.exit_code == 0
 
 
+@pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     mocked_git_push: MagicMock,
     runtime_context_with_no_tags: RuntimeContext,
