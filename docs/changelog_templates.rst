@@ -241,6 +241,40 @@ Each ``Release`` object also has the following attributes:
 
 .. _dataclass: https://docs.python.org/3/library/dataclasses.html
 
+.. _changelog-templates-customizing-vcs-release-notes:
+
+Customizing VCS Release Notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The same :ref:`template rendering <changelog-templates-template-rendering>` mechanism
+generates the release notes when :ref:`creating VCS releases <index-creating-vcs-releases>`:
+
+* the `in-built template`_ is used by default
+* create a file named ``.release_notes.md.j2`` inside the project's
+  :ref:`template_dir <config-changelog-template-dir>` to customize the release notes
+
+.. _in-built template: https://github.com/python-semantic-release/python-semantic-release/blob/master/semantic_release/data/templates/release_notes.md.j2
+
+.. _changelog-templates-release-notes-template-example:
+
+Release Notes Template Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below is an example template that can be used to render release notes (it's similar to
+GitHub's `automatically generated release notes`_):
+
+.. code-block::
+
+    ## What's Changed
+    {% for type_, commits in release["elements"] | dictsort %}
+    ### {{ type_ | capitalize }}
+    {%- if type_ != "unknown" %}
+    {% for commit in commits %}
+    * {{ commit.descriptions[0] }} by {{commit.commit.author.name}} in [`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }})
+    {%- endfor %}{% endif %}{% endfor %}
+
+.. _Automatically generated release notes: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
 .. _changelog-templates-template-rendering-example:
 
 Changelog Template Example
