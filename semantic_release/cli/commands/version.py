@@ -517,12 +517,12 @@ def version(  # noqa: C901
 
     gha_output.released = True
 
-    if make_vcs_release and opts.noop:
-        noop_report(
-            f"would have created a release for the tag {new_version.as_tag()!r}"
-        )
-        noop_report(f"would have uploaded the following assets: {runtime.assets}")
-    elif make_vcs_release:
+    if make_vcs_release:
+        if opts.noop:
+            noop_report(
+                f"would have created a release for the tag {new_version.as_tag()!r}"
+            )
+
         release = rh.released[new_version]
         # Use a new, non-configurable environment for release notes -
         # not user-configurable at the moment
@@ -536,24 +536,30 @@ def version(  # noqa: C901
             version=new_version,
             release=release,
         )
-        try:
-            release_id = hvcs_client.create_or_update_release(
-                tag=new_version.as_tag(),
-                release_notes=release_notes,
-                prerelease=new_version.is_prerelease,
+        if opts.noop:
+            noop_report(
+                "would have created the following release notes: \n" + release_notes
             )
-        except Exception as e:
-            log.exception(e)
-            ctx.fail(str(e))
-        if not release_id:
-            log.warning("release_id not identified, cannot upload assets")
+            noop_report(f"would have uploaded the following assets: {runtime.assets}")
         else:
-            for asset in assets:
-                log.info("Uploading asset %s", asset)
-                try:
-                    hvcs_client.upload_asset(release_id, asset)
-                except Exception as e:
-                    log.exception(e)
-                    ctx.fail(str(e))
+            try:
+                release_id = hvcs_client.create_or_update_release(
+                    tag=new_version.as_tag(),
+                    release_notes=release_notes,
+                    prerelease=new_version.is_prerelease,
+                )
+            except Exception as e:
+                log.exception(e)
+                ctx.fail(str(e))
+            if not release_id:
+                log.warning("release_id not identified, cannot upload assets")
+            else:
+                for asset in assets:
+                    log.info("Uploading asset %s", asset)
+                    try:
+                        hvcs_client.upload_asset(release_id, asset)
+                    except Exception as e:
+                        log.exception(e)
+                        ctx.fail(str(e))
 
     return str(new_version)
