@@ -3,6 +3,7 @@ from __future__ import annotations
 import filecmp
 import os
 import shutil
+import sys
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -172,6 +173,10 @@ def test_changelog_post_to_release(
     )
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="MagicMock.call_args does not include kwargs before Python 3.8",
+)
 @pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     release_history: ReleaseHistory,

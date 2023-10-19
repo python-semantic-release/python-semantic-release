@@ -4,6 +4,7 @@ import difflib
 import filecmp
 import re
 import shutil
+import sys
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -425,9 +426,7 @@ def test_version_no_push_force_level(
     )
 
     old_pyproject_toml["tool"]["poetry"].pop("version")  # type: ignore[attr-defined]
-    new_version = new_pyproject_toml["tool"][  # type: ignore[attr-defined]
-        "poetry"
-    ].pop(  # type: ignore[attr-defined]
+    new_version = new_pyproject_toml["tool"]["poetry"].pop(  # type: ignore[attr-defined]  # type: ignore[attr-defined]
         "version"
     )
 
@@ -496,9 +495,7 @@ def test_version_runs_build_command(
     repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml, shell
 ):
     config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = config["tool"]["semantic_release"][  # type: ignore[attr-defined]
-        "build_command"
-    ]
+    build_command = config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
     exe = shell.split("/")[-1]
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
@@ -561,6 +558,10 @@ def test_version_exit_code_when_not_strict(
     assert result.exit_code == 0
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="MagicMock.call_args does not include kwargs before Python 3.8",
+)
 @pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     mocked_git_push: MagicMock,
