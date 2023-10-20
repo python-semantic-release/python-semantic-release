@@ -4,7 +4,6 @@ import difflib
 import filecmp
 import re
 import shutil
-import sys
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -26,6 +25,7 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
+    from requests_mock import Mocker
 
     from semantic_release.cli.config import RuntimeContext
 
@@ -558,15 +558,11 @@ def test_version_exit_code_when_not_strict(
     assert result.exit_code == 0
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 8),
-    reason="MagicMock.call_args does not include kwargs before Python 3.8",
-)
 @pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     mocked_git_push: MagicMock,
     runtime_context_with_no_tags: RuntimeContext,
-    mocked_session_post: MagicMock,
+    post_mocker: Mocker,
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
@@ -592,7 +588,5 @@ def test_custom_release_notes_template(
         "Unexpected failure in command "
         f"'semantic-release {version.name} --skip-build --vcs-release': " + resp.stderr
     )
-    mocked_session_post.assert_called_once()
-    assert (
-        mocked_session_post.call_args.kwargs["json"]["body"] == expected_release_notes
-    )
+    assert post_mocker.call_count == 1
+    assert post_mocker.last_request.json()["body"] == expected_release_notes

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generator
-from unittest import mock
+from typing import TYPE_CHECKING, Generator
 from unittest.mock import MagicMock
 
 import pytest
 from click.testing import CliRunner
+from requests_mock import ANY
 
 from semantic_release.cli.commands import main
 from semantic_release.cli.config import (
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
     from git.repo import Repo
     from pytest import MonkeyPatch
+    from requests_mock.mocker import Mocker
 
     from semantic_release.changelog.release_history import ReleaseHistory
 
@@ -36,10 +37,10 @@ def cli_runner() -> CliRunner:
 
 
 @pytest.fixture
-def mocked_session_post() -> Generator[MagicMock, Any, None]:
-    """Mock the `post()` method in `requests.Session`."""
-    with mock.patch("requests.sessions.Session.post") as mocked_session:
-        yield mocked_session
+def post_mocker(requests_mock: Mocker) -> Mocker:
+    """Patch all POST requests, mocking a response body for VCS release creation."""
+    requests_mock.register_uri("POST", ANY, json={"id": 999})
+    return requests_mock
 
 
 @pytest.fixture

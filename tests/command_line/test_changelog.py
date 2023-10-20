@@ -3,7 +3,6 @@ from __future__ import annotations
 import filecmp
 import os
 import shutil
-import sys
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -23,9 +22,8 @@ from tests.const import (
 from tests.util import flatten_dircmp
 
 if TYPE_CHECKING:
-    from unittest.mock import MagicMock
-
     from click.testing import CliRunner
+    from requests_mock import Mocker
 
     from semantic_release.changelog.release_history import ReleaseHistory
     from semantic_release.cli.config import RuntimeContext
@@ -180,15 +178,11 @@ def test_changelog_post_to_release(
     )
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 8),
-    reason="MagicMock.call_args does not include kwargs before Python 3.8",
-)
 @pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     release_history: ReleaseHistory,
     runtime_context_with_tags: RuntimeContext,
-    mocked_session_post: MagicMock,
+    post_mocker: Mocker,
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
@@ -209,7 +203,5 @@ def test_custom_release_notes_template(
         f"'semantic-release {changelog.name} --post-to-release-tag {tag}': "
         + resp.stderr
     )
-    mocked_session_post.assert_called_once()
-    assert (
-        mocked_session_post.call_args.kwargs["json"]["body"] == expected_release_notes
-    )
+    assert post_mocker.call_count == 1
+    assert post_mocker.last_request.json()["body"] == expected_release_notes
