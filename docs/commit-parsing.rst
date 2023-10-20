@@ -193,7 +193,9 @@ from the file ``custom_parser.py`` at the root of your repository, you should sp
 you can ensure that the module containing your parser class is installed in the same
 virtual environment as semantic-release.
 If you can run ``python -c "from $MODULE import $CLASS"`` successfully, specifying
-``commit_parser="$MODULE:$CLASS"`` is sufficient.
+``commit_parser="$MODULE:$CLASS"`` is sufficient. You may need to set the
+``PYTHONPATH`` environment variable to the directory containing the module with
+your commit parser.
 
 Python Semantic Release provides several building blocks to help you write your parser.
 To maintain compatibility with how Python Semantic Release will invoke your parser, you
