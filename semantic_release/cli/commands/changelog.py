@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import TYPE_CHECKING
 
 import click
 
@@ -13,6 +14,10 @@ from semantic_release.cli.common import (
     render_release_notes,
 )
 from semantic_release.cli.util import noop_report
+
+if TYPE_CHECKING:
+    from semantic_release.cli.config import RuntimeContext
+    from semantic_release.version import Version
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +37,7 @@ log = logging.getLogger(__name__)
 @click.pass_context
 def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
     """Generate and optionally publish a changelog for your project"""
-    runtime = ctx.obj
+    runtime: RuntimeContext = ctx.obj
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
@@ -62,8 +67,7 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             )
         else:
             changelog_text = render_default_changelog_file(env)
-            with open(str(changelog_file), "w+", encoding="utf-8") as f:
-                f.write(changelog_text)
+            changelog_file.write_text(changelog_text, encoding="utf-8")
 
     else:
         if runtime.global_cli_options.noop:
@@ -80,7 +84,8 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
                 f"would have posted changelog to the release for tag {release_tag}"
             )
 
-        version = translator.from_tag(release_tag)
+        # note: the following check ensures 'version is not None', but mypy can't follow
+        version: Version = translator.from_tag(release_tag)  # type: ignore[assignment]
         if not version:
             ctx.fail(
                 f"Tag {release_tag!r} doesn't match tag format "

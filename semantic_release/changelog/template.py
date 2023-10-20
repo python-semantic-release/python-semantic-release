@@ -75,7 +75,9 @@ def environment(
 
 # pylint: disable=redefined-outer-name
 def recursive_render(
-    template_dir: str, environment: Environment, _root_dir: str = "."
+    template_dir: Path,
+    environment: Environment,
+    _root_dir: str | os.PathLike[str] = ".",
 ) -> list[str]:
     rendered_paths: list[str] = []
     for root, file in (
