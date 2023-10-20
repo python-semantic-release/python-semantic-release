@@ -59,6 +59,12 @@ def config_path(example_project: Path) -> Path:
 
 @pytest.fixture
 def raw_config(config_path: Path) -> RawConfig:
+    """
+    Read the raw config file from `config_path`.
+
+    note: a `tests.fixtures.example_project` fixture must precede this one
+            otherwise, the `config_path` file will not exist, and this fixture will fail
+    """
     config_text = load_raw_config_file(config_path)
     return RawConfig.model_validate(config_text)
 
@@ -69,15 +75,13 @@ def cli_options(config_path: Path) -> GlobalCommandLineOptions:
         noop=False,
         verbosity=0,
         strict=False,
-        config_file=config_path,
+        config_file=str(config_path),
     )
 
 
 @pytest.fixture
 def runtime_context_with_tags(
-    # note (1/2): the following fixture must precede the `raw_config` fixture...
     repo_with_single_branch_and_prereleases_angular_commits: Repo,
-    # note (2/2): ... so that the config file gets updated before it is read:
     raw_config: RawConfig,
     cli_options: GlobalCommandLineOptions,
 ) -> RuntimeContext:
