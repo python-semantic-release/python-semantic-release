@@ -24,8 +24,8 @@ from tests.util import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from _pytest.monkeypatch import MonkeyPatch
     from git.repo import Repo
+    from pytest import MonkeyPatch
 
     from semantic_release.changelog.release_history import ReleaseHistory
 
