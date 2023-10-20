@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 # pylint: disable=too-many-arguments,too-many-locals
 def environment(
-    template_dir: str = ".",
+    template_dir: Path | str = ".",
     block_start_string: str = "{%",
     block_end_string: str = "%}",
     variable_start_string: str = "{{",

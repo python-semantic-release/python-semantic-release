@@ -1,6 +1,5 @@
 # Ref: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 # and https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
-
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -77,12 +76,16 @@ addopts = [
   "-ra",
   "--cache-clear",
   "--cov=semantic_release",
+  "--cov-context=test",
   "--cov-report",
   "html:coverage-html",
   "--cov-report",
   "term",
 ]
 python_files = ["tests/test_*.py", "tests/**/test_*.py"]
+
+[tool.coverage.html]
+show_contexts = true
 
 [tool.coverage.run]
 omit = ["*/tests/*"]

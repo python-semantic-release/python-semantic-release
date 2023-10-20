@@ -125,7 +125,7 @@ class HvcsBase:
         return None
 
     def upload_asset(
-        self, release_id: int, file: str, label: str | None = None
+        self, release_id: int | str, file: str, label: str | None = None
     ) -> bool:
         """
         Upload an asset (file) to a release with the given release_id, if releases are

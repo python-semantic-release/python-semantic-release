@@ -5,7 +5,7 @@ import os
 import subprocess
 from contextlib import nullcontext
 from datetime import datetime
-from typing import TYPE_CHECKING, ContextManager
+from typing import TYPE_CHECKING, ContextManager, Iterable
 
 import click
 import shellingham  # type: ignore[import]
@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from git import Repo
 
+    from semantic_release.cli.config import RuntimeContext
     from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
 
@@ -61,7 +62,7 @@ def version_from_forced_level(
 
 def apply_version_to_source_files(
     repo: Repo,
-    version_declarations: list[VersionDeclarationABC],
+    version_declarations: Iterable[VersionDeclarationABC],
     version: Version,
     noop: bool = False,
 ) -> list[str]:
@@ -208,7 +209,7 @@ def version(  # noqa: C901
       * Push the new tag and commit to the remote for the repository
       * Create a release (if supported) in the remote VCS for this tag
     """
-    runtime = ctx.obj
+    runtime: RuntimeContext = ctx.obj
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
@@ -384,22 +385,7 @@ def version(  # noqa: C901
 
     updated_paths: list[str] = []
     if update_changelog:
-        if not os.path.exists(template_dir):
-            log.info(
-                "Path %r not found, using default changelog template", template_dir
-            )
-            if opts.noop:
-                noop_report(
-                    "would have written your changelog to "
-                    + str(changelog_file.relative_to(repo.working_dir))
-                )
-            else:
-                changelog_text = render_default_changelog_file(env)
-                with open(str(changelog_file), "w+", encoding="utf-8") as f:
-                    f.write(changelog_text)
-
-            updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
-        else:
+        if template_dir.is_dir():
             if opts.noop:
                 noop_report(
                     f"would have recursively rendered the template directory "
@@ -411,6 +397,21 @@ def version(  # noqa: C901
                 updated_paths = recursive_render(
                     template_dir, environment=env, _root_dir=repo.working_dir
                 )
+
+        else:
+            log.info(
+                "Path %r not found, using default changelog template", template_dir
+            )
+            if opts.noop:
+                noop_report(
+                    "would have written your changelog to "
+                    + str(changelog_file.relative_to(repo.working_dir))
+                )
+            else:
+                changelog_text = render_default_changelog_file(env)
+                changelog_file.write_text(changelog_text, encoding="utf-8")
+
+            updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
 
         if commit_changes and opts.noop:
             noop_report(
@@ -551,15 +552,13 @@ def version(  # noqa: C901
             except Exception as e:
                 log.exception(e)
                 ctx.fail(str(e))
-            if not release_id:
-                log.warning("release_id not identified, cannot upload assets")
-            else:
-                for asset in assets:
-                    log.info("Uploading asset %s", asset)
-                    try:
-                        hvcs_client.upload_asset(release_id, asset)
-                    except Exception as e:
-                        log.exception(e)
-                        ctx.fail(str(e))
+
+            for asset in assets:
+                log.info("Uploading asset %s", asset)
+                try:
+                    hvcs_client.upload_asset(release_id, asset)
+                except Exception as e:
+                    log.exception(e)
+                    ctx.fail(str(e))
 
     return str(new_version)
