@@ -253,6 +253,22 @@ generates the release notes when :ref:`creating VCS releases <index-creating-vcs
 * create a file named ``.release_notes.md.j2`` inside the project's
   :ref:`template_dir <config-changelog-template-dir>` to customize the release notes
 
+.. _changelog-templates-customizing-vcs-release-notes-release-notes-context:
+
+Release Notes Context
+"""""""""""""""""""""
+
+All of the changelog's
+:ref:`template context <changelog-templates-template-rendering-template-context>` is
+exposed to the `Jinja`_ template when rendering the release notes.
+
+Additionally, the following two globals are available to the template:
+
+* ``release`` (:class:`Release <semantic_release.changelog.release_history.Release>`):
+  contains metadata about the content of the release, as parsed from commit logs
+* ``version`` (:class:`Version <semantic_release.version.version.Version>`): contains
+  metadata about the software version to be released and its ``git`` tag
+
 .. _in-built template: https://github.com/python-semantic-release/python-semantic-release/blob/master/semantic_release/data/templates/release_notes.md.j2
 
 .. _changelog-templates-release-notes-template-example:
