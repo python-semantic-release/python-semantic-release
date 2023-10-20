@@ -13,7 +13,12 @@ from semantic_release.cli.commands import main
 
 if TYPE_CHECKING:
     import filecmp
-    from typing import TypeAlias
+
+    try:
+        from typing import TypeAlias
+    except ImportError:
+        from typing_extensions import TypeAlias
+
     from unittest.mock import MagicMock
 
     from git import Repo
