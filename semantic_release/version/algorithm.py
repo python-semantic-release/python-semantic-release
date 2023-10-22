@@ -58,6 +58,7 @@ def tags_and_versions(
             ts_and_vs.append((tag, version))
 
     log.info("found %s previous tags", len(ts_and_vs))
+
     return sorted(ts_and_vs, reverse=True, key=lambda v: v[1])
 
 
