@@ -50,7 +50,7 @@ The default parser, which uses the `Angular commit style <https://github.com/ang
   - Multiple ``BREAKING CHANGE:`` paragraphs are supported
   - ``revert`` is not currently supported
 
-The default confiugration options for
+The default configuration options for
 :py:class:`semantic_release.commit_parser.AngularCommitParser` are:
 
 .. code-block:: toml
@@ -85,7 +85,7 @@ section.
 
 The default settings are for `Gitmoji <https://gitmoji.carloscuesta.me/>`_.
 
-The default confiugration options for
+The default configuration options for
 :py:class:`semantic_release.commit_parser.EmojiCommitParser` are:
 
 .. code-block:: toml
@@ -128,7 +128,7 @@ A parser for `scipy-style commits <scipy-style>`_ with the following differences
     a breaking change. Multiple ``BREAKING CHANGE`` paragraphs are supported.
   - A scope (following the tag in parentheses) is supported
 
-The default confiugration options for
+The default configuration options for
 :py:class:`semantic_release.commit_parser.ScipyCommitParser` are:
 
 .. code-block:: toml
@@ -163,7 +163,7 @@ The default confiugration options for
 The original parser from v1.0.0 of Python Semantic Release. Similar to the
 emoji parser above, but with less features.
 
-The default confiugration options for
+The default configuration options for
 :py:class:`semantic_release.commit_parser.TagCommitParser` are:
 
 .. code-block:: toml
@@ -193,7 +193,9 @@ from the file ``custom_parser.py`` at the root of your repository, you should sp
 you can ensure that the module containing your parser class is installed in the same
 virtual environment as semantic-release.
 If you can run ``python -c "from $MODULE import $CLASS"`` successfully, specifying
-``commit_parser="$MODULE:$CLASS"`` is sufficient.
+``commit_parser="$MODULE:$CLASS"`` is sufficient. You may need to set the
+``PYTHONPATH`` environment variable to the directory containing the module with
+your commit parser.
 
 Python Semantic Release provides several building blocks to help you write your parser.
 To maintain compatibility with how Python Semantic Release will invoke your parser, you

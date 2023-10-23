@@ -5,7 +5,7 @@ import os
 import subprocess
 from contextlib import nullcontext
 from datetime import datetime
-from typing import TYPE_CHECKING, ContextManager
+from typing import TYPE_CHECKING, ContextManager, Iterable
 
 import click
 import shellingham  # type: ignore[import]
@@ -13,6 +13,7 @@ import shellingham  # type: ignore[import]
 from semantic_release.changelog import ReleaseHistory, environment, recursive_render
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.cli.common import (
+    get_release_notes_template,
     render_default_changelog_file,
     render_release_notes,
 )
@@ -20,20 +21,15 @@ from semantic_release.cli.github_actions_output import VersionGitHubActionsOutpu
 from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.version import (
-    Version,
-    next_version,
-    tags_and_versions,
-)
+from semantic_release.version import Version, next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from git import Repo
 
-    from semantic_release.version import (
-        VersionTranslator,
-    )
+    from semantic_release.cli.config import RuntimeContext
+    from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
 
 
@@ -66,7 +62,7 @@ def version_from_forced_level(
 
 def apply_version_to_source_files(
     repo: Repo,
-    version_declarations: list[VersionDeclarationABC],
+    version_declarations: Iterable[VersionDeclarationABC],
     version: Version,
     noop: bool = False,
 ) -> list[str]:
@@ -102,7 +98,10 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     if not shell:
         raise TypeError("'shell' is None")
 
-    return subprocess.run([shell, "-c", cmd], check=check)  # noqa: S603
+    return subprocess.run(
+        [shell, "-c" if shell != "cmd" else "/c", cmd],  # noqa: S603
+        check=check,
+    )
 
 
 @click.command(
@@ -210,7 +209,7 @@ def version(  # noqa: C901
       * Push the new tag and commit to the remote for the repository
       * Create a release (if supported) in the remote VCS for this tag
     """
-    runtime = ctx.obj
+    runtime: RuntimeContext = ctx.obj
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
@@ -386,22 +385,7 @@ def version(  # noqa: C901
 
     updated_paths: list[str] = []
     if update_changelog:
-        if not os.path.exists(template_dir):
-            log.info(
-                "Path %r not found, using default changelog template", template_dir
-            )
-            if opts.noop:
-                noop_report(
-                    "would have written your changelog to "
-                    + str(changelog_file.relative_to(repo.working_dir))
-                )
-            else:
-                changelog_text = render_default_changelog_file(env)
-                with open(str(changelog_file), "w+", encoding="utf-8") as f:
-                    f.write(changelog_text)
-
-            updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
-        else:
+        if template_dir.is_dir():
             if opts.noop:
                 noop_report(
                     f"would have recursively rendered the template directory "
@@ -413,6 +397,21 @@ def version(  # noqa: C901
                 updated_paths = recursive_render(
                     template_dir, environment=env, _root_dir=repo.working_dir
                 )
+
+        else:
+            log.info(
+                "Path %r not found, using default changelog template", template_dir
+            )
+            if opts.noop:
+                noop_report(
+                    "would have written your changelog to "
+                    + str(changelog_file.relative_to(repo.working_dir))
+                )
+            else:
+                changelog_text = render_default_changelog_file(env)
+                changelog_file.write_text(changelog_text, encoding="utf-8")
+
+            updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
 
         if commit_changes and opts.noop:
             noop_report(
@@ -519,34 +518,41 @@ def version(  # noqa: C901
 
     gha_output.released = True
 
-    if make_vcs_release and opts.noop:
-        noop_report(
-            f"would have created a release for the tag {new_version.as_tag()!r}"
-        )
-        noop_report(f"would have uploaded the following assets: {runtime.assets}")
-    elif make_vcs_release:
+    if make_vcs_release:
+        if opts.noop:
+            noop_report(
+                f"would have created a release for the tag {new_version.as_tag()!r}"
+            )
+
         release = rh.released[new_version]
         # Use a new, non-configurable environment for release notes -
         # not user-configurable at the moment
         release_note_environment = environment(template_dir=runtime.template_dir)
         changelog_context.bind_to_environment(release_note_environment)
+
+        template = get_release_notes_template(template_dir)
         release_notes = render_release_notes(
+            release_notes_template=template,
             template_environment=release_note_environment,
             version=new_version,
             release=release,
         )
-        try:
-            release_id = hvcs_client.create_or_update_release(
-                tag=new_version.as_tag(),
-                release_notes=release_notes,
-                prerelease=new_version.is_prerelease,
+        if opts.noop:
+            noop_report(
+                "would have created the following release notes: \n" + release_notes
             )
-        except Exception as e:
-            log.exception(e)
-            ctx.fail(str(e))
-        if not release_id:
-            log.warning("release_id not identified, cannot upload assets")
+            noop_report(f"would have uploaded the following assets: {runtime.assets}")
         else:
+            try:
+                release_id = hvcs_client.create_or_update_release(
+                    tag=new_version.as_tag(),
+                    release_notes=release_notes,
+                    prerelease=new_version.is_prerelease,
+                )
+            except Exception as e:
+                log.exception(e)
+                ctx.fail(str(e))
+
             for asset in assets:
                 log.info("Uploading asset %s", asset)
                 try:

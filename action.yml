@@ -30,7 +30,7 @@ inputs:
     description: "The ssh private key used to sign commits"
     required: false
 
-  # `semantic-release version` comamnd line options
+  # `semantic-release version` command line options
   prerelease:
     type: string
     required: false

@@ -95,7 +95,7 @@ class HvcsBase:
 
     def get_release_id_by_tag(self, tag: str) -> int | None:
         """
-        Given a Git tag, return the ID (as the remote VCS defines it) of a corrsponding
+        Given a Git tag, return the ID (as the remote VCS defines it) of a corresponding
         release in the remove VCS, if supported
         """
         _not_supported(self, "get_release_id_by_tag")
@@ -125,7 +125,7 @@ class HvcsBase:
         return None
 
     def upload_asset(
-        self, release_id: int, file: str, label: str | None = None
+        self, release_id: int | str, file: str, label: str | None = None
     ) -> bool:
         """
         Upload an asset (file) to a release with the given release_id, if releases are

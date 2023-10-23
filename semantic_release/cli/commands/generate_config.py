@@ -40,7 +40,7 @@ def generate_config(fmt: str = "toml", is_pyproject_toml: bool = False) -> None:
 
         semantic-release generate-config -f toml >> pyproject.toml
     """
-    config = RawConfig().dict(exclude_none=True)
+    config = RawConfig().model_dump(exclude_none=True)
 
     config_dct = {"semantic_release": config}
     if is_pyproject_toml and fmt == "toml":

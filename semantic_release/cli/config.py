@@ -204,7 +204,7 @@ class RuntimeContext:
     changelog_file: Path
     ignore_token_for_push: bool
     template_environment: Environment
-    template_dir: str
+    template_dir: Path
     build_command: Optional[str]
     dist_glob_patterns: Tuple[str, ...]
     upload_to_vcs_release: bool
@@ -352,8 +352,11 @@ class RuntimeContext:
         # changelog_file
         changelog_file = Path(raw.changelog.changelog_file).resolve()
 
+        template_dir = Path(repo.working_tree_dir or ".") / raw.changelog.template_dir
+
         template_environment = environment(
-            template_dir=raw.changelog.template_dir, **raw.changelog.environment.dict()
+            template_dir=raw.changelog.template_dir,
+            **raw.changelog.environment.model_dump(),
         )
 
         # version_translator
@@ -376,7 +379,7 @@ class RuntimeContext:
             changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,
-            template_dir=raw.changelog.template_dir,
+            template_dir=template_dir,
             template_environment=template_environment,
             dist_glob_patterns=raw.publish.dist_glob_patterns,
             upload_to_vcs_release=raw.publish.upload_to_vcs_release,

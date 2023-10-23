@@ -445,12 +445,21 @@ setup(
 EXAMPLE_CHANGELOG_MD_CONTENT = r"""
 # CHANGELOG.md
 
-## This is an example changlog
+## This is an example changelog
 
 ## v1.0.0
 * Various bugfixes, security enhancements
 * Extra cookies to enhance your experience
 * ~Removed~ simplified cookie opt-out handling logic
 """
+
+EXAMPLE_RELEASE_NOTES_TEMPLATE = r"""## What's Changed
+{% for type_, commits in release["elements"] | dictsort %}
+### {{ type_ | capitalize }}
+{%- if type_ != "unknown" %}
+{% for commit in commits %}
+* {{ commit.commit.summary.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
+{%- endfor %}{% endif %}{% endfor %}
+"""  # noqa: E501
 
 RELEASE_NOTES = "# Release Notes"

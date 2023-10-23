@@ -35,7 +35,7 @@ Implementation
 
 1. Parse all the Git tags of the repository into semantic versions, and **sort**
    in descending (most recent first) order according to `semver precedence`_.
-   Ignore any tags which do not correspond to valid semantic vesrions accroding
+   Ignore any tags which do not correspond to valid semantic vesrions according
    to ``tag_format``.
 
 

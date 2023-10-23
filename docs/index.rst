@@ -40,7 +40,7 @@ inspect the default configuration in your terminal by running
 
 ``semantic-release generate-config``
 
-You can also use the :ref:`-f/--format <cmd-generate-config-option-format>` option to specify what foramt you would like this configuration
+You can also use the :ref:`-f/--format <cmd-generate-config-option-format>` option to specify what format you would like this configuration
 to be. The default is TOML, but JSON can also be used.
 
 You can append the configuration to your existing ``pyproject.toml`` file using a standard redirect,
@@ -144,6 +144,8 @@ environment variable.
 
 .. seealso::
    - :ref:`Changelog <config-changelog>` - customize your project's changelog.
+   - :ref:`Customizing VCS Release Notes <changelog-templates-customizing-vcs-release-notes>` - customize
+     the VCS release notes.
    - :ref:`upload_to_vcs_release <config-publish-upload-to-vcs-release>` -
      enable/disable uploading artefacts to VCS releases
    - :ref:`version --vcs-release/--no-vcs-release <cmd-version-option-vcs-release>` - enable/disable VCS release

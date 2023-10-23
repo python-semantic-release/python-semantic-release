@@ -142,7 +142,7 @@ def main(
         except InvalidConfiguration as exc:
             ctx.fail(str(exc))
 
-    raw_config = RawConfig.parse_obj(config_text)
+    raw_config = RawConfig.model_validate(config_text)
     try:
         runtime = RuntimeContext.from_raw_config(
             raw_config, repo=repo, global_cli_options=cli_options

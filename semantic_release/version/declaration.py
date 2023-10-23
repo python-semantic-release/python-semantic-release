@@ -4,10 +4,10 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, cast
 
 import tomlkit
-from dotty_dict import Dotty
+from dotty_dict import Dotty  # type: ignore[import]
 
 from semantic_release.version.version import Version
 
@@ -99,7 +99,7 @@ class TomlVersionDeclaration(VersionDeclarationABC):
     def parse(self) -> set[Version]:
         """Look for the version in the source content"""
         content = self._load()
-        maybe_version = content.get(self.search_text)
+        maybe_version: str = content.get(self.search_text)  # type: ignore[return-value]
         if maybe_version is not None:
             log.debug(
                 "Found a key %r that looks like a version (%r)",
@@ -107,7 +107,7 @@ class TomlVersionDeclaration(VersionDeclarationABC):
                 maybe_version,
             )
             valid_version = Version.parse(maybe_version)
-            return {valid_version}
+            return {valid_version} if valid_version else set()
         # Maybe in future raise error if not found?
         return set()
 
@@ -124,7 +124,8 @@ class TomlVersionDeclaration(VersionDeclarationABC):
                 new_version,
             )
             content[self.search_text] = str(new_version)
-        return tomlkit.dumps(content)
+
+        return tomlkit.dumps(cast(Dict[str, Any], content))
 
 
 class PatternVersionDeclaration(VersionDeclarationABC):

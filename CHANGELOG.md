@@ -2,6 +2,101 @@
 
 
 
+## v8.2.0 (2023-10-23)
+
+### Documentation
+
+* docs: add PYTHONPATH mention for commit parser ([`3284258`](https://github.com/python-semantic-release/python-semantic-release/commit/3284258b9fa1a3fe165f336181aff831d50fddd3))
+
+### Feature
+
+* feat: Allow user customization of release notes template (#736)
+
+Signed-off-by: Bryant Finney &lt;bryant.finney@outlook.com&gt; ([`94a1311`](https://github.com/python-semantic-release/python-semantic-release/commit/94a131167e1b867f8bc112a042b9766e050ccfd1))
+
+
+## v8.1.2 (2023-10-13)
+
+### Build
+
+* build(deps-dev): update importlib-resources requirement (#719) ([`b1ec8fe`](https://github.com/python-semantic-release/python-semantic-release/commit/b1ec8fed0047c79e85fd986cdbd246d2325e2b7f))
+
+* build(deps-dev): bump ruff from 0.0.290 to 0.0.292 (#726) ([`9818cb0`](https://github.com/python-semantic-release/python-semantic-release/commit/9818cb0066ff27adb8d24cdee4ed714754c32e5e))
+
+### Chore
+
+* chore: remove setup.py as setuptools no longer needs it ([`d8762c8`](https://github.com/python-semantic-release/python-semantic-release/commit/d8762c8d4e9772f4ba016116a28948af4a4ee4d6))
+
+* chore: clearer pytest output from tox ([`d890e46`](https://github.com/python-semantic-release/python-semantic-release/commit/d890e466d2dad0538ceb58932b987abbd662fafc))
+
+* chore: pre-commit autoupdate &amp;&amp; pre-commit run -a ([`7f448f2`](https://github.com/python-semantic-release/python-semantic-release/commit/7f448f20ef207f0314c63f94f055f8285064df16))
+
+* chore: add tests for python 3.12 (#728) ([`42360fd`](https://github.com/python-semantic-release/python-semantic-release/commit/42360fd93975f9ec4e1784dcd4b4cec23acc5de4))
+
+### Fix
+
+* fix: correct lint errors
+
+GitHub.upload_asset now raises ValueError instead of requests.HTTPError ([`a13a6c3`](https://github.com/python-semantic-release/python-semantic-release/commit/a13a6c37e180dc422599939a5725835306c18ff2))
+
+* fix: Error when running build command on windows systems (#732) ([`2553657`](https://github.com/python-semantic-release/python-semantic-release/commit/25536574760b407410f435441da533fafbf94402))
+
+
+## v8.1.1 (2023-09-19)
+
+### Build
+
+* build(deps-dev): bump ruff from 0.0.286 to 0.0.290 (#713)
+
+Bumps [ruff](https://github.com/astral-sh/ruff) from 0.0.286 to 0.0.290.
+- [Release notes](https://github.com/astral-sh/ruff/releases)
+- [Changelog](https://github.com/astral-sh/ruff/blob/main/BREAKING_CHANGES.md)
+- [Commits](https://github.com/astral-sh/ruff/compare/v0.0.286...v0.0.290)
+
+---
+updated-dependencies:
+- dependency-name: ruff
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`6b288f2`](https://github.com/python-semantic-release/python-semantic-release/commit/6b288f2033366a8a2d6e730938df3606fa5ca5a7))
+
+### Fix
+
+* fix: attribute error when logging non-strings (#711) ([`75e6e48`](https://github.com/python-semantic-release/python-semantic-release/commit/75e6e48129da8238a62d5eccac1ae55d0fee0f9f))
+
+
+## v8.1.0 (2023-09-19)
+
+### Build
+
+* build(deps-dev): bump importlib-resources from 5.7 to 5.12.0 (#704)
+
+* build(deps-dev): bump importlib-resources from 5.7 to 5.12.0
+
+* build(deps-dev): relax importlib-resources requirement
+
+---------
+
+Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`861fe01`](https://github.com/python-semantic-release/python-semantic-release/commit/861fe0119131f69761ae3e06ec46d62e526269d6))
+
+### Chore
+
+* chore: add ci test job for python 3.12-dev (#707) ([`2e57fb9`](https://github.com/python-semantic-release/python-semantic-release/commit/2e57fb957c2f72f4b8570a269dbdd093fb9fbf4b))
+
+### Documentation
+
+* docs: update project urls (#715) ([`5fd5485`](https://github.com/python-semantic-release/python-semantic-release/commit/5fd54856dfb6774feffc40d36d5bb0f421f04842))
+
+* docs: fix typos (#708) ([`2698b0e`](https://github.com/python-semantic-release/python-semantic-release/commit/2698b0e006ff7e175430b98450ba248ed523b341))
+
+### Feature
+
+* feat: upgrade pydantic to v2 (#714) ([`5a5c5d0`](https://github.com/python-semantic-release/python-semantic-release/commit/5a5c5d0ee347750d7c417c3242d52e8ada50b217))
+
+
 ## v8.0.8 (2023-08-26)
 
 ### Chore
