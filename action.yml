@@ -21,7 +21,7 @@ inputs:
     required: false
   git_committer_email:
     description: "The email address for the “committer” field"
-    default: "github-actions@github.com"
+    default: "action@github.com"
     required: false
   ssh_public_signing_key:
     description: "The ssh public key used to sign commits"
@@ -88,17 +88,46 @@ inputs:
 
 outputs:
   released:
+    value: ${{ steps.semrel.outputs.released }}
     description: |
       "true" if a release was made, "false" otherwise
 
   version:
+    value: ${{ steps.semrel.outputs.released }}
     description: |
       The newly released version if one was made, otherwise the current version
 
   tag:
+    value: ${{ steps.semrel.outputs.tag }}
     description: |
       The Git tag corresponding to the version output
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: "composite"
+  steps:
+    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+      shell: bash
+    - run: |
+        python -m venv ~/semantic-release/.venv
+        source ~/semantic-release/.venv/bin/activate
+        pip install python-semantic-release
+        semantic-release --help
+      shell: bash
+    - run: action.sh
+      id: semrel
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        GIT_COMMITTER_NAME: ${{ inputs.git_committer_name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.git_committer_email }}
+        SSH_PRIVATE_SIGNING_KEY: ${{ inputs.ssh_private_signing_key }}
+        SSH_PUBLIC_SIGNING_KEY: ${{ inputs.ssh_public_signing_key }}
+        ROOT_OPTIONS: ${{ inputs.root_options }}
+        PRERELEASE: ${{ inputs.prerelease }}
+        COMMIT: ${{ inputs.commit }}
+        PUSH: ${{ inputs.push }}
+        CHANGELOG: ${{ inputs.changelog }}
+        VCS_RELEASE: ${{ inputs.vcs_release }}
+        FORCE: ${{ inputs.force }}
+        BUILD_METADATA: ${{ inputs.build_metadata }}
+        DIRECTORY: ${{ inputs.directory }}
