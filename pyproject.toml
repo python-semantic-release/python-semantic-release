@@ -67,7 +67,7 @@ test = [
   "requests-mock>=1.10.0,<2",
   "types-pytest-lazy-fixture>=0.6.3.3",
 ]
-dev = ["pre-commit", "tox", "black", "ruff==0.0.292"]
+dev = ["pre-commit", "tox", "black", "ruff==0.1.1"]
 mypy = ["mypy", "types-requests"]
 
 [tool.pytest.ini_options]
@@ -128,7 +128,7 @@ commands =
 [testenv:ruff]
 deps = .[dev]
 commands =
-    ruff check . --statistics --format=text
+    ruff check . --statistics --output-format=text
 """
 
 [tool.mypy]
@@ -249,7 +249,7 @@ external = ["V"]
 target-version = "py37"
 force-exclude = true
 line-length = 88
-format = "grouped"
+output-format = "grouped"
 ignore-init-module-imports = true
 show-source = true
 show-fixes = true
