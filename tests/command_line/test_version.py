@@ -5,6 +5,7 @@ import filecmp
 import re
 import shutil
 from subprocess import CompletedProcess
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
@@ -13,8 +14,20 @@ from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.cli import main, version
 
-from tests.const import EXAMPLE_PROJECT_NAME
-from tests.util import actions_output_to_dict, flatten_dircmp
+from tests.const import EXAMPLE_PROJECT_NAME, EXAMPLE_RELEASE_NOTES_TEMPLATE
+from tests.util import (
+    actions_output_to_dict,
+    flatten_dircmp,
+    get_release_history_from_context,
+)
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
+
+    from click.testing import CliRunner
+    from requests_mock import Mocker
+
+    from semantic_release.cli.config import RuntimeContext
 
 
 @pytest.mark.parametrize(
@@ -413,9 +426,7 @@ def test_version_no_push_force_level(
     )
 
     old_pyproject_toml["tool"]["poetry"].pop("version")  # type: ignore[attr-defined]
-    new_version = new_pyproject_toml["tool"][  # type: ignore[attr-defined]
-        "poetry"
-    ].pop(  # type: ignore[attr-defined]
+    new_version = new_pyproject_toml["tool"]["poetry"].pop(  # type: ignore[attr-defined]  # type: ignore[attr-defined]
         "version"
     )
 
@@ -484,9 +495,7 @@ def test_version_runs_build_command(
     repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml, shell
 ):
     config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = config["tool"]["semantic_release"][  # type: ignore[attr-defined]
-        "build_command"
-    ]
+    build_command = config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
     exe = shell.split("/")[-1]
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
@@ -547,3 +556,37 @@ def test_version_exit_code_when_not_strict(
     # Testing "no release will be made"
     result = cli_runner.invoke(main, [version.name, "--no-push"])
     assert result.exit_code == 0
+
+
+@pytest.mark.usefixtures("example_project_with_release_notes_template")
+def test_custom_release_notes_template(
+    mocked_git_push: MagicMock,
+    runtime_context_with_no_tags: RuntimeContext,
+    post_mocker: Mocker,
+    cli_runner: CliRunner,
+) -> None:
+    """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
+    # Arrange
+    # (see fixtures)
+
+    # Act
+    resp = cli_runner.invoke(main, [version.name, "--skip-build", "--vcs-release"])
+    release_history = get_release_history_from_context(runtime_context_with_no_tags)
+    tag = runtime_context_with_no_tags.repo.tags[-1].name
+    release_version = runtime_context_with_no_tags.version_translator.from_tag(tag)
+    release = release_history.released[release_version]
+
+    expected_release_notes = (
+        runtime_context_with_no_tags.template_environment.from_string(
+            EXAMPLE_RELEASE_NOTES_TEMPLATE
+        ).render(version=release_version, release=release)
+    )
+
+    # Assert
+    assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
+    assert resp.exit_code == 0, (
+        "Unexpected failure in command "
+        f"'semantic-release {version.name} --skip-build --vcs-release': " + resp.stderr
+    )
+    assert post_mocker.call_count == 1
+    assert post_mocker.last_request.json()["body"] == expected_release_notes

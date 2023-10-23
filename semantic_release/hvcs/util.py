@@ -71,7 +71,7 @@ def suppress_http_error_for_codes(
             try:
                 return func(*a, **kw)
             except HTTPError as err:
-                if err.response.status_code in codes:
+                if err.response and err.response.status_code in codes:
                     logger.warning(
                         "%s received response %s: %s",
                         func.__qualname__,

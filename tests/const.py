@@ -453,4 +453,13 @@ EXAMPLE_CHANGELOG_MD_CONTENT = r"""
 * ~Removed~ simplified cookie opt-out handling logic
 """
 
+EXAMPLE_RELEASE_NOTES_TEMPLATE = r"""## What's Changed
+{% for type_, commits in release["elements"] | dictsort %}
+### {{ type_ | capitalize }}
+{%- if type_ != "unknown" %}
+{% for commit in commits %}
+* {{ commit.commit.summary.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
+{%- endfor %}{% endif %}{% endfor %}
+"""  # noqa: E501
+
 RELEASE_NOTES = "# Release Notes"

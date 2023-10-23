@@ -47,6 +47,7 @@ def git_repo_factory(request, example_project):
         with repo.config_writer("repository") as config:
             config.set_value("user", "name", "semantic release testing")
             config.set_value("user", "email", "not_a_real@email.com")
+            config.set_value("commit", "gpgsign", False)
         repo.create_remote(name="origin", url=request.param)
         return repo
 
