@@ -2,6 +2,15 @@
 
 
 
+## v8.3.0 (2023-10-23)
+
+### Feature
+
+* feat(action): use composite action for semantic release (#692)
+
+Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`4648d87`](https://github.com/python-semantic-release/python-semantic-release/commit/4648d87bac8fb7e6cc361b765b4391b30a8caef8))
+
+
 ## v8.2.0 (2023-10-23)
 
 ### Documentation
