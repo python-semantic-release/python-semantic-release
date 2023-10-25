@@ -67,7 +67,7 @@ test = [
   "requests-mock>=1.10.0,<2",
   "types-pytest-lazy-fixture>=0.6.3.3",
 ]
-dev = ["pre-commit", "tox", "black", "ruff==0.1.1"]
+dev = ["pre-commit", "tox", "ruff==0.1.2"]
 mypy = ["mypy", "types-requests"]
 
 [tool.pytest.ini_options]
@@ -163,23 +163,21 @@ allow_untyped_calls = true
 select = ["ALL"]
 
 # See https://beta.ruff.rs/docs/rules
+# for any of these codes you can also run `ruff rule [CODE]`
+# which explains it in the terminal
 ignore = [
   # attribute shadows builtin (e.g. Foo.list())
   "A003",
   # Annotations (flake8-annotations)
   # missing "self" type-hint
   "ANN101",
-  # missing "cls" type-hint
   "ANN102",
-  # no typing.Any
   "ANN401",
   # flake8-bugbear
-  # no functools.lru_cache
   "B019",
   # flake8-commas
   "COM",
-  # Missing docstrings. These would be nice to enable
-  # but not done yet
+  # Missing docstrings - eventually want to enable
   "D100",
   "D101",
   "D102",
@@ -188,17 +186,11 @@ ignore = [
   "D105",
   "D107",
 
-  # class docstrings must be preceded by a newline
   "D203",
-  # one blank line between summary and description for docstrings
   "D205",
-  # multiline summary should start on first line of docstring
   "D212",
-  # first line should end with a period
   "D400",
-  # "an imperative mood"
   "D401",
-  # First word of docstring should be "This"
   "D404",
   "D415",
   # flake8-datetimez
@@ -221,9 +213,7 @@ ignore = [
   "PT007",
   # pytest.raises needs a match - eventually want to enable
   "PT011",
-  # pytest.raises must be alone in a with-block
   "PT012",
-  # use only simple "import pytest"
   "PT013",
   # pylint
   "PLR",
@@ -243,6 +233,24 @@ ignore = [
   # tryceratops
   "TRY003",
   "TRY401",
+
+  # other errors that conflict with ruff format
+  # indentation-with-invalid-multiple
+  "W191",
+  "E111",
+  "E114",
+  "E117",
+  "E501",
+  "D206",
+  "D300",
+  "Q000",
+  "Q001",
+  "Q002",
+  "Q003",
+  "COM812",
+  "COM812",
+  "ISC001",
+  "ISC002",
 ]
 
 external = ["V"]
@@ -255,6 +263,11 @@ show-source = true
 show-fixes = true
 src = ["semantic_release", "tests"]
 task-tags = ["NOTE", "TODO", "FIXME", "XXX"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
 
 [tool.ruff.per-file-ignores]
 # Imported but unused
@@ -295,6 +308,10 @@ max-complexity = 10
 
 [tool.ruff.flake8-implicit-str-concat]
 allow-multiline = true
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"

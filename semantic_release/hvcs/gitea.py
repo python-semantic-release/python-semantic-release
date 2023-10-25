@@ -154,7 +154,10 @@ class Gitea(HvcsBase):
 
     @logged_function(log)
     def upload_asset(
-        self, release_id: int, file: str, label: str | None = None  # noqa: ARG002
+        self,
+        release_id: int,
+        file: str,
+        label: str | None = None,  # noqa: ARG002
     ) -> bool:
         """
         Upload an asset to an existing release

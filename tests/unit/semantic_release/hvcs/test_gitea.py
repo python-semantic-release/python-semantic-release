@@ -606,9 +606,7 @@ def test_upload_dists_when_release_id_found(
         default_gitea_client, "upload_asset"
     ) as mock_upload_asset, mock.patch.object(
         glob, "glob"
-    ) as mock_glob_glob, mock.patch.object(
-        os.path, "isfile"
-    ) as mock_os_path_isfile:
+    ) as mock_glob_glob, mock.patch.object(os.path, "isfile") as mock_os_path_isfile:
         # Skip check as the files don't exist in filesystem
         mock_os_path_isfile.return_value = True
 
