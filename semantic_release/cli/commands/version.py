@@ -502,18 +502,28 @@ def version(  # noqa: C901
             use_token=not runtime.ignore_token_for_push
         )
         active_branch = repo.active_branch.name
-        if opts.noop:
+        if commit_changes and opts.noop:
             noop_report(
                 indented(
                     f"""
                     would have run:
                         git push {runtime.masker.mask(remote_url)} {active_branch}
+                    """  # noqa: E501
+                )
+            )
+        elif commit_changes:
+            repo.git.push(remote_url, active_branch)
+
+        if opts.noop:
+            noop_report(
+                indented(
+                    f"""
+                    would have run:
                         git push --tags {runtime.masker.mask(remote_url)} {active_branch}
                     """  # noqa: E501
                 )
             )
         else:
-            repo.git.push(remote_url, active_branch)
             repo.git.push("--tags", remote_url, active_branch)
 
     gha_output.released = True
