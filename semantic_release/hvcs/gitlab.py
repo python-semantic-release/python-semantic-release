@@ -81,7 +81,10 @@ class Gitlab(HvcsBase):
 
     @logged_function(log)
     def create_release(
-        self, tag: str, release_notes: str, prerelease: bool = False  # noqa: ARG002
+        self,
+        tag: str,
+        release_notes: str,
+        prerelease: bool = False,  # noqa: ARG002
     ) -> str:
         """
         Post release changelog

@@ -53,7 +53,11 @@ jobs:
           python -m pip install ".[dev, mypy]"
       - name: ruff
         run: |
-          python -m ruff check . --config pyproject.toml --diff --show-source
+          python -m ruff check . \
+            --config pyproject.toml \
+            --diff \
+            --show-source \
+            --exit-non-zero-on-fix
       - name: mypy
         run: |
           python -m mypy --ignore-missing-imports semantic_release
@@ -78,11 +82,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Black
-        run: python -m pip install black
+      - name: Install Ruff
+        run: python -m pip install ruff==0.1.2
 
-      - name: Beautify with Black
-        run: python -m black .
+      - name: Format
+        run: |
+          python -m ruff format .
 
       - name: Commit and push changes
         uses: github-actions-x/commit@v2.9

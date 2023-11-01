@@ -538,13 +538,14 @@ def test_asset_upload_url(default_gh_client):
     }
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri("GET", github_api_matcher, json=resp_payload, status_code=200)
-        assert default_gh_client.asset_upload_url(
-            release_id
-        ) == "https://{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-            domain=default_gh_client.DEFAULT_UPLOAD_DOMAIN,
-            owner=default_gh_client.owner,
-            repo=default_gh_client.repo_name,
-            release_id=release_id,
+        assert (
+            default_gh_client.asset_upload_url(release_id)
+            == "https://{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+                domain=default_gh_client.DEFAULT_UPLOAD_DOMAIN,
+                owner=default_gh_client.owner,
+                repo=default_gh_client.repo_name,
+                release_id=release_id,
+            )
         )
         assert m.called
         assert len(m.request_history) == 1
@@ -704,9 +705,7 @@ def test_upload_dists_when_release_id_found(
         default_gh_client, "upload_asset"
     ) as mock_upload_asset, mock.patch.object(
         glob, "glob"
-    ) as mock_glob_glob, mock.patch.object(
-        os.path, "isfile"
-    ) as mock_os_path_isfile:
+    ) as mock_glob_glob, mock.patch.object(os.path, "isfile") as mock_os_path_isfile:
         # Skip check as the filenames deliberately don't exists for testing
         mock_os_path_isfile.return_value = True
 

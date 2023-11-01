@@ -41,7 +41,9 @@ class VersionTranslator:
         return pat
 
     def __init__(
-        self, tag_format: str = "v{version}", prerelease_token: str = "rc"  # noqa: S107
+        self,
+        tag_format: str = "v{version}",
+        prerelease_token: str = "rc",  # noqa: S107
     ) -> None:
         check_tag_format(tag_format)
         self.tag_format = tag_format
