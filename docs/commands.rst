@@ -213,12 +213,25 @@ For example, assuming a project is currently at version 1.2.3::
 Whether or not to perform a ``git commit`` on modifications to source files made by ``semantic-release`` during this
 command invocation, and to run ``git tag`` on this new commit with a tag corresponding to the new version.
 
-If ``--no-commit`` is supplied, a number of other options are also disabled; please see below.
+If ``--no-commit`` is supplied, it may disable other options derivatively; please see below.
 
 **Default:** ``--commit``
 
 .. seealso::
    - :ref:`tag_format <config-tag-format>`
+
+.. _cmd-version-option-tag:
+
+``--tag/--no-tag``
+************************
+
+Whether or not to perform a ``git tag`` to apply a tag of the corresponding to the new version during this
+command invocation. This option manages the tag application separate from the commit handled by the `--commit`
+option.
+
+If ``--no-tag`` is supplied, it may disable other options derivatively; please see below.
+
+**Default:** ``--tag``
 
 .. _cmd-version-option-changelog:
 
@@ -239,10 +252,10 @@ version released.
 ``--push/--no-push``
 ********************
 
-Whether or not to push new commits and tags to the remote repository.
+Whether or not to push new commits and/or tags to the remote repository.
 
-**Default:** ``--no-push`` if :ref:`--no-commit <cmd-version-option-commit>` is also
-supplied, otherwise ``--push``
+**Default:** ``--no-push`` if :ref:`--no-commit <cmd-version-option-commit>` and
+:ref:`--no-tag <cmd-version-option-tag>` is also supplied, otherwise ``push`` is the default.
 
 .. _cmd-version-option-vcs-release:
 
