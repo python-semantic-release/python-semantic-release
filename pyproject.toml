@@ -63,7 +63,7 @@ test = [
   "pytest-cov>=4,<5",
   "pytest-pretty>=1.2.0,<2",
   "pytest-clarity>=1.0.1",
-  "responses==0.23.3",
+  "responses==0.24.1",
   "requests-mock>=1.10.0,<2",
   "types-pytest-lazy-fixture>=0.6.3.3",
 ]
