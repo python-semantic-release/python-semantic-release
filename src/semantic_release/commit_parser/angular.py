@@ -263,7 +263,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     # mypy/pytest use their own caching directories, for very large commit
     # histories?
     # The problem is the cache likely won't be present in CI environments
-    def parse(self, commit: Commit) -> ParseResult:
+    def parse(self, commit: Commit) -> ParseResult | list[ParseResult]:
         """
         Attempt to parse the commit message with a regular expression into a
         ParseResult

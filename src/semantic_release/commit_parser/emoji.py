@@ -249,7 +249,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             linked_merge_request=linked_merge_request,
         )
 
-    def parse(self, commit: Commit) -> ParseResult:
+    def parse(self, commit: Commit) -> ParseResult | list[ParseResult]:
         """
         Attempt to parse the commit message with a regular expression into a
         ParseResult
