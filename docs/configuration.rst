@@ -190,7 +190,7 @@ within the Git repository.
 You can choose one of the inbuilt commit parsers - ``"angular"`` for
 :ref:`AngularCommitParser <commit-parser-angular>`, ``"emoji"`` for
 :ref:`EmojiCommitParser <commit-parser-emoji>`, ``"scipy"`` for
-:ref:`<ScipyCommitParser <commit-parser-scipy>` or ``"tag"`` for
+:ref:`ScipyCommitParser <commit-parser-scipy>` or ``"tag"`` for
 :ref:`TagCommitParser <commit-parser-tag>`. However you can also specify your own
 commit parser in ``module:attr`` form, in which case this will be imported and used
 instead.
@@ -375,7 +375,7 @@ The patterns in this list are treated as regular expressions.
 *************************************************
 
 .. note::
-   This section of the configuration contains options which customise the template
+   This section of the configuration contains options which customize the template
    environment used to render templates such as the changelog. Most options are
    passed directly to the `jinja2.Environment`_ constructor, and further
    documentation one these parameters can be found there.
@@ -603,7 +603,7 @@ list should be a string containing a Unix-style glob pattern.
 ``upload_to_vcs_release (bool)``
 """"""""""""""""""""""""""""""""
 
-If set to ``true``, upload artefacts matching
+If set to ``true``, upload artifacts matching
 :ref:`dist_glob_patterns <config-publish-dist-glob-patterns>` to the release created
 in the remote VCS corresponding to the latest tag, if that is supported by the
 :ref:`VCS type <config-remote-type>`.
