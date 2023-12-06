@@ -29,9 +29,11 @@ def _logged_parse_error(commit: Commit, error: str) -> ParseError:
 
 # types with long names in changelog
 LONG_TYPE_NAMES = {
-    "feat": "feature",
+    "build": "build system",
     "docs": "documentation",
-    "perf": "performance",
+    "feat": "features",
+    "fix": "fixes",
+    "perf": "performance improvements",
 }
 
 
@@ -82,7 +84,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     def get_default_options() -> AngularParserOptions:
         return AngularParserOptions()
 
-    # Maybe this can be cached as an optimisation, similar to how
+    # Maybe this can be cached as an optimization, similar to how
     # mypy/pytest use their own caching directories, for very large commit
     # histories?
     # The problem is the cache likely won't be present in CI environments
