@@ -37,6 +37,20 @@ def test_not_a_release_branch_exit_code_with_strict(
     assert result.exit_code != 0
 
 
+def test_not_a_release_branch_detached_head_exit_code(
+    repo_with_git_flow_angular_commits, cli_runner
+):
+    expected_err_msg = "Detached HEAD state cannot match any release groups; no release will be made"
+
+    # cause repo to be in detached head state without file changes
+    repo_with_git_flow_angular_commits.git.checkout("HEAD", "--detach")
+    result = cli_runner.invoke(main, ["version", "--no-commit"])
+
+    # as non-strict, this will return success exit code
+    assert result.exit_code == 0
+    assert expected_err_msg in result.stderr
+
+
 @pytest.fixture
 def toml_file_with_no_configuration_for_psr(tmp_path):
     path = tmp_path / "config.toml"
