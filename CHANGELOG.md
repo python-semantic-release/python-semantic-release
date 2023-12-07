@@ -2,6 +2,13 @@
 
 
 
+## v8.5.0 (2023-12-07)
+
+### Feature
+
+* feat: allow template directories to contain a &#39;.&#39; at the top-level (#762) ([`07b232a`](https://github.com/python-semantic-release/python-semantic-release/commit/07b232a3b34be0b28c6af08aea4852acb1b9bd56))
+
+
 ## v8.4.0 (2023-12-07)
 
 ### Build
