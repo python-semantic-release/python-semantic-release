@@ -153,7 +153,7 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     "--tag/--no-tag",
     "create_tag",
     default=True,
-    help="Whether or not to create a tag for the new version"
+    help="Whether or not to create a tag for the new version",
 )
 @click.option(
     "--changelog/--no-changelog",

@@ -624,13 +624,15 @@ def test_version_only_update_files_no_git_actions(
     runtime_context_with_tags: RuntimeContext,
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
-    example_pyproject_toml: Path
+    example_pyproject_toml: Path,
 ) -> None:
     # Arrange
     expected_new_version = "0.3.0"
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
-    example_project = Path(runtime_context_with_tags.repo.git.rev_parse("--show-toplevel"))
+    example_project = Path(
+        runtime_context_with_tags.repo.git.rev_parse("--show-toplevel")
+    )
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
 
     head_before = runtime_context_with_tags.repo.head.commit
@@ -646,7 +648,9 @@ def test_version_only_update_files_no_git_actions(
     # Assert
     assert tags_before == tags_after
     assert head_before == head_after
-    assert mocked_git_push.call_count == 0 # no push as it should be turned off automatically
+    assert (
+        mocked_git_push.call_count == 0
+    )  # no push as it should be turned off automatically
     assert resp.exit_code == 0, (
         "Unexpected failure in command "
         f"'semantic-release {str.join(' ', args)}': " + resp.stderr
