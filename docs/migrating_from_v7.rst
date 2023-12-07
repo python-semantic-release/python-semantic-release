@@ -176,7 +176,8 @@ To achieve a similar flow of logic such as
     4. Push the changes to the metadata and changelog to the remote repository
     5. Create a release in the remote version control system
     6. Build a wheel
-    7. Publish the wheel to PyPI and to the release in the remote VCS
+    7. Publish the wheel to PyPI
+    8. Publish the distribution artifacts to the release in the remote VCS
 
 You should run::
 
@@ -184,8 +185,9 @@ You should run::
     twine upload dist/*  # or whichever path your distributions are placed in
     semantic-release publish
 
-With steps 1-5 being handled by the :ref:`cmd-version` command, and steps 6 and 7
-handled by the :ref:`cmd-publish` command.
+With steps 1-6 being handled by the :ref:`cmd-version` command, step 7 being left
+to the developer to handle, and lastly step 8 to be handled by the
+:ref:`cmd-publish` command.
 
 .. _breaking-removed-define-option:
 
