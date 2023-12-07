@@ -4,6 +4,7 @@ import difflib
 import filecmp
 import re
 import shutil
+from pathlib import Path
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -590,3 +591,109 @@ def test_custom_release_notes_template(
     )
     assert post_mocker.call_count == 1
     assert post_mocker.last_request.json()["body"] == expected_release_notes
+
+
+def test_version_tag_only_push(
+    mocked_git_push: MagicMock,
+    runtime_context_with_no_tags: RuntimeContext,
+    cli_runner: CliRunner,
+) -> None:
+    # Arrange
+    # (see fixtures)
+    head_before = runtime_context_with_no_tags.repo.head.commit
+
+    # Act
+    args = [version.name, "--tag", "--no-commit", "--skip-build", "--no-vcs-release"]
+    resp = cli_runner.invoke(main, args)
+
+    tag_after = runtime_context_with_no_tags.repo.tags[-1].name
+    head_after = runtime_context_with_no_tags.repo.head.commit
+
+    # Assert
+    assert tag_after == "v0.1.0"
+    assert head_before == head_after
+    assert mocked_git_push.call_count == 1  # 0 for commit, 1 for tag
+    assert resp.exit_code == 0, (
+        "Unexpected failure in command "
+        f"'semantic-release {str.join(' ', args)}': " + resp.stderr
+    )
+
+
+def test_version_only_update_files_no_git_actions(
+    mocked_git_push: MagicMock,
+    runtime_context_with_tags: RuntimeContext,
+    cli_runner: CliRunner,
+    tmp_path_factory: pytest.TempPathFactory,
+    example_pyproject_toml: Path
+) -> None:
+    # Arrange
+    expected_new_version = "0.3.0"
+    tempdir = tmp_path_factory.mktemp("test_version")
+    shutil.rmtree(str(tempdir.resolve()))
+    example_project = Path(runtime_context_with_tags.repo.git.rev_parse("--show-toplevel"))
+    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+
+    head_before = runtime_context_with_tags.repo.head.commit
+    tags_before = runtime_context_with_tags.repo.tags
+
+    # Act
+    args = [version.name, "--minor", "--no-tag", "--no-commit", "--skip-build"]
+    resp = cli_runner.invoke(main, args)
+
+    tags_after = runtime_context_with_tags.repo.tags
+    head_after = runtime_context_with_tags.repo.head.commit
+
+    # Assert
+    assert tags_before == tags_after
+    assert head_before == head_after
+    assert mocked_git_push.call_count == 0 # no push as it should be turned off automatically
+    assert resp.exit_code == 0, (
+        "Unexpected failure in command "
+        f"'semantic-release {str.join(' ', args)}': " + resp.stderr
+    )
+
+    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    differing_files = flatten_dircmp(dcmp)
+
+    # Files that should receive version change
+    assert differing_files == [
+        "pyproject.toml",
+        f"src/{EXAMPLE_PROJECT_NAME}/__init__.py",
+    ]
+
+    # Compare pyproject.toml
+    new_pyproject_toml = tomlkit.loads(
+        example_pyproject_toml.read_text(encoding="utf-8")
+    )
+    old_pyproject_toml = tomlkit.loads(
+        (tempdir / "pyproject.toml").read_text(encoding="utf-8")
+    )
+
+    old_pyproject_toml["tool"]["poetry"].pop("version")  # type: ignore[attr-defined]
+    new_version = new_pyproject_toml["tool"]["poetry"].pop(  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+        "version"
+    )
+
+    assert old_pyproject_toml == new_pyproject_toml
+    assert new_version == expected_new_version
+
+    # Compare __init__.py
+    new_init_py = (
+        (example_project / "src" / EXAMPLE_PROJECT_NAME / "__init__.py")
+        .read_text(encoding="utf-8")
+        .splitlines(keepends=True)
+    )
+    old_init_py = (
+        (tempdir / "src" / EXAMPLE_PROJECT_NAME / "__init__.py")
+        .read_text(encoding="utf-8")
+        .splitlines(keepends=True)
+    )
+
+    d = difflib.Differ()
+    diff = list(d.compare(old_init_py, new_init_py))
+    added = [line[2:] for line in diff if line.startswith("+ ")]
+    removed = [line[2:] for line in diff if line.startswith("- ")]
+
+    assert len(removed) == 1
+    assert re.match('__version__ = ".*"', removed[0])
+    assert added == [f'__version__ = "{expected_new_version}"\n']

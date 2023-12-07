@@ -150,6 +150,12 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     help="Whether or not to commit changes locally",
 )
 @click.option(
+    "--tag/--no-tag",
+    "create_tag",
+    default=True,
+    help="Whether or not to create a tag for the new version"
+)
+@click.option(
     "--changelog/--no-changelog",
     "update_changelog",
     default=True,
@@ -188,6 +194,7 @@ def version(  # noqa: C901
     prerelease_token: str | None = None,
     force_level: str | None = None,
     commit_changes: bool = True,
+    create_tag: bool = True,
     update_changelog: bool = True,
     push_changes: bool = True,
     make_vcs_release: bool = True,
@@ -237,8 +244,14 @@ def version(  # noqa: C901
 
     # Only push if we're committing changes
     if push_changes and not commit_changes:
-        log.info("changes will not be pushed because --no-commit disables pushing")
-        push_changes &= commit_changes
+        if not create_tag:
+            log.info("changes will not be pushed because --no-commit disables pushing")
+            push_changes &= commit_changes
+    # Only push if we're creating a tag
+    if push_changes and not create_tag:
+        if not commit_changes:
+            log.info("new tag will not be pushed because --no-tag disables pushing")
+            push_changes &= create_tag
     # Only make a release if we're pushing the changes
     if make_vcs_release and not push_changes:
         log.info("No vcs release will be created because pushing changes is disabled")
@@ -484,36 +497,47 @@ def version(  # noqa: C901
     # are disabled, and the changelog generation is disabled or it's not
     # modified, then the HEAD commit will be tagged as a release commit
     # despite not being made by PSR
-    if commit_changes and opts.noop:
-        noop_report(
-            indented(
-                f"""
-                would have run:
-                    git tag -a {new_version.as_tag()} -m "{new_version.as_tag()}"
-                """
+    if commit_changes or create_tag:
+        if opts.noop:
+            noop_report(
+                indented(
+                    f"""
+                    would have run:
+                        git tag -a {new_version.as_tag()} -m "{new_version.as_tag()}"
+                    """
+                )
             )
-        )
-    elif commit_changes:
-        with custom_git_environment():
-            repo.git.tag("-a", new_version.as_tag(), m=new_version.as_tag())
+        else:
+            with custom_git_environment():
+                repo.git.tag("-a", new_version.as_tag(), m=new_version.as_tag())
 
     if push_changes:
         remote_url = runtime.hvcs_client.remote_url(
             use_token=not runtime.ignore_token_for_push
         )
         active_branch = repo.active_branch.name
-        if opts.noop:
+        if commit_changes and opts.noop:
             noop_report(
                 indented(
                     f"""
                     would have run:
                         git push {runtime.masker.mask(remote_url)} {active_branch}
+                    """  # noqa: E501
+                )
+            )
+        elif commit_changes:
+            repo.git.push(remote_url, active_branch)
+
+        if create_tag and opts.noop:
+            noop_report(
+                indented(
+                    f"""
+                    would have run:
                         git push --tags {runtime.masker.mask(remote_url)} {active_branch}
                     """  # noqa: E501
                 )
             )
-        else:
-            repo.git.push(remote_url, active_branch)
+        elif create_tag:
             repo.git.push("--tags", remote_url, active_branch)
 
     gha_output.released = True
