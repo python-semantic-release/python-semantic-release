@@ -95,7 +95,7 @@ def test_recursive_render(
     preexisting_paths = set(example_project.rglob("**/*"))
 
     recursive_render(
-        template_dir=str(tmpl_dir),
+        template_dir=example_project_template_dir.resolve(),
         environment=env,
         _root_dir=str(example_project.resolve()),
     )
@@ -127,4 +127,38 @@ def test_recursive_render(
         for p in itertools.accumulate(
             t.relative_to(example_project).parts, func=lambda *a: os.sep.join(a)
         )
+    )
+
+
+@pytest.fixture
+def dotfolder_template_dir(example_project: Path):
+    newpath = example_project / ".templates/.psr-templates"
+    newpath.mkdir(parents=True, exist_ok=True)
+    return newpath
+
+
+@pytest.fixture
+def dotfolder_template(dotfolder_template_dir: Path):
+    tmpl = dotfolder_template_dir / "template.txt"
+    tmpl.write_text("I am a template")
+    return tmpl
+
+
+def test_recursive_render_with_top_level_dotfolder(
+    example_project, dotfolder_template, dotfolder_template_dir
+):
+    preexisting_paths = set(example_project.rglob("**/*"))
+    env = environment(template_dir=dotfolder_template_dir.resolve())
+
+    recursive_render(
+        template_dir=dotfolder_template_dir.resolve(),
+        environment=env,
+        _root_dir=example_project.resolve(),
+    )
+
+    rendered_template = example_project / dotfolder_template.name
+    assert rendered_template.exists()
+
+    assert set(example_project.rglob("**/*")) == preexisting_paths.union(
+        {example_project / rendered_template}
     )

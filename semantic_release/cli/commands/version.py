@@ -243,15 +243,13 @@ def version(  # noqa: C901
         translator.prerelease_token = prerelease_token
 
     # Only push if we're committing changes
-    if push_changes and not commit_changes:
-        if not create_tag:
-            log.info("changes will not be pushed because --no-commit disables pushing")
-            push_changes &= commit_changes
+    if push_changes and not commit_changes and not create_tag:
+        log.info("changes will not be pushed because --no-commit disables pushing")
+        push_changes &= commit_changes
     # Only push if we're creating a tag
-    if push_changes and not create_tag:
-        if not commit_changes:
-            log.info("new tag will not be pushed because --no-tag disables pushing")
-            push_changes &= create_tag
+    if push_changes and not create_tag and not commit_changes:
+        log.info("new tag will not be pushed because --no-tag disables pushing")
+        push_changes &= create_tag
     # Only make a release if we're pushing the changes
     if make_vcs_release and not push_changes:
         log.info("No vcs release will be created because pushing changes is disabled")

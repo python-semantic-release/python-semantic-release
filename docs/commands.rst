@@ -226,7 +226,7 @@ If ``--no-commit`` is supplied, it may disable other options derivatively; pleas
 ************************
 
 Whether or not to perform a ``git tag`` to apply a tag of the corresponding to the new version during this
-command invocation. This option manages the tag application separate from the commit handled by the `--commit`
+command invocation. This option manages the tag application separate from the commit handled by the ``--commit``
 option.
 
 If ``--no-tag`` is supplied, it may disable other options derivatively; please see below.

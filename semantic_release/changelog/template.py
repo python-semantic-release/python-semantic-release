@@ -81,22 +81,28 @@ def recursive_render(
 ) -> list[str]:
     rendered_paths: list[str] = []
     for root, file in (
-        (root, file)
+        (Path(root), file)
         for root, _, files in os.walk(template_dir)
         for file in files
-        if not any(elem.startswith(".") for elem in root.split(os.sep))
+        # we slice relpath.parts[1:] to allow the top-level
+        # template folder to have a dot prefix.
+        # e.g. to permit ".github/psr-templates" to contain the templates,
+        # rather than enforcing a top-level, non-hidden directory
+        if not any(
+            elem.startswith(".")
+            for elem in Path(root).relative_to(template_dir).parts[1:]
+        )
         and not file.startswith(".")
     ):
-        src_path = Path(root)
-        output_path = (_root_dir / src_path.relative_to(template_dir)).resolve()
-        log.info("Rendering templates from %s to %s", src_path, output_path)
-        os.makedirs(str(output_path), exist_ok=True)
+        output_path = (_root_dir / root.relative_to(template_dir)).resolve()
+        log.info("Rendering templates from %s to %s", root, output_path)
+        output_path.mkdir(parents=True, exist_ok=True)
         if file.endswith(".j2"):
             # We know the file ends with .j2 by the filter in the for-loop
             output_filename = file[:-3]
             # Strip off the template directory from the front of the root path -
             # that's the output location relative to the repo root
-            src_file_path = str((src_path / file).relative_to(template_dir))
+            src_file_path = str((root / file).relative_to(template_dir))
             output_file_path = str((output_path / output_filename).resolve())
 
             log.debug("rendering %s to %s", src_file_path, output_file_path)
@@ -107,7 +113,7 @@ def recursive_render(
 
             rendered_paths.append(output_file_path)
         else:
-            src_file = str((src_path / file).resolve())
+            src_file = str((root / file).resolve())
             target_file = str((output_path / file).resolve())
             log.debug(
                 "source file %s is not a template, copying to %s", src_file, target_file
