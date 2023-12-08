@@ -375,13 +375,71 @@ def version(  # noqa: C901
 
     rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
 
+    rh = ReleaseHistory.from_git_history(
+        repo=repo,
+        translator=translator,
+        commit_parser=parser,
+        exclude_commit_patterns=changelog_excluded_commit_patterns,
+    )
+
+    commit_date = datetime.now()
+    try:
+        rh = rh.release(
+            new_version,
+            tagger=commit_author,
+            committer=commit_author,
+            tagged_date=commit_date,
+        )
+    except ValueError as ve:
+        ctx.fail(str(ve))
+
+    all_paths_to_add: list[str] = []
+
+    if update_changelog:
+        changelog_context = make_changelog_context(
+            hvcs_client=hvcs_client, release_history=rh
+        )
+        changelog_context.bind_to_environment(env)
+
+        if template_dir.is_dir():
+            if opts.noop:
+                noop_report(
+                    f"would have recursively rendered the template directory "
+                    f"{template_dir!r} relative to {repo.working_dir!r}. "
+                    "Paths which would be modified by this operation cannot be "
+                    "determined in no-op mode."
+                )
+            else:
+                all_paths_to_add.extend(
+                    recursive_render(
+                        template_dir, environment=env, _root_dir=repo.working_dir
+                    )
+                )
+
+        else:
+            log.info(
+                "Path %r not found, using default changelog template", template_dir
+            )
+            if opts.noop:
+                noop_report(
+                    "would have written your changelog to "
+                    + str(changelog_file.relative_to(repo.working_dir))
+                )
+            else:
+                changelog_text = render_default_changelog_file(env)
+                changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
+
+            all_paths_to_add.append(str(changelog_file.relative_to(repo.working_dir)))
+
+    # Apply the new version to the source files
     files_with_new_version_written = apply_version_to_source_files(
         repo=repo,
         version_declarations=runtime.version_declarations,
         version=new_version,
         noop=opts.noop,
     )
-    all_paths_to_add = files_with_new_version_written + (assets or [])
+    all_paths_to_add.extend(files_with_new_version_written)
+    all_paths_to_add.extend(assets or [])
 
     # Build distributions before committing any changes - this way if the
     # build fails, modifications to the source code won't be committed
@@ -404,19 +462,11 @@ def version(  # noqa: C901
 
     # Commit changes
     if commit_changes and opts.noop:
-        # Indents the newlines so that terminal formatting is happy - note the
-        # git commit line of the output is 24 spaces indented too
-        # Only this message needs such special handling because of the newlines
-        # that might be in a commit message between the subject and body
-        indented_commit_message = commit_message.format(version=new_version).replace(
-            "\n\n", "\n\n" + " " * 24
-        )
         noop_report(
             indented(
                 f"""
                 would have run:
                     git add {" ".join(all_paths_to_add)}
-                    git commit -m "{indented_commit_message}"
                 """
             )
         )
@@ -431,80 +481,6 @@ def version(  # noqa: C901
                 repo.git.add(updated_path)
             except GitCommandError:  # noqa: PERF203
                 log.warning("Failed to add path (%s) to index", updated_path)
-
-    rh = ReleaseHistory.from_git_history(
-        repo=repo,
-        translator=translator,
-        commit_parser=parser,
-        exclude_commit_patterns=changelog_excluded_commit_patterns,
-    )
-
-    commit_date = datetime.now()
-    try:
-        rh = rh.release(
-            new_version,
-            tagger=commit_author,
-            committer=commit_author,
-            tagged_date=commit_date,
-        )
-    except ValueError as ve:
-        ctx.fail(str(ve))
-
-    changelog_context = make_changelog_context(
-        hvcs_client=hvcs_client, release_history=rh
-    )
-    changelog_context.bind_to_environment(env)
-
-    updated_paths: list[str] = []
-    if update_changelog:
-        if template_dir.is_dir():
-            if opts.noop:
-                noop_report(
-                    f"would have recursively rendered the template directory "
-                    f"{template_dir!r} relative to {repo.working_dir!r}. "
-                    "Paths which would be modified by this operation cannot be "
-                    "determined in no-op mode."
-                )
-            else:
-                updated_paths = recursive_render(
-                    template_dir, environment=env, _root_dir=repo.working_dir
-                )
-
-        else:
-            log.info(
-                "Path %r not found, using default changelog template", template_dir
-            )
-            if opts.noop:
-                noop_report(
-                    "would have written your changelog to "
-                    + str(changelog_file.relative_to(repo.working_dir))
-                )
-            else:
-                changelog_text = render_default_changelog_file(env)
-                changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
-
-            updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
-
-        if commit_changes and opts.noop:
-            noop_report(
-                indented(
-                    f"""
-                    would have run:
-                        git add {" ".join(updated_paths)}
-                    """
-                )
-            )
-        elif commit_changes:
-            # Anything changed here should be staged.
-            # TODO: in future this loop should be 1 line:
-            # repo.index.add(updated_paths, force=False)  # noqa: ERA001
-            # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
-            # we have to do manually add each filepath, and catch the exception if it is an ignored file
-            for updated_path in updated_paths:
-                try:
-                    repo.git.add(updated_path)
-                except GitCommandError:  # noqa: PERF203
-                    log.warning("Failed to add path (%s) to index", updated_path)
 
     def custom_git_environment() -> ContextManager[None]:
         """
@@ -541,7 +517,16 @@ def version(  # noqa: C901
             if commit_author
             else ""
         )
-        command += "git commit -m '{commit_message.format(version=v)}'"
+
+        # Indents the newlines so that terminal formatting is happy - note the
+        # git commit line of the output is 24 spaces indented too
+        # Only this message needs such special handling because of the newlines
+        # that might be in a commit message between the subject and body
+        indented_commit_message = commit_message.format(version=new_version).replace(
+            "\n\n", "\n\n" + " " * 24
+        )
+
+        command += f"git commit -m '{indented_commit_message}'"
 
         noop_report(
             indented(
@@ -619,6 +604,9 @@ def version(  # noqa: C901
         # Use a new, non-configurable environment for release notes -
         # not user-configurable at the moment
         release_note_environment = environment(template_dir=runtime.template_dir)
+        changelog_context = make_changelog_context(
+            hvcs_client=hvcs_client, release_history=rh
+        )
         changelog_context.bind_to_environment(release_note_environment)
 
         template = get_release_notes_template(template_dir)
