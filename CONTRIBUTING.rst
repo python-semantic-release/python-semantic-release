@@ -29,19 +29,69 @@ that should result in a new release it will happen if the build is green.
 Development
 ~~~~~~~~~~~
 
-Install this module and the development dependencies::
+Install this module and the development dependencies
 
-    pip install -e ".[test,dev]"
+.. code-block:: bash
 
-And if you'd like to build the documentation locally::
+    pip install -e ".[dev,mypy,test]"
+
+And if you'd like to build the documentation locally
+
+.. code-block:: bash
 
     pip install -e ".[docs]"
+    sphinx-autobuild --open-browser docs docs/_build/html
 
 Testing
 ~~~~~~~
 
 To test your modifications locally:
 
-::
+.. code-block:: bash
 
+    # Run type-checking, all tests across all supported Python versions
     tox
+
+    # Run all tests for your current installed Python version (with full error output)
+    pytest -vv tests/
+
+If you need to run tests in a debugger, such as VSCode, you will need to adjust
+``pyproject.toml`` temporarily:
+
+.. code-block:: diff
+
+    diff --git a/pyproject.toml b/pyproject.toml
+
+      [tool.pytest.ini_options]
+      addopts = [
+    +     "-n0",
+    -     "-nauto",
+          "-ra",
+          "--cache-clear",
+    -     "--cov=semantic_release",
+    -     "--cov-context=test",
+    -     "--cov-report",
+    -     "html:coverage-html",
+    -     "--cov-report",
+    -     "term",
+      ]
+
+.. note::
+
+    The ``-n0`` option disables ``xdist``'s parallel testing. The removal of the coverage options
+    is to avoid a bug in ``pytest-cov`` that prevents VSCode from stopping at the breakpoints.
+
+Building
+~~~~~~~~
+
+This project is designed to be versioned and built by itself using the ``tool.semantic_release``
+configuration in ``pyproject.toml``. The setting ``tool.semantic_release.build_command`` defines
+the command to run to build the package.
+
+The following is a copy of the ``build_command`` setting which can be run manually to build the
+package locally:
+
+.. code-block:: bash
+
+    python -m pip install build~=0.10.0
+    python -m build .
