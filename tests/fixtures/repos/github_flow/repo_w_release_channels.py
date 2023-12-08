@@ -206,6 +206,8 @@ def build_github_flow_repo_w_feature_release_channel(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            main_branch_head = git_repo.heads.main
+
             # Make initial feature release (v0.1.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -250,8 +252,8 @@ def build_github_flow_repo_w_feature_release_channel(
             next_version_def = repo_def[next_version]
 
             # Checkout beta_testing branch
-            git_repo.create_head("beta_testing")
-            git_repo.heads.beta_testing.checkout()
+            beta_branch = git_repo.create_head("beta_testing", main_branch_head.commit)
+            beta_branch.checkout()
 
             # Make a feature level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
