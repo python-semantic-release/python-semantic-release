@@ -4,9 +4,9 @@ Configuration
 =============
 
 Configuration is read from a file which can be specified using the
-:ref:`--config <cmd-main-option-config>` option to :ref:`cmd-main`. Python Semantic
-Release currently supports either TOML- or JSON-formatted configuration, and will
-attempt to detect the configuration format and parse it.
+:ref:`\\\\-\\\\-config <cmd-main-option-config>` option to :ref:`cmd-main`. Python Semantic
+Release currently supports a configuration in either TOML or JSON format, and will
+attempt to auto-detect and parse either format.
 
 When using a JSON-format configuration file, Python Semantic Release looks for its
 settings beneath a top-level ``semantic_release`` key; when using a TOML-format
@@ -50,36 +50,32 @@ the relevant settings.
 Environment Variables
 ---------------------
 
-Some settings can be configured via environment variables. In order to do this,
-you must indicate that Python Semantic Release should use a particular environment
-variable as follows.
+Some settings are best pulled from environment variables rather than being stored
+in plaintext in your configuration file. Python Semantic Release can be configured
+to look for an environment variable value to use for a given setting, but this feature
+is not available for all settings. In order to use an environment variable for a setting,
+you must indicate in your configuration file the name of the environment variable to use.
 
-Suppose for example that you would like to set :ref:`remote.token <config-remote-token>`.
-It is possible to do so by pasting your token in plaintext into your
-configuration file (**Note: this is not advisable**):
-
-.. code-block:: toml
-
-    [tool.semantic_release.remote]
-    token = "very secret 123"
-
-Unfortunately, this configuration lives in your Git repository along with your source
-code, and this would represent insecure management of your password. It is recommended
-to use an environment variable to provide the required password. Suppose you would
-like to specify that should be read from the environment variable ``GH_TOKEN``.
-In this case, you should modify your configuration to the following:
-
-.. code-block:: toml
-
-    [tool.semantic_release.remote]
-    token = { env = "GH_TOKEN" }
-
-This is equivalent to the default:
+The traditional and most common use case for environment variable use is for passing
+authentication tokens to Python Semantic Release. You do **NOT** want to hard code your
+authentication token in your configuration file, as this is a **security risk**. A plaintext
+token in your configuration file could be exposed to anyone with access to your repository,
+including long after its deleted if a token is in your git history. Instead, define the name
+of the environment variable which contains your :ref:`remote.token <config-remote-token>`,
+such as ``GH_TOKEN``, in your configuration file, and Python Semantic Release will do the
+rest, as seen below.
 
 .. code-block:: toml
 
     [tool.semantic_release.remote.token]
     env = "GH_TOKEN"
+
+Given basic TOML syntax compatibility, this is equivalent to:
+
+.. code-block:: toml
+
+    [tool.semantic_release.remote]
+    token = { env = "GH_TOKEN" }
 
 The general format for specifying that some configuration should be sourced from an
 environment variable is:
@@ -187,13 +183,14 @@ adding the old message pattern(s) to :ref:`exclude_commit_patterns <config-chang
 Specify which commit parser Python Semantic Release should use to parse the commits
 within the Git repository.
 
-You can choose one of the inbuilt commit parsers - ``"angular"`` for
-:ref:`AngularCommitParser <commit-parser-angular>`, ``"emoji"`` for
-:ref:`EmojiCommitParser <commit-parser-emoji>`, ``"scipy"`` for
-:ref:`ScipyCommitParser <commit-parser-scipy>` or ``"tag"`` for
-:ref:`TagCommitParser <commit-parser-tag>`. However you can also specify your own
-commit parser in ``module:attr`` form, in which case this will be imported and used
-instead.
+Built-in parsers:
+    * ``angular`` - :ref:`AngularCommitParser <commit-parser-angular>`
+    * ``emoji`` - :ref:`EmojiCommitParser <commit-parser-emoji>`
+    * ``scipy`` - :ref:`ScipyCommitParser <commit-parser-scipy>`
+    * ``tag`` - :ref:`TagCommitParser <commit-parser-tag>`
+
+You can set any of the built-in parsers by their keyword but you can also specify
+your own commit parser in ``module:attr`` form.
 
 For more information see :ref:`commit-parsing`.
 
@@ -559,12 +556,13 @@ pushing.
 
 .. _config-remote-token:
 
-``token`` (:ref:`Environment Variable <config-environment-variables>`)
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+``token (Dict['env': str])``
+""""""""""""""""""""""""""""
 
-Environment variable from which to source the authentication token for the remote VCS.
-Common examples include ``"GH_TOKEN"``, ``"GITLAB_TOKEN"`` or ``"GITEA_TOKEN"``, however
-you can choose to use a custom environment variable if you wish.
+:ref:`Environment Variable <config-environment-variables>` from which to source the
+authentication token for the remote VCS. Common examples include ``"GH_TOKEN"``,
+``"GITLAB_TOKEN"`` or ``"GITEA_TOKEN"``, however, you may choose to use a custom
+environment variable if you wish.
 
 .. note::
    By default, this is a **mandatory** environment variable that must be set before
@@ -603,9 +601,9 @@ list should be a string containing a Unix-style glob pattern.
 ``upload_to_vcs_release (bool)``
 """"""""""""""""""""""""""""""""
 
-If set to ``true``, upload artifacts matching
+If set to ``true``, upload any artifacts matched by the
 :ref:`dist_glob_patterns <config-publish-dist-glob-patterns>` to the release created
-in the remote VCS corresponding to the latest tag, if that is supported by the
-:ref:`VCS type <config-remote-type>`.
+in the remote VCS corresponding to the latest tag. Artifacts are only uploaded if
+release artifact uploads are supported by the :ref:`VCS type <config-remote-type>`.
 
 **Default:** ``true``
