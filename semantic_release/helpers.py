@@ -3,6 +3,7 @@ import logging
 import re
 import string
 from functools import lru_cache, wraps
+from pathlib import PurePosixPath
 from typing import Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
@@ -73,7 +74,7 @@ def dynamic_import(import_path: str) -> Any:
 
 
 class ParsedGitUrl(NamedTuple):
-    """Container for the elements parsed from a git URL using GIT_URL_REGEX"""
+    """Container for the elements parsed from a git URL"""
 
     scheme: str
     netloc: str
@@ -81,59 +82,86 @@ class ParsedGitUrl(NamedTuple):
     repo_name: str
 
 
-GIT_URL_REGEX = re.compile(
-    r"""
-    ^
-    (?P<user>[\w\d\-.]+)@
-    (?P<netloc>[^:]+)
-    :
-    (?P<namespace>[\w\.@\:/\-~]+)
-    /
-    (?P<repo_name>[\w\.\_\-]+)  # Note this also catches the ".git" at the end if present
-    /?
-    $
-    """,  # noqa: E501
-    flags=re.VERBOSE,
-)
-
-
 @lru_cache(maxsize=512)
 def parse_git_url(url: str) -> ParsedGitUrl:
     """
-    Attempt to parse a string as a git url, either https or ssh format, into a
+    Attempt to parse a string as a git url http[s]://, git://, file://, or ssh format, into a
     ParsedGitUrl.
+
+    supported examples:
+        http://git.mycompany.com/username/myproject.git
+        https://github.com/username/myproject.git
+        https://gitlab.com/group/subgroup/myproject.git
+        https://git.mycompany.com:4443/username/myproject.git
+        git://host.xz/path/to/repo.git/
+        git://host.xz:9418/path/to/repo.git/
+        git@github.com:username/myproject.git                  <-- assumes ssh://
+        ssh://git@github.com:3759/myproject.git                <-- non-standard, but assume user 3759
+        ssh://git@github.com:username/myproject.git
+        ssh://git@bitbucket.org:7999/username/myproject.git
+        git+ssh://git@github.com:username/myproject.git
+        /Users/username/dev/remote/myproject.git               <-- Posix File paths
+        file:///Users/username/dev/remote/myproject.git
+        C:/Users/username/dev/remote/myproject.git             <-- Windows File paths
+        file:///C:/Users/username/dev/remote/myproject.git
+
+    REFERENCE: https://stackoverflow.com/questions/31801271/what-are-the-supported-git-url-formats
+
     Raises ValueError if the url can't be parsed.
     """
     log.debug("Parsing git url %r", url)
+
+    # Normalizers are a list of tuples of (pattern, replacement)
+    normalizers = [
+        # normalize implicit ssh urls to explicit ssh://
+        (r"^(\w+@)", r"ssh://\1"),
+
+        # normalize git+ssh:// urls to ssh://
+        (r"^git\+ssh://", "ssh://"),
+
+        # normalize an scp like syntax to URL compatible syntax
+        # excluding port definitions (:#####) & including numeric usernames
+        (r"(ssh://(?:\w+@)?[\w.]+):(?!\d{1,5}/\w+/)(.*)$", r"\1/\2"),
+
+        # normalize implicit file (windows || posix) urls to explicit file:// urls
+        (r"^([C-Z]:/)|^/(\w)", r"file:///\1\2"),
+    ]
+
+    for pattern, replacement in normalizers:
+        url = re.compile(pattern).sub(replacement, url)
+
+    # run the url through urlsplit to separate out the parts
     urllib_split = urlsplit(url)
-    if urllib_split.scheme:
-        # We have been able to parse the url with urlsplit,
-        # so it's a (git|ssh|https?)://... structure
-        namespace, _, name = urllib_split.path.lstrip("/").rpartition("/")
-        name.rstrip("/")
-        name = name[:-4] if name.endswith(".git") else name
-        if not all((urllib_split.scheme, urllib_split.netloc, namespace, name)):
-            raise ValueError(f"Bad url: {url!r}")
 
-        return ParsedGitUrl(
-            scheme=urllib_split.scheme,
-            netloc=urllib_split.netloc,
-            namespace=namespace,
-            repo_name=name,
-        )
-
-    m = GIT_URL_REGEX.match(url)
-    if not m:
+    # Fail if url scheme not found
+    if not urllib_split.scheme:
         raise ValueError(f"Cannot parse {url!r}")
 
-    repo_name = m.group("repo_name")
-    repo_name = repo_name[:-4] if repo_name.endswith(".git") else repo_name
+    # We have been able to parse the url with urlsplit,
+    # so it's a (file|git|ssh|https?)://... structure
+    # but we aren't validating the protocol scheme as its not our business
 
-    if not all((*m.group("netloc", "namespace"), repo_name)):
+    # use PosixPath to normalize the path & then separate out the namespace & repo_name
+    namespace, _, name = str(PurePosixPath(urllib_split.path)).lstrip("/").rpartition("/")
+
+    # strip out the .git at the end of the repo_name if present
+    name = name[:-4] if name.endswith(".git") else name
+
+    # check that we have all the required parts of the url
+    required_parts = [
+        urllib_split.scheme,
+        # Allow empty net location for file:// urls
+        True if urllib_split.scheme == "file" else urllib_split.netloc,
+        namespace,
+        name
+    ]
+
+    if not all(required_parts):
         raise ValueError(f"Bad url: {url!r}")
+
     return ParsedGitUrl(
-        scheme="ssh",
-        netloc=m.group("netloc"),
-        namespace=m.group("namespace"),
-        repo_name=repo_name,
+        scheme=urllib_split.scheme,
+        netloc=urllib_split.netloc,
+        namespace=namespace,
+        repo_name=name,
     )
