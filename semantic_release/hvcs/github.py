@@ -37,6 +37,7 @@ class Github(HvcsBase):
     DEFAULT_DOMAIN = "github.com"
     DEFAULT_API_DOMAIN = "api.github.com"
     DEFAULT_UPLOAD_DOMAIN = "uploads.github.com"
+    DEFAULT_ENV_TOKEN_NAME = "GH_TOKEN"
 
     def __init__(
         self,

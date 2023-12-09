@@ -3,3 +3,5 @@ from semantic_release.hvcs.gitea import Gitea
 from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.gitlab import Gitlab
 from semantic_release.hvcs.token_auth import TokenAuth
+
+__all__ = ["Gitea", "Github", "Gitlab", "HvcsBase", "TokenAuth"]

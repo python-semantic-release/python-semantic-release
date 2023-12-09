@@ -6,14 +6,15 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
 
 from git import Actor
 from git.repo.base import Repo
 from jinja2 import Environment
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from typing_extensions import Literal
 
+from semantic_release import hvcs
 from semantic_release.changelog import environment
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.masking_filter import MaskingFilter
@@ -29,7 +30,6 @@ from semantic_release.commit_parser import (
 from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
-from semantic_release.hvcs import Gitea, Github, Gitlab, HvcsBase
 from semantic_release.version import VersionTranslator
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,
@@ -44,6 +44,21 @@ class HvcsClient(str, Enum):
     GITHUB = "github"
     GITLAB = "gitlab"
     GITEA = "gitea"
+
+
+_known_commit_parsers = {
+    "angular": AngularCommitParser,
+    "emoji": EmojiCommitParser,
+    "scipy": ScipyCommitParser,
+    "tag": TagCommitParser,
+}
+
+
+_known_hvcs: Dict[HvcsClient, Type[hvcs.HvcsBase]] = {
+    HvcsClient.GITHUB: hvcs.Github,
+    HvcsClient.GITLAB: hvcs.Gitlab,
+    HvcsClient.GITEA: hvcs.Gitea,
+}
 
 
 class EnvConfigVar(BaseModel):
@@ -90,12 +105,21 @@ class BranchConfig(BaseModel):
 
 class RemoteConfig(BaseModel):
     name: str = "origin"
-    token: MaybeFromEnv = EnvConfigVar(env="GH_TOKEN")
+    token: MaybeFromEnv = ""
     url: Optional[MaybeFromEnv] = None
     type: HvcsClient = HvcsClient.GITHUB
     domain: Optional[str] = None
     api_domain: Optional[str] = None
     ignore_token_for_push: bool = False
+
+    @model_validator(mode="after")
+    def set_default_token(self) -> "RemoteConfig":
+        # Set the default token name for the given VCS when no user input is given
+        if not self.token and self.type in _known_hvcs:
+            default_token_name = _known_hvcs[self.type].DEFAULT_ENV_TOKEN_NAME
+            if default_token_name:
+                self.token = EnvConfigVar(env=default_token_name)
+        return self
 
 
 class PublishConfig(BaseModel):
@@ -172,20 +196,6 @@ def _recursive_getattr(obj: Any, path: str) -> Any:
     return out
 
 
-_known_commit_parsers = {
-    "angular": AngularCommitParser,
-    "emoji": EmojiCommitParser,
-    "scipy": ScipyCommitParser,
-    "tag": TagCommitParser,
-}
-
-_known_hvcs = {
-    HvcsClient.GITHUB: Github,
-    HvcsClient.GITLAB: Gitlab,
-    HvcsClient.GITEA: Gitea,
-}
-
-
 @dataclass
 class RuntimeContext:
     _mask_attrs_: ClassVar[List[str]] = ["hvcs_client.token"]
@@ -200,7 +210,7 @@ class RuntimeContext:
     commit_message: str
     changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
     version_declarations: Tuple[VersionDeclarationABC, ...]
-    hvcs_client: HvcsBase
+    hvcs_client: hvcs.HvcsBase
     changelog_file: Path
     ignore_token_for_push: bool
     template_environment: Environment

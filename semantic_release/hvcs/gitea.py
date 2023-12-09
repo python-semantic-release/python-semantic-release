@@ -36,6 +36,7 @@ class Gitea(HvcsBase):
     DEFAULT_DOMAIN = "gitea.com"
     DEFAULT_API_PATH = "/api/v1"
     DEFAULT_API_DOMAIN = f"{DEFAULT_DOMAIN}{DEFAULT_API_PATH}"
+    DEFAULT_ENV_TOKEN_NAME = "GITEA_TOKEN"
 
     # pylint: disable=super-init-not-called
     def __init__(
