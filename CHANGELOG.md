@@ -2,6 +2,39 @@
 
 
 
+## v8.5.1 (2023-12-12)
+
+### Documentation
+
+* docs(configuration): adjust wording and improve clarity (#766)
+
+* docs(configuration): fix typo in text
+
+* docs(configuration): adjust wording and improve clarity ([`6b2fc8c`](https://github.com/python-semantic-release/python-semantic-release/commit/6b2fc8c156e122ee1b43fdb513b2dc3b8fd76724))
+
+### Fix
+
+* fix(config): gracefully fail when repo is in a detached HEAD state (#765)
+
+* fix(config): cleanly handle repository in detached HEAD state
+
+* test(cli-main): add detached head cli test ([`ac4f9aa`](https://github.com/python-semantic-release/python-semantic-release/commit/ac4f9aacb72c99f2479ae33369822faad011a824))
+
+* fix(cmd-version): handle committing of git-ignored file gracefully (#764)
+
+* fix(version): only commit non git-ignored files during version commit
+
+* test(version): set version file as ignored file
+
+Tweaks tests to use one committed change file and the version file
+as an ignored change file. This allows us to verify that our commit
+mechanism does not crash if a file that is changed is ignored by user ([`ea89fa7`](https://github.com/python-semantic-release/python-semantic-release/commit/ea89fa72885e15da91687172355426a22c152513))
+
+### Style
+
+* style: beautify 6b2fc8c156e122ee1b43fdb513b2dc3b8fd76724 ([`9bf69d7`](https://github.com/python-semantic-release/python-semantic-release/commit/9bf69d7005eee75f20b356bda97fea2d250a91de))
+
+
 ## v8.5.0 (2023-12-07)
 
 ### Feature
