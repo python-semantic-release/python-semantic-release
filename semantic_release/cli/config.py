@@ -257,8 +257,18 @@ class RuntimeContext:
         ##
         # credentials masking for logging
         masker = MaskingFilter(_use_named_masks=raw.logging_use_named_masks)
+
+        try:
+            active_branch = repo.active_branch.name
+        except TypeError as err:
+            raise NotAReleaseBranch(
+                "Detached HEAD state cannot match any release groups; "
+                "no release will be made"
+            ) from err
+
         # branch-specific configuration
-        branch_config = cls.select_branch_options(raw.branches, repo.active_branch.name)
+        branch_config = cls.select_branch_options(raw.branches, active_branch)
+
         # commit_parser
         commit_parser_cls = (
             _known_commit_parsers[raw.commit_parser]
