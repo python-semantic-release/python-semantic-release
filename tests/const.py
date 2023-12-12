@@ -180,7 +180,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.semantic_release]
 version_variables = [
-    "src/{EXAMPLE_PROJECT_NAME}/__init__.py:__version__",
+    "src/{EXAMPLE_PROJECT_NAME}/_version.py:__version__",
 ]
 version_toml = ["pyproject.toml:tool.poetry.version"]
 build_command = "bash -c \"echo 'Hello World'\""
@@ -375,7 +375,7 @@ def _read_long_description():
         return None
 
 
-with open("{EXAMPLE_PROJECT_NAME}/__init__.py", "r") as fd:
+with open("{EXAMPLE_PROJECT_NAME}/_version.py", "r") as fd:
     version = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE
     ).group(1)

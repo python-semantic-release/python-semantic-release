@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, ContextManager, Iterable
 
 import click
 import shellingham  # type: ignore[import]
+from git.exc import GitCommandError
 
 from semantic_release.changelog import ReleaseHistory, environment, recursive_render
 from semantic_release.changelog.context import make_changelog_context
@@ -369,7 +370,15 @@ def version(  # noqa: C901
         )
 
     elif commit_changes:
-        repo.git.add(all_paths_to_add)
+        # TODO: in future this loop should be 1 line:
+        # repo.index.add(all_paths_to_add, force=False)
+        # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
+        # we have to do manually add each filepath, and catch the exception if it is an ignored file
+        for updated_path in all_paths_to_add:
+            try:
+                repo.git.add(updated_path)
+            except GitCommandError:
+                log.warning("Failed to add path (%s) to index", updated_path)
 
     rh = ReleaseHistory.from_git_history(
         repo=repo,
@@ -435,7 +444,16 @@ def version(  # noqa: C901
             )
         elif commit_changes:
             # Anything changed here should be staged.
-            repo.git.add(updated_paths)
+            # TODO: in future this loop should be 1 line:
+            # repo.index.add(updated_paths, force=False)
+            # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
+            # we have to do manually add each filepath, and catch the exception if it is an ignored file
+            for updated_path in updated_paths:
+                try:
+                    repo.git.add(updated_path)
+                except GitCommandError:
+                    log.warning("Failed to add path (%s) to index", updated_path)
+
 
     def custom_git_environment() -> ContextManager[None]:
         """

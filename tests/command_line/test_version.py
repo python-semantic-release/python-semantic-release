@@ -389,7 +389,7 @@ def test_version_no_push_force_level(
     expected_new_version,
     example_project,
     example_pyproject_toml,
-    tmp_path_factory,
+    tmp_path_factory: pytest.TempPathFactory,
     cli_runner,
 ):
     tempdir = tmp_path_factory.mktemp("test_version")
@@ -415,7 +415,7 @@ def test_version_no_push_force_level(
     # Changelog already reflects changes this should introduce
     assert differing_files == [
         "pyproject.toml",
-        f"src/{EXAMPLE_PROJECT_NAME}/__init__.py",
+        f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
     ]
 
     # Compare pyproject.toml
@@ -434,14 +434,14 @@ def test_version_no_push_force_level(
     assert old_pyproject_toml == new_pyproject_toml
     assert new_version == expected_new_version
 
-    # Compare __init__.py
+    # Compare _version.py
     new_init_py = (
-        (example_project / "src" / EXAMPLE_PROJECT_NAME / "__init__.py")
+        (example_project / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
         .read_text(encoding="utf-8")
         .splitlines(keepends=True)
     )
     old_init_py = (
-        (tempdir / "src" / EXAMPLE_PROJECT_NAME / "__init__.py")
+        (tempdir / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
         .read_text(encoding="utf-8")
         .splitlines(keepends=True)
     )
@@ -662,7 +662,7 @@ def test_version_only_update_files_no_git_actions(
     # Files that should receive version change
     assert differing_files == [
         "pyproject.toml",
-        f"src/{EXAMPLE_PROJECT_NAME}/__init__.py",
+        f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
     ]
 
     # Compare pyproject.toml
@@ -681,20 +681,20 @@ def test_version_only_update_files_no_git_actions(
     assert old_pyproject_toml == new_pyproject_toml
     assert new_version == expected_new_version
 
-    # Compare __init__.py
-    new_init_py = (
-        (example_project / "src" / EXAMPLE_PROJECT_NAME / "__init__.py")
+    # Compare _version.py
+    new_version_py = (
+        (example_project / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
         .read_text(encoding="utf-8")
         .splitlines(keepends=True)
     )
-    old_init_py = (
-        (tempdir / "src" / EXAMPLE_PROJECT_NAME / "__init__.py")
+    old_version_py = (
+        (tempdir / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
         .read_text(encoding="utf-8")
         .splitlines(keepends=True)
     )
 
     d = difflib.Differ()
-    diff = list(d.compare(old_init_py, new_init_py))
+    diff = list(d.compare(old_version_py, new_version_py))
     added = [line[2:] for line in diff if line.startswith("+ ")]
     removed = [line[2:] for line in diff if line.startswith("- ")]
 

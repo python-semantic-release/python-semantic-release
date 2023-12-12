@@ -26,7 +26,7 @@ def cd(path: Path) -> Generator[Path, None, None]:
 
 
 @pytest.fixture
-def example_project(tmp_path):
+def example_project(tmp_path: "Path") -> "Generator[Path, None, None]":
     with cd(tmp_path):
         src_dir = tmp_path / "src"
         src_dir.mkdir()
@@ -35,16 +35,33 @@ def example_project(tmp_path):
         init_py = example_dir / "__init__.py"
         init_py.write_text(
             dedent(
-                f'''
+                '''
                 """
                 An example package with a very informative docstring
                 """
-                __version__ = "{EXAMPLE_PROJECT_VERSION}"
+                from ._version import __version__
 
 
                 def hello_world() -> None:
                     print("Hello World")
                 '''
+            )
+        )
+        version_py = example_dir / "_version.py"
+        version_py.write_text(
+            dedent(
+                f'''
+                __version__ = "{EXAMPLE_PROJECT_VERSION}"
+                '''
+            )
+        )
+        gitignore = tmp_path / ".gitignore"
+        gitignore.write_text(
+            dedent(
+                f"""
+                *.pyc
+                /src/**/{version_py.name}
+                """
             )
         )
         pyproject_toml = tmp_path / "pyproject.toml"
