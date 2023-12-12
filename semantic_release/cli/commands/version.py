@@ -454,7 +454,6 @@ def version(  # noqa: C901
                 except GitCommandError:
                     log.warning("Failed to add path (%s) to index", updated_path)
 
-
     def custom_git_environment() -> ContextManager[None]:
         """
         git.custom_environment is a context manager but

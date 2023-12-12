@@ -40,7 +40,9 @@ def test_not_a_release_branch_exit_code_with_strict(
 def test_not_a_release_branch_detached_head_exit_code(
     repo_with_git_flow_angular_commits, cli_runner
 ):
-    expected_err_msg = "Detached HEAD state cannot match any release groups; no release will be made"
+    expected_err_msg = (
+        "Detached HEAD state cannot match any release groups; no release will be made"
+    )
 
     # cause repo to be in detached head state without file changes
     repo_with_git_flow_angular_commits.git.checkout("HEAD", "--detach")

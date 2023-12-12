@@ -50,9 +50,9 @@ def example_project(tmp_path: "Path") -> "Generator[Path, None, None]":
         version_py = example_dir / "_version.py"
         version_py.write_text(
             dedent(
-                f'''
+                f"""
                 __version__ = "{EXAMPLE_PROJECT_VERSION}"
-                '''
+                """
             )
         )
         gitignore = tmp_path / ".gitignore"
