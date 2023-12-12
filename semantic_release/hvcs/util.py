@@ -64,7 +64,7 @@ def suppress_http_error_for_codes(
     """
 
     def _suppress_http_error_for_codes(
-        func: Callable[..., _R]
+        func: Callable[..., _R],
     ) -> Callable[..., _R | None]:
         @wraps(func)
         def _wrapper(*a: Any, **kw: Any) -> _R | None:

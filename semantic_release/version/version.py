@@ -23,7 +23,8 @@ VersionComparator = Callable[["Version", "Version"], bool]
 
 @overload
 def _comparator(
-    *, type_guard: bool
+    *,
+    type_guard: bool,
 ) -> Callable[[VersionComparator], VersionComparator]:
     ...
 
