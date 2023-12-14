@@ -1,12 +1,18 @@
 import json
 import os
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import git
 import pytest
 
 from semantic_release import __version__
 from semantic_release.cli import main
+
+if TYPE_CHECKING:
+    from click.testing import CliRunner
+
+    from tests.fixtures.example_project import UpdatePyprojectTomlFn
 
 
 def test_main_prints_version_and_exits(cli_runner):
@@ -114,6 +120,19 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
 
     assert result.exit_code == 2
     assert "does not exist" in result.stderr
+
+
+@pytest.mark.usefixtures("repo_with_no_tags_angular_commits")
+def test_errors_when_config_file_invalid_configuration(
+    cli_runner: "CliRunner", update_pyproject_toml: "UpdatePyprojectTomlFn"
+):
+    update_pyproject_toml("tool.semantic_release.remote.type", "invalidType")
+    result = cli_runner.invoke(main, ["--config", "pyproject.toml", "version"])
+
+    stderr_lines = result.stderr.splitlines()
+    assert result.exit_code == 1
+    assert "1 validation error for RawConfig" in stderr_lines[0]
+    assert "remote.type" in stderr_lines[1]
 
 
 def test_uses_default_config_when_no_config_file_found(
