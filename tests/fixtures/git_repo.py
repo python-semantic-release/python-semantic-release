@@ -10,7 +10,11 @@ from tests.util import add_text_to_file, shortuid
 if TYPE_CHECKING:
     from typing import Generator, List, Protocol
 
-    from tests.fixtures.example_project import ExProjectDir, UseParserFn
+    from tests.fixtures.example_project import (
+        ExProjectDir,
+        UpdatePyprojectTomlFn,
+        UseParserFn,
+    )
 
     class RepoInitFn(Protocol):
         def __call__(self) -> Repo:
@@ -430,10 +434,19 @@ def repo_with_single_branch_and_prereleases_tag_commits(
 def repo_with_main_and_feature_branches_angular_commits(
     git_repo_factory: "RepoInitFn",
     use_angular_parser: "UseParserFn",
+    update_pyproject_toml: "UpdatePyprojectTomlFn",
     file_in_repo: str,
 ) -> "Repo":
     git_repo = git_repo_factory()
     use_angular_parser()
+    update_pyproject_toml(
+        "tool.semantic_release.branches.beta-testing",
+        {
+            "match": "beta.*",
+            "prerelease": True,
+            "prerelease_token": "beta"
+        }
+    )
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -646,10 +659,19 @@ def repo_with_main_and_feature_branches_tag_commits(
 def repo_with_git_flow_angular_commits(
     git_repo_factory: "RepoInitFn",
     use_angular_parser: "UseParserFn",
+    update_pyproject_toml: "UpdatePyprojectTomlFn",
     file_in_repo: str
 ) -> "Repo":
     git_repo = git_repo_factory()
     use_angular_parser()
+    update_pyproject_toml(
+        "tool.semantic_release.branches.features",
+        {
+            "match": "feat.*",
+            "prerelease": True,
+            "prerelease_token": "alpha"
+        }
+    )
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -964,10 +986,19 @@ def repo_with_git_flow_tag_commits(
 def repo_with_git_flow_and_release_channels_angular_commits(
     git_repo_factory: "RepoInitFn",
     use_angular_parser: "UseParserFn",
+    update_pyproject_toml: "UpdatePyprojectTomlFn",
     file_in_repo: str
 ) -> "Repo":
     git_repo = git_repo_factory()
     use_angular_parser()
+    update_pyproject_toml(
+        "tool.semantic_release.branches.features",
+        {
+            "match": "feat.*",
+            "prerelease": True,
+            "prerelease_token": "alpha"
+        }
+    )
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
