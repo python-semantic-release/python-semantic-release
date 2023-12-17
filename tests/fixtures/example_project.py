@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
 from textwrap import dedent
@@ -20,25 +22,25 @@ from tests.const import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Protocol, Type
+    from typing import Any, Protocol
 
     ExProjectDir = Path
 
     class UpdatePyprojectTomlFn(Protocol):
-        def __call__(self, setting: str, value: "Any") -> None:
+        def __call__(self, setting: str, value: Any) -> None:
             ...
 
     class UseHvcsFn(Protocol):
-        def __call__(self) -> Type[HvcsBase]:
+        def __call__(self) -> type[HvcsBase]:
             ...
 
     class UseParserFn(Protocol):
-        def __call__(self) -> Type[CommitParser]:
+        def __call__(self) -> type[CommitParser]:
             ...
 
 
 @pytest.fixture
-def change_to_tmp_dir(tmp_path: "Path") -> "Generator[None, None, None]":
+def change_to_tmp_dir(tmp_path: Path) -> Generator[None, None, None]:
     cwd = os.getcwd()
     os.chdir(str(tmp_path.resolve()))
     try:
@@ -48,7 +50,7 @@ def change_to_tmp_dir(tmp_path: "Path") -> "Generator[None, None, None]":
 
 
 @pytest.fixture
-def example_project(change_to_tmp_dir: None) -> "ExProjectDir":
+def example_project(change_to_tmp_dir: None) -> ExProjectDir:
     tmp_path = Path.cwd()
     src_dir = tmp_path / "src"
     src_dir.mkdir()
@@ -108,7 +110,7 @@ def example_project_with_release_notes_template(example_project: Path) -> Path:
 
 
 @pytest.fixture
-def example_pyproject_toml(example_project):
+def example_pyproject_toml(example_project: ExProjectDir) -> Path:
     return example_project / "pyproject.toml"
 
 
@@ -135,11 +137,10 @@ def example_project_template_dir(example_project):
 
 @pytest.fixture
 def update_pyproject_toml(
-    example_project: "Path", example_pyproject_toml: "Path"
-) -> "UpdatePyprojectTomlFn":
+    example_project: Path, example_pyproject_toml: Path
+) -> UpdatePyprojectTomlFn:
     """Update the pyproject.toml file with the given content."""
-
-    def _update_pyproject_toml(setting: str, value: "Any") -> None:
+    def _update_pyproject_toml(setting: str, value: Any) -> None:
         with open(example_pyproject_toml) as rfd:
             pyproject_toml = tomlkit.load(rfd)
 
@@ -162,9 +163,9 @@ def update_pyproject_toml(
 
 
 @pytest.fixture
-def use_angular_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Angular parser."""
-    def _use_angular_parser() -> "Type[CommitParser]":
+    def _use_angular_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "angular")
         return AngularCommitParser
 
@@ -172,9 +173,9 @@ def use_angular_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UsePa
 
 
 @pytest.fixture
-def use_emoji_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Emoji parser."""
-    def _use_emoji_parser() -> "Type[CommitParser]":
+    def _use_emoji_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "emoji")
         return EmojiCommitParser
 
@@ -182,9 +183,9 @@ def use_emoji_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UsePars
 
 
 @pytest.fixture
-def use_scipy_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Scipy parser."""
-    def _use_scipy_parser() -> "Type[CommitParser]":
+    def _use_scipy_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "scipy")
         return ScipyCommitParser
 
@@ -192,9 +193,9 @@ def use_scipy_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UsePars
 
 
 @pytest.fixture
-def use_tag_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Tag parser."""
-    def _use_tag_parser() -> "Type[CommitParser]":
+    def _use_tag_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "tag")
         return TagCommitParser
 
@@ -202,9 +203,9 @@ def use_tag_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParser
 
 
 @pytest.fixture
-def use_github_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsFn":
+def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitHub as the HVCS."""
-    def _use_github_hvcs() -> "Type[HvcsBase]":
+    def _use_github_hvcs() -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "github")
         return Github
 
@@ -212,9 +213,9 @@ def use_github_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsF
 
 
 @pytest.fixture
-def use_gitlab_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsFn":
+def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitLab as the HVCS."""
-    def _use_gitlab_hvcs() -> "Type[HvcsBase]":
+    def _use_gitlab_hvcs() -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
         return Gitlab
 
@@ -222,9 +223,9 @@ def use_gitlab_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsF
 
 
 @pytest.fixture
-def use_gitea_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsFn":
+def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use Gitea as the HVCS."""
-    def _use_gitea_hvcs() -> "Type[HvcsBase]":
+    def _use_gitea_hvcs() -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
         return Gitea
 

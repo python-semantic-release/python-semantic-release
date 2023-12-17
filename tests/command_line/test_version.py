@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
+    from git import Repo
     from requests_mock import Mocker
 
     from semantic_release.cli.config import RuntimeContext
@@ -466,26 +467,27 @@ def test_version_no_push_force_level(
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
 )
-def test_version_build_metadata_triggers_new_version(repo, cli_runner):
+def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: CliRunner):
+    version_cmd_name = version.name or "version"
     # Verify we get "no version to release" without build metadata
     no_metadata_result = cli_runner.invoke(
-        main, ["--strict", version.name, "--no-push"]
+        main, ["--strict", version_cmd_name, "--no-push"]
     )
     assert no_metadata_result.exit_code == 2
     assert "no release will be made" in no_metadata_result.stderr.lower()
 
     metadata_suffix = "build.abc-12345"
     result = cli_runner.invoke(
-        main, [version.name, "--no-push", "--build-metadata", metadata_suffix]
+        main, [version_cmd_name, "--no-push", "--build-metadata", metadata_suffix]
     )
     assert result.exit_code == 0
     assert repo.git.tag(l=f"*{metadata_suffix}")
 
 
 def test_version_prints_current_version_if_no_new_version(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
-    result = cli_runner.invoke(main, [version.name, "--no-push"])
+    result = cli_runner.invoke(main, [version.name or "version", "--no-push"])
     assert result.exit_code == 0
     assert "no release will be made" in result.stderr.lower()
     assert result.stdout == "1.2.0-alpha.2\n"
@@ -503,9 +505,10 @@ def test_version_runs_build_command(
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
     ):
+        # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
-            main, [version.name, "--patch", "--no-push"]
-        )  # force a new version
+            main, [version.name or "version", "--patch", "--no-push"]
+        )
         assert result.exit_code == 0
 
         patched_subprocess_run.assert_called_once_with(
@@ -571,7 +574,7 @@ def test_custom_release_notes_template(
     # (see fixtures)
 
     # Act
-    resp = cli_runner.invoke(main, [version.name, "--skip-build", "--vcs-release"])
+    resp = cli_runner.invoke(main, [version.name or "version", "--skip-build", "--vcs-release"])
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
     release_version = runtime_context_with_no_tags.version_translator.from_tag(tag)
