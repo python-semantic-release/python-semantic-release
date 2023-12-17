@@ -10,7 +10,7 @@ from tests.util import add_text_to_file, shortuid
 if TYPE_CHECKING:
     from typing import Generator, List, Protocol
 
-    from tests.fixtures.example_project import ExProjectDir
+    from tests.fixtures.example_project import ExProjectDir, UseParserFn
 
     class RepoInitFn(Protocol):
         def __call__(self) -> Repo:
@@ -71,8 +71,14 @@ def git_repo_factory(
 
 
 @pytest.fixture
-def repo_with_no_tags_angular_commits(git_repo_factory, file_in_repo):
+def repo_with_no_tags_angular_commits(
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -87,8 +93,14 @@ def repo_with_no_tags_angular_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_no_tags_emoji_commits(git_repo_factory, file_in_repo):
+def repo_with_no_tags_emoji_commits(
+    git_repo_factory: "RepoInitFn",
+    use_emoji_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_emoji_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -103,8 +115,14 @@ def repo_with_no_tags_emoji_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_no_tags_scipy_commits(git_repo_factory, file_in_repo):
+def repo_with_no_tags_scipy_commits(
+    git_repo_factory: "RepoInitFn",
+    use_scipy_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_scipy_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -119,8 +137,14 @@ def repo_with_no_tags_scipy_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_no_tags_tag_commits(git_repo_factory, file_in_repo):
+def repo_with_no_tags_tag_commits(
+    git_repo_factory: "RepoInitFn",
+    use_tag_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_tag_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -135,8 +159,14 @@ def repo_with_no_tags_tag_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_single_branch_angular_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_angular_commits(
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -155,8 +185,14 @@ def repo_with_single_branch_angular_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_single_branch_emoji_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_emoji_commits(
+    git_repo_factory: "RepoInitFn",
+    use_emoji_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_emoji_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -175,8 +211,14 @@ def repo_with_single_branch_emoji_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_single_branch_scipy_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_scipy_commits(
+    git_repo_factory: "RepoInitFn",
+    use_scipy_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_scipy_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -195,8 +237,14 @@ def repo_with_single_branch_scipy_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_single_branch_tag_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_tag_commits(
+    git_repo_factory: "RepoInitFn",
+    use_tag_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_tag_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -216,9 +264,13 @@ def repo_with_single_branch_tag_commits(git_repo_factory, file_in_repo):
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_angular_commits(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -253,9 +305,13 @@ def repo_with_single_branch_and_prereleases_angular_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_emoji_commits(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_emoji_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_emoji_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -290,9 +346,13 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_scipy_commits(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_scipy_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_scipy_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -326,8 +386,14 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
 
 
 @pytest.fixture
-def repo_with_single_branch_and_prereleases_tag_commits(git_repo_factory, file_in_repo):
+def repo_with_single_branch_and_prereleases_tag_commits(
+    git_repo_factory: "RepoInitFn",
+    use_tag_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_tag_parser()
+
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
 
@@ -361,8 +427,13 @@ def repo_with_single_branch_and_prereleases_tag_commits(git_repo_factory, file_i
 
 
 @pytest.fixture
-def repo_with_main_and_feature_branches_angular_commits(git_repo_factory, file_in_repo):
+def repo_with_main_and_feature_branches_angular_commits(
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str,
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -410,8 +481,13 @@ def repo_with_main_and_feature_branches_angular_commits(git_repo_factory, file_i
 
 
 @pytest.fixture
-def repo_with_main_and_feature_branches_emoji_commits(git_repo_factory, file_in_repo):
+def repo_with_main_and_feature_branches_emoji_commits(
+    git_repo_factory: "RepoInitFn",
+    use_emoji_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -459,8 +535,13 @@ def repo_with_main_and_feature_branches_emoji_commits(git_repo_factory, file_in_
 
 
 @pytest.fixture
-def repo_with_main_and_feature_branches_scipy_commits(git_repo_factory, file_in_repo):
+def repo_with_main_and_feature_branches_scipy_commits(
+    git_repo_factory: "RepoInitFn",
+    use_scipy_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -508,8 +589,13 @@ def repo_with_main_and_feature_branches_scipy_commits(git_repo_factory, file_in_
 
 
 @pytest.fixture
-def repo_with_main_and_feature_branches_tag_commits(git_repo_factory, file_in_repo):
+def repo_with_main_and_feature_branches_tag_commits(
+    git_repo_factory: "RepoInitFn",
+    use_tag_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -557,8 +643,13 @@ def repo_with_main_and_feature_branches_tag_commits(git_repo_factory, file_in_re
 
 
 @pytest.fixture
-def repo_with_git_flow_angular_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_angular_commits(
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -631,8 +722,13 @@ def repo_with_git_flow_angular_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_git_flow_emoji_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_emoji_commits(
+    git_repo_factory: "RepoInitFn",
+    use_emoji_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -705,8 +801,13 @@ def repo_with_git_flow_emoji_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_git_flow_scipy_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_scipy_commits(
+    git_repo_factory: "RepoInitFn",
+    use_scipy_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -779,8 +880,13 @@ def repo_with_git_flow_scipy_commits(git_repo_factory, file_in_repo):
 
 
 @pytest.fixture
-def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_tag_commits(
+    git_repo_factory: "RepoInitFn",
+    use_tag_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -856,9 +962,12 @@ def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_angular_commits(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -938,9 +1047,12 @@ def repo_with_git_flow_and_release_channels_angular_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_angular_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_angular_parser() # TODO: is this correct?
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -1020,9 +1132,12 @@ def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_emoji_commits(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_emoji_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -1102,9 +1217,12 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_scipy_commits(
-    git_repo_factory, file_in_repo
-):
+    git_repo_factory: "RepoInitFn",
+    use_scipy_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
@@ -1183,8 +1301,13 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_tag_commits(git_repo_factory, file_in_repo):
+def repo_with_git_flow_and_release_channels_tag_commits(
+    git_repo_factory: "RepoInitFn",
+    use_tag_parser: "UseParserFn",
+    file_in_repo: str
+) -> "Repo":
     git_repo = git_repo_factory()
+    use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="Initial commit")
