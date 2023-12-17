@@ -7,6 +7,7 @@ import pytest
 import tomlkit
 
 from semantic_release.commit_parser import *
+from semantic_release.hvcs import *
 
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
@@ -27,8 +28,12 @@ if TYPE_CHECKING:
         def __call__(self, setting: str, value: "Any") -> None:
             ...
 
+    class UseHvcsFn(Protocol):
+        def __call__(self) -> Type[HvcsBase]:
+            ...
+
     class UseParserFn(Protocol):
-        def __call__(self) -> "Type[CommitParser]":
+        def __call__(self) -> Type[CommitParser]:
             ...
 
 
@@ -194,3 +199,33 @@ def use_tag_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParser
         return TagCommitParser
 
     return _use_tag_parser
+
+
+@pytest.fixture
+def use_github_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsFn":
+    """Modify the configuration file to use GitHub as the HVCS."""
+    def _use_github_hvcs() -> "Type[HvcsBase]":
+        update_pyproject_toml("tool.semantic_release.remote.type", "github")
+        return Github
+
+    return _use_github_hvcs
+
+
+@pytest.fixture
+def use_gitlab_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsFn":
+    """Modify the configuration file to use GitLab as the HVCS."""
+    def _use_gitlab_hvcs() -> "Type[HvcsBase]":
+        update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
+        return Gitlab
+
+    return _use_gitlab_hvcs
+
+
+@pytest.fixture
+def use_gitea_hvcs(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseHvcsFn":
+    """Modify the configuration file to use Gitea as the HVCS."""
+    def _use_gitea_hvcs() -> "Type[HvcsBase]":
+        update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
+        return Gitea
+
+    return _use_gitea_hvcs
