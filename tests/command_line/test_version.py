@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
     from semantic_release.cli.config import RuntimeContext
 
+    from tests.fixtures.example_project import UpdatePyprojectTomlFn
+
 
 @pytest.mark.parametrize(
     "repo",
@@ -495,11 +497,18 @@ def test_version_prints_current_version_if_no_new_version(
 
 @pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
 def test_version_runs_build_command(
-    repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml, shell
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    shell: str
 ):
-    config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
+    # Setup
+    build_command = "bash -c \"echo 'hello world'\""
+    update_pyproject_toml("tool.semantic_release.build_command", build_command)
     exe = shell.split("/")[-1]
+
+    # Mock out subprocess.run
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run, mock.patch(
