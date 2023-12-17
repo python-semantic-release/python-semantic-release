@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 import tomlkit
 
+from semantic_release.commit_parser import *
+
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
     EXAMPLE_PROJECT_NAME,
@@ -17,12 +19,16 @@ from tests.const import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Protocol
+    from typing import Any, Protocol, Type
 
     ExProjectDir = Path
 
     class UpdatePyprojectTomlFn(Protocol):
         def __call__(self, setting: str, value: "Any") -> None:
+            ...
+
+    class UseParserFn(Protocol):
+        def __call__(self) -> "Type[CommitParser]":
             ...
 
 
@@ -148,3 +154,43 @@ def update_pyproject_toml(
             tomlkit.dump(pyproject_toml, wfd)
 
     return _update_pyproject_toml
+
+
+@pytest.fixture
+def use_angular_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+    """Modify the configuration file to use the Angular parser."""
+    def _use_angular_parser() -> "Type[CommitParser]":
+        update_pyproject_toml("tool.semantic_release.commit_parser", "angular")
+        return AngularCommitParser
+
+    return _use_angular_parser
+
+
+@pytest.fixture
+def use_emoji_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+    """Modify the configuration file to use the Emoji parser."""
+    def _use_emoji_parser() -> "Type[CommitParser]":
+        update_pyproject_toml("tool.semantic_release.commit_parser", "emoji")
+        return EmojiCommitParser
+
+    return _use_emoji_parser
+
+
+@pytest.fixture
+def use_scipy_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+    """Modify the configuration file to use the Scipy parser."""
+    def _use_scipy_parser() -> "Type[CommitParser]":
+        update_pyproject_toml("tool.semantic_release.commit_parser", "scipy")
+        return ScipyCommitParser
+
+    return _use_scipy_parser
+
+
+@pytest.fixture
+def use_tag_parser(update_pyproject_toml: "UpdatePyprojectTomlFn") -> "UseParserFn":
+    """Modify the configuration file to use the Tag parser."""
+    def _use_tag_parser() -> "Type[CommitParser]":
+        update_pyproject_toml("tool.semantic_release.commit_parser", "tag")
+        return TagCommitParser
+
+    return _use_tag_parser
