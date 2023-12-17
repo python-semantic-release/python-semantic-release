@@ -1,9 +1,20 @@
+from typing import TYPE_CHECKING
+
 import pytest
 from git import Actor, Repo
 from pytest_lazyfixture import lazy_fixture
 
 from tests.const import COMMIT_MESSAGE, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.util import add_text_to_file, shortuid
+
+if TYPE_CHECKING:
+    from typing import Generator, List, Protocol
+
+    from tests.fixtures.example_project import ExProjectDir
+
+    class RepoInitFn(Protocol):
+        def __call__(self) -> Repo:
+            ...
 
 
 @pytest.fixture
@@ -31,17 +42,18 @@ def example_git_https_url():
     # twice, once with a different URL format
     params=[lazy_fixture("example_git_ssh_url")]
 )
-def git_repo_factory(request, example_project):
-    """
-    !!! WARNING !!!
-    You must call repo.close() after yield-ing the result of
-    calling this factory in a test, otherwise the test suite will fail with
-    OSError: Too Many Open Files
-    See https://github.com/pytest-dev/pytest/issues/2970#issuecomment-348033023
-    """
+def git_repo_factory(
+    request: "pytest.FixtureRequest",
+    example_project: "ExProjectDir"
+) -> "Generator[RepoInitFn, None, None]":
+    repos: "List[Repo]" = []
 
-    def git_repo():
+    def git_repo() -> "Repo":
         repo = Repo.init(example_project.resolve())
+
+        # store the repo so we can close it later
+        repos.append(repo)
+
         # Without this the global config may set it to "master", we want consistency
         repo.git.branch("-M", "main")
         with repo.config_writer("repository") as config:
@@ -51,7 +63,11 @@ def git_repo_factory(request, example_project):
         repo.create_remote(name="origin", url=request.param)
         return repo
 
-    return git_repo
+    try:
+        yield git_repo
+    finally:
+        for repo in repos:
+            repo.close()
 
 
 @pytest.fixture
@@ -67,8 +83,7 @@ def repo_with_no_tags_angular_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="fix: more text")
 
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -84,8 +99,7 @@ def repo_with_no_tags_emoji_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":bug: more text")
 
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -101,8 +115,7 @@ def repo_with_no_tags_scipy_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m="MAINT: more text")
 
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -118,8 +131,7 @@ def repo_with_no_tags_tag_commits(git_repo_factory, file_in_repo):
     add_text_to_file(git_repo, file_in_repo)
     git_repo.git.commit(m=":nut_and_bolt: more text")
 
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -139,8 +151,7 @@ def repo_with_single_branch_angular_commits(git_repo_factory, file_in_repo):
     git_repo.git.tag("v0.1.1", m="v0.1.1")
 
     assert git_repo.commit("v0.1.1").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -160,8 +171,7 @@ def repo_with_single_branch_emoji_commits(git_repo_factory, file_in_repo):
     git_repo.git.tag("v0.1.1", m="v0.1.1")
 
     assert git_repo.commit("v0.1.1").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -181,8 +191,7 @@ def repo_with_single_branch_scipy_commits(git_repo_factory, file_in_repo):
     git_repo.git.tag("v0.1.1", m="v0.1.1")
 
     assert git_repo.commit("v0.1.1").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -202,8 +211,7 @@ def repo_with_single_branch_tag_commits(git_repo_factory, file_in_repo):
     git_repo.git.tag("v0.1.1", m="v0.1.1")
 
     assert git_repo.commit("v0.1.1").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -240,8 +248,7 @@ def repo_with_single_branch_and_prereleases_angular_commits(
     git_repo.git.tag("v0.2.0", m="v0.2.0")
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -278,8 +285,7 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
     git_repo.git.tag("v0.2.0", m="v0.2.0")
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -316,8 +322,7 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
     git_repo.git.tag("v0.2.0", m="v0.2.0")
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -352,8 +357,7 @@ def repo_with_single_branch_and_prereleases_tag_commits(git_repo_factory, file_i
     git_repo.git.tag("v0.2.0", m="v0.2.0")
 
     assert git_repo.commit("v0.2.0").hexsha == git_repo.head.commit.hexsha
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -402,8 +406,7 @@ def repo_with_main_and_feature_branches_angular_commits(git_repo_factory, file_i
 
     assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "beta_testing"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -452,8 +455,7 @@ def repo_with_main_and_feature_branches_emoji_commits(git_repo_factory, file_in_
 
     assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "beta_testing"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -502,8 +504,7 @@ def repo_with_main_and_feature_branches_scipy_commits(git_repo_factory, file_in_
 
     assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "beta_testing"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -552,8 +553,7 @@ def repo_with_main_and_feature_branches_tag_commits(git_repo_factory, file_in_re
 
     assert git_repo.commit("v0.3.0-beta.1").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "beta_testing"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -627,8 +627,7 @@ def repo_with_git_flow_angular_commits(git_repo_factory, file_in_repo):
 
     assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -702,8 +701,7 @@ def repo_with_git_flow_emoji_commits(git_repo_factory, file_in_repo):
 
     assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -777,8 +775,7 @@ def repo_with_git_flow_scipy_commits(git_repo_factory, file_in_repo):
 
     assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -854,8 +851,7 @@ def repo_with_git_flow_tag_commits(git_repo_factory, file_in_repo):
 
     assert git_repo.commit("v1.2.0-alpha.2").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -937,8 +933,7 @@ def repo_with_git_flow_and_release_channels_angular_commits(
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -1020,8 +1015,7 @@ def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
 
     assert git_repo.commit("vpy1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -1103,8 +1097,7 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -1186,8 +1179,7 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
 
 
 @pytest.fixture
@@ -1269,5 +1261,4 @@ def repo_with_git_flow_and_release_channels_tag_commits(git_repo_factory, file_i
 
     assert git_repo.commit("v1.1.0-alpha.3").hexsha == git_repo.head.commit.hexsha
     assert git_repo.active_branch.name == "feature"
-    yield git_repo
-    git_repo.close()
+    return git_repo
