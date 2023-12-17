@@ -72,9 +72,13 @@ dev = ["pre-commit", "tox", "ruff==0.1.8"]
 mypy = ["mypy", "types-requests"]
 
 [tool.pytest.ini_options]
+env = [
+  "PYTHONHASHSEED = 123456"
+]
 addopts = [
   "-nauto",
   "-ra",
+  "--diff-symbols",
   "--cache-clear",
   "--cov=semantic_release",
   "--cov-context=test",
@@ -109,7 +113,6 @@ passenv = CI
 setenv =
     PYTHONPATH = {toxinidir}
     TESTING = True
-    PYTHONHASHSEED = 123456
 deps = .[test]
 commands =
     coverage run -p --source=semantic_release -m pytest {posargs:tests}
