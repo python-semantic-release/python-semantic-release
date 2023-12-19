@@ -7,6 +7,7 @@ import click
 from click.core import ParameterSource
 from git import InvalidGitRepositoryError
 from git.repo.base import Repo
+from pydantic import ValidationError
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -142,8 +143,8 @@ def main(
         except InvalidConfiguration as exc:
             ctx.fail(str(exc))
 
-    raw_config = RawConfig.model_validate(config_text)
     try:
+        raw_config = RawConfig.model_validate(config_text)
         runtime = RuntimeContext.from_raw_config(
             raw_config, repo=repo, global_cli_options=cli_options
         )
@@ -153,8 +154,9 @@ def main(
         # multibranch CI it might be desirable to run a non-release branch's pipeline
         # without specifying conditional execution of PSR based on branch name
         ctx.exit(2 if strict else 0)
-    except InvalidConfiguration as exc:
-        ctx.fail(str(exc))
+    except (ValidationError, InvalidConfiguration) as exc:
+        click.echo(str(exc), err=True)
+        ctx.exit(1)
     ctx.obj = runtime
 
     # This allows us to mask secrets in the logging
