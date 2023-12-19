@@ -2,6 +2,70 @@
 
 
 
+## v8.5.2 (2023-12-19)
+
+### Build
+
+* build(deps-dev): bump ruff from 0.1.7 to 0.1.8 (#775)
+
+Bumps [ruff](https://github.com/astral-sh/ruff) from 0.1.7 to 0.1.8.
+- [Release notes](https://github.com/astral-sh/ruff/releases)
+- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/astral-sh/ruff/compare/v0.1.7...v0.1.8)
+
+---
+updated-dependencies:
+- dependency-name: ruff
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`5efda8a`](https://github.com/python-semantic-release/python-semantic-release/commit/5efda8acfed938d3188cd55678ace20ecac7f798))
+
+* build(deps-dev): bump ruff from 0.1.6 to 0.1.7 (#769)
+
+* build(deps-dev): bump ruff from 0.1.6 to 0.1.7
+
+Bumps [ruff](https://github.com/astral-sh/ruff) from 0.1.6 to 0.1.7.
+- [Release notes](https://github.com/astral-sh/ruff/releases)
+- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/astral-sh/ruff/compare/v0.1.6...v0.1.7)
+
+---
+updated-dependencies:
+- dependency-name: ruff
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+
+* ci: remove hardcoded ruff version in workflows
+
+---------
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt;
+Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`c48c3b3`](https://github.com/python-semantic-release/python-semantic-release/commit/c48c3b370335931d63391d1a4f5802937deff178))
+
+### Fix
+
+* fix(cli): gracefully output configuration validation errors (#772)
+
+* test(fixtures): update example project workflow &amp; add config modifier
+
+* test(cli-main): add test for raw config validation error
+
+* fix(cli): gracefully output configuration validation errors ([`e8c9d51`](https://github.com/python-semantic-release/python-semantic-release/commit/e8c9d516c37466a5dce75a73766d5be0f9e74627))
+
+### Style
+
+* style: beautify 5efda8acfed938d3188cd55678ace20ecac7f798 ([`98b10b3`](https://github.com/python-semantic-release/python-semantic-release/commit/98b10b3f08af16ab5cb00096b288afefbee1b74f))
+
+* style: beautify c48c3b370335931d63391d1a4f5802937deff178 ([`bb3b631`](https://github.com/python-semantic-release/python-semantic-release/commit/bb3b63111d0e02bd53c2ed25d5ab0e5a3d532136))
+
+
 ## v8.5.1 (2023-12-12)
 
 ### Documentation
