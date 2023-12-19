@@ -127,6 +127,7 @@ def update_pyproject_toml(
     example_project: "Path", example_pyproject_toml: "Path"
 ) -> "UpdatePyprojectTomlFn":
     """Update the pyproject.toml file with the given content."""
+
     def _update_pyproject_toml(setting: str, value: "Any") -> None:
         with open(example_pyproject_toml) as rfd:
             pyproject_toml = tomlkit.load(rfd)
@@ -143,7 +144,7 @@ def update_pyproject_toml(
             pointer = pointer.get(part, {})
         pointer.update(new_setting)
 
-        with open(example_pyproject_toml, 'w') as wfd:
+        with open(example_pyproject_toml, "w") as wfd:
             tomlkit.dump(pyproject_toml, wfd)
 
     return _update_pyproject_toml
