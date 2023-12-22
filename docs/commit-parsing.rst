@@ -354,7 +354,7 @@ Therefore, a custom commit parser could be implemented via:
     class MyCommitParser(
         semantic_release.CommitParser[semantic_release.ParseResult, MyParserOptions]
     ):
-        def parse(self, commit: git.object.commit.Commit) -> semantic_release.ParseResult:
+        def parse(self, commit: git.objects.commit.Commit) -> semantic_release.ParseResult:
             ...
 
 .. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
