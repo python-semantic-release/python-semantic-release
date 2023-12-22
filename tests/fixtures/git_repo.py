@@ -84,6 +84,7 @@ def repo_with_no_tags_angular_commits(
     use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -106,6 +107,7 @@ def repo_with_no_tags_emoji_commits(
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -128,6 +130,7 @@ def repo_with_no_tags_scipy_commits(
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -150,6 +153,7 @@ def repo_with_no_tags_tag_commits(
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -172,6 +176,7 @@ def repo_with_single_branch_angular_commits(
     use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -198,6 +203,7 @@ def repo_with_single_branch_emoji_commits(
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -224,6 +230,7 @@ def repo_with_single_branch_scipy_commits(
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -250,6 +257,7 @@ def repo_with_single_branch_tag_commits(
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -276,6 +284,7 @@ def repo_with_single_branch_and_prereleases_angular_commits(
     use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -317,6 +326,7 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -358,6 +368,7 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -399,6 +410,7 @@ def repo_with_single_branch_and_prereleases_tag_commits(
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -449,6 +461,7 @@ def repo_with_main_and_feature_branches_angular_commits(
     )
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -503,6 +516,7 @@ def repo_with_main_and_feature_branches_emoji_commits(
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -557,6 +571,7 @@ def repo_with_main_and_feature_branches_scipy_commits(
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -611,6 +626,7 @@ def repo_with_main_and_feature_branches_tag_commits(
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -674,6 +690,7 @@ def repo_with_git_flow_angular_commits(
     )
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -753,6 +770,7 @@ def repo_with_git_flow_emoji_commits(
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -832,6 +850,7 @@ def repo_with_git_flow_scipy_commits(
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -911,6 +930,7 @@ def repo_with_git_flow_tag_commits(
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1001,6 +1021,7 @@ def repo_with_git_flow_and_release_channels_angular_commits(
     )
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1086,6 +1107,7 @@ def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
     use_angular_parser() # TODO: is this correct?
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1171,6 +1193,7 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1256,6 +1279,7 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1341,6 +1365,7 @@ def repo_with_git_flow_and_release_channels_tag_commits(
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
+    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
