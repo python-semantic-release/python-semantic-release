@@ -33,6 +33,8 @@ class HvcsBase:
     checking for NotImplemented around every method call.
     """
 
+    DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"
+
     def __init__(
         self,
         remote_url: str,

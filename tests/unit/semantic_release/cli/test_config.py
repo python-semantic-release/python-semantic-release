@@ -1,14 +1,47 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
 import tomlkit
+from pydantic import ValidationError
 
 from semantic_release.cli.config import (
+    EnvConfigVar,
     GlobalCommandLineOptions,
+    HvcsClient,
     RawConfig,
     RuntimeContext,
 )
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
+
+if TYPE_CHECKING:
+    from typing import Any
+
+
+@pytest.mark.parametrize("remote_config, expected_token", [
+    ({ "type": HvcsClient.GITHUB.value }, EnvConfigVar(env="GH_TOKEN")),
+    ({ "type": HvcsClient.GITLAB.value }, EnvConfigVar(env="GITLAB_TOKEN")),
+    ({ "type": HvcsClient.GITEA.value }, EnvConfigVar(env="GITEA_TOKEN")),
+    ({}, EnvConfigVar(env="GH_TOKEN")),  # default not provided -> means Github
+])
+def test_load_hvcs_default_token(remote_config: dict[str, Any], expected_token):
+    raw_config = RawConfig.model_validate({
+        "remote": remote_config,
+    })
+    assert expected_token == raw_config.remote.token
+
+
+@pytest.mark.parametrize("remote_config", [
+    { "type": "nonexistent" }
+])
+def test_invalid_hvcs_type(remote_config: dict[str, Any]):
+    with pytest.raises(ValidationError) as excinfo:
+        RawConfig.model_validate({
+            "remote": remote_config,
+        })
+    assert "remote.type" in str(excinfo.value)
 
 
 def test_default_toml_config_valid(example_project):
