@@ -2,6 +2,23 @@
 
 
 
+## v8.6.0 (2023-12-22)
+
+### Documentation
+
+* docs: minor correction to commit-parsing documentation (#777) ([`245e878`](https://github.com/python-semantic-release/python-semantic-release/commit/245e878f02d5cafec6baf0493c921c1e396b56e8))
+
+### Feature
+
+* feat(utils): expand parsable valid git remote url formats (#771)
+
+Git remote url parsing now supports additional formats (ssh, https, file, git) ([`cf75f23`](https://github.com/python-semantic-release/python-semantic-release/commit/cf75f237360488ebb0088e5b8aae626e97d9cbdd))
+
+### Style
+
+* style: beautify cf75f237360488ebb0088e5b8aae626e97d9cbdd ([`2de634d`](https://github.com/python-semantic-release/python-semantic-release/commit/2de634d6e1fed29e8ce55a1c57fd23bf838badd9))
+
+
 ## v8.5.2 (2023-12-19)
 
 ### Build
