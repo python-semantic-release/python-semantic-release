@@ -2,6 +2,17 @@
 
 
 
+## v8.7.0 (2023-12-22)
+
+### Feature
+
+* feat(config): enable default environment token per hvcs (#774) ([`26528eb`](https://github.com/python-semantic-release/python-semantic-release/commit/26528eb8794d00dfe985812269702fbc4c4ec788))
+
+### Style
+
+* style: beautify 26528eb8794d00dfe985812269702fbc4c4ec788 ([`514f558`](https://github.com/python-semantic-release/python-semantic-release/commit/514f5580fbec0143f88d3f637be260c769136377))
+
+
 ## v8.6.0 (2023-12-22)
 
 ### Documentation
