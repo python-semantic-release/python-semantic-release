@@ -4,7 +4,6 @@ import difflib
 import filecmp
 import re
 import shutil
-from pathlib import Path
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -23,6 +22,7 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
     from semantic_release.cli.config import RuntimeContext
 
-    from tests.fixtures.example_project import UpdatePyprojectTomlFn
+    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
 
 
 @pytest.mark.parametrize(
@@ -387,13 +387,13 @@ def test_version_already_released_no_push(repo, cli_runner):
     ],
 )
 def test_version_no_push_force_level(
-    repo,
-    cli_args,
-    expected_new_version,
-    example_project,
-    example_pyproject_toml,
+    repo: Repo,
+    cli_args: list[str],
+    expected_new_version: str,
+    example_project: ExProjectDir,
+    example_pyproject_toml: Path,
     tmp_path_factory: pytest.TempPathFactory,
-    cli_runner,
+    cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
@@ -401,7 +401,7 @@ def test_version_no_push_force_level(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, [version.name, *cli_args, "--no-push"])
+    result = cli_runner.invoke(main, [version.name or "version", *cli_args, "--no-push"])
 
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
@@ -637,15 +637,13 @@ def test_version_only_update_files_no_git_actions(
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
     example_pyproject_toml: Path,
+    example_project: ExProjectDir
 ) -> None:
     # Arrange
     expected_new_version = "0.3.0"
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
-    example_project = Path(
-        runtime_context_with_tags.repo.git.rev_parse("--show-toplevel")
-    )
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project), dst=tempdir)
 
     head_before = runtime_context_with_tags.repo.head.commit
     tags_before = runtime_context_with_tags.repo.tags

@@ -22,11 +22,16 @@ from tests.const import (
 from tests.util import flatten_dircmp
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from click.testing import CliRunner
+    from git import Repo
     from requests_mock import Mocker
 
     from semantic_release.changelog.release_history import ReleaseHistory
     from semantic_release.cli.config import RuntimeContext
+
+    from tests.fixtures.example_project import ExProjectDir
 
 
 @pytest.mark.parametrize(
@@ -48,7 +53,12 @@ if TYPE_CHECKING:
 )
 @pytest.mark.parametrize("arg0", [None, "--post-to-release-tag"])
 def test_changelog_noop_is_noop(
-    repo, tag, arg0, tmp_path_factory, example_project, cli_runner
+    repo: Repo,
+    tag: str | None,
+    arg0: str | None,
+    tmp_path_factory: pytest.TempPathFactory,
+    example_project: ExProjectDir,
+    cli_runner: CliRunner,
 ):
     args = [arg0, tag] if tag and arg0 else []
     tempdir = tmp_path_factory.mktemp("test_noop")
@@ -72,7 +82,7 @@ def test_changelog_noop_is_noop(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
-        result = cli_runner.invoke(main, ["--noop", changelog.name, *args])
+        result = cli_runner.invoke(main, ["--noop", changelog.name or "changelog", *args])
 
     assert result.exit_code == 0
 
@@ -98,7 +108,11 @@ def test_changelog_noop_is_noop(
     ],
 )
 def test_changelog_content_regenerated(
-    repo, tmp_path_factory, example_project, example_changelog_md, cli_runner
+    repo: Repo,
+    tmp_path_factory: pytest.TempPathFactory,
+    example_project: ExProjectDir,
+    example_changelog_md: Path,
+    cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))
@@ -107,7 +121,7 @@ def test_changelog_content_regenerated(
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
 
-    result = cli_runner.invoke(main, [changelog.name])
+    result = cli_runner.invoke(main, [changelog.name or "changelog"])
     assert result.exit_code == 0
 
     dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
@@ -122,13 +136,16 @@ def test_changelog_content_regenerated(
     "args", [("--post-to-release-tag", "v1.99.91910000000000000000000000000")]
 )
 def test_changelog_release_tag_not_in_history(
-    args, tmp_path_factory, example_project, cli_runner
+    args: list[str],
+    tmp_path_factory: pytest.TempPathFactory,
+    example_project: ExProjectDir,
+    cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))
     shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
 
-    result = cli_runner.invoke(main, [changelog.name, *args])
+    result = cli_runner.invoke(main, [changelog.name or "changelog", *args])
     assert result.exit_code == 2
     assert "not in release history" in result.stderr.lower()
 
@@ -136,7 +153,11 @@ def test_changelog_release_tag_not_in_history(
 @pytest.mark.usefixtures("repo_with_single_branch_and_prereleases_angular_commits")
 @pytest.mark.parametrize("args", [("--post-to-release-tag", "v0.1.0")])
 def test_changelog_post_to_release(
-    args, monkeypatch, tmp_path_factory, example_project, cli_runner
+    args: list[str],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+    example_project: ExProjectDir,
+    cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))

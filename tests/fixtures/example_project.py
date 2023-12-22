@@ -115,23 +115,23 @@ def example_pyproject_toml(example_project: ExProjectDir) -> Path:
 
 
 @pytest.fixture
-def example_setup_cfg(example_project):
+def example_setup_cfg(example_project: ExProjectDir) -> Path:
     return example_project / "setup.cfg"
 
 
 @pytest.fixture
-def example_setup_py(example_project):
+def example_setup_py(example_project: ExProjectDir) -> Path:
     return example_project / "setup.py"
 
 
 # Note this is just the path and the content may change
 @pytest.fixture
-def example_changelog_md(example_project):
+def example_changelog_md(example_project: ExProjectDir) -> Path:
     return example_project / "CHANGELOG.md"
 
 
 @pytest.fixture
-def example_project_template_dir(example_project):
+def example_project_template_dir(example_project: ExProjectDir) -> Path:
     return example_project / "templates"
 
 

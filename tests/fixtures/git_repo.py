@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import pytest
@@ -8,7 +10,7 @@ from tests.const import COMMIT_MESSAGE, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.util import add_text_to_file, shortuid
 
 if TYPE_CHECKING:
-    from typing import Generator, List, Protocol
+    from typing import Generator, Protocol
 
     from tests.fixtures.example_project import (
         ExProjectDir,
@@ -47,12 +49,12 @@ def example_git_https_url():
     params=[lazy_fixture("example_git_ssh_url")]
 )
 def git_repo_factory(
-    request: "pytest.FixtureRequest",
-    example_project: "ExProjectDir"
-) -> "Generator[RepoInitFn, None, None]":
-    repos: "List[Repo]" = []
+    request: pytest.FixtureRequest,
+    example_project: ExProjectDir
+) -> Generator[RepoInitFn, None, None]:
+    repos: list[Repo] = []
 
-    def git_repo() -> "Repo":
+    def git_repo() -> Repo:
         repo = Repo.init(example_project.resolve())
 
         # store the repo so we can close it later
@@ -76,10 +78,10 @@ def git_repo_factory(
 
 @pytest.fixture
 def repo_with_no_tags_angular_commits(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
 
@@ -99,10 +101,10 @@ def repo_with_no_tags_angular_commits(
 
 @pytest.fixture
 def repo_with_no_tags_emoji_commits(
-    git_repo_factory: "RepoInitFn",
-    use_emoji_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
@@ -122,10 +124,10 @@ def repo_with_no_tags_emoji_commits(
 
 @pytest.fixture
 def repo_with_no_tags_scipy_commits(
-    git_repo_factory: "RepoInitFn",
-    use_scipy_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
@@ -145,10 +147,10 @@ def repo_with_no_tags_scipy_commits(
 
 @pytest.fixture
 def repo_with_no_tags_tag_commits(
-    git_repo_factory: "RepoInitFn",
-    use_tag_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
@@ -168,10 +170,10 @@ def repo_with_no_tags_tag_commits(
 
 @pytest.fixture
 def repo_with_single_branch_angular_commits(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
 
@@ -195,10 +197,10 @@ def repo_with_single_branch_angular_commits(
 
 @pytest.fixture
 def repo_with_single_branch_emoji_commits(
-    git_repo_factory: "RepoInitFn",
-    use_emoji_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
@@ -222,10 +224,10 @@ def repo_with_single_branch_emoji_commits(
 
 @pytest.fixture
 def repo_with_single_branch_scipy_commits(
-    git_repo_factory: "RepoInitFn",
-    use_scipy_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
@@ -249,10 +251,10 @@ def repo_with_single_branch_scipy_commits(
 
 @pytest.fixture
 def repo_with_single_branch_tag_commits(
-    git_repo_factory: "RepoInitFn",
-    use_tag_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
@@ -276,10 +278,10 @@ def repo_with_single_branch_tag_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_angular_commits(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
 
@@ -318,10 +320,10 @@ def repo_with_single_branch_and_prereleases_angular_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_emoji_commits(
-    git_repo_factory: "RepoInitFn",
-    use_emoji_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
@@ -360,10 +362,10 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_scipy_commits(
-    git_repo_factory: "RepoInitFn",
-    use_scipy_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
@@ -402,10 +404,10 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_tag_commits(
-    git_repo_factory: "RepoInitFn",
-    use_tag_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
@@ -444,11 +446,11 @@ def repo_with_single_branch_and_prereleases_tag_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_angular_commits(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
-    update_pyproject_toml: "UpdatePyprojectTomlFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
     file_in_repo: str,
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
     update_pyproject_toml(
@@ -508,10 +510,10 @@ def repo_with_main_and_feature_branches_angular_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_emoji_commits(
-    git_repo_factory: "RepoInitFn",
-    use_emoji_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
@@ -563,10 +565,10 @@ def repo_with_main_and_feature_branches_emoji_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_scipy_commits(
-    git_repo_factory: "RepoInitFn",
-    use_scipy_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
@@ -618,10 +620,10 @@ def repo_with_main_and_feature_branches_scipy_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_tag_commits(
-    git_repo_factory: "RepoInitFn",
-    use_tag_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
@@ -673,11 +675,11 @@ def repo_with_main_and_feature_branches_tag_commits(
 
 @pytest.fixture
 def repo_with_git_flow_angular_commits(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
-    update_pyproject_toml: "UpdatePyprojectTomlFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
     update_pyproject_toml(
@@ -762,10 +764,10 @@ def repo_with_git_flow_angular_commits(
 
 @pytest.fixture
 def repo_with_git_flow_emoji_commits(
-    git_repo_factory: "RepoInitFn",
-    use_emoji_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
@@ -842,10 +844,10 @@ def repo_with_git_flow_emoji_commits(
 
 @pytest.fixture
 def repo_with_git_flow_scipy_commits(
-    git_repo_factory: "RepoInitFn",
-    use_scipy_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
@@ -922,10 +924,10 @@ def repo_with_git_flow_scipy_commits(
 
 @pytest.fixture
 def repo_with_git_flow_tag_commits(
-    git_repo_factory: "RepoInitFn",
-    use_tag_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
@@ -1004,11 +1006,11 @@ def repo_with_git_flow_tag_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_angular_commits(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
-    update_pyproject_toml: "UpdatePyprojectTomlFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
     update_pyproject_toml(
@@ -1099,10 +1101,10 @@ def repo_with_git_flow_and_release_channels_angular_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
-    git_repo_factory: "RepoInitFn",
-    use_angular_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser() # TODO: is this correct?
 
@@ -1185,10 +1187,10 @@ def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_emoji_commits(
-    git_repo_factory: "RepoInitFn",
-    use_emoji_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
@@ -1271,10 +1273,10 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_scipy_commits(
-    git_repo_factory: "RepoInitFn",
-    use_scipy_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
@@ -1357,10 +1359,10 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_tag_commits(
-    git_repo_factory: "RepoInitFn",
-    use_tag_parser: "UseParserFn",
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
     file_in_repo: str
-) -> "Repo":
+) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
