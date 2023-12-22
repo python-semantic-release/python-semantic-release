@@ -115,14 +115,11 @@ def parse_git_url(url: str) -> ParsedGitUrl:
     normalizers = [
         # normalize implicit ssh urls to explicit ssh://
         (r"^(\w+@)", r"ssh://\1"),
-
         # normalize git+ssh:// urls to ssh://
         (r"^git\+ssh://", "ssh://"),
-
         # normalize an scp like syntax to URL compatible syntax
         # excluding port definitions (:#####) & including numeric usernames
         (r"(ssh://(?:\w+@)?[\w.]+):(?!\d{1,5}/\w+/)(.*)$", r"\1/\2"),
-
         # normalize implicit file (windows || posix) urls to explicit file:// urls
         (r"^([C-Z]:/)|^/(\w)", r"file:///\1\2"),
     ]
@@ -142,7 +139,9 @@ def parse_git_url(url: str) -> ParsedGitUrl:
     # but we aren't validating the protocol scheme as its not our business
 
     # use PosixPath to normalize the path & then separate out the namespace & repo_name
-    namespace, _, name = str(PurePosixPath(urllib_split.path)).lstrip("/").rpartition("/")
+    namespace, _, name = (
+        str(PurePosixPath(urllib_split.path)).lstrip("/").rpartition("/")
+    )
 
     # strip out the .git at the end of the repo_name if present
     name = name[:-4] if name.endswith(".git") else name
@@ -153,7 +152,7 @@ def parse_git_url(url: str) -> ParsedGitUrl:
         # Allow empty net location for file:// urls
         True if urllib_split.scheme == "file" else urllib_split.netloc,
         namespace,
-        name
+        name,
     ]
 
     if not all(required_parts):
