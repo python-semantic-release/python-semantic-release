@@ -20,27 +20,32 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-@pytest.mark.parametrize("remote_config, expected_token", [
-    ({ "type": HvcsClient.GITHUB.value }, EnvConfigVar(env="GH_TOKEN")),
-    ({ "type": HvcsClient.GITLAB.value }, EnvConfigVar(env="GITLAB_TOKEN")),
-    ({ "type": HvcsClient.GITEA.value }, EnvConfigVar(env="GITEA_TOKEN")),
-    ({}, EnvConfigVar(env="GH_TOKEN")),  # default not provided -> means Github
-])
+@pytest.mark.parametrize(
+    "remote_config, expected_token",
+    [
+        ({"type": HvcsClient.GITHUB.value}, EnvConfigVar(env="GH_TOKEN")),
+        ({"type": HvcsClient.GITLAB.value}, EnvConfigVar(env="GITLAB_TOKEN")),
+        ({"type": HvcsClient.GITEA.value}, EnvConfigVar(env="GITEA_TOKEN")),
+        ({}, EnvConfigVar(env="GH_TOKEN")),  # default not provided -> means Github
+    ],
+)
 def test_load_hvcs_default_token(remote_config: dict[str, Any], expected_token):
-    raw_config = RawConfig.model_validate({
-        "remote": remote_config,
-    })
+    raw_config = RawConfig.model_validate(
+        {
+            "remote": remote_config,
+        }
+    )
     assert expected_token == raw_config.remote.token
 
 
-@pytest.mark.parametrize("remote_config", [
-    { "type": "nonexistent" }
-])
+@pytest.mark.parametrize("remote_config", [{"type": "nonexistent"}])
 def test_invalid_hvcs_type(remote_config: dict[str, Any]):
     with pytest.raises(ValidationError) as excinfo:
-        RawConfig.model_validate({
-            "remote": remote_config,
-        })
+        RawConfig.model_validate(
+            {
+                "remote": remote_config,
+            }
+        )
     assert "remote.type" in str(excinfo.value)
 
 
