@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from git.objects.commit import Commit
 
 
-class ParserOptions:
+class ParserOptions(dict):
     """
     ParserOptions should accept the keyword arguments they are interested in
     from configuration and process them as desired, ultimately creating attributes
