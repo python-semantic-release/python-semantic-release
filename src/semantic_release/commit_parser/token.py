@@ -18,6 +18,7 @@ class ParsedMessageResult(NamedTuple):
     descriptions: tuple[str, ...]
     breaking_descriptions: tuple[str, ...] = ()
     linked_merge_request: str = ""
+    include_in_changelog: bool = True
 
 
 class ParsedCommit(NamedTuple):
@@ -28,6 +29,7 @@ class ParsedCommit(NamedTuple):
     breaking_descriptions: list[str]
     commit: Commit
     linked_merge_request: str = ""
+    include_in_changelog: bool = True
 
     @property
     def message(self) -> str:
@@ -60,6 +62,7 @@ class ParsedCommit(NamedTuple):
             breaking_descriptions=list(parsed_message_result.breaking_descriptions),
             commit=commit,
             linked_merge_request=parsed_message_result.linked_merge_request,
+            include_in_changelog=parsed_message_result.include_in_changelog,
         )
 
 
