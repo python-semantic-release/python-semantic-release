@@ -98,7 +98,7 @@ class HvcsBase:
     def get_release_id_by_tag(self, tag: str) -> int | None:
         """
         Given a Git tag, return the ID (as the remote VCS defines it) of a corresponding
-        release in the remove VCS, if supported
+        release in the remote VCS, if supported
         """
         _not_supported(self, "get_release_id_by_tag")
         return None
