@@ -4,7 +4,7 @@ from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.changelog import environment, make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
-from semantic_release.hvcs import Gitea, Github, Gitlab
+from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 from semantic_release.version.translator import VersionTranslator
 
 NULL_HEX_SHA = Object.NULL_HEX_SHA
@@ -128,7 +128,7 @@ EXPECTED_CHANGELOG_CONTENT_TAG = r"""
         ),
     ],
 )
-@pytest.mark.parametrize("hvcs_client_class", (Github, Gitlab, Gitea))
+@pytest.mark.parametrize("hvcs_client_class", (Github, Gitlab, Gitea, Bitbucket))
 @pytest.mark.usefixtures("expected_changelog")
 def test_changelog_context(repo, changelog_template, commit_parser, hvcs_client_class):
     # NOTE: this test only checks that the changelog can be rendered with the
