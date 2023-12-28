@@ -567,8 +567,8 @@ Name of the remote to push to using ``git push -u $name <branch_name>``
 """"""""""""""
 
 The type of the remote VCS. Currently, Python Semantic Release supports ``"github"``,
-``"gitlab"`` and ``"gitea"``. Not all functionality is available with all remote types,
-but we welcome pull requests to help improve this!
+``"gitlab"``, ``"gitea"`` and ``"bitbucket"``. Not all functionality is available with all
+remote types, but we welcome pull requests to help improve this!
 
 **Default:** ``"github"``
 

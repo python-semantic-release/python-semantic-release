@@ -43,6 +43,7 @@ NonEmptyString = Annotated[str, Field(..., min_length=1)]
 
 
 class HvcsClient(str, Enum):
+    BITBUCKET = "bitbucket"
     GITHUB = "github"
     GITLAB = "gitlab"
     GITEA = "gitea"
@@ -57,6 +58,7 @@ _known_commit_parsers: Dict[str, type[CommitParser]] = {
 
 
 _known_hvcs: Dict[HvcsClient, Type[hvcs.HvcsBase]] = {
+    HvcsClient.BITBUCKET: hvcs.Bitbucket,
     HvcsClient.GITHUB: hvcs.Github,
     HvcsClient.GITLAB: hvcs.Gitlab,
     HvcsClient.GITEA: hvcs.Gitea,
