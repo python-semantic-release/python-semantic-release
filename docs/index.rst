@@ -142,6 +142,19 @@ Gitea (``GITEA_TOKEN``)
 A personal access token from Gitea. This token should be stored in the ``GITEA_TOKEN``
 environment variable.
 
+Bitbucket (``BITBUCKET_TOKEN``)
+"""""""""""""""""""""""""""""""
+
+Bitbucket does not support uploading releases but can still benefit from automated tags
+and changelogs. The user has three options to push changes to the repository:
+
+#. Use SSH keys.
+#. Use an `App Secret`_, store the secret in the ``BITBUCKET_TOKEN`` environment variable and the username in ``BITBUCKET_USER``.
+#. Use an `Access Token`_ for the repository and store it in the ``BITBUCKET_TOKEN`` environment variable.
+
+.. _App Secret: https://support.atlassian.com/bitbucket-cloud/docs/push-back-to-your-repository/#App-secret
+.. _Access Token: https://support.atlassian.com/bitbucket-cloud/docs/repository-access-tokens
+
 .. seealso::
    - :ref:`Changelog <config-changelog>` - customize your project's changelog.
    - :ref:`Customizing VCS Release Notes <changelog-templates-customizing-vcs-release-notes>` - customize
