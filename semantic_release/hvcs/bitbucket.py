@@ -47,22 +47,12 @@ class Bitbucket(HvcsBase):
         token: str | None = None,
     ) -> None:
         self._remote_url = remote_url
-
-        if hvcs_domain is not None:
-            self.hvcs_domain = hvcs_domain
-        else:
-            api_url = os.getenv("BITBUCKET_SERVER_URL", self.DEFAULT_DOMAIN)
-            self.hvcs_domain = api_url.replace("https://", "")
-
+        self.hvcs_domain = hvcs_domain or self.DEFAULT_DOMAIN.replace("https://", "")
         # ref: https://developer.atlassian.com/cloud/bitbucket/rest/intro/#uri-uuid
-        if hvcs_api_domain is not None:
-            self.hvcs_api_domain = hvcs_api_domain
-        else:
-            api_url = os.getenv("BITBUCKET_API_URL", self.DEFAULT_API_DOMAIN)
-            self.hvcs_api_domain = api_url.replace("https://", "")
-
+        self.hvcs_api_domain = hvcs_api_domain or self.DEFAULT_API_DOMAIN.replace(
+            "https://", ""
+        )
         self.api_url = f"https://{self.hvcs_api_domain}/{self.API_VERSION}"
-
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
