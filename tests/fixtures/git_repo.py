@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import Generator, Literal, Mapping, Protocol
 
+    from semantic_release.hvcs import HvcsBase
+
     from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
 
@@ -26,6 +28,12 @@ if TYPE_CHECKING:
             commit_type: CommitConvention,
             tag_format_str: str | None = None,
         ) -> None:
+            ...
+
+    class CommitNReturnChangelogEntryFn(Protocol):
+        def __call__(
+            self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase
+        ) -> str:
             ...
 
     class CreateReleaseFn(Protocol):
@@ -93,6 +101,24 @@ def create_release_tagged_commit(
         git_repo.git.tag(tag_str, m=tag_str)
 
     return _mimic_semantic_release_commit
+
+
+@pytest.fixture(scope="session")
+def commit_n_rtn_changelog_entry() -> CommitNReturnChangelogEntryFn:
+    def _commit_n_rtn_changelog_entry(
+        git_repo: Repo, commit_msg: str, hvcs: HvcsBase
+    ) -> str:
+        # make commit with --all files
+        git_repo.git.commit(a=True, m=commit_msg)
+
+        # log commit in changelog format after commit action
+        commit_sha = git_repo.head.commit.hexsha
+        return str.join(" ", [
+            str(git_repo.head.commit.message).strip(),
+            f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))"
+        ])
+
+    return _commit_n_rtn_changelog_entry
 
 
 @pytest.fixture(scope="session")
