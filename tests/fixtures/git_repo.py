@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Actor, Repo
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.const import EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.util import copy_dir_tree, shortuid
 
 if TYPE_CHECKING:
@@ -60,12 +60,12 @@ def file_in_repo():
 
 @pytest.fixture(scope="session")
 def example_git_ssh_url():
-    return f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    return f"git@{EXAMPLE_HVCS_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
 
 
 @pytest.fixture(scope="session")
 def example_git_https_url():
-    return f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}"
+    return f"https://{EXAMPLE_HVCS_DOMAIN}/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
 
 
 @pytest.fixture(scope="session")
