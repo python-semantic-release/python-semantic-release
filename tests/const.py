@@ -123,7 +123,7 @@ TAG_COMMITS_MAJOR.insert(
 )
 
 EXAMPLE_PROJECT_NAME = "example"
-EXAMPLE_PROJECT_VERSION = "0.2.2"
+EXAMPLE_PROJECT_VERSION = "0.0.0"
 
 # Uses the internal defaults of semantic-release unless otherwise needed for testing
 # modify the pyproject toml as necessary for the test using update_pyproject_toml()
