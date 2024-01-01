@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Actor, Repo
 
-from tests.const import EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.const import COMMIT_MESSAGE, EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.util import copy_dir_tree, shortuid
 
 if TYPE_CHECKING:
@@ -13,11 +13,24 @@ if TYPE_CHECKING:
     from typing import Generator, Literal, Mapping, Protocol
 
     from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import ExProjectDir
+    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
 
     CommitConvention = Literal["angular", "emoji", "scipy", "tag"]
     VersionStr = str
     CommitMsg = str
+
+    class BuildRepoFn(Protocol):
+        def __call__(
+            self,
+            git_repo_path: Path | str,
+            commit_type: CommitConvention,
+            tag_format_str: str | None = None,
+        ) -> None:
+            ...
+
+    class CreateReleaseFn(Protocol):
+        def __call__(self, git_repo: Repo, version: str, tag_format: str = ...) -> None:
+            ...
 
     class ExProjectGitRepoFn(Protocol):
         def __call__(self) -> Repo:
@@ -31,15 +44,6 @@ if TYPE_CHECKING:
         def __call__(
             self, commit_type: CommitConvention = "angular"
         ) -> Mapping[VersionStr, list[CommitMsg]]:
-            ...
-
-    class BuildRepoFn(Protocol):
-        def __call__(
-            self,
-            git_repo_path: Path | str,
-            commit_type: CommitConvention,
-            tag_format_str: str | None = None,
-        ) -> None:
             ...
 
 
@@ -66,6 +70,29 @@ def example_git_ssh_url():
 @pytest.fixture(scope="session")
 def example_git_https_url():
     return f"https://{EXAMPLE_HVCS_DOMAIN}/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+
+
+@pytest.fixture(scope="session")
+def create_release_tagged_commit(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_tag_format_str: str,
+) -> CreateReleaseFn:
+    def _mimic_semantic_release_commit(
+        git_repo: Repo,
+        version: str,
+        tag_format: str = default_tag_format_str,
+    ) -> None:
+        # stamp version into pyproject.toml
+        update_pyproject_toml("tool.poetry.version", version)
+
+        # commit --all files with version number commit message
+        git_repo.git.commit(a=True, m=COMMIT_MESSAGE.format(version=version))
+
+        # tag commit with version number
+        tag_str = tag_format.format(version=version)
+        git_repo.git.tag(tag_str, m=tag_str)
+
+    return _mimic_semantic_release_commit
 
 
 @pytest.fixture(scope="session")
