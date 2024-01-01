@@ -42,7 +42,7 @@ if TYPE_CHECKING:
             ...
 
     class UseHvcsFn(Protocol):
-        def __call__(self) -> type[HvcsBase]:
+        def __call__(self, domain: str | None = None) -> type[HvcsBase]:
             ...
 
     class UseParserFn(Protocol):
@@ -324,9 +324,10 @@ def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
 @pytest.fixture
 def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitHub as the HVCS."""
-
-    def _use_github_hvcs() -> type[HvcsBase]:
+    def _use_github_hvcs(domain: str | None = None) -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "github")
+        if domain is not None:
+            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
         return Github
 
     return _use_github_hvcs
@@ -335,9 +336,10 @@ def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
 @pytest.fixture
 def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitLab as the HVCS."""
-
-    def _use_gitlab_hvcs() -> type[HvcsBase]:
+    def _use_gitlab_hvcs(domain: str | None = None) -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
+        if domain is not None:
+            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
         return Gitlab
 
     return _use_gitlab_hvcs
@@ -346,9 +348,10 @@ def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
 @pytest.fixture
 def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use Gitea as the HVCS."""
-
-    def _use_gitea_hvcs() -> type[HvcsBase]:
+    def _use_gitea_hvcs(domain: str | None = None) -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
+        if domain is not None:
+            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
         return Gitea
 
     return _use_gitea_hvcs
