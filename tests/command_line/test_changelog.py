@@ -114,14 +114,10 @@ def test_changelog_noop_is_noop(
 )
 def test_changelog_content_regenerated(
     repo: Repo,
-    tmp_path_factory: pytest.TempPathFactory,
-    example_project_dir: ExProjectDir,
     example_changelog_md: Path,
     cli_runner: CliRunner,
 ):
-    tempdir = tmp_path_factory.mktemp("test_changelog")
-    remove_dir_tree(tempdir.resolve(), force=True)
-    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
+    expected_changelog_content = example_changelog_md.read_text()
 
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
@@ -129,10 +125,10 @@ def test_changelog_content_regenerated(
     result = cli_runner.invoke(main, [changelog.name or "changelog"])
     assert result.exit_code == 0
 
-    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
+    actual_content = example_changelog_md.read_text()
 
-    differing_files = flatten_dircmp(dcmp)
-    assert not differing_files
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
 
 
 # Just need to test that it works for "a" project, not all
@@ -189,12 +185,12 @@ def test_changelog_post_to_release(
     ) as mocker, monkeypatch.context() as m:
         m.delenv("GITHUB_REPOSITORY", raising=False)
         m.delenv("CI_PROJECT_NAMESPACE", raising=False)
-        result = cli_runner.invoke(main, [changelog.name, *args])
+        result = cli_runner.invoke(main, [changelog.name or "changelog", *args])
 
     assert result.exit_code == 0
 
     assert mocker.called
-    assert mock_adapter.called
+    assert mock_adapter.called and mock_adapter.last_request is not None
     assert mock_adapter.last_request.url == (
         "https://{api_url}/repos/{owner}/{repo_name}/releases".format(
             api_url=Github.DEFAULT_API_DOMAIN,
@@ -220,11 +216,15 @@ def test_custom_release_notes_template(
     # Arrange
     release_history = get_release_history_from_context(runtime_context_with_tags)
     tag = runtime_context_with_tags.repo.tags[-1].name
+
     version = runtime_context_with_tags.version_translator.from_tag(tag)
+    if version is None:
+        raise ValueError(f"Tag {tag} not in release history")
+
     release = release_history.released[version]
 
     # Act
-    resp = cli_runner.invoke(main, [changelog.name, "--post-to-release-tag", tag])
+    resp = cli_runner.invoke(main, [changelog.name or "changelog", "--post-to-release-tag", tag])
     expected_release_notes = runtime_context_with_tags.template_environment.from_string(
         EXAMPLE_RELEASE_NOTES_TEMPLATE
     ).render(version=version, release=release)
@@ -235,5 +235,5 @@ def test_custom_release_notes_template(
         f"'semantic-release {changelog.name} --post-to-release-tag {tag}': "
         + resp.stderr
     )
-    assert post_mocker.call_count == 1
+    assert post_mocker.call_count == 1 and post_mocker.last_request is not None
     assert expected_release_notes == post_mocker.last_request.json()["body"]
