@@ -28,27 +28,27 @@ EXPECTED_CONTENT = f"""\
 # CHANGELOG
 ## v1.1.0-alpha.3 ({today_as_str})
 ### Fix
-* fix: (feature) add some more text
+* fix(feature): add some missing text
 ### Unknown
 * {_cm_rstripped("1.1.0-alpha.3")}
 ## v1.1.0-alpha.2 ({today_as_str})
 ### Feature
-* feat: (feature) add some more text
+* feat(feature): add some more text
 ### Unknown
 * {_cm_rstripped("1.1.0-alpha.2")}
 ## v1.1.0-alpha.1 ({today_as_str})
 ### Feature
-* feat: (feature) add some more text
+* feat(feature): add some more text
 ### Unknown
 * {_cm_rstripped("1.1.0-alpha.1")}
 ## v1.1.0-rc.2 ({today_as_str})
 ### Fix
-* fix: (dev) add some more text
+* fix(dev): add some more text
 ### Unknown
 * {_cm_rstripped("1.1.0-rc.2")}
 ## v1.1.0-rc.1 ({today_as_str})
 ### Feature
-* feat: (dev) add some more text
+* feat(dev): add some more text
 ### Unknown
 * {_cm_rstripped("1.1.0-rc.1")}
 ## v1.0.0 ({today_as_str})

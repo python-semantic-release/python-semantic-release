@@ -93,7 +93,7 @@ REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY = (
                 "unknown": [COMMIT_MESSAGE.format(version="0.2.0")],
             },
             Version.parse("0.3.0-beta.1"): {
-                "feature": ["feat: (feature) add some more text\n"],
+                "feature": ["feat(feature): add some more text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="0.3.0-beta.1")],
             },
         },
@@ -119,20 +119,20 @@ REPO_WITH_GIT_FLOW_EXPECTED_RELEASE_HISTORY = FakeReleaseHistoryElements(
             "unknown": [COMMIT_MESSAGE.format(version="1.0.0")],
         },
         Version.parse("1.1.0"): {
-            "feature": ["feat: (dev) add some more text\n"],
+            "feature": ["feat(dev): add some more text\n"],
             "unknown": [COMMIT_MESSAGE.format(version="1.1.0")],
         },
         Version.parse("1.1.1"): {
-            "fix": ["fix: (dev) add some more text\n"],
+            "fix": ["fix(dev): add some more text\n"],
             "unknown": [COMMIT_MESSAGE.format(version="1.1.1")],
         },
         Version.parse("1.2.0-alpha.1"): {
-            "feature": ["feat: (feature) add some more text\n"],
+            "feature": ["feat(feature): add some more text\n"],
             "unknown": [COMMIT_MESSAGE.format(version="1.2.0-alpha.1")],
         },
         Version.parse("1.2.0-alpha.2"): {
-            "feature": ["feat: (feature) add some more text\n"],
-            "fix": ["fix: (feature) add some missing text\n"],
+            "feature": ["feat(feature): add some more text\n"],
+            "fix": ["fix(feature): add some missing text\n"],
             "unknown": [COMMIT_MESSAGE.format(version="1.2.0-alpha.2")],
         },
     },
@@ -158,23 +158,23 @@ REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY = (
                 "unknown": [COMMIT_MESSAGE.format(version="1.0.0")],
             },
             Version.parse("1.1.0-rc.1"): {
-                "feature": ["feat: (dev) add some more text\n"],
+                "feature": ["feat(dev): add some more text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="1.1.0-rc.1")],
             },
             Version.parse("1.1.0-rc.2"): {
-                "fix": ["fix: (dev) add some more text\n"],
+                "fix": ["fix(dev): add some more text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="1.1.0-rc.2")],
             },
             Version.parse("1.1.0-alpha.1"): {
-                "feature": ["feat: (feature) add some more text\n"],
+                "feature": ["feat(feature): add some more text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="1.1.0-alpha.1")],
             },
             Version.parse("1.1.0-alpha.2"): {
-                "feature": ["feat: (feature) add some more text\n"],
+                "feature": ["feat(feature): add some more text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="1.1.0-alpha.2")],
             },
             Version.parse("1.1.0-alpha.3"): {
-                "fix": ["fix: (feature) add some more text\n"],
+                "fix": ["fix(feature): add some missing text\n"],
                 "unknown": [COMMIT_MESSAGE.format(version="1.1.0-alpha.3")],
             },
         },

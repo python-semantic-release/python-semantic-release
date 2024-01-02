@@ -27,7 +27,7 @@ def _cm_rstripped(version: str) -> str:
 EXPECTED_CONTENT = f"""\
 # v1.1.0-alpha.3 ({today_as_str})
 ## Fix
-* fix: (feature) add some more text
+* fix(feature): add some missing text
 ## Unknown
 * {_cm_rstripped("1.1.0-alpha.3")}
 """
