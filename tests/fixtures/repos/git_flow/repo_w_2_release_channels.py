@@ -108,7 +108,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": "feat: (dev) add some more text",
+                    "angular": "feat(dev): add some more text",
                     "emoji": ":sparkles: (dev) add some more text",
                     "scipy": "ENH: (dev) add some more text",
                     "tag": ":sparkles: (dev) add some more text",
@@ -124,7 +124,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": "fix: (dev) add some more text",
+                    "angular": "fix(dev): add some more text",
                     "emoji": ":bug: (dev) add some more text",
                     "scipy": "MAINT: (dev) add some more text",
                     "tag": ":nut_and_bolt: (dev) add some more text",
@@ -140,7 +140,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": "feat: (feature) add some more text",
+                    "angular": "feat(feature): add some more text",
                     "emoji": ":sparkles: (feature) add some more text",
                     "scipy": "ENH: (feature) add some more text",
                     "tag": ":sparkles: (feature) add some more text",
@@ -171,13 +171,13 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": "feat: (feature) add some more text",
+                    "angular": "feat(feature): add some more text",
                     "emoji": ":sparkles: (feature) add some more text",
                     "scipy": "ENH: (feature) add some more text",
                     "tag": ":sparkles: (feature) add some more text",
                 },
                 {
-                    "angular": "fix: (feature) add some missing text",
+                    "angular": "fix(feature): add some missing text",
                     "emoji": ":bug: (feature) add some missing text",
                     "scipy": "MAINT: (feature) add some missing text",
                     "tag": ":nut_and_bolt: (feature) add some missing text",

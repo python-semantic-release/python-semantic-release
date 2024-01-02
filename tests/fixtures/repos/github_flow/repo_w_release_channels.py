@@ -108,7 +108,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
             },
             "commits": [
                 {
-                    "angular": "feat: (feature) add some more text",
+                    "angular": "feat(feature): add some more text",
                     "emoji": ":sparkles: (feature) add some more text",
                     "scipy": "ENH: (feature) add some more text",
                     "tag": ":sparkles: (feature) add some more text",
