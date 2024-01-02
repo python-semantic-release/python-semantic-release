@@ -427,6 +427,7 @@ def test_version_no_push_force_level(
 
     # Changelog already reflects changes this should introduce
     assert differing_files == sorted([
+        "CHANGELOG.md",
         "pyproject.toml",
         f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
     ])
