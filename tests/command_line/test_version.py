@@ -423,13 +423,13 @@ def test_version_no_push_force_level(
     assert head_before in repo.head.commit.parents
 
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-    differing_files = flatten_dircmp(dcmp)
+    differing_files = sorted(flatten_dircmp(dcmp))
 
     # Changelog already reflects changes this should introduce
-    assert differing_files == [
+    assert differing_files == sorted([
         "pyproject.toml",
         f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
-    ]
+    ])
 
     # Compare pyproject.toml
     new_pyproject_toml = tomlkit.loads(
@@ -699,13 +699,16 @@ def test_version_only_update_files_no_git_actions(
     )
 
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-    differing_files = flatten_dircmp(dcmp)
+    differing_files = sorted(flatten_dircmp(dcmp))
 
     # Files that should receive version change
-    assert differing_files == [
+    expected_changed_files = sorted([
+        # CHANGELOG.md is not included as no modification to Git History
+        # (no commit or tag) has been made
         "pyproject.toml",
         f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
-    ]
+    ])
+    assert expected_changed_files == differing_files
 
     # Compare pyproject.toml
     new_pyproject_toml = tomlkit.loads(

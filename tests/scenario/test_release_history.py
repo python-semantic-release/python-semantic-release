@@ -233,15 +233,15 @@ def test_release_history(
         ),
     )
     for k in expected_release_history.released:
-        expected, actual = expected_release_history.released[k], released[k]["elements"]
-        actual_released_messages = [
-            res.commit.message for results in actual.values() for res in results
-        ]
-        assert all(
-            msg in actual_released_messages
-            for bucket in expected.values()
-            for msg in bucket
-        )
+        expected = expected_release_history.released[k]
+        actual = released[k]["elements"]
+        actual_released_messages = str.join("\n\n", sorted([
+            str(res.commit.message) for results in actual.values() for res in results
+        ]))
+        expected_released_messages = str.join("\n\n", sorted([
+            msg for bucket in expected.values() for msg in bucket
+        ]))
+        assert expected_released_messages == actual_released_messages
 
     for commit_message in ANGULAR_COMMITS_MINOR:
         add_text_to_file(repo, file_in_repo)
@@ -251,17 +251,21 @@ def test_release_history(
     new_unreleased, new_released = ReleaseHistory.from_git_history(
         repo, translator, default_angular_parser
     )
-    actual_unreleased_messages = [
-        res.commit.message for results in new_unreleased.values() for res in results
-    ]
-    assert all(
-        msg in actual_unreleased_messages
+
+    actual_unreleased_messages = str.join("\n\n", sorted([
+        str(res.commit.message) for results in new_unreleased.values() for res in results
+    ]))
+
+    expected_unreleased_messages = str.join("\n\n", sorted([
+        msg
         for bucket in [
+            ANGULAR_COMMITS_MINOR[::-1],
             *expected_release_history.unreleased.values(),
-            ANGULAR_COMMITS_MINOR,
         ]
         for msg in bucket
-    )
+    ]))
+
+    assert expected_unreleased_messages == actual_unreleased_messages
     assert (
         new_released == released
     ), "something that shouldn't be considered release has been released"
