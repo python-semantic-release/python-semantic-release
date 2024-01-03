@@ -2,6 +2,31 @@
 
 
 
+## v8.7.1 (2024-01-03)
+
+### Documentation
+
+* docs(contributing): add docs-build, testing conf, &amp; build instructions (#787) ([`011b072`](https://github.com/python-semantic-release/python-semantic-release/commit/011b0729cba3045b4e7291fd970cb17aad7bae60))
+
+* docs(configuration): change defaults definition of token default to table (#786) ([`df1df0d`](https://github.com/python-semantic-release/python-semantic-release/commit/df1df0de8bc655cbf8f86ae52aff10efdc66e6d2))
+
+* docs: add note on default envvar behaviour (#780) ([`0b07cae`](https://github.com/python-semantic-release/python-semantic-release/commit/0b07cae71915c5c82d7784898b44359249542a64))
+
+### Fix
+
+* fix(cli-generate-config): ensure configuration types are always toml parsable (#785) ([`758e649`](https://github.com/python-semantic-release/python-semantic-release/commit/758e64975fe46b961809f35977574729b7c44271))
+
+### Style
+
+* style: beautify 011b0729cba3045b4e7291fd970cb17aad7bae60 ([`06d5c61`](https://github.com/python-semantic-release/python-semantic-release/commit/06d5c610642f5a515317b9030368f279086696fc))
+
+* style: beautify d6c4ae0db458f8108c88d75ac4e07079bc747d32 ([`253c99e`](https://github.com/python-semantic-release/python-semantic-release/commit/253c99e72c1f4ddefd806c87cae10d1b72ff461b))
+
+### Test
+
+* test(infrastructure): refactor test fixtures &amp; configuration for higher resiliency (#773) ([`d6c4ae0`](https://github.com/python-semantic-release/python-semantic-release/commit/d6c4ae0db458f8108c88d75ac4e07079bc747d32))
+
+
 ## v8.7.0 (2023-12-22)
 
 ### Feature
