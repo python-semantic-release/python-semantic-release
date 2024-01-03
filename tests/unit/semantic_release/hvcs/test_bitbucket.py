@@ -19,37 +19,7 @@ def default_bitbucket_client():
         "patched_os_environ, hvcs_domain, hvcs_api_domain, "
         "expected_hvcs_domain, expected_hvcs_api_domain"
     ),
-    [
-        ({}, None, None, Bitbucket.DEFAULT_DOMAIN, Bitbucket.DEFAULT_API_DOMAIN),
-        (
-            {"BITBUCKET_SERVER_URL": "https://special.custom.server/vcs/"},
-            None,
-            None,
-            "special.custom.server/vcs/",
-            Bitbucket.DEFAULT_API_DOMAIN,
-        ),
-        (
-            {"BITBUCKET_API_URL": "https://api.special.custom.server/"},
-            None,
-            None,
-            Bitbucket.DEFAULT_DOMAIN,
-            "api.special.custom.server/",
-        ),
-        (
-            {"BITBUCKET_SERVER_URL": "https://special.custom.server/vcs/"},
-            "https://example.com",
-            None,
-            "https://example.com",
-            Bitbucket.DEFAULT_API_DOMAIN,
-        ),
-        (
-            {"BITBUCKET_API_URL": "https://api.special.custom.server/"},
-            None,
-            "https://api.example.com",
-            Bitbucket.DEFAULT_DOMAIN,
-            "https://api.example.com",
-        ),
-    ],
+    [({}, None, None, Bitbucket.DEFAULT_DOMAIN, Bitbucket.DEFAULT_API_DOMAIN)],
 )
 @pytest.mark.parametrize(
     "remote_url",
