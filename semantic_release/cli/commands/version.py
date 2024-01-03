@@ -371,13 +371,13 @@ def version(  # noqa: C901
 
     elif commit_changes:
         # TODO: in future this loop should be 1 line:
-        # repo.index.add(all_paths_to_add, force=False)
+        # repo.index.add(all_paths_to_add, force=False)  # noqa: ERA001
         # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
         # we have to do manually add each filepath, and catch the exception if it is an ignored file
         for updated_path in all_paths_to_add:
             try:
                 repo.git.add(updated_path)
-            except GitCommandError:
+            except GitCommandError:  # noqa: PERF203
                 log.warning("Failed to add path (%s) to index", updated_path)
 
     rh = ReleaseHistory.from_git_history(
@@ -445,13 +445,13 @@ def version(  # noqa: C901
         elif commit_changes:
             # Anything changed here should be staged.
             # TODO: in future this loop should be 1 line:
-            # repo.index.add(updated_paths, force=False)
+            # repo.index.add(updated_paths, force=False)  # noqa: ERA001
             # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
             # we have to do manually add each filepath, and catch the exception if it is an ignored file
             for updated_path in updated_paths:
                 try:
                     repo.git.add(updated_path)
-                except GitCommandError:
+                except GitCommandError:  # noqa: PERF203
                     log.warning("Failed to add path (%s) to index", updated_path)
 
     def custom_git_environment() -> ContextManager[None]:

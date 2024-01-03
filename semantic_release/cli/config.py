@@ -113,7 +113,7 @@ class RemoteConfig(BaseModel):
     ignore_token_for_push: bool = False
 
     @model_validator(mode="after")
-    def set_default_token(self) -> "RemoteConfig":
+    def set_default_token(self) -> RemoteConfig:
         # Set the default token name for the given VCS when no user input is given
         if not self.token and self.type in _known_hvcs:
             default_token_name = _known_hvcs[self.type].DEFAULT_ENV_TOKEN_NAME

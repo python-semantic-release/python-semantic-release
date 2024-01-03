@@ -33,7 +33,7 @@ class HvcsBase:
     checking for NotImplemented around every method call.
     """
 
-    DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"
+    DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"  # noqa: S105
 
     def __init__(
         self,

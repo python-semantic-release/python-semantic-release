@@ -4,7 +4,7 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
 
 
 @pytest.mark.parametrize(
-    ("url", "expected"),
+    "url, expected",
     [
         (
             "http://git.mycompany.com/username/myproject.git",

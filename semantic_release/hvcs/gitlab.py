@@ -38,7 +38,7 @@ class Gitlab(HvcsBase):
     API domain
     """
 
-    DEFAULT_ENV_TOKEN_NAME = "GITLAB_TOKEN"
+    DEFAULT_ENV_TOKEN_NAME = "GITLAB_TOKEN"  # noqa: S105
     # purposefully not CI_JOB_TOKEN as it is not a personal access token,
     # It is missing the permission to push to the repository, but has all others (releases, packages, etc.)
 

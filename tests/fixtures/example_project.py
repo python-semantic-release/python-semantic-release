@@ -8,8 +8,13 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 import tomlkit
 
-from semantic_release.commit_parser import *
-from semantic_release.hvcs import *
+from semantic_release.commit_parser import (
+    AngularCommitParser,
+    EmojiCommitParser,
+    ScipyCommitParser,
+    TagCommitParser,
+)
+from semantic_release.hvcs import Gitea, Github, Gitlab
 
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
@@ -23,6 +28,9 @@ from tests.const import (
 
 if TYPE_CHECKING:
     from typing import Any, Protocol
+
+    from semantic_release.commit_parser import CommitParser
+    from semantic_release.hvcs import HvcsBase
 
     ExProjectDir = Path
 
@@ -40,18 +48,20 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def change_to_tmp_dir(tmp_path: Path) -> Generator[None, None, None]:
+def change_to_tmp_dir(tmp_path: Path) -> Generator[Path, None, None]:
     cwd = os.getcwd()
     os.chdir(str(tmp_path.resolve()))
     try:
-        yield
+        yield Path(os.getcwd())
     finally:
         os.chdir(cwd)
 
 
 @pytest.fixture
-def example_project(change_to_tmp_dir: None) -> ExProjectDir:
-    tmp_path = Path.cwd()
+def example_project(
+    change_to_tmp_dir: Path,  # noqa: U100  # must be given as an argument
+) -> ExProjectDir:
+    tmp_path = change_to_tmp_dir
     src_dir = tmp_path / "src"
     src_dir.mkdir()
     example_dir = src_dir / EXAMPLE_PROJECT_NAME
