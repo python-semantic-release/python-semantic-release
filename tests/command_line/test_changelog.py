@@ -82,7 +82,9 @@ def test_changelog_noop_is_noop(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
-        result = cli_runner.invoke(main, ["--noop", changelog.name or "changelog", *args])
+        result = cli_runner.invoke(
+            main, ["--noop", changelog.name or "changelog", *args]
+        )
 
     assert result.exit_code == 0
 

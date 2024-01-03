@@ -140,6 +140,7 @@ def update_pyproject_toml(
     example_project: Path, example_pyproject_toml: Path
 ) -> UpdatePyprojectTomlFn:
     """Update the pyproject.toml file with the given content."""
+
     def _update_pyproject_toml(setting: str, value: Any) -> None:
         with open(example_pyproject_toml) as rfd:
             pyproject_toml = tomlkit.load(rfd)
@@ -165,6 +166,7 @@ def update_pyproject_toml(
 @pytest.fixture
 def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Angular parser."""
+
     def _use_angular_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "angular")
         return AngularCommitParser
@@ -175,6 +177,7 @@ def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParse
 @pytest.fixture
 def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Emoji parser."""
+
     def _use_emoji_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "emoji")
         return EmojiCommitParser
@@ -185,6 +188,7 @@ def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserF
 @pytest.fixture
 def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Scipy parser."""
+
     def _use_scipy_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "scipy")
         return ScipyCommitParser
@@ -195,6 +199,7 @@ def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserF
 @pytest.fixture
 def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Tag parser."""
+
     def _use_tag_parser() -> type[CommitParser]:
         update_pyproject_toml("tool.semantic_release.commit_parser", "tag")
         return TagCommitParser
@@ -205,6 +210,7 @@ def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
 @pytest.fixture
 def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitHub as the HVCS."""
+
     def _use_github_hvcs() -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "github")
         return Github
@@ -215,6 +221,7 @@ def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
 @pytest.fixture
 def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitLab as the HVCS."""
+
     def _use_gitlab_hvcs() -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
         return Gitlab
@@ -225,6 +232,7 @@ def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
 @pytest.fixture
 def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use Gitea as the HVCS."""
+
     def _use_gitea_hvcs() -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
         return Gitea

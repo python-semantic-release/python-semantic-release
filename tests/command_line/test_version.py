@@ -401,7 +401,9 @@ def test_version_no_push_force_level(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, [version.name or "version", *cli_args, "--no-push"])
+    result = cli_runner.invoke(
+        main, [version.name or "version", *cli_args, "--no-push"]
+    )
 
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
@@ -501,7 +503,7 @@ def test_version_runs_build_command(
     cli_runner: CliRunner,
     example_pyproject_toml: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    shell: str
+    shell: str,
 ):
     # Setup
     build_command = "bash -c \"echo 'hello world'\""
@@ -583,7 +585,9 @@ def test_custom_release_notes_template(
     # (see fixtures)
 
     # Act
-    resp = cli_runner.invoke(main, [version.name or "version", "--skip-build", "--vcs-release"])
+    resp = cli_runner.invoke(
+        main, [version.name or "version", "--skip-build", "--vcs-release"]
+    )
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
     release_version = runtime_context_with_no_tags.version_translator.from_tag(tag)
@@ -637,7 +641,7 @@ def test_version_only_update_files_no_git_actions(
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
     example_pyproject_toml: Path,
-    example_project: ExProjectDir
+    example_project: ExProjectDir,
 ) -> None:
     # Arrange
     expected_new_version = "0.3.0"
