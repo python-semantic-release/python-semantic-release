@@ -4,7 +4,6 @@ import difflib
 import filecmp
 import re
 import shutil
-from pathlib import Path
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -23,12 +22,16 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
+    from git import Repo
     from requests_mock import Mocker
 
     from semantic_release.cli.config import RuntimeContext
+
+    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
 
 
 @pytest.mark.parametrize(
@@ -384,13 +387,13 @@ def test_version_already_released_no_push(repo, cli_runner):
     ],
 )
 def test_version_no_push_force_level(
-    repo,
-    cli_args,
-    expected_new_version,
-    example_project,
-    example_pyproject_toml,
+    repo: Repo,
+    cli_args: list[str],
+    expected_new_version: str,
+    example_project: ExProjectDir,
+    example_pyproject_toml: Path,
     tmp_path_factory: pytest.TempPathFactory,
-    cli_runner,
+    cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
@@ -398,7 +401,7 @@ def test_version_no_push_force_level(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, [version.name, *cli_args, "--no-push"])
+    result = cli_runner.invoke(main, [version.name or "version", *cli_args, "--no-push"])
 
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
@@ -466,26 +469,27 @@ def test_version_no_push_force_level(
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
 )
-def test_version_build_metadata_triggers_new_version(repo, cli_runner):
+def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: CliRunner):
+    version_cmd_name = version.name or "version"
     # Verify we get "no version to release" without build metadata
     no_metadata_result = cli_runner.invoke(
-        main, ["--strict", version.name, "--no-push"]
+        main, ["--strict", version_cmd_name, "--no-push"]
     )
     assert no_metadata_result.exit_code == 2
     assert "no release will be made" in no_metadata_result.stderr.lower()
 
     metadata_suffix = "build.abc-12345"
     result = cli_runner.invoke(
-        main, [version.name, "--no-push", "--build-metadata", metadata_suffix]
+        main, [version_cmd_name, "--no-push", "--build-metadata", metadata_suffix]
     )
     assert result.exit_code == 0
     assert repo.git.tag(l=f"*{metadata_suffix}")
 
 
 def test_version_prints_current_version_if_no_new_version(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
-    result = cli_runner.invoke(main, [version.name, "--no-push"])
+    result = cli_runner.invoke(main, [version.name or "version", "--no-push"])
     assert result.exit_code == 0
     assert "no release will be made" in result.stderr.lower()
     assert result.stdout == "1.2.0-alpha.2\n"
@@ -493,19 +497,27 @@ def test_version_prints_current_version_if_no_new_version(
 
 @pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
 def test_version_runs_build_command(
-    repo_with_git_flow_angular_commits, cli_runner, example_pyproject_toml, shell
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    shell: str
 ):
-    config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
+    # Setup
+    build_command = "bash -c \"echo 'hello world'\""
+    update_pyproject_toml("tool.semantic_release.build_command", build_command)
     exe = shell.split("/")[-1]
+
+    # Mock out subprocess.run
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
     ):
+        # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
-            main, [version.name, "--patch", "--no-push"]
-        )  # force a new version
+            main, [version.name or "version", "--patch", "--no-push"]
+        )
         assert result.exit_code == 0
 
         patched_subprocess_run.assert_called_once_with(
@@ -571,7 +583,7 @@ def test_custom_release_notes_template(
     # (see fixtures)
 
     # Act
-    resp = cli_runner.invoke(main, [version.name, "--skip-build", "--vcs-release"])
+    resp = cli_runner.invoke(main, [version.name or "version", "--skip-build", "--vcs-release"])
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
     release_version = runtime_context_with_no_tags.version_translator.from_tag(tag)
@@ -625,15 +637,13 @@ def test_version_only_update_files_no_git_actions(
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
     example_pyproject_toml: Path,
+    example_project: ExProjectDir
 ) -> None:
     # Arrange
     expected_new_version = "0.3.0"
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
-    example_project = Path(
-        runtime_context_with_tags.repo.git.rev_parse("--show-toplevel")
-    )
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project), dst=tempdir)
 
     head_before = runtime_context_with_tags.repo.head.commit
     tags_before = runtime_context_with_tags.repo.tags

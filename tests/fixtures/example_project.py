@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
 from textwrap import dedent
@@ -5,6 +7,9 @@ from typing import TYPE_CHECKING, Generator
 
 import pytest
 import tomlkit
+
+from semantic_release.commit_parser import *
+from semantic_release.hvcs import *
 
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
@@ -22,12 +27,20 @@ if TYPE_CHECKING:
     ExProjectDir = Path
 
     class UpdatePyprojectTomlFn(Protocol):
-        def __call__(self, setting: str, value: "Any") -> None:
+        def __call__(self, setting: str, value: Any) -> None:
+            ...
+
+    class UseHvcsFn(Protocol):
+        def __call__(self) -> type[HvcsBase]:
+            ...
+
+    class UseParserFn(Protocol):
+        def __call__(self) -> type[CommitParser]:
             ...
 
 
 @pytest.fixture
-def change_to_tmp_dir(tmp_path: "Path") -> "Generator[None, None, None]":
+def change_to_tmp_dir(tmp_path: Path) -> Generator[None, None, None]:
     cwd = os.getcwd()
     os.chdir(str(tmp_path.resolve()))
     try:
@@ -37,7 +50,7 @@ def change_to_tmp_dir(tmp_path: "Path") -> "Generator[None, None, None]":
 
 
 @pytest.fixture
-def example_project(change_to_tmp_dir: None) -> "ExProjectDir":
+def example_project(change_to_tmp_dir: None) -> ExProjectDir:
     tmp_path = Path.cwd()
     src_dir = tmp_path / "src"
     src_dir.mkdir()
@@ -97,38 +110,37 @@ def example_project_with_release_notes_template(example_project: Path) -> Path:
 
 
 @pytest.fixture
-def example_pyproject_toml(example_project):
+def example_pyproject_toml(example_project: ExProjectDir) -> Path:
     return example_project / "pyproject.toml"
 
 
 @pytest.fixture
-def example_setup_cfg(example_project):
+def example_setup_cfg(example_project: ExProjectDir) -> Path:
     return example_project / "setup.cfg"
 
 
 @pytest.fixture
-def example_setup_py(example_project):
+def example_setup_py(example_project: ExProjectDir) -> Path:
     return example_project / "setup.py"
 
 
 # Note this is just the path and the content may change
 @pytest.fixture
-def example_changelog_md(example_project):
+def example_changelog_md(example_project: ExProjectDir) -> Path:
     return example_project / "CHANGELOG.md"
 
 
 @pytest.fixture
-def example_project_template_dir(example_project):
+def example_project_template_dir(example_project: ExProjectDir) -> Path:
     return example_project / "templates"
 
 
 @pytest.fixture
 def update_pyproject_toml(
-    example_project: "Path", example_pyproject_toml: "Path"
-) -> "UpdatePyprojectTomlFn":
+    example_project: Path, example_pyproject_toml: Path
+) -> UpdatePyprojectTomlFn:
     """Update the pyproject.toml file with the given content."""
-
-    def _update_pyproject_toml(setting: str, value: "Any") -> None:
+    def _update_pyproject_toml(setting: str, value: Any) -> None:
         with open(example_pyproject_toml) as rfd:
             pyproject_toml = tomlkit.load(rfd)
 
@@ -148,3 +160,73 @@ def update_pyproject_toml(
             tomlkit.dump(pyproject_toml, wfd)
 
     return _update_pyproject_toml
+
+
+@pytest.fixture
+def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+    """Modify the configuration file to use the Angular parser."""
+    def _use_angular_parser() -> type[CommitParser]:
+        update_pyproject_toml("tool.semantic_release.commit_parser", "angular")
+        return AngularCommitParser
+
+    return _use_angular_parser
+
+
+@pytest.fixture
+def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+    """Modify the configuration file to use the Emoji parser."""
+    def _use_emoji_parser() -> type[CommitParser]:
+        update_pyproject_toml("tool.semantic_release.commit_parser", "emoji")
+        return EmojiCommitParser
+
+    return _use_emoji_parser
+
+
+@pytest.fixture
+def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+    """Modify the configuration file to use the Scipy parser."""
+    def _use_scipy_parser() -> type[CommitParser]:
+        update_pyproject_toml("tool.semantic_release.commit_parser", "scipy")
+        return ScipyCommitParser
+
+    return _use_scipy_parser
+
+
+@pytest.fixture
+def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+    """Modify the configuration file to use the Tag parser."""
+    def _use_tag_parser() -> type[CommitParser]:
+        update_pyproject_toml("tool.semantic_release.commit_parser", "tag")
+        return TagCommitParser
+
+    return _use_tag_parser
+
+
+@pytest.fixture
+def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+    """Modify the configuration file to use GitHub as the HVCS."""
+    def _use_github_hvcs() -> type[HvcsBase]:
+        update_pyproject_toml("tool.semantic_release.remote.type", "github")
+        return Github
+
+    return _use_github_hvcs
+
+
+@pytest.fixture
+def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+    """Modify the configuration file to use GitLab as the HVCS."""
+    def _use_gitlab_hvcs() -> type[HvcsBase]:
+        update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
+        return Gitlab
+
+    return _use_gitlab_hvcs
+
+
+@pytest.fixture
+def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+    """Modify the configuration file to use Gitea as the HVCS."""
+    def _use_gitea_hvcs() -> type[HvcsBase]:
+        update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
+        return Gitea
+
+    return _use_gitea_hvcs
