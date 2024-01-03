@@ -52,7 +52,7 @@ def test_invalid_hvcs_type(remote_config: dict[str, Any]):
 def test_default_toml_config_valid(example_project):
     default_config_file = example_project / "default.toml"
     default_config_file.write_text(
-        tomlkit.dumps(RawConfig().model_dump(mode='json', exclude_none=True))
+        tomlkit.dumps(RawConfig().model_dump(mode="json", exclude_none=True))
     )
 
     written = default_config_file.read_text(encoding="utf-8")
