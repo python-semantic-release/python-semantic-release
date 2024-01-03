@@ -129,11 +129,11 @@ usage. This token should be stored in the ``GH_TOKEN`` environment variable
 To generate a token go to https://github.com/settings/tokens
 and click on *Personal access token*.
 
-GitLab (``GL_TOKEN``)
-"""""""""""""""""""""
+GitLab (``GITLAB_TOKEN``)
+"""""""""""""""""""""""""
 
 A personal access token from GitLab. This is used for authenticating when pushing
-tags, publishing releases etc. This token should be stored in the ``GL_TOKEN``
+tags, publishing releases etc. This token should be stored in the ``GITLAB_TOKEN``
 environment variable.
 
 Gitea (``GITEA_TOKEN``)
