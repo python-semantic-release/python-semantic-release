@@ -40,7 +40,9 @@ def generate_config(fmt: str = "toml", is_pyproject_toml: bool = False) -> None:
 
         semantic-release generate-config -f toml >> pyproject.toml
     """
-    config = RawConfig().model_dump(exclude_none=True)
+    # due to possible IntEnum values (which are not supported by tomlkit.dumps, see sdispater/tomlkit#237),
+    # we must ensure the transformation of the model to a dict uses json serializable values
+    config = RawConfig().model_dump(mode="json", exclude_none=True)
 
     config_dct = {"semantic_release": config}
     if is_pyproject_toml and fmt == "toml":
