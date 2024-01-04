@@ -134,7 +134,7 @@ def test_remote_url(
     patched_os_environ,
     use_token,
     token,
-    _remote_url,
+    _remote_url,  # noqa: PT019
     expected,
     default_bitbucket_client,
 ):
