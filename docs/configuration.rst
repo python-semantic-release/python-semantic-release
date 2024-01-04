@@ -611,13 +611,14 @@ The default value for this setting depends on what you specify as
 :ref:`remote.type <config-remote-type>`. Review the table below to see what the
 default token value will be for each remote type.
 
-================  ==  ============================
+================  ==  ===============================
 ``remote.type``       Default ``remote.token``
-================  ==  ============================
+================  ==  ===============================
 ``"github"``      ->  ``{ env = "GH_TOKEN" }``
 ``"gitlab"``      ->  ``{ env = "GITLAB_TOKEN" }``
 ``"gitea"``       ->  ``{ env = "GITEA_TOKEN" }``
-================  ==  ============================
+``"bitbucket"``   ->  ``{ env = "BITBUCKET_TOKEN" }``
+================  ==  ===============================
 
 **Default:** ``{ env = "<envvar name>" }``, where ``<envvar name>`` depends on
 :ref:`remote.type <config-remote-type>` as indicated above.
