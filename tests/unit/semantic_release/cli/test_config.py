@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     [
         ({"type": HvcsClient.GITHUB.value}, EnvConfigVar(env="GH_TOKEN")),
         ({"type": HvcsClient.GITLAB.value}, EnvConfigVar(env="GITLAB_TOKEN")),
+        ({"type": HvcsClient.GITLABCI.value}, EnvConfigVar(env="CI_JOB_TOKEN")),
         ({"type": HvcsClient.GITEA.value}, EnvConfigVar(env="GITEA_TOKEN")),
         ({}, EnvConfigVar(env="GH_TOKEN")),  # default not provided -> means Github
     ],

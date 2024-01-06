@@ -43,6 +43,7 @@ log = logging.getLogger(__name__)
 class HvcsClient(str, Enum):
     GITHUB = "github"
     GITLAB = "gitlab"
+    GITLABCI = "gitlab-ci"
     GITEA = "gitea"
 
 
@@ -57,6 +58,7 @@ _known_commit_parsers = {
 _known_hvcs: Dict[HvcsClient, Type[hvcs.HvcsBase]] = {
     HvcsClient.GITHUB: hvcs.Github,
     HvcsClient.GITLAB: hvcs.Gitlab,
+    HvcsClient.GITLABCI: hvcs.GitlabCi,
     HvcsClient.GITEA: hvcs.Gitea,
 }
 
