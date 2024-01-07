@@ -81,7 +81,7 @@ class ReleaseHistory:
                     if isinstance(tag.object, TagObject):
                         tagger = tag.object.tagger
                         committer = tag.object.tagger.committer()
-                        _tz = timezone(timedelta(seconds=tag.object.tagger_tz_offset))
+                        _tz = timezone(timedelta(seconds=-1 * tag.object.tagger_tz_offset))
                         tagged_date = datetime.fromtimestamp(
                             tag.object.tagged_date, tz=_tz
                         )
@@ -89,7 +89,7 @@ class ReleaseHistory:
                         # For some reason, sometimes tag.object is a Commit
                         tagger = tag.object.author
                         committer = tag.object.author
-                        _tz = timezone(timedelta(seconds=tag.object.author_tz_offset))
+                        _tz = timezone(timedelta(seconds=-1 * tag.object.author_tz_offset))
                         tagged_date = datetime.fromtimestamp(
                             tag.object.committed_date, tz=_tz
                         )
