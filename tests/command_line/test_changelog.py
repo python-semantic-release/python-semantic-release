@@ -125,6 +125,9 @@ def test_changelog_content_regenerated(
     result = cli_runner.invoke(main, [changelog.name or "changelog"])
     assert result.exit_code == 0
 
+    # Check that the changelog file was re-created
+    assert example_changelog_md.exists()
+
     actual_content = example_changelog_md.read_text()
 
     # Check that the changelog content is the same as before
