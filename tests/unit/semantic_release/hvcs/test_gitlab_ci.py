@@ -215,6 +215,7 @@ def test_create_release_succeeds(default_gl_client, status_code, prerelease, tag
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "POST"
+        assert m.last_request.headers["JOB-TOKEN"] == MINIMUM_ENV_EXPECTED["CI_JOB_TOKEN"]
         assert (
                 m.last_request.url
                 == "{api_url}/projects/{project_id}/releases".format(
@@ -243,6 +244,7 @@ def test_create_release_fails(default_gl_client, prerelease, status_code):
             assert m.called
             assert len(m.request_history) == 1
             assert m.last_request.method == "POST"
+            assert m.last_request.headers["JOB-TOKEN"] == MINIMUM_ENV_EXPECTED["CI_JOB_TOKEN"]
             assert (
                     m.last_request.url
                     == "{api_url}/projects/{project_id}/releases".format(
@@ -279,6 +281,7 @@ def test_edit_release_notes_succeeds(default_gl_client, status_code, mock_tag):
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "PUT"
+        assert m.last_request.headers["JOB-TOKEN"] == MINIMUM_ENV_EXPECTED["CI_JOB_TOKEN"]
         assert (
                 m.last_request.url
                 == "{api_url}/projects/{project_id}/releases/{mock_tag}".format(
@@ -303,6 +306,7 @@ def test_edit_release_notes_fails(default_gl_client, status_code):
         assert m.called
         assert len(m.request_history) == 1
         assert m.last_request.method == "PUT"
+        assert m.last_request.headers["JOB-TOKEN"] == MINIMUM_ENV_EXPECTED["CI_JOB_TOKEN"]
         assert (
                 m.last_request.url
                 == "{api_url}/projects/{project_id}/releases/{mock_tag}".format(
