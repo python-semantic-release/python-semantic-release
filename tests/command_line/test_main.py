@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import json
 import os
+from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -10,24 +13,29 @@ from semantic_release import __version__
 from semantic_release.cli import main
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from click.testing import CliRunner
+    from git import Repo
 
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
 
 
-def test_main_prints_version_and_exits(cli_runner):
+def test_main_prints_version_and_exits(cli_runner: CliRunner):
     result = cli_runner.invoke(main, ["--version"])
     assert result.exit_code == 0
     assert result.output == f"semantic-release, version {__version__}\n"
 
 
 @pytest.mark.parametrize("args", [[], ["--help"]])
-def test_main_prints_help_text(cli_runner, args):
+def test_main_prints_help_text(cli_runner: CliRunner, args: list[str]):
     result = cli_runner.invoke(main, args)
     assert result.exit_code == 0
 
 
-def test_not_a_release_branch_exit_code(repo_with_git_flow_angular_commits, cli_runner):
+def test_not_a_release_branch_exit_code(
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
+):
     # Run anything that doesn't trigger the help text
     repo_with_git_flow_angular_commits.git.checkout("-b", "branch-does-not-exist")
     result = cli_runner.invoke(main, ["version", "--no-commit"])
@@ -35,7 +43,7 @@ def test_not_a_release_branch_exit_code(repo_with_git_flow_angular_commits, cli_
 
 
 def test_not_a_release_branch_exit_code_with_strict(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
     # Run anything that doesn't trigger the help text
     repo_with_git_flow_angular_commits.git.checkout("-b", "branch-does-not-exist")
@@ -44,7 +52,7 @@ def test_not_a_release_branch_exit_code_with_strict(
 
 
 def test_not_a_release_branch_detached_head_exit_code(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
     expected_err_msg = (
         "Detached HEAD state cannot match any release groups; no release will be made"
@@ -60,7 +68,7 @@ def test_not_a_release_branch_detached_head_exit_code(
 
 
 @pytest.fixture
-def toml_file_with_no_configuration_for_psr(tmp_path):
+def toml_file_with_no_configuration_for_psr(tmp_path: Path) -> Path:
     path = tmp_path / "config.toml"
     path.write_text(
         dedent(
@@ -76,7 +84,7 @@ def toml_file_with_no_configuration_for_psr(tmp_path):
 
 
 @pytest.fixture
-def json_file_with_no_configuration_for_psr(tmp_path):
+def json_file_with_no_configuration_for_psr(tmp_path: Path) -> Path:
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"foo": [1, 2, 3]}))
 
@@ -85,8 +93,8 @@ def json_file_with_no_configuration_for_psr(tmp_path):
 
 @pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
 def test_default_config_is_used_when_none_in_toml_config_file(
-    cli_runner,
-    toml_file_with_no_configuration_for_psr,
+    cli_runner: CliRunner,
+    toml_file_with_no_configuration_for_psr: Path,
 ):
     result = cli_runner.invoke(
         main,
@@ -98,8 +106,8 @@ def test_default_config_is_used_when_none_in_toml_config_file(
 
 @pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
 def test_default_config_is_used_when_none_in_json_config_file(
-    cli_runner,
-    json_file_with_no_configuration_for_psr,
+    cli_runner: CliRunner,
+    json_file_with_no_configuration_for_psr: Path,
 ):
     result = cli_runner.invoke(
         main,
@@ -111,7 +119,7 @@ def test_default_config_is_used_when_none_in_json_config_file(
 
 @pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
 def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
-    cli_runner,
+    cli_runner: CliRunner,
 ):
     result = cli_runner.invoke(
         main,
@@ -124,7 +132,7 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
 
 @pytest.mark.usefixtures("repo_with_no_tags_angular_commits")
 def test_errors_when_config_file_invalid_configuration(
-    cli_runner: "CliRunner", update_pyproject_toml: "UpdatePyprojectTomlFn"
+    cli_runner: CliRunner, update_pyproject_toml: UpdatePyprojectTomlFn
 ):
     update_pyproject_toml("tool.semantic_release.remote.type", "invalidType")
     result = cli_runner.invoke(main, ["--config", "pyproject.toml", "version"])
@@ -136,8 +144,8 @@ def test_errors_when_config_file_invalid_configuration(
 
 
 def test_uses_default_config_when_no_config_file_found(
-    tmp_path,
-    cli_runner,
+    tmp_path: Path,
+    cli_runner: CliRunner,
 ):
     # We have to initialise an empty git repository, as the example projects
     # all have pyproject.toml configs which would be used by default

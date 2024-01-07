@@ -27,6 +27,10 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
 
+    from git import Repo
+
+    from tests.fixtures.example_project import ExProjectDir
+
 
 @pytest.mark.parametrize(
     "remote_config, expected_token",
@@ -115,7 +119,7 @@ def test_invalid_commit_parser_value(commit_parser: str):
     assert "commit_parser" in str(excinfo.value)
 
 
-def test_default_toml_config_valid(example_project_dir):
+def test_default_toml_config_valid(example_project_dir: ExProjectDir):
     default_config_file = example_project_dir / "default.toml"
 
     default_config_file.write_text(
@@ -142,9 +146,9 @@ def test_default_toml_config_valid(example_project_dir):
 )
 def test_commit_author_configurable(
     example_pyproject_toml: Path,
-    repo_with_no_tags_angular_commits,
-    mock_env,
-    expected_author,
+    repo_with_no_tags_angular_commits: Repo,
+    mock_env: dict[str, str],
+    expected_author: str,
 ):
     content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
 

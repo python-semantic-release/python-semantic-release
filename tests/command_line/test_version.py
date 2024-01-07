@@ -38,6 +38,9 @@ if TYPE_CHECKING:
     )
 
 
+version_subcmd = version.name or version.__name__
+
+
 @pytest.mark.parametrize(
     "repo",
     [
@@ -49,7 +52,12 @@ if TYPE_CHECKING:
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
 )
-def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_runner):
+def test_version_noop_is_noop(
+    tmp_path_factory: pytest.TempPathFactory,
+    example_project_dir: ExProjectDir,
+    repo: Repo,
+    cli_runner: CliRunner,
+):
     # Make a commit to ensure we have something to release
     # otherwise the "no release will be made" logic will kick in first
     new_file = example_project_dir / "temp.txt"
@@ -65,7 +73,7 @@ def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_r
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, ["--noop", version.name])
+    result = cli_runner.invoke(main, ["--noop", version_subcmd])
 
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
@@ -216,7 +224,12 @@ def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_r
     ],
 )
 def test_version_print(
-    repo, cli_args, expected_stdout, example_project_dir, tmp_path_factory, cli_runner
+    repo: Repo,
+    cli_args: list[str],
+    expected_stdout: str,
+    example_project_dir: ExProjectDir,
+    tmp_path_factory: pytest.TempPathFactory,
+    cli_runner: CliRunner,
 ):
     # Make a commit to ensure we have something to release
     # otherwise the "no release will be made" logic will kick in first
@@ -232,7 +245,7 @@ def test_version_print(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, [version.name, *cli_args, "--print"])
+    result = cli_runner.invoke(main, [version_subcmd, *cli_args, "--print"])
 
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
@@ -258,11 +271,11 @@ def test_version_print(
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
 )
-def test_version_already_released_no_push(repo, cli_runner):
+def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
     # In these tests, unless arguments are supplied then the latest version
     # has already been released, so we expect an exit code of 2 with the message
     # to indicate that no release will be made
-    result = cli_runner.invoke(main, ["--strict", version.name, "--no-push"])
+    result = cli_runner.invoke(main, ["--strict", version_subcmd, "--no-push"])
     assert result.exit_code == 2
     assert "no release will be made" in result.stderr.lower()
 
@@ -410,7 +423,7 @@ def test_version_no_push_force_level(
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
     result = cli_runner.invoke(
-        main, [version.name or "version", *cli_args, "--no-push"]
+        main, [version_subcmd or "version", *cli_args, "--no-push"]
     )
 
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
@@ -481,17 +494,16 @@ def test_version_no_push_force_level(
     ],
 )
 def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: CliRunner):
-    version_cmd_name = version.name or "version"
     # Verify we get "no version to release" without build metadata
     no_metadata_result = cli_runner.invoke(
-        main, ["--strict", version_cmd_name, "--no-push"]
+        main, ["--strict", version_subcmd, "--no-push"]
     )
     assert no_metadata_result.exit_code == 2
     assert "no release will be made" in no_metadata_result.stderr.lower()
 
     metadata_suffix = "build.abc-12345"
     result = cli_runner.invoke(
-        main, [version_cmd_name, "--no-push", "--build-metadata", metadata_suffix]
+        main, [version_subcmd, "--no-push", "--build-metadata", metadata_suffix]
     )
     assert result.exit_code == 0
     assert repo.git.tag(l=f"*{metadata_suffix}")
@@ -500,7 +512,7 @@ def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: Cli
 def test_version_prints_current_version_if_no_new_version(
     repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
-    result = cli_runner.invoke(main, [version.name or "version", "--no-push"])
+    result = cli_runner.invoke(main, [version_subcmd or "version", "--no-push"])
     assert result.exit_code == 0
     assert "no release will be made" in result.stderr.lower()
     assert result.stdout == "1.2.0-alpha.2\n"
@@ -527,7 +539,7 @@ def test_version_runs_build_command(
     ):
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
-            main, [version.name or "version", "--patch", "--no-push"]
+            main, [version_subcmd or "version", "--patch", "--no-push"]
         )
         assert result.exit_code == 0
 
@@ -543,7 +555,7 @@ def test_version_skips_build_command_with_skip_build(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run:
         result = cli_runner.invoke(
-            main, [version.name, "--patch", "--no-push", "--skip-build"]
+            main, [version_subcmd, "--patch", "--no-push", "--skip-build"]
         )  # force a new version
         assert result.exit_code == 0
 
@@ -555,7 +567,7 @@ def test_version_writes_github_actions_output(
 ):
     mock_output_file = tmp_path / "action.out"
     monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
-    result = cli_runner.invoke(main, [version.name, "--patch", "--no-push"])
+    result = cli_runner.invoke(main, [version_subcmd, "--patch", "--no-push"])
     assert result.exit_code == 0
 
     action_outputs = actions_output_to_dict(
@@ -570,7 +582,7 @@ def test_version_writes_github_actions_output(
 
 
 def test_version_exit_code_when_strict(repo_with_git_flow_angular_commits, cli_runner):
-    result = cli_runner.invoke(main, ["--strict", version.name, "--no-push"])
+    result = cli_runner.invoke(main, ["--strict", version_subcmd, "--no-push"])
     assert result.exit_code != 0
 
 
@@ -578,7 +590,7 @@ def test_version_exit_code_when_not_strict(
     repo_with_git_flow_angular_commits, cli_runner
 ):
     # Testing "no release will be made"
-    result = cli_runner.invoke(main, [version.name, "--no-push"])
+    result = cli_runner.invoke(main, [version_subcmd, "--no-push"])
     assert result.exit_code == 0
 
 
@@ -599,7 +611,7 @@ def test_custom_release_notes_template(
 
     # Act
     resp = cli_runner.invoke(
-        main, [version.name or "version", "--skip-build", "--vcs-release"]
+        main, [version_subcmd, "--skip-build", "--vcs-release"]
     )
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
@@ -620,7 +632,7 @@ def test_custom_release_notes_template(
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert resp.exit_code == 0, (
         "Unexpected failure in command "
-        f"'semantic-release {version.name} --skip-build --vcs-release': " + resp.stderr
+        f"'semantic-release {version_subcmd} --skip-build --vcs-release': " + resp.stderr
     )
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
@@ -640,7 +652,7 @@ def test_version_tag_only_push(
     head_before = runtime_context_with_no_tags.repo.head.commit
 
     # Act
-    args = [version.name, "--tag", "--no-commit", "--skip-build", "--no-vcs-release"]
+    args = [version_subcmd, "--tag", "--no-commit", "--skip-build", "--no-vcs-release"]
     resp = cli_runner.invoke(main, args)
 
     tag_after = runtime_context_with_no_tags.repo.tags[-1].name
@@ -682,7 +694,7 @@ def test_version_only_update_files_no_git_actions(
     tags_before = runtime_context_with_tags.repo.tags
 
     # Act
-    args = [version.name, "--minor", "--no-tag", "--no-commit", "--skip-build"]
+    args = [version_subcmd, "--minor", "--no-tag", "--no-commit", "--skip-build"]
     resp = cli_runner.invoke(main, args)
 
     tags_after = runtime_context_with_tags.repo.tags

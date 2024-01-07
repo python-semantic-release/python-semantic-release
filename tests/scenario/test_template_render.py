@@ -10,9 +10,8 @@ import pytest
 from semantic_release.changelog.template import environment, recursive_render
 
 if TYPE_CHECKING:
-    from tests.conftest import ExProjectDir
+    from tests.fixtures.example_project import ExProjectDir
 
-# FIX me
 
 NORMAL_TEMPLATE_SRC = """---
 content:
@@ -46,7 +45,7 @@ def _strip_trailing_j2(path: Path) -> Path:
 
 
 @pytest.fixture
-def normal_template(example_project_template_dir):
+def normal_template(example_project_template_dir: Path) -> Path:
     template = example_project_template_dir / "normal.yaml.j2"
     template.parent.mkdir(parents=True, exist_ok=True)
     template.write_text(NORMAL_TEMPLATE_SRC)
@@ -54,7 +53,7 @@ def normal_template(example_project_template_dir):
 
 
 @pytest.fixture
-def long_directory_path(example_project_template_dir):
+def long_directory_path(example_project_template_dir: Path) -> Path:
     # NOTE: fixture enables using Path rather than
     # constant string, so no issue with / vs \ on Windows
     folder = example_project_template_dir / "long" / "dir" / "path"
@@ -62,7 +61,7 @@ def long_directory_path(example_project_template_dir):
 
 
 @pytest.fixture
-def deeply_nested_file(long_directory_path):
+def deeply_nested_file(long_directory_path: Path) -> Path:
     file = long_directory_path / "buried.txt"
     file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text(PLAINTEXT_FILE_CONTENT)
@@ -70,7 +69,7 @@ def deeply_nested_file(long_directory_path):
 
 
 @pytest.fixture
-def hidden_file(example_project_template_dir):
+def hidden_file(example_project_template_dir: Path) -> Path:
     file = example_project_template_dir / ".hidden"
     file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text("I shouldn't be present")
@@ -84,7 +83,7 @@ def directory_path_with_hidden_subfolder(example_project_template_dir: Path) -> 
 
 
 @pytest.fixture
-def excluded_file(directory_path_with_hidden_subfolder):
+def excluded_file(directory_path_with_hidden_subfolder: Path) -> Path:
     file = directory_path_with_hidden_subfolder / "excluded.txt"
     file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text("I shouldn't be present")
@@ -155,7 +154,10 @@ def dotfolder_template(init_example_project: None, dotfolder_template_dir: Path)
 
 
 def test_recursive_render_with_top_level_dotfolder(
-    example_project_dir, dotfolder_template, dotfolder_template_dir
+    init_example_project: None,
+    example_project_dir: ExProjectDir,
+    dotfolder_template: Path,
+    dotfolder_template_dir: Path,
 ):
     preexisting_paths = set(example_project_dir.rglob("**/*"))
     env = environment(template_dir=dotfolder_template_dir.resolve())

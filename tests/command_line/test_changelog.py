@@ -32,6 +32,9 @@ if TYPE_CHECKING:
     from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
 
 
+changelog_subcmd = changelog.name or changelog.__name__
+
+
 @pytest.mark.parametrize(
     "repo,tag",
     [
@@ -86,7 +89,7 @@ def test_changelog_noop_is_noop(
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
         result = cli_runner.invoke(
-            main, ["--noop", changelog.name or "changelog", *args]
+            main, ["--noop", changelog_subcmd, *args]
         )
 
     assert result.exit_code == 0
@@ -123,7 +126,7 @@ def test_changelog_content_regenerated(
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
 
-    result = cli_runner.invoke(main, [changelog.name or "changelog"])
+    result = cli_runner.invoke(main, [changelog_subcmd])
     assert result.exit_code == 0
 
     # Check that the changelog file was re-created
@@ -150,7 +153,7 @@ def test_changelog_release_tag_not_in_history(
     remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
-    result = cli_runner.invoke(main, [changelog.name or "changelog", *args])
+    result = cli_runner.invoke(main, [changelog_subcmd, *args])
     assert result.exit_code == 2
     assert "not in release history" in result.stderr.lower()
 
@@ -189,7 +192,7 @@ def test_changelog_post_to_release(
     ) as mocker, monkeypatch.context() as m:
         m.delenv("GITHUB_REPOSITORY", raising=False)
         m.delenv("CI_PROJECT_NAMESPACE", raising=False)
-        result = cli_runner.invoke(main, [changelog.name or "changelog", *args])
+        result = cli_runner.invoke(main, [changelog_subcmd, *args])
 
     assert result.exit_code == 0
 
@@ -228,7 +231,7 @@ def test_custom_release_notes_template(
     release = release_history.released[version]
 
     # Act
-    resp = cli_runner.invoke(main, [changelog.name or "changelog", "--post-to-release-tag", tag])
+    resp = cli_runner.invoke(main, [changelog_subcmd, "--post-to-release-tag", tag])
     expected_release_notes = runtime_context_with_tags.template_environment.from_string(
         EXAMPLE_RELEASE_NOTES_TEMPLATE
     ).render(version=version, release=release) + '\n'
@@ -236,7 +239,7 @@ def test_custom_release_notes_template(
     # Assert
     assert resp.exit_code == 0, (
         "Unexpected failure in command "
-        f"'semantic-release {changelog.name} --post-to-release-tag {tag}': "
+        f"'semantic-release {changelog_subcmd} --post-to-release-tag {tag}': "
         + resp.stderr
     )
     assert post_mocker.call_count == 1 and post_mocker.last_request is not None
