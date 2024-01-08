@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import shutil
+import sys
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Generator
@@ -32,6 +34,8 @@ if TYPE_CHECKING:
     from semantic_release.commit_parser import CommitParser
     from semantic_release.hvcs import HvcsBase
 
+    from tests.conftest import TeardownCachedDirFn
+
     ExProjectDir = Path
 
     class UpdatePyprojectTomlFn(Protocol):
@@ -47,108 +51,187 @@ if TYPE_CHECKING:
             ...
 
 
+@pytest.fixture(scope="session")
+def pyproject_toml_file() -> Path:
+    return Path("pyproject.toml")
+
+
+@pytest.fixture(scope="session")
+def setup_cfg_file() -> Path:
+    return Path("setup.cfg")
+
+
+@pytest.fixture(scope="session")
+def setup_py_file() -> Path:
+    return Path("setup.py")
+
+
+@pytest.fixture(scope="session")
+def changelog_md_file() -> Path:
+    return Path("CHANGELOG.md")
+
+
+@pytest.fixture(scope="session")
+def changelog_template_dir() -> Path:
+    return Path("templates")
+
+
 @pytest.fixture
-def change_to_tmp_dir(tmp_path: Path) -> Generator[Path, None, None]:
+def example_project_dir(tmp_path: Path) -> ExProjectDir:
+    return tmp_path.resolve()
+
+
+
+@pytest.fixture
+def change_to_ex_proj_dir(example_project_dir: ExProjectDir) -> Generator[None, None, None]:
     cwd = os.getcwd()
-    os.chdir(str(tmp_path.resolve()))
+    tgt_dir = str(example_project_dir.resolve())
+    if cwd == tgt_dir:
+        return
+
+    os.chdir(tgt_dir)
     try:
-        yield Path(os.getcwd())
+        yield
     finally:
         os.chdir(cwd)
 
 
-@pytest.fixture
-def example_project(
-    change_to_tmp_dir: Path,  # noqa: U100  # must be given as an argument
-) -> ExProjectDir:
-    tmp_path = change_to_tmp_dir
-    src_dir = tmp_path / "src"
-    src_dir.mkdir()
-    example_dir = src_dir / EXAMPLE_PROJECT_NAME
-    example_dir.mkdir()
-    init_py = example_dir / "__init__.py"
-    init_py.write_text(
-        dedent(
-            '''
-            """
-            An example package with a very informative docstring
-            """
-            from ._version import __version__
+@pytest.fixture(scope="session")
+def cached_example_project(
+    pyproject_toml_file: Path,
+    setup_cfg_file: Path,
+    setup_py_file: Path,
+    changelog_md_file: Path,
+    cached_files_dir: Path,
+    changelog_template_dir: Path,
+    teardown_cached_dir: TeardownCachedDirFn,
+) -> Path:
+    """
+    Initializes the example project. DO NOT USE DIRECTLY
 
-
-            def hello_world() -> None:
-                print("Hello World")
-            '''
-        )
-    )
+    Use the `init_example_project` fixture instead.
+    """
+    cached_project_path = (cached_files_dir / "example_project").resolve()
+    # purposefully a relative path
+    example_dir = Path("src", EXAMPLE_PROJECT_NAME)
     version_py = example_dir / "_version.py"
-    version_py.write_text(
-        dedent(
-            f"""
-            __version__ = "{EXAMPLE_PROJECT_VERSION}"
-            """
-        )
-    )
-    gitignore = tmp_path / ".gitignore"
-    gitignore.write_text(
-        dedent(
-            f"""
-            *.pyc
-            /src/**/{version_py.name}
-            """
-        )
-    )
-    pyproject_toml = tmp_path / "pyproject.toml"
-    pyproject_toml.write_text(EXAMPLE_PYPROJECT_TOML_CONTENT)
-    setup_cfg = tmp_path / "setup.cfg"
-    setup_cfg.write_text(EXAMPLE_SETUP_CFG_CONTENT)
-    setup_py = tmp_path / "setup.py"
-    setup_py.write_text(EXAMPLE_SETUP_PY_CONTENT)
-    template_dir = tmp_path / "templates"
-    template_dir.mkdir()
-    changelog_md = tmp_path / "CHANGELOG.md"
-    changelog_md.write_text(EXAMPLE_CHANGELOG_MD_CONTENT)
-    return tmp_path
+    gitignore_contents = dedent(
+        f"""
+        *.pyc
+        /src/**/{version_py.name}
+        """
+    ).lstrip()
+    init_py_contents = dedent(
+        '''
+        """
+        An example package with a very informative docstring
+        """
+        from ._version import __version__
+
+
+        def hello_world() -> None:
+            print("Hello World")
+        '''
+    ).lstrip()
+    version_py_contents = dedent(
+        f"""
+        __version__ = "{EXAMPLE_PROJECT_VERSION}"
+        """
+    ).lstrip()
+
+    for file, contents in [
+        (example_dir / "__init__.py", init_py_contents),
+        (version_py, version_py_contents),
+        (".gitignore", gitignore_contents),
+        (pyproject_toml_file, EXAMPLE_PYPROJECT_TOML_CONTENT),
+        (setup_cfg_file, EXAMPLE_SETUP_CFG_CONTENT),
+        (setup_py_file, EXAMPLE_SETUP_PY_CONTENT),
+        (changelog_md_file, EXAMPLE_CHANGELOG_MD_CONTENT),
+    ]:
+        abs_filepath = cached_project_path.joinpath(file).resolve()
+        # make sure the parent directory exists
+        abs_filepath.parent.mkdir(parents=True, exist_ok=True)
+        # write file contents
+        abs_filepath.write_text(contents)
+
+    # create the changelog template directory
+    cached_project_path.joinpath(changelog_template_dir).mkdir(parents=True, exist_ok=True)
+
+    # trigger automatic cleanup of cache directory during teardown
+    return teardown_cached_dir(cached_project_path)
 
 
 @pytest.fixture
-def example_project_with_release_notes_template(example_project: Path) -> Path:
-    template_dir = example_project / "templates"
+def init_example_project(
+    example_project_dir: ExProjectDir,
+    cached_example_project: Path,
+    change_to_ex_proj_dir: None,
+) -> None:
+    """This fixture initializes the example project in the current test's project directory."""
+    if not cached_example_project.exists():
+        raise RuntimeError(
+            f"Unable to find cached project files for {EXAMPLE_PROJECT_NAME}"
+        )
+
+    # Copy the cached project files into the current test's project directory
+    if sys.version_info[:2] == (3, 7):
+        # For 3.7 compatibility, destination can't exist, and dirs_exist_ok isn't available
+        # since destination had to be removed, handle changing directories to prevent error
+        os.chdir(str(example_project_dir.parent))
+        shutil.rmtree(str(example_project_dir), ignore_errors=True)
+        shutil.copytree(
+            src=str(cached_example_project),
+            dst=str(example_project_dir),
+        )
+        os.chdir(str(example_project_dir))
+        return
+
+    shutil.copytree(
+        src=str(cached_example_project),
+        dst=str(example_project_dir),
+        dirs_exist_ok=True,
+    )
+
+
+@pytest.fixture
+def example_project_with_release_notes_template(
+    init_example_project: None,
+    example_project_dir: Path,
+) -> Path:
+    template_dir = example_project_dir / "templates"
     release_notes_j2 = template_dir / ".release_notes.md.j2"
     release_notes_j2.write_text(EXAMPLE_RELEASE_NOTES_TEMPLATE)
-    return example_project
+    return example_project_dir
 
 
 @pytest.fixture
-def example_pyproject_toml(example_project: ExProjectDir) -> Path:
-    return example_project / "pyproject.toml"
+def example_pyproject_toml(example_project_dir: ExProjectDir) -> Path:
+    return example_project_dir / "pyproject.toml"
 
 
 @pytest.fixture
-def example_setup_cfg(example_project: ExProjectDir) -> Path:
-    return example_project / "setup.cfg"
+def example_setup_cfg(example_project_dir: ExProjectDir) -> Path:
+    return example_project_dir / "setup.cfg"
 
 
 @pytest.fixture
-def example_setup_py(example_project: ExProjectDir) -> Path:
-    return example_project / "setup.py"
+def example_setup_py(example_project_dir: ExProjectDir) -> Path:
+    return example_project_dir / "setup.py"
 
 
 # Note this is just the path and the content may change
 @pytest.fixture
-def example_changelog_md(example_project: ExProjectDir) -> Path:
-    return example_project / "CHANGELOG.md"
+def example_changelog_md(example_project_dir: ExProjectDir) -> Path:
+    return example_project_dir / "CHANGELOG.md"
 
 
 @pytest.fixture
-def example_project_template_dir(example_project: ExProjectDir) -> Path:
-    return example_project / "templates"
+def example_project_template_dir(example_project_dir: ExProjectDir) -> Path:
+    return example_project_dir / "templates"
 
 
 @pytest.fixture
-def update_pyproject_toml(
-    example_project: Path, example_pyproject_toml: Path
-) -> UpdatePyprojectTomlFn:
+def update_pyproject_toml(example_pyproject_toml: Path) -> UpdatePyprojectTomlFn:
     """Update the pyproject.toml file with the given content."""
 
     def _update_pyproject_toml(setting: str, value: Any) -> None:

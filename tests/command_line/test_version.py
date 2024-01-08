@@ -45,10 +45,10 @@ if TYPE_CHECKING:
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
 )
-def test_version_noop_is_noop(tmp_path_factory, example_project, repo, cli_runner):
+def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_runner):
     # Make a commit to ensure we have something to release
     # otherwise the "no release will be made" logic will kick in first
-    new_file = example_project / "temp.txt"
+    new_file = example_project_dir / "temp.txt"
     new_file.write_text("noop version test")
 
     repo.git.add(str(new_file.resolve()))
@@ -56,7 +56,7 @@ def test_version_noop_is_noop(tmp_path_factory, example_project, repo, cli_runne
 
     tempdir = tmp_path_factory.mktemp("test_noop")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
@@ -67,7 +67,7 @@ def test_version_noop_is_noop(tmp_path_factory, example_project, repo, cli_runne
     head_after = repo.head.commit
 
     assert result.exit_code == 0
-    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
 
     differing_files = flatten_dircmp(dcmp)
     assert not differing_files
@@ -210,11 +210,11 @@ def test_version_noop_is_noop(tmp_path_factory, example_project, repo, cli_runne
     ],
 )
 def test_version_print(
-    repo, cli_args, expected_stdout, example_project, tmp_path_factory, cli_runner
+    repo, cli_args, expected_stdout, example_project_dir, tmp_path_factory, cli_runner
 ):
     # Make a commit to ensure we have something to release
     # otherwise the "no release will be made" logic will kick in first
-    new_file = example_project / "temp.txt"
+    new_file = example_project_dir / "temp.txt"
     new_file.write_text("noop version test")
 
     repo.git.add(str(new_file.resolve()))
@@ -222,7 +222,7 @@ def test_version_print(
 
     tempdir = tmp_path_factory.mktemp("test_version_print")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
@@ -235,7 +235,7 @@ def test_version_print(
     assert tags_before == tags_after
     assert head_before == head_after
     assert result.stdout.rstrip("\n") == expected_stdout
-    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
     differing_files = flatten_dircmp(dcmp)
     assert not differing_files
 
@@ -390,14 +390,14 @@ def test_version_no_push_force_level(
     repo: Repo,
     cli_args: list[str],
     expected_new_version: str,
-    example_project: ExProjectDir,
+    example_project_dir: ExProjectDir,
     example_pyproject_toml: Path,
     tmp_path_factory: pytest.TempPathFactory,
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
@@ -414,7 +414,7 @@ def test_version_no_push_force_level(
     assert head_before != head_after  # A commit has been made
     assert head_before in repo.head.commit.parents
 
-    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
     differing_files = flatten_dircmp(dcmp)
 
     # Changelog already reflects changes this should introduce
@@ -441,7 +441,7 @@ def test_version_no_push_force_level(
 
     # Compare _version.py
     new_init_py = (
-        (example_project / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
+        (example_project_dir / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
         .read_text(encoding="utf-8")
         .splitlines(keepends=True)
     )
@@ -641,13 +641,13 @@ def test_version_only_update_files_no_git_actions(
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
     example_pyproject_toml: Path,
-    example_project: ExProjectDir,
+    example_project_dir: ExProjectDir,
 ) -> None:
     # Arrange
     expected_new_version = "0.3.0"
     tempdir = tmp_path_factory.mktemp("test_version")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir), dst=tempdir)
 
     head_before = runtime_context_with_tags.repo.head.commit
     tags_before = runtime_context_with_tags.repo.tags
@@ -670,7 +670,7 @@ def test_version_only_update_files_no_git_actions(
         f"'semantic-release {str.join(' ', args)}': " + resp.stderr
     )
 
-    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
     differing_files = flatten_dircmp(dcmp)
 
     # Files that should receive version change
@@ -697,7 +697,7 @@ def test_version_only_update_files_no_git_actions(
 
     # Compare _version.py
     new_version_py = (
-        (example_project / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
+        (example_project_dir / "src" / EXAMPLE_PROJECT_NAME / "_version.py")
         .read_text(encoding="utf-8")
         .splitlines(keepends=True)
     )
