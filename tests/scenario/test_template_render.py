@@ -83,8 +83,9 @@ def excluded_file(directory_path_with_hidden_subfolder):
 
 @pytest.mark.usefixtures("excluded_file")
 def test_recursive_render(
-    example_project,
-    example_project_template_dir,
+    init_example_project: None,
+    example_project_dir: Path,
+    example_project_template_dir: Path,
     normal_template,
     deeply_nested_file,
     hidden_file,
@@ -92,47 +93,47 @@ def test_recursive_render(
     tmpl_dir = str(example_project_template_dir.resolve())
     env = environment(template_dir=tmpl_dir)
 
-    preexisting_paths = set(example_project.rglob("**/*"))
+    preexisting_paths = set(example_project_dir.rglob("**/*"))
 
     recursive_render(
         template_dir=example_project_template_dir.resolve(),
         environment=env,
-        _root_dir=str(example_project.resolve()),
+        _root_dir=str(example_project_dir.resolve()),
     )
     rendered_normal_template = _strip_trailing_j2(
-        example_project / normal_template.relative_to(example_project_template_dir)
+        example_project_dir / normal_template.relative_to(example_project_template_dir)
     )
     assert rendered_normal_template.exists()
     assert rendered_normal_template.read_text() == NORMAL_TEMPLATE_RENDERED
 
-    rendered_deeply_nested = example_project / deeply_nested_file.relative_to(
+    rendered_deeply_nested = example_project_dir / deeply_nested_file.relative_to(
         example_project_template_dir
     )
     assert rendered_deeply_nested.exists()
     assert rendered_deeply_nested.read_text() == PLAINTEXT_FILE_CONTENT
 
-    rendered_hidden = example_project / hidden_file.relative_to(
+    rendered_hidden = example_project_dir / hidden_file.relative_to(
         example_project_template_dir
     )
     assert not rendered_hidden.exists()
 
-    assert not (example_project / "path").exists()
+    assert not (example_project_dir / "path").exists()
 
-    assert set(example_project.rglob("**/*")) == preexisting_paths.union(
-        example_project / p
+    assert set(example_project_dir.rglob("**/*")) == preexisting_paths.union(
+        example_project_dir / p
         for t in (
             rendered_normal_template,
             rendered_deeply_nested,
         )
         for p in itertools.accumulate(
-            t.relative_to(example_project).parts, func=lambda *a: os.sep.join(a)
+            t.relative_to(example_project_dir).parts, func=lambda *a: os.sep.join(a)
         )
     )
 
 
 @pytest.fixture
-def dotfolder_template_dir(example_project: Path):
-    newpath = example_project / ".templates/.psr-templates"
+def dotfolder_template_dir(example_project_dir: Path):
+    newpath = example_project_dir / ".templates/.psr-templates"
     newpath.mkdir(parents=True, exist_ok=True)
     return newpath
 
@@ -145,20 +146,20 @@ def dotfolder_template(dotfolder_template_dir: Path):
 
 
 def test_recursive_render_with_top_level_dotfolder(
-    example_project, dotfolder_template, dotfolder_template_dir
+    example_project_dir, dotfolder_template, dotfolder_template_dir
 ):
-    preexisting_paths = set(example_project.rglob("**/*"))
+    preexisting_paths = set(example_project_dir.rglob("**/*"))
     env = environment(template_dir=dotfolder_template_dir.resolve())
 
     recursive_render(
         template_dir=dotfolder_template_dir.resolve(),
         environment=env,
-        _root_dir=example_project.resolve(),
+        _root_dir=example_project_dir.resolve(),
     )
 
-    rendered_template = example_project / dotfolder_template.name
+    rendered_template = example_project_dir / dotfolder_template.name
     assert rendered_template.exists()
 
-    assert set(example_project.rglob("**/*")) == preexisting_paths.union(
-        {example_project / rendered_template}
+    assert set(example_project_dir.rglob("**/*")) == preexisting_paths.union(
+        {example_project_dir / rendered_template}
     )

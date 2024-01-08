@@ -53,8 +53,8 @@ def mocked_git_push(monkeypatch: MonkeyPatch) -> MagicMock:
 
 
 @pytest.fixture
-def config_path(example_project: Path) -> Path:
-    return example_project / DEFAULT_CONFIG_FILE
+def config_path(example_project_dir: Path) -> Path:
+    return example_project_dir / DEFAULT_CONFIG_FILE
 
 
 @pytest.fixture

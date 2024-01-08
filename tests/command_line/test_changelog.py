@@ -57,13 +57,13 @@ def test_changelog_noop_is_noop(
     tag: str | None,
     arg0: str | None,
     tmp_path_factory: pytest.TempPathFactory,
-    example_project: ExProjectDir,
+    example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
     args = [arg0, tag] if tag and arg0 else []
     tempdir = tmp_path_factory.mktemp("test_noop")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure
     # they're made
@@ -88,7 +88,7 @@ def test_changelog_noop_is_noop(
 
     assert result.exit_code == 0
 
-    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
 
     differing_files = flatten_dircmp(dcmp)
     assert not differing_files
@@ -112,13 +112,13 @@ def test_changelog_noop_is_noop(
 def test_changelog_content_regenerated(
     repo: Repo,
     tmp_path_factory: pytest.TempPathFactory,
-    example_project: ExProjectDir,
+    example_project_dir: ExProjectDir,
     example_changelog_md: Path,
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
@@ -126,7 +126,7 @@ def test_changelog_content_regenerated(
     result = cli_runner.invoke(main, [changelog.name or "changelog"])
     assert result.exit_code == 0
 
-    dcmp = filecmp.dircmp(str(example_project.resolve()), tempdir)
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
 
     differing_files = flatten_dircmp(dcmp)
     assert not differing_files
@@ -140,12 +140,12 @@ def test_changelog_content_regenerated(
 def test_changelog_release_tag_not_in_history(
     args: list[str],
     tmp_path_factory: pytest.TempPathFactory,
-    example_project: ExProjectDir,
+    example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     result = cli_runner.invoke(main, [changelog.name or "changelog", *args])
     assert result.exit_code == 2
@@ -158,12 +158,12 @@ def test_changelog_post_to_release(
     args: list[str],
     monkeypatch: pytest.MonkeyPatch,
     tmp_path_factory: pytest.TempPathFactory,
-    example_project: ExProjectDir,
+    example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
     shutil.rmtree(str(tempdir.resolve()))
-    shutil.copytree(src=str(example_project.resolve()), dst=tempdir)
+    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're
     # made

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import base64
 import glob
 import mimetypes
 import os
 import re
+from typing import TYPE_CHECKING
 from unittest import mock
 from urllib.parse import urlencode
 
@@ -15,6 +18,9 @@ from semantic_release.hvcs.token_auth import TokenAuth
 
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
 from tests.util import netrc_file
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -564,7 +570,11 @@ def test_asset_upload_url(default_gh_client):
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_upload_asset_succeeds(
-    default_gh_client, example_changelog_md, status_code, mock_release_id
+    init_example_project: None,
+    default_gh_client: Github,
+    example_changelog_md: Path,
+    status_code: int,
+    mock_release_id: int,
 ):
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
@@ -618,7 +628,11 @@ def test_upload_asset_succeeds(
 @pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_upload_asset_fails(
-    default_gh_client, example_changelog_md, status_code, mock_release_id
+    init_example_project: None,
+    default_gh_client: Github,
+    example_changelog_md: Path,
+    status_code: int,
+    mock_release_id: int,
 ):
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
