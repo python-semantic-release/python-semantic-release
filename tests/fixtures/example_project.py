@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import os
-import shutil
-import sys
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Generator
@@ -27,6 +25,7 @@ from tests.const import (
     EXAMPLE_SETUP_CFG_CONTENT,
     EXAMPLE_SETUP_PY_CONTENT,
 )
+from tests.util import copy_dir_tree
 
 if TYPE_CHECKING:
     from typing import Any, Protocol
@@ -177,23 +176,7 @@ def init_example_project(
         )
 
     # Copy the cached project files into the current test's project directory
-    if sys.version_info[:2] == (3, 7):
-        # For 3.7 compatibility, destination can't exist, and dirs_exist_ok isn't available
-        # since destination had to be removed, handle changing directories to prevent error
-        os.chdir(str(example_project_dir.parent))
-        shutil.rmtree(str(example_project_dir), ignore_errors=True)
-        shutil.copytree(
-            src=str(cached_example_project),
-            dst=str(example_project_dir),
-        )
-        os.chdir(str(example_project_dir))
-        return
-
-    shutil.copytree(
-        src=str(cached_example_project),
-        dst=str(example_project_dir),
-        dirs_exist_ok=True,
-    )
+    copy_dir_tree(cached_example_project, example_project_dir)
 
 
 @pytest.fixture

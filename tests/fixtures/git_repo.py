@@ -4,14 +4,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 from git import Actor, Repo
-from pytest_lazyfixture import lazy_fixture
 
 from tests.const import COMMIT_MESSAGE, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
-from tests.util import add_text_to_file, shortuid
+from tests.util import add_text_to_file, copy_dir_tree, shortuid
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing import Generator, Protocol
 
+    from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import (
         ExProjectDir,
         UpdatePyprojectTomlFn,
@@ -19,11 +20,11 @@ if TYPE_CHECKING:
     )
 
     class RepoInitFn(Protocol):
-        def __call__(self) -> Repo:
+        def __call__(self, remote_url: str | None = None) -> Repo:
             ...
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def commit_author():
     return Actor(name="semantic release testing", email="not_a_real@email.com")
 
@@ -38,36 +39,80 @@ def example_git_ssh_url():
     return f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def example_git_https_url():
     return f"https://example.com/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}"
 
 
-@pytest.fixture(
-    # For the moment there's no value in re-running every test that wants a repo
-    # twice, once with a different URL format
-    params=[lazy_fixture("example_git_ssh_url")]
-)
+@pytest.fixture(scope="session")
+def cached_example_git_project(
+    cached_files_dir: Path,
+    teardown_cached_dir: TeardownCachedDirFn,
+    cached_example_project: Path,
+    example_git_https_url: str,
+    commit_author: Actor,
+) -> Path:
+    """
+    Initializes an example project with git repo. DO NOT USE DIRECTLY.
+
+    Use the `git_repo_factory` fixture instead. This creates a default
+    base repository, all settings can be changed later through the git
+    repo factory fixture.
+    """
+    if not cached_example_project.exists():
+        raise RuntimeError("Unable to find cached project files")
+
+    cached_git_proj_path = (cached_files_dir / "example_git_project").resolve()
+
+    # make a copy of the example project as a base
+    copy_dir_tree(cached_example_project, cached_git_proj_path)
+
+    # initialize git repo (open and close)
+    # NOTE: We don't want to hold the repo object open for the entire test session,
+    # the implementation on Windows holds some file descriptors open until close is called.
+    with Repo.init(cached_git_proj_path) as repo:
+        # Without this the global config may set it to "master", we want consistency
+        repo.git.branch("-M", "main")
+        with repo.config_writer("repository") as config:
+            config.set_value("user", "name", commit_author.name)
+            config.set_value("user", "email", commit_author.email)
+            config.set_value("commit", "gpgsign", False)
+
+        repo.create_remote(name="origin", url=example_git_https_url)
+
+        # make sure all base files are in index to enable initial commit
+        repo.index.add(("*", ".gitignore"))
+
+        # TODO: initial commit!
+
+    # trigger automatic cleanup of cache directory during teardown
+    return teardown_cached_dir(cached_git_proj_path)
+
+
+@pytest.fixture
 def git_repo_factory(
-    request: pytest.FixtureRequest,
-    init_example_project: None,
+    cached_example_git_project: Path,
     example_project_dir: ExProjectDir,
 ) -> Generator[RepoInitFn, None, None]:
     repos: list[Repo] = []
 
-    def git_repo() -> Repo:
-        repo = Repo.init(example_project_dir.resolve())
+    def git_repo(remote_url: str | None = None) -> Repo:
+        if not cached_example_git_project.exists():
+            raise RuntimeError("Unable to find cached git project files!")
+
+        # Copy the cached git project to the current test's project dir
+        copy_dir_tree(cached_example_git_project, example_project_dir)
+
+        # Create Git Repo object for project
+        repo = Repo(example_project_dir)
 
         # store the repo so we can close it later
         repos.append(repo)
 
-        # Without this the global config may set it to "master", we want consistency
-        repo.git.branch("-M", "main")
-        with repo.config_writer("repository") as config:
-            config.set_value("user", "name", "semantic release testing")
-            config.set_value("user", "email", "not_a_real@email.com")
-            config.set_value("commit", "gpgsign", False)
-        repo.create_remote(name="origin", url=request.param)
+        if remote_url is not None:
+            # update the origin url if desired
+            repo.remotes.origin.set_url(remote_url)
+
         return repo
 
     try:
@@ -79,13 +124,15 @@ def git_repo_factory(
 
 @pytest.fixture
 def repo_with_no_tags_angular_commits(
-    git_repo_factory: RepoInitFn, use_angular_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -100,13 +147,15 @@ def repo_with_no_tags_angular_commits(
 
 @pytest.fixture
 def repo_with_no_tags_emoji_commits(
-    git_repo_factory: RepoInitFn, use_emoji_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -121,13 +170,15 @@ def repo_with_no_tags_emoji_commits(
 
 @pytest.fixture
 def repo_with_no_tags_scipy_commits(
-    git_repo_factory: RepoInitFn, use_scipy_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -142,13 +193,15 @@ def repo_with_no_tags_scipy_commits(
 
 @pytest.fixture
 def repo_with_no_tags_tag_commits(
-    git_repo_factory: RepoInitFn, use_tag_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -163,13 +216,15 @@ def repo_with_no_tags_tag_commits(
 
 @pytest.fixture
 def repo_with_single_branch_angular_commits(
-    git_repo_factory: RepoInitFn, use_angular_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -188,13 +243,15 @@ def repo_with_single_branch_angular_commits(
 
 @pytest.fixture
 def repo_with_single_branch_emoji_commits(
-    git_repo_factory: RepoInitFn, use_emoji_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -213,13 +270,15 @@ def repo_with_single_branch_emoji_commits(
 
 @pytest.fixture
 def repo_with_single_branch_scipy_commits(
-    git_repo_factory: RepoInitFn, use_scipy_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -238,13 +297,15 @@ def repo_with_single_branch_scipy_commits(
 
 @pytest.fixture
 def repo_with_single_branch_tag_commits(
-    git_repo_factory: RepoInitFn, use_tag_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -263,13 +324,15 @@ def repo_with_single_branch_tag_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_angular_commits(
-    git_repo_factory: RepoInitFn, use_angular_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -303,13 +366,15 @@ def repo_with_single_branch_and_prereleases_angular_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_emoji_commits(
-    git_repo_factory: RepoInitFn, use_emoji_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -343,13 +408,15 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_scipy_commits(
-    git_repo_factory: RepoInitFn, use_scipy_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -383,13 +450,15 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
 
 @pytest.fixture
 def repo_with_single_branch_and_prereleases_tag_commits(
-    git_repo_factory: RepoInitFn, use_tag_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -427,6 +496,7 @@ def repo_with_main_and_feature_branches_angular_commits(
     use_angular_parser: UseParserFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
@@ -436,7 +506,6 @@ def repo_with_main_and_feature_branches_angular_commits(
     )
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -483,13 +552,15 @@ def repo_with_main_and_feature_branches_angular_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_emoji_commits(
-    git_repo_factory: RepoInitFn, use_emoji_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -536,13 +607,15 @@ def repo_with_main_and_feature_branches_emoji_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_scipy_commits(
-    git_repo_factory: RepoInitFn, use_scipy_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -589,13 +662,15 @@ def repo_with_main_and_feature_branches_scipy_commits(
 
 @pytest.fixture
 def repo_with_main_and_feature_branches_tag_commits(
-    git_repo_factory: RepoInitFn, use_tag_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -646,6 +721,7 @@ def repo_with_git_flow_angular_commits(
     use_angular_parser: UseParserFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
@@ -655,7 +731,6 @@ def repo_with_git_flow_angular_commits(
     )
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -727,13 +802,15 @@ def repo_with_git_flow_angular_commits(
 
 @pytest.fixture
 def repo_with_git_flow_emoji_commits(
-    git_repo_factory: RepoInitFn, use_emoji_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -805,13 +882,15 @@ def repo_with_git_flow_emoji_commits(
 
 @pytest.fixture
 def repo_with_git_flow_scipy_commits(
-    git_repo_factory: RepoInitFn, use_scipy_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -883,13 +962,15 @@ def repo_with_git_flow_scipy_commits(
 
 @pytest.fixture
 def repo_with_git_flow_tag_commits(
-    git_repo_factory: RepoInitFn, use_tag_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -967,6 +1048,7 @@ def repo_with_git_flow_and_release_channels_angular_commits(
     use_angular_parser: UseParserFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_angular_parser()
@@ -976,7 +1058,6 @@ def repo_with_git_flow_and_release_channels_angular_commits(
     )
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1054,13 +1135,15 @@ def repo_with_git_flow_and_release_channels_angular_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
-    git_repo_factory: RepoInitFn, use_angular_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_angular_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
-    use_angular_parser()  # TODO: is this correct?
+    use_angular_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1138,13 +1221,15 @@ def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_emoji_commits(
-    git_repo_factory: RepoInitFn, use_emoji_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_emoji_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_emoji_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1222,13 +1307,15 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_scipy_commits(
-    git_repo_factory: RepoInitFn, use_scipy_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_scipy_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_scipy_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
@@ -1306,13 +1393,15 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
 
 @pytest.fixture
 def repo_with_git_flow_and_release_channels_tag_commits(
-    git_repo_factory: RepoInitFn, use_tag_parser: UseParserFn, file_in_repo: str
+    git_repo_factory: RepoInitFn,
+    use_tag_parser: UseParserFn,
+    file_in_repo: str,
+    change_to_ex_proj_dir: None,
 ) -> Repo:
     git_repo = git_repo_factory()
     use_tag_parser()
 
     add_text_to_file(git_repo, file_in_repo)
-    git_repo.index.add(("*", ".gitignore"))
     git_repo.git.commit(m="Initial commit")
 
     add_text_to_file(git_repo, file_in_repo)
