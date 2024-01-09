@@ -23,12 +23,21 @@ from tests.util import (
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import Protocol
 
     from git.repo import Repo
     from pytest import MonkeyPatch
     from requests_mock.mocker import Mocker
 
     from semantic_release.changelog.release_history import ReleaseHistory
+
+    from tests.fixtures.example_project import ExProjectDir
+
+    class ReadConfigFileFn(Protocol):
+        """Read the raw config file from `config_path`."""
+
+        def __call__(self, file: Path | str) -> RawConfig:
+            ...
 
 
 @pytest.fixture
@@ -53,20 +62,17 @@ def mocked_git_push(monkeypatch: MonkeyPatch) -> MagicMock:
 
 
 @pytest.fixture
-def config_path(example_project_dir: Path) -> Path:
+def config_path(example_project_dir: ExProjectDir) -> Path:
     return example_project_dir / DEFAULT_CONFIG_FILE
 
 
 @pytest.fixture
-def raw_config(config_path: Path) -> RawConfig:
-    """
-    Read the raw config file from `config_path`.
+def read_config_file() -> ReadConfigFileFn:
+    def _read_config_file(file: Path | str) -> RawConfig:
+        config_text = load_raw_config_file(file)
+        return RawConfig.model_validate(config_text)
 
-    note: a `tests.fixtures.example_project` fixture must precede this one
-            otherwise, the `config_path` file will not exist, and this fixture will fail
-    """
-    config_text = load_raw_config_file(config_path)
-    return RawConfig.model_validate(config_text)
+    return _read_config_file
 
 
 @pytest.fixture
@@ -82,9 +88,10 @@ def cli_options(config_path: Path) -> GlobalCommandLineOptions:
 @pytest.fixture
 def runtime_context_with_tags(
     repo_with_single_branch_and_prereleases_angular_commits: Repo,
-    raw_config: RawConfig,
+    read_config_file: ReadConfigFileFn,
     cli_options: GlobalCommandLineOptions,
 ) -> RuntimeContext:
+    raw_config = read_config_file(cli_options.config_file)
     return RuntimeContext.from_raw_config(
         raw_config,
         repo_with_single_branch_and_prereleases_angular_commits,
@@ -100,9 +107,10 @@ def release_history(runtime_context_with_tags: RuntimeContext) -> ReleaseHistory
 @pytest.fixture
 def runtime_context_with_no_tags(
     repo_with_no_tags_angular_commits: Repo,
-    raw_config: RawConfig,
+    read_config_file: ReadConfigFileFn,
     cli_options: GlobalCommandLineOptions,
 ) -> RuntimeContext:
+    raw_config = read_config_file(cli_options.config_file)
     return RuntimeContext.from_raw_config(
         raw_config,
         repo_with_no_tags_angular_commits,
