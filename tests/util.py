@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import os
 import secrets
+import shutil
 import string
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Iterable, Tuple, TypeVar
 
@@ -17,6 +19,7 @@ from semantic_release.commit_parser.token import ParseResult
 
 if TYPE_CHECKING:
     import filecmp
+    from pathlib import Path
 
     try:
         from typing import TypeAlias
@@ -30,6 +33,16 @@ if TYPE_CHECKING:
     from semantic_release.cli.config import RuntimeContext
 
     GitCommandWrapperType: TypeAlias = main.Repo.GitCommandWrapperType
+
+
+def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
+    """Compatibility wrapper for shutil.copytree"""
+    # python3.8+
+    shutil.copytree(
+        src=str(src_dir),
+        dst=str(dst_dir),
+        dirs_exist_ok=True,
+    )
 
 
 def shortuid(length: int = 8) -> str:
