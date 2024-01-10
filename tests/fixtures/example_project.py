@@ -49,6 +49,10 @@ if TYPE_CHECKING:
         def __call__(self) -> type[CommitParser]:
             ...
 
+    class UseReleaseNotesTemplateFn(Protocol):
+        def __call__(self) -> None:
+            ...
+
 
 @pytest.fixture(scope="session")
 def pyproject_toml_file() -> Path:
@@ -182,12 +186,27 @@ def init_example_project(
 @pytest.fixture
 def example_project_with_release_notes_template(
     init_example_project: None,
-    example_project_dir: Path,
-) -> Path:
-    template_dir = example_project_dir / "templates"
-    release_notes_j2 = template_dir / ".release_notes.md.j2"
-    release_notes_j2.write_text(EXAMPLE_RELEASE_NOTES_TEMPLATE)
-    return example_project_dir
+    use_release_notes_template: UseReleaseNotesTemplateFn,
+) -> None:
+    use_release_notes_template()
+
+
+@pytest.fixture
+def use_release_notes_template(
+    example_project_template_dir: Path,
+    changelog_template_dir: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+) -> UseReleaseNotesTemplateFn:
+    def _use_release_notes_template() -> None:
+        update_pyproject_toml(
+            "tool.semantic_release.changelog.template_dir",
+            str(changelog_template_dir),
+        )
+        example_project_template_dir.mkdir(parents=True, exist_ok=True)
+        release_notes_j2 = example_project_template_dir / ".release_notes.md.j2"
+        release_notes_j2.write_text(EXAMPLE_RELEASE_NOTES_TEMPLATE)
+
+    return _use_release_notes_template
 
 
 @pytest.fixture

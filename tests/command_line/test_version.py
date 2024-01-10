@@ -29,9 +29,12 @@ if TYPE_CHECKING:
     from git import Repo
     from requests_mock import Mocker
 
-    from semantic_release.cli.config import RuntimeContext
-
-    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.command_line.conftest import RetrieveRuntimeContextFn
+    from tests.fixtures.example_project import (
+        ExProjectDir,
+        UpdatePyprojectTomlFn,
+        UseReleaseNotesTemplateFn,
+    )
 
 
 @pytest.mark.parametrize(
@@ -573,16 +576,20 @@ def test_version_exit_code_when_not_strict(
     assert result.exit_code == 0
 
 
-@pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
     mocked_git_push: MagicMock,
-    runtime_context_with_no_tags: RuntimeContext,
+    repo_with_no_tags_angular_commits: Repo,
+    use_release_notes_template: UseReleaseNotesTemplateFn,
+    retrieve_runtime_context: RetrieveRuntimeContextFn,
     post_mocker: Mocker,
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
-    # Arrange
-    # (see fixtures)
+    # Setup
+    use_release_notes_template()
+    runtime_context_with_no_tags = retrieve_runtime_context(
+        repo_with_no_tags_angular_commits
+    )
 
     # Act
     resp = cli_runner.invoke(
@@ -611,11 +618,14 @@ def test_custom_release_notes_template(
 
 def test_version_tag_only_push(
     mocked_git_push: MagicMock,
-    runtime_context_with_no_tags: RuntimeContext,
+    repo_with_no_tags_angular_commits: Repo,
+    retrieve_runtime_context: RetrieveRuntimeContextFn,
     cli_runner: CliRunner,
 ) -> None:
-    # Arrange
-    # (see fixtures)
+    # Setup
+    runtime_context_with_no_tags = retrieve_runtime_context(
+        repo_with_no_tags_angular_commits
+    )
     head_before = runtime_context_with_no_tags.repo.head.commit
 
     # Act
@@ -637,12 +647,20 @@ def test_version_tag_only_push(
 
 def test_version_only_update_files_no_git_actions(
     mocked_git_push: MagicMock,
-    runtime_context_with_tags: RuntimeContext,
+    repo_with_single_branch_and_prereleases_angular_commits: Repo,
+    use_release_notes_template: UseReleaseNotesTemplateFn,
+    retrieve_runtime_context: RetrieveRuntimeContextFn,
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
     example_pyproject_toml: Path,
     example_project_dir: ExProjectDir,
 ) -> None:
+    # Setup
+    use_release_notes_template()
+    runtime_context_with_tags = retrieve_runtime_context(
+        repo_with_single_branch_and_prereleases_angular_commits
+    )
+
     # Arrange
     expected_new_version = "0.3.0"
     tempdir = tmp_path_factory.mktemp("test_version")

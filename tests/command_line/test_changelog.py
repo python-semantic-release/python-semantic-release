@@ -19,7 +19,7 @@ from tests.const import (
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
 )
-from tests.util import flatten_dircmp
+from tests.util import flatten_dircmp, get_release_history_from_context
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -28,10 +28,8 @@ if TYPE_CHECKING:
     from git import Repo
     from requests_mock import Mocker
 
-    from semantic_release.changelog.release_history import ReleaseHistory
-    from semantic_release.cli.config import RuntimeContext
-
-    from tests.fixtures.example_project import ExProjectDir
+    from tests.command_line.conftest import RetrieveRuntimeContextFn
+    from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
 
 
 @pytest.mark.parametrize(
@@ -201,15 +199,21 @@ def test_changelog_post_to_release(
     )
 
 
-@pytest.mark.usefixtures("example_project_with_release_notes_template")
 def test_custom_release_notes_template(
-    release_history: ReleaseHistory,
-    runtime_context_with_tags: RuntimeContext,
+    repo_with_single_branch_and_prereleases_angular_commits: Repo,
+    use_release_notes_template: UseReleaseNotesTemplateFn,
+    retrieve_runtime_context: RetrieveRuntimeContextFn,
     post_mocker: Mocker,
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
+    # Setup
+    use_release_notes_template()
+    runtime_context_with_tags = retrieve_runtime_context(
+        repo_with_single_branch_and_prereleases_angular_commits
+    )
     # Arrange
+    release_history = get_release_history_from_context(runtime_context_with_tags)
     tag = runtime_context_with_tags.repo.tags[-1].name
     version = runtime_context_with_tags.version_translator.from_tag(tag)
     release = release_history.released[version]
@@ -227,4 +231,4 @@ def test_custom_release_notes_template(
         + resp.stderr
     )
     assert post_mocker.call_count == 1
-    assert post_mocker.last_request.json()["body"] == expected_release_notes
+    assert expected_release_notes == post_mocker.last_request.json()["body"]
