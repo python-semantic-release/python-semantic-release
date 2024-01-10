@@ -16,10 +16,7 @@ from semantic_release.cli.config import (
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import load_raw_config_file
 
-from tests.util import (
-    get_release_history_from_context,
-    prepare_mocked_git_command_wrapper_type,
-)
+from tests.util import prepare_mocked_git_command_wrapper_type
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -29,14 +26,18 @@ if TYPE_CHECKING:
     from pytest import MonkeyPatch
     from requests_mock.mocker import Mocker
 
-    from semantic_release.changelog.release_history import ReleaseHistory
-
     from tests.fixtures.example_project import ExProjectDir
 
     class ReadConfigFileFn(Protocol):
         """Read the raw config file from `config_path`."""
 
         def __call__(self, file: Path | str) -> RawConfig:
+            ...
+
+    class RetrieveRuntimeContextFn(Protocol):
+        """Retrieve the runtime context for a repo."""
+
+        def __call__(self, repo: Repo) -> RuntimeContext:
             ...
 
 
@@ -86,33 +87,12 @@ def cli_options(config_path: Path) -> GlobalCommandLineOptions:
 
 
 @pytest.fixture
-def runtime_context_with_tags(
-    repo_with_single_branch_and_prereleases_angular_commits: Repo,
+def retrieve_runtime_context(
     read_config_file: ReadConfigFileFn,
     cli_options: GlobalCommandLineOptions,
-) -> RuntimeContext:
-    raw_config = read_config_file(cli_options.config_file)
-    return RuntimeContext.from_raw_config(
-        raw_config,
-        repo_with_single_branch_and_prereleases_angular_commits,
-        cli_options,
-    )
+) -> RetrieveRuntimeContextFn:
+    def _retrieve_runtime_context(repo: Repo) -> RuntimeContext:
+        raw_config = read_config_file(cli_options.config_file)
+        return RuntimeContext.from_raw_config(raw_config, repo, cli_options)
 
-
-@pytest.fixture
-def release_history(runtime_context_with_tags: RuntimeContext) -> ReleaseHistory:
-    return get_release_history_from_context(runtime_context_with_tags)
-
-
-@pytest.fixture
-def runtime_context_with_no_tags(
-    repo_with_no_tags_angular_commits: Repo,
-    read_config_file: ReadConfigFileFn,
-    cli_options: GlobalCommandLineOptions,
-) -> RuntimeContext:
-    raw_config = read_config_file(cli_options.config_file)
-    return RuntimeContext.from_raw_config(
-        raw_config,
-        repo_with_no_tags_angular_commits,
-        cli_options,
-    )
+    return _retrieve_runtime_context
