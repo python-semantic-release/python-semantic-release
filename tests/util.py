@@ -7,7 +7,7 @@ import string
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, Any, Iterable, Tuple, TypeVar
+from typing import TYPE_CHECKING, Tuple
 
 from pydantic.dataclasses import dataclass
 
@@ -19,7 +19,7 @@ from semantic_release.commit_parser.token import ParseResult
 
 if TYPE_CHECKING:
     import filecmp
-    from pathlib import Path
+    from typing import Any, Generator, Iterable, TypeVar
 
     try:
         from typing import TypeAlias
@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 
     from semantic_release.cli.config import RuntimeContext
 
+    _R = TypeVar("_R")
+
     GitCommandWrapperType: TypeAlias = main.Repo.GitCommandWrapperType
 
 
@@ -43,6 +45,16 @@ def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
         dst=str(dst_dir),
         dirs_exist_ok=True,
     )
+
+
+@contextmanager
+def temporary_working_directory(directory: Path | str) -> Generator[None, None, None]:
+    cwd = os.getcwd()
+    os.chdir(str(directory))
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
 
 
 def shortuid(length: int = 8) -> str:
@@ -80,9 +92,6 @@ def flatten_dircmp(dcmp: filecmp.dircmp) -> list[str]:
         for directory, cmp in dcmp.subdirs.items()
         for file in flatten_dircmp(cmp)
     ]
-
-
-_R = TypeVar("_R")
 
 
 def xdist_sort_hack(it: Iterable[_R]) -> Iterable[_R]:
