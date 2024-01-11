@@ -210,37 +210,48 @@ def use_release_notes_template(
 
 
 @pytest.fixture
-def example_pyproject_toml(example_project_dir: ExProjectDir) -> Path:
-    return example_project_dir / "pyproject.toml"
+def example_pyproject_toml(
+    example_project_dir: ExProjectDir, pyproject_toml_file: Path,
+) -> Path:
+    return example_project_dir / pyproject_toml_file
 
 
 @pytest.fixture
-def example_setup_cfg(example_project_dir: ExProjectDir) -> Path:
-    return example_project_dir / "setup.cfg"
+def example_setup_cfg(
+    example_project_dir: ExProjectDir, setup_cfg_file: Path,
+) -> Path:
+    return example_project_dir / setup_cfg_file
 
 
 @pytest.fixture
-def example_setup_py(example_project_dir: ExProjectDir) -> Path:
-    return example_project_dir / "setup.py"
+def example_setup_py(
+    example_project_dir: ExProjectDir, setup_py_file: Path,
+) -> Path:
+    return example_project_dir / setup_py_file
 
 
 # Note this is just the path and the content may change
 @pytest.fixture
-def example_changelog_md(example_project_dir: ExProjectDir) -> Path:
-    return example_project_dir / "CHANGELOG.md"
+def example_changelog_md(
+    example_project_dir: ExProjectDir, changelog_md_file: Path,
+) -> Path:
+    return example_project_dir / changelog_md_file
 
 
 @pytest.fixture
-def example_project_template_dir(example_project_dir: ExProjectDir) -> Path:
-    return example_project_dir / "templates"
+def example_project_template_dir(
+    example_project_dir: ExProjectDir, changelog_template_dir: Path,
+) -> Path:
+    return example_project_dir / changelog_template_dir
 
 
-@pytest.fixture
-def update_pyproject_toml(example_pyproject_toml: Path) -> UpdatePyprojectTomlFn:
+@pytest.fixture(scope="session")
+def update_pyproject_toml(pyproject_toml_file: Path) -> UpdatePyprojectTomlFn:
     """Update the pyproject.toml file with the given content."""
 
     def _update_pyproject_toml(setting: str, value: Any) -> None:
-        with open(example_pyproject_toml) as rfd:
+        cwd_pyproject_toml = pyproject_toml_file.resolve()
+        with open(cwd_pyproject_toml) as rfd:
             pyproject_toml = tomlkit.load(rfd)
 
         new_setting = {}
@@ -255,13 +266,13 @@ def update_pyproject_toml(example_pyproject_toml: Path) -> UpdatePyprojectTomlFn
             pointer = pointer.get(part, {})
         pointer.update(new_setting)
 
-        with open(example_pyproject_toml, "w") as wfd:
+        with open(cwd_pyproject_toml, "w") as wfd:
             tomlkit.dump(pyproject_toml, wfd)
 
     return _update_pyproject_toml
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Angular parser."""
 
@@ -272,7 +283,7 @@ def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParse
     return _use_angular_parser
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Emoji parser."""
 
@@ -283,7 +294,7 @@ def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserF
     return _use_emoji_parser
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Scipy parser."""
 
@@ -294,7 +305,7 @@ def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserF
     return _use_scipy_parser
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     """Modify the configuration file to use the Tag parser."""
 
