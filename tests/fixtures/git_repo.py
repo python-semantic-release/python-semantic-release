@@ -10,13 +10,38 @@ from tests.util import copy_dir_tree, shortuid
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Generator, Protocol
+    from typing import Generator, Literal, Mapping, Protocol
 
     from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import ExProjectDir
 
+    CommitConvention = Literal["angular", "emoji", "scipy", "tag"]
+    VersionStr = str
+    CommitMsg = str
+
     class RepoInitFn(Protocol):
         def __call__(self, remote_url: str | None = None) -> Repo:
+            ...
+
+    class ExProjectGitRepoFn(Protocol):
+        def __call__(self) -> Repo:
+            ...
+
+    class GetVersionStringsFn(Protocol):
+        def __call__(self) -> list[VersionStr]:
+            ...
+
+    class GetRepoDefinitionFn(Protocol):
+        def __call__(self, commit_type: CommitConvention = "angular") -> Mapping[VersionStr, list[CommitMsg]]:
+            ...
+
+    class BuildRepoFn(Protocol):
+        def __call__(
+                self,
+                git_repo_path: Path | str,
+                commit_type: CommitConvention,
+                tag_format_str: str | None = None,
+            ) -> None:
             ...
 
 
@@ -25,12 +50,17 @@ def commit_author():
     return Actor(name="semantic release testing", email="not_a_real@email.com")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def default_tag_format_str() -> str:
+    return "v{version}"
+
+
+@pytest.fixture(scope="session")
 def file_in_repo():
     return f"file-{shortuid()}.txt"
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def example_git_ssh_url():
     return f"git@example.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
 
@@ -113,6 +143,25 @@ def git_repo_factory(
 
     try:
         yield git_repo
+    finally:
+        for repo in repos:
+            repo.close()
+
+
+@pytest.fixture
+def example_project_git_repo(example_project_dir: ExProjectDir) -> Generator[ExProjectGitRepoFn, None, None]:
+    repos: list[Repo] = []
+    # Must be a callable function to ensure files exist before repo is opened
+    def _example_project_git_repo() -> Repo:
+        if not example_project_dir.exists():
+            raise RuntimeError("Unable to find example git project!")
+
+        repo = Repo(example_project_dir)
+        repos.append(repo)
+        return repo
+
+    try:
+        yield _example_project_git_repo
     finally:
         for repo in repos:
             repo.close()
