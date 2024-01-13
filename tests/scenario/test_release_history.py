@@ -199,7 +199,7 @@ REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY = (
             REPO_WITH_SINGLE_BRANCH_AND_PRERELEASES_EXPECTED_RELEASE_HISTORY,
         ),
         (
-            lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+            lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
             REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY,
         ),
         (
@@ -271,7 +271,7 @@ def test_release_history(
         lazy_fixture("repo_with_no_tags_angular_commits"),
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
@@ -311,7 +311,7 @@ def test_release_history_releases(repo, default_angular_parser):
         lazy_fixture("repo_with_no_tags_angular_commits"),
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],

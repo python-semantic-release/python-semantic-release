@@ -43,7 +43,7 @@ if TYPE_CHECKING:
         lazy_fixture("repo_with_no_tags_angular_commits"),
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
@@ -149,7 +149,7 @@ def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_r
         ],
         *[
             (
-                lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+                lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
                 cli_args,
                 expected_stdout,
             )
@@ -250,7 +250,7 @@ def test_version_print(
         # so excluding lazy_fixture("repo_with_no_tags_angular_commits"),
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
@@ -329,7 +329,7 @@ def test_version_already_released_no_push(repo, cli_runner):
         ],
         *[
             (
-                lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+                lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
                 cli_args,
                 expected_stdout,
             )
@@ -469,7 +469,7 @@ def test_version_no_push_force_level(
     [
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
