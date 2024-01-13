@@ -19,7 +19,7 @@ from tests.const import (
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
 )
-from tests.util import flatten_dircmp, get_release_history_from_context
+from tests.util import flatten_dircmp, get_release_history_from_context, remove_dir_tree
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -60,7 +60,7 @@ def test_changelog_noop_is_noop(
 ):
     args = [arg0, tag] if tag and arg0 else []
     tempdir = tmp_path_factory.mktemp("test_noop")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure
@@ -115,7 +115,7 @@ def test_changelog_content_regenerated(
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     # Remove the changelog and then check that we can regenerate it
@@ -142,7 +142,7 @@ def test_changelog_release_tag_not_in_history(
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     result = cli_runner.invoke(main, [changelog.name or "changelog", *args])
@@ -160,7 +160,7 @@ def test_changelog_post_to_release(
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_changelog")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're

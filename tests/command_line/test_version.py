@@ -19,6 +19,7 @@ from tests.util import (
     actions_output_to_dict,
     flatten_dircmp,
     get_release_history_from_context,
+    remove_dir_tree,
 )
 
 if TYPE_CHECKING:
@@ -58,7 +59,7 @@ def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_r
     repo.git.commit(m="feat: temp new file")
 
     tempdir = tmp_path_factory.mktemp("test_noop")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     head_before = repo.head.commit
@@ -224,7 +225,7 @@ def test_version_print(
     repo.git.commit(m="fix: temp new file")
 
     tempdir = tmp_path_factory.mktemp("test_version_print")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
@@ -399,7 +400,7 @@ def test_version_no_push_force_level(
     cli_runner: CliRunner,
 ):
     tempdir = tmp_path_factory.mktemp("test_version")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
@@ -664,7 +665,7 @@ def test_version_only_update_files_no_git_actions(
     # Arrange
     expected_new_version = "0.3.0"
     tempdir = tmp_path_factory.mktemp("test_version")
-    shutil.rmtree(str(tempdir.resolve()))
+    remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir), dst=tempdir)
 
     head_before = runtime_context_with_tags.repo.head.commit

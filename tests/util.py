@@ -3,9 +3,9 @@ from __future__ import annotations
 import os
 import secrets
 import shutil
+import stat
 import string
-from contextlib import contextmanager
-from pathlib import Path
+from contextlib import contextmanager, suppress
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Tuple
 
@@ -19,6 +19,7 @@ from semantic_release.commit_parser.token import ParseResult
 
 if TYPE_CHECKING:
     import filecmp
+    from pathlib import Path
     from typing import Any, Generator, Iterable, TypeVar
 
     try:
@@ -45,6 +46,22 @@ def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
         dst=str(dst_dir),
         dirs_exist_ok=True,
     )
+
+
+def remove_dir_tree(directory: Path | str = ".", force: bool = False) -> None:
+    """
+    Compatibility wrapper for shutil.rmtree
+
+    Helpful for deleting directories with .git/* files, which usually have some
+    read-only permissions
+    """
+    def on_read_only_error(func, path, exc_info):
+        os.chmod(path, stat.S_IWRITE)
+        os.unlink(path)
+
+    # Prevent error if already deleted or never existed, that is our desired state
+    with suppress(FileNotFoundError):
+        shutil.rmtree(str(directory), onerror=on_read_only_error if force else None)
 
 
 @contextmanager
