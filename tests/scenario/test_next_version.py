@@ -487,7 +487,7 @@ def test_algorithm_no_zero_dot_versions_tag(
                 # The last full release version was 0.2.0, so it's had a minor
                 # prerelease
                 (
-                    "repo_with_main_and_feature_branches_angular_commits",
+                    "repo_w_github_flow_w_feature_release_channel_angular_commits",
                     "default_angular_parser",
                     VersionTranslator(prerelease_token="beta"),
                 ): [
@@ -658,7 +658,7 @@ def test_algorithm_with_zero_dot_versions_angular(
                 # The last full release version was 0.2.0, so it's had a minor
                 # prerelease
                 (
-                    "repo_with_main_and_feature_branches_emoji_commits",
+                    "repo_w_github_flow_w_feature_release_channel_emoji_commits",
                     "default_emoji_parser",
                     VersionTranslator(prerelease_token="beta"),
                 ): [
@@ -859,7 +859,7 @@ def test_algorithm_with_zero_dot_versions_emoji(
                 # The last full release version was 0.2.0, so it's had a minor
                 # prerelease
                 (
-                    "repo_with_main_and_feature_branches_scipy_commits",
+                    "repo_w_github_flow_w_feature_release_channel_scipy_commits",
                     "default_scipy_parser",
                     VersionTranslator(prerelease_token="beta"),
                 ): [
@@ -1050,7 +1050,7 @@ def test_algorithm_with_zero_dot_versions_scipy(
                 # The last full release version was 0.2.0, so it's had a minor
                 # prerelease
                 (
-                    "repo_with_main_and_feature_branches_tag_commits",
+                    "repo_w_github_flow_w_feature_release_channel_tag_commits",
                     "default_tag_parser",
                     VersionTranslator(prerelease_token="beta"),
                 ): [

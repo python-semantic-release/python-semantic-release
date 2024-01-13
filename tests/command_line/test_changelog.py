@@ -41,7 +41,7 @@ if TYPE_CHECKING:
             lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
             "v0.2.0",
         ),
-        (lazy_fixture("repo_with_main_and_feature_branches_angular_commits"), "v0.2.0"),
+        (lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"), "v0.2.0"),
         (lazy_fixture("repo_with_git_flow_angular_commits"), "v1.0.0"),
         (
             lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
@@ -102,7 +102,7 @@ def test_changelog_noop_is_noop(
         lazy_fixture("repo_with_no_tags_angular_commits"),
         lazy_fixture("repo_with_single_branch_angular_commits"),
         lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_with_main_and_feature_branches_angular_commits"),
+        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
     ],
