@@ -1,13 +1,13 @@
 """Note: fixtures are stored in the tests/fixtures directory for better organisation"""
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
 from tests.fixtures import *
+from tests.util import remove_dir_tree
 
 if TYPE_CHECKING:
     from typing import Generator, Protocol
@@ -36,4 +36,4 @@ def teardown_cached_dir() -> Generator[TeardownCachedDirFn, None, None]:
         # clean up any registered cached directories
         for directory in directories:
             if directory.exists():
-                shutil.rmtree(str(directory))
+                remove_dir_tree(directory, force=True)
