@@ -19,10 +19,6 @@ if TYPE_CHECKING:
     VersionStr = str
     CommitMsg = str
 
-    class RepoInitFn(Protocol):
-        def __call__(self, remote_url: str | None = None) -> Repo:
-            ...
-
     class ExProjectGitRepoFn(Protocol):
         def __call__(self) -> Repo:
             ...
@@ -81,9 +77,9 @@ def cached_example_git_project(
     """
     Initializes an example project with git repo. DO NOT USE DIRECTLY.
 
-    Use the `git_repo_factory` fixture instead. This creates a default
-    base repository, all settings can be changed later through the git
-    repo factory fixture.
+    Use a `repo_*` fixture instead. This creates a default
+    base repository, all settings can be changed later through from the
+    example_project_git_repo fixture's return object and manual adjustment.
     """
     if not cached_example_project.exists():
         raise RuntimeError("Unable to find cached project files")
@@ -113,39 +109,6 @@ def cached_example_git_project(
 
     # trigger automatic cleanup of cache directory during teardown
     return teardown_cached_dir(cached_git_proj_path)
-
-
-@pytest.fixture
-def git_repo_factory(
-    cached_example_git_project: Path,
-    example_project_dir: ExProjectDir,
-) -> Generator[RepoInitFn, None, None]:
-    repos: list[Repo] = []
-
-    def git_repo(remote_url: str | None = None) -> Repo:
-        if not cached_example_git_project.exists():
-            raise RuntimeError("Unable to find cached git project files!")
-
-        # Copy the cached git project to the current test's project dir
-        copy_dir_tree(cached_example_git_project, example_project_dir)
-
-        # Create Git Repo object for project
-        repo = Repo(example_project_dir)
-
-        # store the repo so we can close it later
-        repos.append(repo)
-
-        if remote_url is not None:
-            # update the origin url if desired
-            repo.remotes.origin.set_url(remote_url)
-
-        return repo
-
-    try:
-        yield git_repo
-    finally:
-        for repo in repos:
-            repo.close()
 
 
 @pytest.fixture
