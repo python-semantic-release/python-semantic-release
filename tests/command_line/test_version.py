@@ -598,7 +598,11 @@ def test_custom_release_notes_template(
     )
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
+
     release_version = runtime_context_with_no_tags.version_translator.from_tag(tag)
+    if release_version is None:
+        raise ValueError(f"Could not translate tag '{tag}' to version")
+
     release = release_history.released[release_version]
 
     expected_release_notes = (
@@ -614,6 +618,7 @@ def test_custom_release_notes_template(
         f"'semantic-release {version.name} --skip-build --vcs-release': " + resp.stderr
     )
     assert post_mocker.call_count == 1
+    assert post_mocker.last_request is not None
     assert post_mocker.last_request.json()["body"] == expected_release_notes
 
 
