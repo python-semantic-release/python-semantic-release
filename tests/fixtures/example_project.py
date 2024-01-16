@@ -321,7 +321,7 @@ def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
     return _use_tag_parser
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitHub as the HVCS."""
     def _use_github_hvcs(domain: str | None = None) -> type[HvcsBase]:
@@ -333,7 +333,7 @@ def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     return _use_github_hvcs
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitLab as the HVCS."""
     def _use_gitlab_hvcs(domain: str | None = None) -> type[HvcsBase]:
@@ -345,7 +345,7 @@ def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     return _use_gitlab_hvcs
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use Gitea as the HVCS."""
     def _use_gitea_hvcs(domain: str | None = None) -> type[HvcsBase]:
