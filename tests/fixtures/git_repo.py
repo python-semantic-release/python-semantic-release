@@ -11,6 +11,7 @@ from tests.const import (
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
+    TODAY_DATE_STR,
 )
 from tests.util import (
     add_text_to_file,
@@ -101,6 +102,15 @@ if TYPE_CHECKING:
 
     class GetRepoDefinitionFn(Protocol):
         def __call__(self, commit_type: CommitConvention = "angular") -> RepoDefinition:
+            ...
+
+    class SimulateDefaultChangelogCreationFn(Protocol):
+        def __call__(
+            self,
+            repo_definition: RepoDefinition,
+            dest_file: Path | None = None,
+            tag_format: str = ...
+        ) -> str:
             ...
 
 
@@ -312,6 +322,56 @@ def build_configured_base_repo(
         return Path(dest_dir), hvcs
 
     return _build_configured_base_repo
+
+
+@pytest.fixture(scope="session")
+def simulate_default_changelog_creation(
+    default_tag_format_str: str,
+) -> SimulateDefaultChangelogCreationFn:
+    def build_version_entry(version: VersionStr, version_def: RepoVersionDef, tag_format: str) -> str:
+            version_entry = []
+            if version == "Unreleased":
+                version_entry.append(f"## {version}\n")
+            else:
+                version_entry.append(
+                    # TODO: artificial newline in front due to template when no Unreleased changes exist
+                    f"\n## {tag_format.format(version=version)} ({TODAY_DATE_STR})\n"
+                )
+
+            for section_def in version_def["changelog_sections"]:
+                version_entry.append(f"### {section_def['section']}\n")
+                for i in section_def["i_commits"]:
+                    version_entry.append(f"* {version_def['commits'][i]}\n")
+
+            return str.join("\n", version_entry)
+
+    def _mimic_semantic_release_default_changelog(
+        repo_definition: RepoDefinition,
+        dest_file: Path | None = None,
+        tag_format: str = default_tag_format_str,
+    ) -> str:
+        header = "# CHANGELOG"
+        version_entries = []
+
+        for version, version_def in repo_definition.items():
+            # prepend entries to force reverse ordering
+            version_entries.insert(
+                0, build_version_entry(version, version_def, tag_format)
+            )
+
+        changelog_content = str.join("\n" * 3, [
+            header,
+            str.join("\n", [
+                entry for entry in version_entries
+            ])
+        ])
+
+        if dest_file is not None:
+            dest_file.write_text(changelog_content)
+
+        return changelog_content
+
+    return _mimic_semantic_release_default_changelog
 
 
 @pytest.fixture
