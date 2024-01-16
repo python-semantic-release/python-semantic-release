@@ -6,23 +6,27 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Repo
 
-from tests.const import COMMIT_MESSAGE
-from tests.util import add_text_to_file, copy_dir_tree, temporary_working_directory
+from tests.const import EXAMPLE_HVCS_DOMAIN
+from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from semantic_release.hvcs import HvcsBase
 
     from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import UseParserFn
+    from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
         BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
+        CreateReleaseFn,
         ExProjectGitRepoFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
+        SimulateChangeCommitsNReturnChangelogEntryFn,
+        TomlSerializableTypes,
         VersionStr,
     )
 
@@ -132,91 +136,84 @@ def get_versions_for_trunk_only_repo_w_prerelease_tags(
 @pytest.fixture(scope="session")
 def build_trunk_only_repo_w_prerelease_tags(
     get_commits_for_trunk_only_repo_w_prerelease_tags: GetRepoDefinitionFn,
-    cached_example_git_project: Path,
-    use_angular_parser: UseParserFn,
-    use_emoji_parser: UseParserFn,
-    use_scipy_parser: UseParserFn,
-    use_tag_parser: UseParserFn,
-    file_in_repo: str,
+    build_configured_base_repo: BuildRepoFn,
     default_tag_format_str: str,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+    create_release_tagged_commit: CreateReleaseFn,
 ) -> BuildRepoFn:
     def _build_trunk_only_repo_w_prerelease_tags(
-        git_repo_path: Path | str,
-        commit_type: CommitConvention,
+        dest_dir: Path | str,
+        commit_type: CommitConvention = "angular",
+        hvcs_client_name: str = "github",
+        hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
-    ) -> None:
-        repo_definition = get_commits_for_trunk_only_repo_w_prerelease_tags(commit_type)
+        extra_configs: dict[str, TomlSerializableTypes] | None = None,
+    ) -> tuple[Path, HvcsBase]:
+        repo_dir, hvcs = build_configured_base_repo(
+            dest_dir,
+            commit_type=commit_type,
+            hvcs_client_name=hvcs_client_name,
+            hvcs_domain=hvcs_domain,
+            tag_format_str=tag_format_str,
+            extra_configs=extra_configs,
+        )
+
+        repo_def = get_commits_for_trunk_only_repo_w_prerelease_tags(commit_type)
+        versions = (key for key in repo_def)
+        next_version = next(versions)
+        next_version_def = repo_def[next_version]
+
+        # must be after build_configured_base_repo() so we dont set the
+        # default tag format in the pyproject.toml (we want semantic-release to use its defaults)
+        # however we need it to manually create the tags it knows how to parse
         tag_format = tag_format_str or default_tag_format_str
-        versions = list(repo_definition.keys())
-        next_version = versions[0]
 
-        if not cached_example_git_project.exists():
-            raise RuntimeError("Unable to find cached example git project!")
+        with temporary_working_directory(repo_dir), Repo(".") as git_repo:
+            # commit initial files & update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
-        copy_dir_tree(cached_example_git_project, git_repo_path)
+            # Make initial feature release (v0.1.0)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
-        with temporary_working_directory(git_repo_path), Repo(".") as git_repo:
-            if commit_type == "angular":
-                use_angular_parser()
-            elif commit_type == "emoji":
-                use_emoji_parser()
-            elif commit_type == "scipy":
-                use_scipy_parser()
-            elif commit_type == "tag":
-                use_tag_parser()
-            else:
-                raise ValueError(f"Unknown commit type: {commit_type}")
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
-            git_repo.git.commit(
-                a=True, m=repo_definition[next_version][0]
-            )  # Initial commit
+            # Add a patch level change
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            # Make a patch level release candidate (v0.1.1-rc.1)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
-            next_version = versions[1]
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
-            # Prepare for a prerelease
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(
-                m=repo_definition[next_version][0]
-            )  # patch level commit
+            # Make a minor level change
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
-            # Make a prerelease
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            # Make the next feature level prerelease (v0.2.0-rc.1)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
-            next_version = versions[2]
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
-            # Prepare a 2nd prerelease
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(
-                m=repo_definition[next_version][0]
-            )  # minor level commit
-
-            # Make a 2nd prerelease
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
-
-            next_version = versions[3]
-
-            # Prepare for a full release
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(
-                m=repo_definition[next_version][0]
-            )  # minor level commit
+            # Make a minor level change
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
             # Make a full release
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
+
+        return repo_dir, hvcs
 
     return _build_trunk_only_repo_w_prerelease_tags
 
@@ -287,7 +284,7 @@ def cached_repo_with_single_branch_and_prereleases_tag_commits(
 def repo_with_single_branch_and_prereleases_angular_commits(
     cached_repo_with_single_branch_and_prereleases_angular_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_with_single_branch_and_prereleases_angular_commits.exists():
@@ -303,7 +300,7 @@ def repo_with_single_branch_and_prereleases_angular_commits(
 def repo_with_single_branch_and_prereleases_emoji_commits(
     cached_repo_with_single_branch_and_prereleases_emoji_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_with_single_branch_and_prereleases_emoji_commits.exists():
@@ -319,7 +316,7 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
 def repo_with_single_branch_and_prereleases_scipy_commits(
     cached_repo_with_single_branch_and_prereleases_scipy_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_with_single_branch_and_prereleases_scipy_commits.exists():
@@ -335,7 +332,7 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
 def repo_with_single_branch_and_prereleases_tag_commits(
     cached_repo_with_single_branch_and_prereleases_tag_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_with_single_branch_and_prereleases_tag_commits.exists():
