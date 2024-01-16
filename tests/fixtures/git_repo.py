@@ -10,7 +10,7 @@ from tests.util import add_text_to_file, copy_dir_tree, shortuid
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Generator, Literal, Mapping, Protocol
+    from typing import Generator, Literal, TypedDict, Protocol, Union
 
     from semantic_release.hvcs import HvcsBase
 
@@ -20,6 +20,29 @@ if TYPE_CHECKING:
     CommitConvention = Literal["angular", "emoji", "scipy", "tag"]
     VersionStr = str
     CommitMsg = str
+    ChangelogTypeHeading = str
+    TomlSerializableTypes = Union[dict, set, list, tuple, int, float, bool, str]
+
+    class RepoVersionDef(TypedDict):
+        """
+        A reduced common repo definition, that is specific to a type of commit conventions
+
+        Used for builder functions that only need to know about a single commit convention type
+        """
+        changelog_sections: list[ChangelogTypeHeadingDef]
+        commits: list[CommitMsg]
+
+    class ChangelogTypeHeadingDef(TypedDict):
+        section: ChangelogTypeHeading
+        i_commits: list[int]
+        """List of indexes values to match to the commits list in the RepoVersionDef"""
+
+    class BaseRepoVersionDef(TypedDict):
+        """
+        A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types
+        """
+        changelog_sections: dict[CommitConvention, list[ChangelogTypeHeadingDef]]
+        commits: list[dict[CommitConvention, CommitMsg]]
 
     class BuildRepoFn(Protocol):
         def __call__(
@@ -53,6 +76,12 @@ if TYPE_CHECKING:
     class GetVersionStringsFn(Protocol):
         def __call__(self) -> list[VersionStr]:
             ...
+
+    RepoDefinition = dict[VersionStr, RepoVersionDef]
+    """
+    A Type alias to define a repositories versions, commits, and changelog sections
+    for a specific commit convention
+    """
 
     class GetRepoDefinitionFn(Protocol):
         def __call__(
