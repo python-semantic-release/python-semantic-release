@@ -6,7 +6,7 @@ import pytest
 from git import Actor, Repo
 
 from tests.const import COMMIT_MESSAGE, EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
-from tests.util import copy_dir_tree, shortuid
+from tests.util import add_text_to_file, copy_dir_tree, shortuid
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -34,6 +34,12 @@ if TYPE_CHECKING:
         def __call__(
             self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase
         ) -> str:
+            ...
+
+    class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
+        def __call__(
+            self, git_repo: Repo, commit_msgs: list[CommitMsg], hvcs: HvcsBase
+        ) -> list[CommitMsg]:
             ...
 
     class CreateReleaseFn(Protocol):
@@ -119,6 +125,25 @@ def commit_n_rtn_changelog_entry() -> CommitNReturnChangelogEntryFn:
         ])
 
     return _commit_n_rtn_changelog_entry
+
+
+@pytest.fixture(scope="session")
+def simulate_change_commits_n_rtn_changelog_entry(
+    commit_n_rtn_changelog_entry: CommitNReturnChangelogEntryFn,
+    file_in_repo: str,
+) -> SimulateChangeCommitsNReturnChangelogEntryFn:
+    def _simulate_change_commits_n_rtn_changelog_entry(
+        git_repo: Repo, commit_msgs: list[str], hvcs: HvcsBase
+    ) -> list[str]:
+        changelog_entries = []
+        for commit_msg in commit_msgs:
+            add_text_to_file(git_repo, file_in_repo)
+            changelog_entries.append(
+                commit_n_rtn_changelog_entry(git_repo, commit_msg, hvcs)
+            )
+        return changelog_entries
+
+    return _simulate_change_commits_n_rtn_changelog_entry
 
 
 @pytest.fixture(scope="session")
