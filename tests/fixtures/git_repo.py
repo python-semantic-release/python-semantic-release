@@ -1,21 +1,23 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 from git import Actor, Repo
 
 from tests.const import COMMIT_MESSAGE, EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
-from tests.util import add_text_to_file, copy_dir_tree, shortuid
+from tests.util import add_text_to_file, copy_dir_tree, shortuid, temporary_working_directory
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import Generator, Literal, TypedDict, Protocol, Union
 
     from semantic_release.hvcs import HvcsBase
 
     from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.fixtures.example_project import (
+        ExProjectDir, UpdatePyprojectTomlFn, UseHvcsFn, UseParserFn
+    )
 
     CommitConvention = Literal["angular", "emoji", "scipy", "tag"]
     VersionStr = str
@@ -47,10 +49,13 @@ if TYPE_CHECKING:
     class BuildRepoFn(Protocol):
         def __call__(
             self,
-            git_repo_path: Path | str,
-            commit_type: CommitConvention,
+            dest_dir: Path | str,
+            commit_type: CommitConvention = ...,
+            hvcs_client_name: str = ...,
+            hvcs_domain: str = ...,
             tag_format_str: str | None = None,
-        ) -> None:
+            extra_configs: dict[str, TomlSerializableTypes] | None = None,
+        ) -> tuple[Path, HvcsBase]:
             ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
@@ -216,6 +221,82 @@ def cached_example_git_project(
 
     # trigger automatic cleanup of cache directory during teardown
     return teardown_cached_dir(cached_git_proj_path)
+
+
+@pytest.fixture(scope="session")
+def build_configured_base_repo(
+    cached_example_git_project: Path,
+    use_github_hvcs: UseHvcsFn,
+    use_gitlab_hvcs: UseHvcsFn,
+    use_gitea_hvcs: UseHvcsFn,
+    use_angular_parser: UseParserFn,
+    use_emoji_parser: UseParserFn,
+    use_scipy_parser: UseParserFn,
+    use_tag_parser: UseParserFn,
+    example_git_https_url: str,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+) -> BuildRepoFn:
+    """
+    This fixture is intended to simplify repo scenario building by initially
+    creating the repo but also configuring semantic_release in the pyproject.toml
+    for when the test executes semantic_release. It returns a function so that
+    derivative fixtures can call this fixture with individual parameters.
+    """
+    def _build_configured_base_repo(
+        dest_dir: Path | str,
+        commit_type: str = "angular",
+        hvcs_client_name: str = "github",
+        hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
+        tag_format_str: str | None = None,
+        extra_configs: dict[str, TomlSerializableTypes] | None = None,
+    ) -> tuple[Path, HvcsBase]:
+        if not cached_example_git_project.exists():
+            raise RuntimeError(f"Unable to find cached git project files!")
+
+        # Copy the cached git project the dest directory
+        copy_dir_tree(cached_example_git_project, dest_dir)
+
+        # Make sure we are in the dest directory
+        with temporary_working_directory(dest_dir):
+
+            # Set parser configuration
+            if commit_type == "angular":
+                use_angular_parser()
+            elif commit_type == "emoji":
+                use_emoji_parser()
+            elif commit_type == "scipy":
+                use_scipy_parser()
+            elif commit_type == "tag":
+                use_tag_parser()
+            else:
+                raise ValueError(f"Unknown parser name: {commit_type}")
+
+            # Set HVCS configuration
+            if hvcs_client_name == "github":
+                hvcs_class = use_github_hvcs(hvcs_domain)
+            elif hvcs_client_name == "gitlab":
+                hvcs_class = use_gitlab_hvcs(hvcs_domain)
+            elif hvcs_client_name == "gitea":
+                hvcs_class = use_gitea_hvcs(hvcs_domain)
+            else:
+                raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
+
+            # Create HVCS Client instance
+            hvcs = hvcs_class(example_git_https_url, hvcs_domain)
+
+            # Set tag format in configuration
+            if tag_format_str is not None:
+                update_pyproject_toml("tool.semantic_release.tag_format", tag_format_str)
+
+            # Apply configurations to pyproject.toml
+            if extra_configs is not None:
+                for key, value in extra_configs.items():
+                    update_pyproject_toml(key, value)
+
+        return Path(dest_dir), hvcs
+
+    return _build_configured_base_repo
+
 
 
 @pytest.fixture
