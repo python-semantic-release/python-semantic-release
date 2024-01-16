@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import pytest
@@ -9,60 +10,98 @@ from tests.util import add_text_to_file, copy_dir_tree, temporary_working_direct
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Mapping
+
 
     from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import ExProjectDir, UseParserFn
     from tests.fixtures.git_repo import (
+        BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
-        CommitMsg,
         ExProjectGitRepoFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
+        RepoDefinition,
         VersionStr,
     )
 
 
 @pytest.fixture(scope="session")
 def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
-    base_definition: Mapping[VersionStr, list[dict[CommitConvention, CommitMsg]]] = {
-        "0.1.0": [
-            {
-                "angular": "Initial commit",
-                "emoji": "Initial commit",
-                "scipy": "Initial commit",
-                "tag": "Initial commit",
+    base_definition: dict[str, BaseRepoVersionDef] = {
+        "Unreleased": {
+            "changelog_sections": {
+                # ORDER matters here since greater than 1 commit, changelogs sections are alphabetized
+                # But value is ultimately defined by the commits, which means the commits are
+                # referenced by index value
+                "angular": [
+                    {"section": "Feature", "i_commits": [2]},
+                    {"section": "Fix", "i_commits": [3, 1]},
+                    {"section": "Unknown", "i_commits": [0]},
+                ],
+                "emoji": [
+                    {"section": ":bug:", "i_commits": [1, 3]},
+                    {"section": ":sparkles:", "i_commits": [2]},
+                    {"section": "Other", "i_commits": [0]},
+                ],
+                "scipy": [
+                    {"section": "Feature", "i_commits": [2]},
+                    {"section": "Fix", "i_commits": [1, 3]},
+                    {"section": "None", "i_commits": [0]},
+                ],
+                "tag": [
+                    {"section": "Feature", "i_commits": [2]},
+                    {"section": "Fix", "i_commits": [1, 3]},
+                    {"section": "Unknown", "i_commits": [0]},
+                ],
             },
-            {
-                "angular": "fix: add some more text",
-                "emoji": ":bug: add some more text",
-                "scipy": "MAINT: add some more text",
-                "tag": ":nut_and_bolt: add some more text",
-            },
-            {
-                "angular": "feat: add much more text",
-                "emoji": ":sparkles: add much more text",
-                "scipy": "ENH: add much more text",
-                "tag": ":sparkles: add much more text",
-            },
-            {
-                "angular": "fix: more text",
-                "emoji": ":bug: more text",
-                "scipy": "MAINT: more text",
-                "tag": ":nut_and_bolt: more text",
-            },
-        ],
+            "commits": [
+                {
+                    "angular": "Initial commit",
+                    "emoji": "Initial commit",
+                    "scipy": "Initial commit",
+                    "tag": "Initial commit",
+                },
+                {
+                    "angular": "fix: add some more text",
+                    "emoji": ":bug: add some more text",
+                    "scipy": "MAINT: add some more text",
+                    "tag": ":nut_and_bolt: add some more text",
+                },
+                {
+                    "angular": "feat: add much more text",
+                    "emoji": ":sparkles: add much more text",
+                    "scipy": "ENH: add much more text",
+                    "tag": ":sparkles: add much more text",
+                },
+                {
+                    "angular": "fix: more text",
+                    "emoji": ":bug: more text",
+                    "scipy": "MAINT: more text",
+                    "tag": ":nut_and_bolt: more text",
+                },
+            ],
+        },
     }
 
     def _get_commits_for_trunk_only_repo_w_no_tags(
         commit_type: CommitConvention = "angular",
-    ) -> Mapping[VersionStr, list[CommitMsg]]:
-        definition: Mapping[VersionStr, list[CommitMsg]] = {}
-        for version, commits in base_definition.items():
-            definition[version] = [
-                message_dict[commit_type] for message_dict in commits
-            ]
+    ) -> RepoDefinition:
+        definition: RepoDefinition = {}
+
+        for version, version_def in base_definition.items():
+            definition[version] = {
+                # Extract the correct changelog section header for the commit type
+                "changelog_sections": deepcopy(
+                    version_def["changelog_sections"][commit_type]
+                ),
+                "commits": [
+                    # Extract the correct commit message for the commit type
+                    message_variants[commit_type]
+                    for message_variants in version_def["commits"]
+                ],
+            }
+
         return definition
 
     return _get_commits_for_trunk_only_repo_w_no_tags

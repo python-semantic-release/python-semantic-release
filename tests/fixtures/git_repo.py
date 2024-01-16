@@ -84,9 +84,7 @@ if TYPE_CHECKING:
     """
 
     class GetRepoDefinitionFn(Protocol):
-        def __call__(
-            self, commit_type: CommitConvention = "angular"
-        ) -> Mapping[VersionStr, list[CommitMsg]]:
+        def __call__(self, commit_type: CommitConvention = "angular") -> RepoDefinition:
             ...
 
 
