@@ -6,17 +6,30 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Actor, Repo
 
-from tests.const import COMMIT_MESSAGE, EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
-from tests.util import add_text_to_file, copy_dir_tree, shortuid, temporary_working_directory
+from tests.const import (
+    COMMIT_MESSAGE,
+    EXAMPLE_HVCS_DOMAIN,
+    EXAMPLE_REPO_NAME,
+    EXAMPLE_REPO_OWNER,
+)
+from tests.util import (
+    add_text_to_file,
+    copy_dir_tree,
+    shortuid,
+    temporary_working_directory,
+)
 
 if TYPE_CHECKING:
-    from typing import Generator, Literal, TypedDict, Protocol, Union
+    from typing import Generator, Literal, Protocol, TypedDict, Union
 
     from semantic_release.hvcs import HvcsBase
 
     from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import (
-        ExProjectDir, UpdatePyprojectTomlFn, UseHvcsFn, UseParserFn
+        ExProjectDir,
+        UpdatePyprojectTomlFn,
+        UseHvcsFn,
+        UseParserFn,
     )
 
     CommitConvention = Literal["angular", "emoji", "scipy", "tag"]
@@ -31,20 +44,23 @@ if TYPE_CHECKING:
 
         Used for builder functions that only need to know about a single commit convention type
         """
+
         changelog_sections: list[ChangelogTypeHeadingDef]
         commits: list[CommitMsg]
+
 
     class ChangelogTypeHeadingDef(TypedDict):
         section: ChangelogTypeHeading
         i_commits: list[int]
         """List of indexes values to match to the commits list in the RepoVersionDef"""
 
+
     class BaseRepoVersionDef(TypedDict):
-        """
-        A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types
-        """
+        """A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types"""
+
         changelog_sections: dict[CommitConvention, list[ChangelogTypeHeadingDef]]
         commits: list[dict[CommitConvention, CommitMsg]]
+
 
     class BuildRepoFn(Protocol):
         def __call__(
@@ -58,11 +74,13 @@ if TYPE_CHECKING:
         ) -> tuple[Path, HvcsBase]:
             ...
 
+
     class CommitNReturnChangelogEntryFn(Protocol):
         def __call__(
             self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase
         ) -> str:
             ...
+
 
     class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
         def __call__(
@@ -70,17 +88,21 @@ if TYPE_CHECKING:
         ) -> list[CommitMsg]:
             ...
 
+
     class CreateReleaseFn(Protocol):
         def __call__(self, git_repo: Repo, version: str, tag_format: str = ...) -> None:
             ...
+
 
     class ExProjectGitRepoFn(Protocol):
         def __call__(self) -> Repo:
             ...
 
+
     class GetVersionStringsFn(Protocol):
         def __call__(self) -> list[VersionStr]:
             ...
+
 
     RepoDefinition = dict[VersionStr, RepoVersionDef]
     """
@@ -251,7 +273,7 @@ def build_configured_base_repo(
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
     ) -> tuple[Path, HvcsBase]:
         if not cached_example_git_project.exists():
-            raise RuntimeError(f"Unable to find cached git project files!")
+            raise RuntimeError("Unable to find cached git project files!")
 
         # Copy the cached git project the dest directory
         copy_dir_tree(cached_example_git_project, dest_dir)
