@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,106 +11,189 @@ from tests.util import add_text_to_file, copy_dir_tree, temporary_working_direct
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Mapping
+
 
     from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn, UseParserFn
     from tests.fixtures.git_repo import (
+        BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
-        CommitMsg,
         ExProjectGitRepoFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
+        RepoDefinition,
         VersionStr,
     )
 
 
 @pytest.fixture(scope="session")
 def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
-    base_definition: Mapping[VersionStr, list[dict[CommitConvention, CommitMsg]]] = {
-        "0.1.0": [
-            {
-                "angular": "Initial commit",
-                "emoji": "Initial commit",
-                "scipy": "Initial commit",
-                "tag": "Initial commit",
+    base_definition: dict[str, BaseRepoVersionDef] = {
+        "0.1.0": {
+            "changelog_sections": {
+                "angular": [{"section": "Unknown", "i_commits": [0]}],
+                "emoji": [{"section": "Other", "i_commits": [0]}],
+                "scipy": [{"section": "None", "i_commits": [0]}],
+                "tag": [{"section": "Unknown", "i_commits": [0]}],
             },
-        ],
-        "0.1.1-rc.1": [
-            {
-                "angular": "fix: add some more text",
-                "emoji": ":bug: add some more text",
-                "scipy": "MAINT: add some more text",
-                "tag": ":nut_and_bolt: add some more text",
+            "commits": [
+                {
+                    "angular": "Initial commit",
+                    "emoji": "Initial commit",
+                    "scipy": "Initial commit",
+                    "tag": "Initial commit",
+                }
+            ],
+        },
+        "0.1.1-rc.1": {
+            "changelog_sections": {
+                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "emoji": [{"section": ":bug:", "i_commits": [0]}],
+                "scipy": [{"section": "Fix", "i_commits": [0]}],
+                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
-        ],
-        "1.0.0-rc.1": [
-            {
-                "angular": "feat!: add some more text",
-                "emoji": ":boom: add some more text",
-                "scipy": "API: add some more text",
-                "tag": ":sparkles: add some more text\n\nBREAKING CHANGE: add some more text",
+            "commits": [
+                {
+                    "angular": "fix: add some more text",
+                    "emoji": ":bug: add some more text",
+                    "scipy": "MAINT: add some more text",
+                    "tag": ":nut_and_bolt: add some more text",
+                }
+            ],
+        },
+        "1.0.0-rc.1": {
+            "changelog_sections": {
+                "angular": [{"section": "Breaking", "i_commits": [0]}],
+                "emoji": [{"section": ":boom:", "i_commits": [0]}],
+                "scipy": [{"section": "Breaking", "i_commits": [0]}],
+                "tag": [{"section": "Breaking", "i_commits": [0]}],
             },
-        ],
-        "1.0.0": [
-            {
-                "angular": "feat: add some more text",
-                "emoji": ":sparkles: add some more text",
-                "scipy": "ENH: add some more text",
-                "tag": ":sparkles: add some more text",
+            "commits": [
+                {
+                    "angular": "feat!: add some more text",
+                    "emoji": ":boom: add some more text",
+                    "scipy": "API: add some more text",
+                    "tag": ":sparkles: add some more text\n\nBREAKING CHANGE: add some more text",
+                }
+            ],
+        },
+        "1.0.0": {
+            "changelog_sections": {
+                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
+                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
-        ],
-        "1.1.0-rc.1": [
-            {
-                "angular": "feat: (dev) add some more text",
-                "emoji": ":sparkles: (dev) add some more text",
-                "scipy": "ENH: (dev) add some more text",
-                "tag": ":sparkles: (dev) add some more text",
+            "commits": [
+                {
+                    "angular": "feat: add some more text",
+                    "emoji": ":sparkles: add some more text",
+                    "scipy": "ENH: add some more text",
+                    "tag": ":sparkles: add some more text",
+                },
+            ],
+        },
+        "1.1.0-rc.1": {
+            "changelog_sections": {
+                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
+                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
-        ],
-        "1.1.0-rc.2": [
-            {
-                "angular": "fix: (dev) add some more text",
-                "emoji": ":bug: (dev) add some more text",
-                "scipy": "MAINT: (dev) add some more text",
-                "tag": ":nut_and_bolt: (dev) add some more text",
+            "commits": [
+                {
+                    "angular": "feat: (dev) add some more text",
+                    "emoji": ":sparkles: (dev) add some more text",
+                    "scipy": "ENH: (dev) add some more text",
+                    "tag": ":sparkles: (dev) add some more text",
+                },
+            ],
+        },
+        "1.1.0-rc.2": {
+            "changelog_sections": {
+                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "emoji": [{"section": ":bug:", "i_commits": [0]}],
+                "scipy": [{"section": "Fix", "i_commits": [0]}],
+                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
-        ],
-        "1.1.0-alpha.1": [
-            {
-                "angular": "feat: (feature) add some more text",
-                "emoji": ":sparkles: (feature) add some more text",
-                "scipy": "ENH: (feature) add some more text",
-                "tag": ":sparkles: (feature) add some more text",
+            "commits": [
+                {
+                    "angular": "fix: (dev) add some more text",
+                    "emoji": ":bug: (dev) add some more text",
+                    "scipy": "MAINT: (dev) add some more text",
+                    "tag": ":nut_and_bolt: (dev) add some more text",
+                },
+            ],
+        },
+        "1.1.0-alpha.1": {
+            "changelog_sections": {
+                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
+                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
-        ],
-        "1.1.0-alpha.2": [
-            {
-                "angular": "feat: (feature) add some more text",
-                "emoji": ":sparkles: (feature) add some more text",
-                "scipy": "ENH: (feature) add some more text",
-                "tag": ":sparkles: (feature) add some more text",
+            "commits": [
+                {
+                    "angular": "feat: (feature) add some more text",
+                    "emoji": ":sparkles: (feature) add some more text",
+                    "scipy": "ENH: (feature) add some more text",
+                    "tag": ":sparkles: (feature) add some more text",
+                },
+            ],
+        },
+        "1.1.0-alpha.2": {
+            "changelog_sections": {
+                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
+                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
-        ],
-        "1.1.0-alpha.3": [
-            {
-                "angular": "fix: (feature) add some more text",
-                "emoji": ":bug: (feature) add some more text",
-                "scipy": "MAINT: (feature) add some more text",
-                "tag": ":nut_and_bolt: (feature) add some more text",
+            "commits": [
+                {
+                    "angular": "feat: (feature) add some more text",
+                    "emoji": ":sparkles: (feature) add some more text",
+                    "scipy": "ENH: (feature) add some more text",
+                    "tag": ":sparkles: (feature) add some more text",
+                },
+            ],
+        },
+        "1.1.0-alpha.3": {
+            "changelog_sections": {
+                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "emoji": [{"section": ":bug:", "i_commits": [0]}],
+                "scipy": [{"section": "Fix", "i_commits": [0]}],
+                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
-        ],
+            "commits": [
+                {
+                    "angular": "fix: (feature) add some more text",
+                    "emoji": ":bug: (feature) add some more text",
+                    "scipy": "MAINT: (feature) add some more text",
+                    "tag": ":nut_and_bolt: (feature) add some more text",
+                },
+            ],
+        }
     }
 
     def _get_commits_for_git_flow_repo_w_3_release_channels(
         commit_type: CommitConvention = "angular",
-    ) -> Mapping[VersionStr, list[CommitMsg]]:
-        definition: Mapping[VersionStr, list[CommitMsg]] = {}
-        for version, commits in base_definition.items():
-            definition[version] = [
-                message_dict[commit_type] for message_dict in commits
-            ]
+    ) -> RepoDefinition:
+        definition: RepoDefinition = {}
+
+        for version, version_def in base_definition.items():
+            definition[version] = {
+                # Extract the correct changelog section header for the commit type
+                "changelog_sections": deepcopy(
+                    version_def["changelog_sections"][commit_type]
+                ),
+                "commits": [
+                    # Extract the correct commit message for the commit type
+                    message_variants[commit_type]
+                    for message_variants in version_def["commits"]
+                ],
+            }
+
         return definition
 
     return _get_commits_for_git_flow_repo_w_3_release_channels
