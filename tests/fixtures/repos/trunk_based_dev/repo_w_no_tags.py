@@ -6,14 +6,16 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Repo
 
-from tests.util import add_text_to_file, copy_dir_tree, temporary_working_directory
+from tests.const import EXAMPLE_HVCS_DOMAIN
+from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from semantic_release.hvcs import HvcsBase
 
     from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import ExProjectDir, UseParserFn
+    from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
         BaseRepoVersionDef,
         BuildRepoFn,
@@ -22,6 +24,8 @@ if TYPE_CHECKING:
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
+        SimulateChangeCommitsNReturnChangelogEntryFn,
+        TomlSerializableTypes,
         VersionStr,
     )
 
@@ -120,46 +124,38 @@ def get_versions_for_trunk_only_repo_w_no_tags(
 @pytest.fixture(scope="session")
 def build_trunk_only_repo_w_no_tags(
     get_commits_for_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
-    cached_example_git_project: Path,
-    use_angular_parser: UseParserFn,
-    use_emoji_parser: UseParserFn,
-    use_scipy_parser: UseParserFn,
-    use_tag_parser: UseParserFn,
-    file_in_repo: str,
+    build_configured_base_repo: BuildRepoFn,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
 ) -> BuildRepoFn:
     def _build_trunk_only_repo_w_no_tags(
-        git_repo_path: Path | str,
-        commit_type: CommitConvention,
+        dest_dir: Path | str,
+        commit_type: CommitConvention = "angular",
+        hvcs_client_name: str = "github",
+        hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
-    ) -> None:
-        repo_definition = get_commits_for_trunk_only_repo_w_no_tags(commit_type)
-        versions = list(repo_definition.keys())
-        next_version = versions[0]
+        extra_configs: dict[str, TomlSerializableTypes] | None = None,
+    ) -> tuple[Path, HvcsBase]:
+        repo_dir, hvcs = build_configured_base_repo(
+            dest_dir,
+            commit_type=commit_type,
+            hvcs_client_name=hvcs_client_name,
+            hvcs_domain=hvcs_domain,
+            tag_format_str=tag_format_str,
+            extra_configs=extra_configs,
+        )
 
-        if not cached_example_git_project.exists():
-            raise RuntimeError("Unable to find example git project!")
+        repo_def = get_commits_for_trunk_only_repo_w_no_tags(commit_type)
+        versions = (key for key in repo_def)
+        next_version = next(versions)
+        next_version_def = repo_def[next_version]
 
-        copy_dir_tree(cached_example_git_project, git_repo_path)
+        with temporary_working_directory(repo_dir), Repo(".") as git_repo:
+            # Run set up commits
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
-        with temporary_working_directory(git_repo_path), Repo(".") as git_repo:
-            if commit_type == "angular":
-                use_angular_parser()
-            elif commit_type == "emoji":
-                use_emoji_parser()
-            elif commit_type == "scipy":
-                use_scipy_parser()
-            elif commit_type == "tag":
-                use_tag_parser()
-            else:
-                raise ValueError(f"Unknown commit type: {commit_type}")
-
-            git_repo.git.commit(
-                a=True, m=repo_definition[next_version][0]
-            )  # Initial commit
-
-            for commit_msg in repo_definition[next_version][1:]:
-                add_text_to_file(git_repo, file_in_repo)
-                git_repo.git.commit(a=True, m=commit_msg)
+        return repo_dir, hvcs
 
     return _build_trunk_only_repo_w_no_tags
 

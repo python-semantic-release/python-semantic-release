@@ -6,23 +6,27 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Repo
 
-from tests.const import COMMIT_MESSAGE
-from tests.util import add_text_to_file, copy_dir_tree, temporary_working_directory
+from tests.const import EXAMPLE_HVCS_DOMAIN
+from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from semantic_release.hvcs import HvcsBase
 
     from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import UpdatePyprojectTomlFn, UseParserFn
+    from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
         BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
+        CreateReleaseFn,
         ExProjectGitRepoFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
+        SimulateChangeCommitsNReturnChangelogEntryFn,
+        TomlSerializableTypes,
         VersionStr,
     )
 
@@ -217,164 +221,167 @@ def get_versions_for_git_flow_repo_with_2_release_channels(
 @pytest.fixture(scope="session")
 def build_git_flow_repo_with_2_release_channels(
     get_commits_for_git_flow_repo_with_2_release_channels: GetRepoDefinitionFn,
-    cached_example_git_project: Path,
-    update_pyproject_toml: UpdatePyprojectTomlFn,
-    use_angular_parser: UseParserFn,
-    use_emoji_parser: UseParserFn,
-    use_scipy_parser: UseParserFn,
-    use_tag_parser: UseParserFn,
-    file_in_repo: str,
+    build_configured_base_repo: BuildRepoFn,
     default_tag_format_str: str,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+    create_release_tagged_commit: CreateReleaseFn,
 ) -> BuildRepoFn:
+    """
+    This fixture returns a function that when called will build a git repo that
+    uses the git flow branching strategy with 2 release channels
+        1. alpha feature releases
+        2. release candidate releases
+    """
+
     def _build_git_flow_repo_with_2_release_channels(
-        git_repo_path: Path | str,
-        commit_type: CommitConvention,
+        dest_dir: Path | str,
+        commit_type: CommitConvention = "angular",
+        hvcs_client_name: str = "github",
+        hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
-    ) -> None:
-        repo_definition = get_commits_for_git_flow_repo_with_2_release_channels(
-            commit_type
-        )
-        tag_format = tag_format_str or default_tag_format_str
-        versions = list(repo_definition.keys())
-        next_version = versions[0]
-
-        if not cached_example_git_project.exists():
-            raise RuntimeError("Unable to find cached example git project!")
-
-        copy_dir_tree(cached_example_git_project, git_repo_path)
-
-        with temporary_working_directory(git_repo_path), Repo(".") as git_repo:
-            update_pyproject_toml(
-                "tool.semantic_release.branches.features",
-                {
+        extra_configs: dict[str, TomlSerializableTypes] | None = None,
+    ) -> tuple[Path, HvcsBase]:
+        repo_dir, hvcs = build_configured_base_repo(
+            dest_dir,
+            commit_type=commit_type,
+            hvcs_client_name=hvcs_client_name,
+            hvcs_domain=hvcs_domain,
+            tag_format_str=tag_format_str,
+            extra_configs={
+                # branch "feature" has prerelease suffix of "alpha"
+                "tool.semantic_release.branches.features": {
                     "match": "feat.*",
                     "prerelease": True,
                     "prerelease_token": "alpha",
                 },
+                **(extra_configs or {}),
+            },
+        )
+
+        # Retrieve/Define project vars that will be used to create the repo below
+        repo_def = get_commits_for_git_flow_repo_with_2_release_channels(commit_type)
+        versions = (key for key in repo_def)
+        next_version = next(versions)
+        next_version_def = repo_def[next_version]
+
+        # must be after build_configured_base_repo() so we dont set the
+        # default tag format in the pyproject.toml (we want semantic-release to use its defaults)
+        # however we need it to manually create the tags it knows how to parse
+        tag_format = tag_format_str or default_tag_format_str
+
+        # Run Git operations to simulate repo commit & release history
+        with temporary_working_directory(repo_dir), Repo(".") as git_repo:
+            # commit initial files & update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
             )
 
-            if commit_type == "angular":
-                use_angular_parser()
-            elif commit_type == "emoji":
-                use_emoji_parser()
-            elif commit_type == "scipy":
-                use_scipy_parser()
-            elif commit_type == "tag":
-                use_tag_parser()
-            else:
-                raise ValueError(f"Unknown commit type: {commit_type}")
-
-            git_repo.git.commit(
-                a=True,
-                m=repo_definition[next_version][0],  # Initial commit
-            )
-
-            # Make initial feature release (v0.1.0)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            # Publish initial feature release (v0.1.0) [updates tool.poetry.version]
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[1]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
-            # Prepare for a prerelease
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
+            # Prepare to do a prerelease (by adding a change)
+            # modify && commit modification -> update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
             # Make a patch level release candidate (v0.1.1-rc.1)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[2]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
             # Prepare for a major feature release
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
+            # modify && commit modification -> update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
             # Make a major feature release candidate (v1.0.0-rc.1)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[3]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
             # Prepare for a major feature release
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
+            # modify && commit modification -> update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
             # Make a major feature release (v1.0.0)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[4]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
             # Change to a dev branch
             git_repo.create_head("dev")
             git_repo.heads.dev.checkout()
 
-            # Prepare for a minor feature release
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
+            # TODO: FIX this section... its not proper Git Flow
 
+            # Prepare for a minor feature release
+            # modify && commit modification -> update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
+
+            # TODO: ERROR releasing on dev branch
             # Make a minor feature release (v1.1.0)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[5]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
             # Prepare for a patch level release
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
+            # modify && commit modification -> update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
+            # TODO: ERROR releasing on dev branch
             # Make a patch level release (v1.1.1)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[6]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
             # Change to a feature branch
             git_repo.create_head("feature")
             git_repo.heads.feature.checkout()
 
-            # Prepare for a prerelease
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
+            # Prepare for an alpha prerelease
+            # modify && commit modification -> update commit msg with sha & url
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
-            # Make an alpha prerelease (v1.2.0-alpha.1)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            # Make an alpha prerelease (v1.2.0-alpha.1) on the feature branch
+            create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
-            next_version = versions[7]
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
 
             # Prepare for a 2nd prerelease with 2 commits
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0])
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][1])
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo, next_version_def["commits"], hvcs
+            )
 
-            # Make a 2nd alpha prerelease (v1.2.0-alpha.2)
-            add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
-            tag_str = tag_format.format(version=next_version)
-            git_repo.git.tag(tag_str, m=tag_str)
+            # Make a 2nd alpha prerelease (v1.2.0-alpha.2) on the feature branch
+            create_release_tagged_commit(git_repo, next_version, tag_format)
+
+            return repo_dir, hvcs
 
     return _build_git_flow_repo_with_2_release_channels
 
@@ -445,7 +452,7 @@ def cached_repo_w_git_flow_n_2_release_channels_tag_commits(
 def repo_with_git_flow_angular_commits(
     cached_repo_w_git_flow_n_2_release_channels_angular_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_w_git_flow_n_2_release_channels_angular_commits.exists():
@@ -461,7 +468,7 @@ def repo_with_git_flow_angular_commits(
 def repo_with_git_flow_emoji_commits(
     cached_repo_w_git_flow_n_2_release_channels_emoji_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_w_git_flow_n_2_release_channels_emoji_commits.exists():
@@ -477,7 +484,7 @@ def repo_with_git_flow_emoji_commits(
 def repo_with_git_flow_scipy_commits(
     cached_repo_w_git_flow_n_2_release_channels_scipy_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_w_git_flow_n_2_release_channels_scipy_commits.exists():
@@ -493,7 +500,7 @@ def repo_with_git_flow_scipy_commits(
 def repo_with_git_flow_tag_commits(
     cached_repo_w_git_flow_n_2_release_channels_tag_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: Path,
+    example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
     if not cached_repo_w_git_flow_n_2_release_channels_tag_commits.exists():
