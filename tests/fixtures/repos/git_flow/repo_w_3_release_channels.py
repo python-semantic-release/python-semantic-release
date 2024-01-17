@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         GetVersionStringsFn,
         RepoDefinition,
         SimulateChangeCommitsNReturnChangelogEntryFn,
+        SimulateDefaultChangelogCreationFn,
         TomlSerializableTypes,
         VersionStr,
     )
@@ -218,7 +219,9 @@ def build_git_flow_repo_w_3_release_channels(
     get_commits_for_git_flow_repo_w_3_release_channels: GetRepoDefinitionFn,
     build_configured_base_repo: BuildRepoFn,
     default_tag_format_str: str,
+    changelog_md_file: Path,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+    simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
     create_release_tagged_commit: CreateReleaseFn,
 ) -> BuildRepoFn:
     def _build_git_flow_repo_w_3_release_channels(
@@ -371,6 +374,12 @@ def build_git_flow_repo_w_3_release_channels(
             # Make a patch level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
             )
 
             # Make a 3rd alpha prerelease (v1.1.0-alpha.3)
