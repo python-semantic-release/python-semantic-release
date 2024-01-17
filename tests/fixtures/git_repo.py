@@ -109,7 +109,6 @@ if TYPE_CHECKING:
             self,
             repo_definition: RepoDefinition,
             dest_file: Path | None = None,
-            tag_format: str = ...
         ) -> str:
             ...
 
@@ -325,17 +324,15 @@ def build_configured_base_repo(
 
 
 @pytest.fixture(scope="session")
-def simulate_default_changelog_creation(
-    default_tag_format_str: str,
-) -> SimulateDefaultChangelogCreationFn:
-    def build_version_entry(version: VersionStr, version_def: RepoVersionDef, tag_format: str) -> str:
+def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
+    def build_version_entry(version: VersionStr, version_def: RepoVersionDef) -> str:
             version_entry = []
             if version == "Unreleased":
                 version_entry.append(f"## {version}\n")
             else:
                 version_entry.append(
                     # TODO: artificial newline in front due to template when no Unreleased changes exist
-                    f"\n## {tag_format.format(version=version)} ({TODAY_DATE_STR})\n"
+                    f"\n## v{version} ({TODAY_DATE_STR})\n"
                 )
 
             for section_def in version_def["changelog_sections"]:
@@ -348,7 +345,6 @@ def simulate_default_changelog_creation(
     def _mimic_semantic_release_default_changelog(
         repo_definition: RepoDefinition,
         dest_file: Path | None = None,
-        tag_format: str = default_tag_format_str,
     ) -> str:
         header = "# CHANGELOG"
         version_entries = []
@@ -356,7 +352,7 @@ def simulate_default_changelog_creation(
         for version, version_def in repo_definition.items():
             # prepend entries to force reverse ordering
             version_entries.insert(
-                0, build_version_entry(version, version_def, tag_format)
+                0, build_version_entry(version, version_def)
             )
 
         changelog_content = str.join("\n" * 3, [

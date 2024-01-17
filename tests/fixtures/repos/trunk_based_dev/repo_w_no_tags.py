@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         GetVersionStringsFn,
         RepoDefinition,
         SimulateChangeCommitsNReturnChangelogEntryFn,
+        SimulateDefaultChangelogCreationFn,
         TomlSerializableTypes,
         VersionStr,
     )
@@ -125,7 +126,9 @@ def get_versions_for_trunk_only_repo_w_no_tags(
 def build_trunk_only_repo_w_no_tags(
     get_commits_for_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
     build_configured_base_repo: BuildRepoFn,
+    changelog_md_file: Path,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+    simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
 ) -> BuildRepoFn:
     def _build_trunk_only_repo_w_no_tags(
         dest_dir: Path | str,
@@ -153,6 +156,12 @@ def build_trunk_only_repo_w_no_tags(
             # Run set up commits
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
             )
 
         return repo_dir, hvcs
