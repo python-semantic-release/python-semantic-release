@@ -107,7 +107,6 @@ def cached_example_project(
     setup_py_file: Path,
     changelog_md_file: Path,
     cached_files_dir: Path,
-    changelog_template_dir: Path,
     teardown_cached_dir: TeardownCachedDirFn,
 ) -> Path:
     """
@@ -157,11 +156,6 @@ def cached_example_project(
         abs_filepath.parent.mkdir(parents=True, exist_ok=True)
         # write file contents
         abs_filepath.write_text(contents)
-
-    # create the changelog template directory
-    cached_project_path.joinpath(changelog_template_dir).mkdir(
-        parents=True, exist_ok=True
-    )
 
     # trigger automatic cleanup of cache directory during teardown
     return teardown_cached_dir(cached_project_path)
