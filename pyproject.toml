@@ -50,7 +50,7 @@ repository = "http://github.com/python-semantic-release/python-semantic-release.
 [project.optional-dependencies]
 docs = [
   "Sphinx<=6.0.0",
-  "sphinxcontrib-apidoc==0.3.0",
+  "sphinxcontrib-apidoc == 0.5.0",
   "sphinx-autobuild == 2024.2.4",
   "furo>=2023.3.27",
 ]
