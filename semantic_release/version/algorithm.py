@@ -71,7 +71,9 @@ def _bfs_for_latest_version_in_history(
     `merge_base`'s parents' history. If no commits in the history correspond
     to a released version, return None
     """
-
+    tag_sha_2_version_lookup = {
+        tag.commit.hexsha: version for tag, version in full_release_tags_and_versions
+    }
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
@@ -81,28 +83,26 @@ def _bfs_for_latest_version_in_history(
             return None
 
         node = q.get()
-        if node in visited:
-            log.debug("commit %s already visited, returning none", node.hexsha)
-            return None
 
-        for tag, version in full_release_tags_and_versions:
-            log.debug(
-                "checking if tag %r (%s) matches commit %s",
-                tag.name,
-                tag.commit.hexsha,
-                node.hexsha,
+        log.debug("checking if commit %s matches any tags", node.hexsha)
+        version = tag_sha_2_version_lookup.get(node.hexsha, None)
+
+        if version is not None:
+            log.info(
+                "found latest version in branch history: %r (%s)",
+                str(version),
+                node.hexsha[:7],
             )
-            if tag.commit == node:
-                log.info(
-                    "found latest version in branch history: %r (%s)",
-                    str(version),
-                    node.hexsha[:7],
-                )
-                return version
-            log.debug("commit %s doesn't match any tags", node.hexsha)
+            return version
+
+        log.debug("commit %s doesn't match any tags", node.hexsha)
 
         visited.add(node)
+
         for parent in node.parents:
+            if parent in visited:
+                log.debug("parent commit %s already visited", node.hexsha)
+                continue
             log.debug("queuing parent commit %s", parent.hexsha)
             q.put(parent)
 
