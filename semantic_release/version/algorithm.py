@@ -77,42 +77,60 @@ def _bfs_for_latest_version_in_history(
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
-    def bfs(visited: set[Commit], q: Queue[Commit]) -> Version | None:
-        if q.empty():
-            log.debug("queue is empty, returning none")
-            return None
+    def bfs(start_commit: Commit | TagObject | Blob | Tree) -> Version | None:
+        # Derived from Geeks for Geeks
+        # https://www.geeksforgeeks.org/python-program-for-breadth-first-search-or-bfs-for-a-graph/?ref=lbp
 
-        node = q.get()
+        # Create a queue for BFS
+        q: Queue[Commit | TagObject | Blob | Tree] = Queue()
 
-        log.debug("checking if commit %s matches any tags", node.hexsha)
-        version = tag_sha_2_version_lookup.get(node.hexsha, None)
+        # Create a set to store visited graph nodes (commit objects in this case)
+        visited: set[Commit | TagObject | Blob | Tree] = set()
 
-        if version is not None:
-            log.info(
-                "found latest version in branch history: %r (%s)",
-                str(version),
-                node.hexsha[:7],
-            )
-            return version
+        # Add the source node in the queue & mark as visited to start the search
+        q.put(start_commit)
+        visited.add(start_commit)
 
-        log.debug("commit %s doesn't match any tags", node.hexsha)
+        # Initialize the result to None
+        result = None
 
-        visited.add(node)
+        # Traverse the git history until it finds a version tag if one exists
+        while not q.empty():
+            node = q.get()
+            visited.add(node)
 
-        for parent in node.parents:
-            if parent in visited:
-                log.debug("parent commit %s already visited", node.hexsha)
-                continue
-            log.debug("queuing parent commit %s", parent.hexsha)
-            q.put(parent)
+            log.debug("checking if commit %s matches any tags", node.hexsha)
+            version = tag_sha_2_version_lookup.get(node.hexsha, None)
 
-        return bfs(visited, q)
+            if version is not None:
+                log.info(
+                    "found latest version in branch history: %r (%s)",
+                    str(version),
+                    node.hexsha[:7],
+                )
+                result = version
+                break
 
-    q: Queue[Commit] = Queue()
-    q.put(merge_base)
-    latest_version = bfs(set(), q)
+            log.debug("commit %s doesn't match any tags", node.hexsha)
 
-    log.info("the latest version in this branch's history is %s", latest_version)
+            # Add all parent commits to the queue if they haven't been visited
+            for parent in node.parents:
+                if parent in visited:
+                    log.debug("parent commit %s already visited", node.hexsha)
+                    continue
+
+                log.debug("queuing parent commit %s", parent.hexsha)
+                q.put(parent)
+
+        return result
+
+    # Run a Breadth First Search to find the latest version in the history
+    latest_version = bfs(merge_base)
+    if latest_version is not None:
+        log.info("the latest version in this branch's history is %s", latest_version)
+    else:
+        log.info("no version tags found in this branch's history")
+
     return latest_version
 
 
