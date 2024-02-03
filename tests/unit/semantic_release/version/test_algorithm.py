@@ -1,10 +1,60 @@
 import pytest
-from git import Repo
+from git import Commit, Repo, TagReference
 
 from semantic_release.enums import LevelBump
-from semantic_release.version.algorithm import _increment_version, tags_and_versions
+from semantic_release.version.algorithm import (
+    _bfs_for_latest_version_in_history,
+    _increment_version,
+    tags_and_versions,
+)
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
+
+
+def test_bfs_for_latest_version_in_history():
+    # Setup fake git graph
+    """
+    * merge commit 6 (start)
+    |\
+    | * commit 5
+    | * commit 4
+    |/
+    * commit 3
+    * commit 2
+    * commit 1
+    * v1.0.0
+    """
+    repo = Repo()
+    expected_version = Version.parse("1.0.0")
+    v1_commit = Commit(repo, binsha=b"0" * 20)
+    class TagReferenceOverride(TagReference):
+        commit = v1_commit # type: ignore - mocking the commit property
+
+    v1_tag = TagReferenceOverride(repo, "refs/tags/v1.0.0", check_path=False)
+
+    trunk = Commit(repo, binsha=b"3" * 20, parents=[
+        Commit(repo, binsha=b"2" * 20, parents=[
+            Commit(repo, binsha=b"1" * 20, parents=[v1_commit]),
+        ]),
+    ])
+    start_commit = Commit(
+        repo,
+        binsha=b"6" * 20,
+        parents=[
+            trunk,
+            Commit(repo, binsha=b"5" * 20, parents=[
+                Commit(repo, binsha=b"4" * 20, parents=[trunk]),
+            ]),
+        ]
+    )
+
+    # Execute
+    actual = _bfs_for_latest_version_in_history(start_commit, [
+        (v1_tag, expected_version),
+    ])
+
+    # Verify
+    assert expected_version == actual
 
 
 @pytest.mark.parametrize(
