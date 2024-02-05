@@ -110,6 +110,7 @@ def test_changelog_noop_is_noop(
         lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
         lazy_fixture("repo_with_git_flow_angular_commits"),
         lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits_using_tag_format"),
     ],
 )
 def test_changelog_content_regenerated(
