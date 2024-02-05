@@ -1,109 +1,171 @@
-# NOTE: use backport with newer API
-from datetime import datetime
+from __future__ import annotations
 
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import pytest
+from git import Commit, Object, Repo
+
+# NOTE: use backport with newer API
 from importlib_resources import files
 
+import semantic_release
 from semantic_release.changelog.context import make_changelog_context
-from semantic_release.changelog.release_history import ReleaseHistory
+from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.changelog.template import environment
-from semantic_release.hvcs import Github
-from semantic_release.version.translator import VersionTranslator
+from semantic_release.commit_parser import ParsedCommit
+from semantic_release.enums import LevelBump
+from semantic_release.hvcs import Gitea, Github, Gitlab
+from semantic_release.version.translator import Version
 
-from tests.const import COMMIT_MESSAGE
+from tests.const import TODAY_DATE_STR
 
-default_changelog_template = (
-    files("tests")
-    .joinpath("unit/semantic_release/changelog/TEST_CHANGELOG.md.j2")
-    .read_text(encoding="utf-8")
-)
+if TYPE_CHECKING:
+    from git import Actor
 
-today_as_str = datetime.now().strftime("%Y-%m-%d")
-
-
-def _cm_rstripped(version: str) -> str:
-    return COMMIT_MESSAGE.format(version=version).rstrip()
+    from semantic_release.hvcs import HvcsBase
 
 
-EXPECTED_CONTENT = f"""\
-# CHANGELOG
-## v1.1.0-alpha.3 ({today_as_str})
-### Fix
-* fix(feature): add some missing text
-### Unknown
-* {_cm_rstripped("1.1.0-alpha.3")}
-## v1.1.0-alpha.2 ({today_as_str})
-### Feature
-* feat(feature): add some more text
-### Unknown
-* {_cm_rstripped("1.1.0-alpha.2")}
-## v1.1.0-alpha.1 ({today_as_str})
-### Feature
-* feat(feature): add some more text
-### Unknown
-* {_cm_rstripped("1.1.0-alpha.1")}
-## v1.1.0-rc.2 ({today_as_str})
-### Fix
-* fix(dev): add some more text
-### Unknown
-* {_cm_rstripped("1.1.0-rc.2")}
-## v1.1.0-rc.1 ({today_as_str})
-### Feature
-* feat(dev): add some more text
-### Unknown
-* {_cm_rstripped("1.1.0-rc.1")}
-## v1.0.0 ({today_as_str})
-### Feature
-* feat: add some more text
-### Unknown
-* {_cm_rstripped("1.0.0")}
-## v1.0.0-rc.1 ({today_as_str})
-### Breaking
-* feat!: add some more text
-### Unknown
-* {_cm_rstripped("1.0.0-rc.1")}
-## v0.1.1-rc.1 ({today_as_str})
-### Fix
-* fix: add some more text
-### Unknown
-* {_cm_rstripped("0.1.1-rc.1")}
-## v0.1.0 ({today_as_str})
-### Unknown
-* {_cm_rstripped("0.1.0")}
-* Initial commit
-"""
+@pytest.fixture
+def default_changelog_template() -> str:
+    """Retrieve the semantic-release default changelog template."""
+    version_notes_template = files(semantic_release.__name__).joinpath(
+        Path("data", "templates", "CHANGELOG.md.j2")
+    )
+    return version_notes_template.read_text(encoding="utf-8")
 
 
+@pytest.fixture
+def artificial_release_history(commit_author: Actor):
+    version = Version.parse("1.0.0")
+
+    commit_subject = "fix(cli): fix a problem"
+
+    fix_commit = Commit(
+        Repo("."),
+        Object.NULL_HEX_SHA[:20].encode("utf-8"),
+        message=commit_subject,
+    )
+
+    fix_commit_parsed = ParsedCommit(
+        bump=LevelBump.PATCH,
+        type="fix",
+        scope="cli",
+        descriptions=[commit_subject],
+        breaking_descriptions=[],
+        commit=fix_commit,
+    )
+
+    commit_subject = "feat(cli): add a new feature"
+
+    feat_commit = Commit(
+        Repo("."),
+        Object.NULL_HEX_SHA[:20].encode("utf-8"),
+        message=commit_subject,
+    )
+
+    feat_commit_parsed = ParsedCommit(
+        bump=LevelBump.MINOR,
+        type="feat",
+        scope="cli",
+        descriptions=[commit_subject],
+        breaking_descriptions=[],
+        commit=feat_commit,
+    )
+
+    return ReleaseHistory(
+        unreleased={
+            "feature": [feat_commit_parsed],
+        },
+        released={
+            version: Release(
+                tagger=commit_author,
+                committer=commit_author,
+                tagged_date=datetime.utcnow(),
+                elements={
+                    "feature": [feat_commit_parsed],
+                    "fix": [fix_commit_parsed],
+                }
+            )
+        }
+    )
+
+
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea])
 def test_default_changelog_template(
-    repo_with_git_flow_and_release_channels_angular_commits, default_angular_parser
+    default_changelog_template: str,
+    hvcs_client: type[HvcsBase],
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
 ):
-    repo = repo_with_git_flow_and_release_channels_angular_commits
+    version_str = "1.0.0"
+    version = Version.parse(version_str)
+    rh = artificial_release_history
+    rh.unreleased = {}  # Wipe out unreleased
+
+    feat_commit_obj = artificial_release_history.released[version]["elements"]["feature"][0]
+    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(feat_commit_obj.commit.hexsha)
+    feat_description = str.join('\n', feat_commit_obj.descriptions)
+
+    fix_commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
+    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(fix_commit_obj.commit.hexsha)
+    fix_description = str.join('\n', fix_commit_obj.descriptions)
+
+    expected_changelog = str.join("\n", [
+        "# CHANGELOG",
+        f"## v{version_str} ({TODAY_DATE_STR})",
+        "### Feature",
+        f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+        "### Fix",
+        f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+        "",
+    ])
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    rh = ReleaseHistory.from_git_history(
-        repo=repo, translator=VersionTranslator(), commit_parser=default_angular_parser
-    )
     context = make_changelog_context(
-        hvcs_client=Github(remote_url=repo.remote().url), release_history=rh
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release_history=rh,
     )
     context.bind_to_environment(env)
-    actual_content = env.from_string(default_changelog_template).render()
-    assert actual_content == EXPECTED_CONTENT
+    actual_changelog = env.from_string(default_changelog_template).render()
+    assert expected_changelog == actual_changelog
 
 
-def test_default_changelog_template_using_tag_format(
-    repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
-    default_angular_parser,
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea])
+def test_default_changelog_template_w_unreleased_changes(
+    default_changelog_template: str,
+    hvcs_client: type[HvcsBase],
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
 ):
-    repo = repo_with_git_flow_and_release_channels_angular_commits_using_tag_format
+    version_str = "1.0.0"
+    version = Version.parse(version_str)
+
+    feat_commit_obj = artificial_release_history.released[version]["elements"]["feature"][0]
+    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(feat_commit_obj.commit.hexsha)
+    feat_description = str.join('\n', feat_commit_obj.descriptions)
+
+    fix_commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
+    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(fix_commit_obj.commit.hexsha)
+    fix_description = str.join('\n', fix_commit_obj.descriptions)
+
+    expected_changelog = str.join("\n", [
+        "# CHANGELOG",
+        "## Unreleased",
+        "### Feature",
+        f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+        f"## v{version_str} ({TODAY_DATE_STR})",
+        "### Feature",
+        f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+        "### Fix",
+        f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+        "",
+    ])
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    rh = ReleaseHistory.from_git_history(
-        repo=repo,
-        translator=VersionTranslator(tag_format="vpy{version}"),
-        commit_parser=default_angular_parser,
-    )
     context = make_changelog_context(
-        hvcs_client=Github(remote_url=repo.remote().url), release_history=rh
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release_history=artificial_release_history,
     )
     context.bind_to_environment(env)
-
-    actual_content = env.from_string(default_changelog_template).render()
-    assert actual_content == EXPECTED_CONTENT
+    actual_changelog = env.from_string(default_changelog_template).render()
+    assert expected_changelog == actual_changelog
