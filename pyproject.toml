@@ -51,7 +51,7 @@ repository = "http://github.com/python-semantic-release/python-semantic-release.
 docs = [
   "Sphinx<=6.0.0",
   "sphinxcontrib-apidoc==0.3.0",
-  "sphinx-autobuild==2021.03.14",
+  "sphinx-autobuild==2024.2.4",
   "furo>=2023.3.27",
 ]
 test = [
