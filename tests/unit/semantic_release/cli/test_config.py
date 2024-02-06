@@ -141,7 +141,10 @@ def test_default_toml_config_valid(example_project_dir):
     ],
 )
 def test_commit_author_configurable(
-    example_pyproject_toml: Path, repo_with_no_tags_angular_commits, mock_env, expected_author
+    example_pyproject_toml: Path,
+    repo_with_no_tags_angular_commits,
+    mock_env,
+    expected_author,
 ):
     content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
 

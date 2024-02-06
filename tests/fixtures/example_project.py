@@ -81,9 +81,10 @@ def example_project_dir(tmp_path: Path) -> ExProjectDir:
     return tmp_path.resolve()
 
 
-
 @pytest.fixture
-def change_to_ex_proj_dir(example_project_dir: ExProjectDir) -> Generator[None, None, None]:
+def change_to_ex_proj_dir(
+    example_project_dir: ExProjectDir,
+) -> Generator[None, None, None]:
     cwd = os.getcwd()
     tgt_dir = str(example_project_dir.resolve())
     if cwd == tgt_dir:
@@ -155,7 +156,9 @@ def cached_example_project(
         abs_filepath.write_text(contents)
 
     # create the changelog template directory
-    cached_project_path.joinpath(changelog_template_dir).mkdir(parents=True, exist_ok=True)
+    cached_project_path.joinpath(changelog_template_dir).mkdir(
+        parents=True, exist_ok=True
+    )
 
     # trigger automatic cleanup of cache directory during teardown
     return teardown_cached_dir(cached_project_path)
