@@ -8,12 +8,11 @@ build-backend = "setuptools.build_meta"
 name = "python-semantic-release"
 version = "8.7.2"
 description = "Automatic Semantic Versioning for Python projects"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = { text = "MIT" }
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -103,7 +102,7 @@ legacy_tox_ini = """
 [tox]
 envlist =
     mypy,
-    py{37,38,39,310,311,312},
+    py{38,39,310,311,312},
     coverage
     ruff
 skipsdist = True
@@ -136,7 +135,7 @@ commands =
 """
 
 [tool.mypy]
-python_version = 3.7
+python_version = "3.8"
 packages = ["semantic_release"]
 show_column_numbers = true
 show_error_context = true
@@ -258,7 +257,7 @@ ignore = [
 ]
 
 external = ["V"]
-target-version = "py37"
+target-version = "py38"
 force-exclude = true
 line-length = 88
 output-format = "grouped"
