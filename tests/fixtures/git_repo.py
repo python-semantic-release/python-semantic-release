@@ -49,12 +49,14 @@ def example_git_https_url():
     params=[lazy_fixture("example_git_ssh_url")]
 )
 def git_repo_factory(
-    request: pytest.FixtureRequest, example_project: ExProjectDir
+    request: pytest.FixtureRequest,
+    init_example_project: None,
+    example_project_dir: ExProjectDir,
 ) -> Generator[RepoInitFn, None, None]:
     repos: list[Repo] = []
 
     def git_repo() -> Repo:
-        repo = Repo.init(example_project.resolve())
+        repo = Repo.init(example_project_dir.resolve())
 
         # store the repo so we can close it later
         repos.append(repo)

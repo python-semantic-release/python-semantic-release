@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import base64
 import glob
 import os
 import re
+from typing import TYPE_CHECKING
 from unittest import mock
 from urllib.parse import urlencode
 
@@ -14,6 +17,9 @@ from semantic_release.hvcs.token_auth import TokenAuth
 
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
 from tests.util import netrc_file
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -508,7 +514,11 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_upload_asset_succeeds(
-    default_gitea_client, example_changelog_md, status_code, mock_release_id
+    init_example_project: None,
+    default_gitea_client: Gitea,
+    example_changelog_md: Path,
+    status_code: int,
+    mock_release_id: int,
 ):
     urlparams = {"name": example_changelog_md.name}
     with requests_mock.Mocker(session=default_gitea_client.session) as m:
@@ -539,7 +549,11 @@ def test_upload_asset_succeeds(
 @pytest.mark.parametrize("status_code", (400, 500, 503))
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_upload_asset_fails(
-    default_gitea_client, example_changelog_md, status_code, mock_release_id
+    init_example_project: None,
+    default_gitea_client: Gitea,
+    example_changelog_md: Path,
+    status_code: int,
+    mock_release_id: int,
 ):
     urlparams = {"name": example_changelog_md.name}
     with requests_mock.Mocker(session=default_gitea_client.session) as m:

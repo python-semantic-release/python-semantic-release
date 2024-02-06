@@ -24,6 +24,7 @@ from semantic_release.enums import LevelBump
 from tests.util import CustomParserOpts
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing import Any
 
 
@@ -114,8 +115,9 @@ def test_invalid_commit_parser_value(commit_parser: str):
     assert "commit_parser" in str(excinfo.value)
 
 
-def test_default_toml_config_valid(example_project):
-    default_config_file = example_project / "default.toml"
+def test_default_toml_config_valid(example_project_dir):
+    default_config_file = example_project_dir / "default.toml"
+
     default_config_file.write_text(
         tomlkit.dumps(RawConfig().model_dump(mode="json", exclude_none=True))
     )
@@ -139,10 +141,9 @@ def test_default_toml_config_valid(example_project):
     ],
 )
 def test_commit_author_configurable(
-    example_project, repo_with_no_tags_angular_commits, mock_env, expected_author
+    example_pyproject_toml: Path, repo_with_no_tags_angular_commits, mock_env, expected_author
 ):
-    pyproject_toml = example_project / "pyproject.toml"
-    content = tomlkit.loads(pyproject_toml.read_text(encoding="utf-8")).unwrap()
+    content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
 
     with mock.patch.dict("os.environ", mock_env):
         raw = RawConfig.model_validate(content)
