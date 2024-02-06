@@ -207,27 +207,61 @@ or transformation.
 
 For more information, see :ref:`commit-parsing-parser-options`.
 
-The default values are the defaults for :ref:`commit-parser-angular`
+The default value for this setting depends on what you specify as
+:ref:`commit_parser <config-commit-parser>`. The table below outlines
+the expections from ``commit_parser`` value to default options value.
 
-**Default:**
+==================  ==   =================================
+``commit_parser``        Default ``commit_parser_options``
+==================  ==   =================================
+``"angular"``       ->   .. code-block:: toml
 
-.. code-block:: toml
+                             [tool.semantic_release.commit_parser_options]
+                             allowed_types = [
+                                 "build", "chore", "ci", "docs", "feat", "fix",
+                                 "perf", "style", "refactor", "test"
+                             ]
+                             minor_types = ["feat"]
+                             patch_types = ["fix", "perf"]
 
-    [tool.semantic_release.commit_parser_options]
-    allowed_tags = [
-        "build",
-        "chore",
-        "ci",
-        "docs",
-        "feat",
-        "fix",
-        "perf",
-        "style",
-        "refactor",
-        "test",
-    ]
-    minor_tags = ["feat"]
-    patch_tags = ["fix", "perf"]
+``"emoji"``         ->   .. code-block:: toml
+
+                             [tool.semantic_release.commit_parser_options]
+                             major_tags = [":boom:"]
+                             minor_tags = [
+                                 ":sparkles:", ":children_crossing:", ":lipstick:",
+                                 ":iphone:", ":egg:", ":chart_with_upwards_trend:"
+                             ]
+                             patch_tags = [
+                                 ":ambulance:", ":lock:", ":bug:", ":zap:", ":goal_net:",
+                                 ":alien:", ":wheelchair:", ":speech_balloon:", ":mag:",
+                                 ":apple:", ":penguin:", ":checkered_flag:", ":robot:",
+                                 ":green_apple:"
+                             ]
+
+``"scipy"``         ->   .. code-block:: toml
+
+                             [tool.semantic_release.commit_parser_options]
+                             allowed_tags = [
+                                "API", "DEP", "ENH", "REV", "BUG", "MAINT", "BENCH",
+                                "BLD", "DEV", "DOC", "STY", "TST", "REL", "FEAT", "TEST",
+                             ]
+                             major_tags = ["API",]
+                             minor_tags = ["DEP", "DEV", "ENH", "REV", "FEAT"]
+                             patch_tags = ["BLD", "BUG", "MAINT"]
+
+``"tag"``           ->   .. code-block:: toml
+
+                             [tool.semantic_release.commit_parser_options]
+                             minor_tag = ":sparkles:"
+                             patch_tag = ":nut_and_bolt:"
+
+``"module:class"``  ->   ``**module:class.parser_options()``
+==================  ==   =================================
+
+**Default:** ``ParserOptions { ... }``, where ``...`` depends on
+:ref:`commit_parser <config-commit-parser>` as indicated above.
+
 
 .. _config-logging-use-named-masks:
 
