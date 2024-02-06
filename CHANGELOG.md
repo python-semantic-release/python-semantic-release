@@ -2,6 +2,13 @@
 
 
 
+## v9.0.0 (2024-02-06)
+
+### Breaking
+
+* fix!: drop support for Python 3.7 (#828) ([`ad086f5`](https://github.com/python-semantic-release/python-semantic-release/commit/ad086f5993ae4741d6e20fee618d1bce8df394fb))
+
+
 ## v8.7.2 (2024-01-03)
 
 ### Build
