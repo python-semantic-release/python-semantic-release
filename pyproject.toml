@@ -67,7 +67,7 @@ test = [
   "requests-mock>=1.10.0,<2",
   "types-pytest-lazy-fixture>=0.6.3.3",
 ]
-dev = ["pre-commit", "tox", "ruff==0.1.11"]
+dev = ["pre-commit", "tox", "ruff==0.2.1"]
 mypy = ["mypy", "types-requests"]
 
 [tool.pytest.ini_options]
