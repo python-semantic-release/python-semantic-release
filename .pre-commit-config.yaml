@@ -31,7 +31,7 @@ repos:
 
   # Formatters that may modify source files automatically
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.2
+    rev: v0.1.11
     hooks:
       - id: ruff-format
         name: ruff (format)
@@ -51,7 +51,7 @@ repos:
 
   # Linters and validation
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.2
+    rev: v0.1.11
     hooks:
       - id: ruff
         name: ruff (lint)
@@ -64,7 +64,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.6.1"
+    rev: "v1.8.0"
     hooks:
       - id: mypy
         args: ["--config-file", "pyproject.toml"]
@@ -100,7 +100,7 @@ repos:
           - "tests"
 
   - repo: https://github.com/pycqa/bandit
-    rev: 1.7.5
+    rev: 1.7.6
     hooks:
       - id: bandit
         args:
@@ -114,7 +114,7 @@ repos:
 
   # GHA linting
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.27.0"
+    rev: "0.27.3"
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
