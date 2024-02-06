@@ -5,11 +5,15 @@ import secrets
 import string
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, Any, Iterable, TypeVar
+from typing import TYPE_CHECKING, Any, Iterable, Tuple, TypeVar
+
+from pydantic.dataclasses import dataclass
 
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli.commands import main
+from semantic_release.commit_parser._base import CommitParser, ParserOptions
+from semantic_release.commit_parser.token import ParseResult
 
 if TYPE_CHECKING:
     import filecmp
@@ -136,3 +140,16 @@ def prepare_mocked_git_command_wrapper_type(
     for name, method in mocked_methods.items():
         setattr(MockGitCommandWrapperType, f"mocked_{name}", method)
     return MockGitCommandWrapperType
+
+
+class CustomParserWithNoOpts(CommitParser[ParseResult, ParserOptions]):
+    parser_options = ParserOptions
+
+
+@dataclass
+class CustomParserOpts(ParserOptions):
+    allowed_tags: Tuple[str, ...] = ("new", "custom")  # noqa: UP006
+
+
+class CustomParserWithOpts(CommitParser[ParseResult, CustomParserOpts]):
+    parser_options = CustomParserOpts

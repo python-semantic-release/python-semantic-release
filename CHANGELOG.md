@@ -2,6 +2,24 @@
 
 
 
+## v9.0.1 (2024-02-06)
+
+### Fix
+
+* fix(config): set commit parser opt defaults based on parser choice (#782) ([`9c594fb`](https://github.com/python-semantic-release/python-semantic-release/commit/9c594fb6efac7e4df2b0bfbd749777d3126d03d7))
+
+### Style
+
+* style: beautify 9c594fb6efac7e4df2b0bfbd749777d3126d03d7 ([`6ed24fe`](https://github.com/python-semantic-release/python-semantic-release/commit/6ed24fe81ae2cf2a3823a1dff78552abbd9fd363))
+
+
+## v9.0.0 (2024-02-06)
+
+### Breaking
+
+* fix!: drop support for Python 3.7 (#828) ([`ad086f5`](https://github.com/python-semantic-release/python-semantic-release/commit/ad086f5993ae4741d6e20fee618d1bce8df394fb))
+
+
 ## v8.7.2 (2024-01-03)
 
 ### Build

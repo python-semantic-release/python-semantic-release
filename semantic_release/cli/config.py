@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, is_dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
@@ -11,8 +12,8 @@ from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
 from git import Actor
 from git.repo.base import Repo
 from jinja2 import Environment
-from pydantic import BaseModel, model_validator
-from typing_extensions import Literal
+from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
+from typing_extensions import Annotated, Literal
 
 from semantic_release import hvcs
 from semantic_release.changelog import environment
@@ -38,6 +39,7 @@ from semantic_release.version.declaration import (
 )
 
 log = logging.getLogger(__name__)
+NonEmptyString = Annotated[str, Field(..., min_length=1)]
 
 
 class HvcsClient(str, Enum):
@@ -46,7 +48,7 @@ class HvcsClient(str, Enum):
     GITEA = "gitea"
 
 
-_known_commit_parsers = {
+_known_commit_parsers: Dict[str, type[CommitParser]] = {
     "angular": AngularCommitParser,
     "emoji": EmojiCommitParser,
     "scipy": ScipyCommitParser,
@@ -136,24 +138,9 @@ class RawConfig(BaseModel):
         env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR
     )
     commit_message: str = COMMIT_MESSAGE
-    commit_parser: str = "angular"
+    commit_parser: NonEmptyString = "angular"
     # It's up to the parser_options() method to validate these
-    commit_parser_options: Dict[str, Any] = {
-        "allowed_tags": [
-            "build",
-            "chore",
-            "ci",
-            "docs",
-            "feat",
-            "fix",
-            "perf",
-            "style",
-            "refactor",
-            "test",
-        ],
-        "minor_tags": ["feat"],
-        "patch_tags": ["fix", "perf"],
-    }
+    commit_parser_options: Dict[str, Any] = {}
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
     remote: RemoteConfig = RemoteConfig()
@@ -161,6 +148,42 @@ class RawConfig(BaseModel):
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
     version_variables: Optional[Tuple[str, ...]] = None
+
+    @model_validator(mode="after")
+    def set_default_opts(self) -> RawConfig:
+        # Set the default parser options for the given commit parser when no user input is given
+        if not self.commit_parser_options and self.commit_parser:
+            parser_opts_type = None
+            # If the commit parser is a known one, pull the default options object from it
+            if self.commit_parser in _known_commit_parsers:
+                parser_opts_type = _known_commit_parsers[
+                    self.commit_parser
+                ].parser_options
+            else:
+                # if its a custom parser, try to import it and pull the default options object type
+                custom_class = dynamic_import(self.commit_parser)
+                if hasattr(custom_class, "parser_options"):
+                    parser_opts_type = custom_class.parser_options
+
+            # from either the custom opts class or the known parser opts class, create an instance
+            if callable(parser_opts_type):
+                opts_obj = parser_opts_type()
+                # if the opts object is a dataclass, wrap it in a RootModel so it can be transformed to a Mapping
+                opts_obj = (
+                    opts_obj if not is_dataclass(opts_obj) else RootModel(opts_obj)
+                )
+                # Must be a mapping, so if it's a BaseModel, dump the model to a dict
+                self.commit_parser_options = (
+                    opts_obj.model_dump()
+                    if isinstance(opts_obj, (BaseModel, RootModel))
+                    else opts_obj
+                )
+                if not isinstance(self.commit_parser_options, Mapping):
+                    raise ValidationError(
+                        f"Invalid parser options: {opts_obj}. Must be a mapping."
+                    )
+
+        return self
 
 
 @dataclass
