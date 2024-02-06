@@ -2,6 +2,17 @@
 
 
 
+## v9.0.1 (2024-02-06)
+
+### Fix
+
+* fix(config): set commit parser opt defaults based on parser choice (#782) ([`9c594fb`](https://github.com/python-semantic-release/python-semantic-release/commit/9c594fb6efac7e4df2b0bfbd749777d3126d03d7))
+
+### Style
+
+* style: beautify 9c594fb6efac7e4df2b0bfbd749777d3126d03d7 ([`6ed24fe`](https://github.com/python-semantic-release/python-semantic-release/commit/6ed24fe81ae2cf2a3823a1dff78552abbd9fd363))
+
+
 ## v9.0.0 (2024-02-06)
 
 ### Breaking
