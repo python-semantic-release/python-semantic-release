@@ -14,3 +14,18 @@ updates:
       - dependencies
     open-pull-requests-limit: 10
     rebase-strategy: auto
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "18:00"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+    rebase-strategy: auto
+    groups:
+      github-actions:
+        patterns:
+        - "*"
