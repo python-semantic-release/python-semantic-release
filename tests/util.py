@@ -148,7 +148,7 @@ class CustomParserWithNoOpts(CommitParser[ParseResult, ParserOptions]):
 
 @dataclass
 class CustomParserOpts(ParserOptions):
-    allowed_tags: Tuple[str, ...] = ("new", "custom") # noqa: UP006
+    allowed_tags: Tuple[str, ...] = ("new", "custom")  # noqa: UP006
 
 
 class CustomParserWithOpts(CommitParser[ParseResult, CustomParserOpts]):

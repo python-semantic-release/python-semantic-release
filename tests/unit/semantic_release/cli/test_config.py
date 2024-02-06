@@ -34,10 +34,15 @@ if TYPE_CHECKING:
         ({"type": HvcsClient.GITLAB.value}, EnvConfigVar(env="GITLAB_TOKEN")),
         ({"type": HvcsClient.GITEA.value}, EnvConfigVar(env="GITEA_TOKEN")),
         ({}, EnvConfigVar(env="GH_TOKEN")),  # default not provided -> means Github
-        ({"type": HvcsClient.GITHUB.value, "token": {'env': "CUSTOM_TOKEN"}}, EnvConfigVar(env="CUSTOM_TOKEN")),
+        (
+            {"type": HvcsClient.GITHUB.value, "token": {"env": "CUSTOM_TOKEN"}},
+            EnvConfigVar(env="CUSTOM_TOKEN"),
+        ),
     ],
 )
-def test_load_hvcs_default_token(remote_config: dict[str, Any], expected_token: EnvConfigVar):
+def test_load_hvcs_default_token(
+    remote_config: dict[str, Any], expected_token: EnvConfigVar
+):
     raw_config = RawConfig.model_validate(
         {
             "remote": remote_config,
@@ -60,7 +65,10 @@ def test_invalid_hvcs_type(remote_config: dict[str, Any]):
 @pytest.mark.parametrize(
     "commit_parser, expected_parser_opts",
     [
-        (None, RootModel(AngularParserOptions()).model_dump()),  # default not provided -> means angular
+        (
+            None,
+            RootModel(AngularParserOptions()).model_dump(),
+        ),  # default not provided -> means angular
         ("angular", RootModel(AngularParserOptions()).model_dump()),
         ("emoji", RootModel(EmojiParserOptions()).model_dump()),
         ("scipy", RootModel(ScipyParserOptions()).model_dump()),
@@ -69,10 +77,12 @@ def test_invalid_hvcs_type(remote_config: dict[str, Any]):
         ("tests.util:CustomParserWithOpts", RootModel(CustomParserOpts()).model_dump()),
     ],
 )
-def test_load_default_parser_opts(commit_parser: str | None, expected_parser_opts: dict[str, Any]):
+def test_load_default_parser_opts(
+    commit_parser: str | None, expected_parser_opts: dict[str, Any]
+):
     raw_config = RawConfig.model_validate(
         # Since TOML does not support NoneTypes, we need to not include the key
-        { "commit_parser": commit_parser } if commit_parser else {}
+        {"commit_parser": commit_parser} if commit_parser else {}
     )
     assert expected_parser_opts == raw_config.commit_parser_options
 

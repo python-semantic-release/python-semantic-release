@@ -156,7 +156,9 @@ class RawConfig(BaseModel):
             parser_opts_type = None
             # If the commit parser is a known one, pull the default options object from it
             if self.commit_parser in _known_commit_parsers:
-                parser_opts_type = _known_commit_parsers[self.commit_parser].parser_options
+                parser_opts_type = _known_commit_parsers[
+                    self.commit_parser
+                ].parser_options
             else:
                 # if its a custom parser, try to import it and pull the default options object type
                 custom_class = dynamic_import(self.commit_parser)
@@ -167,7 +169,9 @@ class RawConfig(BaseModel):
             if callable(parser_opts_type):
                 opts_obj = parser_opts_type()
                 # if the opts object is a dataclass, wrap it in a RootModel so it can be transformed to a Mapping
-                opts_obj = opts_obj if not is_dataclass(opts_obj) else RootModel(opts_obj)
+                opts_obj = (
+                    opts_obj if not is_dataclass(opts_obj) else RootModel(opts_obj)
+                )
                 # Must be a mapping, so if it's a BaseModel, dump the model to a dict
                 self.commit_parser_options = (
                     opts_obj.model_dump()
@@ -175,7 +179,9 @@ class RawConfig(BaseModel):
                     else opts_obj
                 )
                 if not isinstance(self.commit_parser_options, Mapping):
-                    raise ValidationError(f"Invalid parser options: {opts_obj}. Must be a mapping.")
+                    raise ValidationError(
+                        f"Invalid parser options: {opts_obj}. Must be a mapping."
+                    )
 
         return self
 
