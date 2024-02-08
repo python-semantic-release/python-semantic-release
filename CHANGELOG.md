@@ -2,6 +2,48 @@
 
 
 
+## v9.0.2 (2024-02-08)
+
+### Chore
+
+* chore: update pre-commit hooks (#796) ([`e238452`](https://github.com/python-semantic-release/python-semantic-release/commit/e23845226120b4fb934dd8755ce1b3f822cac041))
+
+### Ci
+
+* ci: Configure trusted publishing in pypi ([`8e3c00b`](https://github.com/python-semantic-release/python-semantic-release/commit/8e3c00b238859559d82ff692bcee15f70bf4f6ad))
+
+* ci: bump the github-actions group with 3 updates (#831) ([`bf96143`](https://github.com/python-semantic-release/python-semantic-release/commit/bf961436fd81c6398ca2c456143b64517a2b4cac))
+
+* ci: add grouped github-actions section to dependabot config (#794) ([`3eb15c4`](https://github.com/python-semantic-release/python-semantic-release/commit/3eb15c413cec0430fe2b27a313185068f900c61d))
+
+### Documentation
+
+* docs: Remove duplicate note in configuration.rst (#807) ([`fb6f243`](https://github.com/python-semantic-release/python-semantic-release/commit/fb6f243a141642c02469f1080180ecaf4f3cec66))
+
+### Fix
+
+* fix(util): properly parse windows line-endings in commit messages
+
+Due to windows line-endings `\r\n`, it would improperly split the commit
+description (it failed to split at all) and cause detection of Breaking changes
+to fail. The breaking changes regular expression looks to the start of the line
+for the proper syntax.
+
+Resolves: #820 ([`70193ba`](https://github.com/python-semantic-release/python-semantic-release/commit/70193ba117c1a6d3690aed685fee8a734ba174e5))
+
+### Style
+
+* style: beautify 70193ba117c1a6d3690aed685fee8a734ba174e5 ([`c777bb2`](https://github.com/python-semantic-release/python-semantic-release/commit/c777bb261e8e46497c5c4b3fd84303db71772142))
+
+* style: beautify 229c6471efc2c1bee002c3b89f58caf391b89e78 ([`c7be6e2`](https://github.com/python-semantic-release/python-semantic-release/commit/c7be6e2330c3527302915fcf3334923ab5252480))
+
+### Test
+
+* test(util): add windows line-endings possibilities for commit parsing ([`c57b082`](https://github.com/python-semantic-release/python-semantic-release/commit/c57b0825c632da166c6dbe5b976c9edb1aa5882b))
+
+* test(fixtures): cache the base example project directory (#799) ([`229c647`](https://github.com/python-semantic-release/python-semantic-release/commit/229c6471efc2c1bee002c3b89f58caf391b89e78))
+
+
 ## v9.0.1 (2024-02-06)
 
 ### Fix
@@ -2301,11 +2343,7 @@ Fixes #237 ([`fe6a7e7`](https://github.com/python-semantic-release/python-semant
 
 ## v7.0.0 (2020-05-22)
 
-### Documentation
-
-* docs: add conda-forge badge ([`e9536bb`](https://github.com/python-semantic-release/python-semantic-release/commit/e9536bbe119c9e3b90c61130c02468e0e1f14141))
-
-### Feature
+### Breaking
 
 * feat(changelog): add changelog components (#240)
 
@@ -2330,6 +2368,10 @@ BREAKING CHANGE: The `compare_url` option has been removed in favor of using
 Changelog components may now receive the value of `changelog_sections`,
 split and ready to use. ([`3e17a98`](https://github.com/python-semantic-release/python-semantic-release/commit/3e17a98d7fa8468868a87e62651ac2c010067711))
 
+### Documentation
+
+* docs: add conda-forge badge ([`e9536bb`](https://github.com/python-semantic-release/python-semantic-release/commit/e9536bbe119c9e3b90c61130c02468e0e1f14141))
+
 ### Style
 
 * style: improve code formatting ([`1dfca97`](https://github.com/python-semantic-release/python-semantic-release/commit/1dfca97c3856e496e9e2cda429b8aa093799bd5b))
@@ -2350,7 +2392,7 @@ Fixes #239 ([`34acbbc`](https://github.com/python-semantic-release/python-semant
 
 ## v6.4.0 (2020-05-15)
 
-### Feature
+### Breaking
 
 * feat(history): create emoji parser (#238)
 
@@ -2719,11 +2761,7 @@ will get the version they specify. ([`123984d`](https://github.com/python-semant
 
 ## v5.0.0 (2020-03-22)
 
-### Documentation
-
-* docs(pypi): update docstings in pypi.py ([`6502d44`](https://github.com/python-semantic-release/python-semantic-release/commit/6502d448fa65e5dc100e32595e83fff6f62a881a))
-
-### Feature
+### Breaking
 
 * feat(build): allow config setting for build command (#195)
 
@@ -2732,6 +2770,10 @@ will get the version they specify. ([`123984d`](https://github.com/python-semant
 BREAKING CHANGE: Previously the build_commands configuration variable set the types of bundles sent to `python setup.py`. It has been replaced by the configuration variable `build_command` which takes the full command e.g. `python setup.py sdist` or `poetry build`.
 
 Closes #188 ([`740f4bd`](https://github.com/python-semantic-release/python-semantic-release/commit/740f4bdb26569362acfc80f7e862fc2c750a46dd))
+
+### Documentation
+
+* docs(pypi): update docstings in pypi.py ([`6502d44`](https://github.com/python-semantic-release/python-semantic-release/commit/6502d448fa65e5dc100e32595e83fff6f62a881a))
 
 ### Fix
 
