@@ -55,7 +55,7 @@ docs = [
 ]
 test = [
   "coverage[toml]>=6,<8",
-  "pytest>=7,<8",
+  "pytest>=7,<9",
   "pytest-env~=1.0",
   "pytest-xdist>=2,<4",
   "pytest-mock>=3,<4",
