@@ -74,6 +74,7 @@ def _bfs_for_latest_version_in_history(
     tag_sha_2_version_lookup = {
         tag.commit.hexsha: version for tag, version in full_release_tags_and_versions
     }
+
     # Step 3. Latest full release version within the history of the current branch
     # Breadth-first search the merge-base and its parent commits for one which matches
     # the tag of the latest full release tag in history
