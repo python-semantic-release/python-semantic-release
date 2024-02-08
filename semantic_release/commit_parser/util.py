@@ -16,7 +16,12 @@ def parse_paragraphs(text: str) -> list[str]:
     :param text: The text string to be divided.
     :return: A list of condensed paragraphs, as strings.
     """
-    return list(filter(None, [
-        paragraph.replace("\n", " ").strip()
-        for paragraph in text.replace("\r", "").split("\n\n")
-    ]))
+    return list(
+        filter(
+            None,
+            [
+                paragraph.replace("\n", " ").strip()
+                for paragraph in text.replace("\r", "").split("\n\n")
+            ],
+        )
+    )

@@ -7,9 +7,9 @@ from semantic_release.commit_parser.util import parse_paragraphs
     "text, expected",
     [
         ("", []),
-        ("\n\n \n\n \n", []),                  # Unix (LF) - empty lines
-        ("\r\n\r\n \r\n\r\n \n", []),          # Windows (CRLF) - empty lines
-        ("\n\nA\n\nB\n", ["A", "B"]),          # Unix (LF)
+        ("\n\n \n\n \n", []),  # Unix (LF) - empty lines
+        ("\r\n\r\n \r\n\r\n \n", []),  # Windows (CRLF) - empty lines
+        ("\n\nA\n\nB\n", ["A", "B"]),  # Unix (LF)
         ("\r\n\r\nA\r\n\r\nB\n", ["A", "B"]),  # Windows (CRLF)
         (
             "Long\nexplanation\n\nfull of interesting\ndetails",
