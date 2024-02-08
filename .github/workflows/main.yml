@@ -109,6 +109,9 @@ jobs:
     concurrency: push
     needs: [test, lint, beautify]
     if: github.repository == 'python-semantic-release/python-semantic-release'
+    environment:
+      name: pypi
+      url: https://pypi.org/project/python-semantic-release/
     permissions:
       # https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#metadata
       id-token: write
@@ -126,20 +129,15 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           root_options: "-vv"
 
-      # https://github.com/pypa/gh-action-pypi-publish#specifying-a-different-username
-      # This will need converting to use trusted publishing at a later date
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
         id: pypi-publish
-
         # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
         # See https://github.com/actions/runner/issues/1173
         if: steps.release.outputs.released == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
-          user: ${{ secrets.PYPI_USERNAME }}
-          password: ${{ secrets.PYPI_PASSWORD }}
 
       - name: Publish package distributions to GitHub Releases
         id: github-release
