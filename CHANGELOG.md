@@ -2,6 +2,29 @@
 
 
 
+## v9.0.3 (2024-02-08)
+
+### Chore
+
+* chore: modernize ruff configuration to work with ruff &gt;= 0.2 ([`613d240`](https://github.com/python-semantic-release/python-semantic-release/commit/613d240499c081b185c5774d1d8a4665d3f5cc28))
+
+### Fix
+
+* fix(algorithm): correct bfs to not abort on previously visited node ([`02df305`](https://github.com/python-semantic-release/python-semantic-release/commit/02df305db43abfc3a1f160a4a52cc2afae5d854f))
+
+### Performance
+
+* perf(algorithm): refactor bfs search to use queue rather than recursion ([`8b742d3`](https://github.com/python-semantic-release/python-semantic-release/commit/8b742d3db6652981a7b5f773a74b0534edc1fc15))
+
+### Style
+
+* style: beautify 8b742d3db6652981a7b5f773a74b0534edc1fc15 ([`f95be0c`](https://github.com/python-semantic-release/python-semantic-release/commit/f95be0c207e499e214b12c578825bfcee0f2bbf8))
+
+### Test
+
+* test(algorithm): add bfs unit test on fake git history ([`2c8a36e`](https://github.com/python-semantic-release/python-semantic-release/commit/2c8a36ea5b1d1fb19cfe90a3b8a1bce5077c717c))
+
+
 ## v9.0.2 (2024-02-08)
 
 ### Chore
