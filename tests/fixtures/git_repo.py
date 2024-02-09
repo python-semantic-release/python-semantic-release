@@ -28,16 +28,18 @@ if TYPE_CHECKING:
             ...
 
     class GetRepoDefinitionFn(Protocol):
-        def __call__(self, commit_type: CommitConvention = "angular") -> Mapping[VersionStr, list[CommitMsg]]:
+        def __call__(
+            self, commit_type: CommitConvention = "angular"
+        ) -> Mapping[VersionStr, list[CommitMsg]]:
             ...
 
     class BuildRepoFn(Protocol):
         def __call__(
-                self,
-                git_repo_path: Path | str,
-                commit_type: CommitConvention,
-                tag_format_str: str | None = None,
-            ) -> None:
+            self,
+            git_repo_path: Path | str,
+            commit_type: CommitConvention,
+            tag_format_str: str | None = None,
+        ) -> None:
             ...
 
 
@@ -112,8 +114,11 @@ def cached_example_git_project(
 
 
 @pytest.fixture
-def example_project_git_repo(example_project_dir: ExProjectDir) -> Generator[ExProjectGitRepoFn, None, None]:
+def example_project_git_repo(
+    example_project_dir: ExProjectDir,
+) -> Generator[ExProjectGitRepoFn, None, None]:
     repos: list[Repo] = []
+
     # Must be a callable function to ensure files exist before repo is opened
     def _example_project_git_repo() -> Repo:
         if not example_project_dir.exists():

@@ -55,6 +55,7 @@ def remove_dir_tree(directory: Path | str = ".", force: bool = False) -> None:
     Helpful for deleting directories with .git/* files, which usually have some
     read-only permissions
     """
+
     def on_read_only_error(func, path, exc_info):
         os.chmod(path, stat.S_IWRITE)
         os.unlink(path)

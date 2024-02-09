@@ -51,7 +51,7 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
                 "emoji": ":bug: more text",
                 "scipy": "MAINT: more text",
                 "tag": ":nut_and_bolt: more text",
-            }
+            },
         ],
     }
 
@@ -73,9 +73,7 @@ def get_versions_for_trunk_only_repo_w_no_tags(
     get_commits_for_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
 ) -> GetVersionStringsFn:
     def _get_versions_for_trunk_only_repo_w_no_tags() -> list[VersionStr]:
-        return list(
-            get_commits_for_trunk_only_repo_w_no_tags().keys()
-        )
+        return list(get_commits_for_trunk_only_repo_w_no_tags().keys())
 
     return _get_versions_for_trunk_only_repo_w_no_tags
 
@@ -116,14 +114,15 @@ def build_trunk_only_repo_w_no_tags(
             else:
                 raise ValueError(f"Unknown commit type: {commit_type}")
 
-            git_repo.git.commit(a=True, m=repo_definition[next_version][0])  # Initial commit
+            git_repo.git.commit(
+                a=True, m=repo_definition[next_version][0]
+            )  # Initial commit
 
             for commit_msg in repo_definition[next_version][1:]:
                 add_text_to_file(git_repo, file_in_repo)
                 git_repo.git.commit(a=True, m=commit_msg)
 
     return _build_trunk_only_repo_w_no_tags
-
 
 
 # --------------------------------------------------------------------------- #

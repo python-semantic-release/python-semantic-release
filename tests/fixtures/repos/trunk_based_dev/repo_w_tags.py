@@ -28,21 +28,26 @@ if TYPE_CHECKING:
 @pytest.fixture(scope="session")
 def get_commits_for_trunk_only_repo_w_tags() -> GetRepoDefinitionFn:
     base_definition: Mapping[VersionStr, list[dict[CommitConvention, CommitMsg]]] = {
-        "0.1.0": [{
-            "angular": "Initial commit",
-            "emoji": "Initial commit",
-            "scipy": "Initial commit",
-            "tag": "Initial commit",
-        }],
-        "0.1.1": [{
-            "angular": "fix: add some more text",
-            "emoji": ":bug: add some more text",
-            "scipy": "MAINT: add some more text",
-            "tag": ":nut_and_bolt: add some more text",
-        }],
+        "0.1.0": [
+            {
+                "angular": "Initial commit",
+                "emoji": "Initial commit",
+                "scipy": "Initial commit",
+                "tag": "Initial commit",
+            }
+        ],
+        "0.1.1": [
+            {
+                "angular": "fix: add some more text",
+                "emoji": ":bug: add some more text",
+                "scipy": "MAINT: add some more text",
+                "tag": ":nut_and_bolt: add some more text",
+            }
+        ],
     }
+
     def _get_commits_for_trunk_only_repo_w_tags(
-        commit_type: CommitConvention = "angular"
+        commit_type: CommitConvention = "angular",
     ) -> Mapping[VersionStr, list[CommitMsg]]:
         definition: Mapping[VersionStr, list[CommitMsg]] = {}
         for version, commits in base_definition.items():
@@ -59,9 +64,7 @@ def get_versions_for_trunk_only_repo_w_tags(
     get_commits_for_trunk_only_repo_w_tags: GetRepoDefinitionFn,
 ) -> GetVersionStringsFn:
     def _get_versions_for_trunk_only_repo_w_tags() -> list[VersionStr]:
-        return list(
-            get_commits_for_trunk_only_repo_w_tags().keys()
-        )
+        return list(get_commits_for_trunk_only_repo_w_tags().keys())
 
     return _get_versions_for_trunk_only_repo_w_tags
 
@@ -104,7 +107,9 @@ def build_trunk_only_repo_w_tags(
             else:
                 raise ValueError(f"Unknown commit type: {commit_type}")
 
-            git_repo.git.commit(a=True, m=repo_definition[next_version][0])  # Initial commit
+            git_repo.git.commit(
+                a=True, m=repo_definition[next_version][0]
+            )  # Initial commit
 
             add_text_to_file(git_repo, file_in_repo)
             git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))
@@ -114,7 +119,9 @@ def build_trunk_only_repo_w_tags(
             next_version = versions[1]
 
             add_text_to_file(git_repo, file_in_repo)
-            git_repo.git.commit(m=repo_definition[next_version][0]) # patch level message
+            git_repo.git.commit(
+                m=repo_definition[next_version][0]
+            )  # patch level message
 
             add_text_to_file(git_repo, file_in_repo)
             git_repo.git.commit(m=COMMIT_MESSAGE.format(version=next_version))

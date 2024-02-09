@@ -150,7 +150,9 @@ def test_version_noop_is_noop(tmp_path_factory, example_project_dir, repo, cli_r
         ],
         *[
             (
-                lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
+                lazy_fixture(
+                    "repo_w_github_flow_w_feature_release_channel_angular_commits"
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -330,7 +332,9 @@ def test_version_already_released_no_push(repo, cli_runner):
         ],
         *[
             (
-                lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
+                lazy_fixture(
+                    "repo_w_github_flow_w_feature_release_channel_angular_commits"
+                ),
                 cli_args,
                 expected_stdout,
             )

@@ -199,7 +199,9 @@ REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY = (
             REPO_WITH_SINGLE_BRANCH_AND_PRERELEASES_EXPECTED_RELEASE_HISTORY,
         ),
         (
-            lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
+            lazy_fixture(
+                "repo_w_github_flow_w_feature_release_channel_angular_commits"
+            ),
             REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY,
         ),
         (

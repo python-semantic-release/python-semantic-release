@@ -211,21 +211,24 @@ def use_release_notes_template(
 
 @pytest.fixture
 def example_pyproject_toml(
-    example_project_dir: ExProjectDir, pyproject_toml_file: Path,
+    example_project_dir: ExProjectDir,
+    pyproject_toml_file: Path,
 ) -> Path:
     return example_project_dir / pyproject_toml_file
 
 
 @pytest.fixture
 def example_setup_cfg(
-    example_project_dir: ExProjectDir, setup_cfg_file: Path,
+    example_project_dir: ExProjectDir,
+    setup_cfg_file: Path,
 ) -> Path:
     return example_project_dir / setup_cfg_file
 
 
 @pytest.fixture
 def example_setup_py(
-    example_project_dir: ExProjectDir, setup_py_file: Path,
+    example_project_dir: ExProjectDir,
+    setup_py_file: Path,
 ) -> Path:
     return example_project_dir / setup_py_file
 
@@ -233,14 +236,16 @@ def example_setup_py(
 # Note this is just the path and the content may change
 @pytest.fixture
 def example_changelog_md(
-    example_project_dir: ExProjectDir, changelog_md_file: Path,
+    example_project_dir: ExProjectDir,
+    changelog_md_file: Path,
 ) -> Path:
     return example_project_dir / changelog_md_file
 
 
 @pytest.fixture
 def example_project_template_dir(
-    example_project_dir: ExProjectDir, changelog_template_dir: Path,
+    example_project_dir: ExProjectDir,
+    changelog_template_dir: Path,
 ) -> Path:
     return example_project_dir / changelog_template_dir
 

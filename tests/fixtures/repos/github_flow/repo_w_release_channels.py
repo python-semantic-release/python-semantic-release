@@ -87,10 +87,10 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
 def get_versions_for_github_flow_repo_w_feature_release_channel(
     get_commits_for_github_flow_repo_w_feature_release_channel: GetRepoDefinitionFn,
 ) -> GetVersionStringsFn:
-    def _get_versions_for_github_flow_repo_w_feature_release_channel() -> list[VersionStr]:
-        return list(
-            get_commits_for_github_flow_repo_w_feature_release_channel().keys()
-        )
+    def _get_versions_for_github_flow_repo_w_feature_release_channel() -> (
+        list[VersionStr]
+    ):
+        return list(get_commits_for_github_flow_repo_w_feature_release_channel().keys())
 
     return _get_versions_for_github_flow_repo_w_feature_release_channel
 
@@ -112,7 +112,9 @@ def build_github_flow_repo_w_feature_release_channel(
         commit_type: CommitConvention,
         tag_format_str: str | None = None,
     ) -> None:
-        repo_definition = get_commits_for_github_flow_repo_w_feature_release_channel(commit_type)
+        repo_definition = get_commits_for_github_flow_repo_w_feature_release_channel(
+            commit_type
+        )
         tag_format = tag_format_str or default_tag_format_str
         versions = list(repo_definition.keys())
         next_version = versions[0]
@@ -140,7 +142,8 @@ def build_github_flow_repo_w_feature_release_channel(
                 raise ValueError(f"Unknown commit type: {commit_type}")
 
             git_repo.git.commit(
-                a=True, m=repo_definition[next_version][0]  # Initial commit
+                a=True,
+                m=repo_definition[next_version][0],  # Initial commit
             )
 
             # Make initial feature release (v0.1.0)

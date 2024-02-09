@@ -174,7 +174,8 @@ def build_git_flow_repo_with_2_release_channels(
                 raise ValueError(f"Unknown commit type: {commit_type}")
 
             git_repo.git.commit(
-                a=True, m=repo_definition[next_version][0]  # Initial commit
+                a=True,
+                m=repo_definition[next_version][0],  # Initial commit
             )
 
             # Make initial feature release (v0.1.0)

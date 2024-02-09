@@ -80,9 +80,7 @@ def get_versions_for_trunk_only_repo_w_prerelease_tags(
     get_commits_for_trunk_only_repo_w_prerelease_tags: GetRepoDefinitionFn,
 ) -> GetVersionStringsFn:
     def _get_versions_for_trunk_only_repo_w_prerelease_tags() -> list[VersionStr]:
-        return list(
-            get_commits_for_trunk_only_repo_w_prerelease_tags().keys()
-        )
+        return list(get_commits_for_trunk_only_repo_w_prerelease_tags().keys())
 
     return _get_versions_for_trunk_only_repo_w_prerelease_tags
 
@@ -267,7 +265,8 @@ def repo_with_single_branch_and_prereleases_emoji_commits(
     if not cached_repo_with_single_branch_and_prereleases_emoji_commits.exists():
         raise RuntimeError("Unable to find cached repository!")
     copy_dir_tree(
-        cached_repo_with_single_branch_and_prereleases_emoji_commits, example_project_dir
+        cached_repo_with_single_branch_and_prereleases_emoji_commits,
+        example_project_dir,
     )
     return example_project_git_repo()
 
@@ -282,7 +281,8 @@ def repo_with_single_branch_and_prereleases_scipy_commits(
     if not cached_repo_with_single_branch_and_prereleases_scipy_commits.exists():
         raise RuntimeError("Unable to find cached repository!")
     copy_dir_tree(
-        cached_repo_with_single_branch_and_prereleases_scipy_commits, example_project_dir
+        cached_repo_with_single_branch_and_prereleases_scipy_commits,
+        example_project_dir,
     )
     return example_project_git_repo()
 
