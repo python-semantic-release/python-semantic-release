@@ -231,7 +231,7 @@ def test_custom_release_notes_template(
     resp = cli_runner.invoke(main, [changelog.name or "changelog", "--post-to-release-tag", tag])
     expected_release_notes = runtime_context_with_tags.template_environment.from_string(
         EXAMPLE_RELEASE_NOTES_TEMPLATE
-    ).render(version=version, release=release)
+    ).render(version=version, release=release) + '\n'
 
     # Assert
     assert resp.exit_code == 0, (

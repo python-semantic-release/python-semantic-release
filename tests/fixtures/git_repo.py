@@ -360,7 +360,7 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
             str.join("\n", [
                 entry for entry in version_entries
             ])
-        ])
+        ]).rstrip() + '\n'
 
         if dest_file is not None:
             dest_file.write_text(changelog_content)
