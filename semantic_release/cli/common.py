@@ -34,7 +34,7 @@ def render_default_changelog_file(template_environment: Environment) -> str:
         .read_text(encoding="utf-8")
     )
     tmpl = template_environment.from_string(changelog_text)
-    return tmpl.render()
+    return tmpl.render().rstrip()
 
 
 def render_release_notes(
@@ -45,4 +45,4 @@ def render_release_notes(
 ) -> str:
     return template_environment.from_string(release_notes_template).render(
         version=version, release=release
-    )
+    ).rstrip()
