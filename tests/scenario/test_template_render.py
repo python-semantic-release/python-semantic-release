@@ -1,10 +1,18 @@
+from __future__ import annotations
+
 import itertools
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from semantic_release.changelog.template import environment, recursive_render
+
+if TYPE_CHECKING:
+    from tests.conftest import ExProjectDir
+
+# FIX me
 
 NORMAL_TEMPLATE_SRC = """---
 content:
@@ -40,6 +48,7 @@ def _strip_trailing_j2(path: Path) -> Path:
 @pytest.fixture
 def normal_template(example_project_template_dir):
     template = example_project_template_dir / "normal.yaml.j2"
+    template.parent.mkdir(parents=True, exist_ok=True)
     template.write_text(NORMAL_TEMPLATE_SRC)
     return template
 
@@ -48,14 +57,14 @@ def normal_template(example_project_template_dir):
 def long_directory_path(example_project_template_dir):
     # NOTE: fixture enables using Path rather than
     # constant string, so no issue with / vs \ on Windows
-    d = example_project_template_dir / "long" / "dir" / "path"
-    os.makedirs(str(d.resolve()), exist_ok=True)
-    return d
+    folder = example_project_template_dir / "long" / "dir" / "path"
+    return folder
 
 
 @pytest.fixture
 def deeply_nested_file(long_directory_path):
     file = long_directory_path / "buried.txt"
+    file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text(PLAINTEXT_FILE_CONTENT)
     return file
 
@@ -63,20 +72,21 @@ def deeply_nested_file(long_directory_path):
 @pytest.fixture
 def hidden_file(example_project_template_dir):
     file = example_project_template_dir / ".hidden"
+    file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text("I shouldn't be present")
     return file
 
 
 @pytest.fixture
-def directory_path_with_hidden_subfolder(example_project_template_dir):
-    d = example_project_template_dir / "path" / ".subfolder" / "hidden"
-    os.makedirs(str(d.resolve()), exist_ok=True)
-    return d
+def directory_path_with_hidden_subfolder(example_project_template_dir: Path) -> Path:
+    folder = example_project_template_dir / "path" / ".subfolder" / "hidden"
+    return folder
 
 
 @pytest.fixture
 def excluded_file(directory_path_with_hidden_subfolder):
     file = directory_path_with_hidden_subfolder / "excluded.txt"
+    file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text("I shouldn't be present")
     return file
 
@@ -132,15 +142,14 @@ def test_recursive_render(
 
 
 @pytest.fixture
-def dotfolder_template_dir(example_project_dir: Path):
-    newpath = example_project_dir / ".templates/.psr-templates"
-    newpath.mkdir(parents=True, exist_ok=True)
-    return newpath
+def dotfolder_template_dir(example_project_dir: ExProjectDir) -> Path:
+    return example_project_dir / ".templates/.psr-templates"
 
 
 @pytest.fixture
-def dotfolder_template(dotfolder_template_dir: Path):
+def dotfolder_template(init_example_project: None, dotfolder_template_dir: Path) -> Path:
     tmpl = dotfolder_template_dir / "template.txt"
+    tmpl.parent.mkdir(parents=True, exist_ok=True)
     tmpl.write_text("I am a template")
     return tmpl
 
