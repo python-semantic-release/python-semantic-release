@@ -67,7 +67,7 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
             )
         else:
             changelog_text = render_default_changelog_file(env)
-            changelog_file.write_text(changelog_text, encoding="utf-8")
+            changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
 
     else:
         if runtime.global_cli_options.noop:
@@ -112,7 +112,7 @@ def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
         else:
             try:
                 hvcs_client.create_or_update_release(
-                    release_tag, release_notes, prerelease=version.is_prerelease
+                    release_tag, f"{release_notes}\n", prerelease=version.is_prerelease
                 )
             except Exception as e:
                 log.exception(e)

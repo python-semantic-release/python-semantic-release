@@ -429,7 +429,7 @@ def version(  # noqa: C901
                 )
             else:
                 changelog_text = render_default_changelog_file(env)
-                changelog_file.write_text(changelog_text, encoding="utf-8")
+                changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
 
             updated_paths = [str(changelog_file.relative_to(repo.working_dir))]
 
