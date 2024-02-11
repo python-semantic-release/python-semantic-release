@@ -284,7 +284,7 @@ available.
 .. _Rust's error handling: https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html
 .. _black: https://github.com/psf/black/blob/main/src/black/rusty.py
 .. _catching exceptions in Python is slower: https://docs.python.org/3/faq/design.html#how-fast-are-exceptions
-.. _namedtuple: https://docs.python.org/3.7/library/typing.html#typing.NamedTuple
+.. _namedtuple: https://docs.python.org/3/library/typing.html#typing.NamedTuple
 
 .. _commit-parsing-parser-options:
 

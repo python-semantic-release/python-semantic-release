@@ -3,20 +3,16 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Iterable, Iterator
+from typing import TYPE_CHECKING, TypedDict
 
 from git.objects.tag import TagObject
 
-# For Python3.7 compatibility
-from typing_extensions import TypedDict
-
-from semantic_release.commit_parser import (
-    ParseError,
-)
+from semantic_release.commit_parser import ParseError
 from semantic_release.version.algorithm import tags_and_versions
 
 if TYPE_CHECKING:
-    import re
+    from re import Pattern
+    from typing import Iterable, Iterator
 
     from git.repo.base import Repo
     from git.util import Actor
@@ -39,7 +35,7 @@ class ReleaseHistory:
         repo: Repo,
         translator: VersionTranslator,
         commit_parser: CommitParser[ParseResult, ParserOptions],
-        exclude_commit_patterns: Iterable[re.Pattern[str]] = (),
+        exclude_commit_patterns: Iterable[Pattern[str]] = (),
     ) -> ReleaseHistory:
         all_git_tags_and_versions = tags_and_versions(repo.tags, translator)
         unreleased: dict[str, list[ParseResult]] = defaultdict(list)

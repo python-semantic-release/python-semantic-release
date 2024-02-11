@@ -12,8 +12,10 @@ from jinja2.sandbox import SandboxedEnvironment
 from semantic_release.helpers import dynamic_import
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     from jinja2 import Environment
-    from typing_extensions import Literal
+
 
 log = logging.getLogger(__name__)
 

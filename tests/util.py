@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     try:
         from typing import TypeAlias
     except ImportError:
+        # for python 3.8 and 3.9
         from typing_extensions import TypeAlias
 
     from unittest.mock import MagicMock
