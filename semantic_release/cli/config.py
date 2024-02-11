@@ -7,13 +7,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass, is_dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from git import Actor
 from git.repo.base import Repo
 from jinja2 import Environment
 from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
-from typing_extensions import Annotated, Literal
+
+# For Python 3.8 compatibility
+from typing_extensions import Annotated
 
 from semantic_release import hvcs
 from semantic_release.changelog import environment
