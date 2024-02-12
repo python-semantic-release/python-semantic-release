@@ -15,6 +15,7 @@ Guides
 .. toctree::
     travis
     github-actions
+    gitlab-ci
     cronjobs
 
 .. _automatic-github:
