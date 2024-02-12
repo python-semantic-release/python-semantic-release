@@ -5,6 +5,7 @@ import pytest
 from requests import Session
 
 from semantic_release.hvcs.bitbucket import Bitbucket
+
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 
 
