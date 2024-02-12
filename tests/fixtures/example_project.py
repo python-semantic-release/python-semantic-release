@@ -324,6 +324,7 @@ def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
 @pytest.fixture(scope="session")
 def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitHub as the HVCS."""
+
     def _use_github_hvcs(domain: str | None = None) -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "github")
         if domain is not None:
@@ -336,6 +337,7 @@ def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
 @pytest.fixture(scope="session")
 def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use GitLab as the HVCS."""
+
     def _use_gitlab_hvcs(domain: str | None = None) -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
         if domain is not None:
@@ -348,6 +350,7 @@ def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
 @pytest.fixture(scope="session")
 def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
     """Modify the configuration file to use Gitea as the HVCS."""
+
     def _use_gitea_hvcs(domain: str | None = None) -> type[HvcsBase]:
         update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
         if domain is not None:

@@ -177,7 +177,7 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                     "tag": ":nut_and_bolt: (feature) add some more text",
                 },
             ],
-        }
+        },
     }
 
     def _get_commits_for_git_flow_repo_w_3_release_channels(
@@ -240,7 +240,7 @@ def build_git_flow_repo_w_3_release_channels(
                 "tool.semantic_release.branches.dev": {
                     "match": "dev",
                     "prerelease": True,
-                    "prerelease_token": "rc"
+                    "prerelease_token": "rc",
                 },
                 # branch "feature" has prerelease suffix of "alpha"
                 "tool.semantic_release.branches.features": {

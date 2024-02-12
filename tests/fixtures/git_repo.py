@@ -48,19 +48,16 @@ if TYPE_CHECKING:
         changelog_sections: list[ChangelogTypeHeadingDef]
         commits: list[CommitMsg]
 
-
     class ChangelogTypeHeadingDef(TypedDict):
         section: ChangelogTypeHeading
         i_commits: list[int]
         """List of indexes values to match to the commits list in the RepoVersionDef"""
-
 
     class BaseRepoVersionDef(TypedDict):
         """A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types"""
 
         changelog_sections: dict[CommitConvention, list[ChangelogTypeHeadingDef]]
         commits: list[dict[CommitConvention, CommitMsg]]
-
 
     class BuildRepoFn(Protocol):
         def __call__(
@@ -74,13 +71,9 @@ if TYPE_CHECKING:
         ) -> tuple[Path, HvcsBase]:
             ...
 
-
     class CommitNReturnChangelogEntryFn(Protocol):
-        def __call__(
-            self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase
-        ) -> str:
+        def __call__(self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase) -> str:
             ...
-
 
     class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
         def __call__(
@@ -88,21 +81,17 @@ if TYPE_CHECKING:
         ) -> list[CommitMsg]:
             ...
 
-
     class CreateReleaseFn(Protocol):
         def __call__(self, git_repo: Repo, version: str, tag_format: str = ...) -> None:
             ...
-
 
     class ExProjectGitRepoFn(Protocol):
         def __call__(self) -> Repo:
             ...
 
-
     class GetVersionStringsFn(Protocol):
         def __call__(self) -> list[VersionStr]:
             ...
-
 
     RepoDefinition = dict[VersionStr, RepoVersionDef]
     """
@@ -173,10 +162,13 @@ def commit_n_rtn_changelog_entry() -> CommitNReturnChangelogEntryFn:
 
         # log commit in changelog format after commit action
         commit_sha = git_repo.head.commit.hexsha
-        return str.join(" ", [
-            str(git_repo.head.commit.message).strip(),
-            f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))"
-        ])
+        return str.join(
+            " ",
+            [
+                str(git_repo.head.commit.message).strip(),
+                f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))",
+            ],
+        )
 
     return _commit_n_rtn_changelog_entry
 
@@ -264,6 +256,7 @@ def build_configured_base_repo(
     for when the test executes semantic_release. It returns a function so that
     derivative fixtures can call this fixture with individual parameters.
     """
+
     def _build_configured_base_repo(
         dest_dir: Path | str,
         commit_type: str = "angular",
@@ -280,7 +273,6 @@ def build_configured_base_repo(
 
         # Make sure we are in the dest directory
         with temporary_working_directory(dest_dir):
-
             # Set parser configuration
             if commit_type == "angular":
                 use_angular_parser()
@@ -308,7 +300,9 @@ def build_configured_base_repo(
 
             # Set tag format in configuration
             if tag_format_str is not None:
-                update_pyproject_toml("tool.semantic_release.tag_format", tag_format_str)
+                update_pyproject_toml(
+                    "tool.semantic_release.tag_format", tag_format_str
+                )
 
             # Apply configurations to pyproject.toml
             if extra_configs is not None:
@@ -318,7 +312,6 @@ def build_configured_base_repo(
         return Path(dest_dir), hvcs
 
     return _build_configured_base_repo
-
 
 
 @pytest.fixture

@@ -185,7 +185,9 @@ def build_github_flow_repo_w_feature_release_channel(
         )
 
         # Retrieve/Define project vars that will be used to create the repo below
-        repo_def = get_commits_for_github_flow_repo_w_feature_release_channel(commit_type)
+        repo_def = get_commits_for_github_flow_repo_w_feature_release_channel(
+            commit_type
+        )
         versions = (key for key in repo_def)
         next_version = next(versions)
         next_version_def = repo_def[next_version]
