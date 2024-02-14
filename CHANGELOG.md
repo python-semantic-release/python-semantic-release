@@ -2,6 +2,101 @@
 
 
 
+## v9.1.0 (2024-02-14)
+
+### Build
+
+* build(deps): bump minimum required `tomlkit` to `&gt;=0.11.0`
+
+TOMLDocument is missing the `unwrap()` function in `v0.10.2` which
+causes an AttributeError to occur when attempting to read a the text
+in `pyproject.toml` as discovered with #834
+
+Resolves: #834 ([`291aace`](https://github.com/python-semantic-release/python-semantic-release/commit/291aacea1d0429a3b27e92b0a20b598f43f6ea6b))
+
+### Documentation
+
+* docs: add bitbucket to token table ([`56f146d`](https://github.com/python-semantic-release/python-semantic-release/commit/56f146d9f4c0fc7f2a84ad11b21c8c45e9221782))
+
+* docs: add bitbucket authentication ([`b78a387`](https://github.com/python-semantic-release/python-semantic-release/commit/b78a387d8eccbc1a6a424a183254fc576126199c))
+
+* docs: fix typo ([`b240e12`](https://github.com/python-semantic-release/python-semantic-release/commit/b240e129b180d45c1d63d464283b7dfbcb641d0c))
+
+### Feature
+
+* feat: add bitbucket hvcs ([`bbbbfeb`](https://github.com/python-semantic-release/python-semantic-release/commit/bbbbfebff33dd24b8aed2d894de958d532eac596))
+
+### Fix
+
+* fix: remove unofficial environment variables ([`a5168e4`](https://github.com/python-semantic-release/python-semantic-release/commit/a5168e40b9a14dbd022f62964f382b39faf1e0df))
+
+### Refactor
+
+* refactor: add lint workaround ([`55d6e03`](https://github.com/python-semantic-release/python-semantic-release/commit/55d6e0349303e7b1a6a598a8f4eb54d708d1b27d))
+
+### Style
+
+* style: ruff linter ([`f7f7c8a`](https://github.com/python-semantic-release/python-semantic-release/commit/f7f7c8a8d499126a16238e7183cde54e3ea4cea0))
+
+* style: beautify 710d96482edae38438c090e5e631f2d6b6e990f2 ([`d2314f8`](https://github.com/python-semantic-release/python-semantic-release/commit/d2314f86946df8a6ef30ca7a5bd163c5989e46f7))
+
+* style(fixtures): update styling of imports on git repo fixture ([`710d964`](https://github.com/python-semantic-release/python-semantic-release/commit/710d96482edae38438c090e5e631f2d6b6e990f2))
+
+* style: beautify 8e3f87ce801498fdbb0c1b2261b9768941c0a21c ([`16c057a`](https://github.com/python-semantic-release/python-semantic-release/commit/16c057a8da471a696f6d6484f2cc821fd883f5ed))
+
+* style(tests): update typing &amp; import issues ([`2597ea5`](https://github.com/python-semantic-release/python-semantic-release/commit/2597ea584ab5084ef6ab398b9ec6186a6191ac1f))
+
+### Test
+
+* test: remove environment variable tests ([`5c3fe69`](https://github.com/python-semantic-release/python-semantic-release/commit/5c3fe694de5db0fc6a157a6a7717fa8c4d26f6f6))
+
+* test: add bitbucket to changelog unit test ([`c33f8ff`](https://github.com/python-semantic-release/python-semantic-release/commit/c33f8ff37e007a944b5fb1884b9e05b33ccd2047))
+
+* test(fixtures): refactor repos to use common fixtures to simplify workflow ([`9ad8296`](https://github.com/python-semantic-release/python-semantic-release/commit/9ad829693589e0cfe0962159f41cc2efd886eacc))
+
+* test(fixtures): add common repo build/setup fixture ([`8da2840`](https://github.com/python-semantic-release/python-semantic-release/commit/8da284095173f7bcece768e0452d8d18378454d4))
+
+* test(fixtures): apply new repo definition to repos ([`1e13e2c`](https://github.com/python-semantic-release/python-semantic-release/commit/1e13e2cee25b2760058bdd58238a9f55d5999c5e))
+
+* test(fixtures): define new repo definition type ([`e0e8792`](https://github.com/python-semantic-release/python-semantic-release/commit/e0e8792d9dcd3b7d3f4a41ef0f8fe2c92a761f55))
+
+* test(fixtures): add generic multi-commit executor from definition ([`e9605f3`](https://github.com/python-semantic-release/python-semantic-release/commit/e9605f37b001ff478f08f781587448c16ba31687))
+
+* test(fixtures): add commit &amp; changelog entry derivation function ([`29dbc7c`](https://github.com/python-semantic-release/python-semantic-release/commit/29dbc7cf6f9a066d9f6bd785fbeb11e700a586ac))
+
+* test(fixtures): add manual release commit creation fixture ([`93dc523`](https://github.com/python-semantic-release/python-semantic-release/commit/93dc523776af303e0870f42618bb1590948fb826))
+
+* test(fixtures): expand hvcs use fixtures to set remote.domain value ([`1303a5a`](https://github.com/python-semantic-release/python-semantic-release/commit/1303a5a5fcaec326f2cbe625d847c7de821a853d))
+
+* test(fixtures): use const to set example project domain ([`1a15761`](https://github.com/python-semantic-release/python-semantic-release/commit/1a15761c32de93b03628be0032f6a57f196d6ee1))
+
+* test(constants): set starting example project version to 0.0.0 ([`310af11`](https://github.com/python-semantic-release/python-semantic-release/commit/310af1150129e9d6ef833dd9a18860119b15ee01))
+
+* test(fixtures): remove unused fixtures &amp; types ([`8e3f87c`](https://github.com/python-semantic-release/python-semantic-release/commit/8e3f87ce801498fdbb0c1b2261b9768941c0a21c))
+
+* test(util): add util func for removing readonly .git/* files ([`180a053`](https://github.com/python-semantic-release/python-semantic-release/commit/180a053a992c0ffa03e1d9800cc4bf743d6331b2))
+
+* test(fixtures): rename repo main and feature branches fixture across tests ([`f006e2b`](https://github.com/python-semantic-release/python-semantic-release/commit/f006e2b2e9e2025a3b07d14d79714420d59a63fe))
+
+* test(fixtures): add caching to github flow development repos ([`693b143`](https://github.com/python-semantic-release/python-semantic-release/commit/693b14352da4fa2c7fcd969c4b8c5230ec90055c))
+
+* test(fixtures): add caching to git flow development repos ([`3db33f0`](https://github.com/python-semantic-release/python-semantic-release/commit/3db33f0c6556701de54ecc07dde91b65fc5d60a5))
+
+* test(fixtures): add caching to trunk development w/ tags repos ([`4e3b6b6`](https://github.com/python-semantic-release/python-semantic-release/commit/4e3b6b6ef3f493ca613e25b5a5bdb5545fa12e9f))
+
+* test(fixtures): refactor for session level fixture use ([`a42b032`](https://github.com/python-semantic-release/python-semantic-release/commit/a42b032ff44bedee81d20765163758c8a2ca6153))
+
+* test(utils): add a utility to temporary change directory ([`68e12f3`](https://github.com/python-semantic-release/python-semantic-release/commit/68e12f369deced9df9e2c8d08dae7a4e4ece3fee))
+
+* test(fixtures): modularize git repo file into sub-modules ([`18d0877`](https://github.com/python-semantic-release/python-semantic-release/commit/18d0877f6a6db38ed127b1c07d191075dda46904))
+
+* test(fixtures): deconflict colliding fixtures for file dependent fixture execution ([`1890cf2`](https://github.com/python-semantic-release/python-semantic-release/commit/1890cf2e8989e5fea182894e663c3659edf6903a))
+
+* test(fixtures): cache the base example git directory ([`0cd0f44`](https://github.com/python-semantic-release/python-semantic-release/commit/0cd0f44019a5dacf01040b6917b35f2a918d00ca))
+
+* test(fixtures): adapt cli conftest fixtures to read when file is known to exist ([`0193cde`](https://github.com/python-semantic-release/python-semantic-release/commit/0193cde64cf7e07a7ecd5a0ea9513105f6207386))
+
+
 ## v9.0.3 (2024-02-08)
 
 ### Chore
