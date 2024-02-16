@@ -11,6 +11,10 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
             ParsedGitUrl("http", "git.mycompany.com", "username", "myproject"),
         ),
         (
+            "http://subsubdomain.subdomain.company-net.com/username/myproject.git",
+            ParsedGitUrl("http", "subsubdomain.subdomain.company-net.com", "username", "myproject"),
+        ),
+        (
             "https://github.com/username/myproject.git",
             ParsedGitUrl("https", "github.com", "username", "myproject"),
         ),
@@ -21,6 +25,10 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
         (
             "https://git.mycompany.com:4443/username/myproject.git",
             ParsedGitUrl("https", "git.mycompany.com:4443", "username", "myproject"),
+        ),
+        (
+            "https://subsubdomain.subdomain.company-net.com/username/myproject.git",
+            ParsedGitUrl("https", "subsubdomain.subdomain.company-net.com", "username", "myproject"),
         ),
         (
             "git://host.xz/path/to/repo.git/",
@@ -35,6 +43,10 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
             ParsedGitUrl("ssh", "git@github.com", "username", "myproject"),
         ),
         (
+            "git@subsubdomain.subdomain.company-net.com:username/myproject.git",
+            ParsedGitUrl("ssh", "git@subsubdomain.subdomain.company-net.com", "username", "myproject"),
+        ),
+        (
             "ssh://git@github.com:3759/myproject.git",
             ParsedGitUrl("ssh", "git@github.com", "3759", "myproject"),
         ),
@@ -45,6 +57,10 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
         (
             "ssh://git@bitbucket.org:7999/username/myproject.git",
             ParsedGitUrl("ssh", "git@bitbucket.org:7999", "username", "myproject"),
+        ),
+        (
+            "ssh://git@subsubdomain.subdomain.company-net.com:username/myproject.git",
+            ParsedGitUrl("ssh", "git@subsubdomain.subdomain.company-net.com", "username", "myproject"),
         ),
         (
             "git+ssh://git@github.com:username/myproject.git",
