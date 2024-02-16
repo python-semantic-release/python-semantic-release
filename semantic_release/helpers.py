@@ -119,7 +119,7 @@ def parse_git_url(url: str) -> ParsedGitUrl:
         (r"^git\+ssh://", "ssh://"),
         # normalize an scp like syntax to URL compatible syntax
         # excluding port definitions (:#####) & including numeric usernames
-        (r"(ssh://(?:\w+@)?[\w.]+):(?!\d{1,5}/\w+/)(.*)$", r"\1/\2"),
+        (r"(ssh://(?:\w+@)?[\w.-]+):(?!\d{1,5}/\w+/)(.*)$", r"\1/\2"),
         # normalize implicit file (windows || posix) urls to explicit file:// urls
         (r"^([C-Z]:/)|^/(\w)", r"file:///\1\2"),
     ]
