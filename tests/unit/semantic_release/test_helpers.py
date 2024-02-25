@@ -12,7 +12,12 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
         ),
         (
             "http://subsubdomain.subdomain.company-net.com/username/myproject.git",
-            ParsedGitUrl("http", "subsubdomain.subdomain.company-net.com", "username", "myproject"),
+            ParsedGitUrl(
+                "http",
+                "subsubdomain.subdomain.company-net.com",
+                "username",
+                "myproject",
+            ),
         ),
         (
             "https://github.com/username/myproject.git",
@@ -28,7 +33,12 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
         ),
         (
             "https://subsubdomain.subdomain.company-net.com/username/myproject.git",
-            ParsedGitUrl("https", "subsubdomain.subdomain.company-net.com", "username", "myproject"),
+            ParsedGitUrl(
+                "https",
+                "subsubdomain.subdomain.company-net.com",
+                "username",
+                "myproject",
+            ),
         ),
         (
             "git://host.xz/path/to/repo.git/",
@@ -44,7 +54,12 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
         ),
         (
             "git@subsubdomain.subdomain.company-net.com:username/myproject.git",
-            ParsedGitUrl("ssh", "git@subsubdomain.subdomain.company-net.com", "username", "myproject"),
+            ParsedGitUrl(
+                "ssh",
+                "git@subsubdomain.subdomain.company-net.com",
+                "username",
+                "myproject",
+            ),
         ),
         (
             "ssh://git@github.com:3759/myproject.git",
@@ -60,7 +75,12 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
         ),
         (
             "ssh://git@subsubdomain.subdomain.company-net.com:username/myproject.git",
-            ParsedGitUrl("ssh", "git@subsubdomain.subdomain.company-net.com", "username", "myproject"),
+            ParsedGitUrl(
+                "ssh",
+                "git@subsubdomain.subdomain.company-net.com",
+                "username",
+                "myproject",
+            ),
         ),
         (
             "git+ssh://git@github.com:username/myproject.git",
