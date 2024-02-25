@@ -2,6 +2,17 @@
 
 
 
+## v9.1.1 (2024-02-25)
+
+### Fix
+
+* fix(parse_git_url): fix bad url with dash ([`1c25b8e`](https://github.com/python-semantic-release/python-semantic-release/commit/1c25b8e6f1e43c15ca7d5a59dca0a13767f9bc33))
+
+### Style
+
+* style: beautify 1c25b8e6f1e43c15ca7d5a59dca0a13767f9bc33 ([`85b2a2f`](https://github.com/python-semantic-release/python-semantic-release/commit/85b2a2f5cf4c49aa3e394dfe3574e24266f93bfc))
+
+
 ## v9.1.0 (2024-02-14)
 
 ### Build
