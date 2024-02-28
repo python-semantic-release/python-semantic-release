@@ -62,6 +62,15 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url
             ),
         ),
         (
+            "first.last_test-1@subsubdomain.subdomain.company-net.com:username/myproject.git",
+            ParsedGitUrl(
+                "ssh",
+                "first.last_test-1@subsubdomain.subdomain.company-net.com",
+                "username",
+                "myproject",
+            ),
+        ),
+        (
             "ssh://git@github.com:3759/myproject.git",
             ParsedGitUrl("ssh", "git@github.com", "3759", "myproject"),
         ),
