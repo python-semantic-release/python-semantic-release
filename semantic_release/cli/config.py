@@ -146,6 +146,7 @@ class RawConfig(BaseModel):
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
     remote: RemoteConfig = RemoteConfig()
+    no_verify: bool = False
     tag_format: str = "v{version}"
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
@@ -229,6 +230,7 @@ class RuntimeContext:
     commit_parser: CommitParser[ParseResult, ParserOptions]
     version_translator: VersionTranslator
     major_on_zero: bool
+    no_verify: bool
     prerelease: bool
     assets: List[str]
     commit_author: Actor
@@ -430,6 +432,7 @@ class RuntimeContext:
             upload_to_vcs_release=raw.publish.upload_to_vcs_release,
             global_cli_options=global_cli_options,
             masker=masker,
+            no_verify=raw.no_verify,
         )
         # credential masker
         self.apply_log_masking(self.masker)
