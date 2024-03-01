@@ -49,7 +49,7 @@ repository = "http://github.com/python-semantic-release/python-semantic-release.
 [project.optional-dependencies]
 docs = [
   "Sphinx<=6.0.0",
-  "sphinxcontrib-apidoc==0.3.0",
+  "sphinxcontrib-apidoc==0.5.0",
   "sphinx-autobuild==2021.03.14",
   "furo>=2023.3.27",
 ]
@@ -63,11 +63,11 @@ test = [
   "pytest-cov>=4,<5",
   "pytest-pretty>=1.2.0,<2",
   "pytest-clarity>=1.0.1",
-  "responses==0.23.3",
+  "responses==0.24.1",
   "requests-mock>=1.10.0,<2",
   "types-pytest-lazy-fixture>=0.6.3.3",
 ]
-dev = ["pre-commit", "tox", "ruff==0.1.11"]
+dev = ["pre-commit", "tox", "ruff==0.2.1"]
 mypy = ["mypy", "types-requests"]
 
 [tool.pytest.ini_options]
