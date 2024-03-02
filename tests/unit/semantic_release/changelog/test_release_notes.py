@@ -17,7 +17,7 @@ from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.changelog.template import environment
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.enums import LevelBump
-from semantic_release.hvcs import Gitea, Github, Gitlab
+from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 from semantic_release.version import Version
 
 from tests.const import TODAY_DATE_STR
@@ -72,7 +72,7 @@ def release_notes_template() -> str:
     return version_notes_template.read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_release_notes_template(
     example_git_https_url: str,
     hvcs_client: type[HvcsBase],

@@ -252,6 +252,7 @@ def build_configured_base_repo(
     use_github_hvcs: UseHvcsFn,
     use_gitlab_hvcs: UseHvcsFn,
     use_gitea_hvcs: UseHvcsFn,
+    use_bitbucket_hvcs: UseHvcsFn,
     use_angular_parser: UseParserFn,
     use_emoji_parser: UseParserFn,
     use_scipy_parser: UseParserFn,
@@ -301,6 +302,8 @@ def build_configured_base_repo(
                 hvcs_class = use_gitlab_hvcs(hvcs_domain)
             elif hvcs_client_name == "gitea":
                 hvcs_class = use_gitea_hvcs(hvcs_domain)
+            elif hvcs_client_name == "bitbucket":
+                hvcs_class = use_bitbucket_hvcs(hvcs_domain)
             else:
                 raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
 
