@@ -8,6 +8,8 @@ EXAMPLE_REPO_OWNER = "example_owner"
 EXAMPLE_REPO_NAME = "example_repo"
 EXAMPLE_HVCS_DOMAIN = "example.com"
 
+SUCCESS_EXIT_CODE = 0
+
 TODAY_DATE_STR = datetime.now().strftime("%Y-%m-%d")
 """Date formatted as how it would appear in the changelog (Must match local timezone)"""
 
