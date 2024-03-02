@@ -45,18 +45,18 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
                     {"section": "Unknown", "i_commits": [0]},
                 ],
                 "emoji": [
-                    {"section": ":bug:", "i_commits": [1, 3]},
+                    {"section": ":bug:", "i_commits": [3, 1]},
                     {"section": ":sparkles:", "i_commits": [2]},
                     {"section": "Other", "i_commits": [0]},
                 ],
                 "scipy": [
                     {"section": "Feature", "i_commits": [2]},
-                    {"section": "Fix", "i_commits": [1, 3]},
+                    {"section": "Fix", "i_commits": [3, 1]},
                     {"section": "Unknown", "i_commits": [0]},
                 ],
                 "tag": [
                     {"section": "Feature", "i_commits": [2]},
-                    {"section": "Fix", "i_commits": [1, 3]},
+                    {"section": "Fix", "i_commits": [3, 1]},
                     {"section": "Unknown", "i_commits": [0]},
                 ],
             },
