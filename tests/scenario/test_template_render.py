@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,6 +9,8 @@ import pytest
 from semantic_release.changelog.template import environment, recursive_render
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from tests.fixtures.example_project import ExProjectDir
 
 
@@ -56,8 +57,7 @@ def normal_template(example_project_template_dir: Path) -> Path:
 def long_directory_path(example_project_template_dir: Path) -> Path:
     # NOTE: fixture enables using Path rather than
     # constant string, so no issue with / vs \ on Windows
-    folder = example_project_template_dir / "long" / "dir" / "path"
-    return folder
+    return example_project_template_dir / "long" / "dir" / "path"
 
 
 @pytest.fixture
@@ -78,8 +78,7 @@ def hidden_file(example_project_template_dir: Path) -> Path:
 
 @pytest.fixture
 def directory_path_with_hidden_subfolder(example_project_template_dir: Path) -> Path:
-    folder = example_project_template_dir / "path" / ".subfolder" / "hidden"
-    return folder
+    return example_project_template_dir / "path" / ".subfolder" / "hidden"
 
 
 @pytest.fixture
@@ -146,7 +145,9 @@ def dotfolder_template_dir(example_project_dir: ExProjectDir) -> Path:
 
 
 @pytest.fixture
-def dotfolder_template(init_example_project: None, dotfolder_template_dir: Path) -> Path:
+def dotfolder_template(
+    init_example_project: None, dotfolder_template_dir: Path
+) -> Path:
     tmpl = dotfolder_template_dir / "template.txt"
     tmpl.parent.mkdir(parents=True, exist_ok=True)
     tmpl.write_text("I am a template")

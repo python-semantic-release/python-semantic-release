@@ -439,11 +439,13 @@ def test_version_no_push_force_level(
     differing_files = sorted(flatten_dircmp(dcmp))
 
     # Changelog already reflects changes this should introduce
-    assert differing_files == sorted([
-        "CHANGELOG.md",
-        "pyproject.toml",
-        f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
-    ])
+    assert differing_files == sorted(
+        [
+            "CHANGELOG.md",
+            "pyproject.toml",
+            f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
+        ]
+    )
 
     # Compare pyproject.toml
     new_pyproject_toml = tomlkit.loads(
@@ -610,9 +612,7 @@ def test_custom_release_notes_template(
     )
 
     # Act
-    resp = cli_runner.invoke(
-        main, [version_subcmd, "--skip-build", "--vcs-release"]
-    )
+    resp = cli_runner.invoke(main, [version_subcmd, "--skip-build", "--vcs-release"])
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
 
@@ -632,7 +632,8 @@ def test_custom_release_notes_template(
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert resp.exit_code == 0, (
         "Unexpected failure in command "
-        f"'semantic-release {version_subcmd} --skip-build --vcs-release': " + resp.stderr
+        f"'semantic-release {version_subcmd} --skip-build --vcs-release': "
+        + resp.stderr
     )
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
@@ -715,12 +716,14 @@ def test_version_only_update_files_no_git_actions(
     differing_files = sorted(flatten_dircmp(dcmp))
 
     # Files that should receive version change
-    expected_changed_files = sorted([
-        # CHANGELOG.md is not included as no modification to Git History
-        # (no commit or tag) has been made
-        "pyproject.toml",
-        f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
-    ])
+    expected_changed_files = sorted(
+        [
+            # CHANGELOG.md is not included as no modification to Git History
+            # (no commit or tag) has been made
+            "pyproject.toml",
+            f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
+        ]
+    )
     assert expected_changed_files == differing_files
 
     # Compare pyproject.toml
