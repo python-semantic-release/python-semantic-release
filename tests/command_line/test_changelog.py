@@ -19,6 +19,33 @@ from tests.const import (
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
 )
+from tests.fixtures.repos import (
+    repo_with_no_tags_angular_commits,
+    repo_with_no_tags_emoji_commits,
+    repo_with_no_tags_scipy_commits,
+    repo_with_no_tags_tag_commits,
+    repo_with_single_branch_angular_commits,
+    repo_with_single_branch_emoji_commits,
+    repo_with_single_branch_scipy_commits,
+    repo_with_single_branch_tag_commits,
+    repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_and_prereleases_emoji_commits,
+    repo_with_single_branch_and_prereleases_scipy_commits,
+    repo_with_single_branch_and_prereleases_tag_commits,
+    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_emoji_commits,
+    repo_w_github_flow_w_feature_release_channel_scipy_commits,
+    repo_w_github_flow_w_feature_release_channel_tag_commits,
+    repo_with_git_flow_angular_commits,
+    repo_with_git_flow_emoji_commits,
+    repo_with_git_flow_scipy_commits,
+    repo_with_git_flow_tag_commits,
+    repo_with_git_flow_and_release_channels_angular_commits,
+    repo_with_git_flow_and_release_channels_emoji_commits,
+    repo_with_git_flow_and_release_channels_scipy_commits,
+    repo_with_git_flow_and_release_channels_tag_commits,
+    repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
+)
 from tests.util import flatten_dircmp, get_release_history_from_context, remove_dir_tree
 
 if TYPE_CHECKING:
@@ -107,13 +134,34 @@ def test_changelog_noop_is_noop(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits_using_tag_format"),
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            repo_with_no_tags_angular_commits.__name__,
+            repo_with_no_tags_emoji_commits.__name__,
+            repo_with_no_tags_scipy_commits.__name__,
+            repo_with_no_tags_tag_commits.__name__,
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+            repo_with_single_branch_and_prereleases_angular_commits.__name__,
+            repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+            repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+            repo_with_single_branch_and_prereleases_tag_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_tag_commits.__name__,
+            repo_with_git_flow_angular_commits.__name__,
+            repo_with_git_flow_emoji_commits.__name__,
+            repo_with_git_flow_scipy_commits.__name__,
+            repo_with_git_flow_tag_commits.__name__,
+            repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+            repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+            repo_with_git_flow_and_release_channels_tag_commits.__name__,
+            repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+        ]
     ],
 )
 def test_changelog_content_regenerated(
