@@ -57,9 +57,9 @@ def artificial_release_history(commit_author: Actor):
                 tagged_date=datetime.utcnow(),
                 elements={
                     "fix": [fix_commit_parsed],
-                }
+                },
             )
-        }
+        },
     )
 
 
@@ -87,14 +87,19 @@ def test_default_release_notes_template(
     version_str = "1.1.0-alpha.3"
     version = Version.parse(version_str)
     commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
-    commit_url = hvcs_client(example_git_https_url).commit_hash_url(commit_obj.commit.hexsha)
-    commit_description = str.join('\n', commit_obj.descriptions)
-    expected_content = str.join("\n", [
-        f"# v{version_str} ({TODAY_DATE_STR})",
-        "## Fix",
-        f"* {commit_description} ([`{commit_obj.commit.hexsha[:7]}`]({commit_url}))",
-        "",
-    ])
+    commit_url = hvcs_client(example_git_https_url).commit_hash_url(
+        commit_obj.commit.hexsha
+    )
+    commit_description = str.join("\n", commit_obj.descriptions)
+    expected_content = str.join(
+        "\n",
+        [
+            f"# v{version_str} ({TODAY_DATE_STR})",
+            "## Fix",
+            f"* {commit_description} ([`{commit_obj.commit.hexsha[:7]}`]({commit_url}))",
+            "",
+        ],
+    )
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),

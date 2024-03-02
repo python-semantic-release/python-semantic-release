@@ -235,12 +235,19 @@ def test_release_history(
     for k in expected_release_history.released:
         expected = expected_release_history.released[k]
         actual = released[k]["elements"]
-        actual_released_messages = str.join("\n\n", sorted([
-            str(res.commit.message) for results in actual.values() for res in results
-        ]))
-        expected_released_messages = str.join("\n\n", sorted([
-            msg for bucket in expected.values() for msg in bucket
-        ]))
+        actual_released_messages = str.join(
+            "\n\n",
+            sorted(
+                [
+                    str(res.commit.message)
+                    for results in actual.values()
+                    for res in results
+                ]
+            ),
+        )
+        expected_released_messages = str.join(
+            "\n\n", sorted([msg for bucket in expected.values() for msg in bucket])
+        )
         assert expected_released_messages == actual_released_messages
 
     for commit_message in ANGULAR_COMMITS_MINOR:
@@ -252,18 +259,30 @@ def test_release_history(
         repo, translator, default_angular_parser
     )
 
-    actual_unreleased_messages = str.join("\n\n", sorted([
-        str(res.commit.message) for results in new_unreleased.values() for res in results
-    ]))
+    actual_unreleased_messages = str.join(
+        "\n\n",
+        sorted(
+            [
+                str(res.commit.message)
+                for results in new_unreleased.values()
+                for res in results
+            ]
+        ),
+    )
 
-    expected_unreleased_messages = str.join("\n\n", sorted([
-        msg
-        for bucket in [
-            ANGULAR_COMMITS_MINOR[::-1],
-            *expected_release_history.unreleased.values(),
-        ]
-        for msg in bucket
-    ]))
+    expected_unreleased_messages = str.join(
+        "\n\n",
+        sorted(
+            [
+                msg
+                for bucket in [
+                    ANGULAR_COMMITS_MINOR[::-1],
+                    *expected_release_history.unreleased.values(),
+                ]
+                for msg in bucket
+            ]
+        ),
+    )
 
     assert expected_unreleased_messages == actual_unreleased_messages
     assert (

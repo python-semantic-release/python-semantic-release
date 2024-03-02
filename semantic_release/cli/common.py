@@ -43,6 +43,8 @@ def render_release_notes(
     version: Version,
     release: Release,
 ) -> str:
-    return template_environment.from_string(release_notes_template).render(
-        version=version, release=release
-    ).rstrip()
+    return (
+        template_environment.from_string(release_notes_template)
+        .render(version=version, release=release)
+        .rstrip()
+    )

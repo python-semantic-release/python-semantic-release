@@ -86,9 +86,9 @@ def artificial_release_history(commit_author: Actor):
                 elements={
                     "feature": [feat_commit_parsed],
                     "fix": [fix_commit_parsed],
-                }
+                },
             )
-        }
+        },
     )
 
 
@@ -104,23 +104,32 @@ def test_default_changelog_template(
     rh = artificial_release_history
     rh.unreleased = {}  # Wipe out unreleased
 
-    feat_commit_obj = artificial_release_history.released[version]["elements"]["feature"][0]
-    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(feat_commit_obj.commit.hexsha)
-    feat_description = str.join('\n', feat_commit_obj.descriptions)
+    feat_commit_obj = artificial_release_history.released[version]["elements"][
+        "feature"
+    ][0]
+    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
+        feat_commit_obj.commit.hexsha
+    )
+    feat_description = str.join("\n", feat_commit_obj.descriptions)
 
     fix_commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
-    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(fix_commit_obj.commit.hexsha)
-    fix_description = str.join('\n', fix_commit_obj.descriptions)
+    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
+        fix_commit_obj.commit.hexsha
+    )
+    fix_description = str.join("\n", fix_commit_obj.descriptions)
 
-    expected_changelog = str.join("\n", [
-        "# CHANGELOG",
-        f"## v{version_str} ({TODAY_DATE_STR})",
-        "### Feature",
-        f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
-        "### Fix",
-        f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
-        "",
-    ])
+    expected_changelog = str.join(
+        "\n",
+        [
+            "# CHANGELOG",
+            f"## v{version_str} ({TODAY_DATE_STR})",
+            "### Feature",
+            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            "### Fix",
+            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            "",
+        ],
+    )
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),
@@ -141,26 +150,35 @@ def test_default_changelog_template_w_unreleased_changes(
     version_str = "1.0.0"
     version = Version.parse(version_str)
 
-    feat_commit_obj = artificial_release_history.released[version]["elements"]["feature"][0]
-    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(feat_commit_obj.commit.hexsha)
-    feat_description = str.join('\n', feat_commit_obj.descriptions)
+    feat_commit_obj = artificial_release_history.released[version]["elements"][
+        "feature"
+    ][0]
+    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
+        feat_commit_obj.commit.hexsha
+    )
+    feat_description = str.join("\n", feat_commit_obj.descriptions)
 
     fix_commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
-    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(fix_commit_obj.commit.hexsha)
-    fix_description = str.join('\n', fix_commit_obj.descriptions)
+    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
+        fix_commit_obj.commit.hexsha
+    )
+    fix_description = str.join("\n", fix_commit_obj.descriptions)
 
-    expected_changelog = str.join("\n", [
-        "# CHANGELOG",
-        "## Unreleased",
-        "### Feature",
-        f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
-        f"## v{version_str} ({TODAY_DATE_STR})",
-        "### Feature",
-        f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
-        "### Fix",
-        f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
-        "",
-    ])
+    expected_changelog = str.join(
+        "\n",
+        [
+            "# CHANGELOG",
+            "## Unreleased",
+            "### Feature",
+            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            f"## v{version_str} ({TODAY_DATE_STR})",
+            "### Feature",
+            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            "### Fix",
+            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            "",
+        ],
+    )
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),
