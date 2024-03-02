@@ -52,7 +52,7 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
                 "scipy": [
                     {"section": "Feature", "i_commits": [2]},
                     {"section": "Fix", "i_commits": [1, 3]},
-                    {"section": "None", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [0]},
                 ],
                 "tag": [
                     {"section": "Feature", "i_commits": [2]},

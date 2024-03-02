@@ -39,7 +39,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
             "changelog_sections": {
                 "angular": [{"section": "Unknown", "i_commits": [0]}],
                 "emoji": [{"section": "Other", "i_commits": [0]}],
-                "scipy": [{"section": "None", "i_commits": [0]}],
+                "scipy": [{"section": "Unknown", "i_commits": [0]}],
                 "tag": [{"section": "Unknown", "i_commits": [0]}],
             },
             "commits": [
