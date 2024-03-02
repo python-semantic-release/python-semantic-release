@@ -14,7 +14,7 @@ from semantic_release.commit_parser import (
     ScipyCommitParser,
     TagCommitParser,
 )
-from semantic_release.hvcs import Gitea, Github, Gitlab
+from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
@@ -376,3 +376,16 @@ def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
         return Gitea
 
     return _use_gitea_hvcs
+
+
+@pytest.fixture(scope="session")
+def use_bitbucket_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+    """Modify the configuration file to use BitBucket as the HVCS."""
+
+    def _use_bitbucket_hvcs(domain: str | None = None) -> type[HvcsBase]:
+        update_pyproject_toml("tool.semantic_release.remote.type", "bitbucket")
+        if domain is not None:
+            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
+        return Bitbucket
+
+    return _use_bitbucket_hvcs

@@ -16,7 +16,7 @@ from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.changelog.template import environment
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.enums import LevelBump
-from semantic_release.hvcs import Gitea, Github, Gitlab
+from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 from semantic_release.version.translator import Version
 
 from tests.const import TODAY_DATE_STR
@@ -92,7 +92,7 @@ def artificial_release_history(commit_author: Actor):
     )
 
 
-@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template(
     default_changelog_template: str,
     hvcs_client: type[HvcsBase],
@@ -140,7 +140,7 @@ def test_default_changelog_template(
     assert expected_changelog == actual_changelog
 
 
-@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template_w_unreleased_changes(
     default_changelog_template: str,
     hvcs_client: type[HvcsBase],
