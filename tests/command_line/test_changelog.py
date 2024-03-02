@@ -18,33 +18,34 @@ from tests.const import (
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
+    SUCCESS_EXIT_CODE,
 )
 from tests.fixtures.repos import (
-    repo_with_no_tags_angular_commits,
-    repo_with_no_tags_emoji_commits,
-    repo_with_no_tags_scipy_commits,
-    repo_with_no_tags_tag_commits,
-    repo_with_single_branch_angular_commits,
-    repo_with_single_branch_emoji_commits,
-    repo_with_single_branch_scipy_commits,
-    repo_with_single_branch_tag_commits,
-    repo_with_single_branch_and_prereleases_angular_commits,
-    repo_with_single_branch_and_prereleases_emoji_commits,
-    repo_with_single_branch_and_prereleases_scipy_commits,
-    repo_with_single_branch_and_prereleases_tag_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
     repo_w_github_flow_w_feature_release_channel_tag_commits,
+    repo_with_git_flow_and_release_channels_angular_commits,
+    repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
+    repo_with_git_flow_and_release_channels_emoji_commits,
+    repo_with_git_flow_and_release_channels_scipy_commits,
+    repo_with_git_flow_and_release_channels_tag_commits,
     repo_with_git_flow_angular_commits,
     repo_with_git_flow_emoji_commits,
     repo_with_git_flow_scipy_commits,
     repo_with_git_flow_tag_commits,
-    repo_with_git_flow_and_release_channels_angular_commits,
-    repo_with_git_flow_and_release_channels_emoji_commits,
-    repo_with_git_flow_and_release_channels_scipy_commits,
-    repo_with_git_flow_and_release_channels_tag_commits,
-    repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
+    repo_with_no_tags_angular_commits,
+    repo_with_no_tags_emoji_commits,
+    repo_with_no_tags_scipy_commits,
+    repo_with_no_tags_tag_commits,
+    repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_and_prereleases_emoji_commits,
+    repo_with_single_branch_and_prereleases_scipy_commits,
+    repo_with_single_branch_and_prereleases_tag_commits,
+    repo_with_single_branch_angular_commits,
+    repo_with_single_branch_emoji_commits,
+    repo_with_single_branch_scipy_commits,
+    repo_with_single_branch_tag_commits,
 )
 from tests.util import flatten_dircmp, get_release_history_from_context, remove_dir_tree
 
@@ -59,27 +60,31 @@ if TYPE_CHECKING:
     from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
 
 
-changelog_subcmd = changelog.name or changelog.__name__
+changelog_subcmd = changelog.name or changelog.__name__  # type: ignore
 
 
 @pytest.mark.parametrize(
     "repo,tag",
     [
-        (lazy_fixture("repo_with_no_tags_angular_commits"), None),
-        (lazy_fixture("repo_with_single_branch_angular_commits"), "v0.1.1"),
+        (lazy_fixture(repo_with_no_tags_angular_commits.__name__), None),
+        (lazy_fixture(repo_with_single_branch_angular_commits.__name__), "v0.1.1"),
         (
-            lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+            lazy_fixture(
+                repo_with_single_branch_and_prereleases_angular_commits.__name__
+            ),
             "v0.2.0",
         ),
         (
             lazy_fixture(
-                "repo_w_github_flow_w_feature_release_channel_angular_commits"
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
             ),
             "v0.2.0",
         ),
-        (lazy_fixture("repo_with_git_flow_angular_commits"), "v1.0.0"),
+        (lazy_fixture(repo_with_git_flow_angular_commits.__name__), "v1.0.0"),
         (
-            lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+            lazy_fixture(
+                repo_with_git_flow_and_release_channels_angular_commits.__name__
+            ),
             "v1.1.0-alpha.3",
         ),
     ],
@@ -115,11 +120,9 @@ def test_changelog_noop_is_noop(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
-        result = cli_runner.invoke(
-            main, ["--noop", changelog_subcmd, *args]
-        )
+        result = cli_runner.invoke(main, ["--noop", changelog_subcmd, *args])
 
-    assert result.exit_code == 0
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
 
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
 
@@ -175,7 +178,7 @@ def test_changelog_content_regenerated(
     os.remove(str(example_changelog_md.resolve()))
 
     result = cli_runner.invoke(main, [changelog_subcmd])
-    assert result.exit_code == 0
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
 
     # Check that the changelog file was re-created
     assert example_changelog_md.exists()
@@ -187,7 +190,9 @@ def test_changelog_content_regenerated(
 
 
 # Just need to test that it works for "a" project, not all
-@pytest.mark.usefixtures("repo_with_single_branch_and_prereleases_angular_commits")
+@pytest.mark.usefixtures(
+    repo_with_single_branch_and_prereleases_angular_commits.__name__
+)
 @pytest.mark.parametrize(
     "args", [("--post-to-release-tag", "v1.99.91910000000000000000000000000")]
 )
@@ -197,16 +202,20 @@ def test_changelog_release_tag_not_in_history(
     example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
+    expected_err_code = 2
     tempdir = tmp_path_factory.mktemp("test_changelog")
     remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
     result = cli_runner.invoke(main, [changelog_subcmd, *args])
-    assert result.exit_code == 2
+
+    assert expected_err_code == result.exit_code
     assert "not in release history" in result.stderr.lower()
 
 
-@pytest.mark.usefixtures("repo_with_single_branch_and_prereleases_angular_commits")
+@pytest.mark.usefixtures(
+    repo_with_single_branch_and_prereleases_angular_commits.__name__
+)
 @pytest.mark.parametrize("args", [("--post-to-release-tag", "v0.1.0")])
 def test_changelog_post_to_release(
     args: list[str],
@@ -232,6 +241,14 @@ def test_changelog_post_to_release(
     session.mount("http://", mock_adapter)
     session.mount("https://", mock_adapter)
 
+    expected_request_url = (
+        "https://{api_url}/repos/{owner}/{repo_name}/releases".format(
+            api_url=Github.DEFAULT_API_DOMAIN,
+            owner=EXAMPLE_REPO_OWNER,
+            repo_name=EXAMPLE_REPO_NAME,
+        )
+    )
+
     # Patch out env vars that affect changelog URLs but only get set in e.g.
     # Github actions
     with mock.patch(
@@ -242,17 +259,12 @@ def test_changelog_post_to_release(
         m.delenv("CI_PROJECT_NAMESPACE", raising=False)
         result = cli_runner.invoke(main, [changelog_subcmd, *args])
 
-    assert result.exit_code == 0
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
 
     assert mocker.called
-    assert mock_adapter.called and mock_adapter.last_request is not None
-    assert mock_adapter.last_request.url == (
-        "https://{api_url}/repos/{owner}/{repo_name}/releases".format(
-            api_url=Github.DEFAULT_API_DOMAIN,
-            owner=EXAMPLE_REPO_OWNER,
-            repo_name=EXAMPLE_REPO_NAME,
-        )
-    )
+    assert mock_adapter.called
+    assert mock_adapter.last_request is not None
+    assert expected_request_url == mock_adapter.last_request.url
 
 
 def test_custom_release_notes_template(
@@ -268,6 +280,8 @@ def test_custom_release_notes_template(
     runtime_context_with_tags = retrieve_runtime_context(
         repo_with_single_branch_and_prereleases_angular_commits
     )
+    expected_call_count = 1
+
     # Arrange
     release_history = get_release_history_from_context(runtime_context_with_tags)
     tag = runtime_context_with_tags.repo.tags[-1].name
@@ -280,15 +294,19 @@ def test_custom_release_notes_template(
 
     # Act
     resp = cli_runner.invoke(main, [changelog_subcmd, "--post-to-release-tag", tag])
-    expected_release_notes = runtime_context_with_tags.template_environment.from_string(
-        EXAMPLE_RELEASE_NOTES_TEMPLATE
-    ).render(version=version, release=release) + '\n'
+    expected_release_notes = (
+        runtime_context_with_tags.template_environment.from_string(
+            EXAMPLE_RELEASE_NOTES_TEMPLATE
+        ).render(version=version, release=release)
+        + "\n"
+    )
 
     # Assert
-    assert resp.exit_code == 0, (
+    assert SUCCESS_EXIT_CODE == resp.exit_code, (  # noqa: SIM300
         "Unexpected failure in command "
         f"'semantic-release {changelog_subcmd} --post-to-release-tag {tag}': "
         + resp.stderr
     )
-    assert post_mocker.call_count == 1 and post_mocker.last_request is not None
+    assert expected_call_count == post_mocker.call_count
+    assert post_mocker.last_request is not None
     assert expected_release_notes == post_mocker.last_request.json()["body"]
