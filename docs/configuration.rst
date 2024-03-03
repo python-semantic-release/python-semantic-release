@@ -268,6 +268,26 @@ identifying which secrets were replaced, or use a generic string to mask them.
 
 **Default:** ``false``
 
+.. _config-allow-zero-version:
+
+``allow_zero_version (bool)``
+"""""""""""""""""""""""""""""
+
+This flag controls whether or not Python Semantic Release will use version
+numbers aligning with the ``0.x.x`` pattern.
+
+If set to ``true`` and starting at ``0.0.0``, a minor bump would set the
+next version as ``0.1.0`` whereas a patch bump would set the next version as
+``0.0.1``. A breaking change (ie. major bump) would set the next version as
+``1.0.0`` unless the :ref:`major_on_zero` is set to ``false``.
+
+If set to ``false``, Python Semantic Release will consider the first possible
+version to be ``1.0.0``, regardless of patch, minor, or major change level.
+Additionally, when ``allow_zero_version`` is set to ``false``,
+the :ref:`major_on_zero` setting is ignored.
+
+**Default:** ``true``
+
 .. _config-major-on-zero:
 
 ``major_on_zero (bool)``
