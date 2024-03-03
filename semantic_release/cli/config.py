@@ -145,6 +145,7 @@ class RawConfig(BaseModel):
     commit_parser_options: Dict[str, Any] = {}
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
+    allow_zero_version: bool = True
     remote: RemoteConfig = RemoteConfig()
     tag_format: str = "v{version}"
     publish: PublishConfig = PublishConfig()
@@ -229,6 +230,7 @@ class RuntimeContext:
     commit_parser: CommitParser[ParseResult, ParserOptions]
     version_translator: VersionTranslator
     major_on_zero: bool
+    allow_zero_version: bool
     prerelease: bool
     assets: List[str]
     commit_author: Actor
@@ -414,6 +416,7 @@ class RuntimeContext:
             commit_parser=commit_parser,
             version_translator=version_translator,
             major_on_zero=raw.major_on_zero,
+            allow_zero_version=raw.allow_zero_version,
             build_command=raw.build_command,
             version_declarations=tuple(version_declarations),
             hvcs_client=hvcs_client,
