@@ -293,8 +293,14 @@ the :ref:`major_on_zero` setting is ignored.
 ``major_on_zero (bool)``
 """"""""""""""""""""""""
 
+This flag controls whether or not Python Semantic Release will increment the major
+version upon a breaking change when the version matches ``0.y.z``. This value is
+set to ``true`` by default, where breaking changes will increment the ``0`` major
+version to ``1.0.0`` like normally expected.
+
 If set to ``false``, major (breaking) releases will increment the minor digit of the
-version while the major version is ``0``, instead of the major digit.
+version while the major version is ``0``, instead of the major digit. This allows for
+continued breaking changes to be made while the major version remains ``0``.
 
 From the `Semantic Versioning Specification`_:
 
@@ -302,6 +308,11 @@ From the `Semantic Versioning Specification`_:
    any time. The public API SHOULD NOT be considered stable.
 
 .. _Semantic Versioning Specification: https://semver.org/spec/v2.0.0.html#spec-item-4
+
+When you are ready to release a stable version, set ``major_on_zero`` to ``true`` and
+run Python Semantic Release again. This will increment the major version to ``1.0.0``.
+
+When :ref:`allow_zero_version` is set to ``false``, this setting is ignored.
 
 **Default:** ``true``
 
