@@ -291,6 +291,7 @@ def version(  # noqa: C901
             commit_parser=parser,
             prerelease=prerelease,
             major_on_zero=major_on_zero,
+            allow_zero_version=runtime.allow_zero_version,
         )
 
     if build_metadata:

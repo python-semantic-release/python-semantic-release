@@ -143,6 +143,7 @@ def _increment_version(
     prerelease: bool,
     prerelease_token: str,
     major_on_zero: bool,
+    allow_zero_version: bool,
 ) -> Version:
     """
     Using the given versions, along with a given `level_bump`, increment to
@@ -158,19 +159,29 @@ def _increment_version(
     `latest_full_version_in_history`, correspondingly, is the latest full release which
     is in this branch's history.
     """
+    local_vars = list(locals().items())
     log.debug(
-        "_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in locals().items())
+        "_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in local_vars)
     )
-    if not major_on_zero and latest_version.major == 0:
-        # if we are a 0.x.y release and have set `major_on_zero`,
-        # breaking changes should increment the minor digit
-        # Correspondingly, we reduce the level that we increment the
-        # version by.
-        log.debug(
-            "reducing version increment due to 0. version and major_on_zero=False"
-        )
+    if latest_version.major == 0:
+        if not allow_zero_version:
+            # Set up default version to be 1.0.0 if currently 0.x.x which means a commented
+            # breaking change is not required to bump to 1.0.0
+            log.debug(
+                "Bumping major version as 0.x.x versions are disabled because of allow_zero_version=False"
+            )
+            level_bump = LevelBump.MAJOR
 
-        level_bump = min(level_bump, LevelBump.MINOR)
+        elif not major_on_zero:
+            # if we are a 0.x.y release and have set `major_on_zero`,
+            # breaking changes should increment the minor digit
+            # Correspondingly, we reduce the level that we increment the
+            # version by.
+            log.debug(
+                "reducing version increment due to 0. version and major_on_zero=False"
+            )
+
+            level_bump = min(level_bump, LevelBump.MINOR)
 
     if prerelease:
         log.debug("prerelease=true")
@@ -261,6 +272,7 @@ def next_version(
     commit_parser: CommitParser[ParseResult, ParserOptions],
     prerelease: bool = False,
     major_on_zero: bool = True,
+    allow_zero_version: bool = True,
 ) -> Version:
     """
     Evaluate the history within `repo`, and based on the tags and commits in the repo
@@ -398,8 +410,9 @@ def next_version(
     level_bump = max(parsed_levels, default=LevelBump.NO_RELEASE)
     log.info("The type of the next release release is: %s", level_bump)
     if level_bump is LevelBump.NO_RELEASE:
-        log.info("No release will be made")
-        return latest_version
+        if latest_version.major != 0 or allow_zero_version:
+            log.info("No release will be made")
+            return latest_version
 
     return _increment_version(
         latest_version=latest_version,
@@ -418,4 +431,5 @@ def next_version(
         prerelease=prerelease,
         prerelease_token=translator.prerelease_token,
         major_on_zero=major_on_zero,
+        allow_zero_version=allow_zero_version,
     )
