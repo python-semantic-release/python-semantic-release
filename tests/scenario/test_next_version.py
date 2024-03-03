@@ -98,6 +98,7 @@ from tests.util import add_text_to_file, xdist_sort_hack
     ),
 )
 @pytest.mark.parametrize("major_on_zero", [True, False])
+@pytest.mark.parametrize("allow_zero_version", [True, False])
 def test_algorithm_no_zero_dot_versions_angular(
     repo,
     file_in_repo,
@@ -107,13 +108,14 @@ def test_algorithm_no_zero_dot_versions_angular(
     prerelease,
     expected_new_version,
     major_on_zero,
+    allow_zero_version,
 ):
     for commit_message in commit_messages:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message)
 
     new_version = next_version(
-        repo, translator, commit_parser, prerelease, major_on_zero
+        repo, translator, commit_parser, prerelease, major_on_zero, allow_zero_version
     )
 
     assert new_version == Version.parse(
@@ -186,6 +188,7 @@ def test_algorithm_no_zero_dot_versions_angular(
     ),
 )
 @pytest.mark.parametrize("major_on_zero", [True, False])
+@pytest.mark.parametrize("allow_zero_version", [True, False])
 def test_algorithm_no_zero_dot_versions_emoji(
     repo,
     file_in_repo,
@@ -195,13 +198,14 @@ def test_algorithm_no_zero_dot_versions_emoji(
     prerelease,
     expected_new_version,
     major_on_zero,
+    allow_zero_version,
 ):
     for commit_message in commit_messages:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message)
 
     new_version = next_version(
-        repo, translator, commit_parser, prerelease, major_on_zero
+        repo, translator, commit_parser, prerelease, major_on_zero, allow_zero_version
     )
 
     assert new_version == Version.parse(
@@ -274,6 +278,7 @@ def test_algorithm_no_zero_dot_versions_emoji(
     ),
 )
 @pytest.mark.parametrize("major_on_zero", [True, False])
+@pytest.mark.parametrize("allow_zero_version", [True, False])
 def test_algorithm_no_zero_dot_versions_scipy(
     repo,
     file_in_repo,
@@ -283,13 +288,14 @@ def test_algorithm_no_zero_dot_versions_scipy(
     prerelease,
     expected_new_version,
     major_on_zero,
+    allow_zero_version,
 ):
     for commit_message in commit_messages:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message)
 
     new_version = next_version(
-        repo, translator, commit_parser, prerelease, major_on_zero
+        repo, translator, commit_parser, prerelease, major_on_zero, allow_zero_version
     )
 
     assert new_version == Version.parse(
@@ -362,6 +368,7 @@ def test_algorithm_no_zero_dot_versions_scipy(
     ),
 )
 @pytest.mark.parametrize("major_on_zero", [True, False])
+@pytest.mark.parametrize("allow_zero_version", [True, False])
 def test_algorithm_no_zero_dot_versions_tag(
     repo,
     file_in_repo,
@@ -371,13 +378,14 @@ def test_algorithm_no_zero_dot_versions_tag(
     prerelease,
     expected_new_version,
     major_on_zero,
+    allow_zero_version,
 ):
     for commit_message in commit_messages:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message)
 
     new_version = next_version(
-        repo, translator, commit_parser, prerelease, major_on_zero
+        repo, translator, commit_parser, prerelease, major_on_zero, allow_zero_version
     )
 
     assert new_version == Version.parse(
