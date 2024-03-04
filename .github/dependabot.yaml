@@ -1,6 +1,7 @@
 ---
 version: 2
 updates:
+
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -14,6 +15,8 @@ updates:
       - dependencies
     open-pull-requests-limit: 10
     rebase-strategy: auto
+    versioning-strategy: "increase-if-necessary"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
