@@ -71,6 +71,13 @@ def valid_scipy_commit(scipy_tag, subject, body_parts):
     return _make_scipy_commit(scipy_tag, subject, body_parts)
 
 
+@pytest.fixture
+def scipy_chore_commits():
+    return [
+        "DOC: Add a note to the documentation"
+    ]
+
+
 @pytest.fixture(
     params=xdist_sort_hack(
         [
@@ -80,7 +87,7 @@ def valid_scipy_commit(scipy_tag, subject, body_parts):
         ]
     )
 )
-def scipy_commits_patch(request, subject):
+def scipy_patch_commits(request, subject):
     return [
         _make_scipy_commit(request.param, subject, body_parts)
         for body_parts in SCIPY_FORMATTED_COMMIT_BODY_PARTS
@@ -96,7 +103,7 @@ def scipy_commits_patch(request, subject):
         ]
     )
 )
-def scipy_commits_minor(request, subject, default_scipy_parser_options):
+def scipy_minor_commits(request, subject, default_scipy_parser_options):
     patch_tags = [
         k
         for k, v in default_scipy_parser_options.tag_to_level.items()
@@ -126,7 +133,7 @@ def scipy_commits_minor(request, subject, default_scipy_parser_options):
         ]
     )
 )
-def scipy_commits_major(request, subject, default_scipy_parser_options):
+def scipy_major_commits(request, subject, default_scipy_parser_options):
     patch_tags = [
         k
         for k, v in default_scipy_parser_options.tag_to_level.items()
