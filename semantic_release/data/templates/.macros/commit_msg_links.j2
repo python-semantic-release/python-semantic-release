@@ -1,0 +1,33 @@
+{#  MACRO: commit message links or PR/MR links of commit
+    @param commit: Commit object
+    @return: Commit message with PR/MR or commit hash links embedded
+#}
+{%   macro commit_msg_links(commit)
+%}{%    set description = commit.descriptions[0] | capitalize
+%}{#
+        # Replace PR references in the form of (!123) with a link to the PR
+#}{%    if description.split("(!") | length > 1
+%}{%        set pr_num = description.split("(!")[1].split(")")[0]
+%}{%        set replacement = "([!%s](%s))" | format(pr_num, pr_num | pull_request_url)
+%}{%        set description = description | replace("(!" ~ pr_num ~ ")", replacement)
+%}{#
+        # Replace PR references in the form of (#123) with a link to the PR
+#}{%    elif description.split("(#") | length > 1
+%}{%        set pr_num = description.split("(#")[1].split(")")[0]
+%}{%        set replacement = "([#%s](%s))" | format(pr_num, pr_num | pull_request_url)
+%}{%        set description = description | replace("(#" ~ pr_num ~ ")", replacement)
+%}{#
+        # DEFAULT: Append commit hash as url to the commit description
+#}{%    else
+%}{%        set description = "%s ([`%s`](%s))" | format(
+                description,
+                commit.short_hash,
+                commit.hexsha | commit_hash_url
+            )
+%}{%    endif
+%}{#
+        # Return the modified description
+#}{{    description
+
+}}{% endmacro
+%}

@@ -1,52 +1,56 @@
-{{ "# %s (%s)\n" | format(version.as_semver_tag(), release.tagged_date.strftime("%Y-%m-%d")) }}
+{# RELEASE NOTES TEMPLATE
+## This template is used to generate the release notes for a project that uses
+## the conventional commits (ie angular) commit message standard.
+#}{% from '.macros/commit_msg_links.j2' import commit_msg_links
+%}{% from '.macros/headings.angular.j2' import section_headings, heading_to_emoji_map
+%}{#
 
-{% for type_, commits in release["elements"] | dictsort if type_ != "unknown" %}
-{##}
-    {{  "## %s\n" | format(type_ | capitalize) }}
-{##}
-    {% for commit in commits if type_ != "unknown" %}
-{##}
-        {% if commit.scope %}
-{{          "- **%s**: %s ([`%s`](%s))\n" | format(
+vX.X.X.X (YYYY-MMM-DD)
+
+#}{{
+
+    "# %s (%s)\n" | format(
+        version.as_semver_tag(),
+        release.tagged_date.strftime("%Y-%m-%d")
+    )
+
+}}{% for type_ in section_headings if type_ in release["elements"]
+
+%}{{
+        "\n## %s %s\n" | format(emoji_map[type_], type_ | capitalize)
+
+}}{%    for commit in release["elements"][type_] | selectattr("scope") | sort(attribute='scope')
+%}{{
+            "\n- **%s**: %s\n" | format(commit.scope, commit_msg_links(commit) )
+
+}}{%    endfor
+%}{%    for commit in release["elements"][type_] | rejectattr("scope") | sort(attribute='descriptions.0')
+%}{{
+            "\n- %s\n" | format(commit_msg_links(commit))
+
+}}{%    endfor
+%}{% endfor
+%}{#
+
+#}{% if "breaking" in release["elements"]
+%}{{
+        "\n### BREAKING CHANGES\n"
+}}{#
+#}{%    set breaking_commits = release["elements"]["breaking"] | selectattr("breaking_descriptions")
+%}{%    for commit in breaking_commits | selectattr("scope") | sort(attribute='scope')
+%}{{
+            "\n- **%s**: %s\n" | format(
                 commit.scope,
-                commit.descriptions[0],
-                commit.short_hash,
-                commit.hexsha | commit_hash_url
+                commit.breaking_descriptions | join("\n\n") | indent(4) | capitalize
             )
-}}
-        {% else %}
-{{          "- %s ([`%s`](%s))\n" | format(
-                commit.descriptions[0] | capitalize,
-                commit.short_hash,
-                commit.hexsha | commit_hash_url
-            )
-}}
-        {% endif %}
-    {% endfor %}
-{% endfor %}
-{##}
-{% if "breaking" in release["elements"] %}
-{##}
-### BREAKING CHANGES
 
-    {% for type_, commits in release["elements"] | dictsort if type_ != "unknown" %}
-{##}
-        {% for commit in commits if type_ == "breaking" %}
-{##}
-            {% if commit.breaking_descriptions | length > 0 %}
-                {% if commit.scope %}
-{{                      "- **%s**: %s\n" | format(
-                        commit.scope,
-                        commit.breaking_descriptions | join("\n\n") | indent(4) | capitalize
-                    )
-}}
-                {% else %}
-{{                      "- %s\n" | format(
-                        commit.breaking_descriptions | join("\n\n") | indent(4) | capitalize
-                    )
-}}
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-    {% endfor %}
-{% endif %}
+}}{%    endfor
+%}{%    for commit in breaking_commits | rejectattr("scope") | sort(attribute='breaking_descriptions.0')
+%}{{
+            "\n- %s\n" | format(
+                commit.breaking_descriptions | join("\n\n") | indent(4) | capitalize
+            )
+
+}}{%    endfor
+%}{% endif
+%}
