@@ -9,7 +9,6 @@ from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.version.algorithm import next_version
 from semantic_release.version.translator import VersionTranslator
-from semantic_release.version.version import Version
 
 from tests.const import (
     ANGULAR_COMMITS_MAJOR,
@@ -23,38 +22,38 @@ from tests.const import (
     TAG_COMMITS_PATCH,
 )
 from tests.fixtures import (
-    default_tag_parser,
-    repo_w_github_flow_w_feature_release_channel_tag_commits,
-    repo_with_no_tags_tag_commits,
-    repo_with_single_branch_and_prereleases_tag_commits,
-    repo_with_single_branch_tag_commits,
     default_angular_parser,
     default_emoji_parser,
-    repo_with_git_flow_angular_commits,
-    repo_with_git_flow_emoji_commits,
-    repo_with_git_flow_scipy_commits,
-    repo_with_git_flow_tag_commits,
+    default_scipy_parser,
+    default_tag_parser,
+    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_emoji_commits,
+    repo_w_github_flow_w_feature_release_channel_scipy_commits,
+    repo_w_github_flow_w_feature_release_channel_tag_commits,
     repo_with_git_flow_and_release_channels_angular_commits,
     repo_with_git_flow_and_release_channels_emoji_commits,
     repo_with_git_flow_and_release_channels_scipy_commits,
     repo_with_git_flow_and_release_channels_tag_commits,
-    default_scipy_parser,
-    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_with_git_flow_angular_commits,
+    repo_with_git_flow_emoji_commits,
+    repo_with_git_flow_scipy_commits,
+    repo_with_git_flow_tag_commits,
     repo_with_no_tags_angular_commits,
+    repo_with_no_tags_emoji_commits,
+    repo_with_no_tags_scipy_commits,
+    repo_with_no_tags_tag_commits,
     repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_and_prereleases_emoji_commits,
+    repo_with_single_branch_and_prereleases_scipy_commits,
+    repo_with_single_branch_and_prereleases_tag_commits,
     repo_with_single_branch_angular_commits,
+    repo_with_single_branch_emoji_commits,
+    repo_with_single_branch_scipy_commits,
+    repo_with_single_branch_tag_commits,
     scipy_chore_commits,
     scipy_major_commits,
     scipy_minor_commits,
     scipy_patch_commits,
-    repo_w_github_flow_w_feature_release_channel_emoji_commits,
-    repo_with_no_tags_emoji_commits,
-    repo_with_single_branch_and_prereleases_emoji_commits,
-    repo_with_single_branch_emoji_commits,
-    repo_w_github_flow_w_feature_release_channel_scipy_commits,
-    repo_with_no_tags_scipy_commits,
-    repo_with_single_branch_and_prereleases_scipy_commits,
-    repo_with_single_branch_scipy_commits,
 )
 from tests.util import add_text_to_file, xdist_sort_hack
 
@@ -66,9 +65,11 @@ if TYPE_CHECKING:
 def angular_major_commits():
     return ANGULAR_COMMITS_MAJOR
 
+
 @pytest.fixture
 def angular_minor_commits():
     return ANGULAR_COMMITS_MINOR
+
 
 @pytest.fixture
 def angular_patch_commits():
@@ -172,11 +173,23 @@ def tag_chore_commits() -> list[str]:
                         )
                     ),
                     (lazy_fixture(angular_patch_commits.__name__), False, "1.2.0"),
-                    (lazy_fixture(angular_patch_commits.__name__), True, "1.2.0-alpha.3"),
+                    (
+                        lazy_fixture(angular_patch_commits.__name__),
+                        True,
+                        "1.2.0-alpha.3",
+                    ),
                     (lazy_fixture(angular_minor_commits.__name__), False, "1.2.0"),
-                    (lazy_fixture(angular_minor_commits.__name__), True, "1.2.0-alpha.3"),
+                    (
+                        lazy_fixture(angular_minor_commits.__name__),
+                        True,
+                        "1.2.0-alpha.3",
+                    ),
                     (lazy_fixture(angular_major_commits.__name__), False, "2.0.0"),
-                    (lazy_fixture(angular_major_commits.__name__), True, "2.0.0-alpha.1"),
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        True,
+                        "2.0.0-alpha.1",
+                    ),
                 ],
                 # Latest version for repo_with_git_flow_and_release_channels is
                 # currently 1.1.0-alpha.3
@@ -204,11 +217,23 @@ def tag_chore_commits() -> list[str]:
                         )
                     ),
                     (lazy_fixture(angular_patch_commits.__name__), False, "1.1.0"),
-                    (lazy_fixture(angular_patch_commits.__name__), True, "1.1.0-alpha.4"),
+                    (
+                        lazy_fixture(angular_patch_commits.__name__),
+                        True,
+                        "1.1.0-alpha.4",
+                    ),
                     (lazy_fixture(angular_minor_commits.__name__), False, "1.1.0"),
-                    (lazy_fixture(angular_minor_commits.__name__), True, "1.1.0-alpha.4"),
+                    (
+                        lazy_fixture(angular_minor_commits.__name__),
+                        True,
+                        "1.1.0-alpha.4",
+                    ),
                     (lazy_fixture(angular_major_commits.__name__), False, "2.0.0"),
-                    (lazy_fixture(angular_major_commits.__name__), True, "2.0.0-alpha.1"),
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        True,
+                        "2.0.0-alpha.1",
+                    ),
                 ],
             }.items()
             for (commit_messages, prerelease, expected_new_version) in values
@@ -575,16 +600,19 @@ def test_algorithm_no_zero_dot_versions_tag(
 
 
 @pytest.mark.parametrize(
-    str.join(', ', [
-        "repo",
-        "commit_parser",
-        "translator",
-        "commit_messages",
-        "prerelease",
-        "major_on_zero",
-        "allow_zero_version",
-        "expected_new_version",
-    ]),
+    str.join(
+        ", ",
+        [
+            "repo",
+            "commit_parser",
+            "translator",
+            "commit_messages",
+            "prerelease",
+            "major_on_zero",
+            "allow_zero_version",
+            "expected_new_version",
+        ],
+    ),
     xdist_sort_hack(
         [
             (
@@ -614,32 +642,37 @@ def test_algorithm_no_zero_dot_versions_tag(
                             # Even when this test does not change anything, the base modification
                             # will be a minor change and thus the version will be bumped to 0.1.0
                             None,
-
                             # Non version bumping commits are absorbed into the previously detected minor bump
                             lazy_fixture(angular_chore_commits.__name__),
-
                             # Patch commits are absorbed into the previously detected minor bump
                             lazy_fixture(angular_patch_commits.__name__),
-
                             # Minor level commits are absorbed into the previously detected minor bump
                             lazy_fixture(angular_minor_commits.__name__),
-
                             # Given the major_on_zero is False and the version is starting at 0.0.0,
                             # the major level commits are limited to only causing a minor level bump
                             lazy_fixture(angular_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is False, & major_on_zero is False, & allow_zero_version is True,
                     # the version should only be minor bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(angular_major_commits.__name__), False, False, True, "0.1.0"),
-
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.1.0",
+                    ),
                     # when prerelease is False, & major_on_zero is True & allow_zero_version is True,
                     # the version should be major bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(angular_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is False, & allow_zero_version is False, the version should be
                         # 1.0.0, across the board because 0 is not a valid major version.
@@ -668,13 +701,22 @@ def test_algorithm_no_zero_dot_versions_tag(
                         # of the major_on_zero value
                         (commits, False, major_on_zero, True, "0.1.1")
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(angular_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(angular_chore_commits.__name__),
+                        )
                     ),
                     *(
                         # when prerelease must be False, and allow_zero_version is True,
                         # the version is patch bumped because of the patch level commits
                         # regardless of the major_on_zero value
-                        (lazy_fixture(angular_patch_commits.__name__), False, major_on_zero, True, "0.1.2")
+                        (
+                            lazy_fixture(angular_patch_commits.__name__),
+                            False,
+                            major_on_zero,
+                            True,
+                            "0.1.2",
+                        )
                         for major_on_zero in (True, False)
                     ),
                     *(
@@ -689,7 +731,13 @@ def test_algorithm_no_zero_dot_versions_tag(
                     # when prerelease must be False, and allow_zero_version is True,
                     # but the major_on_zero is True, then when a major level commit is given,
                     # the version should be bumped to the next major version
-                    (lazy_fixture(angular_major_commits.__name__), False, True, True, "1.0.0"),
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease must be False, & allow_zero_version is False, the version should be
                         # 1.0.0, with any change regardless of major_on_zero
@@ -718,18 +766,31 @@ def test_algorithm_no_zero_dot_versions_tag(
                         (commits, prerelease, major_on_zero, True, "0.2.0")
                         for prerelease in (True, False)
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(angular_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(angular_chore_commits.__name__),
+                        )
                     ),
-
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped as a prerelease version, when given patch level commits
-                    (lazy_fixture(angular_patch_commits.__name__), True, False, True, "0.2.1-rc.1"),
-
+                    (
+                        lazy_fixture(angular_patch_commits.__name__),
+                        True,
+                        False,
+                        True,
+                        "0.2.1-rc.1",
+                    ),
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped, when given patch level commits
-                    (lazy_fixture(angular_patch_commits.__name__), False, False, True, "0.2.1"),
+                    (
+                        lazy_fixture(angular_patch_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.2.1",
+                    ),
                     *(
                         # when allow_zero_version is True,
                         # prerelease is True, & major_on_zero is False, the version should be
@@ -751,16 +812,25 @@ def test_algorithm_no_zero_dot_versions_tag(
                             lazy_fixture(angular_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits
-                    (lazy_fixture(angular_major_commits.__name__), True, True, True, "1.0.0-rc.1"),
-
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-rc.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(angular_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is True, & allow_zero_version is False, the version should be
                         # bumped to 1.0.0 as a prerelease version, when given any/none commits
@@ -802,7 +872,10 @@ def test_algorithm_no_zero_dot_versions_tag(
                         # the version is not bumped because nothing of importance happened
                         (commits, True, major_on_zero, True, "0.3.0-beta.1")
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(angular_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(angular_chore_commits.__name__),
+                        )
                     ),
                     *(
                         (commits, True, False, True, "0.3.0-beta.2")
@@ -812,11 +885,9 @@ def test_algorithm_no_zero_dot_versions_tag(
                             # because the last full release was 0.2.0 and the prior prerelease consumes the
                             # patch bump
                             lazy_fixture(angular_patch_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(angular_minor_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # increment the next prerelease version, when given new breaking changes
                             # because major_on_zero is false, the last full release was 0.2.0
@@ -831,38 +902,42 @@ def test_algorithm_no_zero_dot_versions_tag(
                             # off, we look at the last full version which is 0.2.0 and
                             # consider the previous minor commit to cause the bump to 0.3.0
                             None,
-
                             # same as None, but with a chore commit
                             lazy_fixture(angular_chore_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # patch bumped, when given patch level commits because last full version was 0.2.0
                             # and it was previously identified (from the prerelease) that a minor commit
                             # exists between 0.2.0 and now
                             lazy_fixture(angular_patch_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(angular_minor_commits.__name__),
-
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given new breaking changes because
                             # major_on_zero is false and last full version was 0.2.0
                             lazy_fixture(angular_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits. The previous prerelease is ignored because of the major
                     # bump
-                    (lazy_fixture(angular_major_commits.__name__), True, True, True, "1.0.0-beta.1"),
-
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-beta.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(angular_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(angular_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # Since allow_zero_version is False, the version should be 1.0.0
                         # as a prerelease value due to prerelease=True, across the board
@@ -887,10 +962,8 @@ def test_algorithm_no_zero_dot_versions_tag(
                             # None & chore commits are absorbed into the previously detected minor bump
                             # and because 0 versions are not allowed
                             None,
-
                             # Same as above, even though our change does not trigger a bump normally
                             lazy_fixture(angular_chore_commits.__name__),
-
                             # Even though we apply more patch, minor, major commits, the previous
                             # minor commit (in the prerelase tag) triggers a higher bump &
                             # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
@@ -937,16 +1010,19 @@ def test_algorithm_with_zero_dot_versions_angular(
 
 
 @pytest.mark.parametrize(
-    str.join(', ', [
-        "repo",
-        "commit_parser",
-        "translator",
-        "commit_messages",
-        "prerelease",
-        "major_on_zero",
-        "allow_zero_version",
-        "expected_new_version",
-    ]),
+    str.join(
+        ", ",
+        [
+            "repo",
+            "commit_parser",
+            "translator",
+            "commit_messages",
+            "prerelease",
+            "major_on_zero",
+            "allow_zero_version",
+            "expected_new_version",
+        ],
+    ),
     xdist_sort_hack(
         [
             (
@@ -976,32 +1052,37 @@ def test_algorithm_with_zero_dot_versions_angular(
                             # Even when this test does not change anything, the base modification
                             # will be a minor change and thus the version will be bumped to 0.1.0
                             None,
-
                             # Non version bumping commits are absorbed into the previously detected minor bump
                             lazy_fixture(emoji_chore_commits.__name__),
-
                             # Patch commits are absorbed into the previously detected minor bump
                             lazy_fixture(emoji_patch_commits.__name__),
-
                             # Minor level commits are absorbed into the previously detected minor bump
                             lazy_fixture(emoji_minor_commits.__name__),
-
                             # Given the major_on_zero is False and the version is starting at 0.0.0,
                             # the major level commits are limited to only causing a minor level bump
                             lazy_fixture(emoji_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is False, & major_on_zero is False, & allow_zero_version is True,
                     # the version should only be minor bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(emoji_major_commits.__name__), False, False, True, "0.1.0"),
-
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.1.0",
+                    ),
                     # when prerelease is False, & major_on_zero is True & allow_zero_version is True,
                     # the version should be major bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(emoji_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is False, & allow_zero_version is False, the version should be
                         # 1.0.0, across the board because 0 is not a valid major version.
@@ -1030,13 +1111,22 @@ def test_algorithm_with_zero_dot_versions_angular(
                         # of the major_on_zero value
                         (commits, False, major_on_zero, True, "0.1.1")
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(emoji_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(emoji_chore_commits.__name__),
+                        )
                     ),
                     *(
                         # when prerelease must be False, and allow_zero_version is True,
                         # the version is patch bumped because of the patch level commits
                         # regardless of the major_on_zero value
-                        (lazy_fixture(emoji_patch_commits.__name__), False, major_on_zero, True, "0.1.2")
+                        (
+                            lazy_fixture(emoji_patch_commits.__name__),
+                            False,
+                            major_on_zero,
+                            True,
+                            "0.1.2",
+                        )
                         for major_on_zero in (True, False)
                     ),
                     *(
@@ -1051,7 +1141,13 @@ def test_algorithm_with_zero_dot_versions_angular(
                     # when prerelease must be False, and allow_zero_version is True,
                     # but the major_on_zero is True, then when a major level commit is given,
                     # the version should be bumped to the next major version
-                    (lazy_fixture(emoji_major_commits.__name__), False, True, True, "1.0.0"),
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease must be False, & allow_zero_version is False, the version should be
                         # 1.0.0, with any change regardless of major_on_zero
@@ -1080,18 +1176,31 @@ def test_algorithm_with_zero_dot_versions_angular(
                         (commits, prerelease, major_on_zero, True, "0.2.0")
                         for prerelease in (True, False)
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(emoji_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(emoji_chore_commits.__name__),
+                        )
                     ),
-
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped as a prerelease version, when given patch level commits
-                    (lazy_fixture(emoji_patch_commits.__name__), True, False, True, "0.2.1-rc.1"),
-
+                    (
+                        lazy_fixture(emoji_patch_commits.__name__),
+                        True,
+                        False,
+                        True,
+                        "0.2.1-rc.1",
+                    ),
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped, when given patch level commits
-                    (lazy_fixture(emoji_patch_commits.__name__), False, False, True, "0.2.1"),
+                    (
+                        lazy_fixture(emoji_patch_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.2.1",
+                    ),
                     *(
                         # when allow_zero_version is True,
                         # prerelease is True, & major_on_zero is False, the version should be
@@ -1113,16 +1222,25 @@ def test_algorithm_with_zero_dot_versions_angular(
                             lazy_fixture(emoji_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits
-                    (lazy_fixture(emoji_major_commits.__name__), True, True, True, "1.0.0-rc.1"),
-
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-rc.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(emoji_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is True, & allow_zero_version is False, the version should be
                         # bumped to 1.0.0 as a prerelease version, when given any/none commits
@@ -1164,7 +1282,10 @@ def test_algorithm_with_zero_dot_versions_angular(
                         # the version is not bumped because nothing of importance happened
                         (commits, True, major_on_zero, True, "0.3.0-beta.1")
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(emoji_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(emoji_chore_commits.__name__),
+                        )
                     ),
                     *(
                         (commits, True, False, True, "0.3.0-beta.2")
@@ -1174,11 +1295,9 @@ def test_algorithm_with_zero_dot_versions_angular(
                             # because the last full release was 0.2.0 and the prior prerelease consumes the
                             # patch bump
                             lazy_fixture(emoji_patch_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(emoji_minor_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # increment the next prerelease version, when given new breaking changes
                             # because major_on_zero is false, the last full release was 0.2.0
@@ -1193,38 +1312,42 @@ def test_algorithm_with_zero_dot_versions_angular(
                             # off, we look at the last full version which is 0.2.0 and
                             # consider the previous minor commit to cause the bump to 0.3.0
                             None,
-
                             # same as None, but with a chore commit
                             lazy_fixture(emoji_chore_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # patch bumped, when given patch level commits because last full version was 0.2.0
                             # and it was previously identified (from the prerelease) that a minor commit
                             # exists between 0.2.0 and now
                             lazy_fixture(emoji_patch_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(emoji_minor_commits.__name__),
-
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given new breaking changes because
                             # major_on_zero is false and last full version was 0.2.0
                             lazy_fixture(emoji_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits. The previous prerelease is ignored because of the major
                     # bump
-                    (lazy_fixture(emoji_major_commits.__name__), True, True, True, "1.0.0-beta.1"),
-
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-beta.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(emoji_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(emoji_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # Since allow_zero_version is False, the version should be 1.0.0
                         # as a prerelease value due to prerelease=True, across the board
@@ -1249,10 +1372,8 @@ def test_algorithm_with_zero_dot_versions_angular(
                             # None & chore commits are absorbed into the previously detected minor bump
                             # and because 0 versions are not allowed
                             None,
-
                             # Same as above, even though our change does not trigger a bump normally
                             lazy_fixture(emoji_chore_commits.__name__),
-
                             # Even though we apply more patch, minor, major commits, the previous
                             # minor commit (in the prerelase tag) triggers a higher bump &
                             # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
@@ -1298,18 +1419,20 @@ def test_algorithm_with_zero_dot_versions_emoji(
     assert expected_new_version == str(new_version)
 
 
-
 @pytest.mark.parametrize(
-    str.join(', ', [
-        "repo",
-        "commit_parser",
-        "translator",
-        "commit_messages",
-        "prerelease",
-        "major_on_zero",
-        "allow_zero_version",
-        "expected_new_version",
-    ]),
+    str.join(
+        ", ",
+        [
+            "repo",
+            "commit_parser",
+            "translator",
+            "commit_messages",
+            "prerelease",
+            "major_on_zero",
+            "allow_zero_version",
+            "expected_new_version",
+        ],
+    ),
     xdist_sort_hack(
         [
             (
@@ -1339,32 +1462,37 @@ def test_algorithm_with_zero_dot_versions_emoji(
                             # Even when this test does not change anything, the base modification
                             # will be a minor change and thus the version will be bumped to 0.1.0
                             None,
-
                             # Non version bumping commits are absorbed into the previously detected minor bump
                             lazy_fixture(scipy_chore_commits.__name__),
-
                             # Patch commits are absorbed into the previously detected minor bump
                             lazy_fixture(scipy_patch_commits.__name__),
-
                             # Minor level commits are absorbed into the previously detected minor bump
                             lazy_fixture(scipy_minor_commits.__name__),
-
                             # Given the major_on_zero is False and the version is starting at 0.0.0,
                             # the major level commits are limited to only causing a minor level bump
                             lazy_fixture(scipy_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is False, & major_on_zero is False, & allow_zero_version is True,
                     # the version should only be minor bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(scipy_major_commits.__name__), False, False, True, "0.1.0"),
-
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.1.0",
+                    ),
                     # when prerelease is False, & major_on_zero is True & allow_zero_version is True,
                     # the version should be major bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(scipy_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is False, & allow_zero_version is False, the version should be
                         # 1.0.0, across the board because 0 is not a valid major version.
@@ -1393,13 +1521,22 @@ def test_algorithm_with_zero_dot_versions_emoji(
                         # of the major_on_zero value
                         (commits, False, major_on_zero, True, "0.1.1")
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(scipy_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(scipy_chore_commits.__name__),
+                        )
                     ),
                     *(
                         # when prerelease must be False, and allow_zero_version is True,
                         # the version is patch bumped because of the patch level commits
                         # regardless of the major_on_zero value
-                        (lazy_fixture(scipy_patch_commits.__name__), False, major_on_zero, True, "0.1.2")
+                        (
+                            lazy_fixture(scipy_patch_commits.__name__),
+                            False,
+                            major_on_zero,
+                            True,
+                            "0.1.2",
+                        )
                         for major_on_zero in (True, False)
                     ),
                     *(
@@ -1414,7 +1551,13 @@ def test_algorithm_with_zero_dot_versions_emoji(
                     # when prerelease must be False, and allow_zero_version is True,
                     # but the major_on_zero is True, then when a major level commit is given,
                     # the version should be bumped to the next major version
-                    (lazy_fixture(scipy_major_commits.__name__), False, True, True, "1.0.0"),
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease must be False, & allow_zero_version is False, the version should be
                         # 1.0.0, with any change regardless of major_on_zero
@@ -1443,18 +1586,31 @@ def test_algorithm_with_zero_dot_versions_emoji(
                         (commits, prerelease, major_on_zero, True, "0.2.0")
                         for prerelease in (True, False)
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(scipy_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(scipy_chore_commits.__name__),
+                        )
                     ),
-
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped as a prerelease version, when given patch level commits
-                    (lazy_fixture(scipy_patch_commits.__name__), True, False, True, "0.2.1-rc.1"),
-
+                    (
+                        lazy_fixture(scipy_patch_commits.__name__),
+                        True,
+                        False,
+                        True,
+                        "0.2.1-rc.1",
+                    ),
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped, when given patch level commits
-                    (lazy_fixture(scipy_patch_commits.__name__), False, False, True, "0.2.1"),
+                    (
+                        lazy_fixture(scipy_patch_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.2.1",
+                    ),
                     *(
                         # when allow_zero_version is True,
                         # prerelease is True, & major_on_zero is False, the version should be
@@ -1476,16 +1632,25 @@ def test_algorithm_with_zero_dot_versions_emoji(
                             lazy_fixture(scipy_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits
-                    (lazy_fixture(scipy_major_commits.__name__), True, True, True, "1.0.0-rc.1"),
-
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-rc.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(scipy_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is True, & allow_zero_version is False, the version should be
                         # bumped to 1.0.0 as a prerelease version, when given any/none commits
@@ -1527,7 +1692,10 @@ def test_algorithm_with_zero_dot_versions_emoji(
                         # the version is not bumped because nothing of importance happened
                         (commits, True, major_on_zero, True, "0.3.0-beta.1")
                         for major_on_zero in (True, False)
-                        for commits in (None, lazy_fixture(scipy_chore_commits.__name__))
+                        for commits in (
+                            None,
+                            lazy_fixture(scipy_chore_commits.__name__),
+                        )
                     ),
                     *(
                         (commits, True, False, True, "0.3.0-beta.2")
@@ -1537,11 +1705,9 @@ def test_algorithm_with_zero_dot_versions_emoji(
                             # because the last full release was 0.2.0 and the prior prerelease consumes the
                             # patch bump
                             lazy_fixture(scipy_patch_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(scipy_minor_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # increment the next prerelease version, when given new breaking changes
                             # because major_on_zero is false, the last full release was 0.2.0
@@ -1556,38 +1722,42 @@ def test_algorithm_with_zero_dot_versions_emoji(
                             # off, we look at the last full version which is 0.2.0 and
                             # consider the previous minor commit to cause the bump to 0.3.0
                             None,
-
                             # same as None, but with a chore commit
                             lazy_fixture(scipy_chore_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # patch bumped, when given patch level commits because last full version was 0.2.0
                             # and it was previously identified (from the prerelease) that a minor commit
                             # exists between 0.2.0 and now
                             lazy_fixture(scipy_patch_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(scipy_minor_commits.__name__),
-
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given new breaking changes because
                             # major_on_zero is false and last full version was 0.2.0
                             lazy_fixture(scipy_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits. The previous prerelease is ignored because of the major
                     # bump
-                    (lazy_fixture(scipy_major_commits.__name__), True, True, True, "1.0.0-beta.1"),
-
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-beta.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(scipy_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(scipy_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # Since allow_zero_version is False, the version should be 1.0.0
                         # as a prerelease value due to prerelease=True, across the board
@@ -1612,10 +1782,8 @@ def test_algorithm_with_zero_dot_versions_emoji(
                             # None & chore commits are absorbed into the previously detected minor bump
                             # and because 0 versions are not allowed
                             None,
-
                             # Same as above, even though our change does not trigger a bump normally
                             lazy_fixture(scipy_chore_commits.__name__),
-
                             # Even though we apply more patch, minor, major commits, the previous
                             # minor commit (in the prerelase tag) triggers a higher bump &
                             # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
@@ -1662,16 +1830,19 @@ def test_algorithm_with_zero_dot_versions_scipy(
 
 
 @pytest.mark.parametrize(
-    str.join(', ', [
-        "repo",
-        "commit_parser",
-        "translator",
-        "commit_messages",
-        "prerelease",
-        "major_on_zero",
-        "allow_zero_version",
-        "expected_new_version",
-    ]),
+    str.join(
+        ", ",
+        [
+            "repo",
+            "commit_parser",
+            "translator",
+            "commit_messages",
+            "prerelease",
+            "major_on_zero",
+            "allow_zero_version",
+            "expected_new_version",
+        ],
+    ),
     xdist_sort_hack(
         [
             (
@@ -1701,32 +1872,37 @@ def test_algorithm_with_zero_dot_versions_scipy(
                             # Even when this test does not change anything, the base modification
                             # will be a minor change and thus the version will be bumped to 0.1.0
                             None,
-
                             # Non version bumping commits are absorbed into the previously detected minor bump
                             lazy_fixture(tag_chore_commits.__name__),
-
                             # Patch commits are absorbed into the previously detected minor bump
                             lazy_fixture(tag_patch_commits.__name__),
-
                             # Minor level commits are absorbed into the previously detected minor bump
                             lazy_fixture(tag_minor_commits.__name__),
-
                             # Given the major_on_zero is False and the version is starting at 0.0.0,
                             # the major level commits are limited to only causing a minor level bump
                             lazy_fixture(tag_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is False, & major_on_zero is False, & allow_zero_version is True,
                     # the version should only be minor bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(tag_major_commits.__name__), False, False, True, "0.1.0"),
-
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.1.0",
+                    ),
                     # when prerelease is False, & major_on_zero is True & allow_zero_version is True,
                     # the version should be major bumped when provided major commits because
                     # of the major_on_zero value
-                    (lazy_fixture(tag_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is False, & allow_zero_version is False, the version should be
                         # 1.0.0, across the board because 0 is not a valid major version.
@@ -1761,7 +1937,13 @@ def test_algorithm_with_zero_dot_versions_scipy(
                         # when prerelease must be False, and allow_zero_version is True,
                         # the version is patch bumped because of the patch level commits
                         # regardless of the major_on_zero value
-                        (lazy_fixture(tag_patch_commits.__name__), False, major_on_zero, True, "0.1.2")
+                        (
+                            lazy_fixture(tag_patch_commits.__name__),
+                            False,
+                            major_on_zero,
+                            True,
+                            "0.1.2",
+                        )
                         for major_on_zero in (True, False)
                     ),
                     *(
@@ -1776,7 +1958,13 @@ def test_algorithm_with_zero_dot_versions_scipy(
                     # when prerelease must be False, and allow_zero_version is True,
                     # but the major_on_zero is True, then when a major level commit is given,
                     # the version should be bumped to the next major version
-                    (lazy_fixture(tag_major_commits.__name__), False, True, True, "1.0.0"),
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease must be False, & allow_zero_version is False, the version should be
                         # 1.0.0, with any change regardless of major_on_zero
@@ -1807,16 +1995,26 @@ def test_algorithm_with_zero_dot_versions_scipy(
                         for major_on_zero in (True, False)
                         for commits in (None, lazy_fixture(tag_chore_commits.__name__))
                     ),
-
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped as a prerelease version, when given patch level commits
-                    (lazy_fixture(tag_patch_commits.__name__), True, False, True, "0.2.1-rc.1"),
-
+                    (
+                        lazy_fixture(tag_patch_commits.__name__),
+                        True,
+                        False,
+                        True,
+                        "0.2.1-rc.1",
+                    ),
                     # when allow_zero_version is True,
                     # prerelease is False, & major_on_zero is False, the version should be
                     # patch bumped, when given patch level commits
-                    (lazy_fixture(tag_patch_commits.__name__), False, False, True, "0.2.1"),
+                    (
+                        lazy_fixture(tag_patch_commits.__name__),
+                        False,
+                        False,
+                        True,
+                        "0.2.1",
+                    ),
                     *(
                         # when allow_zero_version is True,
                         # prerelease is True, & major_on_zero is False, the version should be
@@ -1838,16 +2036,25 @@ def test_algorithm_with_zero_dot_versions_scipy(
                             lazy_fixture(tag_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits
-                    (lazy_fixture(tag_major_commits.__name__), True, True, True, "1.0.0-rc.1"),
-
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-rc.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(tag_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # when prerelease is True, & allow_zero_version is False, the version should be
                         # bumped to 1.0.0 as a prerelease version, when given any/none commits
@@ -1899,11 +2106,9 @@ def test_algorithm_with_zero_dot_versions_scipy(
                             # because the last full release was 0.2.0 and the prior prerelease consumes the
                             # patch bump
                             lazy_fixture(tag_patch_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(tag_minor_commits.__name__),
-
                             # when prerelease is True, & major_on_zero is False, the version should be
                             # increment the next prerelease version, when given new breaking changes
                             # because major_on_zero is false, the last full release was 0.2.0
@@ -1918,38 +2123,42 @@ def test_algorithm_with_zero_dot_versions_scipy(
                             # off, we look at the last full version which is 0.2.0 and
                             # consider the previous minor commit to cause the bump to 0.3.0
                             None,
-
                             # same as None, but with a chore commit
                             lazy_fixture(tag_chore_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # patch bumped, when given patch level commits because last full version was 0.2.0
                             # and it was previously identified (from the prerelease) that a minor commit
                             # exists between 0.2.0 and now
                             lazy_fixture(tag_patch_commits.__name__),
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given patch level commits because last full version was 0.2.0
                             lazy_fixture(tag_minor_commits.__name__),
-
-
                             # when prerelease is False, & major_on_zero is False, the version should be
                             # minor bumped, when given new breaking changes because
                             # major_on_zero is false and last full version was 0.2.0
                             lazy_fixture(tag_major_commits.__name__),
                         )
                     ),
-
                     # when prerelease is True, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                     # given major level commits. The previous prerelease is ignored because of the major
                     # bump
-                    (lazy_fixture(tag_major_commits.__name__), True, True, True, "1.0.0-beta.1"),
-
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        True,
+                        True,
+                        True,
+                        "1.0.0-beta.1",
+                    ),
                     # when prerelease is False, & major_on_zero is True, and allow_zero_version
                     # is True, the version should be bumped to 1.0.0, when given major level commits
-                    (lazy_fixture(tag_major_commits.__name__), False, True, True, "1.0.0"),
-
+                    (
+                        lazy_fixture(tag_major_commits.__name__),
+                        False,
+                        True,
+                        True,
+                        "1.0.0",
+                    ),
                     *(
                         # Since allow_zero_version is False, the version should be 1.0.0
                         # as a prerelease value due to prerelease=True, across the board
@@ -1974,10 +2183,8 @@ def test_algorithm_with_zero_dot_versions_scipy(
                             # None & chore commits are absorbed into the previously detected minor bump
                             # and because 0 versions are not allowed
                             None,
-
                             # Same as above, even though our change does not trigger a bump normally
                             lazy_fixture(tag_chore_commits.__name__),
-
                             # Even though we apply more patch, minor, major commits, the previous
                             # minor commit (in the prerelase tag) triggers a higher bump &
                             # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
@@ -2024,16 +2231,19 @@ def test_algorithm_with_zero_dot_versions_tag(
 
 
 @pytest.mark.parametrize(
-    str.join(" ,", [
-        "repo",
-        "commit_parser",
-        "translator",
-        "commit_messages",
-        "prerelease",
-        "major_on_zero",
-        "allow_zero_version",
-        "expected_new_version",
-    ]),
+    str.join(
+        " ,",
+        [
+            "repo",
+            "commit_parser",
+            "translator",
+            "commit_messages",
+            "prerelease",
+            "major_on_zero",
+            "allow_zero_version",
+            "expected_new_version",
+        ],
+    ),
     xdist_sort_hack(
         [
             (

@@ -284,6 +284,7 @@ def update_pyproject_toml(pyproject_toml_file: Path) -> UpdatePyprojectTomlFn:
 @pytest.fixture
 def set_major_on_zero(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn:
     """Turn on/off the major_on_zero setting."""
+
     def _set_major_on_zero(flag: bool) -> None:
         update_pyproject_toml("tool.semantic_release.major_on_zero", flag)
 
@@ -293,6 +294,7 @@ def set_major_on_zero(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn
 @pytest.fixture
 def set_allow_zero_version(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn:
     """Turn on/off the allow_zero_version setting."""
+
     def _set_allow_zero_version(flag: bool) -> None:
         update_pyproject_toml("tool.semantic_release.allow_zero_version", flag)
 
