@@ -1252,45 +1252,363 @@ def test_algorithm_with_zero_dot_versions_scipy(
                     *(
                         (commits, False, major_on_zero, "0.3.0")
                         for major_on_zero in (True, False)
-                        for commits in ([], ["uninteresting"])
+
+@pytest.mark.parametrize(
+    str.join(" ,", [
+        "repo",
+        "commit_parser",
+        "translator",
+        "commit_messages",
+        "prerelease",
+        "major_on_zero",
+        "allow_zero_version",
+        "expected_new_version",
+    ]),
+    xdist_sort_hack(
+        [
+            (
+                lazy_fixture(repo_with_no_tags_tag_commits.__name__),
+                lazy_fixture(parser_fixture_name),
+                translator[0],
+                commit_messages,
+                prerelease,
+                major_on_zero,
+                allow_zero_version,
+                expected_new_version,
+            )
+            for translator, values in {
+                # Latest version for repo_with_no_tags is currently 0.0.0 (default)
+                # It's biggest change type is minor, so the next version should be 0.1.0
+                (VersionTranslator(),): [
+                    *(
+                        # when prerelease is False, major_on_zero is True & False, & allow_zero_version is True
+                        # the version should be 0.0.0, when no distintive changes have been made since the
+                        # start of the project
+                        (commits, parser, prerelease, major_on_zero, True, "0.0.0")
+                        for prerelease in (True, False)
+                        for major_on_zero in (True, False)
+                        for commits, parser in (
+                            # No commits added, so base is just initial commit at 0.0.0
+                            (None, default_tag_parser.__name__),
+                            # Chore like commits also don't trigger a version bump so it stays 0.0.0
+                            (
+                                lazy_fixture(angular_chore_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_chore_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_chore_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_chore_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
                     ),
                     *(
-                        (TAG_COMMITS_PATCH, False, major_on_zero, "0.3.0")
+                        (commits, parser, True, major_on_zero, True, "0.0.1-rc.1")
                         for major_on_zero in (True, False)
+                        for commits, parser in (
+                            # when prerelease is True & allow_zero_version is True, the version should be
+                            # a patch bump as a prerelease version, because of the patch level commits
+                            # major_on_zero is irrelevant here as we are only applying patch commits
+                            (
+                                lazy_fixture(angular_patch_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_patch_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_patch_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_patch_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
                     ),
                     *(
-                        (TAG_COMMITS_PATCH, True, major_on_zero, "0.3.0-beta.2")
+                        (commits, parser, False, major_on_zero, True, "0.0.1")
                         for major_on_zero in (True, False)
+                        for commits, parser in (
+                            # when prerelease is False, & allow_zero_version is True, the version should be
+                            # a patch bump because of the patch commits added
+                            # major_on_zero is irrelevant here as we are only applying patch commits
+                            (
+                                lazy_fixture(angular_patch_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_patch_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_patch_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_patch_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
                     ),
                     *(
-                        (TAG_COMMITS_MINOR, False, major_on_zero, "0.3.0")
-                        for major_on_zero in (True, False)
+                        (commits, parser, True, False, True, "0.1.0-rc.1")
+                        for commits, parser in (
+                            # when prerelease is False, & major_on_zero is False, the version should be
+                            # a minor bump because of the minor commits added
+                            (
+                                lazy_fixture(angular_minor_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_minor_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_minor_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_minor_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            # Given the major_on_zero is False and the version is starting at 0.0.0,
+                            # the major level commits are limited to only causing a minor level bump
+                            (
+                                lazy_fixture(angular_major_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_major_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_major_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_major_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
                     ),
                     *(
-                        (TAG_COMMITS_MINOR, True, major_on_zero, "0.3.0-beta.2")
-                        for major_on_zero in (True, False)
+                        (commits, parser, False, False, True, "0.1.0")
+                        for commits, parser in (
+                            # when prerelease is False,
+                            # major_on_zero is False, & allow_zero_version is True
+                            # the version should be a minor bump of 0.0.0
+                            # because of the minor commits added and zero version is allowed
+                            (
+                                lazy_fixture(angular_minor_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_minor_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_minor_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_minor_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            # Given the major_on_zero is False and the version is starting at 0.0.0,
+                            # the major level commits are limited to only causing a minor level bump
+                            (
+                                lazy_fixture(angular_major_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_major_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_major_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_major_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
                     ),
-                    (TAG_COMMITS_MAJOR, False, True, "1.0.0"),
-                    (TAG_COMMITS_MAJOR, True, True, "1.0.0-beta.1"),
-                    (TAG_COMMITS_MAJOR, False, False, "0.3.0"),
-                    # Note - since breaking changes are absorbed into the minor digit
-                    # with major_on_zero = False, and that's already been incremented
-                    # since the last full release, the breaking change here will only
-                    # trigger a prerelease revision
-                    (TAG_COMMITS_MAJOR, True, False, "0.3.0-beta.2"),
+                    *(
+                        # when prerelease is True, & allow_zero_version is False, the version should be
+                        # a prerelease version 1.0.0-rc.1, across the board when any valuable change
+                        # is made because of the allow_zero_version is False, major_on_zero is ignored
+                        # when allow_zero_version is False (but we still test it)
+                        (commits, parser, True, major_on_zero, False, "1.0.0-rc.1")
+                        for major_on_zero in (True, False)
+                        for commits, parser in (
+                            # parser doesn't matter here as long as it detects a NO_RELEASE on Initial Commit
+                            (None, default_tag_parser.__name__),
+                            (
+                                lazy_fixture(angular_chore_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(angular_patch_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(angular_minor_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(angular_major_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_chore_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_patch_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_minor_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_major_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_chore_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_patch_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_minor_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_major_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_chore_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_patch_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_minor_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_major_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
+                    ),
+                    *(
+                        # when prerelease is True, & allow_zero_version is False, the version should be
+                        # 1.0.0, across the board when any valuable change
+                        # is made because of the allow_zero_version is False. major_on_zero is ignored
+                        # when allow_zero_version is False (but we still test it)
+                        (commits, parser, False, major_on_zero, False, "1.0.0")
+                        for major_on_zero in (True, False)
+                        for commits, parser in (
+                            (None, default_tag_parser.__name__),
+                            (
+                                lazy_fixture(angular_chore_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(angular_patch_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(angular_minor_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(angular_major_commits.__name__),
+                                default_angular_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_chore_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_patch_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_minor_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(emoji_major_commits.__name__),
+                                default_emoji_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_chore_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_patch_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_minor_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(scipy_major_commits.__name__),
+                                default_scipy_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_chore_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_patch_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_minor_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                            (
+                                lazy_fixture(tag_major_commits.__name__),
+                                default_tag_parser.__name__,
+                            ),
+                        )
+                    ),
                 ],
             }.items()
             for (
                 commit_messages,
+                parser_fixture_name,
                 prerelease,
                 major_on_zero,
+                allow_zero_version,
                 expected_new_version,
             ) in values
         ],
     ),
 )
-def test_algorithm_with_zero_dot_versions_tag(
-    repo,
+def test_algorithm_with_zero_dot_versions_minimums(
+    repo: Repo,
     file_in_repo,
     commit_parser,
     translator,
@@ -1298,15 +1616,21 @@ def test_algorithm_with_zero_dot_versions_tag(
     prerelease,
     expected_new_version,
     major_on_zero,
+    allow_zero_version,
 ):
-    for commit_message in commit_messages:
+    # Setup
+    # Move tree down to the Initial Commit
+    initial_commit = repo.git.log("--max-parents=0", "--format=%H").strip()
+    repo.git.reset("--hard", initial_commit)
+
+    for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message)
 
+    # Action
     new_version = next_version(
-        repo, translator, commit_parser, prerelease, major_on_zero
+        repo, translator, commit_parser, prerelease, major_on_zero, allow_zero_version
     )
 
-    assert new_version == Version.parse(
-        expected_new_version, prerelease_token=translator.prerelease_token
-    )
+    # Verify
+    assert expected_new_version == str(new_version)
