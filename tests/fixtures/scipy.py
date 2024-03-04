@@ -73,9 +73,7 @@ def valid_scipy_commit(scipy_tag, subject, body_parts):
 
 @pytest.fixture
 def scipy_chore_commits():
-    return [
-        "DOC: Add a note to the documentation"
-    ]
+    return ["DOC: Add a note to the documentation"]
 
 
 @pytest.fixture(

@@ -160,9 +160,7 @@ def _increment_version(
     is in this branch's history.
     """
     local_vars = list(locals().items())
-    log.debug(
-        "_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in local_vars)
-    )
+    log.debug("_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in local_vars))
     if latest_version.major == 0:
         if not allow_zero_version:
             # Set up default version to be 1.0.0 if currently 0.x.x which means a commented
