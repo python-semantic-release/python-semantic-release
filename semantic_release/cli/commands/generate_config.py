@@ -38,7 +38,7 @@ def generate_config(fmt: str = "toml", is_pyproject_toml: bool = False) -> None:
     your needs. For example, to append the default configuration to your pyproject.toml
     file, you can use the following command:
 
-        semantic-release generate-config -f toml >> pyproject.toml
+        semantic-release generate-config --pyproject >> pyproject.toml
     """
     # due to possible IntEnum values (which are not supported by tomlkit.dumps, see sdispater/tomlkit#237),
     # we must ensure the transformation of the model to a dict uses json serializable values

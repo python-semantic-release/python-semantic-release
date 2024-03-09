@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 import click
 
 from semantic_release.cli.util import noop_report
 from semantic_release.version import tags_and_versions
+
+if TYPE_CHECKING:
+    from semantic_release.cli.commands.cli_context import CliContextObj
+
 
 log = logging.getLogger(__name__)
 
@@ -20,10 +27,11 @@ log = logging.getLogger(__name__)
     help="The tag associated with the release to publish to",
     default="latest",
 )
-@click.pass_context
-def publish(ctx: click.Context, tag: str = "latest") -> None:
+@click.pass_obj
+def publish(cli_ctx: CliContextObj, tag: str = "latest") -> None:
     """Build and publish a distribution to a VCS release."""
-    runtime = ctx.obj
+    ctx = click.get_current_context()
+    runtime = cli_ctx.runtime_ctx
     repo = runtime.repo
     hvcs_client = runtime.hvcs_client
     translator = runtime.version_translator
