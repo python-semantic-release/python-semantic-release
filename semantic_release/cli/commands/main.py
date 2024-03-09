@@ -1,26 +1,21 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
+# from typing import TYPE_CHECKING
 import click
-from click.core import ParameterSource
-from git import InvalidGitRepositoryError
-from git.repo.base import Repo
-from pydantic import ValidationError
 from rich.console import Console
 from rich.logging import RichHandler
 
 import semantic_release
-from semantic_release.cli.commands.generate_config import generate_config
-from semantic_release.cli.config import (
-    GlobalCommandLineOptions,
-    RawConfig,
-    RuntimeContext,
-)
+from semantic_release.cli.commands.cli_context import CliContextObj
+from semantic_release.cli.config import GlobalCommandLineOptions
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
-from semantic_release.cli.util import load_raw_config_file, rprint
-from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
+from semantic_release.cli.util import rprint
+
+# if TYPE_CHECKING:
+#     pass
+
 
 FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
 
@@ -94,19 +89,8 @@ def main(
         ],
     )
 
-    log = logging.getLogger(__name__)
-
-    if ctx.invoked_subcommand == generate_config.name:
-        # generate-config doesn't require any of the usual setup,
-        # so exit out early and delegate to it
-        log.debug("Forwarding to %s", generate_config.name)
-        return
-
-    log.debug("logging level set to: %s", logging.getLevelName(log_level))
-    try:
-        repo = Repo(".", search_parent_directories=True)
-    except InvalidGitRepositoryError:
-        ctx.fail("Not in a valid Git repository")
+    logger = logging.getLogger(__name__)
+    logger.debug("logging level set to: %s", logging.getLevelName(log_level))
 
     if noop:
         rprint(
@@ -115,51 +99,9 @@ def main(
         )
 
     cli_options = GlobalCommandLineOptions(
-        noop=noop,
-        verbosity=verbosity,
-        config_file=config_file,
-        strict=strict,
+        noop=noop, verbosity=verbosity, config_file=config_file, strict=strict
     )
-    log.debug("global cli options: %s", cli_options)
 
-    config_path = Path(config_file)
-    # default no config loaded
-    config_text = {}
-    if not config_path.exists():
-        if ctx.get_parameter_source("config_file") not in (
-            ParameterSource.DEFAULT,
-            ParameterSource.DEFAULT_MAP,
-        ):
-            ctx.fail(f"File {config_file} does not exist")
+    logger.debug("global cli options: %s", cli_options)
 
-        log.info(
-            "configuration file %s not found, using default configuration",
-            config_file,
-        )
-
-    else:
-        try:
-            config_text = load_raw_config_file(config_path)
-        except InvalidConfiguration as exc:
-            ctx.fail(str(exc))
-
-    try:
-        raw_config = RawConfig.model_validate(config_text)
-        runtime = RuntimeContext.from_raw_config(
-            raw_config, repo=repo, global_cli_options=cli_options
-        )
-    except NotAReleaseBranch as exc:
-        rprint(f"[bold {'red' if strict else 'orange1'}]{exc!s}")
-        # If not strict, exit 0 so other processes can continue. For example, in
-        # multibranch CI it might be desirable to run a non-release branch's pipeline
-        # without specifying conditional execution of PSR based on branch name
-        ctx.exit(2 if strict else 0)
-    except (ValidationError, InvalidConfiguration) as exc:
-        click.echo(str(exc), err=True)
-        ctx.exit(1)
-    ctx.obj = runtime
-
-    # This allows us to mask secrets in the logging
-    # by applying it to all the configured handlers
-    for handler in logging.getLogger().handlers:
-        handler.addFilter(runtime.masker)
+    ctx.obj = CliContextObj(ctx, logger, cli_options)

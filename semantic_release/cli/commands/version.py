@@ -5,7 +5,7 @@ import os
 import subprocess
 from contextlib import nullcontext
 from datetime import datetime
-from typing import TYPE_CHECKING, ContextManager, Iterable
+from typing import TYPE_CHECKING
 
 import click
 import shellingham  # type: ignore[import]
@@ -28,10 +28,12 @@ from semantic_release.version import Version, next_version, tags_and_versions
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing import ContextManager, Iterable
+
     from git import Repo
     from git.refs.tag import Tag
 
-    from semantic_release.cli.config import RuntimeContext
+    from semantic_release.cli.commands.cli_context import CliContextObj
     from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
 
@@ -213,9 +215,9 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     is_flag=True,
     help="Skip building the current project",
 )
-@click.pass_context
+@click.pass_obj
 def version(  # noqa: C901
-    ctx: click.Context,
+    cli_ctx: CliContextObj,
     print_only: bool = False,
     print_only_tag: bool = False,
     print_last_released: bool = False,
@@ -231,22 +233,27 @@ def version(  # noqa: C901
     build_metadata: str | None = None,
     skip_build: bool = False,
 ) -> str:
-    r"""
+    """
     Detect the semantically correct next version that should be applied to your
     project.
 
-    \b
     By default:
-      * Write this new version to the project metadata locations
-        specified in the configuration file
-      * Create a new commit with these locations and any other assets configured
-        to be included in a release
-      * Tag this commit according the configured format, with a tag that uniquely
-        identifies the version being released.
-      * Push the new tag and commit to the remote for the repository
-      * Create a release (if supported) in the remote VCS for this tag
+
+    * Write this new version to the project metadata locations specified
+    in the configuration file
+
+    * Create a new commit with these locations and any other assets configured
+    to be included in a release
+
+    * Tag this commit according the configured format, with a tag that uniquely
+    identifies the version being released.
+
+    * Push the new tag and commit to the remote for the repository
+
+    * Create a release (if supported) in the remote VCS for this tag
     """
-    runtime: RuntimeContext = ctx.obj
+    ctx = click.get_current_context()
+    runtime = cli_ctx.runtime_ctx
     repo = runtime.repo
     translator = runtime.version_translator
 

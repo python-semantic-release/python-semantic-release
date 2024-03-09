@@ -9,13 +9,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Type, Union
 
-from git import Actor
+from git import Actor, InvalidGitRepositoryError
 from git.repo.base import Repo
 from jinja2 import Environment
 from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
 
-# For Python 3.8 compatibility
-from typing_extensions import Annotated
+# For Python 3.8, 3.9, 3.10 compatibility
+from typing_extensions import Annotated, Self
 
 from semantic_release import hvcs
 from semantic_release.changelog import environment
@@ -119,7 +119,7 @@ class RemoteConfig(BaseModel):
     ignore_token_for_push: bool = False
 
     @model_validator(mode="after")
-    def set_default_token(self) -> RemoteConfig:
+    def set_default_token(self) -> Self:
         # Set the default token name for the given VCS when no user input is given
         if not self.token and self.type in _known_hvcs:
             default_token_name = _known_hvcs[self.type].DEFAULT_ENV_TOKEN_NAME
@@ -155,7 +155,7 @@ class RawConfig(BaseModel):
     version_variables: Optional[Tuple[str, ...]] = None
 
     @model_validator(mode="after")
-    def set_default_opts(self) -> RawConfig:
+    def set_default_opts(self) -> Self:
         # Set the default parser options for the given commit parser when no user input is given
         if not self.commit_parser_options and self.commit_parser:
             parser_opts_type = None
@@ -291,14 +291,17 @@ class RuntimeContext:
 
     @classmethod
     def from_raw_config(
-        cls, raw: RawConfig, repo: Repo, global_cli_options: GlobalCommandLineOptions
+        cls, raw: RawConfig, global_cli_options: GlobalCommandLineOptions
     ) -> RuntimeContext:
         ##
         # credentials masking for logging
         masker = MaskingFilter(_use_named_masks=raw.logging_use_named_masks)
 
         try:
+            repo = Repo(".", search_parent_directories=True)
             active_branch = repo.active_branch.name
+        except InvalidGitRepositoryError as err:
+            raise InvalidGitRepositoryError("No valid git repository found!") from err
         except TypeError as err:
             raise NotAReleaseBranch(
                 "Detached HEAD state cannot match any release groups; "

@@ -16,7 +16,7 @@ from semantic_release.cli.common import (
 from semantic_release.cli.util import noop_report
 
 if TYPE_CHECKING:
-    from semantic_release.cli.config import RuntimeContext
+    from semantic_release.cli.commands.cli_context import CliContextObj
     from semantic_release.version import Version
 
 log = logging.getLogger(__name__)
@@ -34,10 +34,11 @@ log = logging.getLogger(__name__)
     default=None,
     help="Post the generated release notes to the remote VCS's release for this tag",
 )
-@click.pass_context
-def changelog(ctx: click.Context, release_tag: str | None = None) -> None:
+@click.pass_obj
+def changelog(cli_ctx: CliContextObj, release_tag: str | None = None) -> None:
     """Generate and optionally publish a changelog for your project"""
-    runtime: RuntimeContext = ctx.obj
+    ctx = click.get_current_context()
+    runtime = cli_ctx.runtime_ctx
     repo = runtime.repo
     parser = runtime.commit_parser
     translator = runtime.version_translator
