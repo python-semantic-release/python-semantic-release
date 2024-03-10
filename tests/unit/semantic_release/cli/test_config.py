@@ -21,13 +21,12 @@ from semantic_release.commit_parser.tag import TagParserOptions
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
 
+from tests.fixtures.repos import repo_with_no_tags_angular_commits
 from tests.util import CustomParserOpts
 
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
-
-    from git import Repo
 
     from tests.fixtures.example_project import ExProjectDir
 
@@ -144,11 +143,12 @@ def test_default_toml_config_valid(example_project_dir: ExProjectDir):
         ({"GIT_COMMIT_AUTHOR": "foo <foo>"}, "foo <foo>"),
     ],
 )
+@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
 def test_commit_author_configurable(
     example_pyproject_toml: Path,
-    repo_with_no_tags_angular_commits: Repo,
     mock_env: dict[str, str],
     expected_author: str,
+    change_to_ex_proj_dir: str,
 ):
     content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
 
@@ -156,10 +156,9 @@ def test_commit_author_configurable(
         raw = RawConfig.model_validate(content)
         runtime = RuntimeContext.from_raw_config(
             raw=raw,
-            repo=repo_with_no_tags_angular_commits,
             global_cli_options=GlobalCommandLineOptions(),
         )
-        assert (
+        resulting_author = (
             f"{runtime.commit_author.name} <{runtime.commit_author.email}>"
-            == expected_author
         )
+        assert expected_author == resulting_author
