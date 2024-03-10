@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
@@ -7,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 from requests_mock import ANY
 
-from semantic_release.cli.commands import main
+from semantic_release.cli import config as CliConfigModule
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     RawConfig,
@@ -19,7 +21,6 @@ from semantic_release.cli.util import load_raw_config_file
 from tests.util import prepare_mocked_git_command_wrapper_type
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import Protocol
 
     from git.repo import Repo
@@ -56,7 +57,7 @@ def mocked_git_push(monkeypatch: MonkeyPatch) -> MagicMock:
     """Mock the `Repo.git.push()` method in `semantic_release.cli.main`."""
     mocked_push = MagicMock()
     cls = prepare_mocked_git_command_wrapper_type(push=mocked_push)
-    monkeypatch.setattr(main.Repo, "GitCommandWrapperType", cls)
+    monkeypatch.setattr(CliConfigModule.Repo, "GitCommandWrapperType", cls)
     return mocked_push
 
 
@@ -90,7 +91,14 @@ def retrieve_runtime_context(
     cli_options: GlobalCommandLineOptions,
 ) -> RetrieveRuntimeContextFn:
     def _retrieve_runtime_context(repo: Repo) -> RuntimeContext:
-        raw_config = read_config_file(cli_options.config_file)
-        return RuntimeContext.from_raw_config(raw_config, repo, cli_options)
+        cwd = os.getcwd()
+        repo_dir = str(Path(repo.working_dir).resolve())
+
+        os.chdir(repo_dir)
+        try:
+            raw_config = read_config_file(cli_options.config_file)
+            return RuntimeContext.from_raw_config(raw_config, cli_options)
+        finally:
+            os.chdir(cwd)
 
     return _retrieve_runtime_context
