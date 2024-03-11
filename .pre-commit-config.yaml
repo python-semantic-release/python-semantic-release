@@ -2,6 +2,8 @@
 default_language_version:
   python: python3
 
+exclude: "^CHANGELOG.md$"
+
 repos:
   # Meta hooks
   - repo: meta
