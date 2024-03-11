@@ -743,3 +743,36 @@ def test_version_only_update_files_no_git_actions(
     assert len(removed) == 1
     assert re.match('__version__ = ".*"', removed[0])
     assert added == [f'__version__ = "{expected_new_version}"\n']
+
+
+def test_version_print_last_released_prints_version(
+    repo_with_single_branch_tag_commits: Repo, cli_runner: CliRunner
+):
+    result = cli_runner.invoke(main, [version.name, "--print-last-released"])
+    assert result.exit_code == 0
+    assert result.stdout == "0.1.1\n"
+
+
+def test_version_print_last_released_prints_released_if_commits(
+    repo_with_single_branch_tag_commits: Repo,
+    example_project_dir: ExProjectDir,
+    cli_runner: CliRunner,
+):
+    new_file = example_project_dir / "temp.txt"
+    new_file.write_text("test --print-last-released")
+
+    repo_with_single_branch_tag_commits.git.add(str(new_file.resolve()))
+    repo_with_single_branch_tag_commits.git.commit(m="fix: temp new file")
+
+    result = cli_runner.invoke(main, [version.name, "--print-last-released"])
+    assert result.exit_code == 0
+    assert result.stdout == "0.1.1\n"
+
+
+def test_version_print_last_released_prints_nothing_if_no_tags(
+    caplog, repo_with_no_tags_angular_commits: Repo, cli_runner: CliRunner
+):
+    result = cli_runner.invoke(main, [version.name, "--print-last-released"])
+    assert result.exit_code == 0
+    assert result.stdout == ""
+    assert "No release tags found." in caplog.text

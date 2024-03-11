@@ -144,6 +144,33 @@ command line options::
     semantic-release version --patch --print
     semantic-release version --prerelease --print
 
+.. _cmd-version-option-print-tag:
+
+``--print-tag``
+***************
+
+Same as the :ref:`cmd-version-option-print` flag but prints the complete tag
+name (ex. ``v1.0.0`` or ``py-v1.0.0``) instead of the raw version number
+(``1.0.0``).
+
+.. _cmd-version-option-print-last-released:
+
+``--print-last-released``
+*************************
+
+Print the last released version based on the Git tags.  This flag is useful if you just
+want to see the released version without determining what the next version will be.
+Note if the version can not be found nothing will be printed.
+
+.. _cmd-version-option-print-last-released-tag:
+
+``--print-last-released-tag``
+***************
+
+Same as the :ref:`cmd-version-option-print-last-released` flag but prints the
+complete tag name (ex. ``v1.0.0`` or ``py-v1.0.0``) instead of the raw version
+number (``1.0.0``).
+
 .. _cmd-version-option-force-level:
 
 ``--major/--minor/--patch``
