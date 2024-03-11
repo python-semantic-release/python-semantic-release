@@ -16,7 +16,7 @@ from semantic_release.commit_parser.util import parse_paragraphs
             ["Long explanation", "full of interesting details"],
         ),
         (
-            # Windows (CRLF)
+            # Windows uses CRLF
             "Long\r\nexplanation\r\n\r\nfull of interesting\r\ndetails",
             ["Long explanation", "full of interesting details"],
         ),

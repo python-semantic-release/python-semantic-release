@@ -221,6 +221,9 @@ ignore = [
   "INP001",
   # Errors should end with "Error"
   "N818",
+  # Fixtures that do not return a value need an underscore prefix.  The rule
+  # does not handle generators.
+  "PT004",
   # flake8-pytest-style, values rowtype (list|tuple)
   "PT007",
   # pytest.raises needs a match - eventually want to enable
@@ -285,7 +288,7 @@ line-ending = "lf"
 "semantic_release/hvcs/_base.py" = ["ARG002"]
 # from tests.fixtures import * is deliberate
 "tests/conftest.py" = ["F403"]
-"tests/fixtures/__init__.py" = ["F403"]
+"tests/fixtures/**/__init__.py" = ["F403"]
 
 "tests/*" = [
   # unused arguments - likely fixtures to be moved to
@@ -307,6 +310,7 @@ line-ending = "lf"
   # Annotations
   "ANN",
 ]
+
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
