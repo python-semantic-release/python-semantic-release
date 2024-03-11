@@ -238,7 +238,7 @@ def cached_example_git_project(
 
 
 @pytest.fixture(scope="session")
-def build_configured_base_repo(
+def build_configured_base_repo(  # noqa: C901
     cached_example_git_project: Path,
     use_github_hvcs: UseHvcsFn,
     use_gitlab_hvcs: UseHvcsFn,
@@ -257,7 +257,7 @@ def build_configured_base_repo(
     derivative fixtures can call this fixture with individual parameters.
     """
 
-    def _build_configured_base_repo(
+    def _build_configured_base_repo(  # noqa: C901
         dest_dir: Path | str,
         commit_type: str = "angular",
         hvcs_client_name: str = "github",

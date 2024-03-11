@@ -37,7 +37,7 @@ class Bitbucket(HvcsBase):
     API_VERSION = "2.0"
     DEFAULT_DOMAIN = "bitbucket.org"
     DEFAULT_API_DOMAIN = "api.bitbucket.org"
-    DEFAULT_ENV_TOKEN_NAME = "BITBUCKET_TOKEN"
+    DEFAULT_ENV_TOKEN_NAME = "BITBUCKET_TOKEN"  # noqa: S105
 
     def __init__(
         self,
@@ -93,14 +93,13 @@ class Bitbucket(HvcsBase):
                 f"https://{user}:{self.token}@"
                 f"{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"
             )
-        else:
-            # Note: Assume the token is a repository token which will only work on the
-            # repository it was created for.
-            # https://support.atlassian.com/bitbucket-cloud/docs/using-access-tokens
-            return (
-                f"https://x-token-auth:{self.token}@"
-                f"{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"
-            )
+        # Note: Assume the token is a repository token which will only work on the
+        # repository it was created for.
+        # https://support.atlassian.com/bitbucket-cloud/docs/using-access-tokens
+        return (
+            f"https://x-token-auth:{self.token}@"
+            f"{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"
+        )
 
     def commit_hash_url(self, commit_hash: str) -> str:
         return (

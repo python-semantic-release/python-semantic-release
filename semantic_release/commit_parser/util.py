@@ -6,7 +6,7 @@ breaking_re = re.compile(r"BREAKING[ -]CHANGE:\s?(.*)")
 
 
 def parse_paragraphs(text: str) -> list[str]:
-    """
+    r"""
     This will take a text block and return a list containing each
     paragraph with single line breaks collapsed into spaces.
 
