@@ -56,7 +56,7 @@ def remove_dir_tree(directory: Path | str = ".", force: bool = False) -> None:
     read-only permissions
     """
 
-    def on_read_only_error(func, path, exc_info):
+    def on_read_only_error(_func, path, _exc_info):
         os.chmod(path, stat.S_IWRITE)
         os.unlink(path)
 

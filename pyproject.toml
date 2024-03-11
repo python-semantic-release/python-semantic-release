@@ -345,6 +345,9 @@ section-order = [
 ]
 sections = { "tests" = ["tests"] }
 
+[tool.vulture]
+ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
+
 [tool.semantic_release]
 logging_use_named_masks = true
 tag_format = "v{version}"
