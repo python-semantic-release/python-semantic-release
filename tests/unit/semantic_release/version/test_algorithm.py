@@ -29,7 +29,7 @@ def test_bfs_for_latest_version_in_history():
     v1_commit = Commit(repo, binsha=b"0" * 20)
 
     class TagReferenceOverride(TagReference):
-        commit = v1_commit  # type: ignore - mocking the commit property
+        commit = v1_commit  # mocking the commit property
 
     v1_tag = TagReferenceOverride(repo, "refs/tags/v1.0.0", check_path=False)
 
