@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, ContextManager, Iterable
 
 import click
 import shellingham  # type: ignore[import]
+from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git.exc import GitCommandError
 
 from semantic_release.changelog import ReleaseHistory, environment, recursive_render
@@ -26,8 +27,9 @@ from semantic_release.version import Version, next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from git import Repo
+    from git.refs.tag import Tag
 
     from semantic_release.cli.config import RuntimeContext
     from semantic_release.version import VersionTranslator
@@ -46,6 +48,13 @@ def is_forced_prerelease(
     """
     log.debug(", ".join(f"{k} = {v}" for k, v in locals().items()))
     return force_prerelease or ((force_level is None) and prerelease)
+
+
+def last_released(
+    repo: Repo, translator: VersionTranslator
+) -> tuple[Tag, Version] | None:
+    ts_and_vs = tags_and_versions(repo.tags, translator)
+    return ts_and_vs[0] if ts_and_vs else None
 
 
 def version_from_forced_level(
@@ -111,8 +120,25 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
         "help_option_names": ["-h", "--help"],
     },
 )
-@click.option(
+@optgroup.group("Print flags", cls=MutuallyExclusiveOptionGroup)
+@optgroup.option(
     "--print", "print_only", is_flag=True, help="Print the next version and exit"
+)
+@optgroup.option(
+    "--print-tag",
+    "print_only_tag",
+    is_flag=True,
+    help="Print the next version tag and exit",
+)
+@optgroup.option(
+    "--print-last-released",
+    is_flag=True,
+    help="Print the last released version and exit",
+)
+@optgroup.option(
+    "--print-last-released-tag",
+    is_flag=True,
+    help="Print the last released version tag and exit",
 )
 @click.option(
     "--prerelease",
@@ -191,6 +217,9 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
 def version(  # noqa: C901
     ctx: click.Context,
     print_only: bool = False,
+    print_only_tag: bool = False,
+    print_last_released: bool = False,
+    print_last_released_tag: bool = False,
     force_prerelease: bool = False,
     prerelease_token: str | None = None,
     force_level: str | None = None,
@@ -219,8 +248,20 @@ def version(  # noqa: C901
     """
     runtime: RuntimeContext = ctx.obj
     repo = runtime.repo
-    parser = runtime.commit_parser
     translator = runtime.version_translator
+
+    # We can short circuit updating the release if we are only printing the last released version
+    if print_last_released or print_last_released_tag:
+        if last_release := last_released(repo, translator):
+            if print_last_released:
+                click.echo(last_release[1])
+            if print_last_released_tag:
+                click.echo(last_release[0])
+        else:
+            log.warning("No release tags found.")
+        ctx.exit(0)
+
+    parser = runtime.commit_parser
     prerelease = is_forced_prerelease(
         force_prerelease=force_prerelease,
         force_level=force_level,
@@ -301,7 +342,10 @@ def version(  # noqa: C901
     ctx.call_on_close(gha_output.write_if_possible)
 
     # Print the new version so that command-line output capture will work
-    click.echo(str(new_version))
+    if print_only_tag:
+        click.echo(translator.str_to_tag(str(new_version)))
+    else:
+        click.echo(str(new_version))
 
     # If the new version has already been released, we fail and abort if strict;
     # otherwise we exit with 0.
@@ -318,7 +362,7 @@ def version(  # noqa: C901
             )
             ctx.exit(0)
 
-    if print_only:
+    if print_only or print_only_tag:
         ctx.exit(0)
 
     rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
