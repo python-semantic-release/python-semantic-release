@@ -33,12 +33,14 @@ repos:
 
   # Formatters that may modify source files automatically
   - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Keep old ruff formatting rules until other merge requests are completed
     rev: v0.1.11
     hooks:
       - id: ruff-format
         name: ruff (format)
         args: ["."]
         pass_filenames: false
+
   - repo: https://github.com/adamchainz/blacken-docs
     rev: 1.16.0
     hooks:
@@ -53,7 +55,7 @@ repos:
 
   # Linters and validation
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.11
+    rev: v0.3.2
     hooks:
       - id: ruff
         name: ruff (lint)
