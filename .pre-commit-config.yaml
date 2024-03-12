@@ -48,7 +48,7 @@ repos:
         additional_dependencies: ["black==23.10.1"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+    rev: v3.15.1
     hooks:
       - id: pyupgrade
         args: ["--py38-plus", "--keep-runtime-typing"]
@@ -68,7 +68,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.8.0"
+    rev: "v1.9.0"
     hooks:
       - id: mypy
         args: ["--config-file", "pyproject.toml"]
@@ -93,7 +93,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/jendrikseipp/vulture
-    rev: "v2.10"
+    rev: "v2.11"
     hooks:
       - id: vulture
         args:
@@ -104,7 +104,7 @@ repos:
           - "tests"
 
   - repo: https://github.com/pycqa/bandit
-    rev: 1.7.6
+    rev: 1.7.8
     hooks:
       - id: bandit
         args:
@@ -118,7 +118,7 @@ repos:
 
   # GHA linting
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.27.3"
+    rev: "0.28.0"
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
