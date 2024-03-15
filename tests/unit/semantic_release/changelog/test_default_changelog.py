@@ -1,5 +1,5 @@
 # NOTE: use backport with newer API
-from datetime import datetime
+from datetime import datetime, timezone
 
 from importlib_resources import files
 
@@ -17,7 +17,7 @@ default_changelog_template = (
     .read_text(encoding="utf-8")
 )
 
-today_as_str = datetime.now().strftime("%Y-%m-%d")
+today_as_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def _cm_rstripped(version: str) -> str:
