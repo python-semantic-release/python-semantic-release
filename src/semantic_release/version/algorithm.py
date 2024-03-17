@@ -127,15 +127,11 @@ def _increment_version(
     Using the given versions, along with a given `level_bump`, increment to
     the next version according to whether or not this is a prerelease.
 
-    `latest_version`, `latest_full_version` and `latest_full_version_in_history`
-    can be the same, but aren't necessarily.
-
     `latest_version` is the most recent version released from this branch's history.
-    `latest_full_version` is the most recent full release (i.e. not a prerelease)
-    anywhere in the repository's history, including commits which aren't present on
-    this branch.
-    `latest_full_version_in_history`, correspondingly, is the latest full release which
-    is in this branch's history.
+    `latest_full_version`, the most recent full release (i.e. not a prerelease)
+    in this branch's history.
+
+    `latest_version` and `latest_full_version` can be the same, but aren't necessarily.
     """
     local_vars = list(locals().items())
     logger.log(
@@ -165,74 +161,93 @@ def _increment_version(
 
             level_bump = min(level_bump, LevelBump.MINOR)
 
-    # Determine the difference between the latest version and the latest full release
-    diff_with_last_released_version = latest_version - latest_full_version
     logger.debug(
-        "diff between the latest version %s and the latest full release version %s is: %s",
+        "prerelease=%s and the latest version %s %s prerelease",
+        prerelease,
         latest_version,
-        latest_full_version,
-        diff_with_last_released_version,
+        "is a" if latest_version.is_prerelease else "is not a",
     )
 
-    # Handle prerelease version bumps
-    if prerelease:
-        # 6a i) if the level_bump > the level bump introduced by any prerelease tag
-        # before e.g. 1.2.4-rc.3 -> 1.3.0-rc.1
-        if level_bump > diff_with_last_released_version:
-            logger.debug(
-                "this release has a greater bump than any change since the last full release, %s",
-                latest_full_version,
-            )
-            return (
-                latest_full_version.finalize_version()
-                .bump(level_bump)
-                .to_prerelease(token=prerelease_token)
-            )
+    if level_bump == LevelBump.NO_RELEASE:
+        raise ValueError("level_bump must be at least PRERELEASE_REVISION")
 
-        # 6a ii) if level_bump <= the level bump introduced by prerelease tag
-        logger.debug(
-            "there has already been at least a %s release since the last full release %s",
-            level_bump,
-            latest_full_version,
-        )
-        logger.debug("this release will increment the prerelease revision")
-        return latest_version.to_prerelease(
-            token=prerelease_token,
-            revision=(
-                1
-                if latest_version.prerelease_token != prerelease_token
-                else (latest_version.prerelease_revision or 0) + 1
-            ),
+    if level_bump == LevelBump.PRERELEASE_REVISION and not latest_version.is_prerelease:
+        raise ValueError(
+            "Cannot increment a non-prerelease version with a prerelease level bump"
         )
 
-    # 6b. if not prerelease
-    # NOTE: These can actually be condensed down to the single line
-    # 6b. i) if there's been a prerelease
+    # assume we always want to increment the version that is the latest in the branch's history
+    base_version = latest_version
+
+    # if the current version is a prerelease & we want a new prerelease, then
+    # figure out if we need to bump the prerelease revision or start a new prerelease
     if latest_version.is_prerelease:
+        # find the change since the last full release because if the current version is a prerelease
+        # then we need to predict properly the next full version
+        diff_with_last_released_version = latest_version - latest_full_version
         logger.debug(
-            "prerelease=false and the latest version %s is a prerelease", latest_version
+            "the diff b/w the latest version '%s' and the latest full release version '%s' is: %s",
+            latest_version,
+            latest_full_version,
+            diff_with_last_released_version,
         )
-        if level_bump > diff_with_last_released_version:
-            logger.debug(
-                "this release has a greater bump than any change since the last full release, %s",
-                latest_full_version,
-            )
-            return latest_version.bump(level_bump).finalize_version()
 
+        # Since the difference is less than or equal to the level bump and we want a new prerelease,
+        # we can abort early and just increment the revision
+        if level_bump <= diff_with_last_released_version:
+            # 6a ii) if level_bump <= the level bump introduced by the previous tag (latest_version)
+            if prerelease:
+                logger.debug(
+                    "there has already been at least a %s release since the last full release %s",
+                    level_bump,
+                    latest_full_version,
+                )
+                logger.debug("Incrementing the prerelease revision...")
+                new_revision = base_version.to_prerelease(
+                    token=prerelease_token,
+                    revision=(
+                        1
+                        if latest_version.prerelease_token != prerelease_token
+                        else (latest_version.prerelease_revision or 0) + 1
+                    ),
+                )
+                logger.debug("Incremented %s to %s", base_version, new_revision)
+                return new_revision
+
+            # When we don't want a prerelease, but the previous version is a prerelease that
+            # had a greater bump than we currently are applying, choose the larger bump instead
+            # as it consumes this bump
+            logger.debug("Finalizing the prerelease version...")
+            return base_version.finalize_version()
+
+        # Fallthrough to handle all larger level bumps
         logger.debug(
-            "there has already been at least a %s release since the last full release %s",
-            level_bump,
+            "this release has a greater bump than any change since the last full release, %s",
             latest_full_version,
         )
-        return latest_version.finalize_version()
 
-    # 6b. ii) If there's been no prerelease
-    logger.debug(
-        "prerelease=false and %s is not a prerelease; bumping with a %s release",
-        latest_version,
-        level_bump,
+        # Fallthrough, if we don't want a prerelease, or if we do but the level bump is greater
+        #
+        # because the current version is a prerelease, we must start from the last full version
+        # Case 1: we identified that the level bump is greater than the change since
+        #         the last full release, this will also reset the prerelease revision
+        # Case 2: we don't want a prerelease, so consider only the last full version in history
+        base_version = latest_full_version
+
+    # From the base version, we can now increment the version according to the level bump
+    # regardless of the prerelease status as bump() handles the reset and pass through
+    logger.debug("Bumping %s with a %s bump", base_version, level_bump)
+    target_next_version = base_version.bump(level_bump)
+
+    # Converting to/from a prerelease if necessary
+    target_next_version = (
+        target_next_version.to_prerelease(token=prerelease_token)
+        if prerelease
+        else target_next_version.finalize_version()
     )
-    return latest_version.bump(level_bump)
+
+    logger.debug("Incremented %s to %s", base_version, target_next_version)
+    return target_next_version
 
 
 def next_version(
