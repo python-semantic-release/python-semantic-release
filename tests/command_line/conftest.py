@@ -31,14 +31,12 @@ if TYPE_CHECKING:
     class ReadConfigFileFn(Protocol):
         """Read the raw config file from `config_path`."""
 
-        def __call__(self, file: Path | str) -> RawConfig:
-            ...
+        def __call__(self, file: Path | str) -> RawConfig: ...
 
     class RetrieveRuntimeContextFn(Protocol):
         """Retrieve the runtime context for a repo."""
 
-        def __call__(self, repo: Repo) -> RuntimeContext:
-            ...
+        def __call__(self, repo: Repo) -> RuntimeContext: ...
 
 
 @pytest.fixture

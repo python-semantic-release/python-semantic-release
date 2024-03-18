@@ -1,4 +1,5 @@
 """Python Semantic Release"""
+
 from __future__ import annotations
 
 from semantic_release.commit_parser import (

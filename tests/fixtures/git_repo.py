@@ -69,30 +69,26 @@ if TYPE_CHECKING:
             hvcs_domain: str = ...,
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        ) -> tuple[Path, HvcsBase]:
-            ...
+        ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
-        def __call__(self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase) -> str:
-            ...
+        def __call__(self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase) -> str: ...
 
     class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
         def __call__(
             self, git_repo: Repo, commit_msgs: list[CommitMsg], hvcs: HvcsBase
-        ) -> list[CommitMsg]:
-            ...
+        ) -> list[CommitMsg]: ...
 
     class CreateReleaseFn(Protocol):
-        def __call__(self, git_repo: Repo, version: str, tag_format: str = ...) -> None:
-            ...
+        def __call__(
+            self, git_repo: Repo, version: str, tag_format: str = ...
+        ) -> None: ...
 
     class ExProjectGitRepoFn(Protocol):
-        def __call__(self) -> Repo:
-            ...
+        def __call__(self) -> Repo: ...
 
     class GetVersionStringsFn(Protocol):
-        def __call__(self) -> list[VersionStr]:
-            ...
+        def __call__(self) -> list[VersionStr]: ...
 
     RepoDefinition = dict[VersionStr, RepoVersionDef]
     """
@@ -101,16 +97,16 @@ if TYPE_CHECKING:
     """
 
     class GetRepoDefinitionFn(Protocol):
-        def __call__(self, commit_type: CommitConvention = "angular") -> RepoDefinition:
-            ...
+        def __call__(
+            self, commit_type: CommitConvention = "angular"
+        ) -> RepoDefinition: ...
 
     class SimulateDefaultChangelogCreationFn(Protocol):
         def __call__(
             self,
             repo_definition: RepoDefinition,
             dest_file: Path | None = None,
-        ) -> str:
-            ...
+        ) -> str: ...
 
 
 @pytest.fixture(scope="session")

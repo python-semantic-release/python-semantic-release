@@ -1,4 +1,5 @@
 """Helper code for interacting with a Gitea remote VCS"""
+
 from __future__ import annotations
 
 import glob

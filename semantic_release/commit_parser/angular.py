@@ -2,6 +2,7 @@
 Angular commit style parser
 https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines
 """
+
 from __future__ import annotations
 
 import logging

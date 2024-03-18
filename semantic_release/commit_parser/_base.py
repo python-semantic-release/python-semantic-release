@@ -71,5 +71,4 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
         self.options = options
 
     @abstractmethod
-    def parse(self, commit: Commit) -> _TT:
-        ...
+    def parse(self, commit: Commit) -> _TT: ...

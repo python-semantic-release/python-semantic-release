@@ -1,4 +1,5 @@
 """Helper code for interacting with a Gitlab remote VCS"""
+
 from __future__ import annotations
 
 import logging

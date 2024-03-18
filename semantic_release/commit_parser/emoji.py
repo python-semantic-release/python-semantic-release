@@ -1,4 +1,5 @@
 """Commit parser which looks for emojis to determine the type of commit"""
+
 import logging
 from typing import Tuple
 

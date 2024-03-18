@@ -34,6 +34,7 @@ Supported Changelog Sections::
 
 .. _`scipy-style`: https://docs.scipy.org/doc/scipy/reference/dev/contributor/development_workflow.html#writing-the-commit-message
 """
+
 from __future__ import annotations
 
 import logging

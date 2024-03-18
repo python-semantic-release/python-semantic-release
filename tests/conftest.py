@@ -1,4 +1,5 @@
 """Note: fixtures are stored in the tests/fixtures directory for better organisation"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,8 +14,7 @@ if TYPE_CHECKING:
     from typing import Generator, Protocol
 
     class TeardownCachedDirFn(Protocol):
-        def __call__(self, directory: Path) -> Path:
-            ...
+        def __call__(self, directory: Path) -> Path: ...
 
 
 @pytest.fixture(scope="session")

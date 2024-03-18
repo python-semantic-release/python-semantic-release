@@ -1,4 +1,5 @@
 """Legacy commit parser from Python Semantic Release 1.0"""
+
 import logging
 import re
 

@@ -1,4 +1,5 @@
 """Common functionality and interface for interacting with Git remote VCS"""
+
 from __future__ import annotations
 
 import logging
