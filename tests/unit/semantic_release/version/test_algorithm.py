@@ -149,7 +149,7 @@ def test_sorted_repo_tags_and_versions(tags: list[str], sorted_tags: list[str]):
     translator = VersionTranslator()
     tagrefs = [repo.tag(tag) for tag in tags]
     actual = [t.name for t, _ in tags_and_versions(tagrefs, translator)]
-    assert actual == sorted_tags
+    assert sorted_tags == actual
 
 
 @pytest.mark.parametrize(
@@ -216,7 +216,7 @@ def test_tags_and_versions_ignores_invalid_tags_as_versions(
     translator = VersionTranslator(tag_format=tag_format)
     tagrefs = [repo.tag(tag) for tag in (*valid_tags, *invalid_tags)]
     actual = [t.name for t, _ in tags_and_versions(tagrefs, translator)]
-    assert set(actual) == set(valid_tags)
+    assert set(valid_tags) == set(actual)
 
 
 @pytest.mark.parametrize(
@@ -234,6 +234,16 @@ def test_tags_and_versions_ignores_invalid_tags_as_versions(
     [
         # NOTE: level_bump != LevelBump.NO_RELEASE, we return early in the
         # algorithm to discount this case
+        # NOTE: you can only perform a PRERELEASE_REVISION bump on a previously
+        # prerelease version and if you are requesting a prerelease
+        (
+            "1.0.1-rc.1",
+            "1.0.0",
+            LevelBump.PRERELEASE_REVISION,
+            True,
+            "rc",
+            "1.0.1-rc.2",
+        ),
         *[
             (
                 "1.0.0",
@@ -244,8 +254,6 @@ def test_tags_and_versions_ignores_invalid_tags_as_versions(
                 expected_version,
             )
             for bump_level, prerelease, expected_version in [
-                (LevelBump.PRERELEASE_REVISION, False, "1.0.0-rc.1"),
-                (LevelBump.PRERELEASE_REVISION, True, "1.0.0-rc.1"),
                 (LevelBump.PATCH, False, "1.0.1"),
                 (LevelBump.PATCH, True, "1.0.1-rc.1"),
                 (LevelBump.MINOR, False, "1.1.0"),
@@ -254,6 +262,14 @@ def test_tags_and_versions_ignores_invalid_tags_as_versions(
                 (LevelBump.MAJOR, True, "2.0.0-rc.1"),
             ]
         ],
+        (
+            "1.2.4-rc.1",
+            "1.2.3",
+            LevelBump.PRERELEASE_REVISION,
+            True,
+            "rc",
+            "1.2.4-rc.2",
+        ),
         *[
             (
                 "1.2.4-rc.1",
@@ -272,6 +288,14 @@ def test_tags_and_versions_ignores_invalid_tags_as_versions(
                 (LevelBump.MAJOR, True, "2.0.0-rc.1"),
             ]
         ],
+        (
+            "2.0.0-rc.1",
+            "1.19.3",
+            LevelBump.PRERELEASE_REVISION,
+            True,
+            "rc",
+            "2.0.0-rc.2",
+        ),
         *[
             (
                 "2.0.0-rc.1",
@@ -310,3 +334,45 @@ def test_increment_version_no_major_on_zero(
         allow_zero_version=True,
     )
     assert expected_version == str(actual)
+
+
+@pytest.mark.parametrize(
+    "latest_version, latest_full_version, level_bump, prerelease, prerelease_token",
+    [
+        # NOTE: level_bump != LevelBump.NO_RELEASE, we return early in the
+        # algorithm to discount this case
+        # NOTE: you can only perform a PRERELEASE_REVISION bump on a previously
+        # prerelease version and if you are requesting a prerelease
+        (
+            "1.0.0",
+            "1.0.0",
+            LevelBump.PRERELEASE_REVISION,
+            False,
+            "rc",
+        ),
+        (
+            "1.0.0",
+            "1.0.0",
+            LevelBump.PRERELEASE_REVISION,
+            True,
+            "rc",
+        ),
+    ],
+)
+def test_increment_version_invalid_operation(
+    latest_version: str,
+    latest_full_version: str,
+    level_bump: LevelBump,
+    prerelease: bool,
+    prerelease_token: str,
+):
+    with pytest.raises(ValueError):
+        _increment_version(
+            latest_version=Version.parse(latest_version),
+            latest_full_version=Version.parse(latest_full_version),
+            level_bump=level_bump,
+            prerelease=prerelease,
+            prerelease_token=prerelease_token,
+            major_on_zero=False,
+            allow_zero_version=True,
+        )
