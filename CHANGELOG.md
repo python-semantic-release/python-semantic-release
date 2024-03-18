@@ -2,6 +2,113 @@
 
 
 
+## v9.2.0 (2024-03-18)
+
+### Build
+
+* build(MANIFEST): fix sdist contents to include docs &amp; tests ([`228347c`](https://github.com/python-semantic-release/python-semantic-release/commit/228347c8f64cc46f01b717ccdc2daf15384c7f2e))
+
+* build(deps): add click-option-group for grouping exclusive flags ([`bd892b8`](https://github.com/python-semantic-release/python-semantic-release/commit/bd892b89c26df9fccc9335c84e2b3217e3e02a37))
+
+### Chore
+
+* chore(stalebot): add config to manage aging issues &amp; PRs ([`d69a69b`](https://github.com/python-semantic-release/python-semantic-release/commit/d69a69bb636c06d384ae29601c62971cf1d6e88a))
+
+* chore(dependabot): adjust conf to relax bumping flexible requirement specs ([`a040aa4`](https://github.com/python-semantic-release/python-semantic-release/commit/a040aa43eb2218d76b3e56d280c7853633af4f45))
+
+### Documentation
+
+* docs(configuration): clarify the `major_on_zero` configuration option ([`f7753cd`](https://github.com/python-semantic-release/python-semantic-release/commit/f7753cdabd07e276bc001478d605fca9a4b37ec4))
+
+* docs(configuration): add description of `allow-zero-version` configuration option ([`4028f83`](https://github.com/python-semantic-release/python-semantic-release/commit/4028f8384a0181c8d58c81ae81cf0b241a02a710))
+
+### Feature
+
+* feat(version-config): add option to disable 0.x.x versions ([`dedb3b7`](https://github.com/python-semantic-release/python-semantic-release/commit/dedb3b765c8530379af61d3046c3bb9c160d54e5))
+
+* feat(version): add new version print flags to display the last released version and tag ([`814240c`](https://github.com/python-semantic-release/python-semantic-release/commit/814240c7355df95e9be9a6ed31d004b800584bc0))
+
+### Fix
+
+* fix(changelog-generation): fix incorrect release timezone determination ([`f802446`](https://github.com/python-semantic-release/python-semantic-release/commit/f802446bd0693c4c9f6bdfdceae8b89c447827d2))
+
+* fix(changelog): make sure default templates render ending in 1 newline ([`0b4a45e`](https://github.com/python-semantic-release/python-semantic-release/commit/0b4a45e3673d0408016dc8e7b0dce98007a763e3))
+
+### Style
+
+* style: resolve linter &amp; formatting across codebase ([`747fe1d`](https://github.com/python-semantic-release/python-semantic-release/commit/747fe1da682764da1a7c9199f43c02fdf998739d))
+
+* style(test-changelog): change to direct fixture reference &amp; improve clarity ([`a841f3b`](https://github.com/python-semantic-release/python-semantic-release/commit/a841f3baa909768947ffac742a33ca18a40cc01b))
+
+* style(tests): add additional typing to test args ([`74c9dec`](https://github.com/python-semantic-release/python-semantic-release/commit/74c9dec2869c41700bbfe378f3f7833fa02a821c))
+
+* style: apply ruff formatting to codebase ([`ced4caa`](https://github.com/python-semantic-release/python-semantic-release/commit/ced4caadf35b26eb573f6d6e19452d05c7e7dabb))
+
+### Test
+
+* test(fixtures): correct the ordering of commits in changelog expectations ([`adce520`](https://github.com/python-semantic-release/python-semantic-release/commit/adce5200910aa287c0925a6ca2c742fbd470209f))
+
+* test(fixtures): adjust scipy changelog expectations related to parse errors ([`6242b61`](https://github.com/python-semantic-release/python-semantic-release/commit/6242b61a4d87f6f4e27e3a65b2cd57e22394da48))
+
+* test: add bitbucket to hvcs parameter list &amp; bitbucket to configs ([`b226906`](https://github.com/python-semantic-release/python-semantic-release/commit/b226906b3717d0307d242924a77cd847e7f9a50c))
+
+* test(changelog): increase changelog rigor to all commit types ([`1573b6b`](https://github.com/python-semantic-release/python-semantic-release/commit/1573b6b7def84fabeaebdeb590d65068e6ed9a5d))
+
+* test(changelog): enforce common single newline after generated docs ([`77c3816`](https://github.com/python-semantic-release/python-semantic-release/commit/77c3816f79ad3c1ef9687304b4773e6485e4ee2f))
+
+* test(fixtures): refactor for better chronological ordering for test success ([`929b861`](https://github.com/python-semantic-release/python-semantic-release/commit/929b861a5d827913efac325f9db6ae7b2f44ef77))
+
+* test(unit-changelog): refactor template testing to be fast &amp; simple ([`f8a718f`](https://github.com/python-semantic-release/python-semantic-release/commit/f8a718f7c00baa58521ffb21b231437652d1e102))
+
+* test(unit-release-notes): refactor template testing
+
+Drop the test related release notes template as that is one more thing to
+maintain and use the one provided to the user. ([`620d62a`](https://github.com/python-semantic-release/python-semantic-release/commit/620d62a60c47c3a8ffdc79cb74ee36ca330767e3))
+
+* test(unit-changelog): drop context test &amp; duplicate/incorrect template
+
+Drop the test related changelog template as that is one more thing to
+maintain and does not actually match the embedded template provided to
+the user.
+
+Secondly, drop the context unit test as it does not provide value that
+the template ultimately will fail in other unit tests. ([`ebb5ca3`](https://github.com/python-semantic-release/python-semantic-release/commit/ebb5ca3ea208c15170f25376e749e61e3475d2ee))
+
+* test(repo-commits): fix angular syntax for scopes in commits ([`a2b2b8f`](https://github.com/python-semantic-release/python-semantic-release/commit/a2b2b8f2ddeedb79e60cdb90de7a1d981509e814))
+
+* test(fixtures): trigger changelog generation in repo fixtures ([`2a89f68`](https://github.com/python-semantic-release/python-semantic-release/commit/2a89f68bf14f540234cd218e3aab1c9e12707f21))
+
+* test(fixtures): remove changelog generation prevention ([`7af8373`](https://github.com/python-semantic-release/python-semantic-release/commit/7af8373c3612e6aeec19c52c006187faa418b5be))
+
+* test(cli-version): ensure CHANGELOG is included in changed files ([`8d119df`](https://github.com/python-semantic-release/python-semantic-release/commit/8d119df1b0ca04f4e06446c608a2322497b30aac))
+
+* test: improve reliability &amp; error readability of assertions ([`0b07786`](https://github.com/python-semantic-release/python-semantic-release/commit/0b0778617b8e0d73365f5b223270625227c3ca30))
+
+* test(changelog): add assertion to check for changelog file exist before read ([`5556c3a`](https://github.com/python-semantic-release/python-semantic-release/commit/5556c3a881bfcc206df8adb21075b532a5551053))
+
+* test(cli-changelog): refactor changelog re-gen test to show debuggable results ([`3f4ff05`](https://github.com/python-semantic-release/python-semantic-release/commit/3f4ff05c71d261b825d117ecd030d34e22009731))
+
+* test(fixtures): add common fixture to write default changelog from repo definition ([`d2904b2`](https://github.com/python-semantic-release/python-semantic-release/commit/d2904b250b1285017316575d5effeb42b4440dfe))
+
+* test(next-version): adapt scipy commits test for new allow_zero_version config option ([`d157ecf`](https://github.com/python-semantic-release/python-semantic-release/commit/d157ecf579594177de0b7cbc61b706f41db56fb9))
+
+* test(next-version): adapt emoji commits test for new allow_zero_version config option ([`fc05b0e`](https://github.com/python-semantic-release/python-semantic-release/commit/fc05b0e334e5e8f9263626f3b68c32ee3a3b9bcc))
+
+* test(next-version): adapt angular commits test for new allow_zero_version config option ([`5893831`](https://github.com/python-semantic-release/python-semantic-release/commit/58938315a3ea04db798dc40b7940f9d323a00aae))
+
+* test(next-version): adapt tag commits test for new allow_zero_version config option ([`efe1672`](https://github.com/python-semantic-release/python-semantic-release/commit/efe1672788fd3659f53f60cc2fd72ca1bb9e40c0))
+
+* test(next-version): add new test case to ensure minimum version determinations ([`7ed5fe5`](https://github.com/python-semantic-release/python-semantic-release/commit/7ed5fe504234acbfed72dd5fe4e76381475d4cce))
+
+* test(next-version): refactor fixture references for maintainability ([`a2b43e2`](https://github.com/python-semantic-release/python-semantic-release/commit/a2b43e2759b334775edc9c65b0327b70808416d3))
+
+* test(fixtures): add config modifier fixture ([`e3bb4d3`](https://github.com/python-semantic-release/python-semantic-release/commit/e3bb4d3dc8aa5e14b11396f4e9fe1901f20ed4a3))
+
+* test(scenario): add variation of `allow_zero_version` flag ([`36142a6`](https://github.com/python-semantic-release/python-semantic-release/commit/36142a6d96446f4117220205fec8e6fe3d63ad42))
+
+* test(unit): update unit test for incrementing version ([`791c69d`](https://github.com/python-semantic-release/python-semantic-release/commit/791c69d8d9968357284d884344e1710b9289688a))
+
+
 ## v9.1.1 (2024-02-25)
 
 ### Fix
@@ -4234,7 +4341,7 @@ file. ([`005dba0`](https://github.com/python-semantic-release/python-semantic-re
 * Merge branch &#39;tag-parser&#39; ([`2519b42`](https://github.com/python-semantic-release/python-semantic-release/commit/2519b42c7381fe8217b34150bd1ad06b23c9a56d))
 
 
-## v2.1.4 (2015-08-23)
+## v2.1.4 (2015-08-24)
 
 ### Fix
 
@@ -4298,7 +4405,7 @@ Properties can only be used from instances. ([`7ecdeb2`](https://github.com/pyth
 * 2.1.1 ([`7cf3a7d`](https://github.com/python-semantic-release/python-semantic-release/commit/7cf3a7d9aa2adc5a3cebf9d1151b113388117312))
 
 
-## v2.1.0 (2015-08-19)
+## v2.1.0 (2015-08-20)
 
 ### Chore
 
@@ -4585,7 +4692,7 @@ related to #9 ([`a71b536`](https://github.com/python-semantic-release/python-sem
 * 0.3.2 ([`1d3ee00`](https://github.com/python-semantic-release/python-semantic-release/commit/1d3ee00c3601f06f900bc1694f3c7c32106a6e14))
 
 
-## v0.3.1 (2015-07-27)
+## v0.3.1 (2015-07-28)
 
 ### Unknown
 
