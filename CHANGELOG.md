@@ -2,6 +2,26 @@
 
 
 
+## v9.2.2 (2024-03-19)
+
+### Fix
+
+* fix(cli): enable subcommand help even if config is invalid
+
+Refactors configuration loading to use lazy loading by subcommands
+triggered by the property access of the runtime_ctx object. Resolves
+the issues when running `--help` on subcommands when a configuration
+is invalid
+
+Resolves: #840 ([`91d221a`](https://github.com/python-semantic-release/python-semantic-release/commit/91d221a01266e5ca6de5c73296b0a90987847494))
+
+### Test
+
+* test: update references in test cases ([`e083056`](https://github.com/python-semantic-release/python-semantic-release/commit/e083056892086fdc70beb7a42d952e7c9604e995))
+
+* test(cli-help): add test cases of --help failures ([`1d53879`](https://github.com/python-semantic-release/python-semantic-release/commit/1d538790a727852d61c5edfe91c5707ed3b6af5a))
+
+
 ## v9.2.1 (2024-03-19)
 
 ### Chore
