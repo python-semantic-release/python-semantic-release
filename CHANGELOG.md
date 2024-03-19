@@ -2,6 +2,39 @@
 
 
 
+## v9.2.1 (2024-03-19)
+
+### Chore
+
+* chore(pre-commit): upgrade hooks for pyupgrade, mypy, vulture, bandit, and check-jsonschema ([`d59f593`](https://github.com/python-semantic-release/python-semantic-release/commit/d59f5931e6b7fac3604f9d5f13a1947688b285d9))
+
+* chore(deps-dev): bump ruff from 0.1.11 to 0.3.2 ([`ccdc976`](https://github.com/python-semantic-release/python-semantic-release/commit/ccdc9763b2f588bafe7a8c7d71342d4ebcb09f13))
+
+* chore(pre-commit): cleanup ruff warnings ([`4cb4ca1`](https://github.com/python-semantic-release/python-semantic-release/commit/4cb4ca19dc3d649a54e7a1b1e9a44a196624eef0))
+
+* chore(pre-commit): cleanup &#39;check blanket type ignore&#39; warnings ([`7e938e6`](https://github.com/python-semantic-release/python-semantic-release/commit/7e938e69af7d45c6d77dcf0a3627e5663cb35bff))
+
+* chore(pre-commit): exclude generated file CHANGELOG.md from checks ([`6e1f5cb`](https://github.com/python-semantic-release/python-semantic-release/commit/6e1f5cbd1c01f9a8c6cd8bafd706e5b5ec6ab007))
+
+* chore(pre-commit): cleanup vulture warnings ([`4b2467a`](https://github.com/python-semantic-release/python-semantic-release/commit/4b2467a1d7b14cd1afc3b355e69e81804fcc5b4d))
+
+### Fix
+
+* fix(parse-git-url): handle urls with url-safe special characters ([`27cd93a`](https://github.com/python-semantic-release/python-semantic-release/commit/27cd93a0a65ee3787ca51be4c91c48f6ddb4269c))
+
+### Refactor
+
+* refactor: drop other 3.7 references ([`04bbefd`](https://github.com/python-semantic-release/python-semantic-release/commit/04bbefdebcdcf07667c2c297f1ce516ad35a1733))
+
+### Style
+
+* style: beautify d59f5931e6b7fac3604f9d5f13a1947688b285d9 ([`585a098`](https://github.com/python-semantic-release/python-semantic-release/commit/585a0983198fcf5ced9a1a337e521cbd8f4d5de4))
+
+### Test
+
+* test(helpers): add git url parse cases for urls with special characters ([`fc74ef2`](https://github.com/python-semantic-release/python-semantic-release/commit/fc74ef20e92645a9939efb0fcea69254a6a89681))
+
+
 ## v9.2.0 (2024-03-18)
 
 ### Build
