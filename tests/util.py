@@ -106,7 +106,7 @@ def netrc_file(machine: str) -> NamedTemporaryFile:
 
 
 def flatten_dircmp(dcmp: filecmp.dircmp) -> list[str]:
-    return dcmp.diff_files + [
+    return dcmp.diff_files + dcmp.left_only + dcmp.right_only + [
         os.sep.join((directory, file))
         for directory, cmp in dcmp.subdirs.items()
         for file in flatten_dircmp(cmp)
