@@ -2,6 +2,27 @@
 
 
 
+## v9.3.0 (2024-03-21)
+
+### Feature
+
+* feat(cmd-version): changelog available to bundle (#779)
+
+* test(util): fix overlooked file differences in folder comparison
+
+* test(version): tracked changelog as changed file on version create
+
+Removes the temporary release_notes hack to prevent CHANGELOG generation on
+execution of version command.  Now that it is implemented we can remove the
+fixture to properly pass the tests.
+
+* feat(cmd-version): create changelog prior to build enabling doc bundling ([`37fdb28`](https://github.com/python-semantic-release/python-semantic-release/commit/37fdb28e0eb886d682b5dea4cc83a7c98a099422))
+
+### Style
+
+* style: beautify 37fdb28e0eb886d682b5dea4cc83a7c98a099422 ([`bc841cd`](https://github.com/python-semantic-release/python-semantic-release/commit/bc841cd171c46e1e23681f0f02d8f314281857c4))
+
+
 ## v9.2.2 (2024-03-19)
 
 ### Fix
