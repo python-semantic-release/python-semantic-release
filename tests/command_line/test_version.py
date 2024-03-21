@@ -672,18 +672,19 @@ def test_version_tag_only_push(
 def test_version_only_update_files_no_git_actions(
     mocked_git_push: MagicMock,
     repo_with_single_branch_and_prereleases_angular_commits: Repo,
-    use_release_notes_template: UseReleaseNotesTemplateFn,
     retrieve_runtime_context: RetrieveRuntimeContextFn,
     cli_runner: CliRunner,
     tmp_path_factory: pytest.TempPathFactory,
     example_pyproject_toml: Path,
     example_project_dir: ExProjectDir,
+    example_changelog_md: Path,
 ) -> None:
     # Setup
-    use_release_notes_template()
     runtime_context_with_tags = retrieve_runtime_context(
         repo_with_single_branch_and_prereleases_angular_commits
     )
+    # Remove the previously created changelog to allow for it to be generated
+    example_changelog_md.unlink()
 
     # Arrange
     expected_new_version = "0.3.0"
@@ -718,8 +719,7 @@ def test_version_only_update_files_no_git_actions(
     # Files that should receive version change
     expected_changed_files = sorted(
         [
-            # CHANGELOG.md is not included as no modification to Git History
-            # (no commit or tag) has been made
+            "CHANGELOG.md",
             "pyproject.toml",
             f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
         ]
