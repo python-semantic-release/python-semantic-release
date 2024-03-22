@@ -280,5 +280,8 @@ class Github(HvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/commit/{commit_hash}"
 
+    def issue_url(self, issue_number: str | int) -> str:
+        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/issues/{issue_number}"
+
     def pull_request_url(self, pr_number: str | int) -> str:
-        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/issues/{pr_number}"
+        return self.issue_url(issue_number=pr_number)

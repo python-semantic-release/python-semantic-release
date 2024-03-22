@@ -154,6 +154,14 @@ class HvcsBase:
         _not_supported(self, "commit_hash_url")
         return ""
 
+    def issue_url(self, issue_number: str) -> str:
+        """
+        Given a number for an issue, return a web URL that links to that issue
+        in the remote VCS.
+        """
+        _not_supported(self, "issue_url")
+        return ""
+
     def pull_request_url(self, pr_number: str) -> str:
         """
         Given a number for a PR/Merge request/equivalent, return a web URL that links
