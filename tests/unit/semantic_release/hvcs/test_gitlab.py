@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import os
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import gitlab
@@ -9,6 +12,9 @@ from requests import Session
 from semantic_release.hvcs.gitlab import Gitlab
 
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
+
+if TYPE_CHECKING:
+    from typing import Generator
 
 gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 
@@ -143,9 +149,10 @@ def mock_gitlab(status: str = "success"):
 
 
 @pytest.fixture
-def default_gl_client():
+def default_gl_client() -> Generator[Gitlab, None, None]:
     remote_url = f"git@gitlab.com:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
-    return Gitlab(remote_url=remote_url)
+    with mock.patch.dict(os.environ, {}, clear=True):
+        yield Gitlab(remote_url=remote_url)
 
 
 @pytest.mark.parametrize(
@@ -210,13 +217,16 @@ def test_gitlab_client_init(
             token=token,
         )
 
-        assert client.hvcs_domain == expected_hvcs_domain
-        assert client.hvcs_api_domain == expected_hvcs_api_domain
-        assert client.api_url == patched_os_environ.get(
+        expected_api_url = patched_os_environ.get(
             "CI_SERVER_URL", f"https://{client.hvcs_api_domain}"
         )
-        assert client.token == token
-        assert client._remote_url == remote_url
+
+        # Evaluate (expected -> actual)
+        assert expected_hvcs_domain == client.hvcs_domain
+        assert expected_hvcs_api_domain == client.hvcs_api_domain
+        assert expected_api_url == client.api_url
+        assert token == client.token
+        assert remote_url == client._remote_url
         assert hasattr(client, "session")
         assert isinstance(getattr(client, "session", None), Session)
 
@@ -233,19 +243,25 @@ def test_gitlab_client_init(
     ],
 )
 def test_gitlab_get_repository_owner_and_name(
-    default_gl_client, patched_os_environ, expected_owner, expected_name
+    default_gl_client: Gitlab,
+    patched_os_environ: dict[str, str],
+    expected_owner: str | None,
+    expected_name: str | None,
 ):
+    # expected results should be a tuple[namespace, repo_name] and if both are None,
+    # then the default value from GitLab class should be used
+    expected_result = (expected_owner, expected_name)
+    if expected_owner is None and expected_name is None:
+        expected_result = super(
+            Gitlab, default_gl_client
+        )._get_repository_owner_and_name()
+
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
-        if expected_owner is None and expected_name is None:
-            assert (
-                default_gl_client._get_repository_owner_and_name()
-                == super(Gitlab, default_gl_client)._get_repository_owner_and_name()
-            )
-        else:
-            assert default_gl_client._get_repository_owner_and_name() == (
-                expected_owner,
-                expected_name,
-            )
+        # Execute in mocked environment
+        result = default_gl_client._get_repository_owner_and_name()
+
+        # Evaluate (expected -> actual)
+        assert expected_result == result
 
 
 @pytest.mark.parametrize(
@@ -278,32 +294,44 @@ def test_gitlab_get_repository_owner_and_name(
     ],
 )
 def test_remote_url(
-    default_gl_client,
-    use_token,
-    token,
+    default_gl_client: Gitlab,
+    use_token: bool,
+    token: str,
     # TODO: linter thinks this is a fixture not a param - why?
-    _remote_url,  # noqa: PT019
-    expected,
+    _remote_url: str,  # noqa: PT019
+    expected: str,
 ):
     default_gl_client._remote_url = _remote_url
     default_gl_client.token = token
-    assert default_gl_client.remote_url(use_token=use_token) == expected
+    assert expected == default_gl_client.remote_url(use_token=use_token)
 
 
-def test_compare_url(default_gl_client):
-    assert default_gl_client.compare_url(
-        from_rev="revA", to_rev="revB"
-    ) == "https://{domain}/{owner}/{repo}/-/compare/revA...revB".format(
+def test_compare_url(default_gl_client: Gitlab):
+    start_rev = "revA"
+    end_rev = "revB"
+    expected_url = (
+        "https://{domain}/{owner}/{repo}/-/compare/{from_rev}...{to_rev}".format(
+            domain=default_gl_client.hvcs_domain,
+            owner=default_gl_client.owner,
+            repo=default_gl_client.repo_name,
+            from_rev=start_rev,
+            to_rev=end_rev,
+        )
+    )
+    actual_url = default_gl_client.compare_url(from_rev=start_rev, to_rev=end_rev)
+    assert expected_url == actual_url
+
+
+def test_commit_hash_url(default_gl_client: Gitlab):
+    expected_url = "https://{domain}/{owner}/{repo}/-/commit/{sha}".format(
         domain=default_gl_client.hvcs_domain,
         owner=default_gl_client.owner,
         repo=default_gl_client.repo_name,
+        sha=REF,
     )
+    assert expected_url == default_gl_client.commit_hash_url(REF)
 
 
-def test_commit_hash_url(default_gl_client):
-    assert default_gl_client.commit_hash_url(
-        REF
-    ) == "https://{domain}/{owner}/{repo}/-/commit/{sha}".format(
         domain=default_gl_client.hvcs_domain,
         owner=default_gl_client.owner,
         repo=default_gl_client.repo_name,
@@ -324,42 +352,43 @@ def test_pull_request_url(default_gl_client, pr_number):
 
 
 @pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
-def test_create_release_succeeds(default_gl_client, tag):
+def test_create_release_succeeds(default_gl_client: Gitlab, tag):
     with mock_gitlab():
-        assert default_gl_client.create_release(tag, RELEASE_NOTES) == tag
+        assert tag == default_gl_client.create_release(tag, RELEASE_NOTES)
 
 
-def test_create_release_fails_with_bad_tag(default_gl_client):
+def test_create_release_fails_with_bad_tag(default_gl_client: Gitlab):
     with mock_gitlab(), pytest.raises(gitlab.GitlabCreateError):
         default_gl_client.create_release(A_BAD_TAG, RELEASE_NOTES)
 
 
 @pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
-def test_update_release_succeeds(default_gl_client, tag):
+def test_update_release_succeeds(default_gl_client: Gitlab, tag: str):
     with mock_gitlab():
-        assert default_gl_client.edit_release_notes(tag, RELEASE_NOTES) == tag
+        assert tag == default_gl_client.edit_release_notes(tag, RELEASE_NOTES)
 
 
-def test_update_release_fails_with_missing_tag(default_gl_client):
+def test_update_release_fails_with_missing_tag(default_gl_client: Gitlab):
     with mock_gitlab(), pytest.raises(gitlab.GitlabUpdateError):
         default_gl_client.edit_release_notes(A_MISSING_TAG, RELEASE_NOTES)
 
 
 @pytest.mark.parametrize("prerelease", (True, False))
-def test_create_or_update_release_when_create_succeeds(default_gl_client, prerelease):
+def test_create_or_update_release_when_create_succeeds(
+    default_gl_client: Gitlab, prerelease: bool
+):
     with mock.patch.object(
-        default_gl_client, "create_release"
+        default_gl_client, "create_release", return_value=A_GOOD_TAG
     ) as mock_create_release, mock.patch.object(
-        default_gl_client, "edit_release_notes"
+        default_gl_client, "edit_release_notes", return_value=A_GOOD_TAG
     ) as mock_edit_release_notes:
-        mock_create_release.return_value = A_GOOD_TAG
-        mock_edit_release_notes.return_value = A_GOOD_TAG
-        assert (
-            default_gl_client.create_or_update_release(
-                A_GOOD_TAG, RELEASE_NOTES, prerelease
-            )
-            == A_GOOD_TAG
+        # Execute in mock environment
+        result = default_gl_client.create_or_update_release(
+            A_GOOD_TAG, RELEASE_NOTES, prerelease
         )
+
+        # Evaluate (expected -> actual)
+        assert A_GOOD_TAG == result  # noqa: SIM300
         mock_create_release.assert_called_once_with(
             tag=A_GOOD_TAG, release_notes=RELEASE_NOTES, prerelease=prerelease
         )
@@ -368,22 +397,21 @@ def test_create_or_update_release_when_create_succeeds(default_gl_client, prerel
 
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release_when_create_fails_and_update_succeeds(
-    default_gl_client, prerelease
+    default_gl_client: Gitlab, prerelease: bool
 ):
     bad_request = gitlab.GitlabCreateError("400 Bad Request")
     with mock.patch.object(
-        default_gl_client, "create_release"
-    ) as mock_create_release, mock.patch.object(
-        default_gl_client, "edit_release_notes"
+        default_gl_client, "create_release", side_effect=bad_request
+    ), mock.patch.object(
+        default_gl_client, "edit_release_notes", return_value=A_GOOD_TAG
     ) as mock_edit_release_notes:
-        mock_create_release.side_effect = bad_request
-        mock_edit_release_notes.return_value = A_GOOD_TAG
-        assert (
-            default_gl_client.create_or_update_release(
-                A_GOOD_TAG, RELEASE_NOTES, prerelease
-            )
-            == A_GOOD_TAG
+        # Execute in mock environment
+        result = default_gl_client.create_or_update_release(
+            A_GOOD_TAG, RELEASE_NOTES, prerelease
         )
+
+        # Evaluate (expected -> actual)
+        assert A_GOOD_TAG == result  # noqa: SIM300
         mock_edit_release_notes.assert_called_once_with(
             release_id=A_GOOD_TAG, release_notes=RELEASE_NOTES
         )
@@ -391,18 +419,19 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
 
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release_when_create_fails_and_update_fails(
-    default_gl_client, prerelease
+    default_gl_client: Gitlab, prerelease: bool
 ):
     bad_request = gitlab.GitlabCreateError("400 Bad Request")
     not_found = gitlab.GitlabUpdateError("404 Not Found")
-    with mock.patch.object(
-        default_gl_client, "create_release"
-    ) as mock_create_release, mock.patch.object(
-        default_gl_client, "edit_release_notes"
-    ) as mock_edit_release_notes:
-        mock_create_release.side_effect = bad_request
-        mock_edit_release_notes.side_effect = not_found
+    create_release_patch = mock.patch.object(
+        default_gl_client, "create_release", side_effect=bad_request
+    )
+    edit_release_notes_patch = mock.patch.object(
+        default_gl_client, "edit_release_notes", side_effect=not_found
+    )
 
+    # Execute in mocked environment expecting a GitlabUpdateError to be raised
+    with create_release_patch, edit_release_notes_patch:
         with pytest.raises(gitlab.GitlabUpdateError):
             default_gl_client.create_or_update_release(
                 A_GOOD_TAG, RELEASE_NOTES, prerelease
