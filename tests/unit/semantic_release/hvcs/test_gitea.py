@@ -203,6 +203,17 @@ def test_commit_hash_url(default_gitea_client: Gitea):
     assert expected_url == default_gitea_client.commit_hash_url(sha)
 
 
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_gitea_client: Gitea, issue_number: int | str):
+    expected_url = "{server}/{owner}/{repo}/issues/{issue_number}".format(
+        server=default_gitea_client.hvcs_domain.url,
+        owner=default_gitea_client.owner,
+        repo=default_gitea_client.repo_name,
+        issue_number=issue_number,
+    )
+    assert expected_url == default_gitea_client.issue_url(issue_num=issue_number)
+
+
 @pytest.mark.parametrize("pr_number", (420, "420"))
 def test_pull_request_url(default_gitea_client: Gitea, pr_number: int | str):
     expected_url = "{server}/{owner}/{repo}/pulls/{pr_number}".format(

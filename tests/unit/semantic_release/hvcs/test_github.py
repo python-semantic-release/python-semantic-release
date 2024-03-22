@@ -376,6 +376,17 @@ def test_commit_hash_url(default_gh_client: Github):
     assert expected_url == default_gh_client.commit_hash_url(sha)
 
 
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_gh_client: Github, issue_number: str | int):
+    expected_url = "{server}/{owner}/{repo}/issues/{issue_num}".format(
+        server=default_gh_client.hvcs_domain.url,
+        owner=default_gh_client.owner,
+        repo=default_gh_client.repo_name,
+        issue_num=issue_number,
+    )
+    assert expected_url == default_gh_client.issue_url(issue_num=issue_number)
+
+
 @pytest.mark.parametrize("pr_number", (420, "420"))
 def test_pull_request_url(default_gh_client: Github, pr_number: int | str):
     expected_url = "{server}/{owner}/{repo}/pull/{pr_number}".format(
