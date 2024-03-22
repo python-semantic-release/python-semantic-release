@@ -160,16 +160,26 @@ def test_commit_hash_url(default_gitea_client):
     )
 
 
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_gitea_client: Gitea, issue_number: int | str):
+    expected_url = "https://{domain}/{owner}/{repo}/issues/{issue_number}".format(
+        domain=default_gitea_client.hvcs_domain,
+        owner=default_gitea_client.owner,
+        repo=default_gitea_client.repo_name,
+        issue_number=issue_number,
+    )
+    assert expected_url == default_gitea_client.issue_url(issue_number)
+
+
 @pytest.mark.parametrize("pr_number", (420, "420"))
-def test_pull_request_url(default_gitea_client, pr_number):
-    assert default_gitea_client.pull_request_url(
-        pr_number=pr_number
-    ) == "https://{domain}/{owner}/{repo}/pulls/{pr_number}".format(
+def test_pull_request_url(default_gitea_client: Gitea, pr_number: int | str):
+    expected_url = "https://{domain}/{owner}/{repo}/pulls/{pr_number}".format(
         domain=default_gitea_client.hvcs_domain,
         owner=default_gitea_client.owner,
         repo=default_gitea_client.repo_name,
         pr_number=pr_number,
     )
+    assert expected_url == default_gitea_client.pull_request_url(pr_number)
 
 
 def test_asset_upload_url(default_gitea_client):

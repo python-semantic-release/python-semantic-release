@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from unittest import mock
 
@@ -145,25 +147,34 @@ def test_remote_url(
         assert default_bitbucket_client.remote_url(use_token=use_token) == expected
 
 
-def test_commit_hash_url(default_bitbucket_client):
+def test_commit_hash_url(default_bitbucket_client: Bitbucket):
     sha = "244f7e11bcb1e1ce097db61594056bc2a32189a0"
-    assert default_bitbucket_client.commit_hash_url(
-        sha
-    ) == "https://{domain}/{owner}/{repo}/commits/{sha}".format(
+    expected_url = "https://{domain}/{owner}/{repo}/commits/{sha}".format(
         domain=default_bitbucket_client.hvcs_domain,
         owner=default_bitbucket_client.owner,
         repo=default_bitbucket_client.repo_name,
         sha=sha,
     )
+    assert expected_url == default_bitbucket_client.commit_hash_url(sha)
+
+
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_bitbucket_client: Bitbucket, issue_number: int | str):
+    expected_url = "https://{domain}/{owner}/{repo}/issues/{issue_number}".format(
+        domain=default_bitbucket_client.hvcs_domain,
+        owner=default_bitbucket_client.owner,
+        repo=default_bitbucket_client.repo_name,
+        issue_number=issue_number,
+    )
+    assert expected_url == default_bitbucket_client.issue_url(issue_number)
 
 
 @pytest.mark.parametrize("pr_number", (420, "420"))
-def test_pull_request_url(default_bitbucket_client, pr_number):
-    assert default_bitbucket_client.pull_request_url(
-        pr_number=pr_number
-    ) == "https://{domain}/{owner}/{repo}/pull-requests/{pr_number}".format(
+def test_pull_request_url(default_bitbucket_client: Bitbucket, pr_number: int | str):
+    expected_url = "https://{domain}/{owner}/{repo}/pull-requests/{pr_number}".format(
         domain=default_bitbucket_client.hvcs_domain,
         owner=default_bitbucket_client.owner,
         repo=default_bitbucket_client.repo_name,
         pr_number=pr_number,
     )
+    assert expected_url == default_bitbucket_client.pull_request_url(pr_number)
