@@ -332,23 +332,26 @@ def test_commit_hash_url(default_gl_client: Gitlab):
     assert expected_url == default_gl_client.commit_hash_url(REF)
 
 
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_gl_client: Gitlab, issue_number: int | str):
+    expected_url = "https://{domain}/{owner}/{repo}/-/issues/{issue_number}".format(
         domain=default_gl_client.hvcs_domain,
         owner=default_gl_client.owner,
         repo=default_gl_client.repo_name,
-        sha=REF,
+        issue_number=issue_number,
     )
+    assert expected_url == default_gl_client.issue_url(issue_number=issue_number)
 
 
 @pytest.mark.parametrize("pr_number", (420, "420"))
-def test_pull_request_url(default_gl_client, pr_number):
-    assert default_gl_client.pull_request_url(
-        pr_number=pr_number
-    ) == "https://{domain}/{owner}/{repo}/-/issues/{pr_number}".format(
+def test_pull_request_url(default_gl_client: Gitlab, pr_number: int | str):
+    expected_url = "https://{domain}/{owner}/{repo}/-/merge_requests/{mr_number}".format(
         domain=default_gl_client.hvcs_domain,
         owner=default_gl_client.owner,
         repo=default_gl_client.repo_name,
-        pr_number=pr_number,
+        mr_number=pr_number,
     )
+    assert expected_url == default_gl_client.pull_request_url(pr_number=pr_number)
 
 
 @pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
