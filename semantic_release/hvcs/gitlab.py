@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import mimetypes
 import os
 from functools import lru_cache
 from urllib.parse import urlsplit
@@ -16,20 +15,6 @@ from semantic_release.hvcs.token_auth import TokenAuth
 from semantic_release.hvcs.util import build_requests_session
 
 log = logging.getLogger(__name__)
-
-# Add a mime type for wheels
-# Fix incorrect entries in the `mimetypes` registry.
-# On Windows, the Python standard library's `mimetypes` reads in
-# mappings from file extension to MIME type from the Windows
-# registry. Other applications can and do write incorrect values
-# to this registry, which causes `mimetypes.guess_type` to return
-# incorrect values, which causes TensorBoard to fail to render on
-# the frontend.
-# This method hard-codes the correct mappings for certain MIME
-# types that are known to be either used by python-semantic-release or
-# problematic in general.
-mimetypes.add_type("application/octet-stream", ".whl")
-mimetypes.add_type("text/markdown", ".md")
 
 
 class Gitlab(HvcsBase):
@@ -160,5 +145,11 @@ class Gitlab(HvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/commit/{commit_hash}"
 
+    def issue_url(self, issue_number: str | int) -> str:
+        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/issues/{issue_number}"
+
+    def merge_request_url(self, mr_number: str | int) -> str:
+        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/merge_requests/{mr_number}"
+
     def pull_request_url(self, pr_number: str | int) -> str:
-        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/-/issues/{pr_number}"
+        return self.merge_request_url(mr_number=pr_number)
