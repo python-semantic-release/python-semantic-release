@@ -585,12 +585,17 @@ def version(  # noqa: C901
                 indented(
                     f"""
                     would have run:
-                        git push --tags {runtime.masker.mask(remote_url)} {active_branch}
+                        git push {runtime.masker.mask(remote_url)} tag {new_version.as_tag()}
                     """  # noqa: E501
                 )
             )
         elif create_tag:
-            repo.git.push("--tags", remote_url, active_branch)
+            # push specific tag refspec (that we made) to remote
+            # ---------------
+            # Resolves issue #803 where a tag that already existed was pushed and caused
+            # a failure. Its not clear why there was an incorrect tag (likely user error change)
+            # but we will avoid possibly pushing an separate tag that we didn't create.
+            repo.git.push(remote_url, "tag", new_version.as_tag())
 
     gha_output.released = True
 
