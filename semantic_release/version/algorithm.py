@@ -4,9 +4,7 @@ import logging
 from queue import Queue
 from typing import TYPE_CHECKING, Iterable
 
-from semantic_release.commit_parser import (
-    ParsedCommit,
-)
+from semantic_release.commit_parser import ParsedCommit
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidVersion
@@ -278,9 +276,9 @@ def next_version(
     """
     # Step 1. All tags, sorted descending by semver ordering rules
     all_git_tags_as_versions = tags_and_versions(repo.tags, translator)
-    all_full_release_tags_and_versions = [
-        (t, v) for t, v in all_git_tags_as_versions if not v.is_prerelease
-    ]
+    all_full_release_tags_and_versions = list(filter(
+        lambda t_v: not t_v[1].is_prerelease, all_git_tags_as_versions
+    ))
     log.info(
         "Found %s full releases (excluding prereleases)",
         len(all_full_release_tags_and_versions),
@@ -350,6 +348,23 @@ def next_version(
         tag_format=translator.tag_format,
     )
 
+    # We only include pre-releases here if doing a prerelease.
+    # If it's not a prerelease, we need to include commits back
+    # to the last full version in consideration for what kind of
+    # bump to produce. However if we're doing a prerelease, we can
+    # include prereleases here to potentially consider a smaller portion
+    # of history (from a prerelease since the last full release, onwards)
+
+    # Note that a side-effect of this is, if at some point the configuration
+    # for a particular branch pattern changes w.r.t. prerelease=True/False,
+    # the new kind of version will be produced from the commits already
+    # included in a prerelease since the last full release on the branch
+    tag_sha_2_version_lookup = {
+        tag.commit.hexsha: (tag, version)
+        for tag, version in all_git_tags_as_versions
+        if prerelease or not version.is_prerelease
+    }
+
     # N.B. these should be sorted so long as we iterate the commits in reverse order
     for commit in commits_since_last_full_release:
         parse_result = commit_parser.parse(commit)
@@ -360,44 +375,24 @@ def next_version(
             )
             parsed_levels.add(parse_result.bump)
 
-        # We only include pre-releases here if doing a prerelease.
-        # If it's not a prerelease, we need to include commits back
-        # to the last full version in consideration for what kind of
-        # bump to produce. However if we're doing a prerelease, we can
-        # include prereleases here to potentially consider a smaller portion
-        # of history (from a prerelease since the last full release, onwards)
+        log.debug("checking if commit %s matches any tags", commit.hexsha)
+        t_v = tag_sha_2_version_lookup.get(commit.hexsha, None)
 
-        # Note that a side-effect of this is, if at some point the configuration
-        # for a particular branch pattern changes w.r.t. prerelease=True/False,
-        # the new kind of version will be produced from the commits already
-        # included in a prerelease since the last full release on the branch
-        for tag, version in (
-            (tag, version)
-            for tag, version in all_git_tags_as_versions
-            if prerelease or not version.is_prerelease
-        ):
-            log.debug(
-                "testing if tag %r (%s) matches commit %s",
-                tag.name,
-                tag.commit.hexsha,
-                commit.hexsha,
-            )
-            if tag.commit == commit:
-                latest_version = version
-                log.debug(
-                    "tag %r (%s) matches commit %s. the latest version is %s",
-                    tag.name,
-                    tag.commit.hexsha,
-                    commit.hexsha,
-                    latest_version,
-                )
-                break
-        else:
+        if t_v is None:
             # If we haven't found the latest prerelease on the branch,
-            # keep the outer loop going to look for it
+            # keep the loop going to look for it
             log.debug("no tags correspond to commit %s", commit.hexsha)
             continue
-        # If we found it in the inner loop, break the outer loop too
+
+        # Unpack the tuple
+        tag, latest_version = t_v
+        log.debug(
+            "tag %r (%s) matches commit %s. the latest version is %s",
+            tag.name,
+            tag.commit.hexsha,
+            commit.hexsha,
+            latest_version,
+        )
         break
 
     log.debug(
