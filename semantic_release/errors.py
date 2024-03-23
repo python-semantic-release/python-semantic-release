@@ -31,3 +31,10 @@ class CommitParseError(SemanticReleaseBaseError):
     Raised when a commit cannot be parsed by a commit parser. Custom commit parsers
     should also raise this Exception
     """
+
+
+class MissingMergeBaseError(SemanticReleaseBaseError):
+    """
+    Raised when the merge base cannot be found with the current history. Generally
+    because of a shallow git clone.
+    """

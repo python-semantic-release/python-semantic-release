@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Iterable
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.errors import InvalidVersion
+from semantic_release.errors import InvalidVersion, MissingMergeBaseError
 from semantic_release.version.version import Version
 
 if TYPE_CHECKING:
@@ -289,30 +289,50 @@ def next_version(
         iter(all_full_release_tags_and_versions),
         (None, translator.from_string(DEFAULT_VERSION)),
     )
-    if latest_full_release_tag is None:
-        # Workaround - we can safely scan the extra commits on this
-        # branch if it's never been released, but we have no other
-        # guarantees that other branches exist
-        log.info(
-            "No full releases have been made yet, the default version to use is %s",
-            latest_full_release_version,
+
+    # we can safely scan the extra commits on this
+    # branch if it's never been released, but we have no other
+    # guarantees that other branches exist
+    # Note the merge_base might be on our current branch, it's not
+    # necessarily the merge base of the current branch with `main`
+    other_ref = (
+        repo.active_branch
+        if latest_full_release_tag is None
+        else latest_full_release_tag.name
+    )
+
+    # Conditional log message to inform what was chosen as the comparison point
+    # to find the merge base of the current branch with the latest full release
+    log_msg = (
+        str.join(", ", [
+            "No full releases have been made yet",
+            f"the default version to use is {latest_full_release_version}",
+        ])
+        if latest_full_release_tag is None
+        else str.join(", ", [
+            f"The last full release was {latest_full_release_version}",
+            f"tagged as {latest_full_release_tag!r}",
+        ])
+    )
+
+    log.info(log_msg)
+    merge_bases = repo.merge_base(other_ref, repo.active_branch)
+
+    if len(merge_bases) < 1:
+        raise MissingMergeBaseError(
+            f"Unable to find merge-base between {other_ref} and {repo.active_branch.name}"
         )
-        merge_bases = repo.merge_base(repo.active_branch, repo.active_branch)
-    else:
-        # Note the merge_base might be on our current branch, it's not
-        # necessarily the merge base of the current branch with `main`
-        log.info(
-            "The last full release was %s, tagged as %r",
-            latest_full_release_version,
-            latest_full_release_tag,
-        )
-        merge_bases = repo.merge_base(latest_full_release_tag.name, repo.active_branch)
+
     if len(merge_bases) > 1:
         raise NotImplementedError(
-            "This branch has more than one merge-base with the "
-            "latest version, which is not yet supported"
+            str.join(" ", [
+                "This branch has more than one merge-base with the",
+                "latest version, which is not yet supported"
+            ])
         )
+
     merge_base = merge_bases[0]
+
     if merge_base is None:
         str_tag_name = (
             "None" if latest_full_release_tag is None else latest_full_release_tag.name
