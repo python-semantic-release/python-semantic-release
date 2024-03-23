@@ -389,6 +389,9 @@ def next_version(
     # bump to produce. However if we're doing a prerelease, we can
     # include prereleases here to potentially consider a smaller portion
     # of history (from a prerelease since the last full release, onwards)
+    # Since there are different types of prereleases, only consider the
+    # prereleases that have the same prerelease token as the current branch's
+    # translator configuration.
 
     # Note that a side-effect of this is, if at some point the configuration
     # for a particular branch pattern changes w.r.t. prerelease=True/False,
@@ -397,7 +400,10 @@ def next_version(
     tag_sha_2_version_lookup = {
         tag.commit.hexsha: (tag, version)
         for tag, version in all_git_tags_as_versions
-        if prerelease or not version.is_prerelease
+        if (
+            (prerelease and version.prerelease_token == translator.prerelease_token)
+            or not version.is_prerelease
+        )
     }
 
     # N.B. these should be sorted so long as we iterate the commits in reverse order
