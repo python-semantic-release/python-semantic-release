@@ -276,9 +276,9 @@ def next_version(
     """
     # Step 1. All tags, sorted descending by semver ordering rules
     all_git_tags_as_versions = tags_and_versions(repo.tags, translator)
-    all_full_release_tags_and_versions = list(filter(
-        lambda t_v: not t_v[1].is_prerelease, all_git_tags_as_versions
-    ))
+    all_full_release_tags_and_versions = list(
+        filter(lambda t_v: not t_v[1].is_prerelease, all_git_tags_as_versions)
+    )
     log.info(
         "Found %s full releases (excluding prereleases)",
         len(all_full_release_tags_and_versions),
@@ -304,15 +304,21 @@ def next_version(
     # Conditional log message to inform what was chosen as the comparison point
     # to find the merge base of the current branch with the latest full release
     log_msg = (
-        str.join(", ", [
-            "No full releases have been made yet",
-            f"the default version to use is {latest_full_release_version}",
-        ])
+        str.join(
+            ", ",
+            [
+                "No full releases have been made yet",
+                f"the default version to use is {latest_full_release_version}",
+            ],
+        )
         if latest_full_release_tag is None
-        else str.join(", ", [
-            f"The last full release was {latest_full_release_version}",
-            f"tagged as {latest_full_release_tag!r}",
-        ])
+        else str.join(
+            ", ",
+            [
+                f"The last full release was {latest_full_release_version}",
+                f"tagged as {latest_full_release_tag!r}",
+            ],
+        )
     )
 
     log.info(log_msg)
@@ -325,10 +331,13 @@ def next_version(
 
     if len(merge_bases) > 1:
         raise NotImplementedError(
-            str.join(" ", [
-                "This branch has more than one merge-base with the",
-                "latest version, which is not yet supported"
-            ])
+            str.join(
+                " ",
+                [
+                    "This branch has more than one merge-base with the",
+                    "latest version, which is not yet supported",
+                ],
+            )
         )
 
     merge_base = merge_bases[0]
