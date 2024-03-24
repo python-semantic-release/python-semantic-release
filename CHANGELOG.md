@@ -2,6 +2,39 @@
 
 
 
+## v9.3.1 (2024-03-24)
+
+### Build
+
+* build(deps-dev): bump ruff from 0.1.11 to 0.3.3 (#862) ([`8a6adeb`](https://github.com/python-semantic-release/python-semantic-release/commit/8a6adeb6824a0b78e3dd297c1e62e5453a9f779f))
+
+### Fix
+
+* fix(cli-version): change implementation to only push the tag we generated
+
+Restricts the git push command to only push the explicit tag we created
+which will eliminate the possibility of pushing another tag that could
+cause an error.
+
+Resolves: #803 ([`8a9da4f`](https://github.com/python-semantic-release/python-semantic-release/commit/8a9da4feb8753e3ab9ea752afa25decd2047675a))
+
+* fix(algorithm): handle merge-base errors gracefully
+
+Merge-base errors generally occur from a shallow clone that is
+primarily used by CI environments and will cause PSR to explode
+prior to this change. Now it exits with an appropriate error.
+
+Resolves: #724 ([`4c998b7`](https://github.com/python-semantic-release/python-semantic-release/commit/4c998b77a3fe5e12783d1ab2d47789a10b83f247))
+
+### Performance
+
+* perf(algorithm): simplify logs &amp; use lookup when searching for commit &amp; tag match ([`3690b95`](https://github.com/python-semantic-release/python-semantic-release/commit/3690b9511de633ab38083de4d2505b6d05853346))
+
+### Style
+
+* style: beautify 8a9da4feb8753e3ab9ea752afa25decd2047675a ([`3bf98d5`](https://github.com/python-semantic-release/python-semantic-release/commit/3bf98d5c18886f9dcc60d122a834e6fe93d0ea07))
+
+
 ## v9.3.0 (2024-03-21)
 
 ### Feature
