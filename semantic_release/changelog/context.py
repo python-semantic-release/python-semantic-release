@@ -31,5 +31,9 @@ def make_changelog_context(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
         history=release_history,
-        filters=(hvcs_client.pull_request_url, hvcs_client.commit_hash_url),
+        filters=(
+            hvcs_client.issue_url,
+            hvcs_client.pull_request_url,
+            hvcs_client.commit_hash_url,
+        ),
     )

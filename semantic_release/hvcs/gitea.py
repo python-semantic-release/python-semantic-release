@@ -233,5 +233,8 @@ class Gitea(HvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/commit/{commit_hash}"
 
+    def issue_url(self, issue_number: str | int) -> str:
+        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/issues/{issue_number}"
+
     def pull_request_url(self, pr_number: str | int) -> str:
         return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/pulls/{pr_number}"

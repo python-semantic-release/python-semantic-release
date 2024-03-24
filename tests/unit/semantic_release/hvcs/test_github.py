@@ -207,16 +207,26 @@ def test_commit_hash_url(default_gh_client):
     )
 
 
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_gh_client: Github, issue_number: str | int):
+    expected_url = "https://{domain}/{owner}/{repo}/issues/{issue_num}".format(
+        domain=default_gh_client.hvcs_domain,
+        owner=default_gh_client.owner,
+        repo=default_gh_client.repo_name,
+        issue_num=issue_number,
+    )
+    assert expected_url == default_gh_client.issue_url(issue_number=issue_number)
+
+
 @pytest.mark.parametrize("pr_number", (420, "420"))
-def test_pull_request_url(default_gh_client, pr_number):
-    assert default_gh_client.pull_request_url(
-        pr_number=pr_number
-    ) == "https://{domain}/{owner}/{repo}/issues/{pr_number}".format(
+def test_pull_request_url(default_gh_client: Github, pr_number: str | int):
+    expected_url = "https://{domain}/{owner}/{repo}/issues/{pr_number}".format(
         domain=default_gh_client.hvcs_domain,
         owner=default_gh_client.owner,
         repo=default_gh_client.repo_name,
         pr_number=pr_number,
     )
+    assert expected_url == default_gh_client.pull_request_url(pr_number=pr_number)
 
 
 ############
