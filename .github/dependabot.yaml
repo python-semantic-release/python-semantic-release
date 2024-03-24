@@ -13,6 +13,7 @@ updates:
       include: "scope"
     labels:
       - dependencies
+      - dependabot
     open-pull-requests-limit: 10
     rebase-strategy: auto
     versioning-strategy: "increase-if-necessary"
@@ -27,6 +28,7 @@ updates:
       prefix: "ci"
     labels:
       - dependencies
+      - dependabot
     rebase-strategy: auto
     groups:
       github-actions:

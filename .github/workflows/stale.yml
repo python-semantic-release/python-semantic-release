@@ -1,0 +1,45 @@
+name: 'Stale Bot'
+on:
+  schedule:
+    # Execute Daily at 7:15 AM UTC
+    - cron: '15 7 * * *'
+
+# Default token permissions = None
+permissions: {}
+
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # default: 30, GitHub Actions API Rate limit is 1000/hr
+          operations-per-run: 200
+          exempt-all-milestones: true
+          # exempt-all-assignees: false (default)
+          stale-issue-label: stale
+          days-before-issue-stale: 90
+          days-before-issue-close: 7
+          exempt-issue-labels: confirmed, help-wanted
+          stale-issue-message: >
+            This issue is stale because it has not been confirmed or planned by the maintainers
+            and has been open 90 days with no recent activity. It will be closed in 7 days,
+            if no further activity occurs. Thank you for your contributions.
+          close-issue-message: >
+            This issue was closed because activity was dormant for 97 days.
+          # PR Configurations
+          stale-pr-label: stale
+          days-before-pr-stale: 60
+          days-before-pr-close: 10
+          exempt-pr-labels: confirmed, dependabot
+          stale-pr-message: >
+            This PR is stale because it has not been confirmed or planned by the maintainers
+            and had been open 60 days with no recent activity. It will be closed in 10 days,
+              if no further activity occurs. Thank you for your contributions.
+          close-pr-message: >
+            This PR was closed because activity was dormant for 70 days.
