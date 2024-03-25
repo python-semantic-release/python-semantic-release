@@ -50,15 +50,15 @@ class Github(HvcsBase):
         self._remote_url = remote_url
 
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-        self.hvcs_domain = hvcs_domain or os.getenv(
-            "GITHUB_SERVER_URL", self.DEFAULT_DOMAIN
+        self.hvcs_domain = (
+            hvcs_domain or os.getenv("GITHUB_SERVER_URL", self.DEFAULT_DOMAIN)
         ).replace("https://", "")
 
         # not necessarily prefixed with "api." in the case of a custom domain, so
         # can't just default to "api.github.com"
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-        self.hvcs_api_domain = hvcs_api_domain or os.getenv(
-            "GITHUB_API_URL", self.DEFAULT_API_DOMAIN
+        self.hvcs_api_domain = (
+            hvcs_api_domain or os.getenv("GITHUB_API_URL", self.DEFAULT_API_DOMAIN)
         ).replace("https://", "")
 
         self.api_url = f"https://{self.hvcs_api_domain}"

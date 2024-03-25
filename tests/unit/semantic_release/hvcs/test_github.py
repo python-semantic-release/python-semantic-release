@@ -54,7 +54,7 @@ def default_gh_client():
             {"GITHUB_SERVER_URL": "https://special.custom.server/vcs/"},
             "https://example.com",
             None,
-            "https://example.com",
+            "example.com",
             Github.DEFAULT_API_DOMAIN,
         ),
         (
@@ -62,7 +62,7 @@ def default_gh_client():
             None,
             "https://api.example.com",
             Github.DEFAULT_DOMAIN,
-            "https://api.example.com",
+            "api.example.com",
         ),
     ],
 )
