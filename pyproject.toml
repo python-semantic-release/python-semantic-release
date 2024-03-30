@@ -1,7 +1,7 @@
 # Ref: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 # and https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools ~= 61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -22,18 +22,18 @@ classifiers = [
 readme = "README.rst"
 authors = [{ name = "Rolf Erik Lekang", email = "me@rolflekang.com" }]
 dependencies = [
-  "click>=8,<9",
-  "click-option-group~=0.5",
-  "gitpython>=3.0.8,<4",
-  "requests>=2.25,<3",
-  "jinja2>=3.1.2,<4",
-  "python-gitlab>=2,<5",
-  "tomlkit~=0.11",
-  "dotty-dict>=1.3.0,<2",
-  "importlib-resources>=5.7,<7",
-  "pydantic>=2,<3",
-  "rich>=12.5.1",
-  "shellingham>=1.5.0.post1",
+  "click ~= 8.0",
+  "click-option-group ~= 0.5",
+  "gitpython ~= 3.0",
+  "requests ~= 2.25",
+  "jinja2 ~= 3.1",
+  "python-gitlab ~= 4.0",
+  "tomlkit ~= 0.11",
+  "dotty-dict ~= 1.3",
+  "importlib-resources ~= 6.0",
+  "pydantic ~= 2.0",
+  "rich ~= 12.5",
+  "shellingham ~= 1.5",
 ]
 
 [project.scripts]
@@ -49,27 +49,34 @@ repository = "http://github.com/python-semantic-release/python-semantic-release.
 
 [project.optional-dependencies]
 docs = [
-  "Sphinx<=6.0.0",
+  "Sphinx ~= 6.0",
   "sphinxcontrib-apidoc == 0.5.0",
   "sphinx-autobuild == 2024.2.4",
-  "furo>=2023.3.27",
+  "furo ~= 2023.3",
 ]
 test = [
-  "coverage[toml]>=6,<8",
-  "pytest>=7,<8",
-  "pytest-env~=1.0",
-  "pytest-xdist>=2,<4",
-  "pytest-mock>=3,<4",
-  "pytest-lazy-fixture~=0.6.3",
+  "coverage[toml] ~= 7.0",
+  "pytest ~= 7.0",
+  "pytest-env ~= 1.0",
+  "pytest-xdist ~= 3.0",
+  "pytest-mock ~= 3.0",
+  "pytest-lazy-fixture ~= 0.6.3",
   "pytest-cov ~= 5.0",
-  "pytest-pretty>=1.2.0,<2",
-  "pytest-clarity>=1.0.1",
+  "pytest-pretty ~= 1.2",
+  "pytest-clarity ~= 1.0",
   "responses ~= 0.24.0",
-  "requests-mock>=1.10.0,<2",
-  "types-pytest-lazy-fixture>=0.6.3.3",
+  "requests-mock ~= 1.10",
+  "types-pytest-lazy-fixture ~= 0.6.3",
 ]
-dev = ["pre-commit", "tox", "ruff==0.3.4"]
-mypy = ["mypy", "types-requests"]
+dev = [
+  "pre-commit ~= 3.5",
+  "tox ~= 4.11",
+  "ruff == 0.3.4"
+]
+mypy = [
+  "mypy == 1.8.0",
+  "types-requests ~= 2.31.0"
+]
 
 [tool.pytest.ini_options]
 env = [
