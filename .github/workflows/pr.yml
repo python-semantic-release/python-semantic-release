@@ -17,10 +17,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -30,6 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install .[test]
           python -m pip install pytest-github-actions-annotate-failures
 
@@ -41,13 +44,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python 3.8
         uses: actions/setup-python@v5
         with:
           python-version: 3.8
+
       - name: Install mypy & dev packages
         run: |
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install ".[dev, mypy]"
+
       - name: ruff
         run: |
           python -m ruff check . \
@@ -66,4 +73,5 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: wagoid/commitlint-github-action@v5
