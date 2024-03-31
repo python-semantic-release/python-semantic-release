@@ -29,39 +29,42 @@ def default_gitea_client():
 
 
 @pytest.mark.parametrize(
-    (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
-        "expected_hvcs_domain, expected_hvcs_api_domain"
-    ),
+    str.join(", ", [
+        "patched_os_environ",
+        "hvcs_domain",
+        "hvcs_api_domain",
+        "expected_hvcs_domain",
+        "expected_hvcs_api_domain",
+    ]),
     [
         ({}, None, None, Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_API_DOMAIN),
         (
             {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
             None,
-            "special.custom.server/vcs/",
-            Gitea.DEFAULT_API_DOMAIN,
+            "special.custom.server/vcs",
+            "special.custom.server/vcs/api/v1",
         ),
         (
             {"GITEA_API_URL": "https://api.special.custom.server/"},
             None,
             None,
             Gitea.DEFAULT_DOMAIN,
-            "api.special.custom.server/",
+            "api.special.custom.server",
         ),
         (
             {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
             "https://example.com",
             None,
-            "https://example.com",
-            Gitea.DEFAULT_API_DOMAIN,
+            "example.com",
+            "example.com/api/v1",
         ),
         (
             {"GITEA_API_URL": "https://api.special.custom.server/"},
             None,
             "https://api.example.com",
             Gitea.DEFAULT_DOMAIN,
-            "https://api.example.com",
+            "api.example.com",
         ),
     ],
 )
@@ -90,11 +93,11 @@ def test_gitea_client_init(
             token=token,
         )
 
-        assert client.hvcs_domain == expected_hvcs_domain
-        assert client.hvcs_api_domain == expected_hvcs_api_domain
-        assert client.api_url == f"https://{client.hvcs_api_domain}"
-        assert client.token == token
-        assert client._remote_url == remote_url
+        assert expected_hvcs_domain == client.hvcs_domain
+        assert expected_hvcs_api_domain == client.hvcs_api_domain
+        assert f"https://{expected_hvcs_api_domain}" == client.api_url
+        assert token == client.token
+        assert remote_url == client._remote_url
         assert hasattr(client, "session")
         assert isinstance(getattr(client, "session", None), Session)
 
