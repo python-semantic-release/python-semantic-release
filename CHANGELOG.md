@@ -2,6 +2,96 @@
 
 
 
+## v9.4.0 (2024-03-31)
+
+### Build
+
+* build(deps-dev): bump responses from 0.24 to 0.25.0 (#842)
+
+Bumps [responses](https://github.com/getsentry/responses) from 0.24 to 0.25.0.
+- [Release notes](https://github.com/getsentry/responses/releases)
+- [Changelog](https://github.com/getsentry/responses/blob/master/CHANGES)
+- [Commits](https://github.com/getsentry/responses/compare/0.24.0...0.25.0)
+
+---
+updated-dependencies:
+- dependency-name: responses
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`a1b2af6`](https://github.com/python-semantic-release/python-semantic-release/commit/a1b2af6272b362afe5334772f81a4be779be7ba6))
+
+* build(deps-build): resolve build deps versions for `python3.12` ([`075daa4`](https://github.com/python-semantic-release/python-semantic-release/commit/075daa4205283414ea5e370da5e35690de12c9ab))
+
+* build(deps-dev): bump responses from 0.23.3 to 0.24.1 ([`9210933`](https://github.com/python-semantic-release/python-semantic-release/commit/9210933be10532baa979e381126da4a477e82e2b))
+
+* build(deps-dev): bump sphinxcontrib-apidoc from 0.3.0 to 0.5.0 ([`69f163b`](https://github.com/python-semantic-release/python-semantic-release/commit/69f163baefad6f45e3537814cae2be2481e3488a))
+
+* build(deps-dev): bump sphinx-autobuild from 2021.03.14 to 2024.2.4 ([`9d30877`](https://github.com/python-semantic-release/python-semantic-release/commit/9d30877b8874a02056f2dee1e2f64c32efda4dc1))
+
+* build(deps-dev): update pytest-cov requirement from ~=4.0 to ~=5.0 (#873)
+
+Updates the requirements on `pytest-cov` to permit the latest version.
+- [Changelog](https://github.com/pytest-dev/pytest-cov/blob/master/CHANGELOG.rst)
+- [Commits](https://github.com/pytest-dev/pytest-cov/compare/v4.0.0...v5.0.0)
+
+---
+updated-dependencies:
+- dependency-name: pytest-cov
+  dependency-type: direct:production
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`2ca6459`](https://github.com/python-semantic-release/python-semantic-release/commit/2ca6459131f677bffead21127f1feb05ae74b762))
+
+* build(deps-dev): bump ruff from 0.3.3 to 0.3.4 (#872)
+
+Bumps [ruff](https://github.com/astral-sh/ruff) from 0.3.3 to 0.3.4.
+- [Release notes](https://github.com/astral-sh/ruff/releases)
+- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/astral-sh/ruff/compare/v0.3.3...v0.3.4)
+
+---
+updated-dependencies:
+- dependency-name: ruff
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`6d7df6d`](https://github.com/python-semantic-release/python-semantic-release/commit/6d7df6d81b8775acac90956e5d8686460e6c2149))
+
+### Chore
+
+* chore(stalebot): refactor to use CI action for stale issue/pr evaluation ([`a352050`](https://github.com/python-semantic-release/python-semantic-release/commit/a352050d506947db6890f5cc0d964e4a3850949d))
+
+### Ci
+
+* ci(github): always update base env packages `pip`, `setuptools`, `wheel` ([`4748435`](https://github.com/python-semantic-release/python-semantic-release/commit/47484356569274d78508688521519972beae609f))
+
+### Feature
+
+* feat(gitea): derives gitea api domain from base domain when unspecified (#675)
+
+* test(gitea): add test of custom server path &amp; custom api domain
+
+* feat(gitea): derives gitea api domain from base domain when unspecified
+
+* refactor(hvcs-gitea): uniformly handle protocol prefixes
+
+---------
+
+Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`2ee3f8a`](https://github.com/python-semantic-release/python-semantic-release/commit/2ee3f8a918d2e5ea9ab64df88f52e62a1f589c38))
+
+### Style
+
+* style: beautify 2ee3f8a918d2e5ea9ab64df88f52e62a1f589c38 ([`8b4fd3e`](https://github.com/python-semantic-release/python-semantic-release/commit/8b4fd3eab052cd1694274e0e6d8eaf77b658474d))
+
+* style(deps): improve readability &amp; flexibility of dependencies ([`8fdd582`](https://github.com/python-semantic-release/python-semantic-release/commit/8fdd5827fa5ea0140e6373060be14780d44bcf0f))
+
+
 ## v9.3.1 (2024-03-24)
 
 ### Build
