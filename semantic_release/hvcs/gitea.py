@@ -8,6 +8,7 @@ import mimetypes
 import os
 
 from requests import HTTPError
+from urllib3.util.url import Url, parse_url
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
@@ -49,17 +50,34 @@ class Gitea(HvcsBase):
     ) -> None:
         self._remote_url = remote_url
 
-        self.hvcs_domain = hvcs_domain or os.getenv(
-            "GITEA_SERVER_URL", self.DEFAULT_DOMAIN
-        ).replace("https://", "")
-
-        self.hvcs_api_domain = (
-            hvcs_api_domain
-            or os.getenv("GITEA_API_URL", "").replace("https://", "")
-            or (
-                f"{self.hvcs_domain}{'' if self.hvcs_domain[-1] == '/' else '/'}{self.DEFAULT_API_PATH}"
-            )
+        domain_url = parse_url(
+            hvcs_domain
+            or os.getenv("GITEA_SERVER_URL", "")
+            or self.DEFAULT_DOMAIN
         )
+
+        # Strip any scheme, query or fragment from the domain
+        self.hvcs_domain = Url(
+            host=domain_url.host, port=domain_url.port, path=domain_url.path
+        ).url.rstrip("/")
+
+        api_domain_parts = parse_url(
+            hvcs_api_domain
+            or os.getenv("GITEA_API_URL", "")
+            or Url(
+                # infer from Domain url and append the default api path
+                scheme=domain_url.scheme,
+                host=self.hvcs_domain,
+                path=self.DEFAULT_API_PATH
+            ).url
+        )
+
+        # Strip any scheme, query or fragment from the api domain
+        self.hvcs_api_domain = Url(
+            host=api_domain_parts.host,
+            port=api_domain_parts.port,
+            path=api_domain_parts.path
+        ).url.rstrip("/")
 
         self.api_url = f"https://{self.hvcs_api_domain}"
 
