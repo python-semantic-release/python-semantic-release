@@ -51,9 +51,7 @@ class Gitea(HvcsBase):
         self._remote_url = remote_url
 
         domain_url = parse_url(
-            hvcs_domain
-            or os.getenv("GITEA_SERVER_URL", "")
-            or self.DEFAULT_DOMAIN
+            hvcs_domain or os.getenv("GITEA_SERVER_URL", "") or self.DEFAULT_DOMAIN
         )
 
         # Strip any scheme, query or fragment from the domain
@@ -68,7 +66,7 @@ class Gitea(HvcsBase):
                 # infer from Domain url and append the default api path
                 scheme=domain_url.scheme,
                 host=self.hvcs_domain,
-                path=self.DEFAULT_API_PATH
+                path=self.DEFAULT_API_PATH,
             ).url
         )
 
@@ -76,7 +74,7 @@ class Gitea(HvcsBase):
         self.hvcs_api_domain = Url(
             host=api_domain_parts.host,
             port=api_domain_parts.port,
-            path=api_domain_parts.path
+            path=api_domain_parts.path,
         ).url.rstrip("/")
 
         self.api_url = f"https://{self.hvcs_api_domain}"

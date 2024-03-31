@@ -29,13 +29,16 @@ def default_gitea_client():
 
 
 @pytest.mark.parametrize(
-    str.join(", ", [
-        "patched_os_environ",
-        "hvcs_domain",
-        "hvcs_api_domain",
-        "expected_hvcs_domain",
-        "expected_hvcs_api_domain",
-    ]),
+    str.join(
+        ", ",
+        [
+            "patched_os_environ",
+            "hvcs_domain",
+            "hvcs_api_domain",
+            "expected_hvcs_domain",
+            "expected_hvcs_api_domain",
+        ],
+    ),
     [
         ({}, None, None, Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_API_DOMAIN),
         (
