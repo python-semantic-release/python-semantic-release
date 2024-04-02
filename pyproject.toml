@@ -74,7 +74,7 @@ dev = [
   "ruff == 0.3.5"
 ]
 mypy = [
-  "mypy == 1.8.0",
+  "mypy == 1.9.0",
   "types-requests ~= 2.31.0"
 ]
 
