@@ -9,6 +9,7 @@ import os
 from functools import lru_cache
 
 from requests import HTTPError
+from urllib3.util.url import Url, parse_url
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
@@ -36,8 +37,8 @@ class Github(HvcsBase):
     """Github helper class"""
 
     DEFAULT_DOMAIN = "github.com"
-    DEFAULT_API_DOMAIN = "api.github.com"
-    DEFAULT_UPLOAD_DOMAIN = "uploads.github.com"
+    DEFAULT_API_SUBDOMAIN_PREFIX = "api"
+    DEFAULT_API_DOMAIN = f"{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}"
     DEFAULT_ENV_TOKEN_NAME = "GH_TOKEN"  # noqa: S105
 
     def __init__(
@@ -50,19 +51,34 @@ class Github(HvcsBase):
         self._remote_url = remote_url
 
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-        self.hvcs_domain = (
-            hvcs_domain or os.getenv("GITHUB_SERVER_URL", self.DEFAULT_DOMAIN)
-        ).replace("https://", "")
+        domain_url = parse_url(
+            hvcs_domain or os.getenv("GITHUB_SERVER_URL", "") or self.DEFAULT_DOMAIN
+        )
 
-        # not necessarily prefixed with "api." in the case of a custom domain, so
-        # can't just default to "api.github.com"
+        # Strip any scheme, query or fragment from the domain
+        self.hvcs_domain = Url(
+            host=domain_url.host, port=domain_url.port, path=domain_url.path
+        ).url.rstrip("/")
+
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
-        self.hvcs_api_domain = (
-            hvcs_api_domain or os.getenv("GITHUB_API_URL", self.DEFAULT_API_DOMAIN)
-        ).replace("https://", "")
+        api_domain_parts = parse_url(
+            hvcs_api_domain
+            or os.getenv("GITHUB_API_URL", "")
+            or Url(
+                # infer from Domain url and prepend the default api subdomain
+                scheme=domain_url.scheme,
+                host=f"{self.DEFAULT_API_SUBDOMAIN_PREFIX}.{self.hvcs_domain}",
+            ).url
+        )
+
+        # Strip any scheme, query or fragment from the api domain
+        self.hvcs_api_domain = Url(
+            host=api_domain_parts.host,
+            port=api_domain_parts.port,
+            path=api_domain_parts.path,
+        ).url.rstrip("/")
 
         self.api_url = f"https://{self.hvcs_api_domain}"
-        self.upload_url = f"https://{self.DEFAULT_UPLOAD_DOMAIN}"
 
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)
