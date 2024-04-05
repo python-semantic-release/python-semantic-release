@@ -15,7 +15,12 @@ from requests import HTTPError, Response, Session
 from semantic_release.hvcs.gitea import Gitea
 from semantic_release.hvcs.token_auth import TokenAuth
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
+from tests.const import (
+    EXAMPLE_HVCS_DOMAIN,
+    EXAMPLE_REPO_NAME,
+    EXAMPLE_REPO_OWNER,
+    RELEASE_NOTES,
+)
 from tests.util import netrc_file
 
 if TYPE_CHECKING:
@@ -40,34 +45,54 @@ def default_gitea_client():
         ],
     ),
     [
-        ({}, None, None, Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_API_DOMAIN),
+        # Default values
+        ({}, None, None, Gitea.DEFAULT_DOMAIN, Gitea.DEFAULT_DOMAIN),
         (
+            # Imply api domain from server domain of environment
+            {"GITEA_SERVER_URL": "https://special.custom.server/"},
+            None,
+            None,
+            "special.custom.server",
+            "special.custom.server",
+        ),
+        (
+            # Custom domain with path prefix (derives from environment)
             {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
             None,
             "special.custom.server/vcs",
-            "special.custom.server/vcs/api/v1",
+            "special.custom.server/vcs",
         ),
         (
-            {"GITEA_API_URL": "https://api.special.custom.server/"},
+            # Pull server locations from environment
+            {
+                "GITEA_SERVER_URL": "https://special.custom.server/",
+                "GITEA_API_URL": "https://api.special.custom.server/"
+            },
             None,
             None,
-            Gitea.DEFAULT_DOMAIN,
+            "special.custom.server",
             "api.special.custom.server",
         ),
         (
-            {"GITEA_SERVER_URL": "https://special.custom.server/vcs/"},
-            "https://example.com",
+            # Ignore environment & use provided parameter value (ie from user config)
+            # then infer api domain from the parameter value based on default Gitea configurations
+            {"GITEA_SERVER_URL": "https://special.custom.server/"},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
             None,
-            "example.com",
-            "example.com/api/v1",
+            EXAMPLE_HVCS_DOMAIN,
+            EXAMPLE_HVCS_DOMAIN,
         ),
         (
-            {"GITEA_API_URL": "https://api.special.custom.server/"},
-            None,
-            "https://api.example.com",
-            Gitea.DEFAULT_DOMAIN,
-            "api.example.com",
+            # Ignore environment & use provided parameter value (ie from user config)
+            {
+                "GITEA_SERVER_URL": "https://special.custom.server/",
+                "GITEA_API_URL": "https://api.special.custom.server/"
+            },
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            EXAMPLE_HVCS_DOMAIN,
+            f"api.{EXAMPLE_HVCS_DOMAIN}",
         ),
     ],
 )
@@ -98,7 +123,7 @@ def test_gitea_client_init(
 
         assert expected_hvcs_domain == client.hvcs_domain
         assert expected_hvcs_api_domain == client.hvcs_api_domain
-        assert f"https://{expected_hvcs_api_domain}" == client.api_url
+        assert f"https://{expected_hvcs_api_domain}/api/v1" == client.api_url
         assert token == client.token
         assert remote_url == client._remote_url
         assert hasattr(client, "session")
@@ -181,8 +206,8 @@ def test_pull_request_url(default_gitea_client, pr_number):
 def test_asset_upload_url(default_gitea_client):
     assert default_gitea_client.asset_upload_url(
         release_id=420
-    ) == "https://{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-        domain=default_gitea_client.hvcs_api_domain,
+    ) == "{api_endpoint}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+        api_endpoint=default_gitea_client.api_url,
         owner=default_gitea_client.owner,
         repo=default_gitea_client.repo_name,
         release_id=420,
@@ -195,7 +220,7 @@ def test_asset_upload_url(default_gitea_client):
 
 
 gitea_matcher = re.compile(rf"^https://{Gitea.DEFAULT_DOMAIN}")
-gitea_api_matcher = re.compile(rf"^https://{Gitea.DEFAULT_API_DOMAIN}")
+gitea_api_matcher = re.compile(rf"^https://{Gitea.DEFAULT_DOMAIN}{Gitea.DEFAULT_API_PATH}")
 
 
 @pytest.mark.parametrize("status_code", (201,))

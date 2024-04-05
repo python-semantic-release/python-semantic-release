@@ -6,7 +6,7 @@ from requests import Session
 
 from semantic_release.hvcs.bitbucket import Bitbucket
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+from tests.const import EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 
 
 @pytest.fixture
@@ -16,11 +16,54 @@ def default_bitbucket_client():
 
 
 @pytest.mark.parametrize(
-    (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
-        "expected_hvcs_domain, expected_hvcs_api_domain"
+    str.join(
+        ", ",
+        [
+            "patched_os_environ",
+            "hvcs_domain",
+            "hvcs_api_domain",
+            "expected_hvcs_domain",
+            "expected_hvcs_api_domain",
+        ],
     ),
-    [({}, None, None, Bitbucket.DEFAULT_DOMAIN, Bitbucket.DEFAULT_API_DOMAIN)],
+    [
+        # Default values (BitBucket Cloud)
+        ({}, None, None, Bitbucket.DEFAULT_DOMAIN, Bitbucket.DEFAULT_API_DOMAIN),
+        (
+            # Explicitly set default values
+            {},
+            f"https://{Bitbucket.DEFAULT_DOMAIN}",
+            f"https://{Bitbucket.DEFAULT_API_DOMAIN}",
+            Bitbucket.DEFAULT_DOMAIN,
+            Bitbucket.DEFAULT_API_DOMAIN
+        ),
+        (
+            # Explicitly defined api
+            {},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            EXAMPLE_HVCS_DOMAIN,
+            f"api.{EXAMPLE_HVCS_DOMAIN}",
+        ),
+        (
+            # Custom domain for on premise BitBucket Server (derive api endpoint)
+            # No env vars as CI is handled by Bamboo or Jenkins Integration
+            {},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            None,
+            EXAMPLE_HVCS_DOMAIN,
+            EXAMPLE_HVCS_DOMAIN,
+        ),
+        (
+            # Custom domain with path prefix
+            # No env vars as CI is handled by Bamboo or Jenkins (which require user defined defaults)
+            {},
+            "special.custom.server/bitbucket",
+            None,
+            "special.custom.server/bitbucket",
+            "special.custom.server/bitbucket",
+        ),
+    ],
 )
 @pytest.mark.parametrize(
     "remote_url",
@@ -39,6 +82,13 @@ def test_bitbucket_client_init(
     remote_url,
     token,
 ):
+    # API paths are different in BitBucket Cloud (bitbucket.org) vs BitBucket Data Center
+    expected_api_url = (
+        f"https://{expected_hvcs_api_domain}/2.0"
+        if expected_hvcs_domain == "bitbucket.org"
+        else f"https://{expected_hvcs_api_domain}/rest/api/1.0"
+    )
+
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         client = Bitbucket(
             remote_url=remote_url,
@@ -47,11 +97,11 @@ def test_bitbucket_client_init(
             token=token,
         )
 
-        assert client.hvcs_domain == expected_hvcs_domain
-        assert client.hvcs_api_domain == expected_hvcs_api_domain
-        assert client.api_url == f"https://{client.hvcs_api_domain}/2.0"
-        assert client.token == token
-        assert client._remote_url == remote_url
+        assert expected_hvcs_domain == client.hvcs_domain
+        assert expected_hvcs_api_domain == client.hvcs_api_domain
+        assert expected_api_url == client.api_url
+        assert token == client.token
+        assert remote_url == client._remote_url
         assert hasattr(client, "session")
         assert isinstance(getattr(client, "session", None), Session)
 
