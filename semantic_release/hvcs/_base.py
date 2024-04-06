@@ -42,6 +42,7 @@ class HvcsBase:
         hvcs_domain: str | None = None,
         hvcs_api_domain: str | None = None,
         token: str | None = None,
+        allow_insecure: bool = False,
     ) -> None:
         self.hvcs_domain = hvcs_domain
         self.hvcs_api_domain = hvcs_api_domain
