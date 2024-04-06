@@ -2,6 +2,31 @@
 
 
 
+## v9.4.1 (2024-04-06)
+
+### Build
+
+* build(deps-dev): bump mypy from 1.8.0 to 1.9.0 (#879) ([`8a47db1`](https://github.com/python-semantic-release/python-semantic-release/commit/8a47db1a43c3fc9a8b7d03be3a8877e69acc7d3c))
+
+* build(deps-dev): bump ruff from 0.3.4 to 0.3.5 (#880) ([`816660e`](https://github.com/python-semantic-release/python-semantic-release/commit/816660e1509b34ba387def3793e9bf9c7e343e8c))
+
+### Fix
+
+* fix(gh-actions-output): fixed trailing newline to match GITHUB_OUTPUT format (#885)
+
+* test(gh-actions-output): fix unit tests to manage proper whitespace
+
+  tests were adjusted for clarity and to replicate error detailed in #884.
+
+* fix(gh-actions-output): fixed trailing newline to match GITHUB_OUTPUT format
+
+  Resolves: #884 ([`2c7b6ec`](https://github.com/python-semantic-release/python-semantic-release/commit/2c7b6ec85b6e3182463d7b695ee48e9669a25b3b))
+
+### Style
+
+* style: beautify 2c7b6ec85b6e3182463d7b695ee48e9669a25b3b ([`b9ecd84`](https://github.com/python-semantic-release/python-semantic-release/commit/b9ecd8461c36c4f904b78dc83d9ca2b10b6d89f5))
+
+
 ## v9.4.0 (2024-03-31)
 
 ### Build
