@@ -47,14 +47,13 @@ class Gitlab(HvcsBase):
     def __init__(
         self,
         remote_url: str,
+        *,
         hvcs_domain: str | None = None,
-        hvcs_api_domain: str | None = None,
         token: str | None = None,
         allow_insecure: bool = False,
+        **kwargs,
     ) -> None:
-        """
-        hvcs_api_domain: unused, kept for compatibility with HvcsBase
-        """
+        super().__init__(remote_url)
         self._remote_url = remote_url
         self.token = token
 
@@ -102,6 +101,7 @@ class Gitlab(HvcsBase):
         if "CI_PROJECT_NAMESPACE" in os.environ and "CI_PROJECT_NAME" in os.environ:
             log.debug("getting repository owner and name from environment variables")
             return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
+
         return super()._get_repository_owner_and_name()
 
 
