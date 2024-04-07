@@ -7,10 +7,12 @@ import logging
 import mimetypes
 import os
 from functools import lru_cache
+from pathlib import PurePosixPath
 
-from requests import HTTPError
+from requests import HTTPError, JSONDecodeError
 from urllib3.util.url import Url, parse_url
 
+from semantic_release.errors import UnexpectedResponse
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
@@ -34,8 +36,19 @@ mimetypes.add_type("text/markdown", ".md")
 
 
 class Github(HvcsBase):
-    """Github helper class"""
+    """
+    GitHub HVCS interface for interacting with GitHub repositories
 
+    This class supports the following products:
+        - GitHub Free, Pro, & Team
+        - GitHub Enterprise Cloud
+
+    This class does not support the following products:
+        - GitHub Enterprise Server (on-premises installations)
+    """
+
+    # TODO: Add support for GitHub Enterprise Server (on-premises installations)
+    #       DEFAULT_ONPREM_API_PATH = "/api/v3"
     DEFAULT_DOMAIN = "github.com"
     DEFAULT_API_SUBDOMAIN_PREFIX = "api"
     DEFAULT_API_DOMAIN = f"{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}"
@@ -44,21 +57,50 @@ class Github(HvcsBase):
     def __init__(
         self,
         remote_url: str,
+        *,
         hvcs_domain: str | None = None,
         hvcs_api_domain: str | None = None,
         token: str | None = None,
+        allow_insecure: bool = False,
+        **kwargs,
     ) -> None:
-        self._remote_url = remote_url
+        super().__init__(remote_url)
+        self.token = token
+        auth = None if not self.token else TokenAuth(self.token)
+        self.session = build_requests_session(auth=auth)
 
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
         domain_url = parse_url(
-            hvcs_domain or os.getenv("GITHUB_SERVER_URL", "") or self.DEFAULT_DOMAIN
+            hvcs_domain or os.getenv("GITHUB_SERVER_URL", "") or f"https://{self.DEFAULT_DOMAIN}"
         )
 
-        # Strip any scheme, query or fragment from the domain
-        self.hvcs_domain = Url(
-            host=domain_url.host, port=domain_url.port, path=domain_url.path
-        ).url.rstrip("/")
+        if domain_url.scheme == "http" and not allow_insecure:
+            raise ValueError("Insecure connections are currently disabled.")
+
+        if not domain_url.scheme:
+            new_scheme = "http" if allow_insecure else "https"
+            domain_url = Url(
+                **{
+                    **domain_url._asdict(),
+                    "scheme": new_scheme
+                }
+            )
+
+        if domain_url.scheme not in ["http", "https"]:
+            raise ValueError(
+                f"Invalid scheme {domain_url.scheme} for domain {domain_url.host}. "
+                "Only http and https are supported."
+            )
+
+        # Strip any auth, query or fragment from the domain
+        self.hvcs_domain = parse_url(
+            Url(
+                scheme=domain_url.scheme,
+                host=domain_url.host,
+                port=domain_url.port,
+                path=str(PurePosixPath(domain_url.path or "/")),
+            ).url.rstrip("/")
+        )
 
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
         api_domain_parts = parse_url(
@@ -66,23 +108,42 @@ class Github(HvcsBase):
             or os.getenv("GITHUB_API_URL", "")
             or Url(
                 # infer from Domain url and prepend the default api subdomain
-                scheme=domain_url.scheme,
-                host=f"{self.DEFAULT_API_SUBDOMAIN_PREFIX}.{self.hvcs_domain}",
+                **{
+                    **self.hvcs_domain._asdict(),
+                    'host': f"{self.DEFAULT_API_SUBDOMAIN_PREFIX}.{self.hvcs_domain.host}",
+                    'path': ''
+                }
             ).url
         )
 
-        # Strip any scheme, query or fragment from the api domain
-        self.hvcs_api_domain = Url(
-            host=api_domain_parts.host,
-            port=api_domain_parts.port,
-            path=api_domain_parts.path,
-        ).url.rstrip("/")
+        if api_domain_parts.scheme == "http" and not allow_insecure:
+            raise ValueError("Insecure connections are currently disabled.")
 
-        self.api_url = f"https://{self.hvcs_api_domain}"
+        if not api_domain_parts.scheme:
+            new_scheme = "http" if allow_insecure else "https"
+            api_domain_parts = Url(
+                **{
+                    **api_domain_parts._asdict(),
+                    "scheme": new_scheme
+                }
+            )
 
-        self.token = token
-        auth = None if not self.token else TokenAuth(self.token)
-        self.session = build_requests_session(auth=auth)
+        if api_domain_parts.scheme not in ["http", "https"]:
+            raise ValueError(
+                f"Invalid scheme {api_domain_parts.scheme} for api domain {api_domain_parts.host}. "
+                "Only http and https are supported."
+            )
+
+        # Strip any auth, query or fragment from the domain
+        self.api_url = parse_url(
+            Url(
+                scheme=api_domain_parts.scheme,
+                host=api_domain_parts.host,
+                port=api_domain_parts.port,
+                path=str(PurePosixPath(api_domain_parts.path or "/")),
+            ).url.rstrip("/")
+        )
+
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
@@ -91,23 +152,21 @@ class Github(HvcsBase):
             log.debug("getting repository owner and name from environment variables")
             owner, name = os.environ["GITHUB_REPOSITORY"].rsplit("/", 1)
             return owner, name
+
         return super()._get_repository_owner_and_name()
 
-    def compare_url(
-        self,
-        from_rev: str,
-        to_rev: str,
-    ) -> str:
+
+    def compare_url(self, from_rev: str, to_rev: str) -> str:
         """
         Get the GitHub comparison link between two version tags.
         :param from_rev: The older version to compare.
         :param to_rev: The newer version to compare.
         :return: Link to view a comparison between the two versions.
         """
-        return (
-            f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/compare/"
-            f"{from_rev}...{to_rev}"
+        return self.create_server_url(
+            path=f"/{self.owner}/{self.repo_name}/compare/{from_rev}...{to_rev}"
         )
+
 
     @logged_function(log)
     def create_release(
@@ -122,8 +181,11 @@ class Github(HvcsBase):
         :return: the ID of the release
         """
         log.info("Creating release for tag %s", tag)
-        resp = self.session.post(
-            f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases",
+        releases_endpoint = self.create_api_url(
+            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases",
+        )
+        response = self.session.post(
+            releases_endpoint,
             json={
                 "tag_name": tag,
                 "name": tag,
@@ -133,9 +195,18 @@ class Github(HvcsBase):
             },
         )
 
-        release_id: int = resp.json()["id"]
-        log.info("Successfully created release with ID: %s", release_id)
-        return release_id
+        # Raise an error if the request was not successful
+        response.raise_for_status()
+
+        try:
+            release_id: int = response.json()["id"]
+            log.info("Successfully created release with ID: %s", release_id)
+            return release_id
+        except JSONDecodeError as err:
+            raise UnexpectedResponse("Unreadable json response") from err
+        except KeyError as err:
+            raise UnexpectedResponse("JSON response is missing an id") from err
+
 
     @logged_function(log)
     @suppress_not_found
@@ -146,17 +217,25 @@ class Github(HvcsBase):
         :param tag: Tag to get release for
         :return: ID of release, if found, else None
         """
-        response = self.session.get(
-            f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}"
+        tag_endpoint = self.create_api_url(
+            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}",
         )
-        return response.json().get("id")
+        response = self.session.get(tag_endpoint)
+
+        # Raise an error if the request was not successful
+        response.raise_for_status()
+
+        try:
+            data = response.json()
+            return data["id"]
+        except JSONDecodeError as err:
+            raise UnexpectedResponse("Unreadable json response") from err
+        except KeyError as err:
+            raise UnexpectedResponse("JSON response is missing an id") from err
+
 
     @logged_function(log)
-    def edit_release_notes(
-        self,
-        release_id: int,
-        release_notes: str,
-    ) -> int:
+    def edit_release_notes(self, release_id: int, release_notes: str) -> int:
         """
         Edit a release with updated change notes
         https://docs.github.com/rest/reference/repos#update-a-release
@@ -165,11 +244,20 @@ class Github(HvcsBase):
         :return: The ID of the release that was edited
         """
         log.info("Updating release %s", release_id)
-        self.session.post(
-            f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
+        release_endpoint = self.create_api_url(
+            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
+        )
+
+        response = self.session.post(
+            release_endpoint,
             json={"body": release_notes},
         )
+
+        # Raise an error if the update was unsuccessful
+        response.raise_for_status()
+
         return release_id
+
 
     @logged_function(log)
     def create_or_update_release(
@@ -198,6 +286,7 @@ class Github(HvcsBase):
         # If this errors we let it die
         return self.edit_release_notes(release_id, release_notes)
 
+
     @logged_function(log)
     @suppress_not_found
     def asset_upload_url(self, release_id: str) -> str | None:
@@ -208,10 +297,23 @@ class Github(HvcsBase):
         :return: URL to upload for a release if found, else None
         """
         # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset
-        response = self.session.get(
-            f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
+        release_url = self.create_api_url(
+            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
         )
-        return response.json().get("upload_url").replace("{?name,label}", "")
+
+        response = self.session.get(release_url)
+        response.raise_for_status()
+
+        try:
+            upload_url: str = response.json()["upload_url"]
+            return upload_url.replace("{?name,label}", "")
+        except JSONDecodeError as err:
+            raise UnexpectedResponse("Unreadable json response") from err
+        except KeyError as err:
+            raise UnexpectedResponse(
+                "JSON response is missing a key 'upload_url'"
+            ) from err
+
 
     @logged_function(log)
     def upload_asset(
@@ -232,6 +334,7 @@ class Github(HvcsBase):
                 f"{release_id}. Release url: "
                 f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
             )
+
         content_type = (
             mimetypes.guess_type(file, strict=False)[0] or "application/octet-stream"
         )
@@ -246,6 +349,9 @@ class Github(HvcsBase):
                 data=data.read(),
             )
 
+            # Raise an error if the upload was unsuccessful
+            response.raise_for_status()
+
         log.debug(
             "Successfully uploaded %s to Github, url: %s, status code: %s",
             file,
@@ -254,6 +360,7 @@ class Github(HvcsBase):
         )
 
         return True
+
 
     @logged_function(log)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
@@ -282,19 +389,55 @@ class Github(HvcsBase):
 
         return n_succeeded
 
+
     def remote_url(self, use_token: bool = True) -> str:
+        """Get the remote url including the token for authentication if requested"""
         if not (self.token and use_token):
             log.info("requested to use token for push but no token set, ignoring...")
             return self._remote_url
-        actor = os.getenv("GITHUB_ACTOR")
-        return (
-            f"https://{actor}:{self.token}@{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"
-            if actor
-            else f"https://{self.token}@{self.hvcs_domain}/{self.owner}/{self.repo_name}.git"
+
+        actor = os.getenv("GITHUB_ACTOR", None)
+        return self.create_server_url(
+            auth=f"{actor}:{self.token}" if actor else self.token,
+            path=f"/{self.owner}/{self.repo_name}.git",
         )
 
+
     def commit_hash_url(self, commit_hash: str) -> str:
-        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/commit/{commit_hash}"
+        return self.create_server_url(
+            path=f"/{self.owner}/{self.repo_name}/commit/{commit_hash}"
+        )
+
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        return f"https://{self.hvcs_domain}/{self.owner}/{self.repo_name}/issues/{pr_number}"
+        return self.create_server_url(
+            path=f"/{self.owner}/{self.repo_name}/issues/{pr_number}"
+        )
+
+
+    def _derive_url(self, base_url: Url, path: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+        overrides = dict(
+            filter(
+                lambda x: x[1] is not None,
+                {
+                    'auth': auth,
+                    'path': str(PurePosixPath("/", path)),
+                    'query': query,
+                    'fragment': fragment,
+                }.items()
+            )
+        )
+        return Url(
+            **{
+                **base_url._asdict(),
+                **overrides,
+            }
+        ).url.rstrip("/")
+
+
+    def create_server_url(self, path: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+        return self._derive_url(self.hvcs_domain, path, auth, query, fragment)
+
+
+    def create_api_url(self, endpoint: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+        return self._derive_url(self.api_url, endpoint, auth, query, fragment)
