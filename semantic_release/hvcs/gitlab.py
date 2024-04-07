@@ -12,21 +12,22 @@ import gitlab
 from urllib3.util.url import Url, parse_url
 
 from semantic_release.helpers import logged_function
-from semantic_release.hvcs._base import HvcsBase
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Callable
+
+
+log = logging.getLogger(__name__)
 
 
 # Globals
 log = logging.getLogger(__name__)
 
 
-class Gitlab(HvcsBase):
+class Gitlab(RemoteHvcsBase):
     """
-    Gitlab helper class
-    Note Gitlab doesn't really have the concept of a separate
-    API domain
+    Gitlab HVCS interface for interacting with Gitlab repositories
     """
 
     DEFAULT_ENV_TOKEN_NAME = "GITLAB_TOKEN"  # noqa: S105
@@ -45,30 +46,17 @@ class Gitlab(HvcsBase):
         **kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
-        self._remote_url = remote_url
         self.token = token
 
-        domain_url = parse_url(
+        domain_url = self._normalize_url(
             hvcs_domain
             or os.getenv("CI_SERVER_URL", "")
-            or f"https://{self.DEFAULT_DOMAIN}"
+            or f"https://{self.DEFAULT_DOMAIN}",
+            allow_insecure=allow_insecure,
         )
 
-        if domain_url.scheme == "http" and not allow_insecure:
-            raise ValueError("Insecure connections are currently disabled.")
-
-        if not domain_url.scheme:
-            new_scheme = "http" if allow_insecure else "https"
-            domain_url = Url(**{**domain_url._asdict(), "scheme": new_scheme})
-
-        if domain_url.scheme not in ["http", "https"]:
-            raise ValueError(
-                f"Invalid scheme {domain_url.scheme} for domain {domain_url.host}. "
-                "Only http and https are supported."
-            )
-
         # Strip any auth, query or fragment from the domain
-        self.hvcs_domain = parse_url(
+        self._hvcs_domain = parse_url(
             Url(
                 scheme=domain_url.scheme,
                 host=domain_url.host,
@@ -78,6 +66,7 @@ class Gitlab(HvcsBase):
         )
 
         self._client = gitlab.Gitlab(self.hvcs_domain.url)
+        self._api_url = parse_url(self._client.url)
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
@@ -155,11 +144,6 @@ class Gitlab(HvcsBase):
             )
             return self.edit_release_notes(release_id=tag, release_notes=release_notes)
 
-    def compare_url(self, from_rev: str, to_rev: str) -> str:
-        return self.create_server_url(
-            path=f"{self.owner}/{self.repo_name}/-/compare/{from_rev}...{to_rev}"
-        )
-
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
         if not (self.token and use_token):
@@ -170,60 +154,35 @@ class Gitlab(HvcsBase):
             path=f"{self.owner}/{self.repo_name}.git",
         )
 
+    def compare_url(self, from_rev: str, to_rev: str) -> str:
+        return self.create_repo_url(repo_path=f"/-/compare/{from_rev}...{to_rev}")
+
     def commit_hash_url(self, commit_hash: str) -> str:
-        return self.create_server_url(
-            path=f"{self.owner}/{self.repo_name}/-/commit/{commit_hash}"
-        )
+        return self.create_repo_url(repo_path=f"/-/commit/{commit_hash}")
 
     def issue_url(self, issue_number: str | int) -> str:
-        return self.create_server_url(
-            path=f"{self.owner}/{self.repo_name}/-/issues/{issue_number}"
-        )
+        return self.create_repo_url(repo_path=f"/-/issues/{issue_number}")
 
     def merge_request_url(self, mr_number: str | int) -> str:
-        return self.create_server_url(
-            path=f"{self.owner}/{self.repo_name}/-/merge_requests/{mr_number}"
-        )
+        return self.create_repo_url(repo_path=f"/-/merge_requests/{mr_number}")
 
     def pull_request_url(self, pr_number: str | int) -> str:
+        # TODO: deprecate in v11, add warning in v10
         return self.merge_request_url(mr_number=pr_number)
 
-    def create_server_url(
-        self,
-        path: str,
-        auth: str | None = None,
-        query: str | None = None,
-        fragment: str | None = None,
-    ) -> str:
-        overrides = dict(
-            filter(
-                lambda x: x[1] is not None,
-                {
-                    "auth": auth,
-                    "path": str(PurePosixPath(path or "/")),
-                    "query": query,
-                    "fragment": fragment,
-                }.items(),
-            )
-        )
-        return Url(
-            **{
-                **self.hvcs_domain._asdict(),
-                **overrides,
-            }
-        ).url.rstrip("/")
+    def upload_dists(self, tag: str, dist_glob: str) -> int:
+        return super().upload_dists(tag, dist_glob)
 
-    def create_api_url(
-        self,
-        endpoint: str,
-        auth: str | None = None,
-        query: str | None = None,
-        fragment: str | None = None,
-    ) -> str:
-        api_path = self._client.api_url.replace(self.hvcs_domain.url, "")
-        return self.create_server_url(
-            path=f"{api_path}/{endpoint.lstrip(api_path)}",
-            auth=auth,
-            query=query,
-            fragment=fragment,
+    def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
+        return (
+            self.create_server_url,
+            self.create_repo_url,
+            self.commit_hash_url,
+            self.compare_url,
+            self.issue_url,
+            self.merge_request_url,
+            self.pull_request_url,
         )
+
+
+RemoteHvcsBase.register(Gitlab)
