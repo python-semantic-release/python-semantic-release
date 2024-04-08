@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-import mimetypes
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
+from typing import TYPE_CHECKING
 
 import gitlab
 from urllib3.util.url import Url, parse_url
@@ -14,21 +14,12 @@ from urllib3.util.url import Url, parse_url
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
 
-log = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from typing import Any
 
-# Add a mime type for wheels
-# Fix incorrect entries in the `mimetypes` registry.
-# On Windows, the Python standard library's `mimetypes` reads in
-# mappings from file extension to MIME type from the Windows
-# registry. Other applications can and do write incorrect values
-# to this registry, which causes `mimetypes.guess_type` to return
-# incorrect values, which causes TensorBoard to fail to render on
-# the frontend.
-# This method hard-codes the correct mappings for certain MIME
-# types that are known to be either used by python-semantic-release or
-# problematic in general.
-mimetypes.add_type("application/octet-stream", ".whl")
-mimetypes.add_type("text/markdown", ".md")
+
+# Globals
+log = logging.getLogger(__name__)
 
 
 class Gitlab(HvcsBase):
@@ -51,7 +42,7 @@ class Gitlab(HvcsBase):
         hvcs_domain: str | None = None,
         token: str | None = None,
         allow_insecure: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
         self._remote_url = remote_url

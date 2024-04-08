@@ -5,9 +5,15 @@ from __future__ import annotations
 import logging
 import warnings
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from semantic_release.helpers import parse_git_url
 
+if TYPE_CHECKING:
+    from typing import Any
+
+
+# Globals
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +40,7 @@ class HvcsBase:
 
     DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"  # noqa: S105
 
-    def __init__(self, remote_url: str, *args, **kwargs) -> None:
+    def __init__(self, remote_url: str, *args: Any, **kwargs: Any) -> None:
         self._remote_url = remote_url
 
 

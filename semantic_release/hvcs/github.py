@@ -8,6 +8,7 @@ import mimetypes
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
+from typing import TYPE_CHECKING
 
 from requests import HTTPError, JSONDecodeError
 from urllib3.util.url import Url, parse_url
@@ -18,7 +19,13 @@ from semantic_release.hvcs._base import HvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
 from semantic_release.hvcs.util import build_requests_session, suppress_not_found
 
+if TYPE_CHECKING:
+    from typing import Any
+
+
+# Globals
 log = logging.getLogger(__name__)
+
 
 # Add a mime type for wheels
 # Fix incorrect entries in the `mimetypes` registry.
@@ -31,8 +38,11 @@ log = logging.getLogger(__name__)
 # This method hard-codes the correct mappings for certain MIME
 # types that are known to be either used by python-semantic-release or
 # problematic in general.
-mimetypes.add_type("application/octet-stream", ".whl")
-mimetypes.add_type("text/markdown", ".md")
+if mimetypes.guess_type("test.whl")[0] != "application/octet-stream":
+    mimetypes.add_type("application/octet-stream", ".whl")
+
+if mimetypes.guess_type("test.md")[0] != "text/markdown":
+    mimetypes.add_type("text/markdown", ".md")
 
 
 class Github(HvcsBase):
@@ -62,7 +72,7 @@ class Github(HvcsBase):
         hvcs_api_domain: str | None = None,
         token: str | None = None,
         allow_insecure: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
         self.token = token

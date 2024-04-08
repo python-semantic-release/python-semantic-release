@@ -9,11 +9,17 @@ import logging
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
+from typing import TYPE_CHECKING
 
 from urllib3.util.url import Url, parse_url
 
 from semantic_release.hvcs._base import HvcsBase
 
+if TYPE_CHECKING:
+    from typing import Any
+
+
+# Globals
 log = logging.getLogger(__name__)
 
 
@@ -41,7 +47,7 @@ class Bitbucket(HvcsBase):
         hvcs_api_domain: str | None = None,
         token: str | None = None,
         allow_insecure: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
         self.token = token
