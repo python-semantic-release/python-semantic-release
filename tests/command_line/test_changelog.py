@@ -12,7 +12,6 @@ from pytest_lazyfixture import lazy_fixture
 from requests import Session
 
 from semantic_release.cli import changelog, main
-from semantic_release.hvcs import Github
 
 from tests.const import (
     EXAMPLE_HVCS_DOMAIN,

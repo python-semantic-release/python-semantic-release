@@ -34,7 +34,9 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def default_gh_client() -> Generator[Github, None, None]:
-    remote_url = f"git@{Github.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    remote_url = (
+        f"git@{Github.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    )
     with mock.patch.dict(os.environ, {}, clear=True):
         yield Github(remote_url=remote_url)
 
@@ -48,7 +50,7 @@ def default_gh_client() -> Generator[Github, None, None]:
             "hvcs_api_domain",
             "expected_hvcs_domain",
             "expected_hvcs_api_url",
-            "insecure"
+            "insecure",
         ],
     ),
     [
@@ -59,7 +61,7 @@ def default_gh_client() -> Generator[Github, None, None]:
             None,
             f"https://{Github.DEFAULT_DOMAIN}",
             f"https://{Github.DEFAULT_API_DOMAIN}",
-            False
+            False,
         ),
         (
             # Gather domain from environment & imply api domain from server domain
@@ -68,7 +70,7 @@ def default_gh_client() -> Generator[Github, None, None]:
             None,
             "https://special.custom.server",
             "https://api.special.custom.server",
-            False
+            False,
         ),
         (
             # Pull both locations from environment
@@ -80,7 +82,7 @@ def default_gh_client() -> Generator[Github, None, None]:
             None,
             "https://special.custom.server",
             "https://api2.special.custom.server",
-            False
+            False,
         ),
         (
             # Ignore environment & use provided parameter value (ie from user config)
@@ -181,17 +183,14 @@ def test_github_client_init(
         # Bad base domain schemes
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", None, False),
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", None, True),
-
         # Unallowed insecure connections when base domain is insecure
         (f"http://{EXAMPLE_HVCS_DOMAIN}", None, False),
-
         # Bad API domain schemes
         (None, f"ftp://api.{EXAMPLE_HVCS_DOMAIN}", False),
         (None, f"ftp://api.{EXAMPLE_HVCS_DOMAIN}", True),
-
         # Unallowed insecure connections when api domain is insecure
         (None, f"http://{EXAMPLE_HVCS_DOMAIN}", False),
-    ]
+    ],
 )
 def test_github_client_init_with_invalid_scheme(
     hvcs_domain: str | None,
@@ -239,14 +238,12 @@ def test_compare_url(default_gh_client: Github):
     # Setup
     start_rev = "revA"
     end_rev = "revB"
-    expected_url = (
-        "{server}/{owner}/{repo}/compare/{from_rev}...{to_rev}".format(
-            server=default_gh_client.hvcs_domain,
-            owner=default_gh_client.owner,
-            repo=default_gh_client.repo_name,
-            from_rev=start_rev,
-            to_rev=end_rev,
-        )
+    expected_url = "{server}/{owner}/{repo}/compare/{from_rev}...{to_rev}".format(
+        server=default_gh_client.hvcs_domain,
+        owner=default_gh_client.owner,
+        repo=default_gh_client.repo_name,
+        from_rev=start_rev,
+        to_rev=end_rev,
     )
 
     # Execute method under test
@@ -316,9 +313,7 @@ def test_remote_url(
         default_gh_client.token = token
 
         # Execute method under test & Evaluate (expected -> actual)
-        assert expected_auth_url == default_gh_client.remote_url(
-            use_token=use_token
-        )
+        assert expected_auth_url == default_gh_client.remote_url(use_token=use_token)
 
 
 def test_commit_hash_url(default_gh_client: Github):
@@ -477,26 +472,34 @@ def test_should_create_release_using_token_or_netrc(
         "prerelease": False,
     }
 
-    encoded_auth = base64.encodebytes(
-        f"{default_netrc_username}:{default_netrc_password}".encode()
-    ).decode("ascii").strip()
+    encoded_auth = (
+        base64.encodebytes(
+            f"{default_netrc_username}:{default_netrc_password}".encode()
+        )
+        .decode("ascii")
+        .strip()
+    )
 
     expected_request_headers = (
-        { "Authorization": f"token {token}" }
-        if token else
-        { "Authorization": f"Basic {encoded_auth}" }
+        {"Authorization": f"token {token}"}
+        if token
+        else {"Authorization": f"Basic {encoded_auth}"}
     ).items()
 
     # create netrc file
     netrc = netrc_file(machine=default_gh_client.DEFAULT_API_DOMAIN)
 
     # Monkeypatch to create the Mocked environment
-    with (
-        requests_mock.Mocker(session=default_gh_client.session) as m,
-        mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True)
+    with requests_mock.Mocker(session=default_gh_client.session) as m, mock.patch.dict(
+        os.environ, {"NETRC": netrc.name}, clear=True
     ):
         # mock the response
-        m.register_uri("POST", github_api_matcher, json={"id": expected_release_id}, status_code=201)
+        m.register_uri(
+            "POST",
+            github_api_matcher,
+            json={"id": expected_release_id},
+            status_code=201,
+        )
 
         # Execute method under test
         ret_val = default_gh_client.create_release(tag, RELEASE_NOTES)
@@ -518,7 +521,9 @@ def test_request_has_no_auth_header_if_no_token_or_netrc():
     expected_http_method = "POST"
 
     with mock.patch.dict(os.environ, {}, clear=True):
-        client = Github(remote_url=f"git@{Github.DEFAULT_DOMAIN}:something/somewhere.git")
+        client = Github(
+            remote_url=f"git@{Github.DEFAULT_DOMAIN}:something/somewhere.git"
+        )
 
         expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
             api_url=client.api_url,
@@ -552,11 +557,13 @@ def test_edit_release_notes_succeeds(
     # Setup
     expected_num_requests = 1
     expected_http_method = "POST"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-        release_id=mock_release_id,
+    expected_request_url = (
+        "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            api_url=default_gh_client.api_url,
+            owner=default_gh_client.owner,
+            repo_name=default_gh_client.repo_name,
+            release_id=mock_release_id,
+        )
     )
     expected_request_body = {"body": RELEASE_NOTES}
 
@@ -589,18 +596,23 @@ def test_edit_release_notes_fails(
     # Setup
     expected_num_requests = 1
     expected_http_method = "POST"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-        release_id=mock_release_id,
+    expected_request_url = (
+        "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            api_url=default_gh_client.api_url,
+            owner=default_gh_client.owner,
+            repo_name=default_gh_client.repo_name,
+            release_id=mock_release_id,
+        )
     )
     expected_request_body = {"body": RELEASE_NOTES}
 
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         # mock the response
         m.register_uri(
-            "POST", github_api_matcher, json={"id": mock_release_id}, status_code=status_code
+            "POST",
+            github_api_matcher,
+            json={"id": mock_release_id},
+            status_code=status_code,
         )
 
         # Execute method under test expecting an exception to be raised
@@ -635,11 +647,13 @@ def test_get_release_id_by_tag(
     tag = "v1.0.0"
     expected_num_requests = 1
     expected_http_method = "GET"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases/tags/{tag}".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-        tag=tag,
+    expected_request_url = (
+        "{api_url}/repos/{owner}/{repo_name}/releases/tags/{tag}".format(
+            api_url=default_gh_client.api_url,
+            owner=default_gh_client.owner,
+            repo_name=default_gh_client.repo_name,
+            tag=tag,
+        )
     )
 
     with requests_mock.Mocker(session=default_gh_client.session) as m:
@@ -703,11 +717,17 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
     not_found.response.status_code = 404
 
     with mock.patch.object(
-        default_gh_client, "create_release", side_effect=not_found,
+        default_gh_client,
+        "create_release",
+        side_effect=not_found,
     ) as mock_create_release, mock.patch.object(
-        default_gh_client, "get_release_id_by_tag", return_value=mock_release_id,
+        default_gh_client,
+        "get_release_id_by_tag",
+        return_value=mock_release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "edit_release_notes", return_value=mock_release_id,
+        default_gh_client,
+        "edit_release_notes",
+        return_value=mock_release_id,
     ) as mock_edit_release_notes:
         # Execute in mock environment
         result = default_gh_client.create_or_update_release(
@@ -723,7 +743,8 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
 
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
-    default_gh_client: Github, prerelease: bool,
+    default_gh_client: Github,
+    prerelease: bool,
 ):
     tag = "v1.0.0"
     not_found = HTTPError("404 Not Found")
@@ -739,9 +760,7 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
     ) as mock_edit_release_notes:
         # Execute in mock environment expecting an exception to be raised
         with pytest.raises(ValueError):
-            default_gh_client.create_or_update_release(
-                tag, RELEASE_NOTES, prerelease
-            )
+            default_gh_client.create_or_update_release(tag, RELEASE_NOTES, prerelease)
 
         mock_create_release.assert_called_once()
         mock_get_release_id_by_tag.assert_called_once_with(tag)
@@ -752,23 +771,27 @@ def test_asset_upload_url(default_gh_client: Github):
     release_id = 1
     expected_num_requests = 1
     expected_http_method = "GET"
-    expected_asset_upload_request_url = "{api_url}/repos/{owner}/{repo}/releases/{release_id}".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo=default_gh_client.repo_name,
-        release_id=release_id,
+    expected_asset_upload_request_url = (
+        "{api_url}/repos/{owner}/{repo}/releases/{release_id}".format(
+            api_url=default_gh_client.api_url,
+            owner=default_gh_client.owner,
+            repo=default_gh_client.repo_name,
+            release_id=release_id,
+        )
     )
-    mocked_upload_url = "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-        upload_domain=github_upload_url,
-        owner=default_gh_client.owner,
-        repo=default_gh_client.repo_name,
-        release_id=release_id,
+    mocked_upload_url = (
+        "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+            upload_domain=github_upload_url,
+            owner=default_gh_client.owner,
+            repo=default_gh_client.repo_name,
+            release_id=release_id,
+        )
     )
     # '{?name,label}' are added by github.com at least, maybe custom too
     # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release
     resp_payload = {
         "upload_url": mocked_upload_url + "{?name,label}",
-        "status": "success"
+        "status": "success",
     }
 
     with requests_mock.Mocker(session=default_gh_client.session) as m:
@@ -798,11 +821,13 @@ def test_upload_asset_succeeds(
     # Setup
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
-    release_upload_url = "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-        upload_domain=github_upload_url,
-        owner=default_gh_client.owner,
-        repo=default_gh_client.repo_name,
-        release_id=mock_release_id,
+    release_upload_url = (
+        "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+            upload_domain=github_upload_url,
+            owner=default_gh_client.owner,
+            repo=default_gh_client.repo_name,
+            release_id=mock_release_id,
+        )
     )
     expected_num_requests = 2
     expected_retrieve_upload_url_method = "GET"
@@ -881,7 +906,7 @@ def test_upload_asset_fails(
         url=upload_url,
         params=urlencode(urlparams),
     )
-    expected_upload_request_headers = { "Content-Type": changelog_data_mime_type }.items()
+    expected_upload_request_headers = {"Content-Type": changelog_data_mime_type}.items()
     expected_changelog = example_changelog_md.read_bytes()
 
     with requests_mock.Mocker(session=default_gh_client.session) as m:
@@ -920,7 +945,9 @@ def test_upload_dists_when_release_id_not_found(default_gh_client):
 
     # Set up mock environment
     with mock.patch.object(
-        default_gh_client, "get_release_id_by_tag", return_value=None,
+        default_gh_client,
+        "get_release_id_by_tag",
+        return_value=None,
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gh_client, "upload_asset"
     ) as mock_upload_asset:
@@ -955,7 +982,7 @@ def test_upload_dists_when_release_id_found(
     release_id = 420
     tag = "doesn't matter"
     matching_files = fnmatch.filter(files, glob_pattern)
-    expected_files_uploaded = [ mock.call(release_id, fn) for fn in matching_files ]
+    expected_files_uploaded = [mock.call(release_id, fn) for fn in matching_files]
 
     # Skip check as the files don't exist in filesystem
     mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
@@ -963,9 +990,13 @@ def test_upload_dists_when_release_id_found(
 
     # Set up mock environment
     with mocked_globber, mocked_isfile, mock.patch.object(
-        default_gh_client, "get_release_id_by_tag", return_value=release_id,
+        default_gh_client,
+        "get_release_id_by_tag",
+        return_value=release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "upload_asset", side_effect=upload_statuses,
+        default_gh_client,
+        "upload_asset",
+        side_effect=upload_statuses,
     ) as mock_upload_asset:
         # Execute method under test
         num_uploads = default_gh_client.upload_dists(tag, glob_pattern)

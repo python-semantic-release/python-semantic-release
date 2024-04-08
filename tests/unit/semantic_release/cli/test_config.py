@@ -8,7 +8,6 @@ import tomlkit
 from pydantic import RootModel, ValidationError
 
 from semantic_release.cli.config import (
-    EnvConfigVar,
     GlobalCommandLineOptions,
     HvcsClient,
     RawConfig,

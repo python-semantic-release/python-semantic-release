@@ -33,7 +33,9 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def default_gitea_client() -> Generator[Gitea, None, None]:
-    remote_url = f"git@{Gitea.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    remote_url = (
+        f"git@{Gitea.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    )
     with mock.patch.dict(os.environ, {}, clear=True):
         yield Gitea(remote_url=remote_url)
 
@@ -86,7 +88,7 @@ def default_gitea_client() -> Generator[Gitea, None, None]:
             EXAMPLE_HVCS_DOMAIN,
             f"http://{EXAMPLE_HVCS_DOMAIN}",
             True,
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -128,7 +130,7 @@ def test_gitea_client_init(
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", False),
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", True),
         (f"http://{EXAMPLE_HVCS_DOMAIN}", False),
-    ]
+    ],
 )
 def test_gitea_client_init_with_invalid_scheme(hvcs_domain: str, insecure: bool):
     with pytest.raises(ValueError), mock.patch.dict(os.environ, {}, clear=True):
@@ -223,7 +225,6 @@ def test_asset_upload_url(default_gitea_client: Gitea, release_id: int):
     )
     actual_url = default_gitea_client.asset_upload_url(release_id=release_id)
     assert expected_url == actual_url
-
 
 
 ############
@@ -359,14 +360,18 @@ def test_should_create_release_using_token_or_netrc(
         "prerelease": False,
     }
 
-    encoded_auth = base64.encodebytes(
-        f"{default_netrc_username}:{default_netrc_password}".encode()
-    ).decode("ascii").strip()
+    encoded_auth = (
+        base64.encodebytes(
+            f"{default_netrc_username}:{default_netrc_password}".encode()
+        )
+        .decode("ascii")
+        .strip()
+    )
 
     expected_request_headers = (
-        { "Authorization": f"token {token}" }
-        if token else
-        { "Authorization": f"Basic {encoded_auth}" }
+        {"Authorization": f"token {token}"}
+        if token
+        else {"Authorization": f"Basic {encoded_auth}"}
     ).items()
 
     # create netrc file
@@ -375,12 +380,13 @@ def test_should_create_release_using_token_or_netrc(
     netrc = netrc_file(machine=default_gitea_client.DEFAULT_DOMAIN)
 
     # Monkeypatch to create the Mocked environment
-    with (
-        requests_mock.Mocker(session=default_gitea_client.session) as m,
-        mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True)
-    ):
+    with requests_mock.Mocker(
+        session=default_gitea_client.session
+    ) as m, mock.patch.dict(os.environ, {"NETRC": netrc.name}, clear=True):
         # mock the response
-        m.register_uri("POST", gitea_api_matcher, json={"id": expected_release_id}, status_code=201)
+        m.register_uri(
+            "POST", gitea_api_matcher, json={"id": expected_release_id}, status_code=201
+        )
 
         # Execute method under test
         ret_val = default_gitea_client.create_release(tag, RELEASE_NOTES)
@@ -443,11 +449,13 @@ def test_get_release_id_by_tag(
     tag = "v1.0.0"
     expected_num_requests = 1
     expected_http_method = "GET"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases/tags/{tag}".format(
-        api_url=default_gitea_client.api_url,
-        owner=default_gitea_client.owner,
-        repo_name=default_gitea_client.repo_name,
-        tag=tag,
+    expected_request_url = (
+        "{api_url}/repos/{owner}/{repo_name}/releases/tags/{tag}".format(
+            api_url=default_gitea_client.api_url,
+            owner=default_gitea_client.owner,
+            repo_name=default_gitea_client.repo_name,
+            tag=tag,
+        )
     )
 
     with requests_mock.Mocker(session=default_gitea_client.session) as m:
@@ -477,11 +485,13 @@ def test_edit_release_notes_succeeds(
     # Setup
     expected_num_requests = 1
     expected_http_method = "PATCH"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-        api_url=default_gitea_client.api_url,
-        owner=default_gitea_client.owner,
-        repo_name=default_gitea_client.repo_name,
-        release_id=mock_release_id,
+    expected_request_url = (
+        "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            api_url=default_gitea_client.api_url,
+            owner=default_gitea_client.owner,
+            repo_name=default_gitea_client.repo_name,
+            release_id=mock_release_id,
+        )
     )
     expected_request_body = {"body": RELEASE_NOTES}
 
@@ -495,7 +505,9 @@ def test_edit_release_notes_succeeds(
         )
 
         # Execute method under test
-        rtn_val = default_gitea_client.edit_release_notes(mock_release_id, RELEASE_NOTES)
+        rtn_val = default_gitea_client.edit_release_notes(
+            mock_release_id, RELEASE_NOTES
+        )
 
         # Evaluate (expected -> actual)
         assert mock_release_id == rtn_val
@@ -509,16 +521,20 @@ def test_edit_release_notes_succeeds(
 @pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
 @pytest.mark.parametrize("mock_release_id", range(3))
 def test_edit_release_notes_fails(
-    default_gitea_client: Gitea, status_code: int, mock_release_id: int,
+    default_gitea_client: Gitea,
+    status_code: int,
+    mock_release_id: int,
 ):
     # Setup
     expected_num_requests = 1
     expected_http_method = "PATCH"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-        api_url=default_gitea_client.api_url,
-        owner=default_gitea_client.owner,
-        repo_name=default_gitea_client.repo_name,
-        release_id=mock_release_id,
+    expected_request_url = (
+        "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
+            api_url=default_gitea_client.api_url,
+            owner=default_gitea_client.owner,
+            repo_name=default_gitea_client.repo_name,
+            release_id=mock_release_id,
+        )
     )
     expected_request_body = {"body": RELEASE_NOTES}
 
@@ -586,11 +602,17 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
     not_found.response.status_code = 404
 
     with mock.patch.object(
-        default_gitea_client, "create_release", side_effect=not_found,
+        default_gitea_client,
+        "create_release",
+        side_effect=not_found,
     ) as mock_create_release, mock.patch.object(
-        default_gitea_client, "get_release_id_by_tag", return_value=mock_release_id,
+        default_gitea_client,
+        "get_release_id_by_tag",
+        return_value=mock_release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gitea_client, "edit_release_notes", return_value=mock_release_id,
+        default_gitea_client,
+        "edit_release_notes",
+        return_value=mock_release_id,
     ) as mock_edit_release_notes:
         # Execute in mock environment
         result = default_gitea_client.create_or_update_release(
@@ -606,7 +628,8 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
 
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
-    default_gitea_client: Gitea, prerelease: bool,
+    default_gitea_client: Gitea,
+    prerelease: bool,
 ):
     tag = "v1.0.0"
     not_found = HTTPError("404 Not Found")
@@ -719,7 +742,9 @@ def test_upload_dists_when_release_id_not_found(default_gitea_client: Gitea):
 
     # Set up mock environment
     with mock.patch.object(
-        default_gitea_client, "get_release_id_by_tag", return_value=None,
+        default_gitea_client,
+        "get_release_id_by_tag",
+        return_value=None,
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gitea_client, "upload_asset"
     ) as mock_upload_asset:
@@ -754,7 +779,7 @@ def test_upload_dists_when_release_id_found(
     release_id = 420
     tag = "doesn't matter"
     matching_files = fnmatch.filter(files, glob_pattern)
-    expected_files_uploaded = [ mock.call(release_id, fn) for fn in matching_files ]
+    expected_files_uploaded = [mock.call(release_id, fn) for fn in matching_files]
 
     # Skip check as the files don't exist in filesystem
     mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
@@ -762,9 +787,13 @@ def test_upload_dists_when_release_id_found(
 
     # Set up mock environment
     with mocked_globber, mocked_isfile, mock.patch.object(
-        default_gitea_client, "get_release_id_by_tag", return_value=release_id,
+        default_gitea_client,
+        "get_release_id_by_tag",
+        return_value=release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gitea_client, "upload_asset", side_effect=upload_statuses,
+        default_gitea_client,
+        "upload_asset",
+        side_effect=upload_statuses,
     ) as mock_upload_asset:
         # Execute method under test
         num_uploads = default_gitea_client.upload_dists(tag, glob_pattern)

@@ -47,7 +47,9 @@ class Gitea(HvcsBase):
         self.session = build_requests_session(auth=auth)
 
         domain_url = parse_url(
-            hvcs_domain or os.getenv("GITEA_SERVER_URL", "") or f"https://{self.DEFAULT_DOMAIN}"
+            hvcs_domain
+            or os.getenv("GITEA_SERVER_URL", "")
+            or f"https://{self.DEFAULT_DOMAIN}"
         )
 
         if domain_url.scheme == "http" and not allow_insecure:
@@ -55,12 +57,7 @@ class Gitea(HvcsBase):
 
         if not domain_url.scheme:
             new_scheme = "http" if allow_insecure else "https"
-            domain_url = Url(
-                **{
-                    **domain_url._asdict(),
-                    "scheme": new_scheme
-                }
-            )
+            domain_url = Url(**{**domain_url._asdict(), "scheme": new_scheme})
 
         if domain_url.scheme not in ["http", "https"]:
             raise ValueError(
@@ -74,7 +71,7 @@ class Gitea(HvcsBase):
                 scheme=domain_url.scheme,
                 host=domain_url.host,
                 port=domain_url.port,
-                path=str(PurePosixPath("/", domain_url.path or "")),
+                path=str(PurePosixPath(domain_url.path or "/")),
             ).url.rstrip("/")
         )
 
@@ -84,11 +81,10 @@ class Gitea(HvcsBase):
                 # infer from Domain url and append the default api path
                 **{
                     **self.hvcs_domain._asdict(),
-                    'path': f"{self.hvcs_domain.path or ''}{self.DEFAULT_API_PATH}"
+                    "path": f"{self.hvcs_domain.path or ''}{self.DEFAULT_API_PATH}",
                 }
             ).url
         )
-
 
     @logged_function(log)
     def create_release(
@@ -129,7 +125,6 @@ class Gitea(HvcsBase):
         except KeyError as err:
             raise UnexpectedResponse("JSON response is missing an id") from err
 
-
     @logged_function(log)
     @suppress_not_found
     def get_release_id_by_tag(self, tag: str) -> int | None:
@@ -155,7 +150,6 @@ class Gitea(HvcsBase):
         except KeyError as err:
             raise UnexpectedResponse("JSON response is missing an id") from err
 
-
     @logged_function(log)
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
         """
@@ -179,7 +173,6 @@ class Gitea(HvcsBase):
         response.raise_for_status()
 
         return release_id
-
 
     @logged_function(log)
     def create_or_update_release(
@@ -208,7 +201,6 @@ class Gitea(HvcsBase):
         log.debug("Found existing release %s, updating", release_id)
         return self.edit_release_notes(release_id, release_notes)
 
-
     @logged_function(log)
     def asset_upload_url(self, release_id: str) -> str:
         """
@@ -219,7 +211,6 @@ class Gitea(HvcsBase):
         return self.create_api_url(
             endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}/assets",
         )
-
 
     @logged_function(log)
     def upload_asset(
@@ -266,7 +257,6 @@ class Gitea(HvcsBase):
 
         return True
 
-
     @logged_function(log)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """
@@ -294,7 +284,6 @@ class Gitea(HvcsBase):
 
         return n_succeeded
 
-
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
         if not (self.token and use_token):
@@ -305,29 +294,32 @@ class Gitea(HvcsBase):
             path=f"{self.owner}/{self.repo_name}.git",
         )
 
-
     def commit_hash_url(self, commit_hash: str) -> str:
         return self.create_server_url(
             path=f"/{self.owner}/{self.repo_name}/commit/{commit_hash}"
         )
-
 
     def pull_request_url(self, pr_number: str | int) -> str:
         return self.create_server_url(
             path=f"/{self.owner}/{self.repo_name}/pulls/{pr_number}"
         )
 
-
-    def create_server_url(self, path: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+    def create_server_url(
+        self,
+        path: str,
+        auth: str | None = None,
+        query: str | None = None,
+        fragment: str | None = None,
+    ) -> str:
         overrides = dict(
             filter(
                 lambda x: x[1] is not None,
                 {
-                    'auth': auth,
-                    'path': str(PurePosixPath("/", path)),
-                    'query': query,
-                    'fragment': fragment,
-                }.items()
+                    "auth": auth,
+                    "path": str(PurePosixPath(path or "/")),
+                    "query": query,
+                    "fragment": fragment,
+                }.items(),
             )
         )
         return Url(
@@ -337,8 +329,13 @@ class Gitea(HvcsBase):
             }
         ).url.rstrip("/")
 
-
-    def create_api_url(self, endpoint: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+    def create_api_url(
+        self,
+        endpoint: str,
+        auth: str | None = None,
+        query: str | None = None,
+        fragment: str | None = None,
+    ) -> str:
         api_path = self.api_url.url.replace(self.hvcs_domain.url, "")
         return self.create_server_url(
             path=f"{api_path}/{endpoint.lstrip(api_path)}",

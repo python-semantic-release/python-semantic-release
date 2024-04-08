@@ -49,7 +49,9 @@ class Gitlab(HvcsBase):
         self.token = token
 
         domain_url = parse_url(
-            hvcs_domain or os.getenv("CI_SERVER_URL", "") or f"https://{self.DEFAULT_DOMAIN}"
+            hvcs_domain
+            or os.getenv("CI_SERVER_URL", "")
+            or f"https://{self.DEFAULT_DOMAIN}"
         )
 
         if domain_url.scheme == "http" and not allow_insecure:
@@ -57,12 +59,7 @@ class Gitlab(HvcsBase):
 
         if not domain_url.scheme:
             new_scheme = "http" if allow_insecure else "https"
-            domain_url = Url(
-                **{
-                    **domain_url._asdict(),
-                    "scheme": new_scheme
-                }
-            )
+            domain_url = Url(**{**domain_url._asdict(), "scheme": new_scheme})
 
         if domain_url.scheme not in ["http", "https"]:
             raise ValueError(
@@ -76,12 +73,11 @@ class Gitlab(HvcsBase):
                 scheme=domain_url.scheme,
                 host=domain_url.host,
                 port=domain_url.port,
-                path=str(PurePosixPath("/", domain_url.path or "")),
+                path=str(PurePosixPath(domain_url.path or "/")),
             ).url.rstrip("/")
         )
 
         self._client = gitlab.Gitlab(self.hvcs_domain.url)
-
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
@@ -94,7 +90,6 @@ class Gitlab(HvcsBase):
             return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
 
         return super()._get_repository_owner_and_name()
-
 
     @logged_function(log)
     def create_release(
@@ -124,7 +119,6 @@ class Gitlab(HvcsBase):
         log.info("Successfully created release for %s", tag)
         return tag
 
-
     # TODO: make str types accepted here
     @logged_function(log)
     def edit_release_notes(  # type: ignore[override]
@@ -144,7 +138,6 @@ class Gitlab(HvcsBase):
         )
         return release_id
 
-
     @logged_function(log)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
@@ -162,12 +155,10 @@ class Gitlab(HvcsBase):
             )
             return self.edit_release_notes(release_id=tag, release_notes=release_notes)
 
-
     def compare_url(self, from_rev: str, to_rev: str) -> str:
         return self.create_server_url(
             path=f"{self.owner}/{self.repo_name}/-/compare/{from_rev}...{to_rev}"
         )
-
 
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
@@ -179,39 +170,40 @@ class Gitlab(HvcsBase):
             path=f"{self.owner}/{self.repo_name}.git",
         )
 
-
     def commit_hash_url(self, commit_hash: str) -> str:
         return self.create_server_url(
             path=f"{self.owner}/{self.repo_name}/-/commit/{commit_hash}"
         )
-
 
     def issue_url(self, issue_number: str | int) -> str:
         return self.create_server_url(
             path=f"{self.owner}/{self.repo_name}/-/issues/{issue_number}"
         )
 
-
     def merge_request_url(self, mr_number: str | int) -> str:
         return self.create_server_url(
             path=f"{self.owner}/{self.repo_name}/-/merge_requests/{mr_number}"
         )
 
-
     def pull_request_url(self, pr_number: str | int) -> str:
         return self.merge_request_url(mr_number=pr_number)
 
-
-    def create_server_url(self, path: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+    def create_server_url(
+        self,
+        path: str,
+        auth: str | None = None,
+        query: str | None = None,
+        fragment: str | None = None,
+    ) -> str:
         overrides = dict(
             filter(
                 lambda x: x[1] is not None,
                 {
-                    'auth': auth,
-                    'path': str(PurePosixPath("/", path)),
-                    'query': query,
-                    'fragment': fragment,
-                }.items()
+                    "auth": auth,
+                    "path": str(PurePosixPath(path or "/")),
+                    "query": query,
+                    "fragment": fragment,
+                }.items(),
             )
         )
         return Url(
@@ -221,8 +213,13 @@ class Gitlab(HvcsBase):
             }
         ).url.rstrip("/")
 
-
-    def create_api_url(self, endpoint: str, auth: str | None = None, query: str | None = None, fragment: str | None = None) -> str:
+    def create_api_url(
+        self,
+        endpoint: str,
+        auth: str | None = None,
+        query: str | None = None,
+        fragment: str | None = None,
+    ) -> str:
         api_path = self._client.api_url.replace(self.hvcs_domain.url, "")
         return self.create_server_url(
             path=f"{api_path}/{endpoint.lstrip(api_path)}",
