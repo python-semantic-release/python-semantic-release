@@ -82,7 +82,7 @@ def artificial_release_history(commit_author: Actor):
             version: Release(
                 tagger=commit_author,
                 committer=commit_author,
-                tagged_date=datetime.utcnow(),
+                tagged_date=datetime.now(),
                 elements={
                     "feature": [feat_commit_parsed],
                     "fix": [fix_commit_parsed],
