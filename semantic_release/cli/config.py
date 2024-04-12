@@ -210,6 +210,7 @@ class RawConfig(BaseModel):
     major_on_zero: bool = True
     allow_zero_version: bool = True
     remote: RemoteConfig = RemoteConfig()
+    no_verify: bool = False
     tag_format: str = "v{version}"
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
@@ -295,6 +296,7 @@ class RuntimeContext:
     major_on_zero: bool
     allow_zero_version: bool
     prerelease: bool
+    no_verify: bool
     assets: List[str]
     commit_author: Actor
     commit_message: str
@@ -488,6 +490,7 @@ class RuntimeContext:
             upload_to_vcs_release=raw.publish.upload_to_vcs_release,
             global_cli_options=global_cli_options,
             masker=masker,
+            no_verify=raw.no_verify,
         )
         # credential masker
         self.apply_log_masking(self.masker)

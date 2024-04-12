@@ -285,6 +285,7 @@ def version(  # noqa: C901
     commit_author = runtime.commit_author
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
+    no_verify = runtime.no_verify
     build_command = runtime.build_command
     opts = runtime.global_cli_options
     gha_output = VersionGitHubActionsOutput()
@@ -529,6 +530,7 @@ def version(  # noqa: C901
         )
 
         command += f"git commit -m '{indented_commit_message}'"
+        command += "--no-verify" if no_verify else ""
 
         noop_report(
             indented(
@@ -544,6 +546,7 @@ def version(  # noqa: C901
             repo.git.commit(
                 m=commit_message.format(version=new_version),
                 date=int(commit_date.timestamp()),
+                no_verify=no_verify,
             )
 
     # Run the tagging after potentially creating a new HEAD commit.
