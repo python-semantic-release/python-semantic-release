@@ -19,7 +19,7 @@ jobs:
       - uses: actions/stale@v9
         with:
           # default: 30, GitHub Actions API Rate limit is 1000/hr
-          operations-per-run: 200
+          operations-per-run: 400
           exempt-all-milestones: true
           # exempt-all-assignees: false (default)
           stale-issue-label: stale
