@@ -102,6 +102,7 @@ class Gitlab(RemoteHvcsBase):
             {
                 "name": "Release " + tag,
                 "tag_name": tag,
+                "tag_message": tag,
                 "description": release_notes,
             }
         )
