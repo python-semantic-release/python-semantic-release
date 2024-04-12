@@ -113,6 +113,7 @@ class Gitlab(HvcsBase):
             {
                 "name": "Release " + tag,
                 "tag_name": tag,
+                "tag_message": release_notes[0:72],
                 "description": release_notes,
             }
         )
