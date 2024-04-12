@@ -13,6 +13,7 @@ from urllib3.util.url import Url, parse_url
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
+from semantic_release.hvcs.util import suppress_not_found
 
 if TYPE_CHECKING:
     from typing import Any, Callable
@@ -107,6 +108,22 @@ class Gitlab(RemoteHvcsBase):
         log.info("Successfully created release for %s", tag)
         return tag
 
+    @logged_function(log)
+    @suppress_not_found
+    def get_release_id_by_tag(self, tag: str) -> int | None:
+        """
+        Get a release by its tag name
+        https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
+        :param tag: Tag to get release for
+        :return: ID of release, if found, else None
+        """
+        client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
+        client.auth()
+        proj_release = client.projects.get(self.owner + "/" + self.repo_name).releases.get(
+            tag
+        )
+        return proj_release.asdict().get("commit.id")
+
     # TODO: make str types accepted here
     @logged_function(log)
     def edit_release_notes(  # type: ignore[override]
@@ -141,7 +158,15 @@ class Gitlab(RemoteHvcsBase):
                 self.owner,
                 self.repo_name,
             )
-            return self.edit_release_notes(release_id=tag, release_notes=release_notes)
+        release_commit_id = self.get_release_id_by_tag(tag)
+        if release_commit_id is None:
+            raise ValueError(
+                f"release commit id for tag {tag} not found, and could not be created"
+            )
+
+        log.debug("Found existing release commit %s, updating", release_commit_id)
+        # If this errors we let it die
+        return self.edit_release_notes(release_id=tag, release_notes=release_notes)
 
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
