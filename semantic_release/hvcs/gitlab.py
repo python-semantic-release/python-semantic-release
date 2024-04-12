@@ -46,7 +46,6 @@ class Gitlab(HvcsBase):
         **kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
-        self._remote_url = remote_url
         self.token = token
 
         domain_url = parse_url(
