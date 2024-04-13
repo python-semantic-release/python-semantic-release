@@ -60,7 +60,7 @@ def default_gh_client():
             # Pull server locations from environment
             {
                 "GITHUB_SERVER_URL": "https://special.custom.server/",
-                "GITHUB_API_URL": "https://api2.special.custom.server/"
+                "GITHUB_API_URL": "https://api2.special.custom.server/",
             },
             None,
             None,
@@ -564,14 +564,13 @@ def test_asset_upload_url(default_gh_client):
     }
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         m.register_uri("GET", github_api_matcher, json=resp_payload, status_code=200)
-        assert (
-            default_gh_client.asset_upload_url(release_id)
-            == "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-                upload_domain=github_upload_url,
-                owner=default_gh_client.owner,
-                repo=default_gh_client.repo_name,
-                release_id=release_id,
-            )
+        assert default_gh_client.asset_upload_url(
+            release_id
+        ) == "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+            upload_domain=github_upload_url,
+            owner=default_gh_client.owner,
+            repo=default_gh_client.repo_name,
+            release_id=release_id,
         )
         assert m.called
         assert len(m.request_history) == 1

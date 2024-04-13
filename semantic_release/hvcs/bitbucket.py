@@ -67,7 +67,7 @@ class Bitbucket(HvcsBase):
             self.api_url = Url(
                 scheme="https",
                 host=self.hvcs_api_domain,
-                path=self.DEFAULT_API_PATH_CLOUD
+                path=self.DEFAULT_API_PATH_CLOUD,
             ).url.rstrip("/")
 
         else:
@@ -87,13 +87,15 @@ class Bitbucket(HvcsBase):
             self.hvcs_api_domain = Url(
                 host=api_domain_parts.host,
                 port=api_domain_parts.port,
-                path=str.replace(api_domain_parts.path or "", self.DEFAULT_API_PATH_ONPREM, ""),
+                path=str.replace(
+                    api_domain_parts.path or "", self.DEFAULT_API_PATH_ONPREM, ""
+                ),
             ).url.rstrip("/")
 
             self.api_url = Url(
                 scheme=api_domain_parts.scheme or "https",
                 host=self.hvcs_api_domain,
-                path=self.DEFAULT_API_PATH_ONPREM
+                path=self.DEFAULT_API_PATH_ONPREM,
             ).url.rstrip("/")
 
         self.token = token

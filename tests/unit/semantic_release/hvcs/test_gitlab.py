@@ -190,14 +190,14 @@ def default_gl_client():
             # Pull server locations from environment
             {
                 "CI_SERVER_URL": "https://special.custom.server/",
-                "CI_API_V4_URL": "https://special.custom.server/api/v4"
+                "CI_API_V4_URL": "https://special.custom.server/api/v4",
             },
             None,
             None,
             "special.custom.server",
             "special.custom.server",
         ),
-                (
+        (
             # Ignore environment & use provided parameter value (ie from user config)
             # then infer api domain from the parameter value based on default GitLab configurations
             {"CI_SERVER_URL": "https://special.custom.server/"},
@@ -210,7 +210,7 @@ def default_gl_client():
             # Ignore environment & use provided parameter value (ie from user config)
             {
                 "CI_SERVER_URL": "https://special.custom.server/",
-                "CI_API_V4_URL": "https://special.custom.server/api/v3"
+                "CI_API_V4_URL": "https://special.custom.server/api/v3",
             },
             f"https://{EXAMPLE_HVCS_DOMAIN}",
             f"https://{EXAMPLE_HVCS_DOMAIN}/api/v4",

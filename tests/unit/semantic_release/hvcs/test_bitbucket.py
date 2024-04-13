@@ -35,7 +35,7 @@ def default_bitbucket_client():
             f"https://{Bitbucket.DEFAULT_DOMAIN}",
             f"https://{Bitbucket.DEFAULT_API_DOMAIN}",
             Bitbucket.DEFAULT_DOMAIN,
-            Bitbucket.DEFAULT_API_DOMAIN
+            Bitbucket.DEFAULT_API_DOMAIN,
         ),
         (
             # Explicitly defined api

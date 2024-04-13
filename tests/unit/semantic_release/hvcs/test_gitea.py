@@ -67,7 +67,7 @@ def default_gitea_client():
             # Pull server locations from environment
             {
                 "GITEA_SERVER_URL": "https://special.custom.server/",
-                "GITEA_API_URL": "https://api.special.custom.server/"
+                "GITEA_API_URL": "https://api.special.custom.server/",
             },
             None,
             None,
@@ -87,7 +87,7 @@ def default_gitea_client():
             # Ignore environment & use provided parameter value (ie from user config)
             {
                 "GITEA_SERVER_URL": "https://special.custom.server/",
-                "GITEA_API_URL": "https://api.special.custom.server/"
+                "GITEA_API_URL": "https://api.special.custom.server/",
             },
             f"https://{EXAMPLE_HVCS_DOMAIN}",
             f"https://api.{EXAMPLE_HVCS_DOMAIN}",
@@ -220,7 +220,9 @@ def test_asset_upload_url(default_gitea_client):
 
 
 gitea_matcher = re.compile(rf"^https://{Gitea.DEFAULT_DOMAIN}")
-gitea_api_matcher = re.compile(rf"^https://{Gitea.DEFAULT_DOMAIN}{Gitea.DEFAULT_API_PATH}")
+gitea_api_matcher = re.compile(
+    rf"^https://{Gitea.DEFAULT_DOMAIN}{Gitea.DEFAULT_API_PATH}"
+)
 
 
 @pytest.mark.parametrize("status_code", (201,))
