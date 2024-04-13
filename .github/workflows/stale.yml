@@ -15,6 +15,7 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
+      actions: write          # required to delete/update cache
     steps:
       - uses: actions/stale@v9
         with:
