@@ -16,7 +16,12 @@ from requests import HTTPError, Response, Session
 from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.token_auth import TokenAuth
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
+from tests.const import (
+    EXAMPLE_HVCS_DOMAIN,
+    EXAMPLE_REPO_NAME,
+    EXAMPLE_REPO_OWNER,
+    RELEASE_NOTES,
+)
 from tests.util import netrc_file
 
 if TYPE_CHECKING:
@@ -30,39 +35,54 @@ def default_gh_client():
 
 
 @pytest.mark.parametrize(
-    (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
-        "expected_hvcs_domain, expected_hvcs_api_domain"
+    str.join(
+        ", ",
+        [
+            "patched_os_environ",
+            "hvcs_domain",
+            "hvcs_api_domain",
+            "expected_hvcs_domain",
+            "expected_hvcs_api_domain",
+        ],
     ),
     [
+        # Default values
         ({}, None, None, Github.DEFAULT_DOMAIN, Github.DEFAULT_API_DOMAIN),
         (
+            # Imply api domain from server domain of environment
+            {"GITHUB_SERVER_URL": "https://special.custom.server/"},
+            None,
+            None,
+            "special.custom.server",
+            "api.special.custom.server",
+        ),
+        (
+            # Pull server locations from environment
+            {
+                "GITHUB_SERVER_URL": "https://special.custom.server/",
+                "GITHUB_API_URL": "https://api2.special.custom.server/"
+            },
+            None,
+            None,
+            "special.custom.server",
+            "api2.special.custom.server",
+        ),
+        (
+            # Ignore environment & use provided parameter value (ie from user config)
+            # then infer api domain from the parameter value based on default GitHub configurations
             {"GITHUB_SERVER_URL": "https://special.custom.server/vcs/"},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
             None,
-            None,
-            "special.custom.server/vcs/",
-            Github.DEFAULT_API_DOMAIN,
+            EXAMPLE_HVCS_DOMAIN,
+            f"api.{EXAMPLE_HVCS_DOMAIN}",
         ),
         (
+            # Ignore environment & use provided parameter value (ie from user config)
             {"GITHUB_API_URL": "https://api.special.custom.server/"},
-            None,
-            None,
-            Github.DEFAULT_DOMAIN,
-            "api.special.custom.server/",
-        ),
-        (
-            {"GITHUB_SERVER_URL": "https://special.custom.server/vcs/"},
-            "https://example.com",
-            None,
-            "https://example.com",
-            Github.DEFAULT_API_DOMAIN,
-        ),
-        (
-            {"GITHUB_API_URL": "https://api.special.custom.server/"},
-            None,
-            "https://api.example.com",
-            Github.DEFAULT_DOMAIN,
-            "https://api.example.com",
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            EXAMPLE_HVCS_DOMAIN,
+            f"api.{EXAMPLE_HVCS_DOMAIN}",
         ),
     ],
 )
@@ -91,11 +111,11 @@ def test_github_client_init(
             token=token,
         )
 
-        assert client.hvcs_domain == expected_hvcs_domain
-        assert client.hvcs_api_domain == expected_hvcs_api_domain
-        assert client.api_url == f"https://{client.hvcs_api_domain}"
-        assert client.token == token
-        assert client._remote_url == remote_url
+        assert expected_hvcs_domain == client.hvcs_domain
+        assert expected_hvcs_api_domain == client.hvcs_api_domain
+        assert f"https://{expected_hvcs_api_domain}" == client.api_url
+        assert token == client.token
+        assert remote_url == client._remote_url
         assert hasattr(client, "session")
         assert isinstance(getattr(client, "session", None), Session)
 
@@ -223,10 +243,10 @@ def test_pull_request_url(default_gh_client, pr_number):
 # Tests which need http response mocking
 ############
 
-
+github_upload_url = f"https://uploads.{Github.DEFAULT_DOMAIN}"
 github_matcher = re.compile(rf"^https://{Github.DEFAULT_DOMAIN}")
 github_api_matcher = re.compile(rf"^https://{Github.DEFAULT_API_DOMAIN}")
-github_upload_matcher = re.compile(rf"^https://{Github.DEFAULT_UPLOAD_DOMAIN}")
+github_upload_matcher = re.compile(rf"^{github_upload_url}")
 
 
 @pytest.mark.parametrize("status_code", (200, 201))
@@ -535,7 +555,7 @@ def test_asset_upload_url(default_gh_client):
     # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release
     resp_payload = {
         "upload_url": (
-            f"{default_gh_client.upload_url}/repos/"
+            f"{github_upload_url}/repos/"
             f"{default_gh_client.owner}/{default_gh_client.repo_name}/"
             f"releases/{release_id}/"
             "assets{?name,label}"
@@ -546,8 +566,8 @@ def test_asset_upload_url(default_gh_client):
         m.register_uri("GET", github_api_matcher, json=resp_payload, status_code=200)
         assert (
             default_gh_client.asset_upload_url(release_id)
-            == "https://{domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-                domain=default_gh_client.DEFAULT_UPLOAD_DOMAIN,
+            == "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
+                upload_domain=github_upload_url,
                 owner=default_gh_client.owner,
                 repo=default_gh_client.repo_name,
                 release_id=release_id,
@@ -579,7 +599,7 @@ def test_upload_asset_succeeds(
     label = "abc123"
     urlparams = {"name": example_changelog_md.name, "label": label}
     expected_upload_url = (
-        f"{default_gh_client.upload_url}/repos/{default_gh_client.owner}/"
+        f"{github_upload_url}/repos/{default_gh_client.owner}/"
         f"{default_gh_client.repo_name}/releases/{mock_release_id}/"
         r"assets{?name,label}"
     )
@@ -639,7 +659,7 @@ def test_upload_asset_fails(
     json_get_up_url = {
         "status": "ok",
         "upload_url": "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-            up_url=default_gh_client.upload_url,
+            up_url=github_upload_url,
             owner=default_gh_client.owner,
             repo_name=default_gh_client.repo_name,
             release_id=mock_release_id,

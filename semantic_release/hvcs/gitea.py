@@ -37,7 +37,6 @@ class Gitea(HvcsBase):
 
     DEFAULT_DOMAIN = "gitea.com"
     DEFAULT_API_PATH = "/api/v1"
-    DEFAULT_API_DOMAIN = f"{DEFAULT_DOMAIN}{DEFAULT_API_PATH}"
     DEFAULT_ENV_TOKEN_NAME = "GITEA_TOKEN"  # noqa: S105
 
     # pylint: disable=super-init-not-called
@@ -74,10 +73,14 @@ class Gitea(HvcsBase):
         self.hvcs_api_domain = Url(
             host=api_domain_parts.host,
             port=api_domain_parts.port,
-            path=api_domain_parts.path,
+            path=str.replace(api_domain_parts.path or "", self.DEFAULT_API_PATH, ""),
         ).url.rstrip("/")
 
-        self.api_url = f"https://{self.hvcs_api_domain}"
+        self.api_url = Url(
+            scheme=api_domain_parts.scheme or "https",
+            host=self.hvcs_api_domain,
+            path=self.DEFAULT_API_PATH,
+        ).url.rstrip("/")
 
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)

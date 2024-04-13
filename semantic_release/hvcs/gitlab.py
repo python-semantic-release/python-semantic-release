@@ -6,9 +6,9 @@ import logging
 import mimetypes
 import os
 from functools import lru_cache
-from urllib.parse import urlsplit
 
 import gitlab
+from urllib3.util.url import Url, parse_url
 
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs._base import HvcsBase
@@ -44,6 +44,7 @@ class Gitlab(HvcsBase):
     # It is missing the permission to push to the repository, but has all others (releases, packages, etc.)
 
     DEFAULT_DOMAIN = "gitlab.com"
+    DEFAULT_API_PATH = "/api/v4"
 
     def __init__(
         self,
@@ -53,25 +54,43 @@ class Gitlab(HvcsBase):
         token: str | None = None,
     ) -> None:
         self._remote_url = remote_url
-        self.hvcs_domain = (
-            hvcs_domain or self._domain_from_environment() or self.DEFAULT_DOMAIN
+
+        domain_url = parse_url(
+            hvcs_domain or os.getenv("CI_SERVER_URL", "") or self.DEFAULT_DOMAIN
         )
-        self.hvcs_api_domain = hvcs_api_domain or self.hvcs_domain.replace(
-            "https://", ""
+
+        # Strip any scheme, query or fragment from the domain
+        self.hvcs_domain = Url(
+            host=domain_url.host, port=domain_url.port, path=domain_url.path
+        ).url.rstrip("/")
+
+        api_domain_parts = parse_url(
+            hvcs_api_domain
+            or os.getenv("CI_API_V4_URL", "")
+            or Url(
+                # infer from Domain url and append the default api path
+                scheme=domain_url.scheme,
+                host=self.hvcs_domain,
+                path=self.DEFAULT_API_PATH,
+            ).url
         )
-        self.api_url = os.getenv("CI_SERVER_URL", f"https://{self.hvcs_api_domain}")
+
+        # Strip any scheme, query or fragment from the api domain
+        self.hvcs_api_domain = Url(
+            host=api_domain_parts.host,
+            port=api_domain_parts.port,
+            path=str.replace(api_domain_parts.path or "", self.DEFAULT_API_PATH, ""),
+        ).url.rstrip("/")
+
+        self.api_url = Url(
+            scheme=api_domain_parts.scheme or "https",
+            host=self.hvcs_api_domain,
+            path=self.DEFAULT_API_PATH,
+        ).url.rstrip("/")
 
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
-
-    @staticmethod
-    def _domain_from_environment() -> str | None:
-        """Use Gitlab-CI environment variable to get the server domain, if available"""
-        if "CI_SERVER_URL" in os.environ:
-            url = urlsplit(os.environ["CI_SERVER_URL"])
-            return f"{url.netloc}{url.path}".rstrip("/")
-        return os.getenv("CI_SERVER_HOST")
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:

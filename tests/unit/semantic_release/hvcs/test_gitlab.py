@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from contextlib import contextmanager
 from unittest import mock
@@ -8,7 +10,12 @@ from requests import Session
 
 from semantic_release.hvcs.gitlab import Gitlab
 
-from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER, RELEASE_NOTES
+from tests.const import (
+    EXAMPLE_HVCS_DOMAIN,
+    EXAMPLE_REPO_NAME,
+    EXAMPLE_REPO_OWNER,
+    RELEASE_NOTES,
+)
 
 gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 
@@ -149,13 +156,30 @@ def default_gl_client():
 
 
 @pytest.mark.parametrize(
-    (
-        "patched_os_environ, hvcs_domain, hvcs_api_domain, "
-        "expected_hvcs_domain, expected_hvcs_api_domain"
+    str.join(
+        ", ",
+        [
+            "patched_os_environ",
+            "hvcs_domain",
+            "hvcs_api_domain",
+            "expected_hvcs_domain",
+            "expected_hvcs_api_domain",
+        ],
     ),
+    # NOTE: GitLab does not have a different api domain
     [
+        # Default values
         ({}, None, None, Gitlab.DEFAULT_DOMAIN, Gitlab.DEFAULT_DOMAIN),
         (
+            # Imply api domain from server domain of environment
+            {"CI_SERVER_URL": "https://special.custom.server/"},
+            None,
+            None,
+            "special.custom.server",
+            "special.custom.server",
+        ),
+        (
+            # Custom domain with path prefix (derives from environment)
             {"CI_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
             None,
@@ -163,25 +187,35 @@ def default_gl_client():
             "special.custom.server/vcs",
         ),
         (
-            {"CI_SERVER_HOST": "api.special.custom.server/"},
+            # Pull server locations from environment
+            {
+                "CI_SERVER_URL": "https://special.custom.server/",
+                "CI_API_V4_URL": "https://special.custom.server/api/v4"
+            },
             None,
             None,
-            "api.special.custom.server/",
-            "api.special.custom.server/",
+            "special.custom.server",
+            "special.custom.server",
+        ),
+                (
+            # Ignore environment & use provided parameter value (ie from user config)
+            # then infer api domain from the parameter value based on default GitLab configurations
+            {"CI_SERVER_URL": "https://special.custom.server/"},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            None,
+            EXAMPLE_HVCS_DOMAIN,
+            EXAMPLE_HVCS_DOMAIN,
         ),
         (
-            {"CI_SERVER_URL": "https://special.custom.server/vcs/"},
-            "example.com",
-            None,
-            "example.com",
-            "example.com",
-        ),
-        (
-            {"CI_SERVER_URL": "https://api.special.custom.server/"},
-            None,
-            "api.example.com",
-            "api.special.custom.server",
-            "api.example.com",
+            # Ignore environment & use provided parameter value (ie from user config)
+            {
+                "CI_SERVER_URL": "https://special.custom.server/",
+                "CI_API_V4_URL": "https://special.custom.server/api/v3"
+            },
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}/api/v4",
+            EXAMPLE_HVCS_DOMAIN,
+            EXAMPLE_HVCS_DOMAIN,
         ),
     ],
 )
@@ -210,13 +244,11 @@ def test_gitlab_client_init(
             token=token,
         )
 
-        assert client.hvcs_domain == expected_hvcs_domain
-        assert client.hvcs_api_domain == expected_hvcs_api_domain
-        assert client.api_url == patched_os_environ.get(
-            "CI_SERVER_URL", f"https://{client.hvcs_api_domain}"
-        )
-        assert client.token == token
-        assert client._remote_url == remote_url
+        assert expected_hvcs_domain == client.hvcs_domain
+        assert expected_hvcs_api_domain == client.hvcs_api_domain
+        assert f"https://{expected_hvcs_api_domain}/api/v4" == client.api_url
+        assert token == client.token
+        assert remote_url == client._remote_url
         assert hasattr(client, "session")
         assert isinstance(getattr(client, "session", None), Session)
 

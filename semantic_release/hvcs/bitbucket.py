@@ -10,6 +10,8 @@ import mimetypes
 import os
 from functools import lru_cache
 
+from urllib3.util.url import Url, parse_url
+
 from semantic_release.hvcs._base import HvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
 from semantic_release.hvcs.util import build_requests_session
@@ -34,9 +36,11 @@ mimetypes.add_type("text/markdown", ".md")
 class Bitbucket(HvcsBase):
     """Bitbucket helper class"""
 
-    API_VERSION = "2.0"
     DEFAULT_DOMAIN = "bitbucket.org"
-    DEFAULT_API_DOMAIN = "api.bitbucket.org"
+    DEFAULT_API_SUBDOMAIN_PREFIX = "api"
+    DEFAULT_API_DOMAIN = f"{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}"
+    DEFAULT_API_PATH_CLOUD = "/2.0"
+    DEFAULT_API_PATH_ONPREM = "/rest/api/1.0"
     DEFAULT_ENV_TOKEN_NAME = "BITBUCKET_TOKEN"  # noqa: S105
 
     def __init__(
@@ -47,12 +51,51 @@ class Bitbucket(HvcsBase):
         token: str | None = None,
     ) -> None:
         self._remote_url = remote_url
-        self.hvcs_domain = hvcs_domain or self.DEFAULT_DOMAIN.replace("https://", "")
-        # ref: https://developer.atlassian.com/cloud/bitbucket/rest/intro/#uri-uuid
-        self.hvcs_api_domain = hvcs_api_domain or self.DEFAULT_API_DOMAIN.replace(
-            "https://", ""
-        )
-        self.api_url = f"https://{self.hvcs_api_domain}/{self.API_VERSION}"
+
+        domain_url = parse_url(hvcs_domain or self.DEFAULT_DOMAIN)
+
+        # Strip any scheme, query or fragment from the domain
+        self.hvcs_domain = Url(
+            host=domain_url.host, port=domain_url.port, path=domain_url.path
+        ).url.rstrip("/")
+
+        if self.hvcs_domain == self.DEFAULT_DOMAIN:
+            # BitBucket Cloud detected, which means it uses a separate api domain
+            self.hvcs_api_domain = self.DEFAULT_API_DOMAIN
+
+            # ref: https://developer.atlassian.com/cloud/bitbucket/rest/intro/#uri-uuid
+            self.api_url = Url(
+                scheme="https",
+                host=self.hvcs_api_domain,
+                path=self.DEFAULT_API_PATH_CLOUD
+            ).url.rstrip("/")
+
+        else:
+            # BitBucket Server (on premise) detected, which uses a path prefix for the api
+            # ref: https://developer.atlassian.com/server/bitbucket/how-tos/command-line-rest/
+            api_domain_parts = parse_url(
+                hvcs_api_domain
+                or Url(
+                    # infer from Domain url and append the api path
+                    scheme=domain_url.scheme,
+                    host=self.hvcs_domain,
+                    path=self.DEFAULT_API_PATH_ONPREM,
+                ).url
+            )
+
+            # Strip any scheme, query or fragment from the api domain
+            self.hvcs_api_domain = Url(
+                host=api_domain_parts.host,
+                port=api_domain_parts.port,
+                path=str.replace(api_domain_parts.path or "", self.DEFAULT_API_PATH_ONPREM, ""),
+            ).url.rstrip("/")
+
+            self.api_url = Url(
+                scheme=api_domain_parts.scheme or "https",
+                host=self.hvcs_api_domain,
+                path=self.DEFAULT_API_PATH_ONPREM
+            ).url.rstrip("/")
+
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
