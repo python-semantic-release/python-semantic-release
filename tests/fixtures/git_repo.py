@@ -304,7 +304,7 @@ def build_configured_base_repo(  # noqa: C901
                 raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
 
             # Create HVCS Client instance
-            hvcs = hvcs_class(example_git_https_url, hvcs_domain)
+            hvcs = hvcs_class(example_git_https_url, hvcs_domain=hvcs_domain)
 
             # Set tag format in configuration
             if tag_format_str is not None:

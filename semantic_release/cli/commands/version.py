@@ -11,6 +11,7 @@ import click
 import shellingham  # type: ignore[import]
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git.exc import GitCommandError
+from requests import HTTPError
 
 from semantic_release.changelog import ReleaseHistory, environment, recursive_render
 from semantic_release.changelog.context import make_changelog_context
@@ -23,6 +24,7 @@ from semantic_release.cli.github_actions_output import VersionGitHubActionsOutpu
 from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
+from semantic_release.errors import UnexpectedResponse
 from semantic_release.version import Version, next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
@@ -633,6 +635,23 @@ def version(  # noqa: C901
                     release_notes=release_notes,
                     prerelease=new_version.is_prerelease,
                 )
+            except HTTPError as err:
+                log.exception(err)
+                ctx.fail(
+                    str.join("\n", [
+                        str(err),
+                        "Failed to create release!"
+                    ])
+                )
+            except UnexpectedResponse as err:
+                log.exception(err)
+                ctx.fail(
+                    str.join("\n", [
+                        str(err),
+                        "Unexpected response from remote VCS!",
+                        "Before re-running, make sure to clean up any artifacts on the hvcs that may have already been created."
+                    ])
+                )
             except Exception as e:
                 log.exception(e)
                 ctx.fail(str(e))
@@ -641,6 +660,14 @@ def version(  # noqa: C901
                 log.info("Uploading asset %s", asset)
                 try:
                     hvcs_client.upload_asset(release_id, asset)
+                except HTTPError as err:
+                    log.exception(err)
+                    ctx.fail(
+                        str.join("\n", [
+                            str(err),
+                            "Failed to upload asset!"
+                        ])
+                    )
                 except Exception as e:
                     log.exception(e)
                     ctx.fail(str(e))

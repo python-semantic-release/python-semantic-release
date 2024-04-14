@@ -12,10 +12,18 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Type, Un
 from git import Actor, InvalidGitRepositoryError
 from git.repo.base import Repo
 from jinja2 import Environment
-from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    RootModel,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
-# For Python 3.8, 3.9, 3.10 compatibility
+# typing_extensions is for Python 3.8, 3.9, 3.10 compatibility
 from typing_extensions import Annotated, Self
+from urllib3.util.url import parse_url
 
 from semantic_release import hvcs
 from semantic_release.changelog import environment
@@ -111,12 +119,21 @@ class BranchConfig(BaseModel):
 
 class RemoteConfig(BaseModel):
     name: str = "origin"
-    token: MaybeFromEnv = ""
-    url: Optional[MaybeFromEnv] = None
+    token: Optional[str] = None
+    url: Optional[str] = None
     type: HvcsClient = HvcsClient.GITHUB
     domain: Optional[str] = None
     api_domain: Optional[str] = None
     ignore_token_for_push: bool = False
+    insecure: bool = False
+
+    @field_validator("url", "domain", "api_domain", "token", mode="before")
+    @classmethod
+    def resolve_env_vars(cls, val: Any) -> str | None:
+        ret_val = val if not isinstance(val, dict) else (
+            EnvConfigVar.model_validate(val).getvalue()
+        )
+        return ret_val or None
 
     @model_validator(mode="after")
     def set_default_token(self) -> Self:
@@ -124,8 +141,45 @@ class RemoteConfig(BaseModel):
         if not self.token and self.type in _known_hvcs:
             default_token_name = _known_hvcs[self.type].DEFAULT_ENV_TOKEN_NAME
             if default_token_name:
-                self.token = EnvConfigVar(env=default_token_name)
+                env_token = EnvConfigVar(env=default_token_name).getvalue()
+                if env_token:
+                    self.token = env_token
         return self
+
+    @model_validator(mode="after")
+    def check_url_scheme(self) -> Self:
+        if self.url and isinstance(self.url, str):
+            self.check_insecure_flag(self.url, "url")
+
+        if self.domain and isinstance(self.domain, str):
+            self.check_insecure_flag(self.domain, "domain")
+
+        if self.api_domain and isinstance(self.api_domain, str):
+            self.check_insecure_flag(self.api_domain, "api_domain")
+
+        return self
+
+
+    def check_insecure_flag(self, url_str: str, field_name: str) -> None:
+        if not url_str:
+            return
+
+        scheme = parse_url(url_str).scheme
+        if scheme == "http" and not self.insecure:
+            raise ValueError(
+                str.join("\n", [
+                    "Insecure 'HTTP' URL detected and disabled by default.",
+                    "Set the 'insecure' flag to 'True' to enable insecure connections."
+                ])
+            )
+
+        if scheme == "https" and self.insecure:
+            log.warning(
+                str.join("\n", [
+                    f"'{field_name}' starts with 'https://' but the 'insecure' flag is set.",
+                    "This flag is only necessary for 'http://' URLs."
+                ])
+            )
 
 
 class PublishConfig(BaseModel):
@@ -370,35 +424,24 @@ class RuntimeContext:
 
             version_declarations.append(pd)
 
-        # hvcs_client
-        hvcs_client_cls = _known_hvcs[raw.remote.type]
-        raw_remote_url = raw.remote.url
-        resolved_remote_url = cls.resolve_from_env(raw_remote_url)
-        remote_url = (
-            resolved_remote_url
-            if resolved_remote_url is not None
-            else repo.remote(raw.remote.name).url
-        )
-
-        token = cls.resolve_from_env(raw.remote.token)
-        if (
-            isinstance(raw.remote.token, EnvConfigVar)
-            and not raw.remote.ignore_token_for_push
-            and not token
-        ):
-            log.warning(
-                "the token for the remote VCS is configured as stored in the %s "
-                "environment variable, but it is empty",
-                raw.remote.token.env,
-            )
-        elif not token:
+        # Provide warnings if the token is missing
+        if not raw.remote.token:
             log.debug("hvcs token is not set")
 
+            if not raw.remote.ignore_token_for_push:
+                log.warning("Token value is missing!")
+
+        # retrieve remote url
+        remote_url = raw.remote.url or repo.remote(raw.remote.name).url
+
+        # hvcs_client
+        hvcs_client_cls = _known_hvcs[raw.remote.type]
         hvcs_client = hvcs_client_cls(
             remote_url=remote_url,
-            hvcs_domain=cls.resolve_from_env(raw.remote.domain),
-            hvcs_api_domain=cls.resolve_from_env(raw.remote.api_domain),
-            token=token,
+            hvcs_domain=raw.remote.domain,
+            hvcs_api_domain=raw.remote.api_domain,
+            token=raw.remote.token,
+            allow_insecure=raw.remote.insecure,
         )
 
         # changelog_file

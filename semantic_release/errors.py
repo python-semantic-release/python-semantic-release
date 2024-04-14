@@ -38,3 +38,9 @@ class MissingMergeBaseError(SemanticReleaseBaseError):
     Raised when the merge base cannot be found with the current history. Generally
     because of a shallow git clone.
     """
+
+class UnexpectedResponse(Exception):
+    """
+    Raised when an HTTP response cannot be parsed properly or the expected structure
+    is not found.
+    """

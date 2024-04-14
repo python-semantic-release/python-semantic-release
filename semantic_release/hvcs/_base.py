@@ -5,11 +5,15 @@ from __future__ import annotations
 import logging
 import warnings
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from semantic_release.helpers import parse_git_url
-from semantic_release.hvcs.token_auth import TokenAuth
-from semantic_release.hvcs.util import build_requests_session
 
+if TYPE_CHECKING:
+    from typing import Any
+
+
+# Globals
 logger = logging.getLogger(__name__)
 
 
@@ -32,23 +36,14 @@ class HvcsBase:
     (i.e. without raising an exception) return _not_supported, and can be overridden
     to provide an implementation in subclasses. This is more straightforward than
     checking for NotImplemented around every method call.
+
     """
 
     DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"  # noqa: S105
 
-    def __init__(
-        self,
-        remote_url: str,
-        hvcs_domain: str | None = None,
-        hvcs_api_domain: str | None = None,
-        token: str | None = None,
-    ) -> None:
-        self.hvcs_domain = hvcs_domain
-        self.hvcs_api_domain = hvcs_api_domain
-        self.token = token
-        auth = None if not self.token else TokenAuth(self.token)
+    def __init__(self, remote_url: str, *args: Any, **kwargs: Any) -> None:
         self._remote_url = remote_url
-        self.session = build_requests_session(auth=auth)
+
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
@@ -59,27 +54,34 @@ class HvcsBase:
         parsed_git_url = parse_git_url(self._remote_url)
         return parsed_git_url.namespace, parsed_git_url.repo_name
 
+
     @property
     def repo_name(self) -> str:
         _, _name = self._get_repository_owner_and_name()
         return _name
+
 
     @property
     def owner(self) -> str:
         _owner, _ = self._get_repository_owner_and_name()
         return _owner
 
+
     def compare_url(self, from_rev: str, to_rev: str) -> str:
         """
         Get the comparison link between two version tags.
+
         :param from_rev: The older version to compare. Can be a commit sha, tag or
-                        branch name.
+        branch name.
+
         :param to_rev: The newer version to compare. Can be a commit sha, tag or
-                       branch name.
+        branch name.
+
         :return: Link to view a comparison between the two versions.
         """
         _not_supported(self, "compare_url")
         return ""
+
 
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """
@@ -104,10 +106,12 @@ class HvcsBase:
         _not_supported(self, "get_release_id_by_tag")
         return None
 
+
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
         """Edit the changelog associated with a release, if supported"""
         _not_supported(self, "edit_release_notes")
         return -1
+
 
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
@@ -119,6 +123,7 @@ class HvcsBase:
         _not_supported(self, "create_or_update_release")
         return -1
 
+
     def asset_upload_url(self, release_id: str) -> str | None:
         """
         Return the URL to use to upload an asset to the given release id, if releases
@@ -126,6 +131,7 @@ class HvcsBase:
         """
         _not_supported(self, "asset_upload_url")
         return None
+
 
     def upload_asset(
         self, release_id: int | str, file: str, label: str | None = None
@@ -138,6 +144,7 @@ class HvcsBase:
         _not_supported(self, "upload_asset")
         return True
 
+
     def remote_url(self, use_token: bool) -> str:
         """
         Return the remote URL for the repository, including the token for
@@ -146,6 +153,7 @@ class HvcsBase:
         _not_supported(self, "remote_url")
         return ""
 
+
     def commit_hash_url(self, commit_hash: str) -> str:
         """
         Given a commit hash, return a web URL which links to this commit in the
@@ -153,6 +161,7 @@ class HvcsBase:
         """
         _not_supported(self, "commit_hash_url")
         return ""
+
 
     def pull_request_url(self, pr_number: str) -> str:
         """

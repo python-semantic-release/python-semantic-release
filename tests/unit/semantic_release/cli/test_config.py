@@ -8,7 +8,6 @@ import tomlkit
 from pydantic import RootModel, ValidationError
 
 from semantic_release.cli.config import (
-    EnvConfigVar,
     GlobalCommandLineOptions,
     HvcsClient,
     RawConfig,
@@ -32,26 +31,48 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    "remote_config, expected_token",
+    "patched_os_environ, remote_config, expected_token",
     [
-        ({"type": HvcsClient.GITHUB.value}, EnvConfigVar(env="GH_TOKEN")),
-        ({"type": HvcsClient.GITLAB.value}, EnvConfigVar(env="GITLAB_TOKEN")),
-        ({"type": HvcsClient.GITEA.value}, EnvConfigVar(env="GITEA_TOKEN")),
-        ({}, EnvConfigVar(env="GH_TOKEN")),  # default not provided -> means Github
         (
+            {"GH_TOKEN": "mytoken"},
+            {"type": HvcsClient.GITHUB.value},
+            "mytoken",
+        ),
+        (
+            {"GITLAB_TOKEN": "mytoken"},
+            {"type": HvcsClient.GITLAB.value},
+            "mytoken",
+        ),
+        (
+            {"GITEA_TOKEN": "mytoken"},
+            {"type": HvcsClient.GITEA.value},
+            "mytoken",
+        ),
+        (
+            # default not provided -> means Github
+            {"GH_TOKEN": "mytoken"},
+            {},
+            "mytoken",
+        ),
+        (
+            {"CUSTOM_TOKEN": "mytoken"},
             {"type": HvcsClient.GITHUB.value, "token": {"env": "CUSTOM_TOKEN"}},
-            EnvConfigVar(env="CUSTOM_TOKEN"),
+            "mytoken",
         ),
     ],
 )
 def test_load_hvcs_default_token(
-    remote_config: dict[str, Any], expected_token: EnvConfigVar
+    patched_os_environ: dict[str, str],
+    remote_config: dict[str, Any],
+    expected_token: str,
 ):
-    raw_config = RawConfig.model_validate(
-        {
-            "remote": remote_config,
-        }
-    )
+    with mock.patch.dict("os.environ", patched_os_environ, clear=True):
+        raw_config = RawConfig.model_validate(
+            {
+                "remote": remote_config,
+            }
+        )
+
     assert expected_token == raw_config.remote.token
 
 

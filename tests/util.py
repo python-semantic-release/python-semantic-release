@@ -6,7 +6,6 @@ import shutil
 import stat
 import string
 from contextlib import contextmanager, suppress
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Tuple
 
 from pydantic.dataclasses import dataclass
@@ -88,21 +87,6 @@ def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
         f.write("\n")
 
     repo.index.add(filename)
-
-
-@contextmanager
-def netrc_file(machine: str) -> NamedTemporaryFile:
-    with NamedTemporaryFile("w") as netrc:
-        # Add these attributes to use in tests as source of truth
-        netrc.login_username = "username"
-        netrc.login_password = "password"
-
-        netrc.write(f"machine {machine}" + "\n")
-        netrc.write(f"login {netrc.login_username}" + "\n")
-        netrc.write(f"password {netrc.login_password}" + "\n")
-        netrc.flush()
-
-        yield netrc
 
 
 def flatten_dircmp(dcmp: filecmp.dircmp) -> list[str]:

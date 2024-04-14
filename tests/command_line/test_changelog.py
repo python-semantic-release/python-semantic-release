@@ -12,9 +12,9 @@ from pytest_lazyfixture import lazy_fixture
 from requests import Session
 
 from semantic_release.cli import changelog, main
-from semantic_release.hvcs import Github
 
 from tests.const import (
+    EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
@@ -242,8 +242,10 @@ def test_changelog_post_to_release(
     session.mount("https://", mock_adapter)
 
     expected_request_url = (
-        "https://{api_url}/repos/{owner}/{repo_name}/releases".format(
-            api_url=Github.DEFAULT_API_DOMAIN,
+        "{api_url}/repos/{owner}/{repo_name}/releases".format(
+            # TODO: Fix as this is likely not correct given a custom domain and the
+            # use of GitHub which would be GitHub Enterprise Server which we don't yet support
+            api_url=f"https://api.{EXAMPLE_HVCS_DOMAIN}", # GitHub API URL
             owner=EXAMPLE_REPO_OWNER,
             repo_name=EXAMPLE_REPO_NAME,
         )
@@ -254,9 +256,7 @@ def test_changelog_post_to_release(
     with mock.patch(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
-    ) as mocker, monkeypatch.context() as m:
-        m.delenv("GITHUB_REPOSITORY", raising=False)
-        m.delenv("CI_PROJECT_NAMESPACE", raising=False)
+    ) as mocker, mock.patch.dict("os.environ", {}, clear=True):
         result = cli_runner.invoke(main, [changelog_subcmd, *args])
 
     assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
