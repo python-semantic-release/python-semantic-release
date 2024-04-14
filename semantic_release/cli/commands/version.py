@@ -637,20 +637,18 @@ def version(  # noqa: C901
                 )
             except HTTPError as err:
                 log.exception(err)
-                ctx.fail(
-                    str.join("\n", [
-                        str(err),
-                        "Failed to create release!"
-                    ])
-                )
+                ctx.fail(str.join("\n", [str(err), "Failed to create release!"]))
             except UnexpectedResponse as err:
                 log.exception(err)
                 ctx.fail(
-                    str.join("\n", [
-                        str(err),
-                        "Unexpected response from remote VCS!",
-                        "Before re-running, make sure to clean up any artifacts on the hvcs that may have already been created."
-                    ])
+                    str.join(
+                        "\n",
+                        [
+                            str(err),
+                            "Unexpected response from remote VCS!",
+                            "Before re-running, make sure to clean up any artifacts on the hvcs that may have already been created.",
+                        ],
+                    )
                 )
             except Exception as e:
                 log.exception(e)
@@ -662,12 +660,7 @@ def version(  # noqa: C901
                     hvcs_client.upload_asset(release_id, asset)
                 except HTTPError as err:
                     log.exception(err)
-                    ctx.fail(
-                        str.join("\n", [
-                            str(err),
-                            "Failed to upload asset!"
-                        ])
-                    )
+                    ctx.fail(str.join("\n", [str(err), "Failed to upload asset!"]))
                 except Exception as e:
                     log.exception(e)
                     ctx.fail(str(e))

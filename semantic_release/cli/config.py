@@ -130,8 +130,10 @@ class RemoteConfig(BaseModel):
     @field_validator("url", "domain", "api_domain", "token", mode="before")
     @classmethod
     def resolve_env_vars(cls, val: Any) -> str | None:
-        ret_val = val if not isinstance(val, dict) else (
-            EnvConfigVar.model_validate(val).getvalue()
+        ret_val = (
+            val
+            if not isinstance(val, dict)
+            else (EnvConfigVar.model_validate(val).getvalue())
         )
         return ret_val or None
 
@@ -159,7 +161,6 @@ class RemoteConfig(BaseModel):
 
         return self
 
-
     def check_insecure_flag(self, url_str: str, field_name: str) -> None:
         if not url_str:
             return
@@ -167,18 +168,24 @@ class RemoteConfig(BaseModel):
         scheme = parse_url(url_str).scheme
         if scheme == "http" and not self.insecure:
             raise ValueError(
-                str.join("\n", [
-                    "Insecure 'HTTP' URL detected and disabled by default.",
-                    "Set the 'insecure' flag to 'True' to enable insecure connections."
-                ])
+                str.join(
+                    "\n",
+                    [
+                        "Insecure 'HTTP' URL detected and disabled by default.",
+                        "Set the 'insecure' flag to 'True' to enable insecure connections.",
+                    ],
+                )
             )
 
         if scheme == "https" and self.insecure:
             log.warning(
-                str.join("\n", [
-                    f"'{field_name}' starts with 'https://' but the 'insecure' flag is set.",
-                    "This flag is only necessary for 'http://' URLs."
-                ])
+                str.join(
+                    "\n",
+                    [
+                        f"'{field_name}' starts with 'https://' but the 'insecure' flag is set.",
+                        "This flag is only necessary for 'http://' URLs.",
+                    ],
+                )
             )
 
 

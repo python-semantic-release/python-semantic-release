@@ -39,6 +39,7 @@ class MissingMergeBaseError(SemanticReleaseBaseError):
     because of a shallow git clone.
     """
 
+
 class UnexpectedResponse(Exception):
     """
     Raised when an HTTP response cannot be parsed properly or the expected structure

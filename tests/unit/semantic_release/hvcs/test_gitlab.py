@@ -154,7 +154,9 @@ def mock_gitlab(status: str = "success"):
 
 @pytest.fixture
 def default_gl_client() -> Generator[Gitlab, None, None]:
-    remote_url = f"git@{Gitlab.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    remote_url = (
+        f"git@{Gitlab.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    )
     with mock.patch.dict(os.environ, {}, clear=True):
         yield Gitlab(remote_url=remote_url)
 
@@ -202,7 +204,7 @@ def default_gl_client() -> Generator[Gitlab, None, None]:
             EXAMPLE_HVCS_DOMAIN,
             f"http://{EXAMPLE_HVCS_DOMAIN}",
             True,
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -241,7 +243,7 @@ def test_gitlab_client_init(
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", False),
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", True),
         (f"http://{EXAMPLE_HVCS_DOMAIN}", False),
-    ]
+    ],
 )
 def test_gitlab_client_init_with_invalid_scheme(
     hvcs_domain: str,
@@ -332,14 +334,12 @@ def test_remote_url(
 def test_compare_url(default_gl_client: Gitlab):
     start_rev = "revA"
     end_rev = "revB"
-    expected_url = (
-        "{server}/{owner}/{repo}/-/compare/{from_rev}...{to_rev}".format(
-            server=default_gl_client.hvcs_domain.url,
-            owner=default_gl_client.owner,
-            repo=default_gl_client.repo_name,
-            from_rev=start_rev,
-            to_rev=end_rev,
-        )
+    expected_url = "{server}/{owner}/{repo}/-/compare/{from_rev}...{to_rev}".format(
+        server=default_gl_client.hvcs_domain.url,
+        owner=default_gl_client.owner,
+        repo=default_gl_client.repo_name,
+        from_rev=start_rev,
+        to_rev=end_rev,
     )
     actual_url = default_gl_client.compare_url(from_rev=start_rev, to_rev=end_rev)
     assert expected_url == actual_url

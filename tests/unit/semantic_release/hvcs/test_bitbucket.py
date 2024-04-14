@@ -12,7 +12,9 @@ from tests.const import EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWN
 
 @pytest.fixture
 def default_bitbucket_client():
-    remote_url = f"git@{Bitbucket.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    remote_url = (
+        f"git@{Bitbucket.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+    )
     return Bitbucket(remote_url=remote_url)
 
 
@@ -163,17 +165,14 @@ def test_bitbucket_client_init(
         # Bad base domain schemes
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", None, False),
         (f"ftp://{EXAMPLE_HVCS_DOMAIN}", None, True),
-
         # Unallowed insecure connections when base domain is insecure
         (f"http://{EXAMPLE_HVCS_DOMAIN}", None, False),
-
         # Bad API domain schemes
         (None, f"ftp://api.{EXAMPLE_HVCS_DOMAIN}", False),
         (None, f"ftp://api.{EXAMPLE_HVCS_DOMAIN}", True),
-
         # Unallowed insecure connections when api domain is insecure
         (None, f"http://{EXAMPLE_HVCS_DOMAIN}", False),
-    ]
+    ],
 )
 def test_bitbucket_client_init_with_invalid_scheme(
     hvcs_domain: str | None,
@@ -229,7 +228,9 @@ def test_compare_url(default_bitbucket_client: Bitbucket):
             to_rev=end_rev,
         )
     )
-    actual_url = default_bitbucket_client.compare_url(from_rev=start_rev, to_rev=end_rev)
+    actual_url = default_bitbucket_client.compare_url(
+        from_rev=start_rev, to_rev=end_rev
+    )
     assert expected_url == actual_url
 
 

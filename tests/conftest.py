@@ -60,7 +60,7 @@ def netrc_file(
             context_manager.__exit__(
                 None if not exception else type(exception),
                 exception,
-                None if not exception else exception.__traceback__
+                None if not exception else exception.__traceback__,
             )
 
 

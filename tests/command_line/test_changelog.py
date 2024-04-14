@@ -241,14 +241,12 @@ def test_changelog_post_to_release(
     session.mount("http://", mock_adapter)
     session.mount("https://", mock_adapter)
 
-    expected_request_url = (
-        "{api_url}/repos/{owner}/{repo_name}/releases".format(
-            # TODO: Fix as this is likely not correct given a custom domain and the
-            # use of GitHub which would be GitHub Enterprise Server which we don't yet support
-            api_url=f"https://api.{EXAMPLE_HVCS_DOMAIN}", # GitHub API URL
-            owner=EXAMPLE_REPO_OWNER,
-            repo_name=EXAMPLE_REPO_NAME,
-        )
+    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
+        # TODO: Fix as this is likely not correct given a custom domain and the
+        # use of GitHub which would be GitHub Enterprise Server which we don't yet support
+        api_url=f"https://api.{EXAMPLE_HVCS_DOMAIN}",  # GitHub API URL
+        owner=EXAMPLE_REPO_OWNER,
+        repo_name=EXAMPLE_REPO_NAME,
     )
 
     # Patch out env vars that affect changelog URLs but only get set in e.g.

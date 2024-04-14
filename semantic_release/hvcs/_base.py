@@ -44,7 +44,6 @@ class HvcsBase:
     def __init__(self, remote_url: str, *args: Any, **kwargs: Any) -> None:
         self._remote_url = remote_url
 
-
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
         """
@@ -54,18 +53,15 @@ class HvcsBase:
         parsed_git_url = parse_git_url(self._remote_url)
         return parsed_git_url.namespace, parsed_git_url.repo_name
 
-
     @property
     def repo_name(self) -> str:
         _, _name = self._get_repository_owner_and_name()
         return _name
 
-
     @property
     def owner(self) -> str:
         _owner, _ = self._get_repository_owner_and_name()
         return _owner
-
 
     def compare_url(self, from_rev: str, to_rev: str) -> str:
         """
@@ -81,7 +77,6 @@ class HvcsBase:
         """
         _not_supported(self, "compare_url")
         return ""
-
 
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """
@@ -106,12 +101,10 @@ class HvcsBase:
         _not_supported(self, "get_release_id_by_tag")
         return None
 
-
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
         """Edit the changelog associated with a release, if supported"""
         _not_supported(self, "edit_release_notes")
         return -1
-
 
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
@@ -123,7 +116,6 @@ class HvcsBase:
         _not_supported(self, "create_or_update_release")
         return -1
 
-
     def asset_upload_url(self, release_id: str) -> str | None:
         """
         Return the URL to use to upload an asset to the given release id, if releases
@@ -131,7 +123,6 @@ class HvcsBase:
         """
         _not_supported(self, "asset_upload_url")
         return None
-
 
     def upload_asset(
         self, release_id: int | str, file: str, label: str | None = None
@@ -144,7 +135,6 @@ class HvcsBase:
         _not_supported(self, "upload_asset")
         return True
 
-
     def remote_url(self, use_token: bool) -> str:
         """
         Return the remote URL for the repository, including the token for
@@ -153,7 +143,6 @@ class HvcsBase:
         _not_supported(self, "remote_url")
         return ""
 
-
     def commit_hash_url(self, commit_hash: str) -> str:
         """
         Given a commit hash, return a web URL which links to this commit in the
@@ -161,7 +150,6 @@ class HvcsBase:
         """
         _not_supported(self, "commit_hash_url")
         return ""
-
 
     def pull_request_url(self, pr_number: str) -> str:
         """
