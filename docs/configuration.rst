@@ -580,33 +580,94 @@ constructor.
 
 .. _config-remote:
 
-``[tool.semantic_release.remote]``
-**********************************
+``remote``
+**********
 
-.. _config-remote-name:
+.. note::
+    The remote configuration is a group of settings that configure PSR's integration
+    with remote version control systems.
 
-``name (str)``
+    **pyproject.toml:** ``[tool.semantic_release.remote]``
+
+----
+
+.. _config-remote-api_domain:
+
+``api_domain``
 """"""""""""""
 
-Name of the remote to push to using ``git push -u $name <branch_name>``
+**Type:** ``Optional[str | Dict['env', str]]``
 
-**Default:** ``"origin"``
+The hosting domain for the API of your remote HVCS if different than the ``domain``.
+Generally, this will be used to specify a separate subdomain that is used for API
+calls rather than the primary domain (ex. ``api.github.com``).
 
-.. _config-remote-type:
+**Most on-premise HVCS installations will NOT use this setting!** Whether or not
+this value is used depends on the HVCS configured (and your server administration)
+in the :ref:`remote.type <config-remote-type>` setting and used in tadem with the
+:ref:`remote.domain <config-remote-domain>` setting.
 
-``type (str)``
-""""""""""""""
+When using a custom :ref:`remote.domain <config-remote-domain>` and a HVCS
+:ref:`remote.type <config-remote-type>` that is configured with a separate domain
+or sub-domain for API requests, this value is used to configure the location of API
+requests that are sent from PSR.
 
-The type of the remote VCS. Currently, Python Semantic Release supports ``"github"``,
-``"gitlab"``, ``"gitea"`` and ``"bitbucket"``. Not all functionality is available with all
-remote types, but we welcome pull requests to help improve this!
+Most on-premise or self-hosted HVCS environments will use a path prefix to handle inbound
+API requests, which means this value will ignored.
 
-**Default:** ``"github"``
+PSR knows the expected api domains for known cloud services and their associated
+api domains which means this value is not necessary to explicitly define for services
+as ``bitbucket.org``, and ``github.com``.
+
+Including the protocol schemes, such as ``https://``, for the API domain is optional.
+Secure ``HTTPS`` connections are assumed unless the setting of
+:ref:`remote.insecure <config-remote-insecure>` is ``True``.
+
+**Default:** ``None``
+
+----
+
+.. _config-remote-domain:
+
+``domain``
+""""""""""
+
+**Type:** ``Optional[str | Dict['env', str]]``
+
+The host domain for your HVCS server. This setting is used to support on-premise
+installations of HVCS providers with custom domain hosts.
+
+If you are using the official domain of the associated
+:ref:`remote.type <config-remote-type>`, this value is not required. PSR will use the
+default domain value for the :ref:`remote.type <config-remote-type>` when not specified.
+For example, when ``remote.type="github"`` is specified the default domain of
+``github.com`` is used.
+
+Including the protocol schemes, such as ``https://``, for the domain value is optional.
+Secure ``HTTPS`` connections are assumed unless the setting of
+:ref:`remote.insecure <config-remote-insecure>` is ``True``.
+
+This setting also supports reading from an environment variable for ease-of-use
+in CI pipelines. See :ref:`Environment Variable <config-environment-variables>` for
+more information. Depending on the :ref:`remote.type <config-remote-type>`, the default
+environment variable for the default domain's CI pipeline environment will automatically
+be checked so this value is not required in default environments.  For example, when
+``remote.type="gitlab"`` is specified, PSR will look to the ``CI_SERVER_URL`` environment
+variable when ``remote.domain`` is not specified.
+
+**Default:** ``None``
+
+.. seealso::
+   - :ref:`remote.api_domain <config-remote-api-domain>`
+
+----
 
 .. _config-remote-ignore-token-for-push:
 
-``ignore_token_for_push (bool)``
-""""""""""""""""""""""""""""""""
+``ignore_token_for_push``
+"""""""""""""""""""""""""
+
+**Type:** ``bool``
 
 If set to ``True``, ignore the authentication token when pushing changes to the remote.
 This is ideal, for example, if you already have SSH keys set up which can be used for
@@ -614,10 +675,87 @@ pushing.
 
 **Default:** ``False``
 
+----
+
+.. _config-remote-insecure:
+
+``insecure``
+""""""""""""
+
+**Type:** ``bool``
+
+Insecure is used to allow non-secure ``HTTP`` connections to your HVCS server. If set to
+``True``, any domain value passed will assume ``http://`` if it is not specified and allow
+it. When set to ``False`` (implicitly or explicitly), it will force ``https://`` communications.
+
+When a custom ``domain`` or ``api_domain`` is provided as a configuration, this flag governs
+the protocol scheme used for those connections. If the protocol scheme is not provided in
+the field value, then this ``insecure`` option defines whether ``HTTP`` or ``HTTPS`` is
+used for the connection. If the protocol scheme is provided in the field value, it must
+match this setting or it will throw an error.
+
+The purpose of this flag is to prevent any typos in provided ``domain`` and ``api_domain``
+values that accidently specify an insecure connection but allow users to toggle the protection
+scheme off when desired.
+
+**Default:** ``False``
+
+----
+
+.. _config-remote-name:
+
+``name``
+""""""""
+
+**Type:** ``str``
+
+Name of the remote to push to using ``git push -u $name <branch_name>``
+
+**Default:** ``"origin"``
+
+----
+
+.. _config-remote-url:
+
+``url``
+"""""""
+
+**Type:** ``Optional[str | Dict['env', str]]``
+
+An override setting used to specify the remote upstream location of ``git push``.
+
+**Not commonly used!** This is used to override the derived upstream location when
+the desired push location is different than the location the repository was cloned
+from.
+
+This setting will override the upstream location url that would normally be derived
+from the :ref:`remote.name <config-remote-name>` location of your git repository.
+
+**Default:** ``None``
+
+----
+
+.. _config-remote-type:
+
+``type``
+""""""""
+
+**Type:** ``Literal["bitbucket", "gitea", "github", "gitlab"]``
+
+The type of the remote VCS. Currently, Python Semantic Release supports ``"github"``,
+``"gitlab"``, ``"gitea"`` and ``"bitbucket"``. Not all functionality is available with all
+remote types, but we welcome pull requests to help improve this!
+
+**Default:** ``"github"``
+
+----
+
 .. _config-remote-token:
 
-``token (Dict['env': str])``
-""""""""""""""""""""""""""""
+``token``
+"""""""""
+
+**Type:** ``Optional[str | Dict['env', str]]``
 
 :ref:`Environment Variable <config-environment-variables>` from which to source the
 authentication token for the remote VCS. Common examples include ``"GH_TOKEN"``,
