@@ -165,7 +165,7 @@ Note if the version can not be found nothing will be printed.
 .. _cmd-version-option-print-last-released-tag:
 
 ``--print-last-released-tag``
-***************
+*****************************
 
 Same as the :ref:`cmd-version-option-print-last-released` flag but prints the
 complete tag name (ex. ``v1.0.0`` or ``py-v1.0.0``) instead of the raw version

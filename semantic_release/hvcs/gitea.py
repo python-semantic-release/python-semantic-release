@@ -92,11 +92,16 @@ class Gitea(HvcsBase):
     ) -> int:
         """
         Create a new release
-        https://gitea.com/api/swagger#/repository/repoCreateRelease
+
+        Ref: https://gitea.com/api/swagger#/repository/repoCreateRelease
+
         :param tag: Tag to create release for
+
         :param release_notes: The release notes for this version
+
         :param prerelease: Whether or not this release should be specified as a
-                           prerelease
+        prerelease
+
         :return: Whether the request succeeded
         """
         log.info("Creating release for tag %s", tag)

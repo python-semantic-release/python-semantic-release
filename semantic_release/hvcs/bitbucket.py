@@ -28,8 +28,20 @@ class Bitbucket(HvcsBase):
     Bitbucket HVCS interface for interacting with BitBucket repositories
 
     This class supports the following products:
+
         - BitBucket Cloud
         - BitBucket Data Center Server (on-premises installations)
+
+    This interface does its best to detect which product is configured based
+    on the provided domain. If it is the official `bitbucket.org`, the default
+    domain, then it is considered as BitBucket Cloud which uses the subdomain
+    `api.bitbucket.org/2.0` for api communication.
+
+    If the provided domain is anything else, than it is assumed to be communicating
+    with an on-premise or 3rd-party maintained BitBucket instance which matches with
+    the BitBucket Data Center Server product. The on-prem server product uses a
+    path prefix for handling api requests which is configured to be
+    `server.domain/rest/api/1.0` based on the documentation in April 2024.
     """
 
     DEFAULT_DOMAIN = "bitbucket.org"

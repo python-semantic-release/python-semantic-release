@@ -36,6 +36,7 @@ class HvcsBase:
     (i.e. without raising an exception) return _not_supported, and can be overridden
     to provide an implementation in subclasses. This is more straightforward than
     checking for NotImplemented around every method call.
+
     """
 
     DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"  # noqa: S105
@@ -69,10 +70,13 @@ class HvcsBase:
     def compare_url(self, from_rev: str, to_rev: str) -> str:
         """
         Get the comparison link between two version tags.
+
         :param from_rev: The older version to compare. Can be a commit sha, tag or
-                        branch name.
+        branch name.
+
         :param to_rev: The newer version to compare. Can be a commit sha, tag or
-                       branch name.
+        branch name.
+
         :return: Link to view a comparison between the two versions.
         """
         _not_supported(self, "compare_url")
