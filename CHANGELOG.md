@@ -2,6 +2,128 @@
 
 
 
+## v9.4.2 (2024-04-14)
+
+### Build
+
+* build(deps-dev): update furo requirement from ~=2023.3 to ~=2024.1 (#878)
+
+Updates the requirements on [furo](https://github.com/pradyunsg/furo) to permit the latest version.
+- [Release notes](https://github.com/pradyunsg/furo/releases)
+- [Changelog](https://github.com/pradyunsg/furo/blob/main/docs/changelog.md)
+- [Commits](https://github.com/pradyunsg/furo/compare/2023.03.23...2024.01.29)
+
+---
+updated-dependencies:
+- dependency-name: furo
+  dependency-type: direct:production
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`8954628`](https://github.com/python-semantic-release/python-semantic-release/commit/89546288b516f4d55c16a90f92602794067eac68))
+
+* build(deps): update rich requirement from ~=12.5 to ~=13.0 (#877)
+
+Updates the requirements on [rich](https://github.com/Textualize/rich) to permit the latest version.
+- [Release notes](https://github.com/Textualize/rich/releases)
+- [Changelog](https://github.com/Textualize/rich/blob/master/CHANGELOG.md)
+
+Resolves: #888
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`4a22a8c`](https://github.com/python-semantic-release/python-semantic-release/commit/4a22a8c1a69bcf7b1ddd6db56e6883c617a892b3))
+
+### Ci
+
+* ci(stalebot): add permission to delete its own cache ([`34260fb`](https://github.com/python-semantic-release/python-semantic-release/commit/34260fb13fc595af9f780ce5082d16cd5ca165ef))
+
+* ci(stalebot): bump api operations from 200 -&gt; 400 allowed
+
+since our repo has around 100 issues, each validation takes a minimum of 2
+operations, leaving actual stale actions with very little ability to change
+things. Bumping this up will allow stalebot to action tickets on time in
+relation to our repository size. ([`f280a71`](https://github.com/python-semantic-release/python-semantic-release/commit/f280a711dae97948134f539ae62e0731cea48dff))
+
+### Fix
+
+* fix(hvcs): allow insecure http connections if configured (#886)
+
+* fix(gitlab): allow insecure http connections if configured
+
+* test(hvcs-gitlab): fix tests for clarity &amp; insecure urls
+
+* test(conftest): refactor netrc generation into common fixture
+
+* refactor(hvcsbase): remove extrenous non-common functionality
+
+* fix(gitea): allow insecure http connections if configured
+
+* test(hvcs-gitea): fix tests for clarity &amp; insecure urls
+
+* refactor(gitlab): adjust init function signature
+
+* fix(github): allow insecure http connections if configured
+
+* test(hvcs-github): fix tests for clarity &amp; insecure urls
+
+* fix(bitbucket): allow insecure http connections if configured
+
+* test(hvcs-bitbucket): fix tests for clarity &amp; insecure urls
+
+* fix(config): add flag to allow insecure connections
+
+* fix(version-cmd): handle HTTP exceptions more gracefully
+
+* style(hvcs): resolve typing issues &amp; mimetype executions
+
+* test(cli-config): adapt default token test for env resolution
+
+* test(changelog-cmd): isolate env &amp; correct the expected api url
+
+* test(fixtures): adapt repo builder for new hvcs init() signature
+
+* style: update syntax for 3.8 compatiblity &amp; formatting
+
+* docs(configuration): update `remote` settings section with missing values
+
+  Resolves: #868
+
+* style(docs): improve configuration &amp; api readability ([`db13438`](https://github.com/python-semantic-release/python-semantic-release/commit/db1343890f7e0644bc8457f995f2bd62087513d3))
+
+* fix(hvcs): prevent double url schemes urls in changelog (#676)
+
+* fix(hvcs): prevent double protocol scheme urls in changelogs
+
+  Due to a typo and conditional stripping of the url scheme the
+  hvcs_domain and hvcs_api_domain values would contain protocol schemes
+  when a user specified one but the defaults would not. It would cause
+  the api_url and remote_url to end up as &#34;https://https://domain.com&#34;
+
+* fix(bitbucket): correct url parsing &amp; prevent double url schemes
+
+* fix(gitea): correct url parsing &amp; prevent double url schemes
+
+* fix(github): correct url parsing &amp; prevent double url schemes
+
+* fix(gitlab): correct url parsing &amp; prevent double url schemes
+
+* test(hvcs): ensure api domains are derived correctly
+
+---------
+
+Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`5cfdb24`](https://github.com/python-semantic-release/python-semantic-release/commit/5cfdb248c003a2d2be5fe65fb61d41b0d4c45db5))
+
+### Style
+
+* style: beautify db1343890f7e0644bc8457f995f2bd62087513d3 ([`88291b9`](https://github.com/python-semantic-release/python-semantic-release/commit/88291b92a980f556cf572856643593234600f9d5))
+
+* style: beautify 5cfdb248c003a2d2be5fe65fb61d41b0d4c45db5 ([`9d1f17a`](https://github.com/python-semantic-release/python-semantic-release/commit/9d1f17acb6c42b2044253e4f91b32869729bb522))
+
+### Test
+
+* test(changelog): convert test fixtures to use local tz rather than utc (#887) ([`f2caba7`](https://github.com/python-semantic-release/python-semantic-release/commit/f2caba7601ea771a8dabe491c6f070e57baa7311))
+
+
 ## v9.4.1 (2024-04-06)
 
 ### Build
