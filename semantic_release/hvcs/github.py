@@ -50,18 +50,28 @@ class Github(HvcsBase):
     GitHub HVCS interface for interacting with GitHub repositories
 
     This class supports the following products:
+
         - GitHub Free, Pro, & Team
         - GitHub Enterprise Cloud
-
-    This class does not support the following products:
         - GitHub Enterprise Server (on-premises installations)
+
+    This interface does its best to detect which product is configured based
+    on the provided domain. If it is the official `github.com`, the default
+    domain, then it is considered as GitHub Enterprise Cloud which uses the
+    subdomain `api.github.com` for api communication.
+
+    If the provided domain is anything else, than it is assumed to be communicating
+    with an on-premise or 3rd-party maintained GitHub instance which matches with
+    the GitHub Enterprise Server product. The on-prem server product uses a
+    path prefix for handling api requests which is configured to be
+    `server.domain/api/v3` based on the documentation in April 2024.
     """
 
-    # TODO: Add support for GitHub Enterprise Server (on-premises installations)
-    #       DEFAULT_ONPREM_API_PATH = "/api/v3"
     DEFAULT_DOMAIN = "github.com"
     DEFAULT_API_SUBDOMAIN_PREFIX = "api"
     DEFAULT_API_DOMAIN = f"{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}"
+    DEFAULT_API_PATH_CLOUD = "/"  # no path prefix!
+    DEFAULT_API_PATH_ONPREM = "/api/v3"
     DEFAULT_ENV_TOKEN_NAME = "GH_TOKEN"  # noqa: S105
 
     def __init__(
@@ -117,10 +127,15 @@ class Github(HvcsBase):
                 # infer from Domain url and prepend the default api subdomain
                 **{
                     **self.hvcs_domain._asdict(),
-                    "host": f"{self.DEFAULT_API_SUBDOMAIN_PREFIX}.{self.hvcs_domain.host}",
-                    "path": "",
+                    "host": self.hvcs_domain.host,
+                    "path": str(
+                        PurePosixPath(
+                            str.lstrip(self.hvcs_domain.path or "", "/") or "/",
+                            self.DEFAULT_API_PATH_ONPREM.lstrip("/"),
+                        )
+                    ),
                 }
-            ).url
+            ).url.rstrip("/")
         )
 
         if api_domain_parts.scheme == "http" and not allow_insecure:
@@ -138,14 +153,66 @@ class Github(HvcsBase):
                 "Only http and https are supported."
             )
 
-        # Strip any auth, query or fragment from the domain
-        self.api_url = parse_url(
+        # As GitHub Enterprise Cloud and GitHub Enterprise Server (on-prem) have different api locations
+        # lets check what we have been given and set the api url accordingly
+        #   NOTE: Github Server (on premise) uses a path prefix '/api/v3' for the api
+        #         while GitHub Enterprise Cloud uses a separate subdomain as the base
+        is_github_cloud = bool(
+            self.hvcs_domain.url == f"https://{self.DEFAULT_DOMAIN}"
+        )
+
+        # Calculate out the api url that we expect for GitHub Cloud
+        default_cloud_api_url = parse_url(
             Url(
-                scheme=api_domain_parts.scheme,
-                host=api_domain_parts.host,
-                port=api_domain_parts.port,
-                path=str(PurePosixPath(api_domain_parts.path or "/")),
+                # set api domain and append the default api path
+                **{
+                    **self.hvcs_domain._asdict(),
+                    "host": f"{self.DEFAULT_API_DOMAIN}",
+                    "path": self.DEFAULT_API_PATH_CLOUD,
+                }
             ).url.rstrip("/")
+        )
+
+        if (
+            is_github_cloud
+            and hvcs_api_domain
+            and api_domain_parts.url not in default_cloud_api_url.url
+        ):
+            # Api was provied but is not a subset of the expected one, raise an error
+            # we check for a subset because the user may not have provided the full api path
+            # but the correct domain.  If they didn't, then we are erroring out here.
+            raise ValueError(
+                f"Invalid api domain {api_domain_parts.url} for GitHub Enterprise Cloud. "
+                f"Expected {default_cloud_api_url.url}."
+            )
+
+        # Set the api url to the default cloud one if we are on cloud, otherwise
+        # use the verified api domain for a on-prem server
+        self.api_url = (
+            default_cloud_api_url
+            if is_github_cloud
+            else parse_url(
+                # Strip any auth, query or fragment from the domain
+                Url(
+                    scheme=api_domain_parts.scheme,
+                    host=api_domain_parts.host,
+                    port=api_domain_parts.port,
+                    path=str(
+                        PurePosixPath(
+                            # pass any custom server prefix path but ensure we don't
+                            # double up the api path in the case the user provided it
+                            str.replace(
+                                api_domain_parts.path or "",
+                                self.DEFAULT_API_PATH_ONPREM,
+                                "",
+                            ).lstrip("/")
+                            or "/",
+                            # apply the on-prem api path
+                            self.DEFAULT_API_PATH_ONPREM.lstrip("/"),
+                        )
+                    ),
+                ).url.rstrip("/")
+            )
         )
 
     @lru_cache(maxsize=1)
@@ -419,7 +486,7 @@ class Github(HvcsBase):
                 lambda x: x[1] is not None,
                 {
                     "auth": auth,
-                    "path": str(PurePosixPath("/", path)),
+                    "path": str(PurePosixPath("/", path.lstrip('/'))),
                     "query": query,
                     "fragment": fragment,
                 }.items(),
@@ -439,7 +506,14 @@ class Github(HvcsBase):
         query: str | None = None,
         fragment: str | None = None,
     ) -> str:
-        return self._derive_url(self.hvcs_domain, path, auth, query, fragment)
+        # Ensure any path prefix is transfered but not doubled up on the derived url
+        return self._derive_url(
+            self.hvcs_domain,
+            path=f"{self.hvcs_domain.path or ''}/{path.lstrip(self.hvcs_domain.path)}",
+            auth=auth,
+            query=query,
+            fragment=fragment,
+        )
 
     def create_api_url(
         self,
@@ -448,4 +522,11 @@ class Github(HvcsBase):
         query: str | None = None,
         fragment: str | None = None,
     ) -> str:
-        return self._derive_url(self.api_url, endpoint, auth, query, fragment)
+        # Ensure any api path prefix is transfered but not doubled up on the derived api url
+        return self._derive_url(
+            self.api_url,
+            path=f"{self.api_url.path or ''}/{endpoint.lstrip(self.api_url.path)}",
+            auth=auth,
+            query=query,
+            fragment=fragment,
+        )
