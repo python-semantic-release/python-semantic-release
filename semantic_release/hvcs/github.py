@@ -157,9 +157,7 @@ class Github(HvcsBase):
         # lets check what we have been given and set the api url accordingly
         #   NOTE: Github Server (on premise) uses a path prefix '/api/v3' for the api
         #         while GitHub Enterprise Cloud uses a separate subdomain as the base
-        is_github_cloud = bool(
-            self.hvcs_domain.url == f"https://{self.DEFAULT_DOMAIN}"
-        )
+        is_github_cloud = bool(self.hvcs_domain.url == f"https://{self.DEFAULT_DOMAIN}")
 
         # Calculate out the api url that we expect for GitHub Cloud
         default_cloud_api_url = parse_url(
@@ -486,7 +484,7 @@ class Github(HvcsBase):
                 lambda x: x[1] is not None,
                 {
                     "auth": auth,
-                    "path": str(PurePosixPath("/", path.lstrip('/'))),
+                    "path": str(PurePosixPath("/", path.lstrip("/"))),
                     "query": query,
                     "fragment": fragment,
                 }.items(),
