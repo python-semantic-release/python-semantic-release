@@ -55,12 +55,61 @@ def default_gh_client() -> Generator[Github, None, None]:
     ),
     [
         (
-            # Default values
+            # Default values (GitHub Enterprise Cloud)
             {},
             None,
             None,
-            f"https://{Github.DEFAULT_DOMAIN}",
-            f"https://{Github.DEFAULT_API_DOMAIN}",
+            "https://github.com",
+            "https://api.github.com",
+            False,
+        ),
+        (
+            # Explicitly set default values (GitHub Enterprise Cloud)
+            {},
+            Github.DEFAULT_DOMAIN,
+            Github.DEFAULT_API_DOMAIN,
+            "https://github.com",
+            "https://api.github.com",
+            False,
+        ),
+        (
+            # Pull both locations from environment (GitHub Actions on Cloud)
+            {
+                "GITHUB_SERVER_URL": f"https://{Github.DEFAULT_DOMAIN}",
+                "GITHUB_API_URL": f"https://{Github.DEFAULT_API_DOMAIN}",
+            },
+            None,
+            None,
+            "https://github.com",
+            "https://api.github.com",
+            False,
+        ),
+        (
+            # Explicitly set custom values with full api path
+            {},
+            EXAMPLE_HVCS_DOMAIN,
+            f"{EXAMPLE_HVCS_DOMAIN}{Github.DEFAULT_API_PATH_ONPREM}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}{Github.DEFAULT_API_PATH_ONPREM}",
+            False,
+        ),
+        (
+            # Explicitly defined api as subdomain
+            # POSSIBLY WRONG ASSUMPTION of Api path for GitHub Enterprise Server (On Prem)
+            {},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}{Github.DEFAULT_API_PATH_ONPREM}",
+            False,
+        ),
+        (
+            # Custom domain with path prefix
+            {},
+            "special.custom.server/vcs",
+            None,
+            "https://special.custom.server/vcs",
+            "https://special.custom.server/vcs/api/v3",
             False,
         ),
         (
@@ -69,19 +118,19 @@ def default_gh_client() -> Generator[Github, None, None]:
             None,
             None,
             "https://special.custom.server",
-            "https://api.special.custom.server",
+            "https://special.custom.server/api/v3",
             False,
         ),
         (
-            # Pull both locations from environment
+            # Pull both locations from environment (On-prem Actions Env)
             {
                 "GITHUB_SERVER_URL": "https://special.custom.server/",
-                "GITHUB_API_URL": "https://api2.special.custom.server/",
+                "GITHUB_API_URL": "https://special.custom.server/api/v3",
             },
             None,
             None,
             "https://special.custom.server",
-            "https://api2.special.custom.server",
+            "https://special.custom.server/api/v3",
             False,
         ),
         (
@@ -91,25 +140,25 @@ def default_gh_client() -> Generator[Github, None, None]:
             f"https://{EXAMPLE_HVCS_DOMAIN}",
             None,
             f"https://{EXAMPLE_HVCS_DOMAIN}",
-            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             False,
         ),
         (
             # Ignore environment & use provided parameter value (ie from user config)
             {"GITHUB_API_URL": "https://api.special.custom.server/"},
             f"https://{EXAMPLE_HVCS_DOMAIN}",
-            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             f"https://{EXAMPLE_HVCS_DOMAIN}",
-            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             False,
         ),
         (
             # Allow insecure http connections explicitly
             {},
             f"http://{EXAMPLE_HVCS_DOMAIN}",
-            f"http://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             f"http://{EXAMPLE_HVCS_DOMAIN}",
-            f"http://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             True,
         ),
         (
@@ -118,16 +167,16 @@ def default_gh_client() -> Generator[Github, None, None]:
             f"http://{EXAMPLE_HVCS_DOMAIN}",
             None,
             f"http://{EXAMPLE_HVCS_DOMAIN}",
-            f"http://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             True,
         ),
         (
             # Infer insecure connection from user configuration
             {},
             EXAMPLE_HVCS_DOMAIN,
-            f"api.{EXAMPLE_HVCS_DOMAIN}",
+            EXAMPLE_HVCS_DOMAIN,
             f"http://{EXAMPLE_HVCS_DOMAIN}",
-            f"http://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             True,
         ),
         (
@@ -136,7 +185,7 @@ def default_gh_client() -> Generator[Github, None, None]:
             EXAMPLE_HVCS_DOMAIN,
             None,
             f"http://{EXAMPLE_HVCS_DOMAIN}",
-            f"http://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/api/v3",
             True,
         ),
     ],

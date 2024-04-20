@@ -242,9 +242,7 @@ def test_changelog_post_to_release(
     session.mount("https://", mock_adapter)
 
     expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
-        # TODO: Fix as this is likely not correct given a custom domain and the
-        # use of GitHub which would be GitHub Enterprise Server which we don't yet support
-        api_url=f"https://api.{EXAMPLE_HVCS_DOMAIN}",  # GitHub API URL
+        api_url=f"https://{EXAMPLE_HVCS_DOMAIN}/api/v3",  # GitHub API URL
         owner=EXAMPLE_REPO_OWNER,
         repo_name=EXAMPLE_REPO_NAME,
     )
