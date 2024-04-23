@@ -2,25 +2,26 @@
 
 
 
-## v9.4.2 (2024-04-14)
+## v9.5.0 (2024-04-23)
 
 ### Build
 
-* build(deps-dev): update furo requirement from ~=2023.3 to ~=2024.1 (#878)
+* build(deps): bump ruff from 0.3.5 to 0.3.7 (#894) ([`6bf2849`](https://github.com/python-semantic-release/python-semantic-release/commit/6bf28496d8631ada9009aec5f1000f68b7f7ee16))
 
-Updates the requirements on [furo](https://github.com/pradyunsg/furo) to permit the latest version.
-- [Release notes](https://github.com/pradyunsg/furo/releases)
-- [Changelog](https://github.com/pradyunsg/furo/blob/main/docs/changelog.md)
-- [Commits](https://github.com/pradyunsg/furo/compare/2023.03.23...2024.01.29)
+### Feature
 
----
-updated-dependencies:
-- dependency-name: furo
-  dependency-type: direct:production
-...
+* feat: extend support to on-prem GitHub Enterprise Server (#896)
 
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`8954628`](https://github.com/python-semantic-release/python-semantic-release/commit/89546288b516f4d55c16a90f92602794067eac68))
+* test(github): adjust init test to match the Enterprise Server api url
+
+* feat(github): extend support to on-prem GitHub Enterprise Server
+
+  Resolves: #895 ([`4fcb737`](https://github.com/python-semantic-release/python-semantic-release/commit/4fcb737958d95d1a3be24db7427e137b46f5075f))
+
+
+## v9.4.2 (2024-04-14)
+
+### Build
 
 * build(deps): update rich requirement from ~=12.5 to ~=13.0 (#877)
 
@@ -32,17 +33,6 @@ Resolves: #888
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
 Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`4a22a8c`](https://github.com/python-semantic-release/python-semantic-release/commit/4a22a8c1a69bcf7b1ddd6db56e6883c617a892b3))
-
-### Ci
-
-* ci(stalebot): add permission to delete its own cache ([`34260fb`](https://github.com/python-semantic-release/python-semantic-release/commit/34260fb13fc595af9f780ce5082d16cd5ca165ef))
-
-* ci(stalebot): bump api operations from 200 -&gt; 400 allowed
-
-since our repo has around 100 issues, each validation takes a minimum of 2
-operations, leaving actual stale actions with very little ability to change
-things. Bumping this up will allow stalebot to action tickets on time in
-relation to our repository size. ([`f280a71`](https://github.com/python-semantic-release/python-semantic-release/commit/f280a711dae97948134f539ae62e0731cea48dff))
 
 ### Fix
 
@@ -113,24 +103,8 @@ relation to our repository size. ([`f280a71`](https://github.com/python-semantic
 
 Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`5cfdb24`](https://github.com/python-semantic-release/python-semantic-release/commit/5cfdb248c003a2d2be5fe65fb61d41b0d4c45db5))
 
-### Style
-
-* style: beautify db1343890f7e0644bc8457f995f2bd62087513d3 ([`88291b9`](https://github.com/python-semantic-release/python-semantic-release/commit/88291b92a980f556cf572856643593234600f9d5))
-
-* style: beautify 5cfdb248c003a2d2be5fe65fb61d41b0d4c45db5 ([`9d1f17a`](https://github.com/python-semantic-release/python-semantic-release/commit/9d1f17acb6c42b2044253e4f91b32869729bb522))
-
-### Test
-
-* test(changelog): convert test fixtures to use local tz rather than utc (#887) ([`f2caba7`](https://github.com/python-semantic-release/python-semantic-release/commit/f2caba7601ea771a8dabe491c6f070e57baa7311))
-
 
 ## v9.4.1 (2024-04-06)
-
-### Build
-
-* build(deps-dev): bump mypy from 1.8.0 to 1.9.0 (#879) ([`8a47db1`](https://github.com/python-semantic-release/python-semantic-release/commit/8a47db1a43c3fc9a8b7d03be3a8877e69acc7d3c))
-
-* build(deps-dev): bump ruff from 0.3.4 to 0.3.5 (#880) ([`816660e`](https://github.com/python-semantic-release/python-semantic-release/commit/816660e1509b34ba387def3793e9bf9c7e343e8c))
 
 ### Fix
 
@@ -144,79 +118,8 @@ Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`5cfdb24`](https://g
 
   Resolves: #884 ([`2c7b6ec`](https://github.com/python-semantic-release/python-semantic-release/commit/2c7b6ec85b6e3182463d7b695ee48e9669a25b3b))
 
-### Style
-
-* style: beautify 2c7b6ec85b6e3182463d7b695ee48e9669a25b3b ([`b9ecd84`](https://github.com/python-semantic-release/python-semantic-release/commit/b9ecd8461c36c4f904b78dc83d9ca2b10b6d89f5))
-
 
 ## v9.4.0 (2024-03-31)
-
-### Build
-
-* build(deps-dev): bump responses from 0.24 to 0.25.0 (#842)
-
-Bumps [responses](https://github.com/getsentry/responses) from 0.24 to 0.25.0.
-- [Release notes](https://github.com/getsentry/responses/releases)
-- [Changelog](https://github.com/getsentry/responses/blob/master/CHANGES)
-- [Commits](https://github.com/getsentry/responses/compare/0.24.0...0.25.0)
-
----
-updated-dependencies:
-- dependency-name: responses
-  dependency-type: direct:production
-  update-type: version-update:semver-minor
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`a1b2af6`](https://github.com/python-semantic-release/python-semantic-release/commit/a1b2af6272b362afe5334772f81a4be779be7ba6))
-
-* build(deps-build): resolve build deps versions for `python3.12` ([`075daa4`](https://github.com/python-semantic-release/python-semantic-release/commit/075daa4205283414ea5e370da5e35690de12c9ab))
-
-* build(deps-dev): bump responses from 0.23.3 to 0.24.1 ([`9210933`](https://github.com/python-semantic-release/python-semantic-release/commit/9210933be10532baa979e381126da4a477e82e2b))
-
-* build(deps-dev): bump sphinxcontrib-apidoc from 0.3.0 to 0.5.0 ([`69f163b`](https://github.com/python-semantic-release/python-semantic-release/commit/69f163baefad6f45e3537814cae2be2481e3488a))
-
-* build(deps-dev): bump sphinx-autobuild from 2021.03.14 to 2024.2.4 ([`9d30877`](https://github.com/python-semantic-release/python-semantic-release/commit/9d30877b8874a02056f2dee1e2f64c32efda4dc1))
-
-* build(deps-dev): update pytest-cov requirement from ~=4.0 to ~=5.0 (#873)
-
-Updates the requirements on `pytest-cov` to permit the latest version.
-- [Changelog](https://github.com/pytest-dev/pytest-cov/blob/master/CHANGELOG.rst)
-- [Commits](https://github.com/pytest-dev/pytest-cov/compare/v4.0.0...v5.0.0)
-
----
-updated-dependencies:
-- dependency-name: pytest-cov
-  dependency-type: direct:production
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`2ca6459`](https://github.com/python-semantic-release/python-semantic-release/commit/2ca6459131f677bffead21127f1feb05ae74b762))
-
-* build(deps-dev): bump ruff from 0.3.3 to 0.3.4 (#872)
-
-Bumps [ruff](https://github.com/astral-sh/ruff) from 0.3.3 to 0.3.4.
-- [Release notes](https://github.com/astral-sh/ruff/releases)
-- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
-- [Commits](https://github.com/astral-sh/ruff/compare/v0.3.3...v0.3.4)
-
----
-updated-dependencies:
-- dependency-name: ruff
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`6d7df6d`](https://github.com/python-semantic-release/python-semantic-release/commit/6d7df6d81b8775acac90956e5d8686460e6c2149))
-
-### Chore
-
-* chore(stalebot): refactor to use CI action for stale issue/pr evaluation ([`a352050`](https://github.com/python-semantic-release/python-semantic-release/commit/a352050d506947db6890f5cc0d964e4a3850949d))
-
-### Ci
-
-* ci(github): always update base env packages `pip`, `setuptools`, `wheel` ([`4748435`](https://github.com/python-semantic-release/python-semantic-release/commit/47484356569274d78508688521519972beae609f))
 
 ### Feature
 
@@ -232,18 +135,8 @@ Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.githu
 
 Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`2ee3f8a`](https://github.com/python-semantic-release/python-semantic-release/commit/2ee3f8a918d2e5ea9ab64df88f52e62a1f589c38))
 
-### Style
-
-* style: beautify 2ee3f8a918d2e5ea9ab64df88f52e62a1f589c38 ([`8b4fd3e`](https://github.com/python-semantic-release/python-semantic-release/commit/8b4fd3eab052cd1694274e0e6d8eaf77b658474d))
-
-* style(deps): improve readability &amp; flexibility of dependencies ([`8fdd582`](https://github.com/python-semantic-release/python-semantic-release/commit/8fdd5827fa5ea0140e6373060be14780d44bcf0f))
-
 
 ## v9.3.1 (2024-03-24)
-
-### Build
-
-* build(deps-dev): bump ruff from 0.1.11 to 0.3.3 (#862) ([`8a6adeb`](https://github.com/python-semantic-release/python-semantic-release/commit/8a6adeb6824a0b78e3dd297c1e62e5453a9f779f))
 
 ### Fix
 
@@ -267,10 +160,6 @@ Resolves: #724 ([`4c998b7`](https://github.com/python-semantic-release/python-se
 
 * perf(algorithm): simplify logs &amp; use lookup when searching for commit &amp; tag match ([`3690b95`](https://github.com/python-semantic-release/python-semantic-release/commit/3690b9511de633ab38083de4d2505b6d05853346))
 
-### Style
-
-* style: beautify 8a9da4feb8753e3ab9ea752afa25decd2047675a ([`3bf98d5`](https://github.com/python-semantic-release/python-semantic-release/commit/3bf98d5c18886f9dcc60d122a834e6fe93d0ea07))
-
 
 ## v9.3.0 (2024-03-21)
 
@@ -288,10 +177,6 @@ fixture to properly pass the tests.
 
 * feat(cmd-version): create changelog prior to build enabling doc bundling ([`37fdb28`](https://github.com/python-semantic-release/python-semantic-release/commit/37fdb28e0eb886d682b5dea4cc83a7c98a099422))
 
-### Style
-
-* style: beautify 37fdb28e0eb886d682b5dea4cc83a7c98a099422 ([`bc841cd`](https://github.com/python-semantic-release/python-semantic-release/commit/bc841cd171c46e1e23681f0f02d8f314281857c4))
-
 
 ## v9.2.2 (2024-03-19)
 
@@ -306,59 +191,19 @@ is invalid
 
 Resolves: #840 ([`91d221a`](https://github.com/python-semantic-release/python-semantic-release/commit/91d221a01266e5ca6de5c73296b0a90987847494))
 
-### Test
-
-* test: update references in test cases ([`e083056`](https://github.com/python-semantic-release/python-semantic-release/commit/e083056892086fdc70beb7a42d952e7c9604e995))
-
-* test(cli-help): add test cases of --help failures ([`1d53879`](https://github.com/python-semantic-release/python-semantic-release/commit/1d538790a727852d61c5edfe91c5707ed3b6af5a))
-
 
 ## v9.2.1 (2024-03-19)
-
-### Chore
-
-* chore(pre-commit): upgrade hooks for pyupgrade, mypy, vulture, bandit, and check-jsonschema ([`d59f593`](https://github.com/python-semantic-release/python-semantic-release/commit/d59f5931e6b7fac3604f9d5f13a1947688b285d9))
-
-* chore(deps-dev): bump ruff from 0.1.11 to 0.3.2 ([`ccdc976`](https://github.com/python-semantic-release/python-semantic-release/commit/ccdc9763b2f588bafe7a8c7d71342d4ebcb09f13))
-
-* chore(pre-commit): cleanup ruff warnings ([`4cb4ca1`](https://github.com/python-semantic-release/python-semantic-release/commit/4cb4ca19dc3d649a54e7a1b1e9a44a196624eef0))
-
-* chore(pre-commit): cleanup &#39;check blanket type ignore&#39; warnings ([`7e938e6`](https://github.com/python-semantic-release/python-semantic-release/commit/7e938e69af7d45c6d77dcf0a3627e5663cb35bff))
-
-* chore(pre-commit): exclude generated file CHANGELOG.md from checks ([`6e1f5cb`](https://github.com/python-semantic-release/python-semantic-release/commit/6e1f5cbd1c01f9a8c6cd8bafd706e5b5ec6ab007))
-
-* chore(pre-commit): cleanup vulture warnings ([`4b2467a`](https://github.com/python-semantic-release/python-semantic-release/commit/4b2467a1d7b14cd1afc3b355e69e81804fcc5b4d))
 
 ### Fix
 
 * fix(parse-git-url): handle urls with url-safe special characters ([`27cd93a`](https://github.com/python-semantic-release/python-semantic-release/commit/27cd93a0a65ee3787ca51be4c91c48f6ddb4269c))
-
-### Refactor
-
-* refactor: drop other 3.7 references ([`04bbefd`](https://github.com/python-semantic-release/python-semantic-release/commit/04bbefdebcdcf07667c2c297f1ce516ad35a1733))
-
-### Style
-
-* style: beautify d59f5931e6b7fac3604f9d5f13a1947688b285d9 ([`585a098`](https://github.com/python-semantic-release/python-semantic-release/commit/585a0983198fcf5ced9a1a337e521cbd8f4d5de4))
-
-### Test
-
-* test(helpers): add git url parse cases for urls with special characters ([`fc74ef2`](https://github.com/python-semantic-release/python-semantic-release/commit/fc74ef20e92645a9939efb0fcea69254a6a89681))
 
 
 ## v9.2.0 (2024-03-18)
 
 ### Build
 
-* build(MANIFEST): fix sdist contents to include docs &amp; tests ([`228347c`](https://github.com/python-semantic-release/python-semantic-release/commit/228347c8f64cc46f01b717ccdc2daf15384c7f2e))
-
 * build(deps): add click-option-group for grouping exclusive flags ([`bd892b8`](https://github.com/python-semantic-release/python-semantic-release/commit/bd892b89c26df9fccc9335c84e2b3217e3e02a37))
-
-### Chore
-
-* chore(stalebot): add config to manage aging issues &amp; PRs ([`d69a69b`](https://github.com/python-semantic-release/python-semantic-release/commit/d69a69bb636c06d384ae29601c62971cf1d6e88a))
-
-* chore(dependabot): adjust conf to relax bumping flexible requirement specs ([`a040aa4`](https://github.com/python-semantic-release/python-semantic-release/commit/a040aa43eb2218d76b3e56d280c7853633af4f45))
 
 ### Documentation
 
@@ -378,90 +223,12 @@ Resolves: #840 ([`91d221a`](https://github.com/python-semantic-release/python-se
 
 * fix(changelog): make sure default templates render ending in 1 newline ([`0b4a45e`](https://github.com/python-semantic-release/python-semantic-release/commit/0b4a45e3673d0408016dc8e7b0dce98007a763e3))
 
-### Style
-
-* style: resolve linter &amp; formatting across codebase ([`747fe1d`](https://github.com/python-semantic-release/python-semantic-release/commit/747fe1da682764da1a7c9199f43c02fdf998739d))
-
-* style(test-changelog): change to direct fixture reference &amp; improve clarity ([`a841f3b`](https://github.com/python-semantic-release/python-semantic-release/commit/a841f3baa909768947ffac742a33ca18a40cc01b))
-
-* style(tests): add additional typing to test args ([`74c9dec`](https://github.com/python-semantic-release/python-semantic-release/commit/74c9dec2869c41700bbfe378f3f7833fa02a821c))
-
-* style: apply ruff formatting to codebase ([`ced4caa`](https://github.com/python-semantic-release/python-semantic-release/commit/ced4caadf35b26eb573f6d6e19452d05c7e7dabb))
-
-### Test
-
-* test(fixtures): correct the ordering of commits in changelog expectations ([`adce520`](https://github.com/python-semantic-release/python-semantic-release/commit/adce5200910aa287c0925a6ca2c742fbd470209f))
-
-* test(fixtures): adjust scipy changelog expectations related to parse errors ([`6242b61`](https://github.com/python-semantic-release/python-semantic-release/commit/6242b61a4d87f6f4e27e3a65b2cd57e22394da48))
-
-* test: add bitbucket to hvcs parameter list &amp; bitbucket to configs ([`b226906`](https://github.com/python-semantic-release/python-semantic-release/commit/b226906b3717d0307d242924a77cd847e7f9a50c))
-
-* test(changelog): increase changelog rigor to all commit types ([`1573b6b`](https://github.com/python-semantic-release/python-semantic-release/commit/1573b6b7def84fabeaebdeb590d65068e6ed9a5d))
-
-* test(changelog): enforce common single newline after generated docs ([`77c3816`](https://github.com/python-semantic-release/python-semantic-release/commit/77c3816f79ad3c1ef9687304b4773e6485e4ee2f))
-
-* test(fixtures): refactor for better chronological ordering for test success ([`929b861`](https://github.com/python-semantic-release/python-semantic-release/commit/929b861a5d827913efac325f9db6ae7b2f44ef77))
-
-* test(unit-changelog): refactor template testing to be fast &amp; simple ([`f8a718f`](https://github.com/python-semantic-release/python-semantic-release/commit/f8a718f7c00baa58521ffb21b231437652d1e102))
-
-* test(unit-release-notes): refactor template testing
-
-Drop the test related release notes template as that is one more thing to
-maintain and use the one provided to the user. ([`620d62a`](https://github.com/python-semantic-release/python-semantic-release/commit/620d62a60c47c3a8ffdc79cb74ee36ca330767e3))
-
-* test(unit-changelog): drop context test &amp; duplicate/incorrect template
-
-Drop the test related changelog template as that is one more thing to
-maintain and does not actually match the embedded template provided to
-the user.
-
-Secondly, drop the context unit test as it does not provide value that
-the template ultimately will fail in other unit tests. ([`ebb5ca3`](https://github.com/python-semantic-release/python-semantic-release/commit/ebb5ca3ea208c15170f25376e749e61e3475d2ee))
-
-* test(repo-commits): fix angular syntax for scopes in commits ([`a2b2b8f`](https://github.com/python-semantic-release/python-semantic-release/commit/a2b2b8f2ddeedb79e60cdb90de7a1d981509e814))
-
-* test(fixtures): trigger changelog generation in repo fixtures ([`2a89f68`](https://github.com/python-semantic-release/python-semantic-release/commit/2a89f68bf14f540234cd218e3aab1c9e12707f21))
-
-* test(fixtures): remove changelog generation prevention ([`7af8373`](https://github.com/python-semantic-release/python-semantic-release/commit/7af8373c3612e6aeec19c52c006187faa418b5be))
-
-* test(cli-version): ensure CHANGELOG is included in changed files ([`8d119df`](https://github.com/python-semantic-release/python-semantic-release/commit/8d119df1b0ca04f4e06446c608a2322497b30aac))
-
-* test: improve reliability &amp; error readability of assertions ([`0b07786`](https://github.com/python-semantic-release/python-semantic-release/commit/0b0778617b8e0d73365f5b223270625227c3ca30))
-
-* test(changelog): add assertion to check for changelog file exist before read ([`5556c3a`](https://github.com/python-semantic-release/python-semantic-release/commit/5556c3a881bfcc206df8adb21075b532a5551053))
-
-* test(cli-changelog): refactor changelog re-gen test to show debuggable results ([`3f4ff05`](https://github.com/python-semantic-release/python-semantic-release/commit/3f4ff05c71d261b825d117ecd030d34e22009731))
-
-* test(fixtures): add common fixture to write default changelog from repo definition ([`d2904b2`](https://github.com/python-semantic-release/python-semantic-release/commit/d2904b250b1285017316575d5effeb42b4440dfe))
-
-* test(next-version): adapt scipy commits test for new allow_zero_version config option ([`d157ecf`](https://github.com/python-semantic-release/python-semantic-release/commit/d157ecf579594177de0b7cbc61b706f41db56fb9))
-
-* test(next-version): adapt emoji commits test for new allow_zero_version config option ([`fc05b0e`](https://github.com/python-semantic-release/python-semantic-release/commit/fc05b0e334e5e8f9263626f3b68c32ee3a3b9bcc))
-
-* test(next-version): adapt angular commits test for new allow_zero_version config option ([`5893831`](https://github.com/python-semantic-release/python-semantic-release/commit/58938315a3ea04db798dc40b7940f9d323a00aae))
-
-* test(next-version): adapt tag commits test for new allow_zero_version config option ([`efe1672`](https://github.com/python-semantic-release/python-semantic-release/commit/efe1672788fd3659f53f60cc2fd72ca1bb9e40c0))
-
-* test(next-version): add new test case to ensure minimum version determinations ([`7ed5fe5`](https://github.com/python-semantic-release/python-semantic-release/commit/7ed5fe504234acbfed72dd5fe4e76381475d4cce))
-
-* test(next-version): refactor fixture references for maintainability ([`a2b43e2`](https://github.com/python-semantic-release/python-semantic-release/commit/a2b43e2759b334775edc9c65b0327b70808416d3))
-
-* test(fixtures): add config modifier fixture ([`e3bb4d3`](https://github.com/python-semantic-release/python-semantic-release/commit/e3bb4d3dc8aa5e14b11396f4e9fe1901f20ed4a3))
-
-* test(scenario): add variation of `allow_zero_version` flag ([`36142a6`](https://github.com/python-semantic-release/python-semantic-release/commit/36142a6d96446f4117220205fec8e6fe3d63ad42))
-
-* test(unit): update unit test for incrementing version ([`791c69d`](https://github.com/python-semantic-release/python-semantic-release/commit/791c69d8d9968357284d884344e1710b9289688a))
-
 
 ## v9.1.1 (2024-02-25)
 
 ### Fix
 
 * fix(parse_git_url): fix bad url with dash ([`1c25b8e`](https://github.com/python-semantic-release/python-semantic-release/commit/1c25b8e6f1e43c15ca7d5a59dca0a13767f9bc33))
-
-### Style
-
-* style: beautify 1c25b8e6f1e43c15ca7d5a59dca0a13767f9bc33 ([`85b2a2f`](https://github.com/python-semantic-release/python-semantic-release/commit/85b2a2f5cf4c49aa3e394dfe3574e24266f93bfc))
 
 
 ## v9.1.0 (2024-02-14)
@@ -492,78 +259,8 @@ Resolves: #834 ([`291aace`](https://github.com/python-semantic-release/python-se
 
 * fix: remove unofficial environment variables ([`a5168e4`](https://github.com/python-semantic-release/python-semantic-release/commit/a5168e40b9a14dbd022f62964f382b39faf1e0df))
 
-### Refactor
-
-* refactor: add lint workaround ([`55d6e03`](https://github.com/python-semantic-release/python-semantic-release/commit/55d6e0349303e7b1a6a598a8f4eb54d708d1b27d))
-
-### Style
-
-* style: ruff linter ([`f7f7c8a`](https://github.com/python-semantic-release/python-semantic-release/commit/f7f7c8a8d499126a16238e7183cde54e3ea4cea0))
-
-* style: beautify 710d96482edae38438c090e5e631f2d6b6e990f2 ([`d2314f8`](https://github.com/python-semantic-release/python-semantic-release/commit/d2314f86946df8a6ef30ca7a5bd163c5989e46f7))
-
-* style(fixtures): update styling of imports on git repo fixture ([`710d964`](https://github.com/python-semantic-release/python-semantic-release/commit/710d96482edae38438c090e5e631f2d6b6e990f2))
-
-* style: beautify 8e3f87ce801498fdbb0c1b2261b9768941c0a21c ([`16c057a`](https://github.com/python-semantic-release/python-semantic-release/commit/16c057a8da471a696f6d6484f2cc821fd883f5ed))
-
-* style(tests): update typing &amp; import issues ([`2597ea5`](https://github.com/python-semantic-release/python-semantic-release/commit/2597ea584ab5084ef6ab398b9ec6186a6191ac1f))
-
-### Test
-
-* test: remove environment variable tests ([`5c3fe69`](https://github.com/python-semantic-release/python-semantic-release/commit/5c3fe694de5db0fc6a157a6a7717fa8c4d26f6f6))
-
-* test: add bitbucket to changelog unit test ([`c33f8ff`](https://github.com/python-semantic-release/python-semantic-release/commit/c33f8ff37e007a944b5fb1884b9e05b33ccd2047))
-
-* test(fixtures): refactor repos to use common fixtures to simplify workflow ([`9ad8296`](https://github.com/python-semantic-release/python-semantic-release/commit/9ad829693589e0cfe0962159f41cc2efd886eacc))
-
-* test(fixtures): add common repo build/setup fixture ([`8da2840`](https://github.com/python-semantic-release/python-semantic-release/commit/8da284095173f7bcece768e0452d8d18378454d4))
-
-* test(fixtures): apply new repo definition to repos ([`1e13e2c`](https://github.com/python-semantic-release/python-semantic-release/commit/1e13e2cee25b2760058bdd58238a9f55d5999c5e))
-
-* test(fixtures): define new repo definition type ([`e0e8792`](https://github.com/python-semantic-release/python-semantic-release/commit/e0e8792d9dcd3b7d3f4a41ef0f8fe2c92a761f55))
-
-* test(fixtures): add generic multi-commit executor from definition ([`e9605f3`](https://github.com/python-semantic-release/python-semantic-release/commit/e9605f37b001ff478f08f781587448c16ba31687))
-
-* test(fixtures): add commit &amp; changelog entry derivation function ([`29dbc7c`](https://github.com/python-semantic-release/python-semantic-release/commit/29dbc7cf6f9a066d9f6bd785fbeb11e700a586ac))
-
-* test(fixtures): add manual release commit creation fixture ([`93dc523`](https://github.com/python-semantic-release/python-semantic-release/commit/93dc523776af303e0870f42618bb1590948fb826))
-
-* test(fixtures): expand hvcs use fixtures to set remote.domain value ([`1303a5a`](https://github.com/python-semantic-release/python-semantic-release/commit/1303a5a5fcaec326f2cbe625d847c7de821a853d))
-
-* test(fixtures): use const to set example project domain ([`1a15761`](https://github.com/python-semantic-release/python-semantic-release/commit/1a15761c32de93b03628be0032f6a57f196d6ee1))
-
-* test(constants): set starting example project version to 0.0.0 ([`310af11`](https://github.com/python-semantic-release/python-semantic-release/commit/310af1150129e9d6ef833dd9a18860119b15ee01))
-
-* test(fixtures): remove unused fixtures &amp; types ([`8e3f87c`](https://github.com/python-semantic-release/python-semantic-release/commit/8e3f87ce801498fdbb0c1b2261b9768941c0a21c))
-
-* test(util): add util func for removing readonly .git/* files ([`180a053`](https://github.com/python-semantic-release/python-semantic-release/commit/180a053a992c0ffa03e1d9800cc4bf743d6331b2))
-
-* test(fixtures): rename repo main and feature branches fixture across tests ([`f006e2b`](https://github.com/python-semantic-release/python-semantic-release/commit/f006e2b2e9e2025a3b07d14d79714420d59a63fe))
-
-* test(fixtures): add caching to github flow development repos ([`693b143`](https://github.com/python-semantic-release/python-semantic-release/commit/693b14352da4fa2c7fcd969c4b8c5230ec90055c))
-
-* test(fixtures): add caching to git flow development repos ([`3db33f0`](https://github.com/python-semantic-release/python-semantic-release/commit/3db33f0c6556701de54ecc07dde91b65fc5d60a5))
-
-* test(fixtures): add caching to trunk development w/ tags repos ([`4e3b6b6`](https://github.com/python-semantic-release/python-semantic-release/commit/4e3b6b6ef3f493ca613e25b5a5bdb5545fa12e9f))
-
-* test(fixtures): refactor for session level fixture use ([`a42b032`](https://github.com/python-semantic-release/python-semantic-release/commit/a42b032ff44bedee81d20765163758c8a2ca6153))
-
-* test(utils): add a utility to temporary change directory ([`68e12f3`](https://github.com/python-semantic-release/python-semantic-release/commit/68e12f369deced9df9e2c8d08dae7a4e4ece3fee))
-
-* test(fixtures): modularize git repo file into sub-modules ([`18d0877`](https://github.com/python-semantic-release/python-semantic-release/commit/18d0877f6a6db38ed127b1c07d191075dda46904))
-
-* test(fixtures): deconflict colliding fixtures for file dependent fixture execution ([`1890cf2`](https://github.com/python-semantic-release/python-semantic-release/commit/1890cf2e8989e5fea182894e663c3659edf6903a))
-
-* test(fixtures): cache the base example git directory ([`0cd0f44`](https://github.com/python-semantic-release/python-semantic-release/commit/0cd0f44019a5dacf01040b6917b35f2a918d00ca))
-
-* test(fixtures): adapt cli conftest fixtures to read when file is known to exist ([`0193cde`](https://github.com/python-semantic-release/python-semantic-release/commit/0193cde64cf7e07a7ecd5a0ea9513105f6207386))
-
 
 ## v9.0.3 (2024-02-08)
-
-### Chore
-
-* chore: modernize ruff configuration to work with ruff &gt;= 0.2 ([`613d240`](https://github.com/python-semantic-release/python-semantic-release/commit/613d240499c081b185c5774d1d8a4665d3f5cc28))
 
 ### Fix
 
@@ -573,28 +270,8 @@ Resolves: #834 ([`291aace`](https://github.com/python-semantic-release/python-se
 
 * perf(algorithm): refactor bfs search to use queue rather than recursion ([`8b742d3`](https://github.com/python-semantic-release/python-semantic-release/commit/8b742d3db6652981a7b5f773a74b0534edc1fc15))
 
-### Style
-
-* style: beautify 8b742d3db6652981a7b5f773a74b0534edc1fc15 ([`f95be0c`](https://github.com/python-semantic-release/python-semantic-release/commit/f95be0c207e499e214b12c578825bfcee0f2bbf8))
-
-### Test
-
-* test(algorithm): add bfs unit test on fake git history ([`2c8a36e`](https://github.com/python-semantic-release/python-semantic-release/commit/2c8a36ea5b1d1fb19cfe90a3b8a1bce5077c717c))
-
 
 ## v9.0.2 (2024-02-08)
-
-### Chore
-
-* chore: update pre-commit hooks (#796) ([`e238452`](https://github.com/python-semantic-release/python-semantic-release/commit/e23845226120b4fb934dd8755ce1b3f822cac041))
-
-### Ci
-
-* ci: Configure trusted publishing in pypi ([`8e3c00b`](https://github.com/python-semantic-release/python-semantic-release/commit/8e3c00b238859559d82ff692bcee15f70bf4f6ad))
-
-* ci: bump the github-actions group with 3 updates (#831) ([`bf96143`](https://github.com/python-semantic-release/python-semantic-release/commit/bf961436fd81c6398ca2c456143b64517a2b4cac))
-
-* ci: add grouped github-actions section to dependabot config (#794) ([`3eb15c4`](https://github.com/python-semantic-release/python-semantic-release/commit/3eb15c413cec0430fe2b27a313185068f900c61d))
 
 ### Documentation
 
@@ -611,28 +288,12 @@ for the proper syntax.
 
 Resolves: #820 ([`70193ba`](https://github.com/python-semantic-release/python-semantic-release/commit/70193ba117c1a6d3690aed685fee8a734ba174e5))
 
-### Style
-
-* style: beautify 70193ba117c1a6d3690aed685fee8a734ba174e5 ([`c777bb2`](https://github.com/python-semantic-release/python-semantic-release/commit/c777bb261e8e46497c5c4b3fd84303db71772142))
-
-* style: beautify 229c6471efc2c1bee002c3b89f58caf391b89e78 ([`c7be6e2`](https://github.com/python-semantic-release/python-semantic-release/commit/c7be6e2330c3527302915fcf3334923ab5252480))
-
-### Test
-
-* test(util): add windows line-endings possibilities for commit parsing ([`c57b082`](https://github.com/python-semantic-release/python-semantic-release/commit/c57b0825c632da166c6dbe5b976c9edb1aa5882b))
-
-* test(fixtures): cache the base example project directory (#799) ([`229c647`](https://github.com/python-semantic-release/python-semantic-release/commit/229c6471efc2c1bee002c3b89f58caf391b89e78))
-
 
 ## v9.0.1 (2024-02-06)
 
 ### Fix
 
 * fix(config): set commit parser opt defaults based on parser choice (#782) ([`9c594fb`](https://github.com/python-semantic-release/python-semantic-release/commit/9c594fb6efac7e4df2b0bfbd749777d3126d03d7))
-
-### Style
-
-* style: beautify 9c594fb6efac7e4df2b0bfbd749777d3126d03d7 ([`6ed24fe`](https://github.com/python-semantic-release/python-semantic-release/commit/6ed24fe81ae2cf2a3823a1dff78552abbd9fd363))
 
 
 ## v9.0.0 (2024-02-06)
@@ -643,25 +304,6 @@ Resolves: #820 ([`70193ba`](https://github.com/python-semantic-release/python-se
 
 
 ## v8.7.2 (2024-01-03)
-
-### Build
-
-* build(deps-dev): bump ruff from 0.1.8 to 0.1.11 (#792)
-
-Bumps [ruff](https://github.com/astral-sh/ruff) from 0.1.8 to 0.1.11.
-- [Release notes](https://github.com/astral-sh/ruff/releases)
-- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
-- [Commits](https://github.com/astral-sh/ruff/compare/v0.1.8...v0.1.11)
-
----
-updated-dependencies:
-- dependency-name: ruff
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`6835fca`](https://github.com/python-semantic-release/python-semantic-release/commit/6835fcad54b452ac212ee132a8424453c1c1e150))
 
 ### Fix
 
@@ -682,26 +324,12 @@ Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.githu
 
 * fix(cli-generate-config): ensure configuration types are always toml parsable (#785) ([`758e649`](https://github.com/python-semantic-release/python-semantic-release/commit/758e64975fe46b961809f35977574729b7c44271))
 
-### Style
-
-* style: beautify 011b0729cba3045b4e7291fd970cb17aad7bae60 ([`06d5c61`](https://github.com/python-semantic-release/python-semantic-release/commit/06d5c610642f5a515317b9030368f279086696fc))
-
-* style: beautify d6c4ae0db458f8108c88d75ac4e07079bc747d32 ([`253c99e`](https://github.com/python-semantic-release/python-semantic-release/commit/253c99e72c1f4ddefd806c87cae10d1b72ff461b))
-
-### Test
-
-* test(infrastructure): refactor test fixtures &amp; configuration for higher resiliency (#773) ([`d6c4ae0`](https://github.com/python-semantic-release/python-semantic-release/commit/d6c4ae0db458f8108c88d75ac4e07079bc747d32))
-
 
 ## v8.7.0 (2023-12-22)
 
 ### Feature
 
 * feat(config): enable default environment token per hvcs (#774) ([`26528eb`](https://github.com/python-semantic-release/python-semantic-release/commit/26528eb8794d00dfe985812269702fbc4c4ec788))
-
-### Style
-
-* style: beautify 26528eb8794d00dfe985812269702fbc4c4ec788 ([`514f558`](https://github.com/python-semantic-release/python-semantic-release/commit/514f5580fbec0143f88d3f637be260c769136377))
 
 
 ## v8.6.0 (2023-12-22)
@@ -716,57 +344,8 @@ Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.githu
 
 Git remote url parsing now supports additional formats (ssh, https, file, git) ([`cf75f23`](https://github.com/python-semantic-release/python-semantic-release/commit/cf75f237360488ebb0088e5b8aae626e97d9cbdd))
 
-### Style
-
-* style: beautify cf75f237360488ebb0088e5b8aae626e97d9cbdd ([`2de634d`](https://github.com/python-semantic-release/python-semantic-release/commit/2de634d6e1fed29e8ce55a1c57fd23bf838badd9))
-
 
 ## v8.5.2 (2023-12-19)
-
-### Build
-
-* build(deps-dev): bump ruff from 0.1.7 to 0.1.8 (#775)
-
-Bumps [ruff](https://github.com/astral-sh/ruff) from 0.1.7 to 0.1.8.
-- [Release notes](https://github.com/astral-sh/ruff/releases)
-- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
-- [Commits](https://github.com/astral-sh/ruff/compare/v0.1.7...v0.1.8)
-
----
-updated-dependencies:
-- dependency-name: ruff
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`5efda8a`](https://github.com/python-semantic-release/python-semantic-release/commit/5efda8acfed938d3188cd55678ace20ecac7f798))
-
-* build(deps-dev): bump ruff from 0.1.6 to 0.1.7 (#769)
-
-* build(deps-dev): bump ruff from 0.1.6 to 0.1.7
-
-Bumps [ruff](https://github.com/astral-sh/ruff) from 0.1.6 to 0.1.7.
-- [Release notes](https://github.com/astral-sh/ruff/releases)
-- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
-- [Commits](https://github.com/astral-sh/ruff/compare/v0.1.6...v0.1.7)
-
----
-updated-dependencies:
-- dependency-name: ruff
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-
-* ci: remove hardcoded ruff version in workflows
-
----------
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt;
-Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`c48c3b3`](https://github.com/python-semantic-release/python-semantic-release/commit/c48c3b370335931d63391d1a4f5802937deff178))
 
 ### Fix
 
@@ -777,12 +356,6 @@ Co-authored-by: Bernard Cooke &lt;bernard-cooke@hotmail.com&gt; ([`c48c3b3`](htt
 * test(cli-main): add test for raw config validation error
 
 * fix(cli): gracefully output configuration validation errors ([`e8c9d51`](https://github.com/python-semantic-release/python-semantic-release/commit/e8c9d516c37466a5dce75a73766d5be0f9e74627))
-
-### Style
-
-* style: beautify 5efda8acfed938d3188cd55678ace20ecac7f798 ([`98b10b3`](https://github.com/python-semantic-release/python-semantic-release/commit/98b10b3f08af16ab5cb00096b288afefbee1b74f))
-
-* style: beautify c48c3b370335931d63391d1a4f5802937deff178 ([`bb3b631`](https://github.com/python-semantic-release/python-semantic-release/commit/bb3b63111d0e02bd53c2ed25d5ab0e5a3d532136))
 
 
 ## v8.5.1 (2023-12-12)
@@ -813,10 +386,6 @@ Tweaks tests to use one committed change file and the version file
 as an ignored change file. This allows us to verify that our commit
 mechanism does not crash if a file that is changed is ignored by user ([`ea89fa7`](https://github.com/python-semantic-release/python-semantic-release/commit/ea89fa72885e15da91687172355426a22c152513))
 
-### Style
-
-* style: beautify 6b2fc8c156e122ee1b43fdb513b2dc3b8fd76724 ([`9bf69d7`](https://github.com/python-semantic-release/python-semantic-release/commit/9bf69d7005eee75f20b356bda97fea2d250a91de))
-
 
 ## v8.5.0 (2023-12-07)
 
@@ -826,43 +395,6 @@ mechanism does not crash if a file that is changed is ignored by user ([`ea89fa7
 
 
 ## v8.4.0 (2023-12-07)
-
-### Build
-
-* build(deps-dev): bump ruff from 0.1.2 to 0.1.6 (#757)
-
-Bumps [ruff](https://github.com/astral-sh/ruff) from 0.1.2 to 0.1.6.
-- [Release notes](https://github.com/astral-sh/ruff/releases)
-- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)
-- [Commits](https://github.com/astral-sh/ruff/compare/v0.1.2...v0.1.6)
-
----
-updated-dependencies:
-- dependency-name: ruff
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`90db8f1`](https://github.com/python-semantic-release/python-semantic-release/commit/90db8f1bd8986eda1b913cd4bab5abd41192f01f))
-
-* build(deps-dev): update python-gitlab requirement from &lt;4,&gt;=2 to &gt;=2,&lt;5 (#748)
-
-Updates the requirements on [python-gitlab](https://github.com/python-gitlab/python-gitlab) to permit the latest version.
-- [Release notes](https://github.com/python-gitlab/python-gitlab/releases)
-- [Changelog](https://github.com/python-gitlab/python-gitlab/blob/main/CHANGELOG.md)
-- [Commits](https://github.com/python-gitlab/python-gitlab/compare/v2.0.0...v4.1.1)
-
----
-updated-dependencies:
-- dependency-name: python-gitlab
-  dependency-type: direct:production
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`a176d62`](https://github.com/python-semantic-release/python-semantic-release/commit/a176d626f28ba68ae8a938b2f04f74da841a7eeb))
-
-* build(deps-dev): bump ruff from 0.0.292 to 0.1.1 ([`9c5bbe0`](https://github.com/python-semantic-release/python-semantic-release/commit/9c5bbe0b0ef96e0fadae9e65918fc8939d0d3e60))
 
 ### Documentation
 
@@ -879,16 +411,6 @@ Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.githu
 * test(version): add test for `--tag` option &amp; `--no-tag/commit`
 
 * docs(commands): update `version` subcommand options ([`de6b9ad`](https://github.com/python-semantic-release/python-semantic-release/commit/de6b9ad921e697b5ea2bb2ea8f180893cecca920))
-
-### Style
-
-* style: beautify de6b9ad921e697b5ea2bb2ea8f180893cecca920 ([`c94fb6f`](https://github.com/python-semantic-release/python-semantic-release/commit/c94fb6f53bd8bdeaa4f40219886fa7c6e8755f29))
-
-* style: convert formatter from black to ruff (#746) ([`deb4dba`](https://github.com/python-semantic-release/python-semantic-release/commit/deb4dbaba3de5396e0eb2389e728d0b1fe702843))
-
-### Test
-
-* test(commandline-main): prevent git gpgsign config from failing tests (#760) ([`744ff25`](https://github.com/python-semantic-release/python-semantic-release/commit/744ff256f10c895a97241dc085bc132d10c9f737))
 
 ### Unknown
 
@@ -921,22 +443,6 @@ Signed-off-by: Bryant Finney &lt;bryant.finney@outlook.com&gt; ([`94a1311`](http
 
 ## v8.1.2 (2023-10-13)
 
-### Build
-
-* build(deps-dev): update importlib-resources requirement (#719) ([`b1ec8fe`](https://github.com/python-semantic-release/python-semantic-release/commit/b1ec8fed0047c79e85fd986cdbd246d2325e2b7f))
-
-* build(deps-dev): bump ruff from 0.0.290 to 0.0.292 (#726) ([`9818cb0`](https://github.com/python-semantic-release/python-semantic-release/commit/9818cb0066ff27adb8d24cdee4ed714754c32e5e))
-
-### Chore
-
-* chore: remove setup.py as setuptools no longer needs it ([`d8762c8`](https://github.com/python-semantic-release/python-semantic-release/commit/d8762c8d4e9772f4ba016116a28948af4a4ee4d6))
-
-* chore: clearer pytest output from tox ([`d890e46`](https://github.com/python-semantic-release/python-semantic-release/commit/d890e466d2dad0538ceb58932b987abbd662fafc))
-
-* chore: pre-commit autoupdate &amp;&amp; pre-commit run -a ([`7f448f2`](https://github.com/python-semantic-release/python-semantic-release/commit/7f448f20ef207f0314c63f94f055f8285064df16))
-
-* chore: add tests for python 3.12 (#728) ([`42360fd`](https://github.com/python-semantic-release/python-semantic-release/commit/42360fd93975f9ec4e1784dcd4b4cec23acc5de4))
-
 ### Fix
 
 * fix: correct lint errors
@@ -948,47 +454,12 @@ GitHub.upload_asset now raises ValueError instead of requests.HTTPError ([`a13a6
 
 ## v8.1.1 (2023-09-19)
 
-### Build
-
-* build(deps-dev): bump ruff from 0.0.286 to 0.0.290 (#713)
-
-Bumps [ruff](https://github.com/astral-sh/ruff) from 0.0.286 to 0.0.290.
-- [Release notes](https://github.com/astral-sh/ruff/releases)
-- [Changelog](https://github.com/astral-sh/ruff/blob/main/BREAKING_CHANGES.md)
-- [Commits](https://github.com/astral-sh/ruff/compare/v0.0.286...v0.0.290)
-
----
-updated-dependencies:
-- dependency-name: ruff
-  dependency-type: direct:production
-  update-type: version-update:semver-patch
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`6b288f2`](https://github.com/python-semantic-release/python-semantic-release/commit/6b288f2033366a8a2d6e730938df3606fa5ca5a7))
-
 ### Fix
 
 * fix: attribute error when logging non-strings (#711) ([`75e6e48`](https://github.com/python-semantic-release/python-semantic-release/commit/75e6e48129da8238a62d5eccac1ae55d0fee0f9f))
 
 
 ## v8.1.0 (2023-09-19)
-
-### Build
-
-* build(deps-dev): bump importlib-resources from 5.7 to 5.12.0 (#704)
-
-* build(deps-dev): bump importlib-resources from 5.7 to 5.12.0
-
-* build(deps-dev): relax importlib-resources requirement
-
----------
-
-Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`861fe01`](https://github.com/python-semantic-release/python-semantic-release/commit/861fe0119131f69761ae3e06ec46d62e526269d6))
-
-### Chore
-
-* chore: add ci test job for python 3.12-dev (#707) ([`2e57fb9`](https://github.com/python-semantic-release/python-semantic-release/commit/2e57fb957c2f72f4b8570a269dbdd093fb9fbf4b))
 
 ### Documentation
 
@@ -1002,12 +473,6 @@ Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`861fe01`](http
 
 
 ## v8.0.8 (2023-08-26)
-
-### Chore
-
-* chore: remove duplicate test cases ([`249cec7`](https://github.com/python-semantic-release/python-semantic-release/commit/249cec7e4638770dad00d49ab1d982fd2e20a9a2))
-
-* chore: fix lint errors and pin ruff ([`f16b090`](https://github.com/python-semantic-release/python-semantic-release/commit/f16b090db0aa74da542d49dfdfedef8d41ae4f95))
 
 ### Fix
 
@@ -1024,68 +489,6 @@ Co-authored-by: github-actions &lt;action@github.com&gt; ([`8a515ca`](https://gi
 
 
 ## v8.0.6 (2023-08-13)
-
-### Build
-
-* build(deps-dev): update pytest-xdist requirement (#677)
-
-Updates the requirements on [pytest-xdist](https://github.com/pytest-dev/pytest-xdist) to permit the latest version.
-- [Changelog](https://github.com/pytest-dev/pytest-xdist/blob/master/CHANGELOG.rst)
-- [Commits](https://github.com/pytest-dev/pytest-xdist/compare/v2.0.0...v3.3.1)
-
----
-updated-dependencies:
-- dependency-name: pytest-xdist
-  dependency-type: direct:production
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`9ec6321`](https://github.com/python-semantic-release/python-semantic-release/commit/9ec63215c8d60230ff90c06096d8f37956bd156a))
-
-* build(deps-dev): update coverage[toml] requirement (#678)
-
-Updates the requirements on [coverage[toml]](https://github.com/nedbat/coveragepy) to permit the latest version.
-- [Release notes](https://github.com/nedbat/coveragepy/releases)
-- [Changelog](https://github.com/nedbat/coveragepy/blob/master/CHANGES.rst)
-- [Commits](https://github.com/nedbat/coveragepy/compare/6.0...7.3.0)
-
----
-updated-dependencies:
-- dependency-name: coverage[toml]
-  dependency-type: direct:production
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`3561a97`](https://github.com/python-semantic-release/python-semantic-release/commit/3561a977fc56ec4bb12c9a894c0072cd8a3519fa))
-
-* build(deps-dev): bump responses from 0.21.0 to 0.23.3 (#680)
-
-Bumps [responses](https://github.com/getsentry/responses) from 0.21.0 to 0.23.3.
-- [Release notes](https://github.com/getsentry/responses/releases)
-- [Changelog](https://github.com/getsentry/responses/blob/master/CHANGES)
-- [Commits](https://github.com/getsentry/responses/compare/0.21.0...0.23.3)
-
----
-updated-dependencies:
-- dependency-name: responses
-  dependency-type: direct:production
-  update-type: version-update:semver-minor
-...
-
-Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
-Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.github.com&gt; ([`dd6946c`](https://github.com/python-semantic-release/python-semantic-release/commit/dd6946cd479f646f3af028b92ca83db8fc4c0c66))
-
-### Chore
-
-* chore: clean up dependabot commit messages ([`5981a45`](https://github.com/python-semantic-release/python-semantic-release/commit/5981a45373ce623fc4e74326a4acb6bb97129adc))
-
-* chore: remove redundant flake8 config and add missing README badges ([`101e182`](https://github.com/python-semantic-release/python-semantic-release/commit/101e182a238f8b15221ae093c37206ebdd1eeb25))
-
-* chore(deps): remove obsolete dataclasses dependency (#674) ([`d70fe75`](https://github.com/python-semantic-release/python-semantic-release/commit/d70fe7508ed0f0689d8e8cb631d8b9c0d680838c))
-
-### Ci
-
-* ci: add precommit dependabot ruff (#673) ([`2ad5c41`](https://github.com/python-semantic-release/python-semantic-release/commit/2ad5c41e6cab96d17eb72f57dbe5422f434f6b58))
 
 ### Fix
 
@@ -1106,10 +509,6 @@ Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.githu
 
 * docs: `password` should be `token`. ([`f1a54a6`](https://github.com/python-semantic-release/python-semantic-release/commit/f1a54a6c9a05b225b6474d50cd610eca19ec0c34))
 
-### Style
-
-* style: beautify f1a54a6c9a05b225b6474d50cd610eca19ec0c34 ([`0280e10`](https://github.com/python-semantic-release/python-semantic-release/commit/0280e104fcf8af3ed1341461d1eb9c1e83b5e4be))
-
 
 ## v8.0.4 (2023-07-26)
 
@@ -1122,10 +521,6 @@ Co-authored-by: dependabot[bot] &lt;49699333+dependabot[bot]@users.noreply.githu
 ### Fix
 
 * fix(changelog): use version as semver tag by default (#653) ([`5984c77`](https://github.com/python-semantic-release/python-semantic-release/commit/5984c7771edc37f0d7d57894adecc2591efc414d))
-
-### Style
-
-* style: beautify 5984c7771edc37f0d7d57894adecc2591efc414d ([`df91bad`](https://github.com/python-semantic-release/python-semantic-release/commit/df91bad58ccaf71ad31a61b1af6e69933b634adb))
 
 
 ## v8.0.3 (2023-07-21)
@@ -1403,10 +798,6 @@ In #594, I missed that there are 2 places where the version header is formatted 
 Add an extra new line after each header and between sections to fix 2 markdownlint errors
 for changelogs generated by this package ([`9d9d403`](https://github.com/python-semantic-release/python-semantic-release/commit/9d9d40305c499c907335abe313e3ed122db0b154))
 
-### Style
-
-* style: beautify 9d9d40305c499c907335abe313e3ed122db0b154 ([`2881c5f`](https://github.com/python-semantic-release/python-semantic-release/commit/2881c5f79fb1dc7b5c4a8e37447f47edb8e3ff63))
-
 
 ## v7.34.0 (2023-05-28)
 
@@ -1453,10 +844,6 @@ I could only build the documentation locally by updating Sphinx to the latest
 
 Co-authored-by: Ondrej Winter &lt;ondrej.winter@gmail.com&gt; ([`927da9f`](https://github.com/python-semantic-release/python-semantic-release/commit/927da9f8feb881e02bc08b33dc559bd8e7fc41ab))
 
-### Style
-
-* style: beautify 927da9f8feb881e02bc08b33dc559bd8e7fc41ab ([`00192bc`](https://github.com/python-semantic-release/python-semantic-release/commit/00192bc9b1581d40e960383b25c07ce325618151))
-
 
 ## v7.33.3 (2023-04-24)
 
@@ -1486,10 +873,6 @@ Signed-off-by: Vladislav Doster &lt;mvdoster@gmail.com&gt; ([`bbe754a`](https://
 
 * fix: trim emojis from config (#583) ([`02902f7`](https://github.com/python-semantic-release/python-semantic-release/commit/02902f73ee961565c2470c000f00947d9ef06cb1))
 
-### Style
-
-* style: beautify 806fcfa4cfdd3df4b380afd015a68dc90d54215a ([`3fb49fb`](https://github.com/python-semantic-release/python-semantic-release/commit/3fb49fbb0e043d258ac07a3695ab01161085917f))
-
 
 ## v7.33.2 (2023-02-17)
 
@@ -1506,31 +889,8 @@ Signed-off-by: Vladislav Doster &lt;mvdoster@gmail.com&gt; ([`bbe754a`](https://
 
 See https://github.com/actions/runner-images/issues/6775#issuecomment-1409268124 and https://github.com/actions/runner-images/issues/6775#issuecomment-1410270956 ([`2a55f68`](https://github.com/python-semantic-release/python-semantic-release/commit/2a55f68e2b3cb9ffa9204c00ddbf12706af5c070))
 
-### Style
-
-* style: beautify 2a55f68e2b3cb9ffa9204c00ddbf12706af5c070 ([`30ad440`](https://github.com/python-semantic-release/python-semantic-release/commit/30ad44019904c30aba86fb0d48dc88ce5e9eba39))
-
 
 ## v7.33.0 (2023-01-15)
-
-### Chore
-
-* chore: remove stale.yml
-
-It is spamming to much. We can bring it back if we get the time to fix the spamming. ([`08c535e`](https://github.com/python-semantic-release/python-semantic-release/commit/08c535e3280733e9e76af1783ce03bb5554c4136))
-
-### Ci
-
-* ci: fix GHA conditional ([`8edfbc9`](https://github.com/python-semantic-release/python-semantic-release/commit/8edfbc9eec8804fe14ed9f9f281a89376a03ef9d))
-
-* ci: remove python3.6 from GHA, add python3.10 and python3.11 (#541)
-
-* ci: remove python3.6 from GHA, add python3.10 and python3.11
-
-GHA workflows are failing without this, due to
-https://github.com/actions/setup-python/issues/544\#issuecomment-1332535877
-
-* fix: upgrade pytest ([`8e4aa0e`](https://github.com/python-semantic-release/python-semantic-release/commit/8e4aa0e30438291ade98604a18aeb372f0d0b52f))
 
 ### Feature
 
@@ -1569,26 +929,8 @@ Co-authored-by: Bernard Cooke &lt;bernard.cooke@iotics.com&gt; ([`8f2185d`](http
 
 * fix(action): fix environment variable names ([`3c66218`](https://github.com/python-semantic-release/python-semantic-release/commit/3c66218640044adf263fcf9b2714cfc4b99c2e90))
 
-### Style
-
-* style: beautify 8e4aa0e30438291ade98604a18aeb372f0d0b52f ([`729c2a7`](https://github.com/python-semantic-release/python-semantic-release/commit/729c2a741705523ee16c0be790f54f013c07adcf))
-
-* style: beautify b40dd484387c1b3f78df53ee2d35e281e8e799c8 ([`2aab9bd`](https://github.com/python-semantic-release/python-semantic-release/commit/2aab9bd4fba532dfa632d2008bd10b2fe1e3eb05))
-
 
 ## v7.32.2 (2022-10-22)
-
-### Ci
-
-* ci: Update stale github action config ([`69ddb4e`](https://github.com/python-semantic-release/python-semantic-release/commit/69ddb4e31646f7d355a55f2d60e42c55d25eb679))
-
-* ci: Update deprecated actions (#511)
-
-* ci: update depreated actions
-
-* ci: replace deprecated set-output in workflow
-
-According to https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/ ([`bb09233`](https://github.com/python-semantic-release/python-semantic-release/commit/bb09233b84d153a15784fdf68d7274c9d682c336))
 
 ### Documentation
 
@@ -1631,12 +973,6 @@ parser. ([`988437d`](https://github.com/python-semantic-release/python-semantic-
 
 ## v7.31.4 (2022-08-23)
 
-### Chore
-
-* chore(dependencies): pin tomlkit major version only (#492)
-
-Resolve #491 ([`bd2201f`](https://github.com/python-semantic-release/python-semantic-release/commit/bd2201f099bc38ce233fce08648bd5da44bcb194))
-
 ### Fix
 
 * fix: account for trailing newlines in commit messages (#495)
@@ -1652,16 +988,8 @@ Fixes #490 ([`111b151`](https://github.com/python-semantic-release/python-semant
 
 Co-authored-by: Dzmitry Ryzhykau &lt;d.ryzhykau@onesoil.ai&gt; ([`3849ed9`](https://github.com/python-semantic-release/python-semantic-release/commit/3849ed992c3cff9054b8690bcf59e49768f84f47))
 
-### Style
-
-* style: beautify 3849ed992c3cff9054b8690bcf59e49768f84f47 ([`c84b1b7`](https://github.com/python-semantic-release/python-semantic-release/commit/c84b1b749fb5e6262652210f4275fe4fbbd2b3c3))
-
 
 ## v7.31.2 (2022-07-29)
-
-### Chore
-
-* chore: Fix deprecation warnings in tests ([`47130a4`](https://github.com/python-semantic-release/python-semantic-release/commit/47130a40a1f24214caa71041bb5a645814538076))
 
 ### Documentation
 
@@ -1681,10 +1009,6 @@ Fixes #454 ([`e7a0e81`](https://github.com/python-semantic-release/python-semant
 
 Fixes #422 ([`40be804`](https://github.com/python-semantic-release/python-semantic-release/commit/40be804c09ab8a036fb135c9c38a63f206d2742c))
 
-### Refactor
-
-* refactor: Fix type errors related to loading of repo ([`e09cc3c`](https://github.com/python-semantic-release/python-semantic-release/commit/e09cc3c5fbb38caceb68b20198a98fea97599826))
-
 
 ## v7.31.1 (2022-07-29)
 
@@ -1697,10 +1021,6 @@ Fixes #473 ([`0ece6f2`](https://github.com/python-semantic-release/python-semant
 
 ## v7.31.0 (2022-07-29)
 
-### Chore
-
-* chore: gitignore vim swp files ([`d6fcb5f`](https://github.com/python-semantic-release/python-semantic-release/commit/d6fcb5fb524a5750eb8f504afb4a8ce07d9a4123))
-
 ### Feature
 
 * feat: override repository_url w REPOSITORY_URL env var (#439) ([`cb7578c`](https://github.com/python-semantic-release/python-semantic-release/commit/cb7578cf005b8bd65d9b988f6f773e4c060982e3))
@@ -1710,10 +1030,6 @@ Fixes #473 ([`0ece6f2`](https://github.com/python-semantic-release/python-semant
 ### Fix
 
 * fix: :bug: fix get_current_release_version for tag_only version_source ([`cad09be`](https://github.com/python-semantic-release/python-semantic-release/commit/cad09be9ba067f1c882379c0f4b28115a287fc2b))
-
-### Style
-
-* style: beautify cad09be9ba067f1c882379c0f4b28115a287fc2b ([`76eb536`](https://github.com/python-semantic-release/python-semantic-release/commit/76eb536299195b2ce0d0411e9bc5c662526abd33))
 
 
 ## v7.30.2 (2022-07-26)
@@ -1747,10 +1063,6 @@ Fixes #473 ([`0ece6f2`](https://github.com/python-semantic-release/python-semant
 
 * fix: ignore dependency version bumps when parsing version from commit logs (#476) ([`51bcb78`](https://github.com/python-semantic-release/python-semantic-release/commit/51bcb780a9f55fadfaf01612ff65c1f92642c2c1))
 
-### Style
-
-* style: beautify 51bcb780a9f55fadfaf01612ff65c1f92642c2c1 ([`b47a323`](https://github.com/python-semantic-release/python-semantic-release/commit/b47a3230c0778a67096dd9ba2ded5729247733d0))
-
 
 ## v7.29.6 (2022-07-15)
 
@@ -1776,20 +1088,12 @@ Co-authored-by: Dzmitry Ryzhykau &lt;d.ryzhykau@onesoil.ai&gt; ([`dd26888`](http
 
 * fix: add packaging module requirement (#469) ([`b99c9fa`](https://github.com/python-semantic-release/python-semantic-release/commit/b99c9fa88dc25e5ceacb131cd93d9079c4fb2c86))
 
-### Style
-
-* style: beautify dd26888a923b2f480303c19f1916647de48b02bf ([`9cb0b45`](https://github.com/python-semantic-release/python-semantic-release/commit/9cb0b459702a98ee5d42aa66a141a965413ef7a1))
-
 
 ## v7.29.4 (2022-06-29)
 
 ### Fix
 
 * fix: add text for empty ValueError (#461) ([`733254a`](https://github.com/python-semantic-release/python-semantic-release/commit/733254a99320d8c2f964d799ac4ec29737867faa))
-
-### Style
-
-* style: beautify 733254a99320d8c2f964d799ac4ec29737867faa ([`55c9f4d`](https://github.com/python-semantic-release/python-semantic-release/commit/55c9f4d44853b003d0822cc80cdf7f352d80f869))
 
 
 ## v7.29.3 (2022-06-26)
@@ -1800,16 +1104,6 @@ Co-authored-by: Dzmitry Ryzhykau &lt;d.ryzhykau@onesoil.ai&gt; ([`dd26888`](http
 
 Signed-off-by: Chris Butler &lt;cbutler@australiacloud.com.au&gt; ([`32b516d`](https://github.com/python-semantic-release/python-semantic-release/commit/32b516d7aded4afcafe4aa56d6a5a329b3fc371d))
 
-### Style
-
-* style: beautify 32b516d7aded4afcafe4aa56d6a5a329b3fc371d ([`fc5a703`](https://github.com/python-semantic-release/python-semantic-release/commit/fc5a703ede88539ebc0624b59f9490976f5f96cf))
-
-* style: beautify c8087fea6ce9f638e3fc7ea21e8cae62e43016f8 ([`772573f`](https://github.com/python-semantic-release/python-semantic-release/commit/772573f6636f0a93c617cff29297e98edcb240df))
-
-### Test
-
-* test: refactor to pytest (#459) ([`c8087fe`](https://github.com/python-semantic-release/python-semantic-release/commit/c8087fea6ce9f638e3fc7ea21e8cae62e43016f8))
-
 
 ## v7.29.2 (2022-06-20)
 
@@ -1819,10 +1113,6 @@ Signed-off-by: Chris Butler &lt;cbutler@australiacloud.com.au&gt; ([`32b516d`](h
 
 Co-authored-by: Sebastian Seith &lt;sebastian@vermill.io&gt; ([`da0606f`](https://github.com/python-semantic-release/python-semantic-release/commit/da0606f0d67ada5f097c704b9423ead3b5aca6b2))
 
-### Style
-
-* style: beautify da0606f0d67ada5f097c704b9423ead3b5aca6b2 ([`5d363fa`](https://github.com/python-semantic-release/python-semantic-release/commit/5d363fadc05a9cc074ce1cf2a777a879b4a82bc8))
-
 
 ## v7.29.1 (2022-06-01)
 
@@ -1830,23 +1120,8 @@ Co-authored-by: Sebastian Seith &lt;sebastian@vermill.io&gt; ([`da0606f`](https:
 
 * fix: Capture correct release version when patch has more than one digit (#448) ([`426cdc7`](https://github.com/python-semantic-release/python-semantic-release/commit/426cdc7d7e0140da67f33b6853af71b2295aaac2))
 
-### Style
-
-* style: beautify 426cdc7d7e0140da67f33b6853af71b2295aaac2 ([`1c5184d`](https://github.com/python-semantic-release/python-semantic-release/commit/1c5184db55efc9c1b4b2c59e6e7a7564396fb02a))
-
 
 ## v7.29.0 (2022-05-27)
-
-### Chore
-
-* chore: fix test and doc failures ([`0778516`](https://github.com/python-semantic-release/python-semantic-release/commit/077851677930f0f4d779bbb4c6e3c5eef3bed83e))
-
-### Ci
-
-* ci: adjust actions test phase to use fetch-depth: 0 to fix ci tests (#446)
-
-Co-authored-by: Sebastian Seith &lt;sebastian@vermill.io&gt;
-Co-authored-by: github-actions &lt;action@github.com&gt; ([`3329eef`](https://github.com/python-semantic-release/python-semantic-release/commit/3329eeffb077f628e4a965bc7fd922d09d6b63da))
 
 ### Feature
 
@@ -1881,17 +1156,9 @@ or not ([`7b2dffa`](https://github.com/python-semantic-release/python-semantic-r
 
 ## v7.28.1 (2022-04-14)
 
-### Ci
-
-* ci: update `github-actions-x/commit` action ([`2a25668`](https://github.com/python-semantic-release/python-semantic-release/commit/2a25668b29e89ce656bc710c260e0bc5233d2997))
-
 ### Fix
 
 * fix: fix getting current version when `version_source=tag_only` (#437) ([`b247936`](https://github.com/python-semantic-release/python-semantic-release/commit/b247936a81c0d859a34bf9f17ab8ca6a80488081))
-
-### Style
-
-* style: beautify 2a25668b29e89ce656bc710c260e0bc5233d2997 ([`3575317`](https://github.com/python-semantic-release/python-semantic-release/commit/357531782705de13901ec668b9ed489fad4a9e02))
 
 
 ## v7.28.0 (2022-04-11)
@@ -1905,15 +1172,6 @@ Fixes #354 ([`cf74339`](https://github.com/python-semantic-release/python-semant
 
 ## v7.27.1 (2022-04-03)
 
-### Chore
-
-* chore(dependencies): unpin tomlkit dependency (#429)
-
-- tests for a tomlkit regression don&#39;t fail anymore with newer tomlkit
-- keep comment in setup.py about tomlkit being pinned at some point in time
-
-refs #336 ([`8515879`](https://github.com/python-semantic-release/python-semantic-release/commit/85158798ca438c1dafc84036d13c2988c934f02f))
-
 ### Fix
 
 * fix(prerelase): pass prerelease option to get_current_version (#432)
@@ -1921,19 +1179,8 @@ refs #336 ([`8515879`](https://github.com/python-semantic-release/python-semanti
 The `get_current_version` function accepts a `prerelease` argument which
 was never passed. ([`aabab0b`](https://github.com/python-semantic-release/python-semantic-release/commit/aabab0b7ce647d25e0c78ae6566f1132ece9fcb9))
 
-### Style
-
-* style: beautify aabab0b7ce647d25e0c78ae6566f1132ece9fcb9 ([`e17f83a`](https://github.com/python-semantic-release/python-semantic-release/commit/e17f83a3b6657489f31d71dd916c682da5ff8aa9))
-
 
 ## v7.27.0 (2022-03-15)
-
-### Chore
-
-* chore(dependencies): extend allowed version range for python-gitlab (#417)
-
-* chore(dependencies): extend allowed version range for python-gitlab
-* fix(type): ignore mypy errors for dynamic RESTObject ([`8ee4d4b`](https://github.com/python-semantic-release/python-semantic-release/commit/8ee4d4b8dabfa5c6cd2aa6180d4a8da8f3c9554c))
 
 ### Feature
 
@@ -1960,10 +1207,6 @@ was never passed. ([`aabab0b`](https://github.com/python-semantic-release/python
 
 Co-authored-by: Mario Jäckle &lt;m.jaeckle@careerpartner.eu&gt; ([`7064265`](https://github.com/python-semantic-release/python-semantic-release/commit/7064265627a2aba09caa2873d823b594e0e23e77))
 
-### Style
-
-* style: beautify 7064265627a2aba09caa2873d823b594e0e23e77 ([`fab060a`](https://github.com/python-semantic-release/python-semantic-release/commit/fab060ac0028fde527317418f6e88ccd152c6333))
-
 
 ## v7.25.2 (2022-02-24)
 
@@ -1981,18 +1224,6 @@ Co-authored-by: Mario Jäckle &lt;m.jaeckle@careerpartner.eu&gt; ([`7064265`](ht
 * fix(gitea): handle list build status response
 * fix(gitea): use form-data for upload_asset ([`57db81f`](https://github.com/python-semantic-release/python-semantic-release/commit/57db81f4c6b96da8259e3bad9137eaccbcd10f6e))
 
-### Style
-
-* style: beautify 57db81f4c6b96da8259e3bad9137eaccbcd10f6e ([`9fbb28f`](https://github.com/python-semantic-release/python-semantic-release/commit/9fbb28f932400d4c55cef2e03fe016345b6562bb))
-
-* style: beautify aba6f5e1583c10a001b4ba1623b5806f6d506d69 ([`a4a8743`](https://github.com/python-semantic-release/python-semantic-release/commit/a4a87432f5124098af1c889109746edc416f746a))
-
-### Test
-
-* test: fix test_repo_with_custom_* on Windows (#416)
-
-Prevent test_repo_with_custom_* from failing when run on Windows due to different path seperator. ([`aba6f5e`](https://github.com/python-semantic-release/python-semantic-release/commit/aba6f5e1583c10a001b4ba1623b5806f6d506d69))
-
 
 ## v7.25.0 (2022-02-17)
 
@@ -2006,12 +1237,6 @@ Fixes #410 ([`b631ca0`](https://github.com/python-semantic-release/python-semant
 
 * feat(hvcs): add gitea support (#412) ([`b7e7936`](https://github.com/python-semantic-release/python-semantic-release/commit/b7e7936331b7939db09abab235c8866d800ddc1a))
 
-### Style
-
-* style: beautify b7e7936331b7939db09abab235c8866d800ddc1a ([`f1e3ecb`](https://github.com/python-semantic-release/python-semantic-release/commit/f1e3ecb79122fd2571660661441bc1ab4295cc92))
-
-* style: beautify b631ca0a79cb2d5499715d43688fc284cffb3044 ([`c59095e`](https://github.com/python-semantic-release/python-semantic-release/commit/c59095ed5953af2efd418ac7aec772e880b3ece3))
-
 
 ## v7.24.0 (2022-01-24)
 
@@ -2022,16 +1247,8 @@ Fixes #410 ([`b631ca0`](https://github.com/python-semantic-release/python-semant
 Add new config keys, `pre_commit_command` and `commit_additional_files`,
 to allow custom file changes alongside the release commits. ([`3e34f95`](https://github.com/python-semantic-release/python-semantic-release/commit/3e34f957ff5a3ec6e6f984cc4a79a38ce4391ea9))
 
-### Style
-
-* style: beautify 3e34f957ff5a3ec6e6f984cc4a79a38ce4391ea9 ([`1ad5183`](https://github.com/python-semantic-release/python-semantic-release/commit/1ad518379df054a089a2b6903c33ad622fc19ce7))
-
 
 ## v7.23.0 (2021-11-30)
-
-### Chore
-
-* chore: sync changes with upstream ([`c9ac06d`](https://github.com/python-semantic-release/python-semantic-release/commit/c9ac06d98ecb8e9140523d5ac262ab8ce11a324e))
 
 ### Feature
 
@@ -2064,35 +1281,11 @@ to allow custom file changes alongside the release commits. ([`3e34f95`](https:/
   settings
 - rename `TYPES` variable to `LONG_TYPE_NAMES` ([`f7bc458`](https://github.com/python-semantic-release/python-semantic-release/commit/f7bc45841e6a5c762f99f936c292cee25fabcd02))
 
-### Style
-
-* style: beautify 01eea03a2c4db790bfa881037cdd2d6e8c1511a3 ([`6cf85a7`](https://github.com/python-semantic-release/python-semantic-release/commit/6cf85a7ddb9cd6957eb761159cf75dc4df5ed58e))
-
-### Test
-
-* test: Fix tests of angular options ([`01eea03`](https://github.com/python-semantic-release/python-semantic-release/commit/01eea03a2c4db790bfa881037cdd2d6e8c1511a3))
-
 
 ## v7.21.0 (2021-11-21)
 
-### Style
-
-* style: beautify 02569161e57b96a36294626012c311ae0d55a707 ([`6afa90c`](https://github.com/python-semantic-release/python-semantic-release/commit/6afa90c3c357830a7357d3cc73a1098be78b68d3))
-
-### Unknown
-
-* Merge branch &#39;pr-364&#39; ([`0256916`](https://github.com/python-semantic-release/python-semantic-release/commit/02569161e57b96a36294626012c311ae0d55a707))
-
 
 ## v7.20.0 (2021-11-21)
-
-### Chore
-
-* chore: update GitHub Actions with new variable names ([`7bd3a73`](https://github.com/python-semantic-release/python-semantic-release/commit/7bd3a735e87a872355b1312ab9ab7e1e4d35d0a1))
-
-* chore: update GitHub Actions Dockerfile to Python 3.9
-
-Fixes #388 ([`f010a15`](https://github.com/python-semantic-release/python-semantic-release/commit/f010a15dd03f4ef34e4093cc1a7ee357c6db12eb))
 
 ### Documentation
 
@@ -2134,24 +1327,6 @@ https://github.com/relekang/python-semantic-release/issues/391#issuecomment-9506
 
 * fix: don&#39;t use linux commands on windows (#393) ([`5bcccd2`](https://github.com/python-semantic-release/python-semantic-release/commit/5bcccd21cc8be3289db260e645fec8dc6a592abd))
 
-### Style
-
-* style: beautify d7406ef55287c5a4a70e79c63292f5416ab0f00d ([`2cf59cc`](https://github.com/python-semantic-release/python-semantic-release/commit/2cf59ccc28920df686a1fdcfef1894892d07e02c))
-
-### Unknown
-
-* Merge pull request #395 from fleXible-public/feature/repository ([`d7406ef`](https://github.com/python-semantic-release/python-semantic-release/commit/d7406ef55287c5a4a70e79c63292f5416ab0f00d))
-
-* Merge branch &#39;master&#39; into feature/repository
-
-# Conflicts:
-#	semantic_release/cli.py
-#	semantic_release/defaults.cfg
-#	semantic_release/pypi.py
-#	tests/test_cli.py
-#	tests/test_pypi.py
-#	tests/test_settings.py ([`55bdbb9`](https://github.com/python-semantic-release/python-semantic-release/commit/55bdbb9964311a00bf117325f8e84326c1b74c20))
-
 
 ## v7.19.2 (2021-09-04)
 
@@ -2165,10 +1340,6 @@ https://github.com/relekang/python-semantic-release/issues/391#issuecomment-9506
 ### Fix
 
 * fix: add get_formatted_tag helper instead of hardcoded v-prefix in the git tags ([`1a354c8`](https://github.com/python-semantic-release/python-semantic-release/commit/1a354c86abad77563ebce9a6944256461006f3c7))
-
-### Style
-
-* style: beautify 1a354c86abad77563ebce9a6944256461006f3c7 ([`a3fc6c8`](https://github.com/python-semantic-release/python-semantic-release/commit/a3fc6c8974d471366696545bb17218d509fb75d3))
 
 
 ## v7.19.0 (2021-08-16)
@@ -2224,26 +1395,6 @@ Co-authored-by: Laercio Barbosa &lt;laercio.barbosa@scania.com&gt; ([`a275a7a`](
 
 ## v7.16.2 (2021-06-25)
 
-### Chore
-
-* chore: bump responses to latest version (#343)
-
-The current version has a Deprecation warning:
-
-inspect.getargspec() is deprecated since Python 3.0,
-use inspect.signature() or inspect.getfullargspec() ([`e953157`](https://github.com/python-semantic-release/python-semantic-release/commit/e953157125f4528759453218f75b6e51cafd2cc3))
-
-### Ci
-
-* ci: place beautify and release in the same concurrency group
-
-Otherwise, an older release job could push while a newer beautify job is
-running. ([`26d45b3`](https://github.com/python-semantic-release/python-semantic-release/commit/26d45b3d495d41f458fee1f50e09062050321725))
-
-* ci: install types-requests to fix mypy check (#347) ([`421e908`](https://github.com/python-semantic-release/python-semantic-release/commit/421e9089d4a8029ef791a4cfff088cec0645db37))
-
-* ci: install types-requests to fix mypy check (#345) ([`cd33df6`](https://github.com/python-semantic-release/python-semantic-release/commit/cd33df6221fa26fd875bedc40a34427ff1997ba2))
-
 ### Documentation
 
 * docs: update trove classifiers to reflect supported versions (#344) ([`7578004`](https://github.com/python-semantic-release/python-semantic-release/commit/7578004ed4b20c2bd553782443dfd77535faa377))
@@ -2253,23 +1404,6 @@ running. ([`26d45b3`](https://github.com/python-semantic-release/python-semantic
 ### Fix
 
 * fix: use release-api for gitlab ([`1ef5cab`](https://github.com/python-semantic-release/python-semantic-release/commit/1ef5caba2d8dd0f2647bc51ede0ef7152d8b7b8d))
-
-### Refactor
-
-* refactor: update VersionDeclaration to pathlib ([`e9d2916`](https://github.com/python-semantic-release/python-semantic-release/commit/e9d2916094dd6a537adc6c643d759c3f49100941))
-
-### Style
-
-* style: beautify 60393d730f16300df02cd071c7a21c5f9b591930 ([`a0015c7`](https://github.com/python-semantic-release/python-semantic-release/commit/a0015c73d4d2e6eb4d610f50db2c2be1863c0e39))
-
-### Test
-
-* test: added releases to gitlab mock ([`60393d7`](https://github.com/python-semantic-release/python-semantic-release/commit/60393d730f16300df02cd071c7a21c5f9b591930))
-
-* test: add a failing test to reproduce tomlkit bug
-
-Ref #336
-Ref #338 ([`2041f10`](https://github.com/python-semantic-release/python-semantic-release/commit/2041f10c722b8f381593eefb8f3fd80ea126edde))
 
 
 ## v7.16.1 (2021-06-08)
@@ -2287,24 +1421,12 @@ See https://github.com/relekang/python-semantic-release/pull/339#discussion_r647
 
 * feat: add option to omit tagging (#341) ([`20603e5`](https://github.com/python-semantic-release/python-semantic-release/commit/20603e53116d4f05e822784ce731b42e8cbc5d8f))
 
-### Style
-
-* style: beautify 20603e53116d4f05e822784ce731b42e8cbc5d8f ([`db49709`](https://github.com/python-semantic-release/python-semantic-release/commit/db49709c6da5cb7834fdfbe1909ba80ae070fefc))
-
 
 ## v7.15.6 (2021-06-08)
-
-### Ci
-
-* ci: update beautify job ([`b5ad0d7`](https://github.com/python-semantic-release/python-semantic-release/commit/b5ad0d7186bbde254e90450b3812c573c0d56f1e))
 
 ### Fix
 
 * fix: update click and tomlkit (#339) ([`947ea3b`](https://github.com/python-semantic-release/python-semantic-release/commit/947ea3bc0750735941446cf4a87bae20e750ba12))
-
-### Style
-
-* style: beautify b5ad0d7186bbde254e90450b3812c573c0d56f1e ([`b8fb692`](https://github.com/python-semantic-release/python-semantic-release/commit/b8fb692793ba6868ae11ef25f64750d3c87ffcf1))
 
 
 ## v7.15.5 (2021-05-26)
@@ -2322,10 +1444,6 @@ See https://github.com/relekang/python-semantic-release/pull/339#discussion_r647
 
 Fixes #235 ([`24bb079`](https://github.com/python-semantic-release/python-semantic-release/commit/24bb079cbeff12e7043dd35dd0b5ae03192383bb))
 
-### Test
-
-* test: Fix test for bad toml syntax ([`e52ee3c`](https://github.com/python-semantic-release/python-semantic-release/commit/e52ee3c4c9b0254822bf80a9369b9cdb2e50ba57))
-
 
 ## v7.15.3 (2021-04-03)
 
@@ -2335,10 +1453,6 @@ Fixes #235 ([`24bb079`](https://github.com/python-semantic-release/python-semant
 
 
 ## v7.15.2 (2021-04-03)
-
-### Ci
-
-* ci: Add python 3.9 to test runs ([`2a99b65`](https://github.com/python-semantic-release/python-semantic-release/commit/2a99b65f10c8e7230a80885d2ebe6cacf6541450))
 
 ### Documentation
 
@@ -2358,10 +1472,6 @@ Fixes #331 ([`b508ea9`](https://github.com/python-semantic-release/python-semant
 
 
 ## v7.15.1 (2021-03-26)
-
-### Chore
-
-* chore: Clean up imports ([`fe444b7`](https://github.com/python-semantic-release/python-semantic-release/commit/fe444b77c91f829916870e46d64635fe36993466))
 
 ### Documentation
 
@@ -2387,10 +1497,6 @@ still work with python 3.6.
 
 Fixes #329 ([`abfacc4`](https://github.com/python-semantic-release/python-semantic-release/commit/abfacc432300941d57488842e41c06d885637e6c))
 
-### Style
-
-* style: improve code formatting ([`6ebc3b1`](https://github.com/python-semantic-release/python-semantic-release/commit/6ebc3b15bb46fdbbfdd7381188826bc5204730b8))
-
 
 ## v7.15.0 (2021-02-18)
 
@@ -2401,10 +1507,6 @@ Fixes #329 ([`abfacc4`](https://github.com/python-semantic-release/python-semant
 ### Feature
 
 * feat: allow the use of .pypirc for twine uploads (#325) ([`6bc56b8`](https://github.com/python-semantic-release/python-semantic-release/commit/6bc56b8aa63069a25a828a2d1a9038ecd09b7d5d))
-
-### Style
-
-* style: improve code formatting ([`a0cc0aa`](https://github.com/python-semantic-release/python-semantic-release/commit/a0cc0aa51308fa109ff84668f46345fd6352bb95))
 
 
 ## v7.14.0 (2021-02-11)
@@ -2432,10 +1534,6 @@ Unlike other ci systems jenkins doesn&#39;t generally prefix things with
 `JENKINS` or simply inject `JENKINS=true` Really the only thing that is
 immediately identifiable is `JENKINS_URL` ([`3e99855`](https://github.com/python-semantic-release/python-semantic-release/commit/3e99855c6bc72b3e9a572c58cc14e82ddeebfff8))
 
-### Style
-
-* style: improve code formatting ([`0b128ae`](https://github.com/python-semantic-release/python-semantic-release/commit/0b128ae3b2e01722e949be92755e4e944d16c7d1))
-
 
 ## v7.13.2 (2021-01-29)
 
@@ -2461,10 +1559,6 @@ immediately identifiable is `JENKINS_URL` ([`3e99855`](https://github.com/python
 * fix: use multiline version_pattern match in replace (#315)
 
 Fixes #306 ([`1a85af4`](https://github.com/python-semantic-release/python-semantic-release/commit/1a85af434325ce52e11b49895e115f7a936e417e))
-
-### Style
-
-* style: improve code formatting ([`0c0c45d`](https://github.com/python-semantic-release/python-semantic-release/commit/0c0c45deae4bbf237608b0107d91884a9c5d5dc3))
 
 
 ## v7.13.0 (2021-01-26)
@@ -2495,10 +1589,6 @@ Existing `VersionPattern` class has been renamed to
 Close #245
 Close #275 ([`9b62a7e`](https://github.com/python-semantic-release/python-semantic-release/commit/9b62a7e377378667e716384684a47cdf392093fa))
 
-### Style
-
-* style: improve code formatting ([`a13dfde`](https://github.com/python-semantic-release/python-semantic-release/commit/a13dfdefbbdc7b4031de39637220d6dc9d96f517))
-
 
 ## v7.12.0 (2021-01-25)
 
@@ -2515,10 +1605,6 @@ Fixes #311 ([`e2d8e47`](https://github.com/python-semantic-release/python-semant
 * refactor(github): use requests.Session to call raise_for_status
 
 * fix(github): add retries to github API requests ([`ac241ed`](https://github.com/python-semantic-release/python-semantic-release/commit/ac241edf4de39f4fc0ff561a749fa85caaf9e2ae))
-
-### Style
-
-* style: improve code formatting ([`be87196`](https://github.com/python-semantic-release/python-semantic-release/commit/be8719605e0a9fa9fda2335556742e09cfa06189))
 
 
 ## v7.11.0 (2021-01-08)
@@ -2550,10 +1636,6 @@ This issue occurs when some commits are available but are all to level 0. ([`8ab
 
 * fix: add dot to --define option help ([`eb4107d`](https://github.com/python-semantic-release/python-semantic-release/commit/eb4107d2efdf8c885c8ae35f48f1b908d1fced32))
 
-### Style
-
-* style: improve code formatting ([`1dd8484`](https://github.com/python-semantic-release/python-semantic-release/commit/1dd84847a9eaf8d2467ae5b4ee82492ef563612f))
-
 
 ## v7.10.0 (2021-01-08)
 
@@ -2574,18 +1656,6 @@ This issue occurs when some commits are available but are all to level 0. ([`8ab
 - Depreciate &#39;PYPI_USERNAME&#39; and &#39;PYPI_PASSWORD&#39; and prefer &#39;REPOSITORY_USERNAME&#39; and &#39;REPOSITORY_PASSWORD&#39; env vars
 - Depreciate every config key with &#39;pypi&#39; and prefer repository
 - Update doc in accordance with those changes ([`f4ef373`](https://github.com/python-semantic-release/python-semantic-release/commit/f4ef3733b948282fba5a832c5c0af134609b26d2))
-
-### Style
-
-* style: improve code formatting ([`766bd2e`](https://github.com/python-semantic-release/python-semantic-release/commit/766bd2e12cb8aca36d4deb937033334c77144fb2))
-
-### Test
-
-* test(build): add tests for should_build() and should_remove_dist() ([`527f02b`](https://github.com/python-semantic-release/python-semantic-release/commit/527f02bded40c46bc61f0aad57b707762ef0fba5))
-
-### Unknown
-
-* Merge branch &#39;master&#39; into feature/repository ([`b85fec5`](https://github.com/python-semantic-release/python-semantic-release/commit/b85fec5c28191beb53b6a3552e5b88dbcc97db5f))
 
 
 ## v7.9.0 (2020-12-21)
@@ -2645,14 +1715,6 @@ When mimetype can&#39;t be guessed, content-type header is set to None.
 But it&#39;s mandatory for the file upload to work properly.
 In this case, application/octect-stream is now used as a fallback. ([`f3ece78`](https://github.com/python-semantic-release/python-semantic-release/commit/f3ece78b2913e70f6b99907b192a1e92bbfd6b77))
 
-### Refactor
-
-* refactor: use raise_for_status and enhance error reporting for github uploads ([`69aef9f`](https://github.com/python-semantic-release/python-semantic-release/commit/69aef9f8ea11547cceb326068f7d3ab0bfa4afa7))
-
-### Style
-
-* style: improve code formatting ([`6eec4b4`](https://github.com/python-semantic-release/python-semantic-release/commit/6eec4b42cbfc546ee035de07451584a2672be485))
-
 
 ## v7.8.0 (2020-12-18)
 
@@ -2675,10 +1737,6 @@ https://github.com/owner/repos/issues/123 should be safer / more
 consistent, and should avoid a failure if someone adds an issue link at
 the end of a PR that is merged via rebase merge or merge commit. ([`93e48c9`](https://github.com/python-semantic-release/python-semantic-release/commit/93e48c992cb8b763f430ecbb0b7f9c3ca00036e4))
 
-### Style
-
-* style: improve code formatting ([`8182668`](https://github.com/python-semantic-release/python-semantic-release/commit/81826680a30b062ebd3e2a21b62d655b1ac6a962))
-
 
 ## v7.7.0 (2020-12-12)
 
@@ -2689,10 +1747,6 @@ the end of a PR that is merged via rebase merge or merge commit. ([`93e48c9`](ht
 GitHub release notes automagically link to the PR, but changelog
 markdown doesn&#39;t. Replace a PR number at the end of a message
 with a markdown link. ([`0448f6c`](https://github.com/python-semantic-release/python-semantic-release/commit/0448f6c350bbbf239a81fe13dc5f45761efa7673))
-
-### Style
-
-* style: improve code formatting ([`38cf32e`](https://github.com/python-semantic-release/python-semantic-release/commit/38cf32e986fc45c42101098e194cff881c111ea5))
 
 
 ## v7.6.0 (2020-12-06)
@@ -2706,19 +1760,6 @@ with a markdown link. ([`0448f6c`](https://github.com/python-semantic-release/py
 * feat: add `major_on_zero` option
 
 To control if bump major or not when current major version is zero. ([`d324154`](https://github.com/python-semantic-release/python-semantic-release/commit/d3241540e7640af911eb24c71e66468feebb0d46))
-
-### Refactor
-
-* refactor(history): move changelog_scope default (#284)
-
-* Move the default for changelog_scope from inline to defaults.cfg.
-* Add missing header in docs. ([`b7e1376`](https://github.com/python-semantic-release/python-semantic-release/commit/b7e1376ee1688e5e6dcc069ce623f49e3a389052))
-
-### Style
-
-* style(settings): alphabetize boolean settings (#283)
-
-A few settings were not in alphabetical order. ([`60a3535`](https://github.com/python-semantic-release/python-semantic-release/commit/60a3535f21380de8c9eaec7fe4dea9eb3d04dee1))
 
 
 ## v7.5.0 (2020-12-04)
@@ -2735,10 +1776,6 @@ If scope is not given, it&#39;s omitted.
 
 Add a new config parameter changelog_scope to disable this behavior when
 set to &#39;False&#39; ([`21c96b6`](https://github.com/python-semantic-release/python-semantic-release/commit/21c96b688cc44cc6f45af962ffe6d1f759783f37))
-
-### Style
-
-* style: improve code formatting ([`eaf0064`](https://github.com/python-semantic-release/python-semantic-release/commit/eaf00643363f7040a4078d282e5589b2973c2dec))
 
 
 ## v7.4.1 (2020-12-04)
@@ -2764,27 +1801,8 @@ Fixes #278 (or so I hope). ([`37716df`](https://github.com/python-semantic-relea
 
 Fixes #260 ([`7cacca1`](https://github.com/python-semantic-release/python-semantic-release/commit/7cacca1eb436a7166ba8faf643b53c42bc32a6a7))
 
-### Style
-
-* style: improve code formatting ([`b9016cd`](https://github.com/python-semantic-release/python-semantic-release/commit/b9016cd234e5dea140a9aa61a52f99cec7f3726f))
-
 
 ## v7.3.0 (2020-09-28)
-
-### Chore
-
-* chore: make env statement uppercase in Dockerfile (#262) ([`911670d`](https://github.com/python-semantic-release/python-semantic-release/commit/911670d78c7a5f2e9816161f6ef5344e0c8034e9))
-
-### Ci
-
-* ci: check commit logs with commitlint (#263)
-
-The contributing guide says that the project should itself follow the
-Angular commit convention, but there is nothing to enforce it AFAIK.
-
-I had a similar problem on a project where I&#39;m using
-`python-semantic-release` and I&#39;ve added a Github action to
-test it on CI, you might find it useful too. ([`016fde6`](https://github.com/python-semantic-release/python-semantic-release/commit/016fde683924d380d25579bd0cff0c7f8b7b2240))
 
 ### Documentation
 
@@ -2796,10 +1814,6 @@ the method above. ([`5a5e2cf`](https://github.com/python-semantic-release/python
 ### Feature
 
 * feat: Generate `changelog.md` file (#266) ([`2587dfe`](https://github.com/python-semantic-release/python-semantic-release/commit/2587dfed71338ec6c816f58cdf0882382c533598))
-
-### Style
-
-* style: improve code formatting ([`8b62e79`](https://github.com/python-semantic-release/python-semantic-release/commit/8b62e797dbab33a4a716d70c3abec6f46e36473f))
 
 
 ## v7.2.5 (2020-09-16)
@@ -2823,10 +1837,6 @@ Fixes #241 ([`45707e1`](https://github.com/python-semantic-release/python-semant
 
 ## v7.2.3 (2020-09-12)
 
-### Chore
-
-* chore: update with username change ([`48972fb`](https://github.com/python-semantic-release/python-semantic-release/commit/48972fb761ed9b0fb376fa3ad7028d65ff407ee6))
-
 ### Documentation
 
 * docs: link to getting started guide in README ([`f490e01`](https://github.com/python-semantic-release/python-semantic-release/commit/f490e0194fa818db4d38c185bc5e6245bfde546b))
@@ -2837,16 +1847,8 @@ Fixes #241 ([`45707e1`](https://github.com/python-semantic-release/python-semant
 
 * fix: support multiline version_pattern matching by default ([`82f7849`](https://github.com/python-semantic-release/python-semantic-release/commit/82f7849dcf29ba658e0cb3b5d21369af8bf3c16f))
 
-### Style
-
-* style: improve code formatting ([`71fdb9f`](https://github.com/python-semantic-release/python-semantic-release/commit/71fdb9ff83e56b22367dd810b09e2eaec51c6155))
-
 
 ## v7.2.2 (2020-07-26)
-
-### Ci
-
-* ci: pin isort version ([`cf80ad3`](https://github.com/python-semantic-release/python-semantic-release/commit/cf80ad3dc01b35706b1da50e178373c010c22acf))
 
 ### Documentation
 
@@ -2873,10 +1875,6 @@ example of how to do this. ([`65f1ffc`](https://github.com/python-semantic-relea
 
 * fix: commit all files with bumped versions (#249) ([`b3a1766`](https://github.com/python-semantic-release/python-semantic-release/commit/b3a1766be7edb7d2eb76f2726d35ab8298688b3b))
 
-### Style
-
-* style: improve code formatting ([`904ed7e`](https://github.com/python-semantic-release/python-semantic-release/commit/904ed7eb60332b1984529b2a38afaee3f5facdd3))
-
 
 ## v7.2.0 (2020-06-15)
 
@@ -2892,10 +1890,6 @@ example of how to do this. ([`65f1ffc`](https://github.com/python-semantic-relea
   `version_pattern` to a list in `pyproject.toml`.
 
 Fixes #175 ([`0ba2c47`](https://github.com/python-semantic-release/python-semantic-release/commit/0ba2c473c6e44cc326b3299b6ea3ddde833bdb37))
-
-### Style
-
-* style: improve code formatting ([`f040bb9`](https://github.com/python-semantic-release/python-semantic-release/commit/f040bb96b677589be30c866dc0a483195b6ec74b))
 
 
 ## v7.1.1 (2020-05-28)
@@ -2915,10 +1909,6 @@ Add an alternative changelog component which displays each section as a
 row in a table.
 
 Fixes #237 ([`fe6a7e7`](https://github.com/python-semantic-release/python-semantic-release/commit/fe6a7e7fa014ffb827a1430dbcc10d1fc84c886b))
-
-### Style
-
-* style: improve code formatting ([`a43beb5`](https://github.com/python-semantic-release/python-semantic-release/commit/a43beb56f1bf4645be47399ded14756fb48d95c6))
 
 
 ## v7.0.0 (2020-05-22)
@@ -2952,10 +1942,6 @@ split and ready to use. ([`3e17a98`](https://github.com/python-semantic-release/
 
 * docs: add conda-forge badge ([`e9536bb`](https://github.com/python-semantic-release/python-semantic-release/commit/e9536bbe119c9e3b90c61130c02468e0e1f14141))
 
-### Style
-
-* style: improve code formatting ([`1dfca97`](https://github.com/python-semantic-release/python-semantic-release/commit/1dfca97c3856e496e9e2cda429b8aa093799bd5b))
-
 
 ## v6.4.1 (2020-05-15)
 
@@ -2964,10 +1950,6 @@ split and ready to use. ([`3e17a98`](https://github.com/python-semantic-release/
 * fix: convert \r\n to \n in commit messages
 
 Fixes #239 ([`34acbbc`](https://github.com/python-semantic-release/python-semantic-release/commit/34acbbcd25320a9d18dcd1a4f43e1ce1837b2c9f))
-
-### Style
-
-* style: improve code formatting ([`9684c0f`](https://github.com/python-semantic-release/python-semantic-release/commit/9684c0f3a96af46182f4ffcee041768a24ad9b71))
 
 
 ## v6.4.0 (2020-05-15)
@@ -3002,36 +1984,14 @@ descriptions.
 
 * docs: add documentation for emoji parser ([`2e1c50a`](https://github.com/python-semantic-release/python-semantic-release/commit/2e1c50a865628b372f48945a039a3edb38a7cdf0))
 
-### Style
-
-* style: improve code formatting ([`52bbd72`](https://github.com/python-semantic-release/python-semantic-release/commit/52bbd729bc6a688b422b4abada6826231573f7ce))
-
-* style: improve code formatting ([`2a88ef6`](https://github.com/python-semantic-release/python-semantic-release/commit/2a88ef62da022fc7deb1985d09825a4067c1824d))
-
-### Test
-
-* test: capture logging output
-
-Adapt the CLI tests so that pytest can capture the log output, and display it if there is a failure. This helps with debugging. ([`32cfd90`](https://github.com/python-semantic-release/python-semantic-release/commit/32cfd903f6f5fe8f31eb0dc1d45464071e54423d))
-
 
 ## v6.3.1 (2020-05-11)
-
-### Ci
-
-* ci: update stale to v3 ([`ce5cd0c`](https://github.com/python-semantic-release/python-semantic-release/commit/ce5cd0c894a65dd4cef4aba6658e7d45803fe833))
-
-* ci: create annotations for test failures ([`233a6f4`](https://github.com/python-semantic-release/python-semantic-release/commit/233a6f480ff67165f0f54522230e139b918bb032))
 
 ### Fix
 
 * fix: use getboolean for commit_version_number
 
 Fixes #186 ([`a60e0b4`](https://github.com/python-semantic-release/python-semantic-release/commit/a60e0b4e3cadf310c3e0ad67ebeb4e69d0ee50cb))
-
-### Style
-
-* style: improve code formatting ([`49b3389`](https://github.com/python-semantic-release/python-semantic-release/commit/49b3389a316d221923b4957d83d4e005e85102d3))
 
 
 ## v6.3.0 (2020-05-09)
@@ -3048,38 +2008,8 @@ Fixes #186 ([`a60e0b4`](https://github.com/python-semantic-release/python-semant
 
 Fixes #218 ([`79a8e02`](https://github.com/python-semantic-release/python-semantic-release/commit/79a8e02df82fbc2acecaad9e9ff7368e61df3e54))
 
-### Style
-
-* style: improve code formatting ([`ae4f1d6`](https://github.com/python-semantic-release/python-semantic-release/commit/ae4f1d69866c3830d691e9bd6b48627d70f705ae))
-
-* style: improve code formatting ([`7a85403`](https://github.com/python-semantic-release/python-semantic-release/commit/7a8540322f1308399653d10657e24a7b28943767))
-
-### Test
-
-* test: split history tests into multiple files ([`14e4ae2`](https://github.com/python-semantic-release/python-semantic-release/commit/14e4ae2a527b29026f49ee1346cab708114e60c9))
-
 
 ## v6.2.0 (2020-05-02)
-
-### Ci
-
-* ci: add help-wanted automatically
-
-Add the help-wanted label to bug reports and feature requests which have not had any activity in 3 weeks. This is implemented using stale, however it is set such that the issues will not be closed. ([`56e092a`](https://github.com/python-semantic-release/python-semantic-release/commit/56e092ab498bb24e43570ffb184f170b5c041ca8))
-
-* ci: close stale questions automatically (#226)
-
-Any issues which are labelled as a question will be closed after two weeks of inactivity. This doesn&#39;t affect other types of issues. ([`539918c`](https://github.com/python-semantic-release/python-semantic-release/commit/539918cdb97e5578cbace8d74a6680e6662cb9bb))
-
-* ci: pass SHA from beautify to release
-
-Checkout the current SHA from the end of the beautify job for releasing, 
-instead of master. This will either be the same as the commit we are 
-running for, or the SHA of a style commit. This prevents releasing of 
-untested code.
-
-See 
-https://github.community/t5/GitHub-Actions/Checkout-commit-pushed-by-previous-job/m-p/55847#M9670 ([`76e34b6`](https://github.com/python-semantic-release/python-semantic-release/commit/76e34b6b52b8019e87eaddf295d0781b6aa51541))
 
 ### Documentation
 
@@ -3101,14 +2031,6 @@ are detected when squashing commits together.
 
 Fixes #200 ([`fec08f0`](https://github.com/python-semantic-release/python-semantic-release/commit/fec08f0dbd7ae15f95ca9c41a02c9fe6d448ede0))
 
-### Style
-
-* style: improve code formatting ([`a1d324c`](https://github.com/python-semantic-release/python-semantic-release/commit/a1d324c4d1824fe521d9e21fbd43589d26d3406c))
-
-### Test
-
-* test: test against Python 3.6 ([`a88efb9`](https://github.com/python-semantic-release/python-semantic-release/commit/a88efb9c581fe4c90577b578b4e86efea7944ecc))
-
 
 ## v6.1.0 (2020-04-26)
 
@@ -3128,18 +2050,6 @@ Allow setting the environment variable PYPI_TOKEN to automatically fill the user
 
 Fixes #213 ([`bac135c`](https://github.com/python-semantic-release/python-semantic-release/commit/bac135c0ae7a6053ecfc7cdf2942c3c89640debf))
 
-### Refactor
-
-* refactor(history): combine = and : into one regex
-
-Use a [=:] group instead of running two separate searches. ([`bbaf6b9`](https://github.com/python-semantic-release/python-semantic-release/commit/bbaf6b926532314c41c733be24847a6ab5686a74))
-
-### Style
-
-* style: improve code formatting ([`0a4d8ba`](https://github.com/python-semantic-release/python-semantic-release/commit/0a4d8ba209c8fad7f254278e8bb382505885741d))
-
-* style: improve code formatting ([`149e426`](https://github.com/python-semantic-release/python-semantic-release/commit/149e426c7bf70482e14e41c69f96236090df7ed5))
-
 
 ## v6.0.1 (2020-04-15)
 
@@ -3151,47 +2061,6 @@ This was missed in 213530fb0c914e274b81d1dacf38ea7322b5b91f ([`3084249`](https:/
 
 
 ## v6.0.0 (2020-04-15)
-
-### Breaking
-
-* refactor(debug): use logging and click_log instead of ndebug
-
-BREAKING CHANGE: `DEBUG=&#34;*&#34;` no longer has an effect, instead use 
-`--verbosity DEBUG`. ([`15b1f65`](https://github.com/python-semantic-release/python-semantic-release/commit/15b1f650f29761e1ab2a91b767cbff79b2057a4c))
-
-### Build
-
-* build(pip): store requirements in setup.py
-
-Remove the requirements directory and instead store all required 
-libraries directly inside setup.py. Development, testing and docs 
-dependencies are included as extras. ([`401468f`](https://github.com/python-semantic-release/python-semantic-release/commit/401468f312cf4f3b52006c68c58c4645b5e19802))
-
-### Chore
-
-* chore(tox): clean up tox.ini
-
-Allow mypy and coverage to run on any Python version. ([`28feba6`](https://github.com/python-semantic-release/python-semantic-release/commit/28feba6801315422f492b38b2299a283fb7a3462))
-
-### Ci
-
-* ci: always checkout most recent commit to release
-
-This should pull a beautify commit if one has been created, allowing the 
-new version to be pushed. ([`6c98aab`](https://github.com/python-semantic-release/python-semantic-release/commit/6c98aab932724e3aab08e68b75439bc8c31bd877))
-
-* ci: cache testing dependencies
-
-This should help improve the speed of the testing workflow by caching 
-downloaded dependencies. ([`4f53e35`](https://github.com/python-semantic-release/python-semantic-release/commit/4f53e351960a6b658f50265384c9e8f678718f68))
-
-* ci: move beautification to separate workflow
-
-See https://github.com/relekang/python-semantic-release/pull/214#issuecomment-613916623 ([`6ed42dc`](https://github.com/python-semantic-release/python-semantic-release/commit/6ed42dc83027f48865e4309d520c8b6654b88058))
-
-* ci: beautify code automatically (#214)
-
-Run isort and Black on pushes to master. Any edits made are committed. isort and flake8 no longer run as a check. ([`d49c4ac`](https://github.com/python-semantic-release/python-semantic-release/commit/d49c4ac8d0eb6086693dfbd3e06c63d7e9b5d94c))
 
 ### Documentation
 
@@ -3208,36 +2077,12 @@ inside the other. ([`8673a9d`](https://github.com/python-semantic-release/python
 
 * docs: rewrite troubleshooting page ([`0285de2`](https://github.com/python-semantic-release/python-semantic-release/commit/0285de215a8dac3fcc9a51f555fa45d476a56dff))
 
-### Refactor
-
-* refactor(debug): improve debug output ([`213530f`](https://github.com/python-semantic-release/python-semantic-release/commit/213530fb0c914e274b81d1dacf38ea7322b5b91f))
-
-### Style
-
-* style: improve code formatting ([`a8fdab5`](https://github.com/python-semantic-release/python-semantic-release/commit/a8fdab5b9dbc3dbf092181f30edbdd626a8f668c))
-
-* style: improve code formatting ([`d1efc22`](https://github.com/python-semantic-release/python-semantic-release/commit/d1efc22605b06e8901e82d7ddb865ef69f143c54))
-
 ### Unknown
 
 * doc: updated doc with new ParsedCommit object instead of nested Tuple ([`ac565dc`](https://github.com/python-semantic-release/python-semantic-release/commit/ac565dc824ea575e8899b932db148ac28e27fce2))
 
 
 ## v5.2.0 (2020-04-09)
-
-### Ci
-
-* ci: fetch full history in release job
-
-I didn&#39;t realise that actions/checkout@v2 only fetches 1 commit by 
-default. ([`a02a9b7`](https://github.com/python-semantic-release/python-semantic-release/commit/a02a9b7e34d8e7f8bb3b9c8aa1b5e1ef8bdd406c))
-
-* ci: run tests on pull_request
-
-The tests didn&#39;t run for #211 which caused a flake8 failure to be 
-missed. ([`32fd77e`](https://github.com/python-semantic-release/python-semantic-release/commit/32fd77ed835bcfc943abeacec4e327df045b2ec9))
-
-* ci: run tests on GitHub Actions ([`39ff283`](https://github.com/python-semantic-release/python-semantic-release/commit/39ff283312a0c686bfc5be71e1da9b6456652d95))
 
 ### Documentation
 
@@ -3249,23 +2094,8 @@ Automatically create pages in the API docs section using sphinx-autodoc. This is
 
 * feat(github): add tag as default release name ([`2997908`](https://github.com/python-semantic-release/python-semantic-release/commit/2997908f80f4fcec56917d237a079b961a06f990))
 
-### Refactor
-
-* refactor(vcs): add functools.wraps to check_repo ([`4d97187`](https://github.com/python-semantic-release/python-semantic-release/commit/4d971873669d7ed5427108b180cbd5530375d8f3))
-
-### Style
-
-* style: fix styling from 2997908
-
-These code style problems were introduced because tests didn&#39;t run on 
-#211. ([`172391e`](https://github.com/python-semantic-release/python-semantic-release/commit/172391ec5b5e490081b9b0ea58a94dfd5be33937))
-
 
 ## v5.1.0 (2020-04-04)
-
-### Chore
-
-* chore(github): create issue templates ([`0f57662`](https://github.com/python-semantic-release/python-semantic-release/commit/0f57662ce7f6ce540b80aa7ad857bcc24edbc897))
 
 ### Documentation
 
@@ -3306,13 +2136,6 @@ These code style problems were introduced because tests didn&#39;t run on
 
 * chore: isort errors ([`0a6f8c3`](https://github.com/python-semantic-release/python-semantic-release/commit/0a6f8c3842b05f5f424dad5ce1fa5e3823c7e688))
 
-### Refactor
-
-* refactor(history): use a named tuple for parsed commits
-
-This improves readability as we can use attributes such as &#39;bump&#39; and 
-&#39;descriptions&#39; instead of confusing numeric indices. ([`bff40d5`](https://github.com/python-semantic-release/python-semantic-release/commit/bff40d53174ffe27451d82132c31b112c7bee9fd))
-
 
 ## v5.0.2 (2020-03-22)
 
@@ -3321,10 +2144,6 @@ This improves readability as we can use attributes such as &#39;bump&#39; and
 * fix(history): leave case of other characters unchanged
 
 Previously, use of str.capitalize() would capitalize the first letter as expected, but all subsequent letters became lowercase. Now, the other letters remain unchanged. ([`96ba94c`](https://github.com/python-semantic-release/python-semantic-release/commit/96ba94c4b4593997343ec61ecb6c823c1494d0e2))
-
-### Test
-
-* test: Run --help in docker image to make testing of image easier ([`b41e6b2`](https://github.com/python-semantic-release/python-semantic-release/commit/b41e6b27d63321bba8a6bb717de734df300ee1cc))
 
 
 ## v5.0.1 (2020-03-22)
@@ -3359,36 +2178,8 @@ Closes #188 ([`740f4bd`](https://github.com/python-semantic-release/python-seman
 
 * fix: Rename default of build_command config ([`d5db22f`](https://github.com/python-semantic-release/python-semantic-release/commit/d5db22f9f7acd05d20fd60a8b4b5a35d4bbfabb8))
 
-### Refactor
-
-* refactor(cli): improve readability of cli.py and some log messages ([`646dd81`](https://github.com/python-semantic-release/python-semantic-release/commit/646dd81944bad27f5defe4a33b0ebeb5c9ed0c4e))
-
-* refactor: make check_repo a decorator ([`3799d8b`](https://github.com/python-semantic-release/python-semantic-release/commit/3799d8b595d0b36e59e5486c9b5f1070a47f3903))
-
-### Style
-
-* style: improve readability of history/__init__.py ([`c878cd3`](https://github.com/python-semantic-release/python-semantic-release/commit/c878cd3eb84fe8776913d082270720d4209e6007))
-
-* style: improve readability of parsers ([`f84f317`](https://github.com/python-semantic-release/python-semantic-release/commit/f84f31754240212822227f6880ff110a8dd95214))
-
-* style: improve readability of history/logs.py ([`2f22892`](https://github.com/python-semantic-release/python-semantic-release/commit/2f228921d30e6664986e1ab5a5e840297f52e2f0))
-
-* style: improve readability of vcs_helpers.py ([`e46a358`](https://github.com/python-semantic-release/python-semantic-release/commit/e46a35833c816e570ceea9d67297a725b8ffc9ff))
-
-* style: improve readability of settings.py ([`af4df82`](https://github.com/python-semantic-release/python-semantic-release/commit/af4df82603d9aac70e47672f196a0a5e5160f817))
-
 
 ## v4.11.0 (2020-03-22)
-
-### Ci
-
-* ci: use GitHub Action from this repo ([`4352ea8`](https://github.com/python-semantic-release/python-semantic-release/commit/4352ea8d116abcd5d6c86e897b8d2d5ef72bd663))
-
-* ci: store PyPI username in secrets ([`b6de1a6`](https://github.com/python-semantic-release/python-semantic-release/commit/b6de1a6324ebe3ad6bd8735e16711877e773fea8))
-
-* ci: set up releasing with GitHub Actions
-
-#109: Setup github actions for releasing this project by calling on the current source code. ([`a80cc45`](https://github.com/python-semantic-release/python-semantic-release/commit/a80cc45df47cba6e730afc3c80d959fcba56485c))
 
 ### Documentation
 
@@ -3519,16 +2310,6 @@ whether they are capitalized in the commit itself. ([`1a8e306`](https://github.c
 Fixes #159 ([`1daa4e2`](https://github.com/python-semantic-release/python-semantic-release/commit/1daa4e23ec2dd40c6b490849276524264787e24e))
 
 * fix: Add more debug statements in logs ([`bc931ec`](https://github.com/python-semantic-release/python-semantic-release/commit/bc931ec46795fde4c1ccee004eec83bf73d5de7a))
-
-### Refactor
-
-* refactor(history): remove unnecessary newlines
-
-Since simplifying the capitalization, the comment is no longer needed and so the statement can be compacted onto one line again. ([`ffc3f8b`](https://github.com/python-semantic-release/python-semantic-release/commit/ffc3f8bada5f9a031ffe3af1e00c01b0edb05740))
-
-* refactor(history): use capitalize method for readability
-
-Co-Authored-By: Rolf Erik Lekang &lt;me@rolflekang.com&gt; ([`289349a`](https://github.com/python-semantic-release/python-semantic-release/commit/289349a314f63069ff6f7e40a9d0f2bf0f6063cf))
 
 
 ## v4.5.1 (2020-02-16)
@@ -3665,12 +2446,6 @@ Fixes #151 ([`2778e31`](https://github.com/python-semantic-release/python-semant
 
 * fix: support repo urls without git terminator ([`700e9f1`](https://github.com/python-semantic-release/python-semantic-release/commit/700e9f18dafde1833f482272a72bb80b54d56bb3))
 
-### Test
-
-* test: better test coverage
-
-Adds some coverage mainly on cli and vcs_helpers ([`b7bf6fe`](https://github.com/python-semantic-release/python-semantic-release/commit/b7bf6fe4ea0f1d11e56ec6e39a242253061dc5fc))
-
 
 ## v4.3.0 (2019-09-06)
 
@@ -3735,12 +2510,6 @@ Fixes #140 ([`4b11875`](https://github.com/python-semantic-release/python-semant
 
 ## v4.2.0 (2019-08-05)
 
-### Chore
-
-* chore: Add tools requirements file ([`bbf1109`](https://github.com/python-semantic-release/python-semantic-release/commit/bbf110913cfe323bf174986fe7f4b38d88e41bd6))
-
-* chore: Remove tox and mypy from dev requirements ([`9dcfaf0`](https://github.com/python-semantic-release/python-semantic-release/commit/9dcfaf05ee1f8055221d1959ca1accb1017e2d53))
-
 ### Feature
 
 * feat: Add support for showing unreleased changelog
@@ -3771,14 +2540,6 @@ Fixes #120 ([`0c74faf`](https://github.com/python-semantic-release/python-semant
 
 * fix: Upgrade click to 7.0 ([`2c5dd80`](https://github.com/python-semantic-release/python-semantic-release/commit/2c5dd809b84c2157a5e6cdcc773c43ec864f0328))
 
-### Test
-
-* test: Fix test name ([`aff4454`](https://github.com/python-semantic-release/python-semantic-release/commit/aff4454aa329bcab54b969ed0c41ed429a9b5683))
-
-* test: Add mocking of reading of repo owner
-
-Fixes #108 ([`04cc6b5`](https://github.com/python-semantic-release/python-semantic-release/commit/04cc6b5af969275b1096cbf45f9dc03a105d7034))
-
 
 ## v4.1.2 (2019-08-04)
 
@@ -3805,15 +2566,6 @@ build fail:  https://circleci.com/gh/relekang/python-semantic-release/379 ([`003
 
 ## v4.1.1 (2019-02-15)
 
-### Chore
-
-* chore: ignore venv
-
-venv is ignored in config for flake8 and isort.
-Should be ignored in git as well. ([`ff58962`](https://github.com/python-semantic-release/python-semantic-release/commit/ff5896242a65c3f6d897eb911137956175d74ebd))
-
-* chore: ignore vscode settings ([`bf9da4c`](https://github.com/python-semantic-release/python-semantic-release/commit/bf9da4ca9754c21d69598d956664e2fa3e6b9d5e))
-
 ### Documentation
 
 * docs: DEBUG usage and related
@@ -3829,17 +2581,6 @@ environment variables as well. ([`f08e594`](https://github.com/python-semantic-r
 The commands is lacking from the documentation. ([`b6fa04d`](https://github.com/python-semantic-release/python-semantic-release/commit/b6fa04db3044525a1ee1b5952fb175a706842238))
 
 * docs: update url for commit guidelinesThe guidelines can now be found in theDEVELOPERS.md in angular. ([`90c1b21`](https://github.com/python-semantic-release/python-semantic-release/commit/90c1b217f86263301b91d19d641c7b348e37d960))
-
-### Refactor
-
-* refactor: added debug to hvcshvcs 
-
- 
-module did not have any debug ([`0c6237b`](https://github.com/python-semantic-release/python-semantic-release/commit/0c6237bc01ec39608fb768925091c755d9bb25bd))
-
-* refactor: fix import sorting ([`01e4c5d`](https://github.com/python-semantic-release/python-semantic-release/commit/01e4c5d743f2f237d2c85481118e467d4f5fde15))
-
-* refactor: add debug output ([`06f3788`](https://github.com/python-semantic-release/python-semantic-release/commit/06f378819fea7c007176f0950db33b3d485a246a))
 
 
 ## v4.1.0 (2019-01-31)
@@ -3875,12 +2616,6 @@ This allows to run the program also from inner repository folders ([`c7415e6`](h
 * fix: Use same changelog code for command as post
 
 See #27 for background. ([`248f622`](https://github.com/python-semantic-release/python-semantic-release/commit/248f62283c59182868c43ff105a66d85c923a894))
-
-### Unknown
-
-* Merge pr #89
-
-This was merged locally to fix conflicts. ([`0dad451`](https://github.com/python-semantic-release/python-semantic-release/commit/0dad451617cc752ad3830c9442cf0b0e0993a454))
 
 
 ## v4.0.1 (2019-01-12)
@@ -3918,12 +2653,6 @@ This uses ~= for most dependencies instead of pinning them.
 Fixes #100 ([`847833b`](https://github.com/python-semantic-release/python-semantic-release/commit/847833bf48352a4935f906d0c3f75e1db596ca1c))
 
 * fix(parser_angular): Fix non-match when special chars in scope ([`8a33123`](https://github.com/python-semantic-release/python-semantic-release/commit/8a331232621b26767e4268079f9295bf695047ab))
-
-### Test
-
-* test: Update test after adding cleaning of dist ([`202fba5`](https://github.com/python-semantic-release/python-semantic-release/commit/202fba50c287d3df99b22a4f30a96a3d8d9c8141))
-
-* test(angular): Fix pep8 violations ([`a504f26`](https://github.com/python-semantic-release/python-semantic-release/commit/a504f262a05dc27b87e2c766f185b17cd8b39765))
 
 
 ## v4.0.0 (2018-11-22)
@@ -3998,20 +2727,6 @@ Closes #88  re #32 ([`8df5e2b`](https://github.com/python-semantic-release/pytho
 
 * revert changes to vcs helpers ([`af3ad59`](https://github.com/python-semantic-release/python-semantic-release/commit/af3ad59f018876e11cc3acdda0b149f8dd5606bd))
 
-### Refactor
-
-* refactor: Fix typing errors ([`5c37d47`](https://github.com/python-semantic-release/python-semantic-release/commit/5c37d477053f3bf25b858c80ef176dada8110e7e))
-
-### Style
-
-* style(vcs_helpers): Add r prefix to regular expression match string
-
-This &#39;raw&#39; designator gets rid of flake8 complaints ([`29c25d3`](https://github.com/python-semantic-release/python-semantic-release/commit/29c25d34f61ae4c2058ffc3ae4219ae6ad8b2775))
-
-### Test
-
-* test: Fix tests ([`d3862e8`](https://github.com/python-semantic-release/python-semantic-release/commit/d3862e890f27d11ba4978de3f79746873731001a))
-
 ### Unknown
 
 * Typo, link broken
@@ -4025,16 +2740,8 @@ Change `.. _angular commit guidelins:` to `.. _angular commit guidelines:` ([`72
 
 * fix: Upgrade twine ([`9722313`](https://github.com/python-semantic-release/python-semantic-release/commit/9722313eb63c7e2c32c084ad31bed7ee1c48a928))
 
-### Unknown
-
-* 3.11.2 ([`762fbcf`](https://github.com/python-semantic-release/python-semantic-release/commit/762fbcfb72f3ed269eaa1bbb8b0de433166a0a47))
-
 
 ## v3.11.1 (2018-06-06)
-
-### Chore
-
-* chore: Divide circle ci into different jobs for better feedback on prs ([`11f7c8a`](https://github.com/python-semantic-release/python-semantic-release/commit/11f7c8a8d671e1e9d48c39c8876eee750e0406ec))
 
 ### Documentation
 
@@ -4046,16 +2753,8 @@ Change `.. _angular commit guidelins:` to `.. _angular commit guidelines:` ([`72
 
 Change the Gitpython version number to fix a bug described in #80. ([`23c9d4b`](https://github.com/python-semantic-release/python-semantic-release/commit/23c9d4b6a1716e65605ed985881452898d5cf644))
 
-### Unknown
-
-* 3.11.1 ([`ddb3353`](https://github.com/python-semantic-release/python-semantic-release/commit/ddb3353876601b5bb39563a8fbcced63e9769c8d))
-
 
 ## v3.11.0 (2018-04-12)
-
-### Chore
-
-* chore: Replace travis and frigg with circleci ([`c53d11e`](https://github.com/python-semantic-release/python-semantic-release/commit/c53d11eaf897b5bbcf938bf32650f2a1ea227259))
 
 ### Documentation
 
@@ -4092,24 +2791,6 @@ Fixes #74 ([`1dc306b`](https://github.com/python-semantic-release/python-semanti
 
 * fix: Add pytest cache to gitignore ([`b8efd5a`](https://github.com/python-semantic-release/python-semantic-release/commit/b8efd5a6249c79c8378bffea3e245657e7094ec9))
 
-### Style
-
-* style: Fix flake8 ([`c9686a2`](https://github.com/python-semantic-release/python-semantic-release/commit/c9686a2edafbb23dbf0955f124d5d0b431bd4786))
-
-* style: Fix flake8 ([`d9239ea`](https://github.com/python-semantic-release/python-semantic-release/commit/d9239ea32ffbce37e7c3b852a46660ea6aed75b9))
-
-* style: Fix flake8 ([`a40f56f`](https://github.com/python-semantic-release/python-semantic-release/commit/a40f56f7774382a100f27aa824aef5a0ae796c9a))
-
-* style: Fix isort warnings ([`5411c8d`](https://github.com/python-semantic-release/python-semantic-release/commit/5411c8d8b31229941fd32b0ffee937f4d36ff367))
-
-### Test
-
-* test: Fix broken tests and add a test after 3e312c0 ([`c3e0339`](https://github.com/python-semantic-release/python-semantic-release/commit/c3e0339c5d3d7ca05fef6714a91f1f321220785b))
-
-### Unknown
-
-* 3.11.0 ([`54e003c`](https://github.com/python-semantic-release/python-semantic-release/commit/54e003c8e9c358427067326a2507a279474761b7))
-
 
 ## v3.10.3 (2018-01-29)
 
@@ -4122,10 +2803,6 @@ not allow the help options to be run.
 
 issue #74 ([`251b190`](https://github.com/python-semantic-release/python-semantic-release/commit/251b190a2fd5df68892346926d447cbc1b32475a))
 
-### Unknown
-
-* 3.10.3 ([`c15e0de`](https://github.com/python-semantic-release/python-semantic-release/commit/c15e0debb4dcdc7f15aa1ff6e1f23a99c83579a6))
-
 
 ## v3.10.2 (2017-08-03)
 
@@ -4133,16 +2810,8 @@ issue #74 ([`251b190`](https://github.com/python-semantic-release/python-semanti
 
 * fix: update call to upload to work with twine 1.9.1 (#72) ([`8f47643`](https://github.com/python-semantic-release/python-semantic-release/commit/8f47643c54996e06c358537115e7e17b77cb02ca))
 
-### Unknown
-
-* 3.10.2 ([`0907db4`](https://github.com/python-semantic-release/python-semantic-release/commit/0907db4044e20895d1b9c4f9fb1de33a5d79c06e))
-
 
 ## v3.10.1 (2017-07-22)
-
-### Chore
-
-* chore: Fix config in travis ([`57e969f`](https://github.com/python-semantic-release/python-semantic-release/commit/57e969f8d937cc2335588f538bd8bc4aa522852a))
 
 ### Fix
 
@@ -4152,18 +2821,12 @@ The publishing API is under development and older versions of Twine have problem
 
 ### Unknown
 
-* 3.10.1 ([`500972c`](https://github.com/python-semantic-release/python-semantic-release/commit/500972c0f9c0393a02bdfd8afea628772a0611c1))
-
 * revert: &#34;chore: Remove travis&#34;
 
 This reverts commit 93e5507da6d53ecf63405507390633ef480c52fb. ([`195ed8d`](https://github.com/python-semantic-release/python-semantic-release/commit/195ed8ddc004b736cd4e0301e5d7c7f6394cf4a5))
 
 
 ## v3.10.0 (2017-05-05)
-
-### Chore
-
-* chore: Remove a print statement ([`fe908d4`](https://github.com/python-semantic-release/python-semantic-release/commit/fe908d45048aecc4d4b94c7c8cb821bc941fe70c))
 
 ### Documentation
 
@@ -4187,14 +2850,6 @@ Fix the test errors that would happen after the modification of get_commit_log. 
 
 Can be fixed with changelog command later. ([`b5a68cf`](https://github.com/python-semantic-release/python-semantic-release/commit/b5a68cf6177dc0ed80eda722605db064f3fe2062))
 
-### Test
-
-* test: Make the tests green again ([`874307b`](https://github.com/python-semantic-release/python-semantic-release/commit/874307b5deb6c5a3fcb1212ab54dd81f49f8459e))
-
-### Unknown
-
-* 3.10.0 ([`7cfe01d`](https://github.com/python-semantic-release/python-semantic-release/commit/7cfe01d9dd35b74892d64238c4aa0d50b845b113))
-
 
 ## v3.9.0 (2016-07-03)
 
@@ -4216,69 +2871,15 @@ repo version will get from historical tags. init 0.0.0 if fail of find any versi
 
 repo.tags returns a list sorted by the name rather than date, fix it by sorting them before iteration ([`5a0e681`](https://github.com/python-semantic-release/python-semantic-release/commit/5a0e681e256ec511cd6c6a8edfee9d905891da10))
 
-### Refactor
-
-* refactor: simplify code with clearer logic
-
-add version_source to default.cfg to remove all get_option calls
-remove some duplicate codes ([`4f11a86`](https://github.com/python-semantic-release/python-semantic-release/commit/4f11a86b3b4b0d7a58cee83898d7568acecb5f94))
-
-### Style
-
-* style: flake8 check ([`20422b4`](https://github.com/python-semantic-release/python-semantic-release/commit/20422b4f1192c52c6706a4a7ddbc895e3e9208c8))
-
-### Test
-
-* test: correct tests for tag version ([`1230fe9`](https://github.com/python-semantic-release/python-semantic-release/commit/1230fe9add99bce2323f40e955d880fbb3f60216))
-
-* test: change repo owner for online CI ([`2107813`](https://github.com/python-semantic-release/python-semantic-release/commit/210781354458a9a952044dfadaf0f3e839109e29))
-
-### Unknown
-
-* 3.9.0 ([`52bf48b`](https://github.com/python-semantic-release/python-semantic-release/commit/52bf48b93be7d8feeef5207f0dc9f7ddbd583da4))
-
-* Merge pull request #54 from KenMercusLai/master
-
-add option to use tag instead of creating new commit when versioning ([`8e9c021`](https://github.com/python-semantic-release/python-semantic-release/commit/8e9c021cdf6bf8ed3d7cc7dc9c42187e893f23bf))
-
 
 ## v3.8.1 (2016-04-17)
-
-### Chore
-
-* chore: Grammar fix (#61) ([`1f424c8`](https://github.com/python-semantic-release/python-semantic-release/commit/1f424c8ad48d6c1054cf3d93712d408a2e8bef3d))
 
 ### Fix
 
 * fix: Add search_parent_directories option to gitpython (#62) ([`8bf9ce1`](https://github.com/python-semantic-release/python-semantic-release/commit/8bf9ce11137399906f18bc8b25698b6e03a65034))
 
-### Unknown
-
-* 3.8.1 ([`378e2eb`](https://github.com/python-semantic-release/python-semantic-release/commit/378e2eb6d228cc8b6e5c57e78cae3fe801fc974b))
-
 
 ## v3.8.0 (2016-03-21)
-
-### Chore
-
-* chore: Change pull in after_success to git fetch --unshallow
-
-This will retrieve the whole git history before trying to make a
-release. ([`6f3b9d8`](https://github.com/python-semantic-release/python-semantic-release/commit/6f3b9d897bfc67137beb0b104e572ef5ac1b3756))
-
-* chore: Pull master in after success ([`325d216`](https://github.com/python-semantic-release/python-semantic-release/commit/325d216c8a25c38e080181a37a9ada17ece7d857))
-
-* chore: Run correct tox environments on frigg ([`0d4bdad`](https://github.com/python-semantic-release/python-semantic-release/commit/0d4bdad0348a01e8eb868fcfdeb9750cad03a20b))
-
-* chore: Fix indentation in frigg settings ([`f9cecc5`](https://github.com/python-semantic-release/python-semantic-release/commit/f9cecc56fc034c554670aa238de4d36aeb4d3882))
-
-* chore: Add release in after success in frigg settings ([`7bb4d7e`](https://github.com/python-semantic-release/python-semantic-release/commit/7bb4d7e1f317d0ddef28e9c8ca42452ae20d8af9))
-
-* chore: Remove travis ([`93e5507`](https://github.com/python-semantic-release/python-semantic-release/commit/93e5507da6d53ecf63405507390633ef480c52fb))
-
-* chore: Move coverage to tox ([`9865e9c`](https://github.com/python-semantic-release/python-semantic-release/commit/9865e9c2aaa1519beed71c301865e8e117face64))
-
-* chore: Add tox and sphinx as dev dependencies ([`0237fcd`](https://github.com/python-semantic-release/python-semantic-release/commit/0237fcdc883be32d4e96ca3d4b32e89c8612220c))
 
 ### Documentation
 
@@ -4305,56 +2906,12 @@ release. ([`6f3b9d8`](https://github.com/python-semantic-release/python-semantic
 The tag parser did not work correctly, this went undiscovered for a
 while because the tests was not ran by pytest. ([`9496f6a`](https://github.com/python-semantic-release/python-semantic-release/commit/9496f6a502c79ec3acb4e222e190e76264db02cf))
 
-### Test
-
-* test: Add tests for circle ci checks ([`fa1223c`](https://github.com/python-semantic-release/python-semantic-release/commit/fa1223c661d60033b7d7aba2a27151d6ee18a299))
-
-* test: Mock to fix cli tests ([`24e5f7a`](https://github.com/python-semantic-release/python-semantic-release/commit/24e5f7a85bea75101b60baeeb36d6915464830c1))
-
-* test: Make sure all publish tests mocks checkout
-
-If not the tests will checkout master ([`742b2e9`](https://github.com/python-semantic-release/python-semantic-release/commit/742b2e9e082c15f22052d64dea66f2d997d3d69b))
-
-* test: Restructure ci checks tests ([`f36eb2e`](https://github.com/python-semantic-release/python-semantic-release/commit/f36eb2ede0d6c4cb09861e5497629929c0ce4749))
-
-### Unknown
-
-* 3.8.0 ([`8779773`](https://github.com/python-semantic-release/python-semantic-release/commit/8779773444f54a8090b9d341b644f68a70ddb785))
-
-* Merge pull request #57 from relekang/feat/add-circle-ci-checks
-
-Add circle ci checks ([`7af9816`](https://github.com/python-semantic-release/python-semantic-release/commit/7af9816610669a9c697bfe198e98da33e5ed0a29))
-
-* Merge pull request #58 from relekang/refactor-cli-py
-
-fix: Refactoring cli.py to improve --help and error messages ([`a0bf0ff`](https://github.com/python-semantic-release/python-semantic-release/commit/a0bf0ff0eb0cd0140f851b9f7b7e18c2710dbad5))
-
-* Merge pull request #60 from relekang/test/fix-cli-tests
-
-test: Mock to fix cli tests ([`d6df71d`](https://github.com/python-semantic-release/python-semantic-release/commit/d6df71d6fb990c84bf5e01d45d5b0cab399da4d8))
-
-* Merge pull request #59 from relekang/test/fix-structure
-
-fix: Make tag parser work correctly with breaking changes ([`1e9a581`](https://github.com/python-semantic-release/python-semantic-release/commit/1e9a581e89757fb603a340bbc519e07b59b143e9))
-
-* Merge pull request #56 from relekang/dev-deps
-
-chore: Add tox and sphinx as dev dependencies ([`3beb444`](https://github.com/python-semantic-release/python-semantic-release/commit/3beb444ba34da785a2c3bcf2359e561c9be7abdd))
-
 
 ## v3.7.2 (2016-03-19)
 
 ### Fix
 
 * fix: move code around a bit to make flake8 happy ([`41463b4`](https://github.com/python-semantic-release/python-semantic-release/commit/41463b49b5d44fd94c11ab6e0a81e199510fabec))
-
-### Unknown
-
-* 3.7.2 ([`dde8bbf`](https://github.com/python-semantic-release/python-semantic-release/commit/dde8bbfd71d048d05a92d87bae0c6e45056b52e2))
-
-* Merge pull request #55 from relekang/flake8-fixes
-
-fix: move code around a bit to make flake8 happy ([`2184549`](https://github.com/python-semantic-release/python-semantic-release/commit/218454986be540b90e7d3af45a76c02d3c5f6ee2))
 
 
 ## v3.7.1 (2016-03-15)
@@ -4365,12 +2922,6 @@ fix: move code around a bit to make flake8 happy ([`2184549`](https://github.com
 
 ### Unknown
 
-* 3.7.1 ([`0aaa112`](https://github.com/python-semantic-release/python-semantic-release/commit/0aaa112880559e968f8c0053cfb84cf7eaed64cf))
-
-* Merge pull request #50 from edwelker/doc_fix
-
-documentation typo ([`b3c52c2`](https://github.com/python-semantic-release/python-semantic-release/commit/b3c52c27293f8944ea34a6a42b348082e80275fe))
-
 * documentation typo ([`b77d484`](https://github.com/python-semantic-release/python-semantic-release/commit/b77d484e119daa0c2fe86bc558eda972d4852a83))
 
 
@@ -4380,20 +2931,12 @@ documentation typo ([`b3c52c2`](https://github.com/python-semantic-release/pytho
 
 * feat: Add ci_checks for Frigg CI ([`577c374`](https://github.com/python-semantic-release/python-semantic-release/commit/577c374396fe303b6fe7d64630d2959998d3595c))
 
-### Unknown
-
-* 3.7.0 ([`10825b5`](https://github.com/python-semantic-release/python-semantic-release/commit/10825b5fe633f7cc2ea618ac3402be36fc10e8ee))
-
 
 ## v3.6.1 (2016-01-10)
 
 ### Fix
 
 * fix: Add requests as dependency ([`4525a70`](https://github.com/python-semantic-release/python-semantic-release/commit/4525a70d5520b44720d385b0307e46fae77a7463))
-
-### Unknown
-
-* 3.6.1 ([`8f5dd02`](https://github.com/python-semantic-release/python-semantic-release/commit/8f5dd025577c8d66c2d762070bfebbe31c77ab00))
 
 
 ## v3.6.0 (2015-12-28)
@@ -4419,18 +2962,8 @@ markdown. ([`42a9421`](https://github.com/python-semantic-release/python-semanti
 
 Fixes #44 ([`2d7ef15`](https://github.com/python-semantic-release/python-semantic-release/commit/2d7ef157b1250459060e99601ec53a00942b6955))
 
-### Unknown
-
-* 3.6.0 ([`4916f16`](https://github.com/python-semantic-release/python-semantic-release/commit/4916f16c0a6602fafd52222f3c930ceebade686a))
-
 
 ## v3.5.0 (2015-12-22)
-
-### Chore
-
-* chore: Re-add git user config to travis config ([`2c2809e`](https://github.com/python-semantic-release/python-semantic-release/commit/2c2809ea360977c1e4010c84ac2d43ef94dc6154))
-
-* chore: Remove unecessary git commands from travis after_success ([`a863b62`](https://github.com/python-semantic-release/python-semantic-release/commit/a863b620012b4528f1a5edcea3f8a428a2c690d5))
 
 ### Documentation
 
@@ -4450,24 +2983,8 @@ Fixes #40 ([`020efaa`](https://github.com/python-semantic-release/python-semanti
 
 * fix: Remove &#34; from git push command ([`031318b`](https://github.com/python-semantic-release/python-semantic-release/commit/031318b3268bc37e6847ec049b37425650cebec8))
 
-### Refactor
-
-* refactor: Use gitpython instead of invoke in vcs_helpers
-
-Fixes #3 ([`0d9b9a7`](https://github.com/python-semantic-release/python-semantic-release/commit/0d9b9a76f8292889dc7fbb802988073ffbe59a4e))
-
-### Unknown
-
-* 3.5.0 ([`fb67b5f`](https://github.com/python-semantic-release/python-semantic-release/commit/fb67b5ffb2df7d11b1daf6d7eef46f843f5cfd62))
-
 
 ## v3.4.0 (2015-12-22)
-
-### Chore
-
-* chore: Convert cli tests to pytest ([`40da8bb`](https://github.com/python-semantic-release/python-semantic-release/commit/40da8bb2bd96c06c044da2abc77d8f57f9a11347))
-
-* chore: Add checkout master to travis after_success ([`b79310a`](https://github.com/python-semantic-release/python-semantic-release/commit/b79310aa2f532680b33d30271aeb04dfd906019a))
 
 ### Feature
 
@@ -4476,22 +2993,12 @@ Fixes #3 ([`0d9b9a7`](https://github.com/python-semantic-release/python-semantic
 These checks will ensure that semantic release only runs against master
 and not in a pull-request. ([`f386db7`](https://github.com/python-semantic-release/python-semantic-release/commit/f386db75b77acd521d2f5bde2e1dde99924dc096))
 
-### Unknown
-
-* 3.4.0 ([`397ba66`](https://github.com/python-semantic-release/python-semantic-release/commit/397ba668f4bbb1f6a0385390ce1f4e4efbf98dbf))
-
 
 ## v3.3.3 (2015-12-22)
 
 ### Fix
 
 * fix: Do git push and git push --tags instead of --follow-tags ([`8bc70a1`](https://github.com/python-semantic-release/python-semantic-release/commit/8bc70a183fd72f595c72702382bc0b7c3abe99c8))
-
-### Unknown
-
-* 3.3.3 ([`d1664bb`](https://github.com/python-semantic-release/python-semantic-release/commit/d1664bbaa83ea60c15c5652f7dfe2084e458d48d))
-
-* 3.3.2 ([`68510b6`](https://github.com/python-semantic-release/python-semantic-release/commit/68510b6f27923d407087db07c56deb2f2f404fe4))
 
 
 ## v3.3.2 (2015-12-21)
@@ -4507,12 +3014,6 @@ and not in a pull-request. ([`f386db7`](https://github.com/python-semantic-relea
 
 ## v3.3.1 (2015-12-21)
 
-### Chore
-
-* chore: Use python 2 travis env ([`22c8d67`](https://github.com/python-semantic-release/python-semantic-release/commit/22c8d678358ea8d1808a9c058861d4055d13e0fd))
-
-* chore: Fix version number ([`7041a4c`](https://github.com/python-semantic-release/python-semantic-release/commit/7041a4c40b7dec5ea201a051e2e4ec572f93e358))
-
 ### Fix
 
 * fix: Only list commits from the last version tag
@@ -4521,24 +3022,8 @@ Fixes #28 ([`191369e`](https://github.com/python-semantic-release/python-semanti
 
 * fix: Add pandoc to travis settings ([`17d40a7`](https://github.com/python-semantic-release/python-semantic-release/commit/17d40a73062ffa774542d0abc0f59fc16b68be37))
 
-### Refactor
-
-* refactor: Fix quantified code warnings ([`6d16953`](https://github.com/python-semantic-release/python-semantic-release/commit/6d1695320e09320f43efca403992d7d1791ff2a7))
-
-### Unknown
-
-* 3.3.1 ([`0334b81`](https://github.com/python-semantic-release/python-semantic-release/commit/0334b81c247be5bf222975d894f5ced9d38fb812))
-
-* Merge remote-tracking branch &#39;origin/depsy/click-equals-6.2&#39; ([`f0f7937`](https://github.com/python-semantic-release/python-semantic-release/commit/f0f7937cca61c53b25e1e39b78356345e73b2033))
-
 
 ## v3.3.0 (2015-12-20)
-
-### Chore
-
-* chore: Fix pep8 warnings ([`07977b5`](https://github.com/python-semantic-release/python-semantic-release/commit/07977b5db86cd0a36172f11dbd035bde9348618b))
-
-* chore: Use semantic-release for publishing ([`e5b6119`](https://github.com/python-semantic-release/python-semantic-release/commit/e5b6119b76007345a8fe8e60d18c4c0587b437b7))
 
 ### Feature
 
@@ -4563,10 +3048,6 @@ Fixes #28 ([`191369e`](https://github.com/python-semantic-release/python-semanti
 
 ## v3.2.1 (2015-12-20)
 
-### Chore
-
-* chore: Update travis pypi password ([`7437c80`](https://github.com/python-semantic-release/python-semantic-release/commit/7437c809f8599714e143155b66858a47857b98d7))
-
 ### Fix
 
 * fix: Add requirements to manifest ([`ed25ecb`](https://github.com/python-semantic-release/python-semantic-release/commit/ed25ecbaeec0e20ad3040452a5547bb7d6faf6ad))
@@ -4578,22 +3059,8 @@ confusions if a package have had an sdist release at some point and
 then suddenly is only available as wheel packages, because old pip
 clients will then download the latest sdist package available. ([`a1a35f4`](https://github.com/python-semantic-release/python-semantic-release/commit/a1a35f43175187091f028474db2ebef5bfc77bc0))
 
-### Unknown
-
-* 3.2.1 ([`ab83167`](https://github.com/python-semantic-release/python-semantic-release/commit/ab83167d630bde385622178147037856641e2118))
-
 
 ## v3.2.0 (2015-12-20)
-
-### Chore
-
-* chore: Fix command in travis file ([`edb12d1`](https://github.com/python-semantic-release/python-semantic-release/commit/edb12d1d7d1c6c0539f28b6d5e9581ea8af105cb))
-
-* chore: Add git config to travis setup ([`7cc1510`](https://github.com/python-semantic-release/python-semantic-release/commit/7cc15107ceca1aa1ef25d5ae06e6119c6d9ee4c3))
-
-* chore: Make travis have one environment ([`ec2a003`](https://github.com/python-semantic-release/python-semantic-release/commit/ec2a003230040303e768db1c03e87770bc701e52))
-
-* chore: Setup travis ([`f283875`](https://github.com/python-semantic-release/python-semantic-release/commit/f2838755163dad9ab5766e6bbf494daf37667cec))
 
 ### Feature
 
@@ -4605,17 +3072,7 @@ clients will then download the latest sdist package available. ([`a1a35f4`](http
 
 * fix(deps): Use one file for requirements ([`4868543`](https://github.com/python-semantic-release/python-semantic-release/commit/486854393b24803bb2356324e045ccab17510d46))
 
-### Test
-
-* test: Update test setup ([`ac1e686`](https://github.com/python-semantic-release/python-semantic-release/commit/ac1e6862d8990bb35250478d38af170ccedc81eb))
-
 ### Unknown
-
-* 3.2.0 ([`bf85122`](https://github.com/python-semantic-release/python-semantic-release/commit/bf85122335173076fa6c018a506a546fa16b0aa6))
-
-* Merge pull request #29 from relekang/depsy-decisive-upgrade-15_10_17_07_51_03
-
-[Depsy] Upgrade dependencies ([`4987a31`](https://github.com/python-semantic-release/python-semantic-release/commit/4987a31ae78e8fc202497a01591ba0881e82437e))
 
 * Add links to the node project ([`3567952`](https://github.com/python-semantic-release/python-semantic-release/commit/3567952d8e84235c58aa7e310689de8d4b07f7ad))
 
@@ -4640,26 +3097,12 @@ clients will then download the latest sdist package available. ([`a1a35f4`](http
 
 ## v3.1.0 (2015-08-31)
 
-### Chore
-
-* chore(imports): Make all imports relative ([`d6ce17b`](https://github.com/python-semantic-release/python-semantic-release/commit/d6ce17b85a6d18a526a9a68e7ec51e7f635ca15b))
-
 ### Feature
 
 * feat(pypi): Add option to disable pypi upload ([`f5cd079`](https://github.com/python-semantic-release/python-semantic-release/commit/f5cd079edb219de5ad03a71448d578f5f477da9c))
 
-### Unknown
-
-* 3.1.0 ([`93cb147`](https://github.com/python-semantic-release/python-semantic-release/commit/93cb147ca0d360cd5c51b642f8d7ce2abb576698))
-
 
 ## v3.0.0 (2015-08-25)
-
-### Chore
-
-* chore(pytest): Use assert in pytest-test ([`d8d1f9d`](https://github.com/python-semantic-release/python-semantic-release/commit/d8d1f9d5ace0db71cf256e809ebf44ff090d9237))
-
-* chore(setup.py): Remove uneded variable ([`e54774c`](https://github.com/python-semantic-release/python-semantic-release/commit/e54774c897245b4da2f1e407d9ac848e6f712ef9))
 
 ### Feature
 
@@ -4678,12 +3121,6 @@ python-semantic-release. However, it requires &#34;BREAKING CHANGE:
 This makes it possible to use the version command without a setup.py
 file. ([`005dba0`](https://github.com/python-semantic-release/python-semantic-release/commit/005dba0094eeb4098315ef383a746e139ffb504d))
 
-### Unknown
-
-* 3.0.0 ([`592fedb`](https://github.com/python-semantic-release/python-semantic-release/commit/592fedb52633de40e0b07b418acc6c9d796179a4))
-
-* Merge branch &#39;tag-parser&#39; ([`2519b42`](https://github.com/python-semantic-release/python-semantic-release/commit/2519b42c7381fe8217b34150bd1ad06b23c9a56d))
-
 
 ## v2.1.4 (2015-08-24)
 
@@ -4693,22 +3130,8 @@ file. ([`005dba0`](https://github.com/python-semantic-release/python-semantic-re
 
 Properties can only be used from instances. ([`7ecdeb2`](https://github.com/python-semantic-release/python-semantic-release/commit/7ecdeb22de96b6b55c5404ebf54a751911c4d8cd))
 
-### Refactor
-
-* refactor(parsers): Move the parsing of the parts after line one to helpers ([`cefc8c6`](https://github.com/python-semantic-release/python-semantic-release/commit/cefc8c68ed1d454010a5d81e752ec7b0b1761ebb))
-
-### Unknown
-
-* 2.1.4 ([`a05210f`](https://github.com/python-semantic-release/python-semantic-release/commit/a05210f4274f10ddd5385241c99b6d77996c9544))
-
 
 ## v2.1.3 (2015-08-22)
-
-### Chore
-
-* chore(qc): Fix warnings from quantifiedcode ([`73c5da2`](https://github.com/python-semantic-release/python-semantic-release/commit/73c5da25810e89c66777664a64c0a34b7ddbffb0))
-
-* chore(test): Use mock package instead of unittest.mock ([`5376a56`](https://github.com/python-semantic-release/python-semantic-release/commit/5376a5602889fdae542eb7b13ae529ee001ad0aa))
 
 ### Documentation
 
@@ -4722,20 +3145,12 @@ Properties can only be used from instances. ([`7ecdeb2`](https://github.com/pyth
 
 * fix(hvcs): Make Github.token an property ([`37d5e31`](https://github.com/python-semantic-release/python-semantic-release/commit/37d5e3110397596a036def5f1dccf0860964332c))
 
-### Unknown
-
-* 2.1.3 ([`4979071`](https://github.com/python-semantic-release/python-semantic-release/commit/4979071d9330f2f3648358000de3a642a385a828))
-
 
 ## v2.1.2 (2015-08-20)
 
 ### Fix
 
 * fix(cli): Fix call to generate_changelog in publish ([`5f8bce4`](https://github.com/python-semantic-release/python-semantic-release/commit/5f8bce4cbb5e1729e674efd6c651e2531aea2a16))
-
-### Unknown
-
-* 2.1.2 ([`dfb37cb`](https://github.com/python-semantic-release/python-semantic-release/commit/dfb37cbde0a877ca482095711cbb08f52ab3cf45))
 
 
 ## v2.1.1 (2015-08-20)
@@ -4744,16 +3159,8 @@ Properties can only be used from instances. ([`7ecdeb2`](https://github.com/pyth
 
 * fix(history): Fix issue in get_previous_version ([`f961786`](https://github.com/python-semantic-release/python-semantic-release/commit/f961786aa3eaa3a620f47cc09243340fd329b9c2))
 
-### Unknown
-
-* 2.1.1 ([`7cf3a7d`](https://github.com/python-semantic-release/python-semantic-release/commit/7cf3a7d9aa2adc5a3cebf9d1151b113388117312))
-
 
 ## v2.1.0 (2015-08-20)
-
-### Chore
-
-* chore(pep8): Fix pep8 warning ([`5108b17`](https://github.com/python-semantic-release/python-semantic-release/commit/5108b177ed2b50b50e3476997f9d1f73adaa3f95))
 
 ### Feature
 
@@ -4768,14 +3175,6 @@ Properties can only be used from instances. ([`7ecdeb2`](https://github.com/pyth
 * fix(history): Fix changelog generation
 
 This enables regeneration of a given versions changelog. ([`f010272`](https://github.com/python-semantic-release/python-semantic-release/commit/f01027203a8ca69d21b4aff689e60e8c8d6f9af5))
-
-### Test
-
-* test(github): Fix broken tests ([`a140ecd`](https://github.com/python-semantic-release/python-semantic-release/commit/a140ecdc81c8e639b8d9adbedc7ac850c17f09cc))
-
-### Unknown
-
-* 2.1.0 ([`4b78940`](https://github.com/python-semantic-release/python-semantic-release/commit/4b789409936a5997d6c2f277083930b6e4b3b643))
 
 
 ## v2.0.0 (2015-08-19)
@@ -4829,19 +3228,7 @@ parsed. ([`974ccda`](https://github.com/python-semantic-release/python-semantic-
 
 * fix(history): Fix level id&#39;s in angular parser ([`2918d75`](https://github.com/python-semantic-release/python-semantic-release/commit/2918d759bf462082280ede971a5222fe01634ed8))
 
-### Refactor
-
-* refactor(test): Move exit code assertion in cli tests ([`345c299`](https://github.com/python-semantic-release/python-semantic-release/commit/345c299cbf4c0e626eb482b2f577dc8c5fd9426a))
-
-* refactor(history): Move evaluate_version_bump ([`c448d9b`](https://github.com/python-semantic-release/python-semantic-release/commit/c448d9b056d48d607a8bf7d38b8cf8a8ba038ca6))
-
-### Style
-
-* style(pep8): Fix pep8 and isort warnings ([`87695b1`](https://github.com/python-semantic-release/python-semantic-release/commit/87695b1684ad55e26e1489ab9d835cf8a9854654))
-
 ### Unknown
-
-* 2.0.0 ([`6493a58`](https://github.com/python-semantic-release/python-semantic-release/commit/6493a58727ecd082e3ae12619fef6c3c982cc6e2))
 
 * Add badges in readme ([`ad7c9c6`](https://github.com/python-semantic-release/python-semantic-release/commit/ad7c9c69329efe8af42112f716c39e810ed22718))
 
@@ -4855,8 +3242,6 @@ parsed. ([`974ccda`](https://github.com/python-semantic-release/python-semantic-
 ## v1.0.0 (2015-08-04)
 
 ### Unknown
-
-* 1.0.0 ([`a91662c`](https://github.com/python-semantic-release/python-semantic-release/commit/a91662c55d01af096cc45bf8844bcc6d87c1bcee))
 
 * :boom: Restructure helpers into history and pypi ([`00f64e6`](https://github.com/python-semantic-release/python-semantic-release/commit/00f64e623db0e21470d55488c5081e12d6c11fd3))
 
@@ -4879,8 +3264,6 @@ parsed. ([`974ccda`](https://github.com/python-semantic-release/python-semantic-
 
 ### Unknown
 
-* 0.9.1 ([`240971f`](https://github.com/python-semantic-release/python-semantic-release/commit/240971f4de808be27a5d8c54bd40156d80d38913))
-
 * :bug: Fix get_current_head_hash, ensure it only returns the hash ([`7c28832`](https://github.com/python-semantic-release/python-semantic-release/commit/7c2883209e5bf4a568de60dbdbfc3741d34f38b4))
 
 
@@ -4888,18 +3271,7 @@ parsed. ([`974ccda`](https://github.com/python-semantic-release/python-semantic-
 
 ### Unknown
 
-* 0.9.0 ([`85bfaae`](https://github.com/python-semantic-release/python-semantic-release/commit/85bfaaec2236e6c144bfb31ea12240ed6150c28b))
-
-* Merge pull request #15 from jezdez/python-2
-
-Add Python 2.7 support. Fix #10.
-:sparkles: ([`5daabb7`](https://github.com/python-semantic-release/python-semantic-release/commit/5daabb75eb9145566a2a7c2a9e64439df7cd85f1))
-
 * Add Python 2.7 support. Fix #10. ([`c05e13f`](https://github.com/python-semantic-release/python-semantic-release/commit/c05e13f22163237e963c493ffeda7e140f0202c6))
-
-* Merge pull request #14 from jezdez/assertion-fix
-
-Fixed name of assertion function. ([`aeb62df`](https://github.com/python-semantic-release/python-semantic-release/commit/aeb62dfcb6aa123f47f612dc209415c7fb4fe889))
 
 * Fixed cli tests to use correct params for call assertion. ([`456b26b`](https://github.com/python-semantic-release/python-semantic-release/commit/456b26be7130e51a7a46310f65dffb615b30a097))
 
@@ -4909,8 +3281,6 @@ Fixed name of assertion function. ([`aeb62df`](https://github.com/python-semanti
 ## v0.8.0 (2015-08-03)
 
 ### Unknown
-
-* 0.8.0 ([`6ec8a3e`](https://github.com/python-semantic-release/python-semantic-release/commit/6ec8a3e22f0914dd0d995c809f5b5d078825bc9a))
 
 * Fix version test, add missing mock ([`71842d4`](https://github.com/python-semantic-release/python-semantic-release/commit/71842d4d50fa16fbdba0487d1c8f6d0eb6b7d407))
 
@@ -4935,8 +3305,6 @@ Fixed name of assertion function. ([`aeb62df`](https://github.com/python-semanti
 
 ### Unknown
 
-* 0.7.0 ([`aeb11f7`](https://github.com/python-semantic-release/python-semantic-release/commit/aeb11f74a93fe7e64e9507f9a62202b833ee5733))
-
 * :sparkles: Add patch_without_tag option, fixes #6 ([`3734a88`](https://github.com/python-semantic-release/python-semantic-release/commit/3734a889f753f1b9023876e100031be6475a90d1))
 
 * Move defaults to cfg file ([`cb1257a`](https://github.com/python-semantic-release/python-semantic-release/commit/cb1257a60a81cb5aadbc8f6470ec2ec2c904506c))
@@ -4954,8 +3322,6 @@ Fixed name of assertion function. ([`aeb62df`](https://github.com/python-semanti
 
 ### Unknown
 
-* 0.6.0 ([`3acd8db`](https://github.com/python-semantic-release/python-semantic-release/commit/3acd8dbdd25f3973a536924985a37726d8665cdd))
-
 * :sparkles: Fix #13, Add twine for uploads to pypi ([`eec2561`](https://github.com/python-semantic-release/python-semantic-release/commit/eec256115b28b0a18136a26d74cfc3232502f1a6))
 
 * Add tests for the setup.py hook ([`ecd9e9a`](https://github.com/python-semantic-release/python-semantic-release/commit/ecd9e9a3f97bdf9489b6dc750d736855a2c109c2))
@@ -4970,8 +3336,6 @@ Fixed name of assertion function. ([`aeb62df`](https://github.com/python-semanti
 ## v0.5.4 (2015-07-29)
 
 ### Unknown
-
-* 0.5.4 ([`b66939b`](https://github.com/python-semantic-release/python-semantic-release/commit/b66939bff790c21bd1093e9b8ae6a5dff5f38235))
 
 * Add tests for upload_to_pypi ([`778923f`](https://github.com/python-semantic-release/python-semantic-release/commit/778923fab86d423b6ed254c569fddee1b9650f56))
 
@@ -4988,16 +3352,12 @@ related to #9 ([`a71b536`](https://github.com/python-semantic-release/python-sem
 
 ### Unknown
 
-* 0.5.3 ([`bed6e58`](https://github.com/python-semantic-release/python-semantic-release/commit/bed6e583161fd7651c69660ef9c6ab3252907cb9))
-
 * Add wheel as a dependency ([`971e479`](https://github.com/python-semantic-release/python-semantic-release/commit/971e4795a8b8fea371fcc02dc9221f58a0559f32))
 
 
 ## v0.5.2 (2015-07-28)
 
 ### Unknown
-
-* 0.5.2 ([`f66a1f9`](https://github.com/python-semantic-release/python-semantic-release/commit/f66a1f92072d9927c35ac4ac54153bd9b5a8b3a0))
 
 * :bug: Fix python wheel tag ([`f9ac163`](https://github.com/python-semantic-release/python-semantic-release/commit/f9ac163491666022c809ad49846f3c61966e10c1))
 
@@ -5006,16 +3366,12 @@ related to #9 ([`a71b536`](https://github.com/python-semantic-release/python-sem
 
 ### Unknown
 
-* 0.5.1 ([`6a2311a`](https://github.com/python-semantic-release/python-semantic-release/commit/6a2311adb7c4745908c0fa0ea4e5759b0e46d2b6))
-
 * :bug: Fix push commands ([`8374ef6`](https://github.com/python-semantic-release/python-semantic-release/commit/8374ef6bd78eb564a6d846b882c99a67e116394e))
 
 
 ## v0.5.0 (2015-07-28)
 
 ### Unknown
-
-* 0.5.0 ([`e888160`](https://github.com/python-semantic-release/python-semantic-release/commit/e8881604c94808d0e86387cc18ee81885870e1e7))
 
 * :sparkles: Add setup.py hook for the cli interface ([`c363bc5`](https://github.com/python-semantic-release/python-semantic-release/commit/c363bc5d3cb9e9a113de3cd0c49dd54a5ea9cf35))
 
@@ -5024,23 +3380,15 @@ related to #9 ([`a71b536`](https://github.com/python-semantic-release/python-sem
 
 ### Unknown
 
-* 0.4.0 ([`bfb1434`](https://github.com/python-semantic-release/python-semantic-release/commit/bfb1434f1861fe99dd28b653467034db1e271dfb))
-
 * :sparkles: Add publish command ([`d8116c9`](https://github.com/python-semantic-release/python-semantic-release/commit/d8116c9dec472d0007973939363388d598697784))
 
 
 ## v0.3.2 (2015-07-28)
 
-### Unknown
-
-* 0.3.2 ([`1d3ee00`](https://github.com/python-semantic-release/python-semantic-release/commit/1d3ee00c3601f06f900bc1694f3c7c32106a6e14))
-
 
 ## v0.3.1 (2015-07-28)
 
 ### Unknown
-
-* 0.3.1 ([`fec284c`](https://github.com/python-semantic-release/python-semantic-release/commit/fec284cdec7516b7b8067d5de2738e62434d3f31))
 
 * :bug: Fix wheel settings ([`1e860e8`](https://github.com/python-semantic-release/python-semantic-release/commit/1e860e8a4d9ec580449a0b87be9660a9482fa2a4))
 
@@ -5048,8 +3396,6 @@ related to #9 ([`a71b536`](https://github.com/python-semantic-release/python-sem
 ## v0.3.0 (2015-07-27)
 
 ### Unknown
-
-* 0.3.0 ([`d633a28`](https://github.com/python-semantic-release/python-semantic-release/commit/d633a2811f2e14581793ebdf08b852dc6024dd44))
 
 * Add info about tagging in readme ([`914c78f`](https://github.com/python-semantic-release/python-semantic-release/commit/914c78f0e1e15043c080e6d1ee56eccb5a70dd7d))
 
@@ -5065,8 +3411,6 @@ related to #9 ([`a71b536`](https://github.com/python-semantic-release/python-sem
 ## v0.2.0 (2015-07-27)
 
 ### Unknown
-
-* 0.2.0 ([`c3bad90`](https://github.com/python-semantic-release/python-semantic-release/commit/c3bad90b53cc3312795da18881e6405d9cb8cdfc))
 
 * Remove apt dependencies from frigg settings ([`d942a32`](https://github.com/python-semantic-release/python-semantic-release/commit/d942a32bd475b3541c207069bd43d88f60a310a0))
 
@@ -5099,8 +3443,6 @@ Fixes #4 ([`44c2039`](https://github.com/python-semantic-release/python-semantic
 
 ### Unknown
 
-* 0.1.1 ([`54a98fe`](https://github.com/python-semantic-release/python-semantic-release/commit/54a98fedbf5f8a3898d0d9c27bca20e9b8a382e5))
-
 * Fix libgit install in frigg settings ([`bd991c3`](https://github.com/python-semantic-release/python-semantic-release/commit/bd991c3b3e1f69f86b1f6ca538e57b3ba365e376))
 
 * :bug: Fix entry point ([`bd7ce7f`](https://github.com/python-semantic-release/python-semantic-release/commit/bd7ce7f47c49e2027767fb770024a0d4033299fa))
@@ -5115,8 +3457,6 @@ Fixes #4 ([`44c2039`](https://github.com/python-semantic-release/python-semantic
 ## v0.1.0 (2015-07-27)
 
 ### Unknown
-
-* 0.1.0 ([`30d5f43`](https://github.com/python-semantic-release/python-semantic-release/commit/30d5f4376dc540548f68da921bd87ae7b21e7996))
 
 * Add commiting of new version ([`6865d4b`](https://github.com/python-semantic-release/python-semantic-release/commit/6865d4b9d39027effe1902b9c50479c832650f68))
 
