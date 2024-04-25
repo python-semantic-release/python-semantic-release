@@ -291,6 +291,9 @@ class Gitea(RemoteHvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return self.create_repo_url(repo_path=f"/commit/{commit_hash}")
 
+    def issue_url(self, issue_num: str | int) -> str:
+        return self.create_repo_url(repo_path=f"/issues/{issue_num}")
+
     def pull_request_url(self, pr_number: str | int) -> str:
         return self.create_repo_url(repo_path=f"/pulls/{pr_number}")
 
@@ -299,6 +302,7 @@ class Gitea(RemoteHvcsBase):
             self.create_server_url,
             self.create_repo_url,
             self.commit_hash_url,
+            self.issue_url,
             self.pull_request_url,
         )
 
