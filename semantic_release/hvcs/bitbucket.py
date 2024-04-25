@@ -48,9 +48,7 @@ class Bitbucket(RemoteHvcsBase):
     DEFAULT_API_SUBDOMAIN_PREFIX = "api"
     DEFAULT_API_PATH_CLOUD = "/2.0"
     DEFAULT_API_PATH_ONPREM = "/rest/api/1.0"
-    DEFAULT_API_URL_CLOUD = (
-        f"https://{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}{DEFAULT_API_PATH_CLOUD}"
-    )
+    DEFAULT_API_URL_CLOUD = f"https://{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}{DEFAULT_API_PATH_CLOUD}"
     DEFAULT_ENV_TOKEN_NAME = "BITBUCKET_TOKEN"  # noqa: S105
 
     def __init__(
@@ -223,9 +221,13 @@ class Bitbucket(RemoteHvcsBase):
         return super().create_or_update_release(tag, release_notes, prerelease)
 
     def create_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self,
+        tag: str,
+        release_notes: str,
+        prerelease: bool = False,
+        assets: list[str] | None = None,
     ) -> int | str:
-        return super().create_release(tag, release_notes, prerelease)
+        return super().create_release(tag, release_notes, prerelease, assets)
 
 
 RemoteHvcsBase.register(Bitbucket)

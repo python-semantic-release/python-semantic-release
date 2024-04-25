@@ -13,7 +13,11 @@ from typing import TYPE_CHECKING
 from requests import HTTPError, JSONDecodeError
 from urllib3.util.url import Url, parse_url
 
-from semantic_release.errors import UnexpectedResponse
+from semantic_release.errors import (
+    AssetUploadError,
+    IncompleteReleaseError,
+    UnexpectedResponse,
+)
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
@@ -201,14 +205,25 @@ class Github(RemoteHvcsBase):
 
     @logged_function(log)
     def create_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self,
+        tag: str,
+        release_notes: str,
+        prerelease: bool = False,
+        assets: list[str] | None = None,
     ) -> int:
         """
         Create a new release
-        https://docs.github.com/rest/reference/repos#create-a-release
+
+        REF: https://docs.github.com/rest/reference/repos#create-a-release
+
         :param tag: Tag to create release for
+
         :param release_notes: The release notes for this version
+
         :param prerelease: Whether or not this release should be created as a prerelease
+
+        :param assets: a list of artifacts to upload to the release
+
         :return: the ID of the release
         """
         log.info("Creating release for tag %s", tag)
@@ -232,11 +247,32 @@ class Github(RemoteHvcsBase):
         try:
             release_id: int = response.json()["id"]
             log.info("Successfully created release with ID: %s", release_id)
-            return release_id
         except JSONDecodeError as err:
             raise UnexpectedResponse("Unreadable json response") from err
         except KeyError as err:
             raise UnexpectedResponse("JSON response is missing an id") from err
+
+        errors = []
+        for asset in assets or []:
+            log.info("Uploading asset %s", asset)
+            try:
+                self.upload_release_asset(release_id, asset)
+            except HTTPError as err:
+                errors.append(
+                    AssetUploadError(f"Failed asset upload for {asset}").with_traceback(
+                        err.__traceback__
+                    )
+                )
+
+        if len(errors) < 1:
+            return release_id
+
+        for err in errors:
+            log.exception(err)
+
+        raise IncompleteReleaseError(
+            f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"
+        )
 
     @logged_function(log)
     @suppress_not_found
@@ -342,7 +378,7 @@ class Github(RemoteHvcsBase):
             ) from err
 
     @logged_function(log)
-    def upload_asset(
+    def upload_release_asset(
         self, release_id: int, file: str, label: str | None = None
     ) -> bool:
         """
@@ -407,7 +443,7 @@ class Github(RemoteHvcsBase):
             f for f in glob.glob(dist_glob, recursive=True) if os.path.isfile(f)
         ):
             try:
-                self.upload_asset(release_id, file_path)
+                self.upload_release_asset(release_id, file_path)
                 n_succeeded += 1
             except HTTPError:  # noqa: PERF203
                 log.exception("error uploading asset %s", file_path)

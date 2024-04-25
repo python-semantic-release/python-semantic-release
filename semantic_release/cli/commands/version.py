@@ -631,10 +631,11 @@ def version(  # noqa: C901
             noop_report(f"would have uploaded the following assets: {runtime.assets}")
         else:
             try:
-                release_id = hvcs_client.create_or_update_release(
+                hvcs_client.create_release(
                     tag=new_version.as_tag(),
                     release_notes=release_notes,
                     prerelease=new_version.is_prerelease,
+                    assets=assets,
                 )
             except HTTPError as err:
                 log.exception(err)
@@ -654,16 +655,5 @@ def version(  # noqa: C901
             except Exception as e:
                 log.exception(e)
                 ctx.fail(str(e))
-
-            for asset in assets:
-                log.info("Uploading asset %s", asset)
-                try:
-                    hvcs_client.upload_asset(release_id, asset)
-                except HTTPError as err:
-                    log.exception(err)
-                    ctx.fail(str.join("\n", [str(err), "Failed to upload asset!"]))
-                except Exception as e:
-                    log.exception(e)
-                    ctx.fail(str(e))
 
     return str(new_version)

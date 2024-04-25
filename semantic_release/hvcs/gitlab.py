@@ -86,6 +86,7 @@ class Gitlab(RemoteHvcsBase):
         tag: str,
         release_notes: str,
         prerelease: bool = False,  # noqa: ARG002
+        assets: list[str] | None = None,  # noqa: ARG002
     ) -> str:
         """
         Post release changelog

@@ -40,8 +40,20 @@ class MissingMergeBaseError(SemanticReleaseBaseError):
     """
 
 
-class UnexpectedResponse(Exception):
+class UnexpectedResponse(SemanticReleaseBaseError):
     """
     Raised when an HTTP response cannot be parsed properly or the expected structure
     is not found.
+    """
+
+class IncompleteReleaseError(SemanticReleaseBaseError):
+    """
+    Raised when there is a failure amongst one of the api requests when creating a
+    release on a remote hvcs.
+    """
+
+class AssetUploadError(SemanticReleaseBaseError):
+    """
+    Raised when there is a failure uploading an asset to a remote hvcs's release artifact
+    storage.
     """
