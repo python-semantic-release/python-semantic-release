@@ -468,7 +468,7 @@ class Github(HvcsBase):
 
     def pull_request_url(self, pr_number: str | int) -> str:
         return self.create_server_url(
-            path=f"/{self.owner}/{self.repo_name}/issues/{pr_number}"
+            path=f"/{self.owner}/{self.repo_name}/pull/{pr_number}"
         )
 
     def _derive_url(
