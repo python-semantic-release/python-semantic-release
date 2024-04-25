@@ -267,8 +267,8 @@ class Github(RemoteHvcsBase):
         if len(errors) < 1:
             return release_id
 
-        for err in errors:
-            log.exception(err)
+        for error in errors:
+            log.exception(error)
 
         raise IncompleteReleaseError(
             f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"

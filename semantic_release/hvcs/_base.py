@@ -80,4 +80,4 @@ class HvcsBase(metaclass=ABCMeta):
         ex. filters to convert text to URLs for issues and commits
         """
         self._not_supported(self.get_changelog_context_filters.__name__)
-        return []
+        return ()

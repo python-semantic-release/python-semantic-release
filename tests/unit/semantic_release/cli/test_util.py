@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import json
 from textwrap import dedent
 
 import pytest
-from pytest import lazy_fixture
+from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.cli.util import load_raw_config_file, parse_toml
 from semantic_release.errors import InvalidConfiguration
@@ -174,13 +176,16 @@ def invalid_other_config_file(tmp_path):
 @pytest.mark.parametrize(
     "raw_config_file, expected",
     [
-        (lazy_fixture("raw_toml_config_file"), {"foo": "bar", "abc": {"bar": "baz"}}),
         (
-            lazy_fixture("raw_pyproject_toml_config_file"),
+            lazy_fixture(raw_toml_config_file.__name__),
             {"foo": "bar", "abc": {"bar": "baz"}},
         ),
         (
-            lazy_fixture("raw_json_config_file"),
+            lazy_fixture(raw_pyproject_toml_config_file.__name__),
+            {"foo": "bar", "abc": {"bar": "baz"}},
+        ),
+        (
+            lazy_fixture(raw_json_config_file.__name__),
             {"foo": "bar", "abc": {"bar": "baz"}},
         ),
     ],
@@ -192,9 +197,9 @@ def test_load_raw_config_file_loads_config(raw_config_file, expected):
 @pytest.mark.parametrize(
     "raw_config_file",
     [
-        lazy_fixture("invalid_toml_config_file"),
-        lazy_fixture("invalid_json_config_file"),
-        lazy_fixture("invalid_other_config_file"),
+        lazy_fixture(invalid_toml_config_file.__name__),
+        lazy_fixture(invalid_json_config_file.__name__),
+        lazy_fixture(invalid_other_config_file.__name__),
     ],
 )
 def test_load_raw_invalid_config_file_raises_error(raw_config_file):

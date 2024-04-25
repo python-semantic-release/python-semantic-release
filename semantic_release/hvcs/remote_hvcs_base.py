@@ -174,8 +174,10 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
         Function to ensure url scheme is populated & allowed
 
         Raises
+        ------
         TypeError: when url parameter is not a string or parsable url
         ValueError: when the url scheme is not http or https
+
         """
         tgt_url = parse_url(url) if isinstance(url, str) else url
         if not isinstance(tgt_url, Url):
@@ -189,6 +191,3 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
 
         RemoteHvcsBase._validate_url_scheme(tgt_url, allow_insecure=allow_insecure)
         return tgt_url
-
-
-HvcsBase.register(RemoteHvcsBase)

@@ -24,8 +24,6 @@ from tests.const import TODAY_DATE_STR
 if TYPE_CHECKING:
     from git import Actor
 
-    from semantic_release.hvcs import HvcsBase
-
 
 @pytest.fixture
 def default_changelog_template() -> str:
@@ -95,7 +93,7 @@ def artificial_release_history(commit_author: Actor):
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template(
     default_changelog_template: str,
-    hvcs_client: type[HvcsBase],
+    hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
 ):
@@ -103,19 +101,20 @@ def test_default_changelog_template(
     version = Version.parse(version_str)
     rh = artificial_release_history
     rh.unreleased = {}  # Wipe out unreleased
+    hvcs = hvcs_client(example_git_https_url)
 
     feat_commit_obj = artificial_release_history.released[version]["elements"][
         "feature"
     ][0]
-    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
-        feat_commit_obj.commit.hexsha
-    )
+    assert isinstance(feat_commit_obj, ParsedCommit)
+
+    feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
     feat_description = str.join("\n", feat_commit_obj.descriptions)
 
     fix_commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
-    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
-        fix_commit_obj.commit.hexsha
-    )
+    fix_commit_url = hvcs.commit_hash_url(fix_commit_obj.commit.hexsha)
+
+    assert isinstance(fix_commit_obj, ParsedCommit)
     fix_description = str.join("\n", fix_commit_obj.descriptions)
 
     expected_changelog = str.join(
@@ -143,25 +142,26 @@ def test_default_changelog_template(
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template_w_unreleased_changes(
     default_changelog_template: str,
-    hvcs_client: type[HvcsBase],
+    hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
 ):
     version_str = "1.0.0"
     version = Version.parse(version_str)
+    hvcs = hvcs_client(example_git_https_url)
 
     feat_commit_obj = artificial_release_history.released[version]["elements"][
         "feature"
     ][0]
-    feat_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
-        feat_commit_obj.commit.hexsha
-    )
+    assert isinstance(feat_commit_obj, ParsedCommit)
+
+    feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
     feat_description = str.join("\n", feat_commit_obj.descriptions)
 
     fix_commit_obj = artificial_release_history.released[version]["elements"]["fix"][0]
-    fix_commit_url = hvcs_client(example_git_https_url).commit_hash_url(
-        fix_commit_obj.commit.hexsha
-    )
+    fix_commit_url = hvcs.commit_hash_url(fix_commit_obj.commit.hexsha)
+
+    assert isinstance(fix_commit_obj, ParsedCommit)
     fix_description = str.join("\n", fix_commit_obj.descriptions)
 
     expected_changelog = str.join(

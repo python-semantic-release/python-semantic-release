@@ -14,7 +14,7 @@ from urllib3.util.url import Url, parse_url
 from semantic_release.errors import (
     AssetUploadError,
     IncompleteReleaseError,
-    UnexpectedResponse
+    UnexpectedResponse,
 )
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
@@ -142,8 +142,8 @@ class Gitea(RemoteHvcsBase):
         if len(errors) < 1:
             return release_id
 
-        for err in errors:
-            log.exception(err)
+        for error in errors:
+            log.exception(error)
 
         raise IncompleteReleaseError(
             f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"

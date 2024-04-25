@@ -26,9 +26,7 @@ log = logging.getLogger(__name__)
 
 
 class Gitlab(RemoteHvcsBase):
-    """
-    Gitlab HVCS interface for interacting with Gitlab repositories
-    """
+    """Gitlab HVCS interface for interacting with Gitlab repositories"""
 
     DEFAULT_ENV_TOKEN_NAME = "GITLAB_TOKEN"  # noqa: S105
     # purposefully not CI_JOB_TOKEN as it is not a personal access token,
