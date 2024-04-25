@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import click
 
 from semantic_release.cli.util import noop_report
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import tags_and_versions
 
 if TYPE_CHECKING:
@@ -45,6 +46,11 @@ def publish(cli_ctx: CliContextObj, tag: str = "latest") -> None:
                 f"No tags found with format {translator.tag_format!r}, couldn't "
                 "identify latest version"
             )
+
+    if not isinstance(hvcs_client, RemoteHvcsBase):
+        log.info("Remote does not support artifact upload. Exiting with no action taken...")
+        ctx.exit(0)
+
     if runtime.global_cli_options.noop:
         noop_report(
             "would have uploaded files matching any of the globs "

@@ -25,6 +25,7 @@ from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import UnexpectedResponse
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import Version, next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
@@ -601,7 +602,7 @@ def version(  # noqa: C901
 
     gha_output.released = True
 
-    if make_vcs_release:
+    if make_vcs_release and isinstance(hvcs_client, RemoteHvcsBase):
         if opts.noop:
             noop_report(
                 f"would have created a release for the tag {new_version.as_tag()!r}"
