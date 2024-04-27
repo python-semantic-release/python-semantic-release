@@ -117,9 +117,7 @@ class ScipyParserOptions(ParserOptions):
 class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
     """Parser for scipy-style commit messages"""
 
-    parser_options = ScipyParserOptions
-
-    def __init__(self, options: ScipyParserOptions) -> None:
+    def __init__(self, options: ScipyParserOptions | None = None) -> None:
         super().__init__(options)
         self.re_parser = re.compile(
             rf"(?P<tag>{_COMMIT_FILTER})?"
@@ -129,6 +127,10 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
             r"(\n\n(?P<text>.*))?",
             re.DOTALL,
         )
+
+    @staticmethod
+    def get_default_options() -> ScipyParserOptions:
+        return ScipyParserOptions()
 
     def parse(self, commit: Commit) -> ParseResult:
         message = str(commit.message)
