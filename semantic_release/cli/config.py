@@ -234,7 +234,7 @@ class RawConfig(BaseModel):
             if self.commit_parser in _known_commit_parsers:
                 parser_opts_type = _known_commit_parsers[
                     self.commit_parser
-                ].parser_options
+                ].get_default_options().__class__
             else:
                 # if its a custom parser, try to import it and pull the default options object type
                 custom_class = dynamic_import(self.commit_parser)
@@ -389,8 +389,10 @@ class RuntimeContext:
             else dynamic_import(raw.commit_parser)
         )
 
+        commit_parser_opts_class = commit_parser_cls.get_default_options().__class__
+
         commit_parser = commit_parser_cls(
-            options=commit_parser_cls.parser_options(**raw.commit_parser_options)
+            options=commit_parser_opts_class(**raw.commit_parser_options)
         )
 
         # We always exclude PSR's own release commits from the Changelog
