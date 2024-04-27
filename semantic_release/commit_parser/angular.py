@@ -62,13 +62,11 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     commits. See https://www.conventionalcommits.org/en/v1.0.0-beta.4/
     """
 
-    parser_options = AngularParserOptions
-
-    def __init__(self, options: AngularParserOptions) -> None:
+    def __init__(self, options: AngularParserOptions | None = None) -> None:
         super().__init__(options)
         self.re_parser = re.compile(
             rf"""
-            (?P<type>{"|".join(options.allowed_tags)})  # e.g. feat
+            (?P<type>{"|".join(self.options.allowed_tags)})  # e.g. feat
             (?:\((?P<scope>[^\n]+)\))?  # or feat(parser)
             (?P<break>!)?:\s+  # breaking if feat!:
             (?P<subject>[^\n]+)  # commit subject
@@ -76,6 +74,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             """,
             flags=re.VERBOSE | re.DOTALL,
         )
+
+    @staticmethod
+    def get_default_options() -> AngularParserOptions:
+        return AngularParserOptions()
 
     # Maybe this can be cached as an optimisation, similar to how
     # mypy/pytest use their own caching directories, for very large commit
