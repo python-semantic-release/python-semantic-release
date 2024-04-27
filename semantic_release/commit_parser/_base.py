@@ -65,10 +65,12 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
                 ...
     """
 
-    parser_options: type[_OPTS]
+    def __init__(self, options: _OPTS | None = None) -> None:
+        self.options: _OPTS = options if options is not None else self.get_default_options()
 
-    def __init__(self, options: _OPTS) -> None:
-        self.options = options
+    @staticmethod
+    @abstractmethod
+    def get_default_options() -> _OPTS: ...
 
     @abstractmethod
     def parse(self, commit: Commit) -> _TT: ...
