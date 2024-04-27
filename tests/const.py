@@ -68,37 +68,9 @@ EMOJI_COMMITS_MINOR = [
 EMOJI_COMMITS_MAJOR = EMOJI_COMMITS_MINOR.copy()
 EMOJI_COMMITS_MAJOR.insert(4, ":boom: Move to the blockchain")
 
-SCIPY_FORMATTED_COMMIT_BODY_PARTS = [
-    # a squash merge that preserved PR commit messages
-    (
-        "DOC: import ropy.transform to test for numpy error",
-        "DOC: lower numpy version",
-        "DOC: lower numpy version further",
-        "MAINT: remove debugging import",
-    ),
-    # empty body
-    (),
-    # formatted body
-    (
-        """Bumps [sphinx](https://github.com/sphinx-doc/sphinx) from 3.5.3 to 4.1.1.
-            - [Release notes](https://github.com/sphinx-doc/sphinx/releases)
-            - [Changelog](https://github.com/sphinx-doc/sphinx/blob/4.x/CHANGES)
-            - [Commits](https://github.com/sphinx-doc/sphinx/commits/v4.1.1)""",
-        """---
-            updated-dependencies:
-            - dependency-name: sphinx
-            dependency-type: direct:development
-            update-type: version-update:semver-major""",
-    ),
-    (
-        "Bug spotted on Fedora, see https://src.fedoraproject.org/rpms/scipy/pull-request/22",
-        "The `int[::]` annotation is used to accept non-contiguous views.",
-    ),
-    ("[skip azp] [skip actions]",),
-]
 
-# Note - the scipy commit testing in v7 is very comprehensive -
-# fixtures for commits that should evaluate to the various scopes
+
+# Note - the scipy commit fixtures for commits that should evaluate to the various scopes
 # are in tests/fixtures/scipy
 
 
