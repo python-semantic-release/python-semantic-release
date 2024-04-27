@@ -232,9 +232,11 @@ class RawConfig(BaseModel):
             parser_opts_type = None
             # If the commit parser is a known one, pull the default options object from it
             if self.commit_parser in _known_commit_parsers:
-                parser_opts_type = _known_commit_parsers[
-                    self.commit_parser
-                ].get_default_options().__class__
+                parser_opts_type = (
+                    _known_commit_parsers[self.commit_parser]
+                    .get_default_options()
+                    .__class__
+                )
             else:
                 # if its a custom parser, try to import it and pull the default options object type
                 custom_class = dynamic_import(self.commit_parser)

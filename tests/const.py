@@ -69,7 +69,6 @@ EMOJI_COMMITS_MAJOR = EMOJI_COMMITS_MINOR.copy()
 EMOJI_COMMITS_MAJOR.insert(4, ":boom: Move to the blockchain")
 
 
-
 # Note - the scipy commit fixtures for commits that should evaluate to the various scopes
 # are in tests/fixtures/scipy
 

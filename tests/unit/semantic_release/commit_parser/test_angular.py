@@ -16,8 +16,7 @@ if TYPE_CHECKING:
 
 
 def test_parser_raises_unknown_message_style(
-    default_angular_parser: AngularCommitParser,
-    make_commit_obj: MakeCommitObjFn
+    default_angular_parser: AngularCommitParser, make_commit_obj: MakeCommitObjFn
 ):
     assert isinstance(default_angular_parser.parse(make_commit_obj("")), ParseError)
     assert isinstance(
@@ -149,7 +148,9 @@ def test_parser_return_subject_from_commit_message(
 def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
     options = AngularParserOptions(default_bump_level=LevelBump.MINOR)
     parser = AngularCommitParser(options)
-    result = parser.parse(make_commit_obj("test(parser): Add a test for angular parser"))
+    result = parser.parse(
+        make_commit_obj("test(parser): Add a test for angular parser")
+    )
     assert isinstance(result, ParsedCommit)
     assert result.bump is LevelBump.MINOR
 
