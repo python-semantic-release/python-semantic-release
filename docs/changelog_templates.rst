@@ -144,8 +144,8 @@ project.
 
 .. _changelog-templates-template-rendering-template-context:
 
-Template Context:
-^^^^^^^^^^^^^^^^^
+Template Context
+^^^^^^^^^^^^^^^^
 
 Alongside the rendering of a directory tree, Python Semantic Release makes information
 about the history of the project available within the templating environment in order
@@ -156,18 +156,56 @@ Python terms, ``context`` is a `dataclass`_ with the following attributes:
 
 * ``repo_name: str``: the name of the current repository parsed from the Git url.
 * ``repo_owner: str``: the owner of the current repository parsed from the Git url.
+* ``hvcs_type: str``: the name of the VCS server type currently configured.
 * ``history: ReleaseHistory``: a :py:class:`semantic_release.changelog.ReleaseHistory` instance.
   (See :ref:`changelog-templates-template-rendering-template-context-release-history`)
 * ``filters: Tuple[Callable[..., Any], ...]``: a tuple of filters for the template environment.
   These are added to the environment's ``filters``, and therefore there should be no need to
   access these from the ``context`` object inside the template.
 
-Currently, two filters are defined:
+The filters provided vary based on the VCS configured and available features:
 
-* ``pull_request_url: Callable[[str], str]``: given a pull request number, return a URL
-  to the pull request in the remote.
+* ``create_server_url: Callable[[str, str | None, str | None, str | None], str]``: when given
+  a path, prepend the configured vcs server host and url scheme.  Optionally you can provide,
+  a auth string, a query string or a url fragment to be normalized into the resulting url.
+  Parameter order is as described above respectively.
+
+* ``create_repo_url: Callable[[str, str | None, str | None], str]``: when given a repository
+  path, prepend the configured vcs server host, and repo namespace.  Optionally you can provide,
+  an additional query string and/or a url fragment to also put in the url. Parameter order is
+  as described above respectively. This is similar to ``create_server_url`` but includes the repo
+  namespace and owner automatically.
+
 * ``commit_hash_url: Callable[[str], str]``: given a commit hash, return a URL to the
   commit in the remote.
+
+* ``compare_url: Callable[[str, str], str]``: given a starting git reference and a ending git
+  reference create a comparison url between the two references that can be opened on the remote
+
+* ``issue_url: Callable[[str | int], str]``: given an issue number, return a URL to the issue
+  on the remote vcs.
+
+* ``merge_request_url: Callable[[str | int], str]``: given a merge request number, return a URL
+  to the merge request in the remote. This is an alias to the ``pull_request_url`` but only
+  available for the VCS that uses the merge request terminology.
+
+* ``pull_request_url: Callable[[str | int], str]``: given a pull request number, return a URL
+  to the pull request in the remote. For remote vcs' that use merge request terminology, this
+  filter is an alias to the ``merge_request_url`` filter function.
+
+Availability of the documented filters can be found in the table below:
+
+======================  =========  =====  ======  ======
+**filter - hvcs_type**  bitbucket  gitea  github  gitlab
+======================  =========  =====  ======  ======
+create_server_url          ✅       ✅      ✅      ✅
+create_repo_url            ✅       ✅      ✅      ✅
+commit_hash_url            ✅       ✅      ✅      ✅
+compare_url                ✅       ❌      ✅      ✅
+issue_url                  ❌       ✅      ✅      ✅
+merge_request_url          ❌       ❌      ❌      ✅
+pull_request_url           ✅       ✅      ✅      ✅
+======================  =========  =====  ======  ======
 
 .. seealso::
    * `Filters <https://jinja.palletsprojects.com/en/3.1.x/templates/#filters>`_
