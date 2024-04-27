@@ -163,5 +163,5 @@ This would lead to versions such as ``1.1.1+main.20221127`` or ``2.0.0-rc.4+2.x.
 
 .. note::
    Remember that is always possible to override the release rules configured by using
-   the :ref:`cmd-version-option-force-level` and :ref:`cmd-version-option-prerelease`
+   the :ref:`cmd-version-option-force-level` and :ref:`cmd-version-option-as-prerelease`
    flags.
