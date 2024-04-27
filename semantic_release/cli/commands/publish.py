@@ -48,7 +48,9 @@ def publish(cli_ctx: CliContextObj, tag: str = "latest") -> None:
             )
 
     if not isinstance(hvcs_client, RemoteHvcsBase):
-        log.info("Remote does not support artifact upload. Exiting with no action taken...")
+        log.info(
+            "Remote does not support artifact upload. Exiting with no action taken..."
+        )
         ctx.exit(0)
 
     if runtime.global_cli_options.noop:

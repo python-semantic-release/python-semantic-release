@@ -43,6 +43,7 @@ def changelog_tpl_github_context() -> str:
         """
     ).lstrip()
 
+
 @pytest.fixture
 def changelog_tpl_gitea_context() -> str:
     """Returns an changelog template which uses all the Gitea configured filters"""
@@ -64,6 +65,7 @@ def changelog_tpl_gitea_context() -> str:
         - {{ "[#%s](%s)" | format(19, 19 | issue_url) }}
         """
     ).lstrip()
+
 
 @pytest.fixture
 def changelog_tpl_gitlab_context() -> str:
@@ -89,6 +91,7 @@ def changelog_tpl_gitlab_context() -> str:
         - {{ "[#%s](%s)" | format(19, 19 | issue_url) }}
         """
     ).lstrip()
+
 
 @pytest.fixture
 def changelog_tpl_bitbucket_context() -> str:
@@ -194,7 +197,9 @@ def test_changelog_context_bitbucket(
     )
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(hvcs_client=hvcs, release_history=artificial_release_history)
+    context = make_changelog_context(
+        hvcs_client=hvcs, release_history=artificial_release_history
+    )
     context.bind_to_environment(env)
 
     # Create changelog from template with environment
@@ -235,7 +240,9 @@ def test_changelog_context_github(
     )
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(hvcs_client=hvcs, release_history=artificial_release_history)
+    context = make_changelog_context(
+        hvcs_client=hvcs, release_history=artificial_release_history
+    )
     context.bind_to_environment(env)
 
     # Create changelog from template with environment
@@ -274,7 +281,9 @@ def test_changelog_context_gitea(
     )
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(hvcs_client=hvcs, release_history=artificial_release_history)
+    context = make_changelog_context(
+        hvcs_client=hvcs, release_history=artificial_release_history
+    )
     context.bind_to_environment(env)
 
     # Create changelog from template with environment
@@ -316,7 +325,9 @@ def test_changelog_context_gitlab(
     )
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(hvcs_client=hvcs, release_history=artificial_release_history)
+    context = make_changelog_context(
+        hvcs_client=hvcs, release_history=artificial_release_history
+    )
     context.bind_to_environment(env)
 
     # Create changelog from template with environment

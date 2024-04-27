@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 class ArbitraryHvcs(HvcsBase):
-
     def remote_url(self, use_token: bool) -> str:
         return super().remote_url(use_token)
 

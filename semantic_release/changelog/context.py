@@ -33,7 +33,5 @@ def make_changelog_context(
         repo_owner=hvcs_client.owner,
         history=release_history,
         hvcs_type=hvcs_client.__class__.__name__.lower(),
-        filters=(
-            *hvcs_client.get_changelog_context_filters(),
-        ),
+        filters=(*hvcs_client.get_changelog_context_filters(),),
     )

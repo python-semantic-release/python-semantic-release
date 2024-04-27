@@ -46,11 +46,13 @@ class UnexpectedResponse(SemanticReleaseBaseError):
     is not found.
     """
 
+
 class IncompleteReleaseError(SemanticReleaseBaseError):
     """
     Raised when there is a failure amongst one of the api requests when creating a
     release on a remote hvcs.
     """
+
 
 class AssetUploadError(SemanticReleaseBaseError):
     """
