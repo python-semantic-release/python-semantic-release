@@ -34,7 +34,9 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
     first line as changelog content.
     """
 
-    parser_options = TagParserOptions
+    @staticmethod
+    def get_default_options() -> TagParserOptions:
+        return TagParserOptions()
 
     def parse(self, commit: Commit) -> ParseResult:
         message = str(commit.message)
