@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 
 import pytest
+from git import Commit
 
 from tests.fixtures import *
 from tests.util import remove_dir_tree
@@ -14,6 +15,9 @@ from tests.util import remove_dir_tree
 if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper
     from typing import Generator, Protocol
+
+    class MakeCommitObjFn(Protocol):
+        def __call__(self, message: str) -> Commit: ...
 
     class NetrcFileFn(Protocol):
         def __call__(self, machine: str) -> _TemporaryFileWrapper[str]: ...
@@ -84,3 +88,10 @@ def teardown_cached_dir() -> Generator[TeardownCachedDirFn, None, None]:
         for directory in directories:
             if directory.exists():
                 remove_dir_tree(directory, force=True)
+
+
+@pytest.fixture(scope="session")
+def make_commit_obj() -> MakeCommitObjFn:
+    def _make_commit(message: str) -> Commit:
+        return Commit(repo=Repo(), binsha=Commit.NULL_BIN_SHA, message=message)
+    return _make_commit
