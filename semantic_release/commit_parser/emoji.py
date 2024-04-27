@@ -57,7 +57,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     the commit subject in the changelog.
     """
 
-    parser_options = EmojiParserOptions
+    @staticmethod
+    def get_default_options() -> EmojiParserOptions:
+        return EmojiParserOptions()
 
     def parse(self, commit: Commit) -> ParseResult:
         all_emojis = (
