@@ -1,19 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from semantic_release.commit_parser.emoji import EmojiCommitParser
+from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.enums import LevelBump
 
-from tests.unit.semantic_release.commit_parser.helper import make_commit
+if TYPE_CHECKING:
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
 
-
-@pytest.fixture
-def default_options():
-    return EmojiCommitParser.parser_options()
-
-
-@pytest.fixture
-def default_emoji_parser(default_options):
-    return EmojiCommitParser(default_options)
+    from tests.conftest import MakeCommitObjFn
 
 
 @pytest.mark.parametrize(
@@ -70,16 +67,19 @@ def default_emoji_parser(default_options):
     ],
 )
 def test_default_emoji_parser(
-    default_emoji_parser,
-    commit_message,
-    bump,
-    type_,
-    descriptions,
-    breaking_descriptions,
+    default_emoji_parser: EmojiCommitParser,
+    commit_message: str,
+    bump: LevelBump,
+    type_: str,
+    descriptions: list[str],
+    breaking_descriptions: list[str],
+    make_commit_obj: MakeCommitObjFn,
 ):
-    commit = make_commit(commit_message)
-    parsed = default_emoji_parser.parse(commit)
-    assert parsed.bump is bump
-    assert parsed.type == type_
-    assert parsed.descriptions == descriptions
-    assert parsed.breaking_descriptions == breaking_descriptions
+    commit = make_commit_obj(commit_message)
+    result = default_emoji_parser.parse(commit)
+
+    assert isinstance(result, ParsedCommit)
+    assert bump is result.bump
+    assert type_ == result.type
+    assert descriptions == result.descriptions
+    assert breaking_descriptions == result.breaking_descriptions
