@@ -15,12 +15,16 @@ if TYPE_CHECKING:
     from semantic_release.commit_parser.scipy import ScipyParserOptions
 
     class FormatScipyCommitFn(Protocol):
-        def __call__(self, scipy_tag: str, subject: str, body_parts: list[str]) -> str: ...
+        def __call__(
+            self, scipy_tag: str, subject: str, body_parts: list[str]
+        ) -> str: ...
 
 
 @pytest.fixture(scope="session")
 def format_scipy_commit():
-    def _format_scipy_commit(scipy_tag: str, subject: str, body_parts: list[str]) -> str:
+    def _format_scipy_commit(
+        scipy_tag: str, subject: str, body_parts: list[str]
+    ) -> str:
         body = str.join("\n\n", body_parts)
         return f"{scipy_tag}: {subject}\n\n{body}"
 
@@ -33,12 +37,16 @@ def default_scipy_parser() -> ScipyCommitParser:
 
 
 @pytest.fixture(scope="session")
-def default_scipy_parser_options(default_scipy_parser: ScipyCommitParser) -> ScipyParserOptions:
+def default_scipy_parser_options(
+    default_scipy_parser: ScipyCommitParser,
+) -> ScipyParserOptions:
     return default_scipy_parser.get_default_options()
 
 
 @pytest.fixture(scope="session")
-def scipy_chore_commit_types(default_scipy_parser_options: ScipyParserOptions) -> list[str]:
+def scipy_chore_commit_types(
+    default_scipy_parser_options: ScipyParserOptions,
+) -> list[str]:
     return [
         k
         for k, v in default_scipy_parser_options.tag_to_level.items()
@@ -47,7 +55,9 @@ def scipy_chore_commit_types(default_scipy_parser_options: ScipyParserOptions) -
 
 
 @pytest.fixture(scope="session")
-def scipy_patch_commit_types(default_scipy_parser_options: ScipyParserOptions) -> list[str]:
+def scipy_patch_commit_types(
+    default_scipy_parser_options: ScipyParserOptions,
+) -> list[str]:
     return [
         k
         for k, v in default_scipy_parser_options.tag_to_level.items()
@@ -56,7 +66,9 @@ def scipy_patch_commit_types(default_scipy_parser_options: ScipyParserOptions) -
 
 
 @pytest.fixture(scope="session")
-def scipy_minor_commit_types(default_scipy_parser_options: ScipyParserOptions) -> list[str]:
+def scipy_minor_commit_types(
+    default_scipy_parser_options: ScipyParserOptions,
+) -> list[str]:
     return [
         k
         for k, v in default_scipy_parser_options.tag_to_level.items()
@@ -65,7 +77,9 @@ def scipy_minor_commit_types(default_scipy_parser_options: ScipyParserOptions) -
 
 
 @pytest.fixture(scope="session")
-def scipy_major_commit_types(default_scipy_parser_options: ScipyParserOptions) -> list[str]:
+def scipy_major_commit_types(
+    default_scipy_parser_options: ScipyParserOptions,
+) -> list[str]:
     return [
         k
         for k, v in default_scipy_parser_options.tag_to_level.items()
@@ -156,12 +170,15 @@ def scipy_brk_change_commit_bodies() -> list[list[str]]:
 @pytest.fixture(scope="session")
 def scipy_nonbrking_commit_bodies() -> list[list[str]]:
     # a GitHub squash merge that preserved PR commit messages (all chore-like)
-    github_squash_merge_body = str.join("\n\n", [
-        "* DOC: import ropy.transform to test for numpy error",
-        "* DOC: lower numpy version",
-        "* DOC: lower numpy version further",
-        "* STY: resolve linting issues",
-    ])
+    github_squash_merge_body = str.join(
+        "\n\n",
+        [
+            "* DOC: import ropy.transform to test for numpy error",
+            "* DOC: lower numpy version",
+            "* DOC: lower numpy version further",
+            "* STY: resolve linting issues",
+        ],
+    )
 
     one_block_desc = dedent(
         """
@@ -171,7 +188,7 @@ def scipy_nonbrking_commit_bodies() -> list[list[str]]:
     ).strip()
 
     return [
-        github_squash_merge_body.split("\n\n"), # split into blocks
+        github_squash_merge_body.split("\n\n"),  # split into blocks
         # empty body
         [],
         [""],
@@ -189,17 +206,16 @@ def scipy_nonbrking_commit_bodies() -> list[list[str]]:
                 dependency-type: direct:development
                 update-type: version-update:semver-major
             """
-        ).lstrip().split("\n\n"),
+        )
+        .lstrip()
+        .split("\n\n"),
         # 1 block description
         one_block_desc.split("\n\n"),
         # keywords
         ["[skip azp] [skip actions]"],
         # Resolving an issue on GitHub
         ["Resolves: #127"],
-        [
-            one_block_desc,
-            "Closes: #1024"
-        ],
+        [one_block_desc, "Closes: #1024"],
     ]
 
 
@@ -335,9 +351,7 @@ def scipy_patch_mixed_commits(
     return list(
         filter(
             None,
-            chain.from_iterable(
-                zip_longest(scipy_patch_commits, scipy_chore_commits)
-            )
+            chain.from_iterable(zip_longest(scipy_patch_commits, scipy_chore_commits)),
         )
     )
 
@@ -354,7 +368,7 @@ def scipy_minor_mixed_commits(
                 scipy_minor_commits,
                 scipy_patch_commits,
                 scipy_chore_commits,
-                fillvalue="uninteresting"
+                fillvalue="uninteresting",
             )
         )
     )
@@ -377,7 +391,7 @@ def scipy_major_mixed_commits(
                     scipy_patch_commits,
                     scipy_chore_commits,
                 )
-            )
+            ),
         )
     )
 

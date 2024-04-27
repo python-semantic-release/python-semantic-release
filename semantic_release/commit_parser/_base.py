@@ -66,7 +66,9 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
     """
 
     def __init__(self, options: _OPTS | None = None) -> None:
-        self.options: _OPTS = options if options is not None else self.get_default_options()
+        self.options: _OPTS = (
+            options if options is not None else self.get_default_options()
+        )
 
     @staticmethod
     @abstractmethod

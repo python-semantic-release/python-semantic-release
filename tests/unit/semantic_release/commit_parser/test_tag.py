@@ -21,8 +21,7 @@ footer = "Closes #400"
 
 
 def test_parser_raises_unknown_message_style(
-    default_tag_parser: TagCommitParser,
-    make_commit_obj: MakeCommitObjFn
+    default_tag_parser: TagCommitParser, make_commit_obj: MakeCommitObjFn
 ):
     result = default_tag_parser.parse(make_commit_obj(""))
     assert isinstance(result, ParseError)

@@ -94,4 +94,5 @@ def teardown_cached_dir() -> Generator[TeardownCachedDirFn, None, None]:
 def make_commit_obj() -> MakeCommitObjFn:
     def _make_commit(message: str) -> Commit:
         return Commit(repo=Repo(), binsha=Commit.NULL_BIN_SHA, message=message)
+
     return _make_commit
