@@ -11,21 +11,25 @@ from typing import TYPE_CHECKING
 from requests import HTTPError, JSONDecodeError
 from urllib3.util.url import Url, parse_url
 
-from semantic_release.errors import UnexpectedResponse
+from semantic_release.errors import (
+    AssetUploadError,
+    IncompleteReleaseError,
+    UnexpectedResponse,
+)
 from semantic_release.helpers import logged_function
-from semantic_release.hvcs._base import HvcsBase
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
 from semantic_release.hvcs.util import build_requests_session, suppress_not_found
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Callable
 
 
 # Globals
 log = logging.getLogger(__name__)
 
 
-class Gitea(HvcsBase):
+class Gitea(RemoteHvcsBase):
     """Gitea helper class"""
 
     DEFAULT_DOMAIN = "gitea.com"
@@ -46,27 +50,15 @@ class Gitea(HvcsBase):
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
 
-        domain_url = parse_url(
+        domain_url = self._normalize_url(
             hvcs_domain
             or os.getenv("GITEA_SERVER_URL", "")
-            or f"https://{self.DEFAULT_DOMAIN}"
+            or f"https://{self.DEFAULT_DOMAIN}",
+            allow_insecure=allow_insecure,
         )
 
-        if domain_url.scheme == "http" and not allow_insecure:
-            raise ValueError("Insecure connections are currently disabled.")
-
-        if not domain_url.scheme:
-            new_scheme = "http" if allow_insecure else "https"
-            domain_url = Url(**{**domain_url._asdict(), "scheme": new_scheme})
-
-        if domain_url.scheme not in ["http", "https"]:
-            raise ValueError(
-                f"Invalid scheme {domain_url.scheme} for domain {domain_url.host}. "
-                "Only http and https are supported."
-            )
-
         # Strip any auth, query or fragment from the domain
-        self.hvcs_domain = parse_url(
+        self._hvcs_domain = parse_url(
             Url(
                 scheme=domain_url.scheme,
                 host=domain_url.host,
@@ -75,7 +67,7 @@ class Gitea(HvcsBase):
             ).url.rstrip("/")
         )
 
-        self.api_url = parse_url(
+        self._api_url = self._normalize_url(
             os.getenv("GITEA_API_URL", "").rstrip("/")
             or Url(
                 # infer from Domain url and append the default api path
@@ -83,12 +75,17 @@ class Gitea(HvcsBase):
                     **self.hvcs_domain._asdict(),
                     "path": f"{self.hvcs_domain.path or ''}{self.DEFAULT_API_PATH}",
                 }
-            ).url
+            ).url,
+            allow_insecure=allow_insecure,
         )
 
     @logged_function(log)
     def create_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self,
+        tag: str,
+        release_notes: str,
+        prerelease: bool = False,
+        assets: list[str] | None = None,
     ) -> int:
         """
         Create a new release
@@ -123,12 +120,34 @@ class Gitea(HvcsBase):
         response.raise_for_status()
 
         try:
-            data = response.json()
-            return data["id"]
+            release_id: int = response.json()["id"]
+            log.info("Successfully created release with ID: %s", release_id)
         except JSONDecodeError as err:
             raise UnexpectedResponse("Unreadable json response") from err
         except KeyError as err:
             raise UnexpectedResponse("JSON response is missing an id") from err
+
+        errors = []
+        for asset in assets or []:
+            log.info("Uploading asset %s", asset)
+            try:
+                self.upload_release_asset(release_id, asset)
+            except HTTPError as err:
+                errors.append(
+                    AssetUploadError(f"Failed asset upload for {asset}").with_traceback(
+                        err.__traceback__
+                    )
+                )
+
+        if len(errors) < 1:
+            return release_id
+
+        for error in errors:
+            log.exception(error)
+
+        raise IncompleteReleaseError(
+            f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"
+        )
 
     @logged_function(log)
     @suppress_not_found
@@ -218,7 +237,7 @@ class Gitea(HvcsBase):
         )
 
     @logged_function(log)
-    def upload_asset(
+    def upload_release_asset(
         self,
         release_id: int,
         file: str,
@@ -282,7 +301,7 @@ class Gitea(HvcsBase):
             f for f in glob.glob(dist_glob, recursive=True) if os.path.isfile(f)
         ):
             try:
-                self.upload_asset(release_id, file_path)
+                self.upload_release_asset(release_id, file_path)
                 n_succeeded += 1
             except HTTPError:  # noqa: PERF203
                 log.exception("error uploading asset %s", file_path)
@@ -300,51 +319,22 @@ class Gitea(HvcsBase):
         )
 
     def commit_hash_url(self, commit_hash: str) -> str:
-        return self.create_server_url(
-            path=f"/{self.owner}/{self.repo_name}/commit/{commit_hash}"
-        )
+        return self.create_repo_url(repo_path=f"/commit/{commit_hash}")
+
+    def issue_url(self, issue_num: str | int) -> str:
+        return self.create_repo_url(repo_path=f"/issues/{issue_num}")
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        return self.create_server_url(
-            path=f"/{self.owner}/{self.repo_name}/pulls/{pr_number}"
+        return self.create_repo_url(repo_path=f"/pulls/{pr_number}")
+
+    def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
+        return (
+            self.create_server_url,
+            self.create_repo_url,
+            self.commit_hash_url,
+            self.issue_url,
+            self.pull_request_url,
         )
 
-    def create_server_url(
-        self,
-        path: str,
-        auth: str | None = None,
-        query: str | None = None,
-        fragment: str | None = None,
-    ) -> str:
-        overrides = dict(
-            filter(
-                lambda x: x[1] is not None,
-                {
-                    "auth": auth,
-                    "path": str(PurePosixPath(path or "/")),
-                    "query": query,
-                    "fragment": fragment,
-                }.items(),
-            )
-        )
-        return Url(
-            **{
-                **self.hvcs_domain._asdict(),
-                **overrides,
-            }
-        ).url.rstrip("/")
 
-    def create_api_url(
-        self,
-        endpoint: str,
-        auth: str | None = None,
-        query: str | None = None,
-        fragment: str | None = None,
-    ) -> str:
-        api_path = self.api_url.url.replace(self.hvcs_domain.url, "")
-        return self.create_server_url(
-            path=f"{api_path}/{endpoint.lstrip(api_path)}",
-            auth=auth,
-            query=query,
-            fragment=fragment,
-        )
+RemoteHvcsBase.register(Gitea)

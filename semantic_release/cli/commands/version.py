@@ -25,6 +25,7 @@ from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import UnexpectedResponse
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import Version, next_version, tags_and_versions
 
 log = logging.getLogger(__name__)
@@ -601,7 +602,7 @@ def version(  # noqa: C901
 
     gha_output.released = True
 
-    if make_vcs_release:
+    if make_vcs_release and isinstance(hvcs_client, RemoteHvcsBase):
         if opts.noop:
             noop_report(
                 f"would have created a release for the tag {new_version.as_tag()!r}"
@@ -630,10 +631,11 @@ def version(  # noqa: C901
             noop_report(f"would have uploaded the following assets: {runtime.assets}")
         else:
             try:
-                release_id = hvcs_client.create_or_update_release(
+                hvcs_client.create_release(
                     tag=new_version.as_tag(),
                     release_notes=release_notes,
                     prerelease=new_version.is_prerelease,
+                    assets=assets,
                 )
             except HTTPError as err:
                 log.exception(err)
@@ -653,16 +655,5 @@ def version(  # noqa: C901
             except Exception as e:
                 log.exception(e)
                 ctx.fail(str(e))
-
-            for asset in assets:
-                log.info("Uploading asset %s", asset)
-                try:
-                    hvcs_client.upload_asset(release_id, asset)
-                except HTTPError as err:
-                    log.exception(err)
-                    ctx.fail(str.join("\n", [str(err), "Failed to upload asset!"]))
-                except Exception as e:
-                    log.exception(e)
-                    ctx.fail(str(e))
 
     return str(new_version)

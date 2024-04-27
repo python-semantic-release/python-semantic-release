@@ -1,9 +1,25 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.hvcs._base import HvcsBase
 
 from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
+
+if TYPE_CHECKING:
+    from typing import Any, Callable
+
+
+class ArbitraryHvcs(HvcsBase):
+
+    def remote_url(self, use_token: bool) -> str:
+        return super().remote_url(use_token)
+
+    def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
+        return super().get_changelog_context_filters()
 
 
 @pytest.mark.parametrize(
@@ -15,7 +31,7 @@ from tests.const import EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
     ],
 )
 def test_get_repository_owner(remote_url, repo_name):
-    client = HvcsBase(remote_url)
+    client = ArbitraryHvcs(remote_url)
     assert client.repo_name == repo_name
 
 
@@ -28,7 +44,7 @@ def test_get_repository_owner(remote_url, repo_name):
     ],
 )
 def test_get_repository_name(remote_url, owner):
-    client = HvcsBase(remote_url)
+    client = ArbitraryHvcs(remote_url)
     assert client.owner == owner
 
 
@@ -42,7 +58,7 @@ def test_get_repository_name(remote_url, owner):
     ],
 )
 def test_hvcs_parse_error(bad_url):
-    client = HvcsBase(bad_url)
+    client = ArbitraryHvcs(bad_url)
     with pytest.raises(ValueError):
         _ = client.repo_name
     with pytest.raises(ValueError):

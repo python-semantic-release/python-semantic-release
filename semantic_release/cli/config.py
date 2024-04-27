@@ -41,6 +41,7 @@ from semantic_release.commit_parser import (
 from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
 from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import VersionTranslator
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,
@@ -141,12 +142,21 @@ class RemoteConfig(BaseModel):
     def set_default_token(self) -> Self:
         # Set the default token name for the given VCS when no user input is given
         if not self.token and self.type in _known_hvcs:
-            default_token_name = _known_hvcs[self.type].DEFAULT_ENV_TOKEN_NAME
-            if default_token_name:
-                env_token = EnvConfigVar(env=default_token_name).getvalue()
-                if env_token:
-                    self.token = env_token
+            if env_token := self._get_default_token():
+                self.token = env_token
         return self
+
+    def _get_default_token(self) -> str | None:
+        hvcs_client_class = _known_hvcs[self.type]
+        default_hvcs_instance = hvcs_client_class("git@example.com:owner/project.git")
+        if not isinstance(default_hvcs_instance, RemoteHvcsBase):
+            return None
+
+        default_token_name = default_hvcs_instance.DEFAULT_ENV_TOKEN_NAME
+        if not default_token_name:
+            return None
+
+        return EnvConfigVar(env=default_token_name).getvalue()
 
     @model_validator(mode="after")
     def check_url_scheme(self) -> Self:

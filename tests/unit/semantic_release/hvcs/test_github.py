@@ -376,9 +376,20 @@ def test_commit_hash_url(default_gh_client: Github):
     assert expected_url == default_gh_client.commit_hash_url(sha)
 
 
+@pytest.mark.parametrize("issue_number", (420, "420"))
+def test_issue_url(default_gh_client: Github, issue_number: str | int):
+    expected_url = "{server}/{owner}/{repo}/issues/{issue_num}".format(
+        server=default_gh_client.hvcs_domain.url,
+        owner=default_gh_client.owner,
+        repo=default_gh_client.repo_name,
+        issue_num=issue_number,
+    )
+    assert expected_url == default_gh_client.issue_url(issue_num=issue_number)
+
+
 @pytest.mark.parametrize("pr_number", (420, "420"))
 def test_pull_request_url(default_gh_client: Github, pr_number: int | str):
-    expected_url = "{server}/{owner}/{repo}/issues/{pr_number}".format(
+    expected_url = "{server}/{owner}/{repo}/pull/{pr_number}".format(
         server=default_gh_client.hvcs_domain,
         owner=default_gh_client.owner,
         repo=default_gh_client.repo_name,
@@ -861,7 +872,7 @@ def test_asset_upload_url(default_gh_client: Github):
 @pytest.mark.parametrize("status_code", (200, 201))
 @pytest.mark.parametrize("mock_release_id", range(3))
 @pytest.mark.usefixtures(init_example_project.__name__)
-def test_upload_asset_succeeds(
+def test_upload_release_asset_succeeds(
     default_gh_client: Github,
     example_changelog_md: Path,
     status_code: int,
@@ -904,7 +915,7 @@ def test_upload_asset_succeeds(
         )
 
         # Execute method under test
-        result = default_gh_client.upload_asset(
+        result = default_gh_client.upload_release_asset(
             release_id=mock_release_id,
             file=example_changelog_md.resolve(),
             label=label,
@@ -926,7 +937,7 @@ def test_upload_asset_succeeds(
 @pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
 @pytest.mark.parametrize("mock_release_id", range(3))
 @pytest.mark.usefixtures(init_example_project.__name__)
-def test_upload_asset_fails(
+def test_upload_release_asset_fails(
     default_gh_client: Github,
     example_changelog_md: Path,
     status_code: int,
@@ -970,7 +981,7 @@ def test_upload_asset_fails(
 
         # Execute method under test expecting an exception to be raised
         with pytest.raises(HTTPError):
-            default_gh_client.upload_asset(
+            default_gh_client.upload_release_asset(
                 release_id=mock_release_id,
                 file=example_changelog_md.resolve(),
                 label=label,
@@ -998,15 +1009,15 @@ def test_upload_dists_when_release_id_not_found(default_gh_client):
         "get_release_id_by_tag",
         return_value=None,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "upload_asset"
-    ) as mock_upload_asset:
+        default_gh_client, "upload_release_asset"
+    ) as mock_upload_release_asset:
         # Execute method under test
         result = default_gh_client.upload_dists(tag, path)
 
         # Evaluate
         assert expected_num_uploads == result
         mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
-        mock_upload_asset.assert_not_called()
+        mock_upload_release_asset.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -1044,13 +1055,13 @@ def test_upload_dists_when_release_id_found(
         return_value=release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gh_client,
-        "upload_asset",
+        "upload_release_asset",
         side_effect=upload_statuses,
-    ) as mock_upload_asset:
+    ) as mock_upload_release_asset:
         # Execute method under test
         num_uploads = default_gh_client.upload_dists(tag, glob_pattern)
 
         # Evaluate (expected -> actual)
         assert expected_num_uploads == num_uploads
         mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
-        assert expected_files_uploaded == mock_upload_asset.call_args_list
+        assert expected_files_uploaded == mock_upload_release_asset.call_args_list

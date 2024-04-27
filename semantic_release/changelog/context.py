@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class ChangelogContext:
     repo_name: str
     repo_owner: str
+    hvcs_type: str
     history: ReleaseHistory
     filters: tuple[Callable[..., Any], ...] = ()
 
@@ -31,5 +32,8 @@ def make_changelog_context(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
         history=release_history,
-        filters=(hvcs_client.pull_request_url, hvcs_client.commit_hash_url),
+        hvcs_type=hvcs_client.__class__.__name__.lower(),
+        filters=(
+            *hvcs_client.get_changelog_context_filters(),
+        ),
     )

@@ -14,6 +14,7 @@ from semantic_release.cli.common import (
     render_release_notes,
 )
 from semantic_release.cli.util import noop_report
+from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 
 if TYPE_CHECKING:
     from semantic_release.cli.commands.cli_context import CliContextObj
@@ -79,7 +80,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None = None) -> None:
         else:
             recursive_render(template_dir, environment=env, _root_dir=repo.working_dir)
 
-    if release_tag:
+    if release_tag and isinstance(hvcs_client, RemoteHvcsBase):
         if runtime.global_cli_options.noop:
             noop_report(
                 f"would have posted changelog to the release for tag {release_tag}"

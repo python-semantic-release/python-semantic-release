@@ -39,91 +39,91 @@ def default_bitbucket_client():
             None,
             None,
             f"https://{Bitbucket.DEFAULT_DOMAIN}",
-            f"https://{Bitbucket.DEFAULT_API_DOMAIN}{Bitbucket.DEFAULT_API_PATH_CLOUD}",
+            Bitbucket.DEFAULT_API_URL_CLOUD,
             False,
         ),
         (
             # Explicitly set default values
             {},
             Bitbucket.DEFAULT_DOMAIN,
-            Bitbucket.DEFAULT_API_DOMAIN,
+            Bitbucket.DEFAULT_API_URL_CLOUD,
             f"https://{Bitbucket.DEFAULT_DOMAIN}",
-            f"https://{Bitbucket.DEFAULT_API_DOMAIN}{Bitbucket.DEFAULT_API_PATH_CLOUD}",
+            Bitbucket.DEFAULT_API_URL_CLOUD,
             False,
         ),
-        # (
-        #     # Explicitly set custom values with full api path
-        #     {},
-        #     EXAMPLE_HVCS_DOMAIN,
-        #     f"{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     f"https://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"https://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     False,
-        # ),
-        # (
-        #     # Explicitly defined api as subdomain
-        #     # POSSIBLY WRONG ASSUMPTION of Api path for BitBucket Server
-        #     {},
-        #     f"https://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"https://api.{EXAMPLE_HVCS_DOMAIN}",
-        #     f"https://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"https://api.{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     False,
-        # ),
-        # (
-        #     # Custom domain for on premise BitBucket Server (derive api endpoint)
-        #     {},
-        #     EXAMPLE_HVCS_DOMAIN,
-        #     None,
-        #     f"https://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"https://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     False,
-        # ),
-        # (
-        #     # Custom domain with path prefix
-        #     {},
-        #     "special.custom.server/bitbucket",
-        #     None,
-        #     "https://special.custom.server/bitbucket",
-        #     "https://special.custom.server/bitbucket/rest/api/1.0",
-        #     False,
-        # ),
-        # (
-        #     # Allow insecure http connections explicitly
-        #     {},
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     True,
-        # ),
-        # (
-        #     # Allow insecure http connections explicitly & imply insecure api domain
-        #     {},
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}",
-        #     None,
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     True,
-        # ),
-        # (
-        #     # Infer insecure connection from user configuration
-        #     {},
-        #     EXAMPLE_HVCS_DOMAIN,
-        #     f"{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     True,
-        # ),
-        # (
-        #     # Infer insecure connection from user configuration & imply insecure api domain
-        #     {},
-        #     EXAMPLE_HVCS_DOMAIN,
-        #     None,
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}",
-        #     f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
-        #     True,
-        # ),
+        (
+            # Explicitly set custom values with full api path
+            {},
+            EXAMPLE_HVCS_DOMAIN,
+            f"{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            False,
+        ),
+        (
+            # Explicitly defined api as subdomain
+            # POSSIBLY WRONG ASSUMPTION of Api path for BitBucket Server
+            {},
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://api.{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            False,
+        ),
+        (
+            # Custom domain for on premise BitBucket Server (derive api endpoint)
+            {},
+            EXAMPLE_HVCS_DOMAIN,
+            None,
+            f"https://{EXAMPLE_HVCS_DOMAIN}",
+            f"https://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            False,
+        ),
+        (
+            # Custom domain with path prefix
+            {},
+            "special.custom.server/bitbucket",
+            None,
+            "https://special.custom.server/bitbucket",
+            "https://special.custom.server/bitbucket/rest/api/1.0",
+            False,
+        ),
+        (
+            # Allow insecure http connections explicitly
+            {},
+            f"http://{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            f"http://{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            True,
+        ),
+        (
+            # Allow insecure http connections explicitly & imply insecure api domain
+            {},
+            f"http://{EXAMPLE_HVCS_DOMAIN}",
+            None,
+            f"http://{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            True,
+        ),
+        (
+            # Infer insecure connection from user configuration
+            {},
+            EXAMPLE_HVCS_DOMAIN,
+            f"{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            f"http://{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            True,
+        ),
+        (
+            # Infer insecure connection from user configuration & imply insecure api domain
+            {},
+            EXAMPLE_HVCS_DOMAIN,
+            None,
+            f"http://{EXAMPLE_HVCS_DOMAIN}",
+            f"http://{EXAMPLE_HVCS_DOMAIN}/rest/api/1.0",
+            True,
+        ),
     ],
 )
 @pytest.mark.parametrize(
