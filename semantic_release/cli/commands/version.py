@@ -386,8 +386,9 @@ def version(  # noqa: C901
         new_version.build_metadata = build_metadata
 
     if as_prerelease:
-        before_conversion, new_version = new_version, new_version.to_prerelease(
-            token=translator.prerelease_token
+        before_conversion, new_version = (
+            new_version,
+            new_version.to_prerelease(token=translator.prerelease_token),
         )
         log.info(
             "Converting %s to %s due to '--as-prerelease' command-line option",
