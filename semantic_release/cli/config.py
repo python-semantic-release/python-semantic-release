@@ -148,10 +148,11 @@ class RemoteConfig(BaseModel):
 
     def _get_default_token(self) -> str | None:
         hvcs_client_class = _known_hvcs[self.type]
-        if not isinstance(hvcs_client_class, RemoteHvcsBase):
+        default_hvcs_instance = hvcs_client_class("git@example.com:owner/project.git")
+        if not isinstance(default_hvcs_instance, RemoteHvcsBase):
             return None
 
-        default_token_name = hvcs_client_class.DEFAULT_ENV_TOKEN_NAME
+        default_token_name = default_hvcs_instance.DEFAULT_ENV_TOKEN_NAME
         if not default_token_name:
             return None
 
