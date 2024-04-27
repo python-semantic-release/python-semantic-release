@@ -1,27 +1,28 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from semantic_release.commit_parser.angular import AngularCommitParser
+from semantic_release.commit_parser.angular import (
+    AngularCommitParser,
+    AngularParserOptions,
+)
 from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
 
-from tests.unit.semantic_release.commit_parser.helper import make_commit
+if TYPE_CHECKING:
+    from tests.conftest import MakeCommitObjFn
 
 
-@pytest.fixture
-def default_options():
-    return AngularCommitParser.parser_options()
-
-
-@pytest.fixture
-def default_angular_parser(default_options):
-    return AngularCommitParser(default_options)
-
-
-def test_parser_raises_unknown_message_style(default_angular_parser):
-    assert isinstance(default_angular_parser.parse(make_commit("")), ParseError)
+def test_parser_raises_unknown_message_style(
+    default_angular_parser: AngularCommitParser,
+    make_commit_obj: MakeCommitObjFn
+):
+    assert isinstance(default_angular_parser.parse(make_commit_obj("")), ParseError)
     assert isinstance(
         default_angular_parser.parse(
-            make_commit("feat(parser\n): Add new parser pattern")
+            make_commit_obj("feat(parser\n): Add new parser pattern")
         ),
         ParseError,
     )
@@ -50,9 +51,12 @@ def test_parser_raises_unknown_message_style(default_angular_parser):
     ],
 )
 def test_parser_returns_correct_bump_level(
-    default_angular_parser, commit_message, bump
+    default_angular_parser: AngularCommitParser,
+    commit_message: str,
+    bump: LevelBump,
+    make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit(commit_message))
+    result = default_angular_parser.parse(make_commit_obj(commit_message))
     assert isinstance(result, ParsedCommit)
     assert result.bump is bump
 
@@ -69,8 +73,13 @@ def test_parser_returns_correct_bump_level(
         ("chore(parser): ...", "chore"),
     ],
 )
-def test_parser_return_type_from_commit_message(default_angular_parser, message, type_):
-    result = default_angular_parser.parse(make_commit(message))
+def test_parser_return_type_from_commit_message(
+    default_angular_parser: AngularCommitParser,
+    message: str,
+    type_: str,
+    make_commit_obj: MakeCommitObjFn,
+):
+    result = default_angular_parser.parse(make_commit_obj(message))
     assert isinstance(result, ParsedCommit)
     assert result.type == type_
 
@@ -90,9 +99,12 @@ def test_parser_return_type_from_commit_message(default_angular_parser, message,
     ],
 )
 def test_parser_return_scope_from_commit_message(
-    default_angular_parser, message, scope
+    default_angular_parser: AngularCommitParser,
+    message: str,
+    scope: str,
+    make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit(message))
+    result = default_angular_parser.parse(make_commit_obj(message))
     assert isinstance(result, ParsedCommit)
     assert result.scope == scope
 
@@ -121,9 +133,12 @@ _footer = "Closes #400"
     ],
 )
 def test_parser_return_subject_from_commit_message(
-    default_angular_parser, message, descriptions
+    default_angular_parser: AngularCommitParser,
+    message: str,
+    descriptions: list[str],
+    make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit(message))
+    result = default_angular_parser.parse(make_commit_obj(message))
     assert isinstance(result, ParsedCommit)
     assert result.descriptions == descriptions
 
@@ -131,16 +146,16 @@ def test_parser_return_subject_from_commit_message(
 ##############################
 # test custom parser options #
 ##############################
-def test_parser_custom_default_level():
-    options = AngularCommitParser.parser_options(default_bump_level=LevelBump.MINOR)
+def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
+    options = AngularParserOptions(default_bump_level=LevelBump.MINOR)
     parser = AngularCommitParser(options)
-    result = parser.parse(make_commit("test(parser): Add a test for angular parser"))
+    result = parser.parse(make_commit_obj("test(parser): Add a test for angular parser"))
     assert isinstance(result, ParsedCommit)
     assert result.bump is LevelBump.MINOR
 
 
-def test_parser_custom_allowed_types():
-    options = AngularCommitParser.parser_options(
+def test_parser_custom_allowed_types(make_commit_obj: MakeCommitObjFn):
+    options = AngularParserOptions(
         allowed_tags=(
             "custom",
             "build",
@@ -156,28 +171,28 @@ def test_parser_custom_allowed_types():
     )
     parser = AngularCommitParser(options)
 
-    res1 = parser.parse(make_commit("custom: ..."))
+    res1 = parser.parse(make_commit_obj("custom: ..."))
     assert isinstance(res1, ParsedCommit)
     assert res1.bump is LevelBump.NO_RELEASE
 
-    res2 = parser.parse(make_commit("custom(parser): ..."))
+    res2 = parser.parse(make_commit_obj("custom(parser): ..."))
     assert isinstance(res2, ParsedCommit)
     assert res2.type == "custom"
 
-    assert isinstance(parser.parse(make_commit("feat(parser): ...")), ParseError)
+    assert isinstance(parser.parse(make_commit_obj("feat(parser): ...")), ParseError)
 
 
-def test_parser_custom_minor_tags():
-    options = AngularCommitParser.parser_options(minor_tags=("docs",))
+def test_parser_custom_minor_tags(make_commit_obj: MakeCommitObjFn):
+    options = AngularParserOptions(minor_tags=("docs",))
     parser = AngularCommitParser(options)
-    res = parser.parse(make_commit("docs: write some docs"))
+    res = parser.parse(make_commit_obj("docs: write some docs"))
     assert isinstance(res, ParsedCommit)
     assert res.bump is LevelBump.MINOR
 
 
-def test_parser_custom_patch_tags():
-    options = AngularCommitParser.parser_options(patch_tags=("test",))
+def test_parser_custom_patch_tags(make_commit_obj: MakeCommitObjFn):
+    options = AngularParserOptions(patch_tags=("test",))
     parser = AngularCommitParser(options)
-    res = parser.parse(make_commit("test(this): added a test"))
+    res = parser.parse(make_commit_obj("test(this): added a test"))
     assert isinstance(res, ParsedCommit)
     assert res.bump is LevelBump.PATCH
