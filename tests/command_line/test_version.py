@@ -102,14 +102,16 @@ def test_version_noop_is_noop(
             for cli_args, expected_stdout in (
                 ([], "0.1.0"),
                 (["--build-metadata", "build.12345"], "0.1.0+build.12345"),
+                (["--prerelease"], "0.0.0-rc.1"),
                 (["--patch"], "0.0.1"),
                 (["--minor"], "0.1.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.0.1-rc.1"),
-                (["--minor", "--prerelease"], "0.1.0-rc.1"),
-                (["--major", "--prerelease"], "1.0.0-rc.1"),
+                (["--prerelease", "--as-prerelease"], "0.0.0-rc.1"),
+                (["--patch", "--as-prerelease"], "0.0.1-rc.1"),
+                (["--minor", "--as-prerelease"], "0.1.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "0.0.1-beta.1",
                 ),
             )
@@ -123,14 +125,16 @@ def test_version_noop_is_noop(
             for cli_args, expected_stdout in (
                 ([], "0.1.2"),
                 (["--build-metadata", "build.12345"], "0.1.2+build.12345"),
+                (["--prerelease"], "0.1.1-rc.1"),
                 (["--patch"], "0.1.2"),
                 (["--minor"], "0.2.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.1.2-rc.1"),
-                (["--minor", "--prerelease"], "0.2.0-rc.1"),
-                (["--major", "--prerelease"], "1.0.0-rc.1"),
+                (["--prerelease", "--as-prerelease"], "0.1.1-rc.1"),
+                (["--patch", "--as-prerelease"], "0.1.2-rc.1"),
+                (["--minor", "--as-prerelease"], "0.2.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "0.1.2-beta.1",
                 ),
             )
@@ -144,14 +148,17 @@ def test_version_noop_is_noop(
             for cli_args, expected_stdout in (
                 ([], "0.2.1"),
                 (["--build-metadata", "build.12345"], "0.2.1+build.12345"),
+                # There is already a 0.2.0-rc.1
+                (["--prerelease"], "0.2.0-rc.2"),
                 (["--patch"], "0.2.1"),
                 (["--minor"], "0.3.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.2.1-rc.1"),
-                (["--minor", "--prerelease"], "0.3.0-rc.1"),
-                (["--major", "--prerelease"], "1.0.0-rc.1"),
+                (["--prerelease", "--as-prerelease"], "0.2.0-rc.2"),
+                (["--patch", "--as-prerelease"], "0.2.1-rc.1"),
+                (["--minor", "--as-prerelease"], "0.3.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "0.2.1-beta.1",
                 ),
             )
@@ -167,15 +174,17 @@ def test_version_noop_is_noop(
             for cli_args, expected_stdout in (
                 ([], "0.3.0-beta.2"),
                 (["--build-metadata", "build.12345"], "0.3.0-beta.2+build.12345"),
+                (["--prerelease"], "0.3.0-beta.2"),
                 (["--patch"], "0.3.1"),
                 (["--minor"], "0.4.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.3.1-beta.1"),
-                (["--minor", "--prerelease"], "0.4.0-beta.1"),
-                (["--major", "--prerelease"], "1.0.0-beta.1"),
+                (["--prerelease", "--as-prerelease"], "0.3.0-beta.2"),
+                (["--patch", "--as-prerelease"], "0.3.1-beta.1"),
+                (["--minor", "--as-prerelease"], "0.4.0-beta.1"),
+                (["--major", "--as-prerelease"], "1.0.0-beta.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
-                    "0.3.1-beta.1",
+                    ["--patch", "--as-prerelease", "--prerelease-token", "rc"],
+                    "0.3.1-rc.1",
                 ),
             )
         ],
@@ -188,14 +197,16 @@ def test_version_noop_is_noop(
             for cli_args, expected_stdout in (
                 ([], "1.2.0-alpha.3"),
                 (["--build-metadata", "build.12345"], "1.2.0-alpha.3+build.12345"),
+                (["--prerelease"], "1.2.0-alpha.3"),
                 (["--patch"], "1.2.1"),
                 (["--minor"], "1.3.0"),
                 (["--major"], "2.0.0"),
-                (["--patch", "--prerelease"], "1.2.1-alpha.1"),
-                (["--minor", "--prerelease"], "1.3.0-alpha.1"),
-                (["--major", "--prerelease"], "2.0.0-alpha.1"),
+                (["--prerelease", "--as-prerelease"], "1.2.0-alpha.3"),
+                (["--patch", "--as-prerelease"], "1.2.1-alpha.1"),
+                (["--minor", "--as-prerelease"], "1.3.0-alpha.1"),
+                (["--major", "--as-prerelease"], "2.0.0-alpha.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "1.2.1-beta.1",
                 ),
             )
@@ -209,14 +220,16 @@ def test_version_noop_is_noop(
             for cli_args, expected_stdout in (
                 ([], "1.1.0-alpha.4"),
                 (["--build-metadata", "build.12345"], "1.1.0-alpha.4+build.12345"),
+                (["--prerelease"], "1.1.0-alpha.4"),
                 (["--patch"], "1.1.1"),
                 (["--minor"], "1.2.0"),
                 (["--major"], "2.0.0"),
-                (["--patch", "--prerelease"], "1.1.1-alpha.1"),
-                (["--minor", "--prerelease"], "1.2.0-alpha.1"),
-                (["--major", "--prerelease"], "2.0.0-alpha.1"),
+                (["--prerelease", "--as-prerelease"], "1.1.0-alpha.4"),
+                (["--patch", "--as-prerelease"], "1.1.1-alpha.1"),
+                (["--minor", "--as-prerelease"], "1.2.0-alpha.1"),
+                (["--major", "--as-prerelease"], "2.0.0-alpha.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "1.1.1-beta.1",
                 ),
             )
@@ -291,14 +304,16 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
             )
             for cli_args, expected_stdout in (
                 (["--build-metadata", "build.12345"], "0.1.0+build.12345"),
+                (["--prerelease"], "0.0.0-rc.1"),
                 (["--patch"], "0.0.1"),
                 (["--minor"], "0.1.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.0.1-rc.1"),
-                (["--minor", "--prerelease"], "0.1.0-rc.1"),
-                (["--major", "--prerelease"], "1.0.0-rc.1"),
+                (["--prerelease", "--as-prerelease"], "0.0.0-rc.1"),
+                (["--patch", "--as-prerelease"], "0.0.1-rc.1"),
+                (["--minor", "--as-prerelease"], "0.1.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "0.0.1-beta.1",
                 ),
             )
@@ -311,14 +326,16 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
             )
             for cli_args, expected_stdout in (
                 (["--build-metadata", "build.12345"], "0.1.1+build.12345"),
+                (["--prerelease"], "0.1.1-rc.1"),
                 (["--patch"], "0.1.2"),
                 (["--minor"], "0.2.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.1.2-rc.1"),
-                (["--minor", "--prerelease"], "0.2.0-rc.1"),
-                (["--major", "--prerelease"], "1.0.0-rc.1"),
+                (["--prerelease", "--as-prerelease"], "0.1.1-rc.1"),
+                (["--patch", "--as-prerelease"], "0.1.2-rc.1"),
+                (["--minor", "--as-prerelease"], "0.2.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "0.1.2-beta.1",
                 ),
             )
@@ -331,14 +348,17 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
             )
             for cli_args, expected_stdout in (
                 (["--build-metadata", "build.12345"], "0.2.0+build.12345"),
+                # There is already a 0.2.0-rc.1
+                (["--prerelease"], "0.2.0-rc.2"),
                 (["--patch"], "0.2.1"),
                 (["--minor"], "0.3.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.2.1-rc.1"),
-                (["--minor", "--prerelease"], "0.3.0-rc.1"),
-                (["--major", "--prerelease"], "1.0.0-rc.1"),
+                (["--prerelease", "--as-prerelease"], "0.2.0-rc.2"),
+                (["--patch", "--as-prerelease"], "0.2.1-rc.1"),
+                (["--minor", "--as-prerelease"], "0.3.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "0.2.1-beta.1",
                 ),
             )
@@ -353,15 +373,17 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
             )
             for cli_args, expected_stdout in (
                 (["--build-metadata", "build.12345"], "0.3.0-beta.1+build.12345"),
+                (["--prerelease"], "0.3.0-beta.2"),
                 (["--patch"], "0.3.1"),
                 (["--minor"], "0.4.0"),
                 (["--major"], "1.0.0"),
-                (["--patch", "--prerelease"], "0.3.1-beta.1"),
-                (["--minor", "--prerelease"], "0.4.0-beta.1"),
-                (["--major", "--prerelease"], "1.0.0-beta.1"),
+                (["--prerelease", "--as-prerelease"], "0.3.0-beta.2"),
+                (["--patch", "--as-prerelease"], "0.3.1-beta.1"),
+                (["--minor", "--as-prerelease"], "0.4.0-beta.1"),
+                (["--major", "--as-prerelease"], "1.0.0-beta.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
-                    "0.3.1-beta.1",
+                    ["--patch", "--as-prerelease", "--prerelease-token", "rc"],
+                    "0.3.1-rc.1",
                 ),
             )
         ],
@@ -373,14 +395,16 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
             )
             for cli_args, expected_stdout in (
                 (["--build-metadata", "build.12345"], "1.2.0-alpha.2+build.12345"),
+                (["--prerelease"], "1.2.0-alpha.3"),
                 (["--patch"], "1.2.1"),
                 (["--minor"], "1.3.0"),
                 (["--major"], "2.0.0"),
-                (["--patch", "--prerelease"], "1.2.1-alpha.1"),
-                (["--minor", "--prerelease"], "1.3.0-alpha.1"),
-                (["--major", "--prerelease"], "2.0.0-alpha.1"),
+                (["--prerelease", "--as-prerelease"], "1.2.0-alpha.3"),
+                (["--patch", "--as-prerelease"], "1.2.1-alpha.1"),
+                (["--minor", "--as-prerelease"], "1.3.0-alpha.1"),
+                (["--major", "--as-prerelease"], "2.0.0-alpha.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "1.2.1-beta.1",
                 ),
             )
@@ -393,14 +417,16 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
             )
             for cli_args, expected_stdout in (
                 (["--build-metadata", "build.12345"], "1.1.0-alpha.3+build.12345"),
+                (["--prerelease"], "1.1.0-alpha.4"),
                 (["--patch"], "1.1.1"),
                 (["--minor"], "1.2.0"),
                 (["--major"], "2.0.0"),
-                (["--patch", "--prerelease"], "1.1.1-alpha.1"),
-                (["--minor", "--prerelease"], "1.2.0-alpha.1"),
-                (["--major", "--prerelease"], "2.0.0-alpha.1"),
+                (["--prerelease", "--as-prerelease"], "1.1.0-alpha.4"),
+                (["--patch", "--as-prerelease"], "1.1.1-alpha.1"),
+                (["--minor", "--as-prerelease"], "1.2.0-alpha.1"),
+                (["--major", "--as-prerelease"], "2.0.0-alpha.1"),
                 (
-                    ["--patch", "--prerelease", "--prerelease-token", "beta"],
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
                     "1.1.1-beta.1",
                 ),
             )
