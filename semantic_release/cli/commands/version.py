@@ -42,7 +42,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def is_forced_prerelease(
-    force_prerelease: bool, force_level: str | None, prerelease: bool
+    as_prerelease: bool, forced_level_bump: LevelBump | None, prerelease: bool
 ) -> bool:
     """
     Determine if this release is forced to have prerelease on/off.
@@ -51,8 +51,17 @@ def is_forced_prerelease(
     it's False.
     Otherwise (``force_level is None``) use the value of ``prerelease``
     """
-    log.debug(", ".join(f"{k} = {v}" for k, v in locals().items()))
-    return force_prerelease or ((force_level is None) and prerelease)
+    local_vars = list(locals().items())
+    log.debug(
+        "%s: %s",
+        is_forced_prerelease.__name__,
+        ", ".join(f"{k} = {v}" for k, v in local_vars),
+    )
+    return (
+        as_prerelease
+        or forced_level_bump is LevelBump.PRERELEASE_REVISION
+        or ((forced_level_bump is None) and prerelease)
+    )
 
 
 def last_released(
@@ -171,6 +180,12 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
     help="Print the last released version tag and exit",
 )
 @click.option(
+    "--as-prerelease",
+    "as_prerelease",
+    is_flag=True,
+    help="Ensure the next version to be released is a prerelease version",
+)
+@click.option(
     "--prerelease-token",
     "prerelease_token",
     default=None,
@@ -250,6 +265,7 @@ def version(  # noqa: C901
     print_only_tag: bool = False,
     print_last_released: bool = False,
     print_last_released_tag: bool = False,
+    as_prerelease: bool = False,
     prerelease_token: str | None = None,
     force_level: str | None = None,
     commit_changes: bool = True,
@@ -297,12 +313,11 @@ def version(  # noqa: C901
 
     parser = runtime.commit_parser
     forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
-    prerelease = bool(forced_level_bump == LevelBump.PRERELEASE_REVISION)
-    # prerelease = is_forced_prerelease(
-    #     as_prerelease=as_prerelease,
-    #     forced_level_bump=forced_level_bump,
-    #     prerelease=runtime.prerelease,
-    # )
+    prerelease = is_forced_prerelease(
+        as_prerelease=as_prerelease,
+        forced_level_bump=forced_level_bump,
+        prerelease=runtime.prerelease,
+    )
     hvcs_client = runtime.hvcs_client
     changelog_file = runtime.changelog_file
     changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
@@ -337,9 +352,11 @@ def version(  # noqa: C901
         log.warning(
             "Forcing a '%s' release due to '--%s' command-line flag",
             force_level,
-            force_level
-            if forced_level_bump is not LevelBump.PRERELEASE_REVISION
-            else "prerelease",
+            (
+                force_level
+                if forced_level_bump is not LevelBump.PRERELEASE_REVISION
+                else "prerelease"
+            ),
         )
 
         new_version = version_from_forced_level(
@@ -368,15 +385,15 @@ def version(  # noqa: C901
     if build_metadata:
         new_version.build_metadata = build_metadata
 
-    # if as_prerelease:
-    #     before_conversion, new_version = new_version, new_version.to_prerelease(
-    #         token=translator.prerelease_token
-    #     )
-    #     log.info(
-    #         "Converting %s to %s due to '--as-prerelease' command-line option",
-    #         before_conversion,
-    #         new_version,
-    #     )
+    if as_prerelease:
+        before_conversion, new_version = new_version, new_version.to_prerelease(
+            token=translator.prerelease_token
+        )
+        log.info(
+            "Converting %s to %s due to '--as-prerelease' command-line option",
+            before_conversion,
+            new_version,
+        )
 
     gha_output.released = False
     gha_output.version = new_version
