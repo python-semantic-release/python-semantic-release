@@ -1,20 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from semantic_release.commit_parser.tag import TagCommitParser
-from semantic_release.commit_parser.token import ParseError
+from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
 
-from tests.unit.semantic_release.commit_parser.helper import make_commit
+if TYPE_CHECKING:
+    from semantic_release.commit_parser.tag import TagCommitParser
 
-
-@pytest.fixture
-def default_options():
-    return TagCommitParser.parser_options()
-
-
-@pytest.fixture
-def default_tag_parser(default_options):
-    return TagCommitParser(default_options)
+    from tests.conftest import MakeCommitObjFn
 
 
 text = (
@@ -24,8 +20,11 @@ text = (
 footer = "Closes #400"
 
 
-def test_parser_raises_unknown_message_style(default_tag_parser):
-    result = default_tag_parser.parse(make_commit(""))
+def test_parser_raises_unknown_message_style(
+    default_tag_parser: TagCommitParser,
+    make_commit_obj: MakeCommitObjFn
+):
+    result = default_tag_parser.parse(make_commit_obj(""))
     assert isinstance(result, ParseError)
 
 
@@ -65,10 +64,17 @@ def test_parser_raises_unknown_message_style(default_tag_parser):
     ],
 )
 def test_default_tag_parser(
-    default_tag_parser, commit_message, bump, type_, descriptions
+    default_tag_parser: TagCommitParser,
+    commit_message: str,
+    bump: LevelBump,
+    type_: str,
+    descriptions: list[str],
+    make_commit_obj: MakeCommitObjFn,
 ):
-    commit = make_commit(commit_message)
-    parsed = default_tag_parser.parse(commit)
-    assert parsed.bump is bump
-    assert parsed.type == type_
-    assert parsed.descriptions == descriptions
+    commit = make_commit_obj(commit_message)
+    result = default_tag_parser.parse(commit)
+
+    assert isinstance(result, ParsedCommit)
+    assert result.bump is bump
+    assert result.type == type_
+    assert result.descriptions == descriptions
