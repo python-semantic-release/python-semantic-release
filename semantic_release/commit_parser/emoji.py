@@ -57,6 +57,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     the commit subject in the changelog.
     """
 
+    # TODO: Deprecate in lieu of get_default_options()
+    parser_options = EmojiParserOptions
+
     @staticmethod
     def get_default_options() -> EmojiParserOptions:
         return EmojiParserOptions()

@@ -232,11 +232,15 @@ class RawConfig(BaseModel):
             parser_opts_type = None
             # If the commit parser is a known one, pull the default options object from it
             if self.commit_parser in _known_commit_parsers:
-                parser_opts_type = (
-                    _known_commit_parsers[self.commit_parser]
-                    .get_default_options()
-                    .__class__
-                )
+                # TODO: BREAKING CHANGE v10
+                # parser_opts_type = (
+                #     _known_commit_parsers[self.commit_parser]
+                #     .get_default_options()
+                #     .__class__
+                # )
+                parser_opts_type = _known_commit_parsers[
+                    self.commit_parser
+                ].parser_options
             else:
                 # if its a custom parser, try to import it and pull the default options object type
                 custom_class = dynamic_import(self.commit_parser)
@@ -245,7 +249,7 @@ class RawConfig(BaseModel):
 
             # from either the custom opts class or the known parser opts class, create an instance
             if callable(parser_opts_type):
-                opts_obj = parser_opts_type()
+                opts_obj: Any = parser_opts_type()
                 # if the opts object is a dataclass, wrap it in a RootModel so it can be transformed to a Mapping
                 opts_obj = (
                     opts_obj if not is_dataclass(opts_obj) else RootModel(opts_obj)
@@ -391,7 +395,9 @@ class RuntimeContext:
             else dynamic_import(raw.commit_parser)
         )
 
-        commit_parser_opts_class = commit_parser_cls.get_default_options().__class__
+        commit_parser_opts_class = commit_parser_cls.parser_options
+        # TODO: Breaking change v10
+        # commit_parser_opts_class = commit_parser_cls.get_default_options().__class__
 
         commit_parser = commit_parser_cls(
             options=commit_parser_opts_class(**raw.commit_parser_options)

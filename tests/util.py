@@ -14,7 +14,8 @@ from semantic_release.changelog.context import make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli import config as cliConfigModule
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParseResult
+from semantic_release.commit_parser.token import ParsedCommit, ParseResult
+from semantic_release.enums import LevelBump
 
 if TYPE_CHECKING:
     import filecmp
@@ -29,9 +30,10 @@ if TYPE_CHECKING:
 
     from unittest.mock import MagicMock
 
-    from git import Repo
+    from git import Commit, Repo
 
     from semantic_release.cli.config import RuntimeContext
+    from semantic_release.commit_parser.token import ParseError
 
     _R = TypeVar("_R")
 
@@ -183,3 +185,13 @@ class CustomParserOpts(ParserOptions):
 
 class CustomParserWithOpts(CommitParser[ParseResult, CustomParserOpts]):
     parser_options = CustomParserOpts
+
+    def parse(self, commit: Commit) -> ParsedCommit | ParseError:
+        return ParsedCommit(
+            bump=LevelBump.NO_RELEASE,
+            type="custom",
+            scope="",
+            descriptions=[],
+            breaking_descriptions=[],
+            commit=commit,
+        )

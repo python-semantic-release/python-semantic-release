@@ -34,6 +34,9 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
     first line as changelog content.
     """
 
+    # TODO: Deprecate in lieu of get_default_options()
+    parser_options = TagParserOptions
+
     @staticmethod
     def get_default_options() -> TagParserOptions:
         return TagParserOptions()
