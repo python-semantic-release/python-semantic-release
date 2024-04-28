@@ -83,18 +83,21 @@ env = [
   "PYTHONHASHSEED = 123456"
 ]
 addopts = [
+  # TO DEBUG in single process, swap auto to 0
   "-nauto",
+  # "-n0",
   "-ra",
   "--diff-symbols",
   "--cache-clear",
-  "--cov=semantic_release",
-  "--cov-context=test",
-  "--cov-report",
-  "html:coverage-html",
-  "--cov-report",
-  "term",
+  # No default coverage - causes problems with debuggers
+  # "--cov=semantic_release",
+  # "--cov-context=test",
+  # "--cov-report=html:coverage-html",
+  # "--cov-report=term-missing",
 ]
-python_files = ["tests/test_*.py", "tests/**/test_*.py"]
+testpaths = [
+  "tests"
+]
 
 [tool.coverage.html]
 show_contexts = true
