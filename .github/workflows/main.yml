@@ -63,7 +63,7 @@ jobs:
           python -m ruff check . \
             --config pyproject.toml \
             --diff \
-            --show-source \
+            --output-format=full \
             --exit-non-zero-on-fix
 
       - name: mypy
