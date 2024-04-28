@@ -65,14 +65,19 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
                 ...
     """
 
+    # TODO: Deprecate in lieu of get_default_options()
+    parser_options: type[ParserOptions] = ParserOptions
+
     def __init__(self, options: _OPTS | None = None) -> None:
         self.options: _OPTS = (
             options if options is not None else self.get_default_options()
         )
 
-    @staticmethod
-    @abstractmethod
-    def get_default_options() -> _OPTS: ...
+    # TODO: BREAKING CHANGE v10, add abstract method for all custom parsers
+    # @staticmethod
+    # @abstractmethod
+    def get_default_options(self) -> _OPTS:
+        return self.parser_options() # type: ignore
 
     @abstractmethod
     def parse(self, commit: Commit) -> _TT: ...

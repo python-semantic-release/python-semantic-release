@@ -62,6 +62,9 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     commits. See https://www.conventionalcommits.org/en/v1.0.0-beta.4/
     """
 
+    # TODO: Deprecate in lieu of get_default_options()
+    parser_options = AngularParserOptions
+
     def __init__(self, options: AngularParserOptions | None = None) -> None:
         super().__init__(options)
         self.re_parser = re.compile(
