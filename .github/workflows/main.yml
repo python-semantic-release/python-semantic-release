@@ -40,7 +40,22 @@ jobs:
           python -m pip install pytest-github-actions-annotate-failures
 
       - name: pytest
-        run: PYTHONHASHSEED=123345 python -m pytest -v tests
+        id: tests
+        run: |
+          python -m pytest              \
+            -vv                         \
+            -nauto                      \
+            --cov=semantic_release      \
+            --cov-context=test          \
+            --cov-report=term-missing   \
+            --cov-fail-under=80         \
+            --junit-xml=tests/reports/pytest-results.xml
+
+      - name: Report | Upload Test Results
+        uses: mikepenz/action-junit-report@v4.2.1
+        if: ${{ always() && steps.tests.outcome != 'skipped' }}
+        with:
+          report_paths: ./tests/reports/*.xml
 
   lint:
     runs-on: ubuntu-latest
