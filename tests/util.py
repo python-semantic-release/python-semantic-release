@@ -175,7 +175,16 @@ def prepare_mocked_git_command_wrapper_type(
 
 
 class CustomParserWithNoOpts(CommitParser[ParseResult, ParserOptions]):
-    parser_options = ParserOptions
+
+    def parse(self, commit: Commit) -> ParsedCommit | ParseError:
+        return ParsedCommit(
+            bump=LevelBump.NO_RELEASE,
+            type="",
+            scope="",
+            descriptions=[],
+            breaking_descriptions=[],
+            commit=commit,
+        )
 
 
 @dataclass
@@ -195,3 +204,7 @@ class CustomParserWithOpts(CommitParser[ParseResult, CustomParserOpts]):
             breaking_descriptions=[],
             commit=commit,
         )
+
+
+class IncompleteCustomParser(CommitParser):
+    pass

@@ -7,12 +7,14 @@ import pytest
 import tomlkit
 from pydantic import RootModel, ValidationError
 
+import semantic_release
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     HvcsClient,
     RawConfig,
     RuntimeContext,
 )
+from semantic_release.cli.util import load_raw_config_file
 from semantic_release.commit_parser.angular import AngularParserOptions
 from semantic_release.commit_parser.emoji import EmojiParserOptions
 from semantic_release.commit_parser.scipy import ScipyParserOptions
@@ -20,14 +22,16 @@ from semantic_release.commit_parser.tag import TagParserOptions
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
 
+from semantic_release.errors import ParserLoadError
 from tests.fixtures.repos import repo_with_no_tags_angular_commits
-from tests.util import CustomParserOpts
+from tests.util import CustomParserOpts, CustomParserWithNoOpts, CustomParserWithOpts, IncompleteCustomParser
 
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
 
-    from tests.fixtures.example_project import ExProjectDir
+    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.fixtures.git_repo import BuildRepoFn
 
 
 @pytest.mark.parametrize(
@@ -98,8 +102,11 @@ def test_invalid_hvcs_type(remote_config: dict[str, Any]):
         ("emoji", RootModel(EmojiParserOptions()).model_dump()),
         ("scipy", RootModel(ScipyParserOptions()).model_dump()),
         ("tag", RootModel(TagParserOptions()).model_dump()),
-        ("tests.util:CustomParserWithNoOpts", {}),
-        ("tests.util:CustomParserWithOpts", RootModel(CustomParserOpts()).model_dump()),
+        (f"{CustomParserWithNoOpts.__module__}:{CustomParserWithNoOpts.__name__}", {}),
+        (
+            f"{CustomParserWithOpts.__module__}:{CustomParserWithOpts.__name__}",
+            RootModel(CustomParserOpts()).model_dump(),
+        ),
     ],
 )
 def test_load_default_parser_opts(
@@ -107,7 +114,9 @@ def test_load_default_parser_opts(
 ):
     raw_config = RawConfig.model_validate(
         # Since TOML does not support NoneTypes, we need to not include the key
-        {"commit_parser": commit_parser} if commit_parser else {}
+        {"commit_parser": commit_parser}
+        if commit_parser
+        else {}
     )
     assert expected_parser_opts == raw_config.commit_parser_options
 
@@ -169,7 +178,7 @@ def test_commit_author_configurable(
     example_pyproject_toml: Path,
     mock_env: dict[str, str],
     expected_author: str,
-    change_to_ex_proj_dir: str,
+    change_to_ex_proj_dir: None,
 ):
     content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
 
@@ -183,3 +192,91 @@ def test_commit_author_configurable(
             f"{runtime.commit_author.name} <{runtime.commit_author.email}>"
         )
         assert expected_author == resulting_author
+
+
+def test_load_valid_runtime_config(
+    build_configured_base_repo: BuildRepoFn,
+    example_project_dir: ExProjectDir,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    change_to_ex_proj_dir: None,
+):
+    build_configured_base_repo(example_project_dir)
+
+    # Wipe out any existing configuration options
+    update_pyproject_toml(f"tool.{semantic_release.__name__}", {})
+
+    runtime_ctx = RuntimeContext.from_raw_config(
+        RawConfig.model_validate(
+            load_raw_config_file(example_pyproject_toml)
+        ),
+        global_cli_options=GlobalCommandLineOptions(),
+    )
+
+    # TODO: add more validation
+    assert runtime_ctx
+
+
+@pytest.mark.parametrize(
+    "commit_parser",
+    [
+        f"{CustomParserWithNoOpts.__module__}:{CustomParserWithNoOpts.__name__}",
+        f"{CustomParserWithOpts.__module__}:{CustomParserWithOpts.__name__}",
+    ],
+)
+def test_load_valid_runtime_config_w_custom_parser(
+    commit_parser: str,
+    build_configured_base_repo: BuildRepoFn,
+    example_project_dir: ExProjectDir,
+    example_pyproject_toml: Path,
+    change_to_ex_proj_dir: None,
+):
+    build_configured_base_repo(
+        example_project_dir,
+        commit_type=commit_parser,
+    )
+
+    runtime_ctx = RuntimeContext.from_raw_config(
+        RawConfig.model_validate(
+            load_raw_config_file(example_pyproject_toml)
+        ),
+        global_cli_options=GlobalCommandLineOptions(),
+    )
+    assert runtime_ctx
+
+
+@pytest.mark.parametrize(
+    "commit_parser",
+    [
+        # Non-existant module
+        "tests.missing_module:CustomParser",
+        # Non-existant class
+        f"{CustomParserWithOpts.__module__}:MissingCustomParser",
+        # Incomplete class implementation
+        f"{IncompleteCustomParser.__module__}:{IncompleteCustomParser.__name__}",
+    ],
+)
+def test_load_invalid_custom_parser(
+    commit_parser: str,
+    build_configured_base_repo: BuildRepoFn,
+    example_project_dir: ExProjectDir,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_parser: str,
+    change_to_ex_proj_dir: None,
+):
+    build_configured_base_repo(example_project_dir)
+
+    # Wipe out any existing configuration options
+    update_pyproject_toml(f"{pyproject_toml_config_option_parser}_options", {})
+
+    # Insert invalid custom parser string into configuration
+    update_pyproject_toml(pyproject_toml_config_option_parser, commit_parser)
+
+    with pytest.raises(ParserLoadError):
+        RuntimeContext.from_raw_config(
+            RawConfig.model_validate(
+                load_raw_config_file(example_pyproject_toml)
+            ),
+            global_cli_options=GlobalCommandLineOptions(),
+        )
