@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib import import_module
 import os
 from pathlib import Path
 from textwrap import dedent
@@ -8,6 +9,7 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 import tomlkit
 
+import semantic_release
 from semantic_release.commit_parser import (
     AngularCommitParser,
     EmojiCommitParser,
@@ -42,6 +44,9 @@ if TYPE_CHECKING:
 
     class UpdatePyprojectTomlFn(Protocol):
         def __call__(self, setting: str, value: Any) -> None: ...
+
+    class UseCustomParserFn(Protocol):
+        def __call__(self, module_import_str: str) -> type[CommitParser]: ...
 
     class UseHvcsFn(Protocol):
         def __call__(self, domain: str | None = None) -> type[HvcsBase]: ...
@@ -270,7 +275,12 @@ def update_pyproject_toml(pyproject_toml_file: Path) -> UpdatePyprojectTomlFn:
     return _update_pyproject_toml
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def pyproject_toml_config_option_parser() -> str:
+    return f"tool.{semantic_release.__name__}.commit_parser"
+
+
+@pytest.fixture(scope="session")
 def set_major_on_zero(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn:
     """Turn on/off the major_on_zero setting."""
 
@@ -280,7 +290,7 @@ def set_major_on_zero(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn
     return _set_major_on_zero
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def set_allow_zero_version(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn:
     """Turn on/off the allow_zero_version setting."""
 
@@ -291,47 +301,81 @@ def set_allow_zero_version(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetF
 
 
 @pytest.fixture(scope="session")
-def use_angular_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+def use_angular_parser(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_parser: str
+) -> UseParserFn:
     """Modify the configuration file to use the Angular parser."""
 
     def _use_angular_parser() -> type[CommitParser]:
-        update_pyproject_toml("tool.semantic_release.commit_parser", "angular")
+        update_pyproject_toml(pyproject_toml_config_option_parser, "angular")
         return AngularCommitParser
 
     return _use_angular_parser
 
 
 @pytest.fixture(scope="session")
-def use_emoji_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+def use_emoji_parser(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_parser: str
+) -> UseParserFn:
     """Modify the configuration file to use the Emoji parser."""
 
     def _use_emoji_parser() -> type[CommitParser]:
-        update_pyproject_toml("tool.semantic_release.commit_parser", "emoji")
+        update_pyproject_toml(pyproject_toml_config_option_parser, "emoji")
         return EmojiCommitParser
 
     return _use_emoji_parser
 
 
 @pytest.fixture(scope="session")
-def use_scipy_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+def use_scipy_parser(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_parser: str
+) -> UseParserFn:
     """Modify the configuration file to use the Scipy parser."""
 
     def _use_scipy_parser() -> type[CommitParser]:
-        update_pyproject_toml("tool.semantic_release.commit_parser", "scipy")
+        update_pyproject_toml(pyproject_toml_config_option_parser, "scipy")
         return ScipyCommitParser
 
     return _use_scipy_parser
 
 
 @pytest.fixture(scope="session")
-def use_tag_parser(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseParserFn:
+def use_tag_parser(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_parser: str
+) -> UseParserFn:
     """Modify the configuration file to use the Tag parser."""
 
     def _use_tag_parser() -> type[CommitParser]:
-        update_pyproject_toml("tool.semantic_release.commit_parser", "tag")
+        update_pyproject_toml(pyproject_toml_config_option_parser, "tag")
         return TagCommitParser
 
     return _use_tag_parser
+
+
+@pytest.fixture(scope="session")
+def use_custom_parser(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_parser: str
+) -> UseCustomParserFn:
+    """Modify the configuration file to use a user defined string parser."""
+
+    def _use_custom_parser(module_import_str: str) -> type[CommitParser]:
+        # validate this is importable before writing to parser
+        module_name, attr = module_import_str.split(":", maxsplit=1)
+        try:
+            module = import_module(module_name)
+            custom_class = getattr(module, attr)
+        except (ModuleNotFoundError, AttributeError) as err:
+            raise ValueError("Custom parser object not found!") from err
+
+        update_pyproject_toml(pyproject_toml_config_option_parser, module_import_str)
+        return custom_class
+
+    return _use_custom_parser
 
 
 @pytest.fixture(scope="session")

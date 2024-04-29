@@ -29,11 +29,12 @@ if TYPE_CHECKING:
     from tests.fixtures.example_project import (
         ExProjectDir,
         UpdatePyprojectTomlFn,
+        UseCustomParserFn,
         UseHvcsFn,
         UseParserFn,
     )
 
-    CommitConvention = Literal["angular", "emoji", "scipy", "tag"]
+    CommitConvention = Literal["angular", "emoji", "scipy", "tag"] | str
     VersionStr = str
     CommitMsg = str
     ChangelogTypeHeading = str
@@ -253,6 +254,7 @@ def build_configured_base_repo(  # noqa: C901
     use_emoji_parser: UseParserFn,
     use_scipy_parser: UseParserFn,
     use_tag_parser: UseParserFn,
+    use_custom_parser: UseCustomParserFn,
     example_git_https_url: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ) -> BuildRepoFn:
@@ -289,7 +291,7 @@ def build_configured_base_repo(  # noqa: C901
             elif commit_type == "tag":
                 use_tag_parser()
             else:
-                raise ValueError(f"Unknown parser name: {commit_type}")
+                use_custom_parser(commit_type)
 
             # Set HVCS configuration
             if hvcs_client_name == "github":
