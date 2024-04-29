@@ -175,7 +175,6 @@ def prepare_mocked_git_command_wrapper_type(
 
 
 class CustomParserWithNoOpts(CommitParser[ParseResult, ParserOptions]):
-
     def parse(self, commit: Commit) -> ParsedCommit | ParseError:
         return ParsedCommit(
             bump=LevelBump.NO_RELEASE,

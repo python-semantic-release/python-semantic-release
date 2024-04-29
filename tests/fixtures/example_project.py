@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from importlib import import_module
 import os
+from importlib import import_module
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Generator
@@ -303,7 +303,7 @@ def set_allow_zero_version(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetF
 @pytest.fixture(scope="session")
 def use_angular_parser(
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    pyproject_toml_config_option_parser: str
+    pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Angular parser."""
 
@@ -317,7 +317,7 @@ def use_angular_parser(
 @pytest.fixture(scope="session")
 def use_emoji_parser(
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    pyproject_toml_config_option_parser: str
+    pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Emoji parser."""
 
@@ -331,7 +331,7 @@ def use_emoji_parser(
 @pytest.fixture(scope="session")
 def use_scipy_parser(
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    pyproject_toml_config_option_parser: str
+    pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Scipy parser."""
 
@@ -345,7 +345,7 @@ def use_scipy_parser(
 @pytest.fixture(scope="session")
 def use_tag_parser(
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    pyproject_toml_config_option_parser: str
+    pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Tag parser."""
 
@@ -359,7 +359,7 @@ def use_tag_parser(
 @pytest.fixture(scope="session")
 def use_custom_parser(
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    pyproject_toml_config_option_parser: str
+    pyproject_toml_config_option_parser: str,
 ) -> UseCustomParserFn:
     """Modify the configuration file to use a user defined string parser."""
 
