@@ -39,7 +39,7 @@ from semantic_release.commit_parser import (
     TagCommitParser,
 )
 from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
-from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
+from semantic_release.errors import ParserLoadError, InvalidConfiguration, NotAReleaseBranch
 from semantic_release.helpers import dynamic_import
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import VersionTranslator
@@ -242,10 +242,30 @@ class RawConfig(BaseModel):
                     self.commit_parser
                 ].parser_options
             else:
-                # if its a custom parser, try to import it and pull the default options object type
-                custom_class = dynamic_import(self.commit_parser)
-                if hasattr(custom_class, "parser_options"):
-                    parser_opts_type = custom_class.parser_options
+                try:
+                    # if its a custom parser, try to import it and pull the default options object type
+                    custom_class = dynamic_import(self.commit_parser)
+                    # TODO: BREAKING CHANGE v10
+                    # parser_opts_type = custom_class.get_default_options().__class__
+                    if hasattr(custom_class, "parser_options"):
+                        parser_opts_type = custom_class.parser_options
+
+                except ModuleNotFoundError as err:
+                    raise ParserLoadError(
+                        str.join("\n", [
+                            str(err),
+                            "Unable to import your custom parser! Check your configuration!"
+                        ])
+                    ) from err
+
+                except AttributeError as err:
+                    raise ParserLoadError(
+                        str.join("\n", [
+                            str(err),
+                            "Unable to find your custom parser class inside the given module.",
+                            "Check your configuration!"
+                        ])
+                    ) from err
 
             # from either the custom opts class or the known parser opts class, create an instance
             if callable(parser_opts_type):
@@ -389,19 +409,41 @@ class RuntimeContext:
         branch_config = cls.select_branch_options(raw.branches, active_branch)
 
         # commit_parser
-        commit_parser_cls = (
-            _known_commit_parsers[raw.commit_parser]
-            if raw.commit_parser in _known_commit_parsers
-            else dynamic_import(raw.commit_parser)
-        )
+        try:
+            commit_parser_cls = (
+                _known_commit_parsers[raw.commit_parser]
+                if raw.commit_parser in _known_commit_parsers
+                else dynamic_import(raw.commit_parser)
+            )
+        except ModuleNotFoundError as err:
+            raise ParserLoadError(
+                str.join("\n", [
+                    str(err),
+                    "Unable to import your custom parser! Check your configuration!"
+                ])
+            ) from err
+        except AttributeError as err:
+            raise ParserLoadError(
+                str.join("\n", [
+                    str(err),
+                    "Unable to find the parser class inside the given module"
+                ])
+            ) from err
 
         commit_parser_opts_class = commit_parser_cls.parser_options
         # TODO: Breaking change v10
         # commit_parser_opts_class = commit_parser_cls.get_default_options().__class__
-
-        commit_parser = commit_parser_cls(
-            options=commit_parser_opts_class(**raw.commit_parser_options)
-        )
+        try:
+            commit_parser = commit_parser_cls(
+                options=commit_parser_opts_class(**raw.commit_parser_options)
+            )
+        except TypeError as err:
+            raise ParserLoadError(
+                str.join("\n", [
+                    str(err),
+                    f"Failed to initialize {raw.commit_parser}"
+                ])
+            ) from err
 
         # We always exclude PSR's own release commits from the Changelog
         # when parsing commits
