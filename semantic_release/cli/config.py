@@ -39,7 +39,11 @@ from semantic_release.commit_parser import (
     TagCommitParser,
 )
 from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
-from semantic_release.errors import ParserLoadError, InvalidConfiguration, NotAReleaseBranch
+from semantic_release.errors import (
+    InvalidConfiguration,
+    NotAReleaseBranch,
+    ParserLoadError,
+)
 from semantic_release.helpers import dynamic_import
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import VersionTranslator
@@ -252,19 +256,25 @@ class RawConfig(BaseModel):
 
                 except ModuleNotFoundError as err:
                     raise ParserLoadError(
-                        str.join("\n", [
-                            str(err),
-                            "Unable to import your custom parser! Check your configuration!"
-                        ])
+                        str.join(
+                            "\n",
+                            [
+                                str(err),
+                                "Unable to import your custom parser! Check your configuration!",
+                            ],
+                        )
                     ) from err
 
                 except AttributeError as err:
                     raise ParserLoadError(
-                        str.join("\n", [
-                            str(err),
-                            "Unable to find your custom parser class inside the given module.",
-                            "Check your configuration!"
-                        ])
+                        str.join(
+                            "\n",
+                            [
+                                str(err),
+                                "Unable to find your custom parser class inside the given module.",
+                                "Check your configuration!",
+                            ],
+                        )
                     ) from err
 
             # from either the custom opts class or the known parser opts class, create an instance
@@ -417,17 +427,23 @@ class RuntimeContext:
             )
         except ModuleNotFoundError as err:
             raise ParserLoadError(
-                str.join("\n", [
-                    str(err),
-                    "Unable to import your custom parser! Check your configuration!"
-                ])
+                str.join(
+                    "\n",
+                    [
+                        str(err),
+                        "Unable to import your custom parser! Check your configuration!",
+                    ],
+                )
             ) from err
         except AttributeError as err:
             raise ParserLoadError(
-                str.join("\n", [
-                    str(err),
-                    "Unable to find the parser class inside the given module"
-                ])
+                str.join(
+                    "\n",
+                    [
+                        str(err),
+                        "Unable to find the parser class inside the given module",
+                    ],
+                )
             ) from err
 
         commit_parser_opts_class = commit_parser_cls.parser_options
@@ -439,10 +455,7 @@ class RuntimeContext:
             )
         except TypeError as err:
             raise ParserLoadError(
-                str.join("\n", [
-                    str(err),
-                    f"Failed to initialize {raw.commit_parser}"
-                ])
+                str.join("\n", [str(err), f"Failed to initialize {raw.commit_parser}"])
             ) from err
 
         # We always exclude PSR's own release commits from the Changelog

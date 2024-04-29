@@ -21,10 +21,15 @@ from semantic_release.commit_parser.scipy import ScipyParserOptions
 from semantic_release.commit_parser.tag import TagParserOptions
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
-
 from semantic_release.errors import ParserLoadError
+
 from tests.fixtures.repos import repo_with_no_tags_angular_commits
-from tests.util import CustomParserOpts, CustomParserWithNoOpts, CustomParserWithOpts, IncompleteCustomParser
+from tests.util import (
+    CustomParserOpts,
+    CustomParserWithNoOpts,
+    CustomParserWithOpts,
+    IncompleteCustomParser,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -114,9 +119,7 @@ def test_load_default_parser_opts(
 ):
     raw_config = RawConfig.model_validate(
         # Since TOML does not support NoneTypes, we need to not include the key
-        {"commit_parser": commit_parser}
-        if commit_parser
-        else {}
+        {"commit_parser": commit_parser} if commit_parser else {}
     )
     assert expected_parser_opts == raw_config.commit_parser_options
 
@@ -207,9 +210,7 @@ def test_load_valid_runtime_config(
     update_pyproject_toml(f"tool.{semantic_release.__name__}", {})
 
     runtime_ctx = RuntimeContext.from_raw_config(
-        RawConfig.model_validate(
-            load_raw_config_file(example_pyproject_toml)
-        ),
+        RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
         global_cli_options=GlobalCommandLineOptions(),
     )
 
@@ -237,9 +238,7 @@ def test_load_valid_runtime_config_w_custom_parser(
     )
 
     runtime_ctx = RuntimeContext.from_raw_config(
-        RawConfig.model_validate(
-            load_raw_config_file(example_pyproject_toml)
-        ),
+        RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
         global_cli_options=GlobalCommandLineOptions(),
     )
     assert runtime_ctx
@@ -275,8 +274,6 @@ def test_load_invalid_custom_parser(
 
     with pytest.raises(ParserLoadError):
         RuntimeContext.from_raw_config(
-            RawConfig.model_validate(
-                load_raw_config_file(example_pyproject_toml)
-            ),
+            RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
             global_cli_options=GlobalCommandLineOptions(),
         )

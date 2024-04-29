@@ -60,6 +60,7 @@ class AssetUploadError(SemanticReleaseBaseError):
     storage.
     """
 
+
 class ParserLoadError(SemanticReleaseBaseError):
     """
     Raised when there is a failure to find, load, or instaniate a custom parser
