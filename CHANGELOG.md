@@ -2,6 +2,89 @@
 
 
 
+## v9.6.0 (2024-04-29)
+
+### Feature
+
+* feat: changelog filters are specialized per vcs type (#890)
+
+* test(github): sync pr url expectation with GitHub api documentation
+
+* fix(github): correct changelog filter for pull request urls
+
+* refactor(hvcs-base): change to an abstract class &amp; simplify interface
+
+* refactor(remote-hvcs-base): extend the base abstract class with common remote base class
+
+* refactor(github): adapt to new abstract base class
+
+* refactor(gitea): adapt to new abstract base class
+
+* refactor(gitlab): adapt to new abstract base class
+
+* refactor(bitbucket): adapt to new abstract base class
+
+* refactor(cmds): prevent hvcs from executing if not remote hosted vcs
+
+* feat(changelog): changelog filters are hvcs focused
+
+* test(hvcs): add validation for issue_url generation
+
+* feat(changelog-github): add issue url filter to changelog context
+
+* feat(changelog-gitea): add issue url filter to changelog context
+
+* refactor(cmd-version): consolidate asset uploads with release creation
+
+* style: resolve ruff errors
+
+* feat(changelog-context): add flag to jinja env for which hvcs is available
+
+* test(changelog-context): demonstrate per hvcs filters upon render
+
+* docs(changelog-context): explain new hvcs specific context filters
+
+* refactor(config): adjust default token resolution w/ subclasses ([`76ed593`](https://github.com/python-semantic-release/python-semantic-release/commit/76ed593ea33c851005994f0d1a6a33cc890fb908))
+
+### Fix
+
+* fix(parser-custom): gracefully handle custom parser import errors ([`67f6038`](https://github.com/python-semantic-release/python-semantic-release/commit/67f60389e3f6e93443ea108c0e1b4d30126b8e06))
+
+* fix: correct version `--prerelease` use &amp; enable `--as-prerelease` (#647)
+
+* test(version): add validation of `--as-prerelease` and `--prerelease opts`
+
+* fix(version-cmd): correct `--prerelease` use
+
+  Prior to this change, `--prerelease` performed the role of converting whichever forced
+version into a prerelease version declaration, which was an unintentional breaking
+change to the CLI compared to v7.
+
+  `--prerelease` now forces the next version to increment the prerelease revision,
+which makes it consistent with `--patch`, `--minor` and `--major`. Temporarily disabled
+the ability to force a prerelease.
+
+  Resolves: #639
+
+* feat(version-cmd): add `--as-prerelease` option to force the next version to be a prerelease
+
+  Prior to this change, `--prerelease` performed the role that `--as-prerelease` now does,
+which was an unintentional breaking change to the CLI compared to v7.
+
+  `--prerelease` is used to force the next version to increment the prerelease revision,
+which makes it consistent with `--patch`, `--minor` and `--major`, while `--as-prerelease`
+forces for the next version to be converted to a prerelease version type before it is
+applied to the project regardless of the bump level.
+
+  Resolves: #639
+
+* docs(commands): update version command options definition about prereleases
+
+---------
+
+Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`2acb5ac`](https://github.com/python-semantic-release/python-semantic-release/commit/2acb5ac35ae79d7ae25ca9a03fb5c6a4a68b3673))
+
+
 ## v9.5.0 (2024-04-23)
 
 ### Build
