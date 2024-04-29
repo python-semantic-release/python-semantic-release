@@ -59,3 +59,9 @@ class AssetUploadError(SemanticReleaseBaseError):
     Raised when there is a failure uploading an asset to a remote hvcs's release artifact
     storage.
     """
+
+class ParserLoadError(SemanticReleaseBaseError):
+    """
+    Raised when there is a failure to find, load, or instaniate a custom parser
+    definition.
+    """
