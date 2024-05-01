@@ -56,15 +56,22 @@ inputs:
     default: "true"
     description: Whether or not to commit changes locally
 
+  tag:
+    type: string
+    required: false
+    description: |
+      Whether or not to make a local version tag. Defaults are handled
+      by python-semantic-release internal version command.
+
   push:
     type: string
     required: false
     default: "true"
     description: |
       Whether or not to push local commits to the Git repository.
-      Defaults to "true", but when the "commit" input is "false"
-      this will also be set to "false" regardless of the value
-      supplied.
+      Defaults to "true", but when either the "commit" or "tag"
+      input is "false", this push setting will also be set to
+      "false" regardless of the value supplied.
 
   changelog:
     type: string
