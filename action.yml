@@ -48,7 +48,7 @@ inputs:
     required: false
     description: |
       Force the next version to be a major release. Must be set to
-      one of "patch", "minor", or "major".
+      one of "prerelease", "patch", "minor", or "major".
 
   commit:
     type: string
