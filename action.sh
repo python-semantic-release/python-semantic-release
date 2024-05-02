@@ -77,7 +77,7 @@ git config --global user.email "$GIT_COMMITTER_EMAIL"
 # and https://github.com/actions/runner-images/issues/6775#issuecomment-1410270956
 git config --system --add safe.directory "*"
 
-if [[ -n $SSH_PUBLIC_SIGNING_KEY && -n $SSH_PRIVATE_SIGNING_KEY ]]; then
+if [[ -n "$SSH_PUBLIC_SIGNING_KEY" && -n "$SSH_PRIVATE_SIGNING_KEY" ]]; then
 	echo "SSH Key pair found, configuring signing..."
 	mkdir ~/.ssh
 	echo -e "$SSH_PRIVATE_SIGNING_KEY" >>~/.ssh/signing_key
@@ -90,8 +90,8 @@ if [[ -n $SSH_PUBLIC_SIGNING_KEY && -n $SSH_PRIVATE_SIGNING_KEY ]]; then
 	git config --global gpg.format ssh
 	git config --global user.signingKey ~/.ssh/signing_key
 	git config --global commit.gpgsign true
-	git config --global user.email $GIT_COMMITTER_EMAIL
-	git config --global user.name $GIT_COMMITTER_NAME
+	git config --global user.email "$GIT_COMMITTER_EMAIL"
+	git config --global user.name "$GIT_COMMITTER_NAME"
 	touch ~/.ssh/allowed_signers
 	echo "$GIT_COMMITTER_EMAIL $SSH_PUBLIC_SIGNING_KEY" >~/.ssh/allowed_signers
 	git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
