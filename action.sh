@@ -34,6 +34,7 @@ export SSH_PRIVATE_SIGNING_KEY="${INPUT_SSH_PRIVATE_SIGNING_KEY}"
 export SSH_PUBLIC_SIGNING_KEY="${INPUT_SSH_PUBLIC_SIGNING_KEY}"
 export GIT_COMMIT_AUTHOR="${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>"
 export ROOT_OPTIONS="${INPUT_ROOT_OPTIONS:="-v"}"
+# v10 BREAKING CHANGE, to correct this input value to match cli?
 export PRERELEASE="${INPUT_PRERELEASE:="false"}"
 export COMMIT="${INPUT_COMMIT:="false"}"
 export PUSH="${INPUT_PUSH:="false"}"
@@ -42,7 +43,8 @@ export VCS_RELEASE="${INPUT_VCS_RELEASE:="false"}"
 
 # Convert inputs to command line arguments
 export ARGS=()
-ARGS+=("$(eval_boolean_action_input "prerelease" "$PRERELEASE" "--prerelease" "")") || exit 1
+# v10 Breaking change?
+ARGS+=("$(eval_boolean_action_input "prerelease" "$PRERELEASE" "--as-prerelease" "")") || exit 1
 ARGS+=("$(eval_boolean_action_input "commit" "$COMMIT" "--commit" "--no-commit")") || exit 1
 ARGS+=("$(eval_boolean_action_input "tag" "$INPUT_TAG" "--tag" "--no-tag")") || exit 1
 ARGS+=("$(eval_boolean_action_input "push" "$PUSH" "--push" "--no-push")") || exit 1
@@ -51,7 +53,7 @@ ARGS+=("$(eval_boolean_action_input "vcs_release" "$VCS_RELEASE" "--vcs-release"
 
 # Handle --patch, --minor, --major
 # https://stackoverflow.com/a/47541882
-valid_force_levels=("patch" "minor" "major")
+valid_force_levels=("prerelease" "patch" "minor" "major")
 if [ -z "$INPUT_FORCE" ]; then
 	true # do nothing if 'force' input is not set
 elif printf '%s\0' "${valid_force_levels[@]}" | grep -Fxzq "$INPUT_FORCE"; then
