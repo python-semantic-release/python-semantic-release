@@ -106,14 +106,17 @@ defaults as their corresponding command line option.
 In general, the input for an action corresponding to a command line option has the same
 name, with dashes (``-``) replaced by underscores.
 
-The command line arguments ``--patch``, ``--minor`` and ``--major`` are mutually
-exclusive, and are supplied via the ``force`` input.
+The command line arguments ``--prerelease``, ``--patch``, ``--minor`` and ``--major``
+are mutually exclusive, and are supplied via the ``force`` input.
 
 Flags, which require either ``--<option>`` or ``--no-<option>`` to be passed on the
 command-line, should be specified using the option name (with dashes replaced by
 underscores), and set to the value ``"true"`` to supply ``--<option>`` on the
 command-line, and ``"false"`` to specify ``--no-<option>``.
 Any other values are not accepted.
+
+The flag ``--as-prerelease`` is uniquely provided as just the ``prerelease`` flag value.
+This is for compatibility reasons.
 
 For command line options requiring a value, set the input to the required value.
 
