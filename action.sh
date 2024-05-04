@@ -25,31 +25,15 @@ eval_boolean_action_input() {
 	fi
 }
 
-# Copy inputs into correctly-named environment variables
-export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
-export PATH="${PATH}:/semantic-release/.venv/bin"
-export GIT_COMMITTER_NAME="${INPUT_GIT_COMMITTER_NAME:="github-actions"}"
-export GIT_COMMITTER_EMAIL="${INPUT_GIT_COMMITTER_EMAIL:="github-actions@github.com"}"
-export SSH_PRIVATE_SIGNING_KEY="${INPUT_SSH_PRIVATE_SIGNING_KEY}"
-export SSH_PUBLIC_SIGNING_KEY="${INPUT_SSH_PUBLIC_SIGNING_KEY}"
-export GIT_COMMIT_AUTHOR="${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>"
-export ROOT_OPTIONS="${INPUT_ROOT_OPTIONS:="-v"}"
-# v10 BREAKING CHANGE, to correct this input value to match cli?
-export PRERELEASE="${INPUT_PRERELEASE:="false"}"
-export COMMIT="${INPUT_COMMIT:="false"}"
-export PUSH="${INPUT_PUSH:="false"}"
-export CHANGELOG="${INPUT_CHANGELOG:="false"}"
-export VCS_RELEASE="${INPUT_VCS_RELEASE:="false"}"
-
 # Convert inputs to command line arguments
 export ARGS=()
-# v10 Breaking change?
-ARGS+=("$(eval_boolean_action_input "prerelease" "$PRERELEASE" "--as-prerelease" "")") || exit 1
-ARGS+=("$(eval_boolean_action_input "commit" "$COMMIT" "--commit" "--no-commit")") || exit 1
+# v10 Breaking change as prerelease should be as_prerelease to match
+ARGS+=("$(eval_boolean_action_input "prerelease" "$INPUT_PRERELEASE" "--as-prerelease" "")") || exit 1
+ARGS+=("$(eval_boolean_action_input "commit" "$INPUT_COMMIT" "--commit" "--no-commit")") || exit 1
 ARGS+=("$(eval_boolean_action_input "tag" "$INPUT_TAG" "--tag" "--no-tag")") || exit 1
-ARGS+=("$(eval_boolean_action_input "push" "$PUSH" "--push" "--no-push")") || exit 1
-ARGS+=("$(eval_boolean_action_input "changelog" "$CHANGELOG" "--changelog" "--no-changelog")") || exit 1
-ARGS+=("$(eval_boolean_action_input "vcs_release" "$VCS_RELEASE" "--vcs-release" "--no-vcs-release")") || exit 1
+ARGS+=("$(eval_boolean_action_input "push" "$INPUT_PUSH" "--push" "--no-push")") || exit 1
+ARGS+=("$(eval_boolean_action_input "changelog" "$INPUT_CHANGELOG" "--changelog" "--no-changelog")") || exit 1
+ARGS+=("$(eval_boolean_action_input "vcs_release" "$INPUT_VCS_RELEASE" "--vcs-release" "--no-vcs-release")") || exit 1
 
 # Handle --patch, --minor, --major
 # https://stackoverflow.com/a/47541882
@@ -70,33 +54,51 @@ fi
 cd "${INPUT_DIRECTORY}"
 
 # Set Git details
-git config --global user.name "$GIT_COMMITTER_NAME"
-git config --global user.email "$GIT_COMMITTER_EMAIL"
+if ! [ "${INPUT_GIT_COMMITTER_NAME:="-"}" = "-" ]; then
+	git config --global user.name "$INPUT_GIT_COMMITTER_NAME"
+fi
+if ! [ "${INPUT_GIT_COMMITTER_EMAIL:="-"}" = "-" ]; then
+	git config --global user.email "$INPUT_GIT_COMMITTER_EMAIL"
+fi
 
 # See https://github.com/actions/runner-images/issues/6775#issuecomment-1409268124
 # and https://github.com/actions/runner-images/issues/6775#issuecomment-1410270956
 git config --system --add safe.directory "*"
 
-if [[ -n "$SSH_PUBLIC_SIGNING_KEY" && -n "$SSH_PRIVATE_SIGNING_KEY" ]]; then
+if [[ -n "$INPUT_SSH_PUBLIC_SIGNING_KEY" && -n "$INPUT_SSH_PRIVATE_SIGNING_KEY" ]]; then
 	echo "SSH Key pair found, configuring signing..."
-	mkdir ~/.ssh
-	echo -e "$SSH_PRIVATE_SIGNING_KEY" >>~/.ssh/signing_key
-	cat ~/.ssh/signing_key
-	echo -e "$SSH_PUBLIC_SIGNING_KEY" >>~/.ssh/signing_key.pub
+
+	# Write keys to disk
+	mkdir -vp ~/.ssh
+	echo -e "$INPUT_SSH_PUBLIC_SIGNING_KEY" >>~/.ssh/signing_key.pub
 	cat ~/.ssh/signing_key.pub
-	chmod 600 ~/.ssh/signing_key && chmod 600 ~/.ssh/signing_key.pub
-	eval "$(ssh-agent)"
+	echo -e "$INPUT_SSH_PRIVATE_SIGNING_KEY" >>~/.ssh/signing_key
+	# DO NOT CAT private key for security reasons
+	sha256sum ~/.ssh/signing_key
+	# Ensure read only private key
+	chmod 400 ~/.ssh/signing_key
+
+	# Enable ssh-agent & add signing key
+	eval "$(ssh-agent -s)"
 	ssh-add ~/.ssh/signing_key
+
+	# Create allowed_signers file for git
+	if [ "${INPUT_GIT_COMMITTER_EMAIL:="-"}" = "-" ]; then
+		echo >&2 "git_committer_email must be set to use SSH key signing!"
+		exit 1
+	fi
+	touch ~/.ssh/allowed_signers
+	echo "$INPUT_GIT_COMMITTER_EMAIL $INPUT_SSH_PUBLIC_SIGNING_KEY" >~/.ssh/allowed_signers
+
+	# Configure git for signing
 	git config --global gpg.format ssh
+	git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
 	git config --global user.signingKey ~/.ssh/signing_key
 	git config --global commit.gpgsign true
-	git config --global user.email "$GIT_COMMITTER_EMAIL"
-	git config --global user.name "$GIT_COMMITTER_NAME"
-	touch ~/.ssh/allowed_signers
-	echo "$GIT_COMMITTER_EMAIL $SSH_PUBLIC_SIGNING_KEY" >~/.ssh/allowed_signers
-	git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
 fi
 
+# Copy inputs into correctly-named environment variables
+export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
+
 # Run Semantic Release
-/semantic-release/.venv/bin/python \
-	-m semantic_release ${ROOT_OPTIONS} version ${ARGS[@]}
+semantic-release ${INPUT_ROOT_OPTIONS} version "${ARGS[@]}"
