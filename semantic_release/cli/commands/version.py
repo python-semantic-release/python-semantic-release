@@ -31,7 +31,7 @@ from semantic_release.version import Version, next_version, tags_and_versions
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import ContextManager, Iterable
+    from typing import ContextManager, Iterable, Mapping
 
     from git import Repo
     from git.refs.tag import Tag
@@ -135,7 +135,9 @@ def apply_version_to_source_files(
     return paths
 
 
-def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
+def shell(
+    cmd: str, *, env: Mapping[str, str] | None = None, check: bool = True
+) -> subprocess.CompletedProcess:
     shell: str | None
     try:
         shell, _ = shellingham.detect_shell()
@@ -149,6 +151,7 @@ def shell(cmd: str, *, check: bool = True) -> subprocess.CompletedProcess:
 
     return subprocess.run(
         [shell, "-c" if shell != "cmd" else "/c", cmd],  # noqa: S603
+        env=(env or {}),
         check=check,
     )
 
@@ -507,7 +510,35 @@ def version(  # noqa: C901
                 "[bold green]:hammer_and_wrench: Running build command: "
                 + build_command
             )
-            shell(build_command, check=True)
+            shell(
+                build_command,
+                check=True,
+                env=dict(
+                    filter(
+                        lambda k_v: k_v[1] is not None,  # type: ignore
+                        {
+                            "NEW_VERSION": str(new_version),
+                            "PATH": os.getenv("PATH", ""),
+                            "HOME": os.getenv("HOME", None),
+                            "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
+                            # affects build decisions
+                            "CI": os.getenv("CI", None),
+                            # Identifies which CI environment
+                            "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
+                            "GITLAB_CI": os.getenv("GITLAB_CI", None),
+                            "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
+                            "BITBUCKET_CI": (
+                                str(True).lower()
+                                if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
+                                else None
+                            ),
+                            "PSR_DOCKER_GITHUB_ACTION": os.getenv(
+                                "PSR_DOCKER_GITHUB_ACTION", None
+                            ),
+                        }.items(),
+                    )
+                ),
+            )
         except subprocess.CalledProcessError as exc:
             ctx.fail(str(exc))
 
