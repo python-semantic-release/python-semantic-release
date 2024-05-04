@@ -8,24 +8,30 @@ inputs:
     description: "Additional options for the main command. Example: -vv --noop"
     required: false
     default: "-v"
+
   directory:
     description: "Sub-directory to cd into before running semantic-release"
     default: "."
     required: false
+
   github_token:
     description: "GitHub token used to push release notes and new commits/tags"
     required: true
+
   git_committer_name:
     description: "The human name for the “committer” field"
     default: "github-actions"
     required: false
+
   git_committer_email:
     description: "The email address for the “committer” field"
     default: "github-actions@github.com"
     required: false
+
   ssh_public_signing_key:
     description: "The ssh public key used to sign commits"
     required: false
+
   ssh_private_signing_key:
     description: "The ssh private key used to sign commits"
     required: false
@@ -36,7 +42,6 @@ inputs:
     required: false
     description: |
       Force the next version to be a prerelease. Set to "true" or "false".
-    default: "false"
 
   prerelease_token:
     type: string
@@ -53,8 +58,8 @@ inputs:
   commit:
     type: string
     required: false
-    default: "true"
-    description: Whether or not to commit changes locally
+    description: Whether or not to commit changes locally. Defaults are handled
+      by python-semantic-release internal version command.
 
   tag:
     type: string
@@ -66,24 +71,20 @@ inputs:
   push:
     type: string
     required: false
-    default: "true"
     description: |
-      Whether or not to push local commits to the Git repository.
-      Defaults to "true", but when either the "commit" or "tag"
-      input is "false", this push setting will also be set to
-      "false" regardless of the value supplied.
+      Whether or not to push local commits to the Git repository. See
+      the configuration page for defaults of `semantic-release version`
+      for how the default is determined between push, tag, & commit.
 
   changelog:
     type: string
     required: false
-    default: "true"
     description: |
       Whether or not to update the changelog.
 
   vcs_release:
     type: string
     required: false
-    default: "true"
     description: |
       Whether or not to create a release in the remote VCS, if supported
 
