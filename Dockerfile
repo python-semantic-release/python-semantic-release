@@ -1,24 +1,31 @@
 # This Dockerfile is only for GitHub Actions
 FROM python:3.10-bullseye
 
-RUN set -ex; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-    git-lfs
+# Copy python-semantic-release source code into container
+COPY . /psr
 
-# install backported stable version of git, which supports ssh signing
-RUN echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list; \
-    apt-get update;\
-    apt-get install -y git/bullseye-backports
+RUN \
+    # add backports repository
+    echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list \
+    # Install desired packages
+    && apt update && apt install -y --no-install-recommends \
+        # install git-lfs support
+        git-lfs \
+        # install git that supports ssh signing
+        git/bullseye-backports \
+    # Configure global pip
+    && { \
+        printf '%s\n' "[global]"; \
+        printf '%s\n' "no-cache-dir = true"; \
+        printf '%s\n' "disable-pip-version-check = true"; \
+    } > /etc/pip.conf \
+    # Create virtual environment for python-semantic-release
+    && python3 -m venv /psr/.venv \
+    # Update core utilities in the virtual environment
+    && /psr/.venv/bin/pip install -U pip setuptools wheel \
+    # Install psr & its dependencies from source into virtual environment
+    && /psr/.venv/bin/pip install /psr \
+    # Cleanup
+    && apt clean -y
 
-ENV PYTHONPATH /semantic-release
-
-COPY . /semantic-release
-
-RUN cd /semantic-release && \
-    python -m venv /semantic-release/.venv && \
-    /semantic-release/.venv/bin/pip install .
-
-RUN /semantic-release/.venv/bin/python -m semantic_release --help
-
-ENTRYPOINT ["/semantic-release/action.sh"]
+ENTRYPOINT ["/bin/bash", "-l", "/psr/action.sh"]
