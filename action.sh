@@ -100,5 +100,5 @@ fi
 # Copy inputs into correctly-named environment variables
 export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
 
-# Run Semantic Release
-semantic-release ${INPUT_ROOT_OPTIONS} version "${ARGS[@]}"
+# Run Semantic Release (explicitly use the GitHub action version)
+eval "/psr/.venv/bin/semantic-release $INPUT_ROOT_OPTIONS version ${ARGS[*]}"
