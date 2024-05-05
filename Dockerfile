@@ -1,18 +1,14 @@
 # This Dockerfile is only for GitHub Actions
-FROM python:3.10-bullseye
+FROM python:3.10-bookworm
 
 # Copy python-semantic-release source code into container
 COPY . /psr
 
 RUN \
-    # add backports repository
-    echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list \
     # Install desired packages
-    && apt update && apt install -y --no-install-recommends \
-        # install git-lfs support
-        git-lfs \
-        # install git that supports ssh signing
-        git/bullseye-backports \
+    apt update && apt install -y --no-install-recommends \
+        # install git with git-lfs support
+        git git-lfs \
     # Configure global pip
     && { \
         printf '%s\n' "[global]"; \
