@@ -2,7 +2,7 @@
 
 set -e
 
-# Convert "true"/"false" into command line args
+# Convert "true"/"false" into command line args, returns "" if not defined
 eval_boolean_action_input() {
 	local -r input_name="$1"
 	shift
@@ -12,7 +12,9 @@ eval_boolean_action_input() {
 	shift
 	local -r if_false="$1"
 
-	if [ "$flag_value" = "true" ]; then
+	if [ -z "$flag_value" ]; then
+		echo ""
+	elif [ "$flag_value" = "true" ]; then
 		echo "$if_true"
 	elif [ "$flag_value" = "false" ]; then
 		echo "$if_false"
@@ -42,6 +44,7 @@ export VCS_RELEASE="${INPUT_VCS_RELEASE:="false"}"
 export ARGS=()
 ARGS+=("$(eval_boolean_action_input "prerelease" "$PRERELEASE" "--prerelease" "")") || exit 1
 ARGS+=("$(eval_boolean_action_input "commit" "$COMMIT" "--commit" "--no-commit")") || exit 1
+ARGS+=("$(eval_boolean_action_input "tag" "$INPUT_TAG" "--tag" "--no-tag")") || exit 1
 ARGS+=("$(eval_boolean_action_input "push" "$PUSH" "--push" "--no-push")") || exit 1
 ARGS+=("$(eval_boolean_action_input "changelog" "$CHANGELOG" "--changelog" "--no-changelog")") || exit 1
 ARGS+=("$(eval_boolean_action_input "vcs_release" "$VCS_RELEASE" "--vcs-release" "--no-vcs-release")") || exit 1
