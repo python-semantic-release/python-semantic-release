@@ -9,6 +9,8 @@ RUN \
     apt update && apt install -y --no-install-recommends \
         # install git with git-lfs support
         git git-lfs \
+        # install python cmodule / binary module build utilities
+        python3-dev gcc make cmake cargo \
     # Configure global pip
     && { \
         printf '%s\n' "[global]"; \
