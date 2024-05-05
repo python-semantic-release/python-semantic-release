@@ -26,4 +26,6 @@ RUN \
     # Cleanup
     && apt clean -y
 
+ENV PSR_DOCKER_GITHUB_ACTION=true
+
 ENTRYPOINT ["/bin/bash", "-l", "/psr/action.sh"]
