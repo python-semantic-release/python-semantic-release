@@ -16,31 +16,97 @@ jobs:
       issues: write
       pull-requests: write
       actions: write          # required to delete/update cache
+    env:
+      STALE_ISSUE_WARNING_DAYS: 90
+      STALE_ISSUE_CLOSURE_DAYS: 7
+      STALE_PR_WARNING_DAYS: 60
+      STALE_PR_CLOSURE_DAYS: 10
+      UNRESPONSIVE_WARNING_DAYS: 14
+      UNRESPONSIVE_CLOSURE_DAYS: 7
+      REMINDER_WINDOW: 60
+      OPERATIONS_RATE_LIMIT: 330  # 1000 api/hr / 3 jobs
     steps:
-      - uses: actions/stale@v9
+
+      - name: Stale Issues/PRs
+        uses: actions/stale@v9
         with:
           # default: 30, GitHub Actions API Rate limit is 1000/hr
-          operations-per-run: 400
-          exempt-all-milestones: true
+          operations-per-run: ${{ env.OPERATIONS_RATE_LIMIT }}
+          # exempt-all-milestones: false (default)
           # exempt-all-assignees: false (default)
           stale-issue-label: stale
-          days-before-issue-stale: 90
-          days-before-issue-close: 7
+          days-before-issue-stale: ${{ env.STALE_ISSUE_WARNING_DAYS }}
+          days-before-issue-close: ${{ env.STALE_ISSUE_CLOSURE_DAYS }}
           exempt-issue-labels: confirmed, help-wanted
           stale-issue-message: >
             This issue is stale because it has not been confirmed or planned by the maintainers
-            and has been open 90 days with no recent activity. It will be closed in 7 days,
-            if no further activity occurs. Thank you for your contributions.
+            and has been open ${{ env.STALE_ISSUE_WARNING_DAYS }} days with no recent activity.
+            It will be closed in ${{ env.STALE_ISSUE_CLOSURE_DAYS }} days, if no further
+            activity occurs. Thank you for your contributions.
           close-issue-message: >
-            This issue was closed because activity was dormant for 97 days.
+            This issue was closed due to lack of activity.
+
           # PR Configurations
           stale-pr-label: stale
-          days-before-pr-stale: 60
-          days-before-pr-close: 10
+          days-before-pr-stale: ${{ env.STALE_PR_WARNING_DAYS }}
+          days-before-pr-close: ${{ env.STALE_PR_CLOSURE_DAYS }}
           exempt-pr-labels: confirmed, dependabot
           stale-pr-message: >
             This PR is stale because it has not been confirmed or planned by the maintainers
-            and had been open 60 days with no recent activity. It will be closed in 10 days,
-              if no further activity occurs. Thank you for your contributions.
+            and has been open ${{ env.STALE_PR_WARNING_DAYS }} days with no recent activity.
+            It will be closed in ${{ env.STALE_PR_CLOSURE_DAYS }} days, if no further
+            activity occurs. Thank you for your contributions.
           close-pr-message: >
-            This PR was closed because activity was dormant for 70 days.
+            This PR was closed due to lack of activity.
+
+      - name: Unresponsive Issues/PRs
+        # Closes issues rapidly when submitter is unresponsive. The timer is initiated
+        # by maintainer by placing the awaiting-reply label on the issue or PR. From
+        # that point the submitter has 14 days before a reminder/warning is given. If
+        # no response has been received within 3 weeks, the issue is closed. There are
+        # no exemptions besides removing the awaiting-reply label.
+        uses: actions/stale@v9
+        with:
+          # GitHub Actions API Rate limit is 1000/hr
+          operations-per-run: ${{ env.OPERATIONS_RATE_LIMIT }}
+          only-labels: awaiting-reply
+          stale-issue-label: unresponsive
+          stale-pr-label: unresponsive
+          days-before-stale: ${{ env.UNRESPONSIVE_WARNING_DAYS }}
+          days-before-close: ${{ env.UNRESPONSIVE_CLOSURE_DAYS }}
+          stale-issue-message: >
+            This issue has not received a response in ${{ env.UNRESPONSIVE_WARNING_DAYS }} days.
+            If no response is received in ${{ env.UNRESPONSIVE_CLOSURE_DAYS }} days, it will be
+            closed. We look forward to hearing from you.
+          close-issue-message: >
+            This issue was closed because no response was received.
+          stale-pr-message: >
+            This PR has not received a response in ${{ env.UNRESPONSIVE_WARNING_DAYS }} days.
+            If no response is received in ${{ env.UNRESPONSIVE_CLOSURE_DAYS }} days, it will be
+            closed. We look forward to hearing from you.
+          close-pr-message: >
+            This PR was closed because no response was received.
+
+      - name: Reminders on Confirmed Issues/PRs
+        # Posts a reminder when confirmed issues are not updated in a timely manner.
+        # The timer is initiated by a maintainer by placing the confirmed label on
+        # the issue or PR (which prevents stale closure), however, to prevent it being
+        # forgotten completely, this job will post a reminder message to the maintainers
+        # No closures will occur and there are no exemptions besides removing the confirmed
+        # label.
+        uses: actions/stale@v9
+        with:
+          # GitHub Actions API Rate limit is 1000/hr
+          operations-per-run: ${{ env.OPERATIONS_RATE_LIMIT }}
+          only-labels: confirmed
+          stale-issue-label: needs-update
+          stale-pr-label: needs-update
+          days-before-stale: ${{ env.REMINDER_WINDOW }}
+          days-before-close: -1 # never close
+          stale-issue-message: >
+            It has been ${{ env.REMINDER_WINDOW }} days since the last update on this confirmed
+            issue. @python-semantic-release/team can you provide an update on the status of this
+            issue?
+          stale-pr-message: >
+            It has been ${{ env.REMINDER_WINDOW }} days since the last update on this confirmed
+            PR. @python-semantic-release/team can you provide an update on the status of this PR?
