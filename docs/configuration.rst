@@ -141,10 +141,34 @@ This setting is discussed in more detail at :ref:`multibranch-releases`
 
 .. _config-build-command:
 
-``build_command (Optional[str])``
-"""""""""""""""""""""""""""""""""
+``build_command``
+"""""""""""""""""
 
-Command to use when building the current project during :ref:`cmd-version`
+**Type:** ``Optional[str]``
+
+Command to use to build the current project during :ref:`cmd-version`.
+
+Python Semantic Release will execute the build command in the OS default
+shell with a subset of environment variables. PSR provides the variable
+``NEW_VERSION`` in the environment with the value of the next determined
+version. The following table summarizes all the environment variables that
+are passed on to the ``build_command`` runtime if they exist in the parent
+process.
+
+========================  ======================================================================
+Variable Name             Description
+========================  ======================================================================
+CI                        Pass-through ``true`` if exists in process env, unset otherwise
+BITBUCKET_CI              ``true`` if Bitbucket CI variables exist in env, unset otherwise
+GITHUB_ACTIONS            Pass-through ``true`` if exists in process env, unset otherwise
+GITEA_ACTIONS             Pass-through ``true`` if exists in process env, unset otherwise
+GITLAB_CI                 Pass-through ``true`` if exists in process env, unset otherwise
+HOME                      Pass-through ``HOME`` of parent process
+NEW_VERSION               Semantically determined next version (ex. ``1.2.3``)
+PATH                      Pass-through ``PATH`` of parent process
+PSR_DOCKER_GITHUB_ACTION  Pass-through ``true`` if exists in process env, unset otherwise
+VIRTUAL_ENV               Pass-through ``VIRTUAL_ENV`` if exists in process env, unset otherwise
+========================  ======================================================================
 
 **Default:** ``None`` (not specified)
 
