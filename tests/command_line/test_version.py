@@ -14,8 +14,14 @@ import tomlkit
 from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.cli import main, version
+from semantic_release.hvcs.github import Github
 
-from tests.const import EXAMPLE_PROJECT_NAME, EXAMPLE_RELEASE_NOTES_TEMPLATE
+from tests.const import (
+    EXAMPLE_PROJECT_NAME,
+    EXAMPLE_RELEASE_NOTES_TEMPLATE,
+    SUCCESS_EXIT_CODE,
+)
+from tests.fixtures.git_repo import SimulateChangeCommitsNReturnChangelogEntryFn
 from tests.util import (
     actions_output_to_dict,
     flatten_dircmp,
@@ -934,3 +940,200 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     assert result.exit_code == 0
     assert result.stdout == ""
     assert "No release tags found." in caplog.text
+
+
+def test_version_print_last_released_on_detached_head(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version = "0.1.1"
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+
+    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released"])
+
+    # Evaluate (expected -> actual)
+    assert not result.stderr
+    assert last_version == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+def test_version_print_last_released_on_nonrelease_branch(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version = "0.1.1"
+    repo_with_single_branch_tag_commits.create_head("next").checkout()
+
+    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released"])
+
+    # Evaluate (expected -> actual)
+    assert not result.stderr
+    assert last_version == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+def test_version_print_last_released_tag_on_detached_head(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version = "v0.1.1"
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+
+    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released-tag"])
+
+    # Evaluate (expected -> actual)
+    assert not result.stderr
+    assert last_version == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+def test_version_print_last_released_tag_on_nonrelease_branch(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version_tag = "v0.1.1"
+    repo_with_single_branch_tag_commits.create_head("next").checkout()
+
+    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released-tag"])
+
+    # Evaluate (expected -> actual)
+    assert not result.stderr
+    assert last_version_tag == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+def test_version_print_next_version_fails_on_detached_head(
+    cli_runner: CliRunner,
+    example_git_ssh_url: str,
+    repo_with_single_branch_tag_commits: Repo,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+):
+    # Setup
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    simulate_change_commits_n_rtn_changelog_entry(
+        repo_with_single_branch_tag_commits,
+        ["fix: make a patch fix to codebase"],
+        Github(example_git_ssh_url),
+    )
+    expected_failure_code = 1
+    expected_error_msg = (
+        "Detached HEAD state cannot match any release groups; no release will be made\n"
+    )
+
+    # Execute
+    result = cli_runner.invoke(main, [version_subcmd, "--print"])
+
+    # Evaluate (expected -> actual)
+    assert not result.stdout
+    assert expected_error_msg == result.stderr
+    assert expected_failure_code == result.exit_code
+
+
+# TODO: must update version and Runtime Context to handle this appropriately
+@pytest.mark.xfail(reason="Not implemented Yet")
+def test_version_print_next_version_works_on_detached_head_with_prerelease_token(
+    cli_runner: CliRunner,
+    example_git_ssh_url: str,
+    repo_with_single_branch_tag_commits: Repo,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+):
+    # Hardcoded values for results
+    token = "alpha"
+    expected_next_version = f"0.1.2-{token}.1"
+
+    # setup
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    simulate_change_commits_n_rtn_changelog_entry(
+        repo_with_single_branch_tag_commits,
+        ["fix: make a patch fix to codebase"],
+        Github(example_git_ssh_url),
+    )
+
+    # Execute
+    result = cli_runner.invoke(
+        main,
+        [
+            version_subcmd,
+            "--print",
+            "--as-prerelease",
+            "--prerelease-token",
+            token,
+        ],
+    )
+
+    # Evaluate (expected -> actual)
+    assert not result.stderr
+    assert expected_next_version == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+# TODO: must update version and Runtime Context to handle this appropriately
+@pytest.mark.xfail(reason="Not implemented Yet")
+def test_version_print_next_version_tag_works_on_detached_head_with_prerelease_token(
+    cli_runner: CliRunner,
+    example_git_ssh_url: str,
+    repo_with_single_branch_tag_commits: Repo,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+):
+    # Hardcoded values for results
+    token = "alpha"
+    expected_next_version_tag = f"v0.1.2-{token}.1"
+
+    # setup
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    simulate_change_commits_n_rtn_changelog_entry(
+        repo_with_single_branch_tag_commits,
+        ["fix: make a patch fix to codebase"],
+        Github(example_git_ssh_url),
+    )
+
+    # Execute
+    result = cli_runner.invoke(
+        main,
+        [
+            version_subcmd,
+            "--print-tag",
+            "--as-prerelease",
+            "--prerelease-token",
+            token,
+        ],
+    )
+
+    # Evaluate (expected -> actual)
+    assert not result.stderr
+    assert expected_next_version_tag == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+# TODO: must update version and Runtime Context to handle this appropriately
+@pytest.mark.xfail(reason="Not implemented Yet")
+def test_version_print_next_version_warning_on_nonrelease_branch(
+    cli_runner: CliRunner,
+    example_git_ssh_url: str,
+    repo_with_single_branch_tag_commits: Repo,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+):
+    # Hardcoded values for results
+    expected_next_version = "0.1.2"
+
+    # setup
+    repo_with_single_branch_tag_commits.create_head("next").checkout()
+    simulate_change_commits_n_rtn_changelog_entry(
+        repo_with_single_branch_tag_commits,
+        ["fix: make a patch fix to codebase"],
+        Github(example_git_ssh_url),
+    )
+
+    # Execute
+    result = cli_runner.invoke(main, [version_subcmd, "--print"])
+
+    # Evaluate (expected -> actual)
+    # TODO: error in stderr
+    assert not result.stderr
+    assert expected_next_version == result.stdout.rstrip()
+    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+
+# strict variant?
+# do you always need a prerelease token if its not --as-prerelease?
+#
