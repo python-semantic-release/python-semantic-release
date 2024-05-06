@@ -560,7 +560,7 @@ def test_version_runs_build_command(
     update_pyproject_toml("tool.semantic_release.build_command", build_command)
     exe = shell.split("/")[-1]
     patched_os_environment = {
-        "CI": 'true',
+        "CI": "true",
         "PATH": os.getenv("PATH"),
         "HOME": os.getenv("HOME"),
         "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
@@ -588,16 +588,18 @@ def test_version_runs_build_command(
             [exe, "-c", build_command],
             check=True,
             env={
-                'NEW_VERSION': '1.2.1', # injected into environment
-                'CI': patched_os_environment["CI"],
-                "BITBUCKET_CI": "true", # Converted
-                'GITHUB_ACTIONS': patched_os_environment["GITHUB_ACTIONS"],
+                "NEW_VERSION": "1.2.1",  # injected into environment
+                "CI": patched_os_environment["CI"],
+                "BITBUCKET_CI": "true",  # Converted
+                "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
                 "GITEA_ACTIONS": patched_os_environment["GITEA_ACTIONS"],
                 "GITLAB_CI": patched_os_environment["GITLAB_CI"],
-                'HOME': patched_os_environment["HOME"],
-                'PATH': patched_os_environment["PATH"],
+                "HOME": patched_os_environment["HOME"],
+                "PATH": patched_os_environment["PATH"],
                 "VIRTUAL_ENV": patched_os_environment["VIRTUAL_ENV"],
-                "PSR_DOCKER_GITHUB_ACTION": patched_os_environment["PSR_DOCKER_GITHUB_ACTION"],
+                "PSR_DOCKER_GITHUB_ACTION": patched_os_environment[
+                    "PSR_DOCKER_GITHUB_ACTION"
+                ],
             },
         )
 
