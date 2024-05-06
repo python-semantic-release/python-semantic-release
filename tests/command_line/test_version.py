@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import difflib
 import filecmp
+import os
 import re
 import shutil
 from subprocess import CompletedProcess
@@ -558,13 +559,25 @@ def test_version_runs_build_command(
     build_command = "bash -c \"echo 'hello world'\""
     update_pyproject_toml("tool.semantic_release.build_command", build_command)
     exe = shell.split("/")[-1]
+    patched_os_environment = {
+        "CI": 'true',
+        "PATH": os.getenv("PATH"),
+        "HOME": os.getenv("HOME"),
+        "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
+        # Simulate that all CI's are set
+        "GITHUB_ACTIONS": "true",
+        "GITLAB_CI": "true",
+        "GITEA_ACTIONS": "true",
+        "BITBUCKET_REPO_FULL_NAME": "python-semantic-release/python-semantic-release.git",
+        "PSR_DOCKER_GITHUB_ACTION": "true",
+    }
 
     # Mock out subprocess.run
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
-    ):
+    ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
             main, [version_subcmd or "version", "--patch", "--no-push"]
@@ -572,7 +585,20 @@ def test_version_runs_build_command(
         assert result.exit_code == 0
 
         patched_subprocess_run.assert_called_once_with(
-            [exe, "-c", build_command], check=True
+            [exe, "-c", build_command],
+            check=True,
+            env={
+                'NEW_VERSION': '1.2.1', # injected into environment
+                'CI': patched_os_environment["CI"],
+                "BITBUCKET_CI": "true", # Converted
+                'GITHUB_ACTIONS': patched_os_environment["GITHUB_ACTIONS"],
+                "GITEA_ACTIONS": patched_os_environment["GITEA_ACTIONS"],
+                "GITLAB_CI": patched_os_environment["GITLAB_CI"],
+                'HOME': patched_os_environment["HOME"],
+                'PATH': patched_os_environment["PATH"],
+                "VIRTUAL_ENV": patched_os_environment["VIRTUAL_ENV"],
+                "PSR_DOCKER_GITHUB_ACTION": patched_os_environment["PSR_DOCKER_GITHUB_ACTION"],
+            },
         )
 
 
