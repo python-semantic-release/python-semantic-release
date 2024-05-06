@@ -71,7 +71,7 @@ test = [
 dev = [
   "pre-commit ~= 3.5",
   "tox ~= 4.11",
-  "ruff == 0.4.2"
+  "ruff == 0.4.3"
 ]
 mypy = [
   "mypy == 1.10.0",
