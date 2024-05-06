@@ -2,6 +2,23 @@
 
 
 
+## v9.7.0 (2024-05-06)
+
+### Documentation
+
+* docs(configuration): add description of build command available env variables ([`c882dc6`](https://github.com/python-semantic-release/python-semantic-release/commit/c882dc62b860b2aeaa925c21d1524f4ae25ef567))
+
+### Feature
+
+* feat(version-cmd): pass `NEW_VERSION` &amp; useful env vars to build command ([`ee6b246`](https://github.com/python-semantic-release/python-semantic-release/commit/ee6b246df3bb211ab49c8bce075a4c3f6a68ed77))
+
+### Fix
+
+* fix(gha): add missing `tag` option to GitHub Action definition (#908)
+
+  Resolves: #906 ([`6b24288`](https://github.com/python-semantic-release/python-semantic-release/commit/6b24288a96302cd6982260e46fad128ec4940da9))
+
+
 ## v9.6.0 (2024-04-29)
 
 ### Feature
