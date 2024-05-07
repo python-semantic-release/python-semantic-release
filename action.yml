@@ -1,40 +1,44 @@
 ---
-name: "Python Semantic Release"
+name: Python Semantic Release
 
-description: "Automatic Semantic Versioning for Python projects"
+description: Automatic Semantic Versioning for Python projects
 
 inputs:
   root_options:
-    description: "Additional options for the main command. Example: -vv --noop"
-    required: false
     default: "-v"
+    required: false
+    description: |
+      Additional options for the main command. Example: -vv --noop
 
   directory:
-    description: "Sub-directory to cd into before running semantic-release"
     default: "."
     required: false
+    description: Sub-directory to cd into before running semantic-release
 
   github_token:
-    description: "GitHub token used to push release notes and new commits/tags"
+    type: string
     required: true
+    description: GitHub token used to push release notes and new commits/tags
 
   git_committer_name:
-    description: "The human name for the “committer” field"
-    default: "github-actions"
+    type: string
     required: false
+    description: The human name for the “committer” field
 
   git_committer_email:
-    description: "The email address for the “committer” field"
-    default: "github-actions@github.com"
+    type: string
     required: false
+    description: The email address for the “committer” field
 
   ssh_public_signing_key:
-    description: "The ssh public key used to sign commits"
+    type: string
     required: false
+    description: The ssh public key used to sign commits
 
   ssh_private_signing_key:
-    description: "The ssh private key used to sign commits"
+    type: string
     required: false
+    description: The ssh private key used to sign commits
 
   # `semantic-release version` command line options
   prerelease:
@@ -108,5 +112,5 @@ outputs:
       The Git tag corresponding to the version output
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: docker
+  image: Dockerfile
