@@ -2,6 +2,15 @@
 
 
 
+## v9.7.1 (2024-05-07)
+
+### Fix
+
+* fix(gha): fix missing `git_committer_*` definition in action (#919)
+
+  Resolves: #918 ([`ccef9d8`](https://github.com/python-semantic-release/python-semantic-release/commit/ccef9d8521be12c0640369b3c3a80b81a7832662))
+
+
 ## v9.7.0 (2024-05-06)
 
 ### Documentation
