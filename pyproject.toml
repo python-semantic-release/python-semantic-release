@@ -368,7 +368,7 @@ ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 logging_use_named_masks = true
 commit_parser = "angular"
 build_command = """
-    python -m pip install build~=0.10.0
+    python -m pip install build~=1.2.1
     python -m build .
 """
 major_on_zero = true

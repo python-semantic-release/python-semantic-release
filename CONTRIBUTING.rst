@@ -93,5 +93,5 @@ package locally:
 
 .. code-block:: bash
 
-    python -m pip install build~=0.10.0
+    python -m pip install build~=1.2.1
     python -m build .
