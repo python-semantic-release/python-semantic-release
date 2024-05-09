@@ -48,6 +48,9 @@ issues = "https://github.com/python-semantic-release/python-semantic-release/iss
 repository = "http://github.com/python-semantic-release/python-semantic-release.git"
 
 [project.optional-dependencies]
+build = [
+  "build ~= 1.2"
+]
 docs = [
   "Sphinx ~= 6.0",
   "sphinxcontrib-apidoc == 0.5.0",
@@ -368,7 +371,7 @@ ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 logging_use_named_masks = true
 commit_parser = "angular"
 build_command = """
-    python -m pip install build~=0.10.0
+    python -m pip install -e .[build]
     python -m build .
 """
 major_on_zero = true
