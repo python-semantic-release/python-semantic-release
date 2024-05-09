@@ -33,13 +33,13 @@ Install this module and the development dependencies
 
 .. code-block:: bash
 
-    pip install -e ".[dev,mypy,test]"
+    pip install -e .[dev,mypy,test]
 
 And if you'd like to build the documentation locally
 
 .. code-block:: bash
 
-    pip install -e ".[docs]"
+    pip install -e .[docs]
     sphinx-autobuild --open-browser docs docs/_build/html
 
 Testing
@@ -93,5 +93,5 @@ package locally:
 
 .. code-block:: bash
 
-    python -m pip install build~=1.2.1
+    pip install -e .[build]
     python -m build .
