@@ -30,10 +30,15 @@ def _logged_parse_error(commit: Commit, error: str) -> ParseError:
 # types with long names in changelog
 LONG_TYPE_NAMES = {
     "build": "build system",
+    "ci": "continuous integration",
+    "chore": "chores",
     "docs": "documentation",
     "feat": "features",
     "fix": "fixes",
     "perf": "performance improvements",
+    "refactor": "refactoring",
+    "style": "code style",
+    "test": "tests",
 }
 
 
