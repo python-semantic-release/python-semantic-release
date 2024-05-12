@@ -551,7 +551,6 @@ def test_version_prints_current_version_if_no_new_version(
 def test_version_runs_build_command(
     repo_with_git_flow_angular_commits: Repo,
     cli_runner: CliRunner,
-    example_pyproject_toml: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     shell: str,
 ):
@@ -602,6 +601,84 @@ def test_version_runs_build_command(
                 ],
             },
         )
+
+
+def test_version_runs_build_command_w_user_env(
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    # Setup
+    patched_os_environment = {
+        "CI": "true",
+        "PATH": os.getenv("PATH"),
+        "HOME": os.getenv("HOME"),
+        "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
+        # Simulate that all CI's are set
+        "GITHUB_ACTIONS": "true",
+        "GITLAB_CI": "true",
+        "GITEA_ACTIONS": "true",
+        "BITBUCKET_REPO_FULL_NAME": "python-semantic-release/python-semantic-release.git",
+        "PSR_DOCKER_GITHUB_ACTION": "true",
+        # User environment variables (varying passthrough results)
+        "MY_CUSTOM_VARIABLE": "custom",
+        "IGNORED_VARIABLE": "ignore_me",
+        "OVERWRITTEN_VAR": "initial",
+        "SET_AS_EMPTY_VAR": "not_empty",
+    }
+    build_command = "bash -c \"echo 'hello world'\""
+    update_pyproject_toml("tool.semantic_release.build_command", build_command)
+    update_pyproject_toml(
+        "tool.semantic_release.build_command_env",
+        [
+            # Includes arbitrary whitespace which will be removed
+            " MY_CUSTOM_VARIABLE ",             # detect and pass from environment
+            " OVERWRITTEN_VAR = overrided",     # pass hardcoded value which overrides environment
+            " SET_AS_EMPTY_VAR = ",             # keep variable initialized but as empty string
+            " HARDCODED_VAR=hardcoded ",        # pass hardcoded value that doesn't override anything
+            "VAR_W_EQUALS = a-var===condition", # only splits on 1st equals sign
+            "=ignored-invalid-named-var",       # TODO: validation error instead, but currently just ignore
+        ]
+    )
+
+    # Mock out subprocess.run
+    with mock.patch(
+        "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
+    ) as patched_subprocess_run, mock.patch(
+        "shellingham.detect_shell", return_value=("bash", "/usr/bin/bash")
+    ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
+        # ACT: run & force a new version that will trigger the build command
+        result = cli_runner.invoke(
+            main, [version_subcmd, "--patch", "--no-commit", "--no-tag", "--no-changelog", "--no-push"]
+        )
+
+        patched_subprocess_run.assert_called_once_with(
+            ["bash", "-c", build_command],
+            check=True,
+            env={
+                "NEW_VERSION": "1.2.1",  # injected into environment
+                "CI": patched_os_environment["CI"],
+                "BITBUCKET_CI": "true",  # Converted
+                "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
+                "GITEA_ACTIONS": patched_os_environment["GITEA_ACTIONS"],
+                "GITLAB_CI": patched_os_environment["GITLAB_CI"],
+                "HOME": patched_os_environment["HOME"],
+                "PATH": patched_os_environment["PATH"],
+                "VIRTUAL_ENV": patched_os_environment["VIRTUAL_ENV"],
+                "PSR_DOCKER_GITHUB_ACTION": patched_os_environment[
+                    "PSR_DOCKER_GITHUB_ACTION"
+                ],
+                "MY_CUSTOM_VARIABLE": patched_os_environment["MY_CUSTOM_VARIABLE"],
+                "OVERWRITTEN_VAR": "overrided",
+                "SET_AS_EMPTY_VAR": "",
+                "HARDCODED_VAR": "hardcoded",
+                # Note that IGNORED_VARIABLE is not here.
+                "VAR_W_EQUALS": "a-var===condition",
+            },
+        )
+
+        # Make sure it did not error internally
+        assert result.exit_code == 0
 
 
 def test_version_skips_build_command_with_skip_build(
