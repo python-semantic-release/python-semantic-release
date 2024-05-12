@@ -212,6 +212,7 @@ class RawConfig(BaseModel):
     assets: List[str] = []
     branches: Dict[str, BranchConfig] = {"main": BranchConfig()}
     build_command: Optional[str] = None
+    build_command_env: List[str] = []
     changelog: ChangelogConfig = ChangelogConfig()
     commit_author: MaybeFromEnv = EnvConfigVar(
         env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR
@@ -228,6 +229,11 @@ class RawConfig(BaseModel):
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
     version_variables: Optional[Tuple[str, ...]] = None
+
+    @field_validator("build_command_env", mode="after")
+    @classmethod
+    def remove_whitespace(cls, val: list[str]) -> list[str]:
+        return [entry.strip() for entry in val]
 
     @model_validator(mode="after")
     def set_default_opts(self) -> Self:
@@ -352,6 +358,7 @@ class RuntimeContext:
     template_environment: Environment
     template_dir: Path
     build_command: Optional[str]
+    build_command_env: dict[str, str]
     dist_glob_patterns: Tuple[str, ...]
     upload_to_vcs_release: bool
     global_cli_options: GlobalCommandLineOptions
@@ -541,6 +548,31 @@ class RuntimeContext:
             tag_format=raw.tag_format, prerelease_token=branch_config.prerelease_token
         )
 
+        build_cmd_env = {}
+
+        for i, env_var_def in enumerate(raw.build_command_env):
+            # creative hack to handle, missing =, but also = that then can be unpacked
+            # as the resulting parts array can be either 2 or 3 in length. it becomes 3
+            # with our forced empty value at the end which can be dropped
+            parts = [*env_var_def.split("=", 1), ""]
+            # removes any odd spacing around =, and extracts name=value
+            name, env_val = [part.strip() for part in parts[:2]]
+
+            if not name:
+                # Skip when invalid format (ex. starting with = and no name)
+                logging.warning(
+                    "Skipping invalid build_command_env[%s] definition",
+                    i,
+                )
+                continue
+
+            if not env_val and env_var_def[-1] != "=":
+                # avoid the edge case that user wants to define a value as empty
+                # and don't autoresolve it
+                env_val = os.getenv(name, "")
+
+            build_cmd_env[name] = env_val
+
         self = cls(
             repo=repo,
             commit_parser=commit_parser,
@@ -548,6 +580,7 @@ class RuntimeContext:
             major_on_zero=raw.major_on_zero,
             allow_zero_version=raw.allow_zero_version,
             build_command=raw.build_command,
+            build_command_env=build_cmd_env,
             version_declarations=tuple(version_declarations),
             hvcs_client=hvcs_client,
             changelog_file=changelog_file,

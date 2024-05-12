@@ -517,7 +517,7 @@ def version(  # noqa: C901
                     filter(
                         lambda k_v: k_v[1] is not None,  # type: ignore
                         {
-                            "NEW_VERSION": str(new_version),
+                            # Common values
                             "PATH": os.getenv("PATH", ""),
                             "HOME": os.getenv("HOME", None),
                             "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
@@ -535,6 +535,10 @@ def version(  # noqa: C901
                             "PSR_DOCKER_GITHUB_ACTION": os.getenv(
                                 "PSR_DOCKER_GITHUB_ACTION", None
                             ),
+                            # User defined overrides of environment (from config)
+                            **runtime.build_command_env,
+                            # PSR injected environment variables
+                            "NEW_VERSION": str(new_version),
                         }.items(),
                     )
                 ),
