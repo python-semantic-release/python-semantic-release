@@ -4,7 +4,7 @@ Troubleshooting
 ===============
 
 - Check your configuration file for :ref:`configuration`
-- Check your Git tags match your :ref:`tag_format <config-tag-format>`; tags using
+- Check your Git tags match your :ref:`tag_format <config-tag_format>`; tags using
   other formats are ignored during calculation of the next version.
 
 .. _troubleshooting-verbosity:

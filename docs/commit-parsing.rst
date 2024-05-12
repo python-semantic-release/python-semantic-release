@@ -30,8 +30,8 @@ description to create a major release.
 More information about the style can be found in the `angular commit guidelines`_.
 
 .. seealso::
-  - :ref:`commit_parser <config-commit-parser>`
-  - :ref:`commit_parser_options <config-commit-parser-options>`
+  - :ref:`commit_parser <config-commit_parser>`
+  - :ref:`commit_parser_options <config-commit_parser_options>`
 
 .. _commit-parser-builtin:
 
@@ -181,7 +181,7 @@ If you would prefer to use an alternative commit style, for example to adjust th
 different ``type`` values that are associated with a particular commit, this is
 possible.
 
-The :ref:`commit_parser <config-commit-parser>` option, if set to a string which
+The :ref:`commit_parser <config-commit_parser>` option, if set to a string which
 does not match one of Python Semantic Release's inbuilt commit parsers, will be
 used to attempt to dynamically import a custom commit parser class. As such you will
 need to ensure that your custom commit parser is import-able from the environment in
@@ -296,8 +296,8 @@ To provide options to the commit parser which is configured in the :ref:`configu
 class. Each parser built into Python Semantic Release has a corresponding "options" class, which
 subclasses :py:class:`semantic_release.ParserOptions`.
 
-The configuration in :ref:`commit_parser_options <config-commit-parser-options>` is passed to the
-"options" class which is specified by the configured :ref:`commit_parser <config-commit-parser>` -
+The configuration in :ref:`commit_parser_options <config-commit_parser_options>` is passed to the
+"options" class which is specified by the configured :ref:`commit_parser <config-commit_parser>` -
 more information on how this is specified is below.
 
 The "options" class is used to validate the options which are configured in the repository,

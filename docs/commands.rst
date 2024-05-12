@@ -101,7 +101,7 @@ By default:
 
   * Write this new version to the project metadata locations
     specified in the configuration file
-  * Build the project using :ref:`config-build-command`, if specified
+  * Build the project using :ref:`config-build_command`, if specified
   * Create a new commit with these locations and any other assets configured
     to be included in a release
   * Tag this commit according the configured format, with a tag that uniquely
@@ -116,10 +116,10 @@ commit that is made.
 .. seealso::
     - :ref:`cmd-changelog`
     - :ref:`changelog-templates`
-    - :ref:`config-tag-format`
+    - :ref:`config-tag_format`
     - :ref:`config-assets`
-    - :ref:`config-version-toml`
-    - :ref:`config-version-variables`
+    - :ref:`config-version_toml`
+    - :ref:`config-version_variables`
 
 .. _cmd-version-options:
 
@@ -316,7 +316,7 @@ If ``--no-commit`` is supplied, it may disable other options derivatively; pleas
 **Default:** ``--commit``
 
 .. seealso::
-   - :ref:`tag_format <config-tag-format>`
+   - :ref:`tag_format <config-tag_format>`
 
 .. _cmd-version-option-tag:
 
@@ -370,7 +370,7 @@ implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
 ``--skip-build``
 ****************
 
-If passed, skip building the current project using :ref:`build_command <config-build-command>`.
+If passed, skip building the current project using :ref:`build_command <config-build_command>`.
 
 .. _cmd-publish:
 
@@ -381,7 +381,7 @@ Publish a distribution to a VCS release. Uploads using :ref:`config-publish`
 
 .. seealso::
     - :ref:`config-publish`
-    - :ref:`config-build-command`
+    - :ref:`config-build_command`
 
 .. _cmd-publish-options:
 

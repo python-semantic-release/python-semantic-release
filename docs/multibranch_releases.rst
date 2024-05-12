@@ -71,7 +71,7 @@ that would be considered different according to the semver specification.
 .. note::
 
    If you have tags in your Git repository that are not valid semantic versions
-   (which have then been formatted into your :ref:`tag_format <config-tag-format>`),
+   (which have then been formatted into your :ref:`tag_format <config-tag_format>`),
    these tags will be ignored for the purposes of calculating the next version.
 
 .. _prereleases: https://semver.org/#spec-item-9

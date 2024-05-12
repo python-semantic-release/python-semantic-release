@@ -26,7 +26,7 @@ Assumptions
   ``rc``.
 * We know ahead of time whether ``major`` changes introduced by commits
   should cause the new version to remain on ``0.y.z`` if the project is already
-  on a ``0.`` version - see :ref:`major_on_zero <config-major-on-zero>`.
+  on a ``0.`` version - see :ref:`major_on_zero <config-major_on_zero>`.
 
 .. _algorithm-implementation:
 

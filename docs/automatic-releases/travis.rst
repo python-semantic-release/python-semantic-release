@@ -8,7 +8,7 @@ If this is not the case, please refer to `Travis documentation`_ on how to do th
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See :doc:`../configuration` for details on how to configure Python Semantic Release.
-Make sure that at least you have set :ref:`config-version-variables` before continuing.
+Make sure that at least you have set :ref:`config-version_variables` before continuing.
 
 2. Add environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

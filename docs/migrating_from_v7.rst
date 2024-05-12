@@ -542,7 +542,7 @@ Options such as ``major_emoji``, ``parser_angular_patch_types`` or
 replaced with a single set of recognised commit parser options, ``allowed_tags``,
 ``major_tags``, ``minor_tags``, and ``patch_tags``, though the interpretation of
 these is up to the specific parsers in use. You can read more detail about using
-commit parser options in :ref:`commit_parser_options <config-commit-parser-options>`,
+commit parser options in :ref:`commit_parser_options <config-commit_parser_options>`,
 and if you need to parse multiple commit styles for a single project it's recommended
 that you create a parser following :ref:`commit-parser-writing-your-own-parser` that
 is tailored to the specific needs of your project.
@@ -552,7 +552,7 @@ is tailored to the specific needs of your project.
 ``version_variable``
 """"""""""""""""""""
 
-This option has been renamed to :ref:`version_variables <config-version-variables>`
+This option has been renamed to :ref:`version_variables <config-version_variables>`
 as it refers to a list of variables which can be updated.
 
 .. _breaking-version-pattern-removed:
@@ -603,7 +603,7 @@ key and raise an error if this is not the case.
 """""""""""""""""""""
 
 This option has been renamed to
-:ref:`upload_to_vcs_release <config-publish-upload-to-vcs-release>`.
+:ref:`upload_to_vcs_release <config-publish-upload_to_vcs_release>`.
 
 .. _breaking-custom-commit-parsers:
 

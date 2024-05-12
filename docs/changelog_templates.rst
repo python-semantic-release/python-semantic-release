@@ -5,8 +5,8 @@ Changelog Templates
 
 .. warning::
     If you have an existing changelog in the location you have configured with
-    the :ref:`changelog_file <config-changelog-changelog-file>` setting,
-    or if you have a template inside your :ref:`template directory <config-changelog-template-dir>`
+    the :ref:`changelog_file <config-changelog-changelog_file>` setting,
+    or if you have a template inside your :ref:`template directory <config-changelog-template_dir>`
     which will render to the location of an existing file, Python Semantic Release will
     overwrite the contents of this file.
 
@@ -14,11 +14,11 @@ Changelog Templates
 
 Python Semantic Release can write a changelog for your project. By default, it uses an
 in-built template; once rendered this will be written to the location you configure with the
-:ref:`changelog_file <config-changelog-changelog-file>` setting.
+:ref:`changelog_file <config-changelog-changelog_file>` setting.
 
 However, Python Semantic Release is also capable of rendering an entire directory tree
 of templates during the changelog generation process. This directory is specified
-using the :ref:`template directory <config-changelog-template-dir>` setting.
+using the :ref:`template directory <config-changelog-template_dir>` setting.
 
 Python Semantic Release uses `Jinja`_ as its template engine, so you should refer to the
 `Template Designer Documentation`_ for guidance on how to customize the appearance of
@@ -48,7 +48,7 @@ Directory Structure:
 If you don't want to set up your own custom changelog template, you can have Python
 Semantic Release use its in-built template. If you would like to customize the
 appearance of the changelog, or to render additional files, then you will need to
-create a directory within your repository and set the :ref:`template_dir <config-changelog-template-dir>`
+create a directory within your repository and set the :ref:`template_dir <config-changelog-template_dir>`
 setting to the name of this directory. The default name is ``"templates"``.
 
 .. note::
@@ -78,7 +78,7 @@ a ``"."``.
 Directory Structure (Example)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Suppose a project sets :ref:`template_dir <config-changelog-template-dir>` to
+Suppose a project sets :ref:`template_dir <config-changelog-template_dir>` to
 ``"templates"`` and has the following structure:
 
 .. code-block::
@@ -289,7 +289,7 @@ generates the release notes when :ref:`creating VCS releases <index-creating-vcs
 
 * the `in-built template`_ is used by default
 * create a file named ``.release_notes.md.j2`` inside the project's
-  :ref:`template_dir <config-changelog-template-dir>` to customize the release notes
+  :ref:`template_dir <config-changelog-template_dir>` to customize the release notes
 
 .. _changelog-templates-customizing-vcs-release-notes-release-notes-context:
 

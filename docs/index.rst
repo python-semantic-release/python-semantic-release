@@ -75,7 +75,7 @@ Python Semantic Release can be configured using a TOML or JSON file; the default
 ``pyproject.toml``, if you wish to use another file you will need to use the ``-c/--config`` option to
 specify the file.
 
-Set :ref:`version_variables <config-version-variables>` to a list, the only element of which should be the location of your
+Set :ref:`version_variables <config-version_variables>` to a list, the only element of which should be the location of your
 version variable inside any Python file, specified in standard ``module:attribute`` syntax:
 
 ``pyproject.toml``::
@@ -96,7 +96,7 @@ You can find out more about this in :ref:`commit-parsing`.
 
 .. seealso::
    - :ref:`config-branches` - Adding configuration for releases from multiple branches.
-   - :ref:`commit_parser <config-commit-parser>` - use a different parser for commit messages.
+   - :ref:`commit_parser <config-commit_parser>` - use a different parser for commit messages.
      For example, Python Semantic Release also ships with emoji and scipy-style parsers.
    - :ref:`remote.type <config-remote-type>` - specify the type of your remote VCS.
 
@@ -159,7 +159,7 @@ and changelogs. The user has three options to push changes to the repository:
    - :ref:`Changelog <config-changelog>` - customize your project's changelog.
    - :ref:`Customizing VCS Release Notes <changelog-templates-customizing-vcs-release-notes>` - customize
      the VCS release notes.
-   - :ref:`upload_to_vcs_release <config-publish-upload-to-vcs-release>` -
+   - :ref:`upload_to_vcs_release <config-publish-upload_to_vcs_release>` -
      enable/disable uploading artefacts to VCS releases
    - :ref:`version --vcs-release/--no-vcs-release <cmd-version-option-vcs-release>` - enable/disable VCS release
      creation.
