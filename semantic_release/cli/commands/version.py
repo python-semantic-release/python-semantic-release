@@ -413,26 +413,28 @@ def version(  # noqa: C901
     * Create a release (if supported) in the remote VCS for this tag
     """
     ctx = click.get_current_context()
-    runtime = cli_ctx.runtime_ctx
-    translator = runtime.version_translator
+
+    # Enable any cli overrides of configuration before asking for the runtime context
+    config = cli_ctx.raw_config
 
     # We can short circuit updating the release if we are only printing the last released version
     if print_last_released or print_last_released_tag:
         # TODO: get tag format a better way
-        if not (last_release := last_released(runtime.repo_dir, translator.tag_format)):
+        if not (
+            last_release := last_released(config.repo_dir, tag_format=config.tag_format)
+        ):
             log.warning("No release tags found.")
             return
 
         click.echo(last_release[0] if print_last_released_tag else last_release[1])
         return
 
+    # TODO: figure out --print of next version with & without branch validation
+    # do you always need a prerelease token if its not --as-prerelease?
+    runtime = cli_ctx.runtime_ctx
+    translator = runtime.version_translator
+
     parser = runtime.commit_parser
-    forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
-    prerelease = is_forced_prerelease(
-        as_prerelease=as_prerelease,
-        forced_level_bump=forced_level_bump,
-        prerelease=runtime.prerelease,
-    )
     hvcs_client = runtime.hvcs_client
     assets = runtime.assets
     commit_author = runtime.commit_author
@@ -441,6 +443,13 @@ def version(  # noqa: C901
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
     gha_output = VersionGitHubActionsOutput(released=False)
+
+    forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
+    prerelease = is_forced_prerelease(
+        as_prerelease=as_prerelease,
+        forced_level_bump=forced_level_bump,
+        prerelease=runtime.prerelease,
+    )
 
     if prerelease_token:
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
