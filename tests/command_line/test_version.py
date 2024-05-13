@@ -632,13 +632,13 @@ def test_version_runs_build_command_w_user_env(
         "tool.semantic_release.build_command_env",
         [
             # Includes arbitrary whitespace which will be removed
-            " MY_CUSTOM_VARIABLE ",             # detect and pass from environment
-            " OVERWRITTEN_VAR = overrided",     # pass hardcoded value which overrides environment
-            " SET_AS_EMPTY_VAR = ",             # keep variable initialized but as empty string
-            " HARDCODED_VAR=hardcoded ",        # pass hardcoded value that doesn't override anything
-            "VAR_W_EQUALS = a-var===condition", # only splits on 1st equals sign
-            "=ignored-invalid-named-var",       # TODO: validation error instead, but currently just ignore
-        ]
+            " MY_CUSTOM_VARIABLE ",  # detect and pass from environment
+            " OVERWRITTEN_VAR = overrided",  # pass hardcoded value which overrides environment
+            " SET_AS_EMPTY_VAR = ",  # keep variable initialized but as empty string
+            " HARDCODED_VAR=hardcoded ",  # pass hardcoded value that doesn't override anything
+            "VAR_W_EQUALS = a-var===condition",  # only splits on 1st equals sign
+            "=ignored-invalid-named-var",  # TODO: validation error instead, but currently just ignore
+        ],
     )
 
     # Mock out subprocess.run
@@ -649,7 +649,15 @@ def test_version_runs_build_command_w_user_env(
     ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
-            main, [version_subcmd, "--patch", "--no-commit", "--no-tag", "--no-changelog", "--no-push"]
+            main,
+            [
+                version_subcmd,
+                "--patch",
+                "--no-commit",
+                "--no-tag",
+                "--no-changelog",
+                "--no-push",
+            ],
         )
 
         patched_subprocess_run.assert_called_once_with(
