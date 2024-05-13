@@ -2,6 +2,29 @@
 
 
 
+## v9.7.2 (2024-05-13)
+
+### Documentation
+
+* docs(configuration): clarify TOC &amp; alphabetize configuration descriptions ([`19add16`](https://github.com/python-semantic-release/python-semantic-release/commit/19add16dcfdfdb812efafe2d492a933d0856df1d))
+
+* docs(configuration): clarify TOC &amp; standardize heading links ([`3a41995`](https://github.com/python-semantic-release/python-semantic-release/commit/3a4199542d0ea4dbf88fa35e11bec41d0c27dd17))
+
+### Fix
+
+* fix: enable user configuration of `build_command` env vars (#925)
+
+- test(version): add test of user defined env variables in build command
+
+  ref: #922
+
+- fix(version): enable user config of `build_command` env variables
+
+  Resolves: #922
+
+- docs(configuration): document `build_command_env` configuration option ([`6b5b271`](https://github.com/python-semantic-release/python-semantic-release/commit/6b5b271453874b982fbf2827ec1f6be6db1c2cc7))
+
+
 ## v9.7.1 (2024-05-07)
 
 ### Fix
