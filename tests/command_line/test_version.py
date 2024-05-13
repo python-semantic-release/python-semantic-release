@@ -21,7 +21,6 @@ from tests.const import (
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     SUCCESS_EXIT_CODE,
 )
-from tests.fixtures.git_repo import SimulateChangeCommitsNReturnChangelogEntryFn
 from tests.util import (
     actions_output_to_dict,
     flatten_dircmp,
@@ -43,6 +42,7 @@ if TYPE_CHECKING:
         UpdatePyprojectTomlFn,
         UseReleaseNotesTemplateFn,
     )
+    from tests.fixtures.git_repo import SimulateChangeCommitsNReturnChangelogEntryFn
 
 
 version_subcmd = version.name or version.__name__
@@ -759,7 +759,7 @@ def test_custom_release_notes_template(
     # Act
     resp = cli_runner.invoke(main, [version_subcmd, "--skip-build", "--vcs-release"])
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
-    tag = runtime_context_with_no_tags.repo.tags[-1].name
+    tag = repo_with_no_tags_angular_commits.tags[-1].name
 
     release_version = runtime_context_with_no_tags.version_translator.from_tag(tag)
     if release_version is None:
@@ -792,17 +792,15 @@ def test_version_tag_only_push(
     cli_runner: CliRunner,
 ) -> None:
     # Setup
-    runtime_context_with_no_tags = retrieve_runtime_context(
-        repo_with_no_tags_angular_commits
-    )
-    head_before = runtime_context_with_no_tags.repo.head.commit
+    retrieve_runtime_context(repo_with_no_tags_angular_commits)
+    head_before = repo_with_no_tags_angular_commits.head.commit
 
     # Act
     args = [version_subcmd, "--tag", "--no-commit", "--skip-build", "--no-vcs-release"]
     resp = cli_runner.invoke(main, args)
 
-    tag_after = runtime_context_with_no_tags.repo.tags[-1].name
-    head_after = runtime_context_with_no_tags.repo.head.commit
+    tag_after = repo_with_no_tags_angular_commits.tags[-1].name
+    head_after = repo_with_no_tags_angular_commits.head.commit
 
     # Assert
     assert tag_after == "v0.1.0"
@@ -825,9 +823,7 @@ def test_version_only_update_files_no_git_actions(
     example_changelog_md: Path,
 ) -> None:
     # Setup
-    runtime_context_with_tags = retrieve_runtime_context(
-        repo_with_single_branch_and_prereleases_angular_commits
-    )
+    retrieve_runtime_context(repo_with_single_branch_and_prereleases_angular_commits)
     # Remove the previously created changelog to allow for it to be generated
     example_changelog_md.unlink()
 
@@ -837,15 +833,15 @@ def test_version_only_update_files_no_git_actions(
     remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir), dst=tempdir)
 
-    head_before = runtime_context_with_tags.repo.head.commit
-    tags_before = runtime_context_with_tags.repo.tags
+    head_before = repo_with_single_branch_and_prereleases_angular_commits.head.commit
+    tags_before = repo_with_single_branch_and_prereleases_angular_commits.tags
 
     # Act
     args = [version_subcmd, "--minor", "--no-tag", "--no-commit", "--skip-build"]
     resp = cli_runner.invoke(main, args)
 
-    tags_after = runtime_context_with_tags.repo.tags
-    head_after = runtime_context_with_tags.repo.head.commit
+    tags_after = repo_with_single_branch_and_prereleases_angular_commits.tags
+    head_after = repo_with_single_branch_and_prereleases_angular_commits.head.commit
 
     # Assert
     assert tags_before == tags_after

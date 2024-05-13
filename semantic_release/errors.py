@@ -12,6 +12,10 @@ class InvalidConfiguration(SemanticReleaseBaseError):
     """Raised when configuration is deemed invalid"""
 
 
+class MissingGitRemote(SemanticReleaseBaseError):
+    """Raised when repository is missing the configured remote origin or upstream"""
+
+
 class InvalidVersion(ValueError, SemanticReleaseBaseError):
     """
     Raised when Version.parse attempts to parse a string containing
@@ -24,6 +28,10 @@ class NotAReleaseBranch(InvalidConfiguration):
     Raised when semantic_release is invoked on a branch which isn't configured for
     releases
     """
+
+
+class DetachedHeadGitError(SemanticReleaseBaseError):
+    """Raised when the git repository is in a detached HEAD state"""
 
 
 class CommitParseError(SemanticReleaseBaseError):
