@@ -14,7 +14,11 @@ from semantic_release.cli.config import (
     RuntimeContext,
 )
 from semantic_release.cli.util import load_raw_config_file, rprint
-from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
+from semantic_release.errors import (
+    DetachedHeadGitError,
+    InvalidConfiguration,
+    NotAReleaseBranch,
+)
 
 if TYPE_CHECKING:
     from semantic_release.cli.config import GlobalCommandLineOptions
@@ -30,10 +34,17 @@ class CliContextObj:
         logger: logging.Logger,
         global_opts: GlobalCommandLineOptions,
     ) -> None:
-        self._runtime_ctx: RuntimeContext | None = None
         self.ctx = ctx
         self.logger = logger
         self.global_opts = global_opts
+        self._raw_config: RawConfig | None = None
+        self._runtime_ctx: RuntimeContext | None = None
+
+    @property
+    def raw_config(self) -> RawConfig:
+        if self._raw_config is None:
+            self._raw_config = self._init_raw_config()
+        return self._raw_config
 
     @property
     def runtime_ctx(self) -> RuntimeContext:
@@ -45,7 +56,7 @@ class CliContextObj:
             self._runtime_ctx = self._init_runtime_ctx()
         return self._runtime_ctx
 
-    def _init_runtime_ctx(self) -> RuntimeContext:
+    def _init_raw_config(self) -> RawConfig:
         config_path = Path(self.global_opts.config_file)
         conf_file_exists = config_path.exists()
         was_conf_file_user_provided = bool(
@@ -56,6 +67,7 @@ class CliContextObj:
             )
         )
 
+        # TODO: Evaluate Exeception catches
         try:
             if was_conf_file_user_provided and not conf_file_exists:
                 raise FileNotFoundError(
@@ -70,9 +82,23 @@ class CliContextObj:
                     "configuration empty, falling back to default configuration"
                 )
 
-            raw_config = RawConfig.model_validate(config_obj)
+            return RawConfig.model_validate(config_obj)
+        except FileNotFoundError as exc:
+            click.echo(str(exc), err=True)
+            self.ctx.exit(2)
+        except (
+            ValidationError,
+            InvalidConfiguration,
+            InvalidGitRepositoryError,
+        ) as exc:
+            click.echo(str(exc), err=True)
+            self.ctx.exit(1)
+
+    def _init_runtime_ctx(self) -> RuntimeContext:
+        # TODO: Evaluate Exception catches
+        try:
             runtime = RuntimeContext.from_raw_config(
-                raw_config,
+                self.raw_config,
                 global_cli_options=self.global_opts,
             )
         except NotAReleaseBranch as exc:
@@ -81,13 +107,11 @@ class CliContextObj:
             # multibranch CI it might be desirable to run a non-release branch's pipeline
             # without specifying conditional execution of PSR based on branch name
             self.ctx.exit(2 if self.global_opts.strict else 0)
-        except FileNotFoundError as exc:
-            click.echo(str(exc), err=True)
-            self.ctx.exit(2)
         except (
-            ValidationError,
+            DetachedHeadGitError,
             InvalidConfiguration,
             InvalidGitRepositoryError,
+            ValidationError,
         ) as exc:
             click.echo(str(exc), err=True)
             self.ctx.exit(1)
