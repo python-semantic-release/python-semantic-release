@@ -139,7 +139,7 @@ This setting is discussed in more detail at :ref:`multibranch-releases`
 
 ----
 
-.. _config-build-command:
+.. _config-build_command:
 
 ``build_command``
 """""""""""""""""
@@ -155,6 +155,9 @@ version. The following table summarizes all the environment variables that
 are passed on to the ``build_command`` runtime if they exist in the parent
 process.
 
+If you would like to pass additional environment variables to your build
+command, see :ref:`config-build_command_env`.
+
 ========================  ======================================================================
 Variable Name             Description
 ========================  ======================================================================
@@ -169,6 +172,37 @@ PATH                      Pass-through ``PATH`` of parent process
 PSR_DOCKER_GITHUB_ACTION  Pass-through ``true`` if exists in process env, unset otherwise
 VIRTUAL_ENV               Pass-through ``VIRTUAL_ENV`` if exists in process env, unset otherwise
 ========================  ======================================================================
+
+**Default:** ``None`` (not specified)
+
+----
+
+.. _config-build_command_env:
+
+``build_command_env``
+"""""""""""""""""""""
+
+**Type:** ``Optional[list[str]]``
+
+List of environment variables to include or pass-through on to the build command that executes
+during :ref:`cmd-version`.
+
+This configuration option allows the user to extend the list of environment variables
+from the table above in :ref:`config-build_command`. The input is a list of strings
+where each individual string handles a single variable definition. There are two formats
+accepted and are detailed in the following table:
+
+==================  ===================================================================
+FORMAT              Description
+==================  ===================================================================
+``VAR_NAME``        Detects value from the PSR process environment, and passes value to
+                    ``build_command`` process
+
+``VAR_NAME=value``  Sets variable name to value inside of ``build_command`` process
+==================  ===================================================================
+
+.. note:: Although variable name capitalization is not required, it is recommended as
+          to be in-line with the POSIX-compliant recommendation for shell variable names.
 
 **Default:** ``None`` (not specified)
 
