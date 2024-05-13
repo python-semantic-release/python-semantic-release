@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import click
+from git import Repo
 
 from semantic_release.cli.util import noop_report
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
@@ -57,14 +58,16 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
     """Build and publish a distribution to a VCS release."""
     ctx = click.get_current_context()
     runtime = cli_ctx.runtime_ctx
-    repo = runtime.repo
     hvcs_client = runtime.hvcs_client
     translator = runtime.version_translator
     dist_glob_patterns = runtime.dist_glob_patterns
 
+    with Repo(str(runtime.repo_dir)) as git_repo:
+        repo_tags = git_repo.tags
+
     if tag == "latest":
         try:
-            tag = str(tags_and_versions(repo.tags, translator)[0][0])
+            tag = str(tags_and_versions(repo_tags, translator)[0][0])
         except IndexError:
             ctx.fail(
                 str.join(
@@ -77,7 +80,7 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
                 )
             )
 
-    if tag not in {tag.name for tag in repo.tags}:
+    if tag not in {tag.name for tag in repo_tags}:
         log.error("Tag '%s' not found in local repository!", tag)
         ctx.exit(1)
 

@@ -293,7 +293,7 @@ def test_custom_release_notes_template(
 
     # Arrange
     release_history = get_release_history_from_context(runtime_context_with_tags)
-    tag = runtime_context_with_tags.repo.tags[-1].name
+    tag = repo_with_single_branch_and_prereleases_angular_commits.tags[-1].name
 
     version = runtime_context_with_tags.version_translator.from_tag(tag)
     if version is None:

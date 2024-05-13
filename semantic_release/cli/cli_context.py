@@ -14,7 +14,11 @@ from semantic_release.cli.config import (
     RuntimeContext,
 )
 from semantic_release.cli.util import load_raw_config_file, rprint
-from semantic_release.errors import InvalidConfiguration, NotAReleaseBranch
+from semantic_release.errors import (
+    DetachedHeadGitError,
+    InvalidConfiguration,
+    NotAReleaseBranch,
+)
 
 if TYPE_CHECKING:
     from semantic_release.cli.config import GlobalCommandLineOptions
@@ -75,7 +79,7 @@ class CliContextObj:
                 raw_config,
                 global_cli_options=self.global_opts,
             )
-        except NotAReleaseBranch as exc:
+        except (DetachedHeadGitError, NotAReleaseBranch) as exc:
             rprint(f"[bold {'red' if self.global_opts.strict else 'orange1'}]{exc!s}")
             # If not strict, exit 0 so other processes can continue. For example, in
             # multibranch CI it might be desirable to run a non-release branch's pipeline

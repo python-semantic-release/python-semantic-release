@@ -111,7 +111,7 @@ def write_changelog_files(
     hvcs_client: HvcsBase,
     noop: bool = False,
 ) -> list[str]:
-    project_dir = Path(runtime_ctx.repo.working_dir)
+    project_dir = Path(runtime_ctx.repo_dir)
     template_dir = runtime_ctx.template_dir
 
     changelog_context = make_changelog_context(
