@@ -9,6 +9,7 @@ from contextlib import contextmanager, suppress
 from textwrap import indent
 from typing import TYPE_CHECKING, Tuple
 
+from git import Repo
 from pydantic.dataclasses import dataclass
 
 from semantic_release.changelog.context import make_changelog_context
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import Result as ClickInvokeResult
-    from git import Commit, Repo
+    from git import Commit
 
     from semantic_release.cli.config import RuntimeContext
     from semantic_release.commit_parser.token import ParseError
@@ -173,12 +174,13 @@ def actions_output_to_dict(output: str) -> dict[str, str]:
 
 
 def get_release_history_from_context(runtime_context: RuntimeContext) -> ReleaseHistory:
-    rh = ReleaseHistory.from_git_history(
-        runtime_context.repo,
-        runtime_context.version_translator,
-        runtime_context.commit_parser,
-        runtime_context.changelog_excluded_commit_patterns,
-    )
+    with Repo(str(runtime_context.repo_dir)) as git_repo:
+        rh = ReleaseHistory.from_git_history(
+            git_repo,
+            runtime_context.version_translator,
+            runtime_context.commit_parser,
+            runtime_context.changelog_excluded_commit_patterns,
+        )
     changelog_context = make_changelog_context(runtime_context.hvcs_client, rh)
     changelog_context.bind_to_environment(runtime_context.template_environment)
     return rh

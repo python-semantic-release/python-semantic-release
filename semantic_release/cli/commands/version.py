@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 import click
 import shellingham  # type: ignore[import]
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
+from git import Repo
 from git.exc import GitCommandError
 from requests import HTTPError
 
@@ -25,16 +26,20 @@ from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import BuildDistributionsError, UnexpectedResponse
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
-from semantic_release.version import Version, next_version, tags_and_versions
+from semantic_release.version import (
+    Version,
+    VersionTranslator,
+    next_version,
+    tags_and_versions,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pathlib import Path
     from typing import ContextManager, Iterable, Mapping
 
-    from git import Repo
     from git.refs.tag import Tag
 
     from semantic_release.cli.cli_context import CliContextObj
-    from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
 
 
@@ -64,17 +69,20 @@ def is_forced_prerelease(
     )
 
 
-def last_released(
-    repo: Repo, translator: VersionTranslator
-) -> tuple[Tag, Version] | None:
-    ts_and_vs = tags_and_versions(repo.tags, translator)
+def last_released(repo_dir: Path, tag_format: str) -> tuple[Tag, Version] | None:
+    with Repo(str(repo_dir)) as git_repo:
+        ts_and_vs = tags_and_versions(
+            git_repo.tags, VersionTranslator(tag_format=tag_format)
+        )
+
     return ts_and_vs[0] if ts_and_vs else None
 
 
 def version_from_forced_level(
-    repo: Repo, forced_level_bump: LevelBump, translator: VersionTranslator
+    repo_dir: Path, forced_level_bump: LevelBump, translator: VersionTranslator
 ) -> Version:
-    ts_and_vs = tags_and_versions(repo.tags, translator)
+    with Repo(str(repo_dir)) as git_repo:
+        ts_and_vs = tags_and_versions(git_repo.tags, translator)
 
     # If we have no tags, return the default version
     if not ts_and_vs:
@@ -110,15 +118,13 @@ def version_from_forced_level(
 
 
 def apply_version_to_source_files(
-    repo: Repo,
+    repo_dir: Path,
     version_declarations: Iterable[VersionDeclarationABC],
     version: Version,
     noop: bool = False,
 ) -> list[str]:
-    working_dir = os.getcwd() if repo.working_dir is None else repo.working_dir
-
     paths = [
-        str(declaration.path.resolve().relative_to(working_dir))
+        str(declaration.path.resolve().relative_to(repo_dir))
         for declaration in version_declarations
     ]
 
@@ -405,12 +411,12 @@ def version(  # noqa: C901
     """
     ctx = click.get_current_context()
     runtime = cli_ctx.runtime_ctx
-    repo = runtime.repo
     translator = runtime.version_translator
 
     # We can short circuit updating the release if we are only printing the last released version
     if print_last_released or print_last_released_tag:
-        if not (last_release := last_released(repo, translator)):
+        # TODO: get tag format a better way
+        if not (last_release := last_released(runtime.repo_dir, translator.tag_format)):
             log.warning("No release tags found.")
             return
 
@@ -425,7 +431,6 @@ def version(  # noqa: C901
         prerelease=runtime.prerelease,
     )
     hvcs_client = runtime.hvcs_client
-    changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
     assets = runtime.assets
     commit_author = runtime.commit_author
     commit_message = runtime.commit_message
@@ -454,14 +459,15 @@ def version(  # noqa: C901
         make_vcs_release &= push_changes
 
     if not forced_level_bump:
-        new_version = next_version(
-            repo=repo,
-            translator=translator,
-            commit_parser=parser,
-            prerelease=prerelease,
-            major_on_zero=major_on_zero,
-            allow_zero_version=runtime.allow_zero_version,
-        )
+        with Repo(str(runtime.repo_dir)) as git_repo:
+            new_version = next_version(
+                repo=git_repo,
+                translator=translator,
+                commit_parser=parser,
+                prerelease=prerelease,
+                major_on_zero=major_on_zero,
+                allow_zero_version=runtime.allow_zero_version,
+            )
     else:
         log.warning(
             "Forcing a '%s' release due to '--%s' command-line flag",
@@ -474,7 +480,9 @@ def version(  # noqa: C901
         )
 
         new_version = version_from_forced_level(
-            repo=repo, forced_level_bump=forced_level_bump, translator=translator
+            repo_dir=runtime.repo_dir,
+            forced_level_bump=forced_level_bump,
+            translator=translator,
         )
 
         # We only turn the forced version into a prerelease if the user has specified
@@ -514,10 +522,11 @@ def version(  # noqa: C901
     # Print the new version so that command-line output capture will work
     click.echo(version_to_print)
 
-    # TODO: performance improvement - cache the result of tags_and_versions (previously done in next_version())
-    previously_released_versions = {
-        v for _, v in tags_and_versions(repo.tags, translator)
-    }
+    with Repo(str(runtime.repo_dir)) as git_repo:
+        # TODO: performance improvement - cache the result of tags_and_versions (previously done in next_version())
+        previously_released_versions = {
+            v for _, v in tags_and_versions(git_repo.tags, translator)
+        }
 
     # If the new version has already been released, we fail and abort if strict;
     # otherwise we exit with 0.
@@ -540,12 +549,13 @@ def version(  # noqa: C901
     if print_only or print_only_tag:
         return
 
-    release_history = ReleaseHistory.from_git_history(
-        repo=repo,
-        translator=translator,
-        commit_parser=parser,
-        exclude_commit_patterns=changelog_excluded_commit_patterns,
-    )
+    with Repo(str(runtime.repo_dir)) as git_repo:
+        release_history = ReleaseHistory.from_git_history(
+            repo=git_repo,
+            translator=translator,
+            commit_parser=parser,
+            exclude_commit_patterns=runtime.changelog_excluded_commit_patterns,
+        )
 
     rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
 
@@ -578,7 +588,7 @@ def version(  # noqa: C901
 
     # Apply the new version to the source files
     files_with_new_version_written = apply_version_to_source_files(
-        repo=repo,
+        repo_dir=runtime.repo_dir,
         version_declarations=runtime.version_declarations,
         version=new_version,
         noop=opts.noop,
@@ -623,11 +633,12 @@ def version(  # noqa: C901
         # repo.index.add(all_paths_to_add, force=False)  # noqa: ERA001
         # but since 'force' is deliberately ineffective (as in docstring) in gitpython 3.1.18
         # we have to do manually add each filepath, and catch the exception if it is an ignored file
-        for updated_path in all_paths_to_add:
-            try:
-                repo.git.add(updated_path)
-            except GitCommandError:  # noqa: PERF203
-                log.warning("Failed to add path (%s) to index", updated_path)
+        with Repo(str(runtime.repo_dir)) as git_repo:
+            for updated_path in all_paths_to_add:
+                try:
+                    git_repo.git.add(updated_path)
+                except GitCommandError:  # noqa: PERF203
+                    log.warning("Failed to add path (%s) to index", updated_path)
 
     def custom_git_environment() -> ContextManager[None]:
         """
@@ -636,21 +647,25 @@ def version(  # noqa: C901
         we need to throw it away and re-create it in
         order to use it again
         """
-        return (
-            nullcontext()
-            if not commit_author
-            else repo.git.custom_environment(
-                GIT_AUTHOR_NAME=commit_author.name,
-                GIT_AUTHOR_EMAIL=commit_author.email,
-                GIT_COMMITTER_NAME=commit_author.name,
-                GIT_COMMITTER_EMAIL=commit_author.email,
+        with Repo(str(runtime.repo_dir)) as git_repo:
+            return (
+                nullcontext()
+                if not commit_author
+                else git_repo.git.custom_environment(
+                    GIT_AUTHOR_NAME=commit_author.name,
+                    GIT_AUTHOR_EMAIL=commit_author.email,
+                    GIT_COMMITTER_NAME=commit_author.name,
+                    GIT_COMMITTER_EMAIL=commit_author.email,
+                )
             )
-        )
 
     # If we haven't modified any source code then we skip trying to make a commit
     # and any tag that we apply will be to the HEAD commit (made outside of
     # running PSR
-    if not repo.index.diff("HEAD"):
+    with Repo(str(runtime.repo_dir)) as git_repo:
+        curr_index_diff = git_repo.index.diff("HEAD")
+
+    if not curr_index_diff:
         log.info("No local changes to add to any commit, skipping")
 
     elif commit_changes and opts.noop:
@@ -686,8 +701,8 @@ def version(  # noqa: C901
         )
 
     elif commit_changes:
-        with custom_git_environment():
-            repo.git.commit(
+        with Repo(str(runtime.repo_dir)) as git_repo, custom_git_environment():
+            git_repo.git.commit(
                 m=commit_message.format(version=new_version),
                 date=int(commit_date.timestamp()),
                 no_verify=no_verify,
@@ -709,14 +724,17 @@ def version(  # noqa: C901
                 )
             )
         else:
-            with custom_git_environment():
-                repo.git.tag("-a", new_version.as_tag(), m=new_version.as_tag())
+            with Repo(str(runtime.repo_dir)) as git_repo, custom_git_environment():
+                git_repo.git.tag("-a", new_version.as_tag(), m=new_version.as_tag())
 
     if push_changes:
         remote_url = runtime.hvcs_client.remote_url(
             use_token=not runtime.ignore_token_for_push
         )
-        active_branch = repo.active_branch.name
+
+        with Repo(str(runtime.repo_dir)) as git_repo:
+            active_branch = git_repo.active_branch.name
+
         if commit_changes and opts.noop:
             noop_report(
                 indented(
@@ -727,7 +745,8 @@ def version(  # noqa: C901
                 )
             )
         elif commit_changes:
-            repo.git.push(remote_url, active_branch)
+            with Repo(str(runtime.repo_dir)) as git_repo:
+                git_repo.git.push(remote_url, active_branch)
 
         if create_tag and opts.noop:
             noop_report(
@@ -744,7 +763,8 @@ def version(  # noqa: C901
             # Resolves issue #803 where a tag that already existed was pushed and caused
             # a failure. Its not clear why there was an incorrect tag (likely user error change)
             # but we will avoid possibly pushing an separate tag that we didn't create.
-            repo.git.push(remote_url, "tag", new_version.as_tag())
+            with Repo(str(runtime.repo_dir)) as git_repo:
+                git_repo.git.push(remote_url, "tag", new_version.as_tag())
 
     # Update GitHub Actions output value now that release has occurred
     gha_output.released = True

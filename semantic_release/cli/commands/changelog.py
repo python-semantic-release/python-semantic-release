@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import click
+from git import Repo
 
 from semantic_release.changelog import ReleaseHistory
 from semantic_release.cli.changelog_writer import (
@@ -64,12 +65,13 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
     translator = runtime.version_translator
     hvcs_client = runtime.hvcs_client
 
-    release_history = ReleaseHistory.from_git_history(
-        repo=runtime.repo,
-        translator=translator,
-        commit_parser=runtime.commit_parser,
-        exclude_commit_patterns=runtime.changelog_excluded_commit_patterns,
-    )
+    with Repo(str(runtime.repo_dir)) as git_repo:
+        release_history = ReleaseHistory.from_git_history(
+            repo=git_repo,
+            translator=translator,
+            commit_parser=runtime.commit_parser,
+            exclude_commit_patterns=runtime.changelog_excluded_commit_patterns,
+        )
 
     write_changelog_files(
         runtime_ctx=runtime,
