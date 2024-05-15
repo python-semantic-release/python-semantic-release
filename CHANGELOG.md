@@ -2,6 +2,13 @@
 
 
 
+## v9.7.3 (2024-05-15)
+
+### Fix
+
+* fix: enabled `prelease-token` parameter in github action (#929) ([`1bb26b0`](https://github.com/python-semantic-release/python-semantic-release/commit/1bb26b0762d94efd97c06a3f1b6b10fb76901f6d))
+
+
 ## v9.7.2 (2024-05-13)
 
 ### Documentation
