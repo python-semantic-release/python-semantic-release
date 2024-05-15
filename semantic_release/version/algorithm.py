@@ -113,13 +113,21 @@ def _bfs_for_latest_version_in_history(
             log.debug("commit %s doesn't match any tags", node.hexsha)
 
             # Add all parent commits to the queue if they haven't been visited
-            for parent in node.parents:
-                if parent in visited:
-                    log.debug("parent commit %s already visited", node.hexsha)
-                    continue
+            try:
+                for parent in node.parents:
+                    if parent in visited:
+                        log.debug("parent commit %s already visited", node.hexsha)
+                        continue
 
-                log.debug("queuing parent commit %s", parent.hexsha)
-                q.put(parent)
+                    log.debug("queuing parent commit %s", parent.hexsha)
+                    q.put(parent)
+            except ValueError:
+                log.error(
+                    "It is possible that the git clone fetch depth was not set to 0. "
+                    "On GitHub use `fetch-depth: 0`. On GitLab set the variable "
+                    "`GIT_DEPTH: 0`"
+                )
+                raise
 
         return result
 
