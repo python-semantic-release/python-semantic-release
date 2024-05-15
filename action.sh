@@ -50,6 +50,10 @@ if [ -n "$INPUT_BUILD_METADATA" ]; then
 	ARGS+=("--build-metadata $INPUT_BUILD_METADATA")
 fi
 
+if [ -n "$INPUT_PRERELEASE_TOKEN" ]; then
+	ARGS+=("--prerelease-token $INPUT_PRERELEASE_TOKEN")
+fi
+
 # Change to configured directory
 cd "${INPUT_DIRECTORY}"
 
