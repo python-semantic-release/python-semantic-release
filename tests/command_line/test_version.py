@@ -5,7 +5,9 @@ import filecmp
 import os
 import re
 import shutil
+from pathlib import Path
 from subprocess import CompletedProcess
+from textwrap import dedent
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -24,7 +26,6 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
@@ -545,6 +546,55 @@ def test_version_prints_current_version_if_no_new_version(
     assert result.exit_code == 0
     assert "no release will be made" in result.stderr.lower()
     assert result.stdout == "1.2.0-alpha.2\n"
+
+
+def test_version_version_no_verify(
+    repo_with_single_branch_angular_commits: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    # setup: set configuration setting
+    update_pyproject_toml("tool.semantic_release.no_git_verify", True)
+    repo_with_single_branch_angular_commits.git.commit(
+        m="chore: adjust project configuration for --no-verify release commits", a=True
+    )
+    # create executable pre-commit script
+    precommit_hook = Path(
+        repo_with_single_branch_angular_commits.git_dir, "hooks", "pre-commit"
+    )
+    precommit_hook.parent.mkdir(parents=True, exist_ok=True)
+    precommit_hook.write_text(
+        dedent(
+            """\
+            #!/bin/sh
+            echo >&2 "Always fail pre-commit" && exit 1;
+            """
+        )
+    )
+    precommit_hook.chmod(0o754)
+    repo_with_single_branch_angular_commits.git.config(
+        "core.hookspath",
+        str(
+            precommit_hook.parent.relative_to(
+                repo_with_single_branch_angular_commits.working_dir
+            )
+        ),
+        local=True,
+    )
+    # Take measurement beforehand
+    head_before = repo_with_single_branch_angular_commits.head.commit
+
+    # Execute
+    result = cli_runner.invoke(
+        main, [version_subcmd, "--patch", "--no-tag", "--no-push"]
+    )
+
+    # Evaluate
+    head_after = repo_with_single_branch_angular_commits.head.commit
+
+    assert head_before != head_after  # A commit has been made
+    assert head_before in repo_with_single_branch_angular_commits.head.commit.parents
+    assert result.exit_code == 0
 
 
 @pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
