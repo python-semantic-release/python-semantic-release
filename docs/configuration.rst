@@ -702,6 +702,24 @@ When :ref:`config-allow_zero_version` is set to ``false``, this setting is ignor
 
 ----
 
+.. _config-no_git_verify:
+
+``no_git_verify``
+"""""""""""""""""
+
+**Type:** ``bool``
+
+This flag is passed along to ``git`` upon performing a ``git commit`` during :ref:`cmd-version`.
+
+When true, it will bypass any git hooks that are set for the repository when Python Semantic
+Release makes a version commit.  When false, the commit is performed as normal. This option
+has no effect when there are not any git hooks configured nor when the ``--no-commit`` option
+is passed.
+
+**Default:** ``false``
+
+----
+
 .. _config-publish:
 
 ``publish``
