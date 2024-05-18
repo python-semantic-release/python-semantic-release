@@ -72,6 +72,7 @@ jobs:
           only-labels: awaiting-reply
           stale-issue-label: unresponsive
           stale-pr-label: unresponsive
+          remove-stale-when-updated: awaiting-reply
           days-before-stale: ${{ env.UNRESPONSIVE_WARNING_DAYS }}
           days-before-close: ${{ env.UNRESPONSIVE_CLOSURE_DAYS }}
           stale-issue-message: >
