@@ -52,10 +52,12 @@ jobs:
           days-before-pr-close: ${{ env.STALE_PR_CLOSURE_DAYS }}
           exempt-pr-labels: confirmed, dependabot
           stale-pr-message: >
-            This PR is stale because it has not been confirmed or planned by the maintainers
-            and has been open ${{ env.STALE_PR_WARNING_DAYS }} days with no recent activity.
-            It will be closed in ${{ env.STALE_PR_CLOSURE_DAYS }} days, if no further
-            activity occurs. Thank you for your contributions.
+            This PR is stale because it has not been confirmed or considered ready for merge
+            by the maintainers but has been open ${{ env.STALE_PR_WARNING_DAYS }} days with
+            no recent activity. It will be closed in ${{ env.STALE_PR_CLOSURE_DAYS }} days,
+            if no further activity occurs. Please make sure to add the proper testing, docs,
+            and descriptions of changes before your PR can be merged. Thank you for your
+            contributions.
           close-pr-message: >
             This PR was closed due to lack of activity.
 
