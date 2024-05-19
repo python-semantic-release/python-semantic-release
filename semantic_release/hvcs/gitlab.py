@@ -100,7 +100,7 @@ class Gitlab(RemoteHvcsBase):
         # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
         client.projects.get(self.owner + "/" + self.repo_name).releases.create(
             {
-                "name": "Release " + tag,
+                "name": tag,
                 "tag_name": tag,
                 "tag_message": tag,
                 "description": release_notes,
