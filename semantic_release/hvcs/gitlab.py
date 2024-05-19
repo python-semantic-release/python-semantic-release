@@ -18,6 +18,8 @@ from semantic_release.hvcs.util import suppress_not_found
 if TYPE_CHECKING:
     from typing import Any, Callable
 
+    from gitlab.v4.objects import Project as GitLabProject
+
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +48,8 @@ class Gitlab(RemoteHvcsBase):
     ) -> None:
         super().__init__(remote_url)
         self.token = token
+        self.project_namespace = f"{self.owner}/{self.repo_name}"
+        self._project: GitLabProject | None = None
 
         domain_url = self._normalize_url(
             hvcs_domain
@@ -64,8 +68,14 @@ class Gitlab(RemoteHvcsBase):
             ).url.rstrip("/")
         )
 
-        self._client = gitlab.Gitlab(self.hvcs_domain.url)
+        self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
         self._api_url = parse_url(self._client.url)
+
+    @property
+    def project(self):
+        if self._project is None:
+            self._project = self._client.projects.get(self.project_namespace)
+        return self._project
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
@@ -94,11 +104,9 @@ class Gitlab(RemoteHvcsBase):
         :param prerelease: This parameter has no effect
         :return: The tag of the release
         """
-        client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
-        client.auth()
         log.info("Creating release for %s", tag)
         # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
-        client.projects.get(self.owner + "/" + self.repo_name).releases.create(
+        self.project.releases.create(
             {
                 "name": tag,
                 "tag_name": tag,
@@ -118,25 +126,17 @@ class Gitlab(RemoteHvcsBase):
         :param tag: Tag to get release for
         :return: ID of release, if found, else None
         """
-        client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
-        client.auth()
-        proj_release = client.projects.get(self.owner + "/" + self.repo_name).releases.get(
-            tag
-        )
+        proj_release = self.project.releases.get(tag)
         return proj_release.asdict().get("commit.id")
 
-    # TODO: make str types accepted here
     @logged_function(log)
     def edit_release_notes(  # type: ignore[override]
         self,
         release_id: str,
         release_notes: str,
     ) -> str:
-        client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
-        client.auth()
         log.info("Updating release %s", release_id)
-
-        client.projects.get(self.owner + "/" + self.repo_name).releases.update(
+        self.project.releases.update(
             release_id,
             {
                 "description": release_notes,
@@ -154,13 +154,12 @@ class Gitlab(RemoteHvcsBase):
             )
         except gitlab.GitlabCreateError:
             log.info(
-                "Release %s could not be created for project %s/%s",
+                "New release %s could not be created for project %s",
                 tag,
-                self.owner,
-                self.repo_name,
+                self.project_namespace,
             )
-        release_commit_id = self.get_release_id_by_tag(tag)
-        if release_commit_id is None:
+
+        if (release_commit_id := self.get_release_id_by_tag(tag)) is None:
             raise ValueError(
                 f"release commit id for tag {tag} not found, and could not be created"
             )
@@ -176,7 +175,7 @@ class Gitlab(RemoteHvcsBase):
 
         return self.create_server_url(
             auth=f"gitlab-ci-token:{self.token}",
-            path=f"{self.owner}/{self.repo_name}.git",
+            path=f"{self.project_namespace}.git",
         )
 
     def compare_url(self, from_rev: str, to_rev: str) -> str:
