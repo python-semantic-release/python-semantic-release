@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import os
-from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from unittest import mock
 
 import gitlab
+import gitlab.exceptions
+import gitlab.v4.objects
 import pytest
 
 from semantic_release.hvcs.gitlab import Gitlab
@@ -141,24 +142,32 @@ class _GitlabProject:
                 pass
 
 
-@contextmanager
-def mock_gitlab(status: str = "success"):
-    with mock.patch("gitlab.Gitlab.auth"), mock.patch(
-        "gitlab.v4.objects.ProjectManager",
-        return_value={
-            f"{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}": _GitlabProject(status)
-        },
-    ):
-        yield
+@pytest.fixture
+def default_gl_project(example_git_https_url: str):
+    return gitlab.Gitlab(url=example_git_https_url).projects.get(
+        f"{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}", lazy=True
+    )
 
 
 @pytest.fixture
-def default_gl_client() -> Generator[Gitlab, None, None]:
-    remote_url = (
-        f"git@{Gitlab.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
+def default_gl_client(
+    example_git_https_url: str,
+    default_gl_project: gitlab.v4.objects.Project,
+) -> Generator[Gitlab, None, None]:
+    gitlab_client = Gitlab(remote_url=example_git_https_url)
+
+    # make sure that when project tries to get the project instance, we return the mock
+    # that we control
+    project_get_mock = mock.patch.object(
+        gitlab_client._client.projects,
+        gitlab_client._client.projects.get.__name__,
+        return_value=default_gl_project,
     )
-    with mock.patch.dict(os.environ, {}, clear=True):
-        yield Gitlab(remote_url=remote_url)
+
+    env_mock = mock.patch.dict(os.environ, {}, clear=True)
+
+    with project_get_mock, env_mock:
+        yield gitlab_client
 
 
 @pytest.mark.parametrize(
@@ -270,6 +279,7 @@ def test_gitlab_client_init_with_invalid_scheme(
 )
 def test_gitlab_get_repository_owner_and_name(
     default_gl_client: Gitlab,
+    example_git_https_url: str,
     patched_os_environ: dict[str, str],
     expected_owner: str | None,
     expected_name: str | None,
@@ -284,7 +294,9 @@ def test_gitlab_get_repository_owner_and_name(
 
     with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         # Execute in mocked environment
-        result = default_gl_client._get_repository_owner_and_name()
+        result = Gitlab(
+            remote_url=example_git_https_url,
+        )._get_repository_owner_and_name()
 
         # Evaluate (expected -> actual)
         assert expected_result == result
@@ -320,15 +332,15 @@ def test_gitlab_get_repository_owner_and_name(
     ],
 )
 def test_remote_url(
-    default_gl_client: Gitlab,
     use_token: bool,
     token: str,
     remote_url: str,
     expected_auth_url: str,
 ):
-    default_gl_client._remote_url = remote_url
-    default_gl_client.token = token
-    assert expected_auth_url == default_gl_client.remote_url(use_token=use_token)
+    with mock.patch.dict(os.environ, {}, clear=True):
+        gl_client = Gitlab(remote_url=remote_url, token=token)
+
+    assert expected_auth_url == gl_client.remote_url(use_token=use_token)
 
 
 def test_compare_url(default_gl_client: Gitlab):
@@ -380,24 +392,67 @@ def test_pull_request_url(default_gl_client: Gitlab, pr_number: int | str):
 
 
 @pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
-def test_create_release_succeeds(default_gl_client: Gitlab, tag):
-    with mock_gitlab():
-        assert tag == default_gl_client.create_release(tag, RELEASE_NOTES)
+def test_create_release_succeeds(
+    default_gl_client: Gitlab, default_gl_project: gitlab.v4.objects.Project, tag: str
+):
+    with mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.create.__name__,
+    ) as mocked_create_release:
+        result = default_gl_client.create_release(tag, RELEASE_NOTES)
+
+        assert tag == result
+        mocked_create_release.assert_called_once_with(
+            {
+                "name": tag,
+                "tag_name": tag,
+                "tag_message": tag,
+                "description": RELEASE_NOTES,
+            }
+        )
 
 
-def test_create_release_fails_with_bad_tag(default_gl_client: Gitlab):
-    with mock_gitlab(), pytest.raises(gitlab.GitlabCreateError):
+def test_create_release_fails_with_bad_tag(
+    default_gl_client: Gitlab,
+    default_gl_project: gitlab.v4.objects.Project,
+):
+    bad_request = gitlab.GitlabCreateError("401 Unauthorized")
+    mock_failed_create = mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.create.__name__,
+        side_effect=bad_request,
+    )
+    with mock_failed_create, pytest.raises(gitlab.GitlabCreateError):
         default_gl_client.create_release(A_BAD_TAG, RELEASE_NOTES)
 
 
 @pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
-def test_update_release_succeeds(default_gl_client: Gitlab, tag: str):
-    with mock_gitlab():
-        assert tag == default_gl_client.edit_release_notes(tag, RELEASE_NOTES)
+def test_update_release_succeeds(
+    default_gl_client: Gitlab, default_gl_project: gitlab.v4.objects.Project, tag: str
+):
+    with mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.update.__name__,
+    ) as mocked_update_release:
+        release_id = default_gl_client.edit_release_notes(tag, RELEASE_NOTES)
+
+        assert tag == release_id
+        mocked_update_release.assert_called_once_with(
+            tag, {"description": RELEASE_NOTES}
+        )
 
 
-def test_update_release_fails_with_missing_tag(default_gl_client: Gitlab):
-    with mock_gitlab(), pytest.raises(gitlab.GitlabUpdateError):
+def test_update_release_fails_with_missing_tag(
+    default_gl_client: Gitlab,
+    default_gl_project: gitlab.v4.objects.Project,
+):
+    mocked_update_release = mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.update.__name__,
+        side_effect=gitlab.GitlabUpdateError,
+    )
+
+    with mocked_update_release, pytest.raises(gitlab.GitlabUpdateError):
         default_gl_client.edit_release_notes(A_MISSING_TAG, RELEASE_NOTES)
 
 
@@ -406,9 +461,13 @@ def test_create_or_update_release_when_create_succeeds(
     default_gl_client: Gitlab, prerelease: bool
 ):
     with mock.patch.object(
-        default_gl_client, "create_release", return_value=A_GOOD_TAG
+        default_gl_client,
+        default_gl_client.create_release.__name__,
+        return_value=A_GOOD_TAG,
     ) as mock_create_release, mock.patch.object(
-        default_gl_client, "edit_release_notes", return_value=A_GOOD_TAG
+        default_gl_client,
+        default_gl_client.edit_release_notes.__name__,
+        return_value=A_GOOD_TAG,
     ) as mock_edit_release_notes:
         # Execute in mock environment
         result = default_gl_client.create_or_update_release(
@@ -423,43 +482,114 @@ def test_create_or_update_release_when_create_succeeds(
         mock_edit_release_notes.assert_not_called()
 
 
+def test_get_release_id_by_tag(
+    default_gl_client: Gitlab,
+    default_gl_project: gitlab.v4.objects.Project,
+):
+    expected_release_id = 1
+    dummy_release = default_gl_project.releases.get(A_GOOD_TAG, lazy=True)
+    dummy_release._attrs["commit.id"] = expected_release_id
+    with mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.get.__name__,
+        return_value=dummy_release,
+    ) as mocked_get_release_id:
+        result = default_gl_client.get_release_id_by_tag(A_GOOD_TAG)
+
+        assert expected_release_id == result
+        mocked_get_release_id.assert_called_once_with(A_GOOD_TAG)
+
+
+def test_get_release_id_by_tag_fails(
+    default_gl_client: Gitlab,
+    default_gl_project: gitlab.v4.objects.Project,
+):
+    mocked_get_release_id = mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.get.__name__,
+        side_effect=gitlab.exceptions.GitlabAuthenticationError,
+    )
+
+    with pytest.raises(
+        gitlab.exceptions.GitlabAuthenticationError
+    ), mocked_get_release_id:
+        default_gl_client.get_release_id_by_tag(A_GOOD_TAG)
+
+
+def test_get_release_id_by_tag_not_found(
+    default_gl_client: Gitlab,
+    default_gl_project: gitlab.v4.objects.Project,
+):
+    mocked_get_release_id = mock.patch.object(
+        default_gl_project.releases,
+        default_gl_project.releases.get.__name__,
+        side_effect=gitlab.exceptions.GitlabGetError,
+    )
+
+    with mocked_get_release_id:
+        result = default_gl_client.get_release_id_by_tag(A_GOOD_TAG)
+
+    assert result is None
+
+
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release_when_create_fails_and_update_succeeds(
-    default_gl_client: Gitlab, prerelease: bool
+    default_gl_client: Gitlab,
+    prerelease: bool,
 ):
+    expected_release_id = 1
     bad_request = gitlab.GitlabCreateError("400 Bad Request")
     with mock.patch.object(
-        default_gl_client, "create_release", side_effect=bad_request
+        default_gl_client,
+        default_gl_client.create_release.__name__,
+        side_effect=bad_request,
     ), mock.patch.object(
-        default_gl_client, "edit_release_notes", return_value=A_GOOD_TAG
+        default_gl_client,
+        default_gl_client.get_release_id_by_tag.__name__,
+        return_value=expected_release_id,
+    ), mock.patch.object(
+        default_gl_client,
+        default_gl_client.edit_release_notes.__name__,
+        return_value=A_GOOD_TAG,
     ) as mock_edit_release_notes:
         # Execute in mock environment
-        result = default_gl_client.create_or_update_release(
+        default_gl_client.create_or_update_release(
             A_GOOD_TAG, RELEASE_NOTES, prerelease
         )
 
         # Evaluate (expected -> actual)
-        assert A_GOOD_TAG == result  # noqa: SIM300
         mock_edit_release_notes.assert_called_once_with(
-            release_id=A_GOOD_TAG, release_notes=RELEASE_NOTES
+            release_id=expected_release_id, release_notes=RELEASE_NOTES
         )
 
 
 @pytest.mark.parametrize("prerelease", (True, False))
 def test_create_or_update_release_when_create_fails_and_update_fails(
-    default_gl_client: Gitlab, prerelease: bool
+    default_gl_client: Gitlab,
+    prerelease: bool,
 ):
     bad_request = gitlab.GitlabCreateError("400 Bad Request")
     not_found = gitlab.GitlabUpdateError("404 Not Found")
+    fake_release_id = 1
+
     create_release_patch = mock.patch.object(
-        default_gl_client, "create_release", side_effect=bad_request
+        default_gl_client,
+        default_gl_client.create_release.__name__,
+        side_effect=bad_request,
     )
     edit_release_notes_patch = mock.patch.object(
-        default_gl_client, "edit_release_notes", side_effect=not_found
+        default_gl_client,
+        default_gl_client.edit_release_notes.__name__,
+        side_effect=not_found,
+    )
+    get_release_by_id_patch = mock.patch.object(
+        default_gl_client,
+        default_gl_client.get_release_id_by_tag.__name__,
+        return_value=fake_release_id,
     )
 
     # Execute in mocked environment expecting a GitlabUpdateError to be raised
-    with create_release_patch, edit_release_notes_patch:
+    with create_release_patch, edit_release_notes_patch, get_release_by_id_patch:
         with pytest.raises(gitlab.GitlabUpdateError):
             default_gl_client.create_or_update_release(
                 A_GOOD_TAG, RELEASE_NOTES, prerelease
