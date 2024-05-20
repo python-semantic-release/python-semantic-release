@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
 import gitlab
+import gitlab.exceptions
 from urllib3.util.url import Url, parse_url
 
 from semantic_release.helpers import logged_function
@@ -72,7 +73,7 @@ class Gitlab(RemoteHvcsBase):
         self._api_url = parse_url(self._client.url)
 
     @property
-    def project(self):
+    def project(self) -> GitLabProject:
         if self._project is None:
             self._project = self._client.projects.get(self.project_namespace)
         return self._project
@@ -123,11 +124,22 @@ class Gitlab(RemoteHvcsBase):
         """
         Get a release by its tag name
         https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
+
         :param tag: Tag to get release for
+
         :return: ID of release, if found, else None
+
+        Raises
+        ------
+        gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+
         """
-        proj_release = self.project.releases.get(tag)
-        return proj_release.asdict().get("commit.id")
+        try:
+            proj_release = self.project.releases.get(tag)
+            return proj_release.asdict().get("commit.id", None)
+        except gitlab.exceptions.GitlabGetError:
+            log.debug("Release %s not found", tag)
+            return None
 
     @logged_function(log)
     def edit_release_notes(  # type: ignore[override]
@@ -148,6 +160,18 @@ class Gitlab(RemoteHvcsBase):
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> str:
+        """
+        Returns
+        -------
+        int: The release id
+
+        Raises
+        ------
+        ValueError: If the release could not be created or updated
+        gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+        GitlabUpdateError: If the server cannot perform the request
+
+        """
         try:
             return self.create_release(
                 tag=tag, release_notes=release_notes, prerelease=prerelease
@@ -166,7 +190,10 @@ class Gitlab(RemoteHvcsBase):
 
         log.debug("Found existing release commit %s, updating", release_commit_id)
         # If this errors we let it die
-        return self.edit_release_notes(release_id=tag, release_notes=release_notes)
+        return self.edit_release_notes(
+            release_id=release_commit_id,
+            release_notes=release_notes,
+        )
 
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
