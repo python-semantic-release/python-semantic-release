@@ -103,6 +103,7 @@ if [[ -n "$INPUT_SSH_PUBLIC_SIGNING_KEY" && -n "$INPUT_SSH_PRIVATE_SIGNING_KEY" 
 	git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
 	git config --global user.signingKey ~/.ssh/signing_key
 	git config --global commit.gpgsign true
+	git config --global tag.gpgsign true
 fi
 
 # Copy inputs into correctly-named environment variables
