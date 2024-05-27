@@ -6,6 +6,7 @@ from unittest import mock
 
 import gitlab
 import gitlab.exceptions
+import gitlab.mixins
 import gitlab.v4.objects
 import pytest
 
@@ -430,30 +431,39 @@ def test_create_release_fails_with_bad_tag(
 def test_update_release_succeeds(
     default_gl_client: Gitlab, default_gl_project: gitlab.v4.objects.Project, tag: str
 ):
+    fake_release_obj = gitlab.v4.objects.ProjectReleaseManager(
+        default_gl_project
+    ).get(tag, lazy=True)
+    fake_release_obj._attrs["name"] = tag
+
     with mock.patch.object(
-        default_gl_project.releases,
-        default_gl_project.releases.update.__name__,
+        gitlab.mixins.SaveMixin,
+        gitlab.mixins.SaveMixin.save.__name__,
     ) as mocked_update_release:
-        release_id = default_gl_client.edit_release_notes(tag, RELEASE_NOTES)
+        release_id = default_gl_client.edit_release_notes(fake_release_obj, RELEASE_NOTES)
 
         assert tag == release_id
-        mocked_update_release.assert_called_once_with(
-            tag, {"description": RELEASE_NOTES}
-        )
+        mocked_update_release.assert_called_once()
+        assert RELEASE_NOTES == fake_release_obj.description  # noqa: SIM300
 
 
 def test_update_release_fails_with_missing_tag(
     default_gl_client: Gitlab,
     default_gl_project: gitlab.v4.objects.Project,
 ):
+    fake_release_obj = gitlab.v4.objects.ProjectRelease(
+        default_gl_project.manager,
+        {"id": A_MISSING_TAG, "name": A_MISSING_TAG},
+        lazy=True
+    )
     mocked_update_release = mock.patch.object(
-        default_gl_project.releases,
-        default_gl_project.releases.update.__name__,
+        gitlab.mixins.SaveMixin,
+        gitlab.mixins.SaveMixin.save.__name__,
         side_effect=gitlab.GitlabUpdateError,
     )
 
     with mocked_update_release, pytest.raises(gitlab.GitlabUpdateError):
-        default_gl_client.edit_release_notes(A_MISSING_TAG, RELEASE_NOTES)
+        default_gl_client.edit_release_notes(fake_release_obj, RELEASE_NOTES)
 
 
 @pytest.mark.parametrize("prerelease", (True, False))
@@ -486,17 +496,16 @@ def test_get_release_id_by_tag(
     default_gl_client: Gitlab,
     default_gl_project: gitlab.v4.objects.Project,
 ):
-    expected_release_id = 1
     dummy_release = default_gl_project.releases.get(A_GOOD_TAG, lazy=True)
-    dummy_release._attrs["commit.id"] = expected_release_id
+
     with mock.patch.object(
         default_gl_project.releases,
         default_gl_project.releases.get.__name__,
         return_value=dummy_release,
     ) as mocked_get_release_id:
-        result = default_gl_client.get_release_id_by_tag(A_GOOD_TAG)
+        result = default_gl_client.get_release_by_tag(A_GOOD_TAG)
 
-        assert expected_release_id == result
+        assert dummy_release == result
         mocked_get_release_id.assert_called_once_with(A_GOOD_TAG)
 
 
@@ -513,7 +522,7 @@ def test_get_release_id_by_tag_fails(
     with pytest.raises(
         gitlab.exceptions.GitlabAuthenticationError
     ), mocked_get_release_id:
-        default_gl_client.get_release_id_by_tag(A_GOOD_TAG)
+        default_gl_client.get_release_by_tag(A_GOOD_TAG)
 
 
 def test_get_release_id_by_tag_not_found(
@@ -527,7 +536,7 @@ def test_get_release_id_by_tag_not_found(
     )
 
     with mocked_get_release_id:
-        result = default_gl_client.get_release_id_by_tag(A_GOOD_TAG)
+        result = default_gl_client.get_release_by_tag(A_GOOD_TAG)
 
     assert result is None
 
@@ -537,16 +546,21 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
     default_gl_client: Gitlab,
     prerelease: bool,
 ):
-    expected_release_id = 1
     bad_request = gitlab.GitlabCreateError("400 Bad Request")
+    expected_release_obj = gitlab.v4.objects.ProjectRelease(
+        gitlab.v4.objects.ProjectManager(default_gl_client._client),
+        {"commit": {"id": "1"}, "name": A_GOOD_TAG},
+        lazy=True
+    )
+
     with mock.patch.object(
         default_gl_client,
         default_gl_client.create_release.__name__,
         side_effect=bad_request,
     ), mock.patch.object(
         default_gl_client,
-        default_gl_client.get_release_id_by_tag.__name__,
-        return_value=expected_release_id,
+        default_gl_client.get_release_by_tag.__name__,
+        return_value=expected_release_obj,
     ), mock.patch.object(
         default_gl_client,
         default_gl_client.edit_release_notes.__name__,
@@ -559,7 +573,7 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
 
         # Evaluate (expected -> actual)
         mock_edit_release_notes.assert_called_once_with(
-            release_id=expected_release_id, release_notes=RELEASE_NOTES
+            release=expected_release_obj, release_notes=RELEASE_NOTES
         )
 
 
@@ -570,7 +584,11 @@ def test_create_or_update_release_when_create_fails_and_update_fails(
 ):
     bad_request = gitlab.GitlabCreateError("400 Bad Request")
     not_found = gitlab.GitlabUpdateError("404 Not Found")
-    fake_release_id = 1
+    fake_release_obj = gitlab.v4.objects.ProjectRelease(
+        gitlab.v4.objects.ProjectManager(default_gl_client._client),
+        {"commit": {"id": "1"}, "name": A_GOOD_TAG},
+        lazy=True
+    )
 
     create_release_patch = mock.patch.object(
         default_gl_client,
@@ -584,8 +602,8 @@ def test_create_or_update_release_when_create_fails_and_update_fails(
     )
     get_release_by_id_patch = mock.patch.object(
         default_gl_client,
-        default_gl_client.get_release_id_by_tag.__name__,
-        return_value=fake_release_id,
+        default_gl_client.get_release_by_tag.__name__,
+        return_value=fake_release_obj,
     )
 
     # Execute in mocked environment expecting a GitlabUpdateError to be raised

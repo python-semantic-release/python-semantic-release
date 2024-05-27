@@ -10,8 +10,11 @@ from typing import TYPE_CHECKING
 
 import gitlab
 import gitlab.exceptions
+import gitlab.v4
+import gitlab.v4.objects
 from urllib3.util.url import Url, parse_url
 
+from semantic_release.errors import UnexpectedResponse
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.util import suppress_not_found
@@ -70,7 +73,7 @@ class Gitlab(RemoteHvcsBase):
         )
 
         self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
-        self._api_url = parse_url(self._client.url)
+        self._api_url = parse_url(self._client.api_url)
 
     @property
     def project(self) -> GitLabProject:
@@ -99,11 +102,24 @@ class Gitlab(RemoteHvcsBase):
         assets: list[str] | None = None,  # noqa: ARG002
     ) -> str:
         """
-        Post release changelog
-        :param tag: Tag to create release for
-        :param release_notes: The release notes for this version
-        :param prerelease: This parameter has no effect
-        :return: The tag of the release
+        Create a release in a remote VCS, adding any release notes and assets to it
+
+        Arguments:
+        ---------
+            tag(str): The tag to create the release for
+            release_notes(str): The changelog description for this version only
+            prerelease(bool): This parameter has no effect in GitLab
+            assets(list[str]): A list of paths to files to upload as assets (TODO: not implemented)
+
+        Returns:
+        -------
+            str: The tag of the release
+
+        Raises:
+        ------
+            GitlabAuthenticationError: If authentication is not correct
+            GitlabCreateError: If the server cannot perform the request
+
         """
         log.info("Creating release for %s", tag)
         # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
@@ -120,56 +136,86 @@ class Gitlab(RemoteHvcsBase):
 
     @logged_function(log)
     @suppress_not_found
-    def get_release_id_by_tag(self, tag: str) -> int | None:
+    def get_release_by_tag(self, tag: str) -> gitlab.v4.objects.ProjectRelease | None:
         """
         Get a release by its tag name
-        https://docs.github.com/rest/reference/repos#get-a-release-by-tag-name
 
-        :param tag: Tag to get release for
+        Arguments:
+        ---------
+            tag(str): The tag name to get the release for
 
-        :return: ID of release, if found, else None
+        Returns:
+        -------
+            gitlab.v4.objects.ProjectRelease | None: The release object or None if not found
 
-        Raises
+        Raises:
         ------
-        gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+            gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
 
         """
         try:
-            proj_release = self.project.releases.get(tag)
-            return proj_release.asdict().get("commit.id", None)
+            return self.project.releases.get(tag)
         except gitlab.exceptions.GitlabGetError:
             log.debug("Release %s not found", tag)
             return None
+        except KeyError as err:
+            raise UnexpectedResponse("JSON response is missing commit.id") from err
 
     @logged_function(log)
     def edit_release_notes(  # type: ignore[override]
         self,
-        release_id: str,
+        release: gitlab.v4.objects.ProjectRelease,
         release_notes: str,
     ) -> str:
-        log.info("Updating release %s", release_id)
-        self.project.releases.update(
-            release_id,
-            {
-                "description": release_notes,
-            },
+        """
+        Update the release notes for a given release
+
+        Arguments:
+        ---------
+            release(gitlab.v4.objects.ProjectRelease): The release object to update
+            release_notes(str): The new release notes
+
+        Returns:
+        -------
+            str: The release id
+
+        Raises:
+        ------
+            GitlabAuthenticationError: If authentication is not correct
+            GitlabUpdateError: If the server cannot perform the request
+
+        """
+        log.info(
+            "Updating release %s [%s]",
+            release.name,
+            release.attributes.get("commit", {}).get("id"),
         )
-        return release_id
+        release.description = release_notes
+        release.save()
+        return str(release.get_id())
 
     @logged_function(log)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> str:
         """
-        Returns
-        -------
-        int: The release id
+        Create or update a release for the given tag in a remote VCS
 
-        Raises
+        Arguments:
+        ---------
+            tag(str): The tag to create or update the release for
+            release_notes(str): The changelog description for this version only
+            prerelease(bool): This parameter has no effect in GitLab
+
+        Returns:
+        -------
+            str: The release id
+
+        Raises:
         ------
-        ValueError: If the release could not be created or updated
-        gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
-        GitlabUpdateError: If the server cannot perform the request
+            ValueError: If the release could not be created or updated
+            gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+            GitlabUpdateError: If the server cannot perform the request
 
         """
         try:
@@ -183,15 +229,17 @@ class Gitlab(RemoteHvcsBase):
                 self.project_namespace,
             )
 
-        if (release_commit_id := self.get_release_id_by_tag(tag)) is None:
+        if (release_obj := self.get_release_by_tag(tag)) is None:
             raise ValueError(
-                f"release commit id for tag {tag} not found, and could not be created"
+                f"release for tag {tag} could not be found, and could not be created"
             )
 
-        log.debug("Found existing release commit %s, updating", release_commit_id)
+        log.debug(
+            "Found existing release commit %s, updating", release_obj.commit.get("id")
+        )
         # If this errors we let it die
         return self.edit_release_notes(
-            release_id=release_commit_id,
+            release=release_obj,
             release_notes=release_notes,
         )
 
