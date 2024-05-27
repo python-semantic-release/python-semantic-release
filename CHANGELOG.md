@@ -2,6 +2,56 @@
 
 
 
+## v9.8.0 (2024-05-27)
+
+### Documentation
+
+* docs(migration-v8): update version references in migration instructions (#938) ([`d6ba16a`](https://github.com/python-semantic-release/python-semantic-release/commit/d6ba16aa8e01bae1a022a9b06cd0b9162c51c345))
+
+### Feature
+
+* feat: extend gitlab to edit a previous release if exists (#934)
+
+* style(hvcs-github): update function docstrings for params
+
+* feat(hvcs-gitlab): enable gitlab to edit a previous release if found
+
+* fix(hvcs-gitlab): add tag message to release creation
+
+* fix(gitlab): adjust release name to mirror other hvcs release names
+
+* refactor(gitlab): consolidate &amp; simplify usage of gitlab client
+
+* test(gitlab): neuter test cases that used the internet &amp; add new tests
+
+* refactor(gitlab): handle errors in release retrieval gracefully
+
+* refactor(gitlab): update release notes editing implementation
+
+---------
+
+Co-authored-by: bdorsey &lt;brentadorsey@gmail.com&gt; ([`23e02b9`](https://github.com/python-semantic-release/python-semantic-release/commit/23e02b96dfb2a58f6b4ecf7b7812e4c1bc50573d))
+
+* feat(gha): configure ssh signed tags in GitHub Action (#937)
+
+Resolves: #936 ([`dfb76b9`](https://github.com/python-semantic-release/python-semantic-release/commit/dfb76b94b859a7f3fa3ad778eec7a86de2874d68))
+
+* feat(version-cmd): add toggle of `--no-verify` option to `git commit` (#927)
+
+* test(version-cmd): add test w/ failing pre-commit hook--preventing version commit
+
+* feat(version-cmd): add toggle of `--no-verify` option to `git commit`
+
+  This commit adds a configuration option that toggles the addition of `--no-verify`
+command line switch on git commit operations that are run with the `version` command.
+
+* docs(configuration): add `no_git_verify` description to the configuration page
+
+---------
+
+Co-authored-by: bdorsey &lt;brentadorsey@gmail.com&gt; ([`1de6f78`](https://github.com/python-semantic-release/python-semantic-release/commit/1de6f7834c6d37a74bc53f91609d40793556b52d))
+
+
 ## v9.7.3 (2024-05-15)
 
 ### Fix
