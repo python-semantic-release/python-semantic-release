@@ -431,16 +431,18 @@ def test_create_release_fails_with_bad_tag(
 def test_update_release_succeeds(
     default_gl_client: Gitlab, default_gl_project: gitlab.v4.objects.Project, tag: str
 ):
-    fake_release_obj = gitlab.v4.objects.ProjectReleaseManager(
-        default_gl_project
-    ).get(tag, lazy=True)
+    fake_release_obj = gitlab.v4.objects.ProjectReleaseManager(default_gl_project).get(
+        tag, lazy=True
+    )
     fake_release_obj._attrs["name"] = tag
 
     with mock.patch.object(
         gitlab.mixins.SaveMixin,
         gitlab.mixins.SaveMixin.save.__name__,
     ) as mocked_update_release:
-        release_id = default_gl_client.edit_release_notes(fake_release_obj, RELEASE_NOTES)
+        release_id = default_gl_client.edit_release_notes(
+            fake_release_obj, RELEASE_NOTES
+        )
 
         assert tag == release_id
         mocked_update_release.assert_called_once()
@@ -454,7 +456,7 @@ def test_update_release_fails_with_missing_tag(
     fake_release_obj = gitlab.v4.objects.ProjectRelease(
         default_gl_project.manager,
         {"id": A_MISSING_TAG, "name": A_MISSING_TAG},
-        lazy=True
+        lazy=True,
     )
     mocked_update_release = mock.patch.object(
         gitlab.mixins.SaveMixin,
@@ -550,7 +552,7 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
     expected_release_obj = gitlab.v4.objects.ProjectRelease(
         gitlab.v4.objects.ProjectManager(default_gl_client._client),
         {"commit": {"id": "1"}, "name": A_GOOD_TAG},
-        lazy=True
+        lazy=True,
     )
 
     with mock.patch.object(
@@ -587,7 +589,7 @@ def test_create_or_update_release_when_create_fails_and_update_fails(
     fake_release_obj = gitlab.v4.objects.ProjectRelease(
         gitlab.v4.objects.ProjectManager(default_gl_client._client),
         {"commit": {"id": "1"}, "name": A_GOOD_TAG},
-        lazy=True
+        lazy=True,
     )
 
     create_release_patch = mock.patch.object(
