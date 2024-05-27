@@ -9,13 +9,20 @@ from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
 import gitlab
+import gitlab.exceptions
+import gitlab.v4
+import gitlab.v4.objects
 from urllib3.util.url import Url, parse_url
 
+from semantic_release.errors import UnexpectedResponse
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
+from semantic_release.hvcs.util import suppress_not_found
 
 if TYPE_CHECKING:
     from typing import Any, Callable
+
+    from gitlab.v4.objects import Project as GitLabProject
 
 
 log = logging.getLogger(__name__)
@@ -45,6 +52,8 @@ class Gitlab(RemoteHvcsBase):
     ) -> None:
         super().__init__(remote_url)
         self.token = token
+        self.project_namespace = f"{self.owner}/{self.repo_name}"
+        self._project: GitLabProject | None = None
 
         domain_url = self._normalize_url(
             hvcs_domain
@@ -63,8 +72,14 @@ class Gitlab(RemoteHvcsBase):
             ).url.rstrip("/")
         )
 
-        self._client = gitlab.Gitlab(self.hvcs_domain.url)
-        self._api_url = parse_url(self._client.url)
+        self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
+        self._api_url = parse_url(self._client.api_url)
+
+    @property
+    def project(self) -> GitLabProject:
+        if self._project is None:
+            self._project = self._client.projects.get(self.project_namespace)
+        return self._project
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
@@ -87,61 +102,146 @@ class Gitlab(RemoteHvcsBase):
         assets: list[str] | None = None,  # noqa: ARG002
     ) -> str:
         """
-        Post release changelog
-        :param tag: Tag to create release for
-        :param release_notes: The release notes for this version
-        :param prerelease: This parameter has no effect
-        :return: The tag of the release
+        Create a release in a remote VCS, adding any release notes and assets to it
+
+        Arguments:
+        ---------
+            tag(str): The tag to create the release for
+            release_notes(str): The changelog description for this version only
+            prerelease(bool): This parameter has no effect in GitLab
+            assets(list[str]): A list of paths to files to upload as assets (TODO: not implemented)
+
+        Returns:
+        -------
+            str: The tag of the release
+
+        Raises:
+        ------
+            GitlabAuthenticationError: If authentication is not correct
+            GitlabCreateError: If the server cannot perform the request
+
         """
-        client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
-        client.auth()
         log.info("Creating release for %s", tag)
         # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
-        client.projects.get(self.owner + "/" + self.repo_name).releases.create(
+        self.project.releases.create(
             {
-                "name": "Release " + tag,
+                "name": tag,
                 "tag_name": tag,
+                "tag_message": tag,
                 "description": release_notes,
             }
         )
         log.info("Successfully created release for %s", tag)
         return tag
 
-    # TODO: make str types accepted here
+    @logged_function(log)
+    @suppress_not_found
+    def get_release_by_tag(self, tag: str) -> gitlab.v4.objects.ProjectRelease | None:
+        """
+        Get a release by its tag name
+
+        Arguments:
+        ---------
+            tag(str): The tag name to get the release for
+
+        Returns:
+        -------
+            gitlab.v4.objects.ProjectRelease | None: The release object or None if not found
+
+        Raises:
+        ------
+            gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+
+        """
+        try:
+            return self.project.releases.get(tag)
+        except gitlab.exceptions.GitlabGetError:
+            log.debug("Release %s not found", tag)
+            return None
+        except KeyError as err:
+            raise UnexpectedResponse("JSON response is missing commit.id") from err
+
     @logged_function(log)
     def edit_release_notes(  # type: ignore[override]
         self,
-        release_id: str,
+        release: gitlab.v4.objects.ProjectRelease,
         release_notes: str,
     ) -> str:
-        client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
-        client.auth()
-        log.info("Updating release %s", release_id)
+        """
+        Update the release notes for a given release
 
-        client.projects.get(self.owner + "/" + self.repo_name).releases.update(
-            release_id,
-            {
-                "description": release_notes,
-            },
+        Arguments:
+        ---------
+            release(gitlab.v4.objects.ProjectRelease): The release object to update
+            release_notes(str): The new release notes
+
+        Returns:
+        -------
+            str: The release id
+
+        Raises:
+        ------
+            GitlabAuthenticationError: If authentication is not correct
+            GitlabUpdateError: If the server cannot perform the request
+
+        """
+        log.info(
+            "Updating release %s [%s]",
+            release.name,
+            release.attributes.get("commit", {}).get("id"),
         )
-        return release_id
+        release.description = release_notes
+        release.save()
+        return str(release.get_id())
 
     @logged_function(log)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> str:
+        """
+        Create or update a release for the given tag in a remote VCS
+
+        Arguments:
+        ---------
+            tag(str): The tag to create or update the release for
+            release_notes(str): The changelog description for this version only
+            prerelease(bool): This parameter has no effect in GitLab
+
+        Returns:
+        -------
+            str: The release id
+
+        Raises:
+        ------
+            ValueError: If the release could not be created or updated
+            gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+            GitlabUpdateError: If the server cannot perform the request
+
+        """
         try:
             return self.create_release(
                 tag=tag, release_notes=release_notes, prerelease=prerelease
             )
         except gitlab.GitlabCreateError:
             log.info(
-                "Release %s could not be created for project %s/%s",
+                "New release %s could not be created for project %s",
                 tag,
-                self.owner,
-                self.repo_name,
+                self.project_namespace,
             )
-            return self.edit_release_notes(release_id=tag, release_notes=release_notes)
+
+        if (release_obj := self.get_release_by_tag(tag)) is None:
+            raise ValueError(
+                f"release for tag {tag} could not be found, and could not be created"
+            )
+
+        log.debug(
+            "Found existing release commit %s, updating", release_obj.commit.get("id")
+        )
+        # If this errors we let it die
+        return self.edit_release_notes(
+            release=release_obj,
+            release_notes=release_notes,
+        )
 
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
@@ -150,7 +250,7 @@ class Gitlab(RemoteHvcsBase):
 
         return self.create_server_url(
             auth=f"gitlab-ci-token:{self.token}",
-            path=f"{self.owner}/{self.repo_name}.git",
+            path=f"{self.project_namespace}.git",
         )
 
     def compare_url(self, from_rev: str, to_rev: str) -> str:

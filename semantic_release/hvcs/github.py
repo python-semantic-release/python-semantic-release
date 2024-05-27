@@ -304,7 +304,7 @@ class Github(RemoteHvcsBase):
         """
         Edit a release with updated change notes
         https://docs.github.com/rest/reference/repos#update-a-release
-        :param id: ID of release to update
+        :param release_id: ID of release to update
         :param release_notes: The release notes for this version
         :return: The ID of the release that was edited
         """
@@ -329,8 +329,9 @@ class Github(RemoteHvcsBase):
     ) -> int:
         """
         Post release changelog
-        :param version: The version number
+        :param tag: The version number
         :param release_notes: The release notes for this version
+        :param prerelease: Whether or not this release should be created as a prerelease
         :return: The status of the request
         """
         log.info("Creating release for %s", tag)
@@ -427,8 +428,8 @@ class Github(RemoteHvcsBase):
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """
         Upload distributions to a release
-        :param version: Version to upload for
-        :param path: Path to the dist directory
+        :param tag: Version to upload for
+        :param dist_glob: Path to the dist directory
         :return: The number of distributions successfully uploaded
         """
         # Find the release corresponding to this version
