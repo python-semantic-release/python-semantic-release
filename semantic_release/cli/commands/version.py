@@ -522,6 +522,9 @@ def version(  # noqa: C901
                             "PATH": os.getenv("PATH", ""),
                             "HOME": os.getenv("HOME", None),
                             "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
+                            # Windows common environment variables
+                            "SYSTEMROOT": os.getenv("SYSTEMROOT", None),
+                            "WINDIR": os.getenv("WINDIR", None),
                             # affects build decisions
                             "CI": os.getenv("CI", None),
                             # Identifies which CI environment
@@ -536,9 +539,6 @@ def version(  # noqa: C901
                             "PSR_DOCKER_GITHUB_ACTION": os.getenv(
                                 "PSR_DOCKER_GITHUB_ACTION", None
                             ),
-                            # Fix problems with windows commands
-                            "SYSTEMROOT": os.getenv("SYSTEMROOT", None),
-                            "WINDIR": os.getenv("WINDIR", None),
                             # User defined overrides of environment (from config)
                             **runtime.build_command_env,
                             # PSR injected environment variables

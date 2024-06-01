@@ -204,7 +204,9 @@ HOME                      Pass-through ``HOME`` of parent process
 NEW_VERSION               Semantically determined next version (ex. ``1.2.3``)
 PATH                      Pass-through ``PATH`` of parent process
 PSR_DOCKER_GITHUB_ACTION  Pass-through ``true`` if exists in process env, unset otherwise
+SYSTEMROOT                Pass-through ``SYSTEMROOT`` if exists in process env (Environment variable common in windows)
 VIRTUAL_ENV               Pass-through ``VIRTUAL_ENV`` if exists in process env, unset otherwise
+WINDIR                    Pass-through ``WINDIR`` if exists in process env (Environment variable common in windows)
 ========================  ======================================================================
 
 **Default:** ``None`` (not specified)
