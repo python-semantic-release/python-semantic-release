@@ -613,9 +613,6 @@ def test_version_runs_build_command(
         "PATH": os.getenv("PATH"),
         "HOME": os.getenv("HOME"),
         "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
-        # Windows
-        "SYSTEMROOT": r"C:\Windows",
-        "WINDIR": r"C:\Windows",
         # Simulate that all CI's are set
         "GITHUB_ACTIONS": "true",
         "GITLAB_CI": "true",
@@ -649,8 +646,6 @@ def test_version_runs_build_command(
                 "HOME": patched_os_environment["HOME"],
                 "PATH": patched_os_environment["PATH"],
                 "VIRTUAL_ENV": patched_os_environment["VIRTUAL_ENV"],
-                "SYSTEMROOT": r"C:\Windows",
-                "WINDIR": r"C:\Windows",
                 "PSR_DOCKER_GITHUB_ACTION": patched_os_environment[
                     "PSR_DOCKER_GITHUB_ACTION"
                 ],

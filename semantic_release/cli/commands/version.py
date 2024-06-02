@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import sys
 from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -154,6 +155,9 @@ def shell(
         env=(env or {}),
         check=check,
     )
+
+def is_windows() -> bool:
+    return sys.platform == "win32"
 
 def get_windows_env() -> Mapping[str, str | None]:
     return {
@@ -552,7 +556,7 @@ def version(  # noqa: C901
                             "HOME": os.getenv("HOME", None),
                             "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
                             # Windows environment variables
-                            **get_windows_env(),
+                            **(get_windows_env() if is_windows() else {}),
                             # affects build decisions
                             "CI": os.getenv("CI", None),
                             # Identifies which CI environment
