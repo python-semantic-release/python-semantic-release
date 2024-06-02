@@ -155,6 +155,12 @@ def shell(
         check=check,
     )
 
+def get_windows_env() -> Mapping[str, str | None]:
+    return {
+        "SYSTEMROOT": os.getenv("SYSTEMROOT", None),
+        "WINDIR": os.getenv("WINDIR", None),
+    }
+
 
 @click.command(
     short_help="Detect and apply a new version",
@@ -522,9 +528,8 @@ def version(  # noqa: C901
                             "PATH": os.getenv("PATH", ""),
                             "HOME": os.getenv("HOME", None),
                             "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
-                            # Windows common environment variables
-                            "SYSTEMROOT": os.getenv("SYSTEMROOT", None),
-                            "WINDIR": os.getenv("WINDIR", None),
+                            # Windows
+                            **get_windows_env(),
                             # affects build decisions
                             "CI": os.getenv("CI", None),
                             # Identifies which CI environment
