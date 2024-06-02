@@ -157,8 +157,31 @@ def shell(
 
 def get_windows_env() -> Mapping[str, str | None]:
     return {
-        "SYSTEMROOT": os.getenv("SYSTEMROOT", None),
-        "WINDIR": os.getenv("WINDIR", None),
+        environment_variable: os.getenv(environment_variable, None)
+        for environment_variable in (
+            "ALLUSERSAPPDATA",
+            "ALLUSERSPROFILE",
+            "APPDATA",
+            "COMMONPROGRAMFILES",
+            "COMMONPROGRAMFILES(x86)",
+            "DEFAULTUSERPROFILE",
+            "HOMEPATH",
+            "PATHEXT",
+            "PROFILESFOLDER",
+            "PROGRAMFILES",
+            "PROGRAMFILES(x86)",
+            "SYSTEM",
+            "SYSTEM16",
+            "SYSTEM32",
+            "SYSTEMDRIVE",
+            "SYSTEMPROFILE",
+            "SYSTEMROOT",
+            "TEMP",
+            "TMP",
+            "USERPROFILE",
+            "USERSID",
+            "WINDIR",
+        )
     }
 
 
@@ -528,7 +551,7 @@ def version(  # noqa: C901
                             "PATH": os.getenv("PATH", ""),
                             "HOME": os.getenv("HOME", None),
                             "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
-                            # Windows
+                            # Windows environment variables
                             **get_windows_env(),
                             # affects build decisions
                             "CI": os.getenv("CI", None),
