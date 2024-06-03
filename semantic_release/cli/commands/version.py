@@ -43,7 +43,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def is_forced_prerelease(
-    as_prerelease: bool, forced_level_bump: LevelBump | None, prerelease: bool
+        as_prerelease: bool, forced_level_bump: LevelBump | None, prerelease: bool
 ) -> bool:
     """
     Determine if this release is forced to have prerelease on/off.
@@ -59,21 +59,21 @@ def is_forced_prerelease(
         ", ".join(f"{k} = {v}" for k, v in local_vars),
     )
     return (
-        as_prerelease
-        or forced_level_bump is LevelBump.PRERELEASE_REVISION
-        or ((forced_level_bump is None) and prerelease)
+            as_prerelease
+            or forced_level_bump is LevelBump.PRERELEASE_REVISION
+            or ((forced_level_bump is None) and prerelease)
     )
 
 
 def last_released(
-    repo: Repo, translator: VersionTranslator
+        repo: Repo, translator: VersionTranslator
 ) -> tuple[Tag, Version] | None:
     ts_and_vs = tags_and_versions(repo.tags, translator)
     return ts_and_vs[0] if ts_and_vs else None
 
 
 def version_from_forced_level(
-    repo: Repo, forced_level_bump: LevelBump, translator: VersionTranslator
+        repo: Repo, forced_level_bump: LevelBump, translator: VersionTranslator
 ) -> Version:
     ts_and_vs = tags_and_versions(repo.tags, translator)
 
@@ -97,24 +97,24 @@ def version_from_forced_level(
     # token as the one we're looking to prerelease, we can use revision 1.
     for _, version in ts_and_vs:
         if not (
-            version.major == latest_version.major
-            and version.minor == latest_version.minor
-            and version.patch == latest_version.patch
+                version.major == latest_version.major
+                and version.minor == latest_version.minor
+                and version.patch == latest_version.patch
         ):
             break
         if (
-            version.is_prerelease
-            and version.prerelease_token == translator.prerelease_token
+                version.is_prerelease
+                and version.prerelease_token == translator.prerelease_token
         ):
             return version.bump(LevelBump.PRERELEASE_REVISION)
     return latest_version.to_prerelease(token=translator.prerelease_token, revision=1)
 
 
 def apply_version_to_source_files(
-    repo: Repo,
-    version_declarations: Iterable[VersionDeclarationABC],
-    version: Version,
-    noop: bool = False,
+        repo: Repo,
+        version_declarations: Iterable[VersionDeclarationABC],
+        version: Version,
+        noop: bool = False,
 ) -> list[str]:
     working_dir = os.getcwd() if repo.working_dir is None else repo.working_dir
 
@@ -137,7 +137,7 @@ def apply_version_to_source_files(
 
 
 def shell(
-    cmd: str, *, env: Mapping[str, str] | None = None, check: bool = True
+        cmd: str, *, env: Mapping[str, str] | None = None, check: bool = True
 ) -> subprocess.CompletedProcess:
     shell: str | None
     try:
@@ -156,8 +156,10 @@ def shell(
         check=check,
     )
 
+
 def is_windows() -> bool:
     return sys.platform == "win32"
+
 
 def get_windows_env() -> Mapping[str, str | None]:
     return {
@@ -296,21 +298,21 @@ def get_windows_env() -> Mapping[str, str | None]:
 )
 @click.pass_obj
 def version(  # noqa: C901
-    cli_ctx: CliContextObj,
-    print_only: bool = False,
-    print_only_tag: bool = False,
-    print_last_released: bool = False,
-    print_last_released_tag: bool = False,
-    as_prerelease: bool = False,
-    prerelease_token: str | None = None,
-    force_level: str | None = None,
-    commit_changes: bool = True,
-    create_tag: bool = True,
-    update_changelog: bool = True,
-    push_changes: bool = True,
-    make_vcs_release: bool = True,
-    build_metadata: str | None = None,
-    skip_build: bool = False,
+        cli_ctx: CliContextObj,
+        print_only: bool = False,
+        print_only_tag: bool = False,
+        print_last_released: bool = False,
+        print_last_released_tag: bool = False,
+        as_prerelease: bool = False,
+        prerelease_token: str | None = None,
+        force_level: str | None = None,
+        commit_changes: bool = True,
+        create_tag: bool = True,
+        update_changelog: bool = True,
+        push_changes: bool = True,
+        make_vcs_release: bool = True,
+        build_metadata: str | None = None,
+        skip_build: bool = False,
 ) -> str:
     """
     Detect the semantically correct next version that should be applied to your
