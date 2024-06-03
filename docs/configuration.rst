@@ -212,7 +212,7 @@ In addition, on windows systems these environment variables are passed:
 Variable Name             Description
 ========================  ======================================================================
 ALLUSERSAPPDATA           Pass-through ``ALLUSERAPPDATA`` if exists in process env, unset otherwise
-ALLUSERSAPPPROFILE        Pass-through ``ALLUSERSAPPPROFILE`` if exists in process env, unset otherwise
+ALLUSERSPROFILE           Pass-through ``ALLUSERSPPPROFILE`` if exists in process env, unset otherwise
 APPDATA                   Pass-through ``APPDATA`` if exists in process env, unset otherwise
 COMMONPROGRAMFILES        Pass-through ``COMMONPROGRAMFILES`` if exists in process env, unset otherwise
 COMMONPROGRAMFILES(x86)   Pass-through ``COMMONPROGRAMFILES(x86)`` if exists in process env, unset otherwise
