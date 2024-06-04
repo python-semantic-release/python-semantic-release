@@ -640,7 +640,7 @@ def test_version_runs_build_command(
         "TMP": "C:\\Users\\Username\\AppData\\Local\\Temp",
         "USERPROFILE": "C:\\Users\\Username",
         "USERSID": "S-1-5-21-1234567890-123456789-123456789-1234",
-        "WINDIR": "C:\\Windows"
+        "WINDIR": "C:\\Windows",
     }
 
     # Mock out subprocess.run
@@ -648,9 +648,9 @@ def test_version_runs_build_command(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
-    ), mock.patch(
-        "sys.platform", "linux"
-    ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
+    ), mock.patch("sys.platform", "linux"), mock.patch.dict(
+        "os.environ", patched_os_environment, clear=True
+    ):
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
             main, [version_subcmd or "version", "--patch", "--no-push"]
@@ -675,6 +675,7 @@ def test_version_runs_build_command(
                 ],
             },
         )
+
 
 @pytest.mark.parametrize("shell", ("powershell", "cmd"))
 def test_version_runs_build_command_windows(
@@ -719,7 +720,7 @@ def test_version_runs_build_command_windows(
         "TMP": "C:\\Users\\Username\\AppData\\Local\\Temp",
         "USERPROFILE": "C:\\Users\\Username",
         "USERSID": "S-1-5-21-1234567890-123456789-123456789-1234",
-        "WINDIR": "C:\\Windows"
+        "WINDIR": "C:\\Windows",
     }
 
     # Mock out subprocess.run
@@ -727,9 +728,9 @@ def test_version_runs_build_command_windows(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
-    ), mock.patch(
-        "sys.platform", "win32"
-    ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
+    ), mock.patch("sys.platform", "win32"), mock.patch.dict(
+        "os.environ", patched_os_environment, clear=True
+    ):
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(
             main, [version_subcmd or "version", "--patch", "--no-push"]
@@ -753,27 +754,27 @@ def test_version_runs_build_command_windows(
                     "PSR_DOCKER_GITHUB_ACTION"
                 ],
                 # Windows
-                "ALLUSERSAPPDATA": "C:\\ProgramData",
-                "ALLUSERSPROFILE": "C:\\ProgramData",
-                "APPDATA": "C:\\Users\\Username\\AppData\\Roaming",
-                "COMMONPROGRAMFILES": "C:\\Program Files\\Common Files",
-                "COMMONPROGRAMFILES(x86)": "C:\\Program Files (x86)\\Common Files",
-                "DEFAULTUSERPROFILE": "C:\\Users\\Default",
-                "HOMEPATH": "\\Users\\Username",
-                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
-                "PROFILESFOLDER": "C:\\Users",
-                "PROGRAMFILES": "C:\\Program Files",
-                "PROGRAMFILES(x86)": "C:\\Program Files (x86)",
-                "SYSTEM": "C:\\Windows\\System32",
-                "SYSTEM16": "C:\\Windows\\System16",
-                "SYSTEM32": "C:\\Windows\\System32",
-                "SYSTEMDRIVE": "C:",
-                "SYSTEMROOT": "C:\\Windows",
-                "TEMP": "C:\\Users\\Username\\AppData\\Local\\Temp",
-                "TMP": "C:\\Users\\Username\\AppData\\Local\\Temp",
-                "USERPROFILE": "C:\\Users\\Username",
-                "USERSID": "S-1-5-21-1234567890-123456789-123456789-1234",
-                "WINDIR": "C:\\Windows"
+                "ALLUSERSAPPDATA": patched_os_environment["ALLUSERSAPPDATA"],
+                "ALLUSERSPROFILE": patched_os_environment["ALLUSERSPROFILE"],
+                "APPDATA": patched_os_environment["APPDATA"],
+                "COMMONPROGRAMFILES": patched_os_environment["COMMONPROGRAMFILES"],
+                "COMMONPROGRAMFILES(x86)": patched_os_environment["COMMONPROGRAMFILES"],
+                "DEFAULTUSERPROFILE": patched_os_environment["DEFAULTUSERPROFILE"],
+                "HOMEPATH": patched_os_environment["HOMEPATH"],
+                "PATHEXT": patched_os_environment["PATHEXT"],
+                "PROFILESFOLDER": patched_os_environment["PROFILESFOLDER"],
+                "PROGRAMFILES": patched_os_environment["PROGRAMFILES"],
+                "PROGRAMFILES(x86)": patched_os_environment["PROGRAMFILES"],
+                "SYSTEM": patched_os_environment["SYSTEM"],
+                "SYSTEM16": patched_os_environment["SYSTEM16"],
+                "SYSTEM32": patched_os_environment["SYSTEM32"],
+                "SYSTEMDRIVE": patched_os_environment["SYSTEMDRIVE"],
+                "SYSTEMROOT": patched_os_environment["SYSTEMROOT"],
+                "TEMP": patched_os_environment["TEMP"],
+                "TMP": patched_os_environment["TMP"],
+                "USERPROFILE": patched_os_environment["USERPROFILE"],
+                "USERSID": patched_os_environment["USERSID"],
+                "WINDIR": patched_os_environment["WINDIR"],
             },
         )
 
