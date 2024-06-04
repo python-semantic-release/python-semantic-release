@@ -61,7 +61,7 @@ class ReleaseHistory:
         is_commit_released = False
         the_version: Version | None = None
 
-        for commit in repo.iter_commits():
+        for commit in repo.iter_commits("HEAD", topo_order=True):
             # mypy will be happy if we make this an explicit string
             commit_message = str(commit.message)
 
