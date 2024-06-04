@@ -3,11 +3,14 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
+from git import Tag
 from git.objects.tag import TagObject
+from git.util import Actor
+from pydantic import BaseModel, ConfigDict
 
-from semantic_release.commit_parser import ParseError
+from semantic_release.commit_parser import ParseError, ParseResult
 from semantic_release.version.algorithm import tags_and_versions
 
 if TYPE_CHECKING:
@@ -15,13 +18,8 @@ if TYPE_CHECKING:
     from typing import Iterable, Iterator
 
     from git.repo.base import Repo
-    from git.util import Actor
 
-    from semantic_release.commit_parser import (
-        CommitParser,
-        ParseResult,
-        ParserOptions,
-    )
+    from semantic_release.commit_parser import CommitParser, ParserOptions
     from semantic_release.version.translator import VersionTranslator
     from semantic_release.version.version import Version
 
@@ -84,35 +82,7 @@ class ReleaseHistory:
                 log.debug("found commit %s for tag %s", commit.hexsha, tag.name)
                 is_commit_released = True
 
-                # tag.object is a Commit if the tag is lightweight, otherwise
-                # it is a TagObject with additional metadata about the tag
-                if isinstance(tag.object, TagObject):
-                    tagger = tag.object.tagger
-                    committer = tag.object.tagger.committer()
-                    _tz = timezone(
-                        timedelta(seconds=-1 * tag.object.tagger_tz_offset)
-                    )
-                    tagged_date = datetime.fromtimestamp(
-                        tag.object.tagged_date, tz=_tz
-                    )
-                else:
-                    # For some reason, sometimes tag.object is a Commit
-                    tagger = tag.object.author
-                    committer = tag.object.author
-                    _tz = timezone(
-                        timedelta(seconds=-1 * tag.object.author_tz_offset)
-                    )
-                    tagged_date = datetime.fromtimestamp(
-                        tag.object.committed_date, tz=_tz
-                    )
-
-                release = Release(
-                    tagger=tagger,
-                    committer=committer,
-                    tagged_date=tagged_date,
-                    elements=defaultdict(list),
-                )
-
+                release = Release.from_git_tag(tag)
                 released.setdefault(the_version, release)
 
             if any(pat.match(commit_message) for pat in exclude_commit_patterns):
@@ -138,7 +108,7 @@ class ReleaseHistory:
                 the_version,
             )
 
-            released[the_version]["elements"][commit_type].append(parse_result)
+            released[the_version].elements[commit_type].append(parse_result)
 
         return cls(unreleased=unreleased, released=released)
 
@@ -171,12 +141,14 @@ class ReleaseHistory:
         return ReleaseHistory(
             unreleased={},
             released={
-                version: {
-                    "tagger": tagger,
-                    "committer": committer,
-                    "tagged_date": tagged_date,
-                    "elements": self.unreleased,
-                },
+                version: Release.model_validate(
+                    {
+                        "tagger": tagger,
+                        "committer": committer,
+                        "tagged_date": tagged_date,
+                        "elements": self.unreleased,
+                    }
+                ),
                 **self.released,
             },
         )
@@ -189,8 +161,36 @@ class ReleaseHistory:
         )
 
 
-class Release(TypedDict):
+class Release(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     tagger: Actor
     committer: Actor
     tagged_date: datetime
-    elements: dict[str, list[ParseResult]]
+    elements: defaultdict[str, list[ParseResult]]
+
+    @staticmethod
+    def from_git_tag(tag: Tag) -> Release:
+        # tag.object is a Commit if the tag is lightweight, otherwise
+        # it is a TagObject with additional metadata about the tag
+        if not isinstance(tag.object, TagObject):
+            # Create release from lightweight tag
+            return Release(
+                committer=tag.object.author,
+                elements=defaultdict(list),
+                tagger=tag.object.author,
+                tagged_date=datetime.fromtimestamp(
+                    tag.object.committed_date,
+                    tz=timezone(timedelta(seconds=-1 * tag.object.author_tz_offset)),
+                ),
+            )
+
+        return Release(
+            committer=tag.object.tagger.committer(),
+            elements=defaultdict(list),
+            tagger=tag.object.tagger,
+            tagged_date=datetime.fromtimestamp(
+                tag.object.tagged_date,
+                tz=timezone(timedelta(seconds=-1 * tag.object.tagger_tz_offset)),
+            ),
+        )
