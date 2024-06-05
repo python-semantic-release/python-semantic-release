@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import pytest
-from git import Repo
+from git import Head, Repo
 
 from tests.const import EXAMPLE_HVCS_DOMAIN
 from tests.util import copy_dir_tree, temporary_working_directory
@@ -51,7 +51,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
                 }
             ],
         },
-        "0.1.1-rc.1": {
+        "0.1.1-alpha.1": {
             "changelog_sections": {
                 "angular": [{"section": "Fix", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
@@ -67,14 +67,48 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
                 }
             ],
         },
-        "0.2.0-rc.1": {
+        "0.1.1-alpha.2": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
-                "tag": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "emoji": [{"section": ":bug:", "i_commits": [0]}],
+                "scipy": [{"section": "Fix", "i_commits": [0]}],
+                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
             "commits": [
+                {
+                    "angular": "fix: adjust text to resolve",
+                    "emoji": ":bug: adjust text to resolve",
+                    "scipy": "MAINT: adjust text to resolve",
+                    "tag": ":nut_and_bolt: adjust text to resolve",
+                },
+            ],
+        },
+        "0.2.0-alpha.1": {
+            "changelog_sections": {
+                "angular": [
+                    {"section": "Feature", "i_commits": [1]},
+                    {"section": "Unknown", "i_commits": [0]},
+                ],
+                "emoji": [
+                    {"section": ":sparkles:", "i_commits": [1]},
+                    {"section": "Other", "i_commits": [0]},
+                ],
+                "scipy": [
+                    {"section": "Feature", "i_commits": [1]},
+                    {"section": "None", "i_commits": [0]},
+                ],
+                "tag": [
+                    {"section": "Feature", "i_commits": [1]},
+                    {"section": "Unknown", "i_commits": [0]},
+                ],
+            },
+            "commits": [
+                {
+                    "angular": "Merge branch {branch_name} into {trunk_name}",
+                    "emoji": "Merge branch {branch_name} into {trunk_name}",
+                    "scipy": "Merge branch {branch_name} into {trunk_name}",
+                    "tag": "Merge branch {branch_name} into {trunk_name}",
+                },
                 {
                     "angular": "feat: add some more text",
                     "emoji": ":sparkles: add some more text",
@@ -85,21 +119,21 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
         },
         "0.2.0": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
-                "tag": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Unknown", "i_commits": [0]}],
+                "emoji": [{"section": "Other", "i_commits": [0]}],
+                "scipy": [{"section": "None", "i_commits": [0]}],
+                "tag": [{"section": "Unknown", "i_commits": [0]}],
             },
             "commits": [
                 {
-                    "angular": "feat: add some more text",
-                    "emoji": ":sparkles: add some more text",
-                    "scipy": "ENH: add some more text",
-                    "tag": ":sparkles: add some more text",
+                    "angular": "Merge branch {branch_name} into {trunk_name}",
+                    "emoji": "Merge branch {branch_name} into {trunk_name}",
+                    "scipy": "Merge branch {branch_name} into {trunk_name}",
+                    "tag": "Merge branch {branch_name} into {trunk_name}",
                 },
             ],
         },
-        "0.3.0-beta.1": {
+        "0.3.0-alpha.1": {
             "changelog_sections": {
                 "angular": [{"section": "Feature", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
@@ -177,11 +211,11 @@ def build_github_flow_repo_w_feature_release_channel(
             hvcs_domain=hvcs_domain,
             tag_format_str=tag_format_str,
             extra_configs={
-                # branch "beta-testing" has prerelease suffix of "beta"
-                "tool.semantic_release.branches.beta-testing": {
-                    "match": "beta.*",
+                # branch "feat/" & "fix/" has prerelease suffix of "alpha"
+                "tool.semantic_release.branches.alpha-release": {
+                    "match": r"^(feat|fix)/.+",
                     "prerelease": True,
-                    "prerelease_token": "beta",
+                    "prerelease_token": "alpha",
                 },
                 **(extra_configs or {}),
             },
@@ -215,47 +249,150 @@ def build_github_flow_repo_w_feature_release_channel(
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
+            # check out fix branch
+            fix_branch_1 = "fix/missing-text"
+            fix_branch_head = git_repo.create_head(
+                fix_branch_1, main_branch_head.commit
+            )
+            fix_branch_head.checkout()
+
             # Make a patch level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
             )
 
-            # Make a patch level release candidate (v0.1.1-rc.1)
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
+            # Make a patch level release candidate (v0.1.1-alpha.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
-            # Make a minor level commit
+            # Make an additional fix from alpha.1
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
             )
 
-            # Make a minor level release candidate (v0.2.0-rc.1)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Make a minor level commit
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, next_version_def["commits"], hvcs
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
-            # Make a minor level release (v0.2.0)
+            # Make a patch level release candidate (v0.1.1-alpha.2)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
-            # Checkout beta_testing branch
-            beta_branch = git_repo.create_head("beta_testing", main_branch_head.commit)
-            beta_branch.checkout()
+            # Merge fix branch into main
+            main_branch_head.checkout()
 
-            # Make a feature level commit
+            git_repo.git.merge(
+                fix_branch_1,
+                "--no-ff",
+                m=next_version_def["commits"][0].format(
+                    branch_name=fix_branch_1, trunk_name="main"
+                ),
+            )
+            Head.delete(git_repo, fix_branch_head, force=True)
+            # TODO: this is ugly but had to be done as we don't ignore merge commits by default
+            # Update the merge commit message with the commit sha and url for changelog
+            commit_sha = git_repo.head.commit.hexsha
+            next_version_def["commits"][0] = str.join(
+                " ",
+                [
+                    str(git_repo.head.commit.message).strip(),
+                    f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))",
+                ],
+            )
+
+            # checkout feat branch
+            feat_branch_1 = "feat/add-text"
+            feat_branch_head = git_repo.create_head(
+                feat_branch_1, main_branch_head.commit
+            )
+            feat_branch_head.checkout()
+
+            next_version_def["commits"] = [
+                # Add/Keep the merge message
+                next_version_def["commits"][0],
+                # update the other commits as normal
+                *simulate_change_commits_n_rtn_changelog_entry(
+                    # drop merge commit
+                    git_repo,
+                    next_version_def["commits"][1:],
+                    hvcs,
+                ),
+            ]
+
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
+            # Make a patch level release candidate (v0.2.0-alpha.1)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
+
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
+
+            # Merge feat branch into main to release minor level version
+            main_branch_head.checkout()
+
+            git_repo.git.merge(
+                feat_branch_1,
+                "--no-ff",
+                m=next_version_def["commits"][0].format(
+                    branch_name=feat_branch_1, trunk_name="main"
+                ),
+            )
+            Head.delete(git_repo, feat_branch_head, force=True)
+            # TODO: this is ugly but had to be done as we don't ignore merge commits by default
+            # Update the merge commit message with the commit sha and url for changelog
+            commit_sha = git_repo.head.commit.hexsha
+            next_version_def["commits"][0] = str.join(
+                " ",
+                [
+                    str(git_repo.head.commit.message).strip(),
+                    f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))",
+                ],
+            )
+
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
+            # Make a patch level release candidate (v0.2.0)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
+
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
+
+            # checkout feat branch
+            feat_branch_2 = "feat/add-more-text"
+            feat_branch_head = git_repo.create_head(
+                feat_branch_2, main_branch_head.commit
+            )
+            feat_branch_head.checkout()
+
+            # Make a minor level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
             )
@@ -266,7 +403,7 @@ def build_github_flow_repo_w_feature_release_channel(
                 repo_dir.joinpath(changelog_md_file),
             )
 
-            # Make a feature level beta release (v0.3.0-beta.1)
+            # Make a minor level release candidate (v0.3.0-alpha.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
         return repo_dir, hvcs
