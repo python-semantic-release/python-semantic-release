@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import pytest
@@ -21,14 +20,33 @@ if TYPE_CHECKING:
         BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
+        CommitNReturnChangelogEntryFn,
         CreateReleaseFn,
         ExProjectGitRepoFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
         SimulateChangeCommitsNReturnChangelogEntryFn,
+        SimulateDefaultChangelogCreationFn,
         TomlSerializableTypes,
         VersionStr,
+    )
+
+
+def get_github_default_squash_msg(
+    pr_title: str,
+    pr_number: int,
+    squashed_commits: list[str],
+) -> str:
+    return (
+        str.join(
+            "\n\n",
+            [
+                f"{pr_title} (#{pr_number})",
+                *[f"* {commit_str}" for commit_str in squashed_commits],
+            ],
+        )
+        + "\n"
     )
 
 
@@ -53,10 +71,22 @@ def get_commits_for_github_flow_repo_w_default_release_channel() -> GetRepoDefin
         },
         "0.1.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fix", "i_commits": [0]}],
-                "emoji": [{"section": ":bug:", "i_commits": [0]}],
-                "scipy": [{"section": "Fix", "i_commits": [0]}],
-                "tag": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [
+                    {"section": "Fix", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [1]},
+                ],
+                "emoji": [
+                    {"section": ":bug:", "i_commits": [0]},
+                    {"section": "Other", "i_commits": [1]},
+                ],
+                "scipy": [
+                    {"section": "Fix", "i_commits": [0]},
+                    {"section": "None", "i_commits": [1]},
+                ],
+                "tag": [
+                    {"section": "Fix", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [1]},
+                ],
             },
             "commits": [
                 {
@@ -64,7 +94,13 @@ def get_commits_for_github_flow_repo_w_default_release_channel() -> GetRepoDefin
                     "emoji": ":bug: add missing text",
                     "scipy": "MAINT: add missing text",
                     "tag": ":nut_and_bolt: add missing text",
-                }
+                },
+                {
+                    "angular": "Merge branch {branch_name} into {trunk_name}",
+                    "emoji": "Merge branch {branch_name} into {trunk_name}",
+                    "scipy": "Merge branch {branch_name} into {trunk_name}",
+                    "tag": "Merge branch {branch_name} into {trunk_name}",
+                },
             ],
         },
         "0.2.0": {
@@ -85,8 +121,8 @@ def get_commits_for_github_flow_repo_w_default_release_channel() -> GetRepoDefin
                     "angular": "docs(cli): add cli documentation",
                     "emoji": ":books: add cli documentation",
                     "scipy": "DOC: add cli documentation",
-                    "tag": ":books: add cli documentation", # TODO: ????
-                }
+                    "tag": ":books: add cli documentation",  # TODO: ????
+                },
             ],
         },
     }
@@ -118,10 +154,10 @@ def get_commits_for_github_flow_repo_w_default_release_channel() -> GetRepoDefin
 def get_versions_for_github_flow_repo_w_default_release_channel(
     get_commits_for_github_flow_repo_w_default_release_channel: GetRepoDefinitionFn,
 ) -> GetVersionStringsFn:
-    def _get_versions_for_github_flow_repo_w_default_release_channel() -> list[VersionStr]:
-        return list(
-            get_commits_for_github_flow_repo_w_default_release_channel().keys()
-        )
+    def _get_versions_for_github_flow_repo_w_default_release_channel() -> (
+        list[VersionStr]
+    ):
+        return list(get_commits_for_github_flow_repo_w_default_release_channel().keys())
 
     return _get_versions_for_github_flow_repo_w_default_release_channel
 
@@ -133,6 +169,9 @@ def build_github_flow_repo_w_default_release_channel(
     default_tag_format_str: str,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     create_release_tagged_commit: CreateReleaseFn,
+    simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
+    changelog_md_file: Path,
+    commit_n_rtn_changelog_entry: CommitNReturnChangelogEntryFn,
 ) -> BuildRepoFn:
     def _build_github_flow_repo_w_default_release_channel(
         dest_dir: Path | str,
@@ -152,7 +191,9 @@ def build_github_flow_repo_w_default_release_channel(
         )
 
         # Retrieve/Define project vars that will be used to create the repo below
-        repo_def = get_commits_for_github_flow_repo_w_default_release_channel(commit_type)
+        repo_def = get_commits_for_github_flow_repo_w_default_release_channel(
+            commit_type
+        )
         versions = (key for key in repo_def)
         next_version = next(versions)
         next_version_def = repo_def[next_version]
@@ -179,26 +220,39 @@ def build_github_flow_repo_w_default_release_channel(
 
             minor_release_version = next(versions)
             minor_release_version_def = repo_def[minor_release_version]
+            commits_msgs_to_be_squashed = list(minor_release_version_def["commits"])
 
             # check out fix branch
             fix_branch_1 = "fix/missing-text"
-            fix_branch_head = git_repo.create_head(fix_branch_1, main_branch_head.commit)
+            fix_branch_head = git_repo.create_head(
+                fix_branch_1, main_branch_head.commit
+            )
             fix_branch_head.checkout()
 
             # Make a patch level commit
-            patch_release_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, patch_release_version_def["commits"], hvcs
-            )
+            patch_release_version_def["commits"] = [
+                *simulate_change_commits_n_rtn_changelog_entry(
+                    # drop merge commit
+                    git_repo,
+                    patch_release_version_def["commits"][:1],
+                    hvcs,
+                ),
+                # Add/Keep the merge message
+                patch_release_version_def["commits"][1],
+            ]
 
             # check out feature branch
             feat_branch_1 = "feat/add-some-text"
-            feat_branch_head = git_repo.create_head(feat_branch_1, main_branch_head.commit)
+            feat_branch_head = git_repo.create_head(
+                feat_branch_1, main_branch_head.commit
+            )
             feat_branch_head.checkout()
 
             # Make 2 commits for a feature level bump
-            pr_title = f"{minor_release_version_def['commits'][0]} (#2)"
-            minor_release_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, minor_release_version_def["commits"], hvcs
+            minor_release_version_def["commits"] = (
+                simulate_change_commits_n_rtn_changelog_entry(
+                    git_repo, minor_release_version_def["commits"], hvcs
+                )
             )
 
             # check out main branch
@@ -208,9 +262,28 @@ def build_github_flow_repo_w_default_release_channel(
             git_repo.git.merge(
                 fix_branch_1,
                 "--no-ff",
-                m=f"Merge branch '{fix_branch_1}' into 'main'"
+                m=patch_release_version_def["commits"][1].format(
+                    branch_name=fix_branch_1, trunk_name="main"
+                ),
             )
-            Head.delete(git_repo, feat_branch_head, force=True)
+            Head.delete(git_repo, fix_branch_head, force=True)
+            # TODO: this is ugly but had to be done as we don't ignore merge commits by default
+            # Update the merge commit message with the commit sha and url for changelog
+            commit_sha = git_repo.head.commit.hexsha
+            patch_release_version_def["commits"][1] = str.join(
+                " ",
+                [
+                    str(git_repo.head.commit.message).strip(),
+                    f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))",
+                ],
+            )
+
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=patch_release_version,
+            )
 
             # Make patch release for fix (v0.1.1)
             create_release_tagged_commit(git_repo, patch_release_version, tag_format)
@@ -223,19 +296,22 @@ def build_github_flow_repo_w_default_release_channel(
             )
 
             # Commit the squashed changes with GitHub default squash message
-            pr_squash_n_merge_msg = dedent(
-                f"""
-                {pr_title}
-
-                * {minor_release_version_def["commits"][0]}
-
-                * {minor_release_version_def["commits"][1]}
-                """
+            pr_title = commits_msgs_to_be_squashed[0]
+            pr_squash_n_merge_msg = get_github_default_squash_msg(
+                pr_title, 2, commits_msgs_to_be_squashed
             )
-            git_repo.git.commit("--no-edit", m=pr_squash_n_merge_msg)
+            minor_release_version_def["commits"] = [
+                commit_n_rtn_changelog_entry(git_repo, pr_squash_n_merge_msg, hvcs)
+            ]
 
             # Delete feat branch
             Head.delete(git_repo, feat_branch_head, force=True)
+
+            # write expected changelog (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+            )
 
             # Make feature release (v0.2.0)
             create_release_tagged_commit(git_repo, minor_release_version, tag_format)
