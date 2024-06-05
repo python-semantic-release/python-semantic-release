@@ -758,7 +758,9 @@ def test_version_runs_build_command_windows(
                 "ALLUSERSPROFILE": patched_os_environment["ALLUSERSPROFILE"],
                 "APPDATA": patched_os_environment["APPDATA"],
                 "COMMONPROGRAMFILES": patched_os_environment["COMMONPROGRAMFILES"],
-                "COMMONPROGRAMFILES(x86)": patched_os_environment["COMMONPROGRAMFILES(x86)"],
+                "COMMONPROGRAMFILES(x86)": patched_os_environment[
+                    "COMMONPROGRAMFILES(x86)"
+                ],
                 "DEFAULTUSERPROFILE": patched_os_environment["DEFAULTUSERPROFILE"],
                 "HOMEPATH": patched_os_environment["HOMEPATH"],
                 "PATHEXT": patched_os_environment["PATHEXT"],
