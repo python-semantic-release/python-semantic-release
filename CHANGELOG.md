@@ -2,6 +2,25 @@
 
 
 
+## v9.8.1 (2024-06-05)
+
+### Fix
+
+* fix: improve build cmd env on windows (#942)
+
+* fix(version-cmd): pass windows specific env vars to build cmd when on windows
+
+* test(version-cmd): extend build cmd tests to include windows vars
+
+* docs(configuration): define windows specific env vars for build cmd
+
+* refactor(version-cmd): only add windows vars when windows is detected
+
+---------
+
+Co-authored-by: Juan Cruz Mencia Naranjo &lt;jcmencia@arsys.es&gt; ([`d911fae`](https://github.com/python-semantic-release/python-semantic-release/commit/d911fae993d41a8cb1497fa8b2a7e823576e0f22))
+
+
 ## v9.8.0 (2024-05-27)
 
 ### Documentation
