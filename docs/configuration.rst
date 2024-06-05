@@ -207,6 +207,33 @@ PSR_DOCKER_GITHUB_ACTION  Pass-through ``true`` if exists in process env, unset 
 VIRTUAL_ENV               Pass-through ``VIRTUAL_ENV`` if exists in process env, unset otherwise
 ========================  ======================================================================
 
+In addition, on windows systems these environment variables are passed:
+========================  ======================================================================
+Variable Name             Description
+========================  ======================================================================
+ALLUSERSAPPDATA           Pass-through ``ALLUSERAPPDATA`` if exists in process env, unset otherwise
+ALLUSERSPROFILE           Pass-through ``ALLUSERSPPPROFILE`` if exists in process env, unset otherwise
+APPDATA                   Pass-through ``APPDATA`` if exists in process env, unset otherwise
+COMMONPROGRAMFILES        Pass-through ``COMMONPROGRAMFILES`` if exists in process env, unset otherwise
+COMMONPROGRAMFILES(x86)   Pass-through ``COMMONPROGRAMFILES(x86)`` if exists in process env, unset otherwise
+DEFAULTUSERPROFILE        Pass-through ``DEFAULTUSERPROFILE`` if exists in process env, unset otherwise
+HOMEPATH                  Pass-through ``HOMEPATH`` if exists in process env, unset otherwise
+PATHEXT                   Pass-through ``PATHEXT`` if exists in process env, unset otherwise
+PROFILESFOLDER            Pass-through ``PROFILESFOLDER`` if exists in process env, unset otherwise
+PROGRAMFILES              Pass-through ``PROGRAMFILES`` if exists in process env, unset otherwise
+PROGRAMFILES(x86)         Pass-through ``PROGRAMFILES(x86)`` if exists in process env, unset otherwise
+SYSTEM                    Pass-through ``SYSTEM`` if exists in process env, unset otherwise
+SYSTEM16                  Pass-through ``SYSTEM16`` if exists in process env, unset otherwise
+SYSTEM32                  Pass-through ``SYSTEM32`` if exists in process env, unset otherwise
+SYSTEMDRIVE               Pass-through ``SYSTEMDRIVE`` if exists in process env, unset otherwise
+SYSTEMROOT                Pass-through ``SYSTEMROOT`` if exists in process env, unset otherwise
+TEMP                      Pass-through ``TEMP`` if exists in process env, unset otherwise
+TMP                       Pass-through ``TMP`` if exists in process env, unset otherwise
+USERPROFILE               Pass-through ``USERPROFILE`` if exists in process env, unset otherwise
+USERSID                   Pass-through ``USERSID`` if exists in process env, unset otherwise
+WINDIR                    Pass-through ``WINDIR`` if exists in process env, unset otherwise
+========================  ======================================================================
+
 **Default:** ``None`` (not specified)
 
 ----
