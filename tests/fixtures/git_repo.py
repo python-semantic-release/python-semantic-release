@@ -21,7 +21,7 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
-    from typing import Generator, Literal, Protocol, TypedDict, Union
+    from typing import Generator, Protocol, TypedDict, Union
 
     from semantic_release.hvcs import HvcsBase
 
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         UseParserFn,
     )
 
-    CommitConvention = Literal["angular", "emoji", "scipy", "tag"] | str
+    CommitConvention = str
     VersionStr = str
     CommitMsg = str
     ChangelogTypeHeading = str
@@ -337,8 +337,9 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
 
         for section_def in version_def["changelog_sections"]:
             version_entry.append(f"### {section_def['section']}\n")
-            for i in section_def["i_commits"]:
-                version_entry.append(f"* {version_def['commits'][i]}\n")
+            version_entry.extend(
+                [f"* {version_def['commits'][i]}\n" for i in section_def["i_commits"]]
+            )
 
         return str.join("\n", version_entry)
 

@@ -802,10 +802,9 @@ def test_algorithm_no_zero_dot_versions_tag(
                         )
                     ),
                     *(
-                        # when allow_zero_version is True,
-                        # prerelease is True, & major_on_zero is False, the version should be
-                        # minor bumped, when given commits of a minor or major level because
-                        # major_on_zero = False
+                        # when allow_zero_version is True, prerelease is True, & major_on_zero
+                        # is False, the version should be minor bumped, when given commits of a
+                        # minor or major level because major_on_zero = False
                         (commits, False, False, True, "0.3.0")
                         for commits in (
                             lazy_fixture(angular_minor_commits.__name__),
@@ -1212,10 +1211,9 @@ def test_algorithm_with_zero_dot_versions_angular(
                         )
                     ),
                     *(
-                        # when allow_zero_version is True,
-                        # prerelease is True, & major_on_zero is False, the version should be
-                        # minor bumped, when given commits of a minor or major level because
-                        # major_on_zero = False
+                        # when allow_zero_version is True, prerelease is True, & major_on_zero
+                        # is False, the version should be minor bumped, when given commits of a
+                        # minor or major level because major_on_zero = False
                         (commits, False, False, True, "0.3.0")
                         for commits in (
                             lazy_fixture(emoji_minor_commits.__name__),
@@ -1622,10 +1620,9 @@ def test_algorithm_with_zero_dot_versions_emoji(
                         )
                     ),
                     *(
-                        # when allow_zero_version is True,
-                        # prerelease is True, & major_on_zero is False, the version should be
-                        # minor bumped, when given commits of a minor or major level because
-                        # major_on_zero = False
+                        # when allow_zero_version is True, prerelease is True, & major_on_zero
+                        # is False, the version should be minor bumped, when given commits of a
+                        # minor or major level because major_on_zero = False
                         (commits, False, False, True, "0.3.0")
                         for commits in (
                             lazy_fixture(scipy_minor_commits.__name__),
@@ -2026,10 +2023,10 @@ def test_algorithm_with_zero_dot_versions_scipy(
                         )
                     ),
                     *(
-                        # when allow_zero_version is True,
-                        # prerelease is True, & major_on_zero is False, the version should be
-                        # minor bumped, when given commits of a minor or major level because
-                        # major_on_zero = False
+                        # when allow_zero_version is True, prerelease is True,
+                        # & major_on_zero is False, the version should be minor
+                        # bumped, when given commits of a minor or major level
+                        # because major_on_zero = False
                         (commits, False, False, True, "0.3.0")
                         for commits in (
                             lazy_fixture(tag_minor_commits.__name__),
