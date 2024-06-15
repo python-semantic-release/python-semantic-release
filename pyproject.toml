@@ -282,7 +282,6 @@ ignore = [
 ]
 
 external = ["V"]
-ignore-init-module-imports = true
 task-tags = ["NOTE", "TODO", "FIXME", "XXX"]
 
 [tool.ruff.format]

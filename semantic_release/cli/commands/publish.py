@@ -63,4 +63,4 @@ def publish(cli_ctx: CliContextObj, tag: str = "latest") -> None:
 
     log.info("Uploading distributions to release")
     for pattern in dist_glob_patterns:
-        hvcs_client.upload_dists(tag=tag, dist_glob=pattern)
+        hvcs_client.upload_dists(tag=tag, dist_glob=pattern)  # type: ignore[attr-defined]

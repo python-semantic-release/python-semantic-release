@@ -558,7 +558,7 @@ class RuntimeContext:
             # with our forced empty value at the end which can be dropped
             parts = [*env_var_def.split("=", 1), ""]
             # removes any odd spacing around =, and extracts name=value
-            name, env_val = [part.strip() for part in parts[:2]]
+            name, env_val = (part.strip() for part in parts[:2])
 
             if not name:
                 # Skip when invalid format (ex. starting with = and no name)
