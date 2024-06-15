@@ -332,8 +332,7 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
             version_entry.append(f"## {version}\n")
         else:
             version_entry.append(
-                # TODO: artificial newline in front due to template when no Unreleased changes exist
-                f"\n## v{version} ({TODAY_DATE_STR})\n"
+                f"## v{version} ({TODAY_DATE_STR})\n"
             )
 
         for section_def in version_def["changelog_sections"]:
@@ -355,7 +354,7 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
             version_entries.insert(0, build_version_entry(version, version_def))
 
         changelog_content = (
-            str.join("\n" * 3, [header, str.join("\n", list(version_entries))]).rstrip()
+            str.join("\n" * 2, [header, str.join("\n", list(version_entries))]).rstrip()
             + "\n"
         )
 
