@@ -446,20 +446,24 @@ def version(  # noqa: C901
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
         translator.prerelease_token = prerelease_token
 
-    # Only push if we're committing changes
+    # Only push if changes are committed or tagged
     if push_changes and not commit_changes and not create_tag:
-        log.info("changes will not be pushed because --no-commit disables pushing")
+        log.info(
+            "changes will not be pushed because --no-commit --no-tag disables pushing"
+        )
         push_changes &= commit_changes
-
-    # Only push if we're creating a tag
-    if push_changes and not create_tag and not commit_changes:
-        log.info("new tag will not be pushed because --no-tag disables pushing")
-        push_changes &= create_tag
-
-    # Only make a release if we're pushing the changes
+    # Only make a release if changes are pushed
     if make_vcs_release and not push_changes:
         log.info("No vcs release will be created because pushing changes is disabled")
         make_vcs_release &= push_changes
+    # Only make a release if changes are committed
+    if make_vcs_release and not commit_changes:
+        log.info("No vcs release will be created because --no-commit disables release")
+        make_vcs_release &= commit_changes
+    # Only make a release if tagged
+    if make_vcs_release and not create_tag:
+        log.info("No vcs release will be created because --no-tag disables release")
+        make_vcs_release &= create_tag
 
     if not forced_level_bump:
         with Repo(str(runtime.repo_dir)) as git_repo:
@@ -648,7 +652,7 @@ def version(  # noqa: C901
     # are disabled, and the changelog generation is disabled or it's not
     # modified, then the HEAD commit will be tagged as a release commit
     # despite not being made by PSR
-    if commit_changes or create_tag:
+    if create_tag:
         project.git_tag(
             tag_name=new_version.as_tag(),
             message=new_version.as_tag(),
