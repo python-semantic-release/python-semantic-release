@@ -331,9 +331,7 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
         if version == "Unreleased":
             version_entry.append(f"## {version}\n")
         else:
-            version_entry.append(
-                f"## v{version} ({TODAY_DATE_STR})\n"
-            )
+            version_entry.append(f"## v{version} ({TODAY_DATE_STR})\n")
 
         for section_def in version_def["changelog_sections"]:
             version_entry.append(f"### {section_def['section']}\n")
