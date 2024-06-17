@@ -43,7 +43,7 @@ class Gitea(RemoteHvcsBase):
         hvcs_domain: str | None = None,
         token: str | None = None,
         allow_insecure: bool = False,
-        **kwargs: Any,
+        **_kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
         self.token = token

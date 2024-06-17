@@ -77,7 +77,7 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
     # @staticmethod
     # @abstractmethod
     def get_default_options(self) -> _OPTS:
-        return self.parser_options()  # type: ignore
+        return self.parser_options()  # type: ignore # noqa: PGH003
 
     @abstractmethod
     def parse(self, commit: Commit) -> _TT: ...
