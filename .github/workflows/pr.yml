@@ -73,7 +73,6 @@ jobs:
       - name: ruff
         run: |
           python -m ruff check . \
-            --diff \
             --output-format=full \
             --exit-non-zero-on-fix
 
