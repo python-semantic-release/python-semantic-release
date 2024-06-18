@@ -309,7 +309,7 @@ For example, assuming a project is currently at version 1.2.3::
 ************************
 
 Whether or not to perform a ``git commit`` on modifications to source files made by ``semantic-release`` during this
-command invocation, and to run ``git tag`` on this new commit with a tag corresponding to the new version.
+command invocation.
 
 If ``--no-commit`` is supplied, it may disable other options derivatively; please see below.
 
@@ -324,8 +324,7 @@ If ``--no-commit`` is supplied, it may disable other options derivatively; pleas
 ************************
 
 Whether or not to perform a ``git tag`` to apply a tag of the corresponding to the new version during this
-command invocation. This option manages the tag application separate from the commit handled by the ``--commit``
-option.
+command invocation.
 
 If ``--no-tag`` is supplied, it may disable other options derivatively; please see below.
 
@@ -353,7 +352,7 @@ version released.
 Whether or not to push new commits and/or tags to the remote repository.
 
 **Default:** ``--no-push`` if :ref:`--no-commit <cmd-version-option-commit>` and
-:ref:`--no-tag <cmd-version-option-tag>` is also supplied, otherwise ``push`` is the default.
+:ref:`--no-tag <cmd-version-option-tag>` is supplied, otherwise ``push`` is the default.
 
 .. _cmd-version-option-vcs-release:
 
@@ -365,7 +364,7 @@ releases in GitHub and Gitea remotes are supported. If releases aren't supported
 remote VCS, this option will not cause a command failure, but will produce a warning.
 
 **Default:** ``--no-vcs-release`` if ``--no-push`` is supplied (including where this is
-implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
+implied by supplying ``--no-commit`` or ``--no-tag``), otherwise ``--vcs-release``
 
 ``--skip-build``
 ****************
