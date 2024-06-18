@@ -58,7 +58,7 @@ class CliContextObj:
 
         try:
             if was_conf_file_user_provided and not conf_file_exists:
-                raise FileNotFoundError(
+                raise FileNotFoundError(  # noqa: TRY301
                     f"File {self.global_opts.config_file} does not exist"
                 )
 

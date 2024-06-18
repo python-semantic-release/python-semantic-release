@@ -107,7 +107,7 @@ If a setting is not provided, than PSR will fill in the value with the default v
 Python Semantic Release expects a root level key to start the configuration definition. Make
 sure to use the correct root key dependending on the configuration format you are using.
 
-.. note:: If you are using ``pyproject.toml``, this heading should include the `tool`` prefix
+.. note:: If you are using ``pyproject.toml``, this heading should include the ``tool`` prefix
           as specified within PEP 517, resulting in ``[tool.semantic_release]``.
 
 .. note:: If you are using a ``releaserc.toml``, use ``[semantic_release]`` as the root key

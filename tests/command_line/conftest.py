@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 from requests_mock import ANY
 
-from semantic_release.cli import config as CliConfigModule
+from semantic_release.cli import config as cli_config_module
 from semantic_release.cli.config import (
     GlobalCommandLineOptions,
     RawConfig,
@@ -57,7 +57,7 @@ def mocked_git_push(monkeypatch: MonkeyPatch) -> MagicMock:
     """Mock the `Repo.git.push()` method in `semantic_release.cli.main`."""
     mocked_push = MagicMock()
     cls = prepare_mocked_git_command_wrapper_type(push=mocked_push)
-    monkeypatch.setattr(CliConfigModule.Repo, "GitCommandWrapperType", cls)
+    monkeypatch.setattr(cli_config_module.Repo, "GitCommandWrapperType", cls)
     return mocked_push
 
 

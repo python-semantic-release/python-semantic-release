@@ -59,7 +59,7 @@ class Bitbucket(RemoteHvcsBase):
         hvcs_api_domain: str | None = None,
         token: str | None = None,
         allow_insecure: bool = False,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         super().__init__(remote_url)
         self.token = token

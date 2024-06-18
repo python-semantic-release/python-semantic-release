@@ -13,15 +13,13 @@ repos:
 
   # Security & credential scanning/alerting
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: debug-statements
       - id: detect-aws-credentials
         args: ["--allow-missing-credentials"]
       - id: detect-private-key
       - id: check-builtin-literals
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
       - id: check-yaml
       - id: check-toml
       - id: check-case-conflict
@@ -31,16 +29,6 @@ repos:
       - id: mixed-line-ending
       - id: check-ast
 
-  # Formatters that may modify source files automatically
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Keep old ruff formatting rules until other merge requests are completed
-    rev: v0.1.11
-    hooks:
-      - id: ruff-format
-        name: ruff (format)
-        args: ["."]
-        pass_filenames: false
-
   - repo: https://github.com/adamchainz/blacken-docs
     rev: 1.16.0
     hooks:
@@ -48,14 +36,14 @@ repos:
         additional_dependencies: ["black==23.10.1"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.1
+    rev: v3.16.0
     hooks:
       - id: pyupgrade
         args: ["--py38-plus", "--keep-runtime-typing"]
 
   # Linters and validation
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.2
+    rev: v0.4.9
     hooks:
       - id: ruff
         name: ruff (lint)
@@ -63,15 +51,14 @@ repos:
           - "--fix"
           - "--exit-non-zero-on-fix"
           - "--statistics"
-          - "--output-format=text"
-          - "."
-        pass_filenames: false
+          - "--output-format=full"
+      - id: ruff-format
+        name: ruff (format)
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.9.0"
+    rev: "v1.10.0"
     hooks:
       - id: mypy
-        args: ["--config-file", "pyproject.toml"]
         additional_dependencies:
           - "pydantic>=2,<3"
           - "types-requests"

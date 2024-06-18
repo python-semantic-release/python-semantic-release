@@ -34,7 +34,7 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
 
     DEFAULT_ENV_TOKEN_NAME = "HVCS_TOKEN"  # noqa: S105
 
-    def __init__(self, remote_url: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, remote_url: str, *_args: Any, **_kwargs: Any) -> None:
         super().__init__(remote_url)
         self._hvcs_domain: Url | None = None
         self._api_url: Url | None = None

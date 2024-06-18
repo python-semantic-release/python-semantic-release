@@ -21,7 +21,8 @@ class ParsedCommit(NamedTuple):
     @property
     def message(self) -> str:
         m = self.commit.message
-        return m.decode("utf-8") if isinstance(m, bytes) else m
+        message_str = m.decode("utf-8") if isinstance(m, bytes) else m
+        return message_str.replace("\r", "")
 
     @property
     def hexsha(self) -> str:
@@ -39,7 +40,8 @@ class ParseError(NamedTuple):
     @property
     def message(self) -> str:
         m = self.commit.message
-        return m.decode("utf-8") if isinstance(m, bytes) else m
+        message_str = m.decode("utf-8") if isinstance(m, bytes) else m
+        return message_str.replace("\r", "")
 
     @property
     def hexsha(self) -> str:

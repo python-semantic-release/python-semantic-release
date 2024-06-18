@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 
 import pytest
-from git import Commit
+from git import Commit, Repo
 
 from tests.fixtures import *
 from tests.util import remove_dir_tree
@@ -57,7 +57,7 @@ def netrc_file(
     exception = None
     try:
         yield _netrc_file
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001
         exception = err
     finally:
         for context_manager in entered_context_managers:

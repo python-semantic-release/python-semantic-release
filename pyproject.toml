@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "python-semantic-release"
-version = "9.8.1"
+version = "9.8.3"
 description = "Automatic Semantic Versioning for Python projects"
 requires-python = ">=3.8"
 license = { text = "MIT" }
@@ -74,7 +74,7 @@ test = [
 dev = [
   "pre-commit ~= 3.5",
   "tox ~= 4.11",
-  "ruff == 0.4.4"
+  "ruff == 0.4.9"
 ]
 mypy = [
   "mypy == 1.10.0",
@@ -222,6 +222,8 @@ ignore = [
   "DTZ",
   # flake8-errmsg
   "EM",
+  # Some todos and some examples; leave this disabled for now
+  "ERA001",
   # don't compare types, use isinstance()
   # sometimes using type(x) == y is deliberately chosen to exclude
   # subclasses
@@ -282,7 +284,6 @@ ignore = [
 ]
 
 external = ["V"]
-ignore-init-module-imports = true
 task-tags = ["NOTE", "TODO", "FIXME", "XXX"]
 
 [tool.ruff.format]
