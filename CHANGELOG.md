@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v9.8.3 (2024-06-18)
+
+### Fix
+
+* fix(parser): strip DOS carriage-returns in commits (#956)
+
+The default template can result in mixed (UNIX / DOS style) carriage
+returns in the generated changelog. Use a string replace in the commit
+parser to strip the DOS CRs (&#34;\r&#34;). This is only needed in the case when
+we are _not_ byte decoding.
+
+Fixes #955 ([`0b005df`](https://github.com/python-semantic-release/python-semantic-release/commit/0b005df0a8c7730ee0c71453c9992d7b5d2400a4))
+
 ## v9.8.2 (2024-06-17)
 
 ### Fix
