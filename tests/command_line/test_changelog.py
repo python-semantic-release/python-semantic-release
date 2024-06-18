@@ -21,6 +21,10 @@ from tests.const import (
     SUCCESS_EXIT_CODE,
 )
 from tests.fixtures.repos import (
+    repo_w_github_flow_w_default_release_channel_angular_commits,
+    repo_w_github_flow_w_default_release_channel_emoji_commits,
+    repo_w_github_flow_w_default_release_channel_scipy_commits,
+    repo_w_github_flow_w_default_release_channel_tag_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
@@ -151,6 +155,10 @@ def test_changelog_noop_is_noop(
             repo_with_single_branch_and_prereleases_emoji_commits.__name__,
             repo_with_single_branch_and_prereleases_scipy_commits.__name__,
             repo_with_single_branch_and_prereleases_tag_commits.__name__,
+            repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+            repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
+            repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
+            repo_w_github_flow_w_default_release_channel_tag_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
