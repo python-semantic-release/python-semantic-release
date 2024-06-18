@@ -431,7 +431,7 @@ def next_version(
     )
     level_bump = max(parsed_levels, default=LevelBump.NO_RELEASE)
     log.info("The type of the next release release is: %s", level_bump)
-    if level_bump is LevelBump.NO_RELEASE:
+    if level_bump is LevelBump.NO_RELEASE:  # noqa: SIM102
         if latest_version.major != 0 or allow_zero_version:
             log.info("No release will be made")
             return latest_version

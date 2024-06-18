@@ -12,7 +12,7 @@ from pydantic.dataclasses import dataclass
 
 from semantic_release.changelog.context import make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
-from semantic_release.cli import config as cliConfigModule
+from semantic_release.cli import config as cli_config_module
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseResult
 from semantic_release.enums import LevelBump
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
     _R = TypeVar("_R")
 
-    GitCommandWrapperType: TypeAlias = cliConfigModule.Repo.GitCommandWrapperType
+    GitCommandWrapperType: TypeAlias = cli_config_module.Repo.GitCommandWrapperType
 
 
 def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
@@ -162,7 +162,7 @@ def prepare_mocked_git_command_wrapper_type(
     >>> mocked_push.assert_called_once()
     """
 
-    class MockGitCommandWrapperType(cliConfigModule.Repo.GitCommandWrapperType):
+    class MockGitCommandWrapperType(cli_config_module.Repo.GitCommandWrapperType):
         def __getattr__(self, name: str) -> Any:
             try:
                 return object.__getattribute__(self, f"mocked_{name}")

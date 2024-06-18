@@ -609,7 +609,7 @@ def test_create_or_update_release_when_create_fails_and_update_fails(
     )
 
     # Execute in mocked environment expecting a GitlabUpdateError to be raised
-    with create_release_patch, edit_release_notes_patch, get_release_by_id_patch:
+    with create_release_patch, edit_release_notes_patch, get_release_by_id_patch:  # noqa: SIM117
         with pytest.raises(gitlab.GitlabUpdateError):
             default_gl_client.create_or_update_release(
                 A_GOOD_TAG, RELEASE_NOTES, prerelease

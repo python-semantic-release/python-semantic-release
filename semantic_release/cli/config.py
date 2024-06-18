@@ -145,9 +145,12 @@ class RemoteConfig(BaseModel):
     @model_validator(mode="after")
     def set_default_token(self) -> Self:
         # Set the default token name for the given VCS when no user input is given
-        if not self.token and self.type in _known_hvcs:
-            if env_token := self._get_default_token():
-                self.token = env_token
+        if self.token:
+            return self
+        if self.type not in _known_hvcs:
+            return self
+        if env_token := self._get_default_token():
+            self.token = env_token
         return self
 
     def _get_default_token(self) -> str | None:
@@ -406,7 +409,7 @@ class RuntimeContext:
         return masker
 
     @classmethod
-    def from_raw_config(
+    def from_raw_config(  # noqa: C901
         cls, raw: RawConfig, global_cli_options: GlobalCommandLineOptions
     ) -> RuntimeContext:
         ##

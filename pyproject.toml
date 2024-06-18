@@ -222,6 +222,8 @@ ignore = [
   "DTZ",
   # flake8-errmsg
   "EM",
+  # Some todos and some examples; leave this disabled for now
+  "ERA001",
   # don't compare types, use isinstance()
   # sometimes using type(x) == y is deliberately chosen to exclude
   # subclasses
