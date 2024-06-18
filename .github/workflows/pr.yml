@@ -49,7 +49,7 @@ jobs:
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@v4.2.1
+        uses: mikepenz/action-junit-report@v4.2.2
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
