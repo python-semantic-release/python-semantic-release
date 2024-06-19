@@ -41,6 +41,11 @@ class EmojiParserOptions(ParserOptions):
         ":robot:",
         ":green_apple:",
     )
+    non_triggering_tags: Tuple[str, ...] = (
+        ":memo:",
+        ":construction_worker:",
+        ":recycle:",
+    )
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
 
@@ -66,7 +71,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
 
     def parse(self, commit: Commit) -> ParseResult:
         all_emojis = (
-            self.options.major_tags + self.options.minor_tags + self.options.patch_tags
+            self.options.major_tags + self.options.minor_tags + self.options.patch_tags + self.options.non_triggering_tags
         )
 
         message = str(commit.message)

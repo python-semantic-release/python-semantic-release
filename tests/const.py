@@ -55,7 +55,7 @@ EMOJI_COMMITS_PATCH = [
 ]
 EMOJI_COMMITS_MINOR = [
     ":sparkles: something special\n",
-    ":sparkles::pencil: docs for something special\n",
+    ":sparkles::memo: docs for something special\n",
     ":bug: needed a tweak\n",
     "tweaked again\n",
     "tweaked again\n",

@@ -657,6 +657,9 @@ the expections from ``commit_parser`` value to default options value.
                                  ":apple:", ":penguin:", ":checkered_flag:", ":robot:",
                                  ":green_apple:"
                              ]
+                             non_triggering_tags = [
+                                 ":memo:", ":construction_worker:", ":recycle:"
+                             ]
 
 ``"scipy"``         ->   .. code-block:: toml
 
