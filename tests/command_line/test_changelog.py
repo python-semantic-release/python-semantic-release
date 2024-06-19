@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
 
 
-changelog_subcmd = changelog.name or changelog.__name__  # type: ignore # noqa: PGH003
+changelog_subcmd = changelog.name or changelog.__name__  # type: ignore[attr-defined] # noqa: PGH003
 
 
 @pytest.mark.parametrize(

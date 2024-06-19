@@ -287,9 +287,10 @@ external = ["V"]
 task-tags = ["NOTE", "TODO", "FIXME", "XXX"]
 
 [tool.ruff.format]
-quote-style = "double"
+docstring-code-format = true
 indent-style = "space"
 line-ending = "lf"
+quote-style = "double"
 
 [tool.ruff.lint.per-file-ignores]
 # Imported but unused
