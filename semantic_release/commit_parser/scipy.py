@@ -25,7 +25,16 @@ from the broken behavior to the new behavior. It will be added to the
 
 Supported Tags::
 
-    API, DEP, ENH, REV, BUG, MAINT, BENCH, BLD,
+    (
+        API,
+        DEP,
+        ENH,
+        REV,
+        BUG,
+        MAINT,
+        BENCH,
+        BLD,
+    )
     DEV, DOC, STY, TST, REL, FEAT, TEST
 
 Supported Changelog Sections::
