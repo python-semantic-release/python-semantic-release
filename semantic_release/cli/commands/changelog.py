@@ -125,8 +125,14 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
 
     changelog_context.bind_to_environment(env)
 
+    use_user_template_dir = bool(
+        # Directory exists and directory is not empty
+        template_dir.exists()
+        and template_dir.is_dir()
+        and os.listdir(template_dir)
+    )
 
-    if template_dir.exists():
+    if use_user_template_dir:
         apply_user_changelog_template_directory(
             template_dir=template_dir,
             environment=env,
