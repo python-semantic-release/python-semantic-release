@@ -541,10 +541,10 @@ class RuntimeContext:
         # changelog_file
         changelog_file = Path(raw.changelog.changelog_file).resolve()
 
-        template_dir = Path(repo.working_tree_dir or ".") / raw.changelog.template_dir
+        template_dir = (Path(repo.working_tree_dir or ".") / raw.changelog.template_dir).resolve()
 
         template_environment = environment(
-            template_dir=raw.changelog.template_dir,
+            template_dir=template_dir,
             **raw.changelog.environment.model_dump(),
         )
 
