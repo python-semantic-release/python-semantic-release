@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from jinja2 import Environment
 
-    from semantic_release.cli.commands.cli_context import CliContextObj
+    from semantic_release.cli.cli_context import CliContextObj
 
 
 log = logging.getLogger(__name__)
