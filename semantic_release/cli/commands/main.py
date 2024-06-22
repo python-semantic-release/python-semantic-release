@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 import semantic_release
-from semantic_release.cli.commands.cli_context import CliContextObj
+from semantic_release.cli.cli_context import CliContextObj
 from semantic_release.cli.config import GlobalCommandLineOptions
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint

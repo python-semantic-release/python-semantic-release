@@ -11,7 +11,7 @@ from semantic_release.version import tags_and_versions
 
 if TYPE_CHECKING:
     from typing import Tuple
-    from semantic_release.cli.commands.cli_context import CliContextObj
+    from semantic_release.cli.cli_context import CliContextObj
 
 
 log = logging.getLogger(__name__)
