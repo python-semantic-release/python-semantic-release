@@ -37,7 +37,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from git import Repo
     from git.refs.tag import Tag
 
-    from semantic_release.cli.commands.cli_context import CliContextObj
+    from semantic_release.cli.cli_context import CliContextObj
     from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
 
