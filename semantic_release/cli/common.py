@@ -10,9 +10,6 @@ if TYPE_CHECKING:
 
     from jinja2 import Environment
 
-    from semantic_release.changelog.release_history import Release
-    from semantic_release.version import Version
-
 
 def get_release_notes_template(template_dir: Path) -> str:
     """Read the project's template for release notes, falling back to the default."""
@@ -27,14 +24,14 @@ def get_release_notes_template(template_dir: Path) -> str:
         )
 
 
-def render_default_changelog_file(template_environment: Environment) -> str:
+def render_default_changelog_file(template_env: Environment) -> str:
     changelog_text = (
         files("semantic_release")
         .joinpath("data/templates/CHANGELOG.md.j2")
         .read_text(encoding="utf-8")
     )
-    tmpl = template_environment.from_string(changelog_text)
-    return tmpl.render().rstrip()
+    template = template_env.from_string(changelog_text)
+    return template.render().rstrip()
 
 
 def render_release_notes(

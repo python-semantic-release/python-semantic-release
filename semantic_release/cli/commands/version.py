@@ -122,16 +122,18 @@ def apply_version_to_source_files(
         str(declaration.path.resolve().relative_to(working_dir))
         for declaration in version_declarations
     ]
+
     if noop:
         noop_report(
             "would have updated versions in the following paths:"
             + "".join(f"\n    {path}" for path in paths)
         )
-    else:
-        log.debug("writing version %s to source paths %s", version, paths)
-        for declaration in version_declarations:
-            new_content = declaration.replace(new_version=version)
-            declaration.path.write_text(new_content)
+        return paths
+
+    log.debug("writing version %s to source paths %s", version, paths)
+    for declaration in version_declarations:
+        new_content = declaration.replace(new_version=version)
+        declaration.path.write_text(new_content)
 
     return paths
 
@@ -299,21 +301,21 @@ def get_windows_env() -> Mapping[str, str | None]:
 @click.pass_obj
 def version(  # noqa: C901
     cli_ctx: CliContextObj,
-    print_only: bool = False,
-    print_only_tag: bool = False,
-    print_last_released: bool = False,
-    print_last_released_tag: bool = False,
-    as_prerelease: bool = False,
-    prerelease_token: str | None = None,
+    print_only: bool,
+    print_only_tag: bool,
+    print_last_released: bool,
+    print_last_released_tag: bool,
+    as_prerelease: bool,
+    prerelease_token: str | None,
+    commit_changes: bool,
+    create_tag: bool,
+    update_changelog: bool,
+    push_changes: bool,
+    make_vcs_release: bool,
+    build_metadata: str | None,
+    skip_build: bool,
     force_level: str | None = None,
-    commit_changes: bool = True,
-    create_tag: bool = True,
-    update_changelog: bool = True,
-    push_changes: bool = True,
-    make_vcs_release: bool = True,
-    build_metadata: str | None = None,
-    skip_build: bool = False,
-) -> str:
+) -> None:
     """
     Detect the semantically correct next version that should be applied to your
     project.
@@ -340,14 +342,12 @@ def version(  # noqa: C901
 
     # We can short circuit updating the release if we are only printing the last released version
     if print_last_released or print_last_released_tag:
-        if last_release := last_released(repo, translator):
-            if print_last_released:
-                click.echo(last_release[1])
-            if print_last_released_tag:
-                click.echo(last_release[0])
-        else:
+        if not (last_release := last_released(repo, translator)):
             log.warning("No release tags found.")
-        ctx.exit(0)
+            return
+
+        click.echo(last_release[0] if print_last_released_tag else last_release[1])
+        return
 
     parser = runtime.commit_parser
     forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
@@ -368,7 +368,7 @@ def version(  # noqa: C901
     no_verify = runtime.no_git_verify
     build_command = runtime.build_command
     opts = runtime.global_cli_options
-    gha_output = VersionGitHubActionsOutput()
+    gha_output = VersionGitHubActionsOutput(released=False)
 
     if prerelease_token:
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
@@ -378,10 +378,12 @@ def version(  # noqa: C901
     if push_changes and not commit_changes and not create_tag:
         log.info("changes will not be pushed because --no-commit disables pushing")
         push_changes &= commit_changes
+
     # Only push if we're creating a tag
     if push_changes and not create_tag and not commit_changes:
         log.info("new tag will not be pushed because --no-tag disables pushing")
         push_changes &= create_tag
+
     # Only make a release if we're pushing the changes
     if make_vcs_release and not push_changes:
         log.info("No vcs release will be created because pushing changes is disabled")
@@ -435,46 +437,67 @@ def version(  # noqa: C901
             new_version,
         )
 
-    gha_output.released = False
+    # Update GitHub Actions output value with new version & set delayed write
     gha_output.version = new_version
     ctx.call_on_close(gha_output.write_if_possible)
 
+    # Make string variant of version && Translate to tag if necessary
+    version_to_print = (
+        str(new_version)
+        if not print_only_tag
+        else translator.str_to_tag(str(new_version))
+    )
+
     # Print the new version so that command-line output capture will work
-    if print_only_tag:
-        click.echo(translator.str_to_tag(str(new_version)))
-    else:
-        click.echo(str(new_version))
+    click.echo(version_to_print)
+
+    # TODO: performance improvement - cache the result of tags_and_versions (previously done in next_version())
+    previously_released_versions = {
+        v for _, v in tags_and_versions(repo.tags, translator)
+    }
 
     # If the new version has already been released, we fail and abort if strict;
     # otherwise we exit with 0.
-    if new_version in {v for _, v in tags_and_versions(repo.tags, translator)}:
+    if new_version in previously_released_versions:
         if opts.strict:
             ctx.fail(
-                f"No release will be made, {new_version!s} has already been "
-                "released!"
+                str.join(
+                    " ",
+                    [
+                        "No release will be made,",
+                        f"{new_version!s} has already been released!",
+                    ],
+                )
             )
-        else:
-            rprint(
-                f"[bold orange1]No release will be made, {new_version!s} has "
-                "already been released!"
+
+        rprint(
+            str.join(
+                " ",
+                [
+                    "[bold orange1]No release will be made,",
+                    f"{new_version!s} has already been released!",
+                ],
             )
-            ctx.exit(0)
+        )
+        return
 
     if print_only or print_only_tag:
-        ctx.exit(0)
+        return
 
-    rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
-
-    rh = ReleaseHistory.from_git_history(
+    release_history = ReleaseHistory.from_git_history(
         repo=repo,
         translator=translator,
         commit_parser=parser,
         exclude_commit_patterns=changelog_excluded_commit_patterns,
     )
 
+    rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
+
     commit_date = datetime.now()
     try:
-        rh = rh.release(
+        # Create release object for the new version
+        # This will be used to generate the changelog prior to the commit and/or tag
+        release_history = release_history.release(
             new_version,
             tagger=commit_author,
             committer=commit_author,
