@@ -13,6 +13,7 @@ from semantic_release import __version__
 from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
+from tests.util import assert_exit_code, assert_successful_exit_code
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from click.testing import CliRunner
     from git import Repo
 
-    from tests.fixtures.example_project import UpdatePyprojectTomlFn
+    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
 
 
 def test_main_prints_version_and_exits(cli_runner: CliRunner):
@@ -29,14 +30,14 @@ def test_main_prints_version_and_exits(cli_runner: CliRunner):
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.output == f"semantic-release, version {__version__}\n"
 
 
 def test_main_no_args_prints_help_text(cli_runner: CliRunner):
     result = cli_runner.invoke(main, [])
-    
-    assert result.exit_code == 0
+    assert_successful_exit_code(result, [MAIN_PROG_NAME])
 
 
 def test_not_a_release_branch_exit_code(
@@ -49,7 +50,9 @@ def test_not_a_release_branch_exit_code(
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-commit"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
 
 def test_not_a_release_branch_exit_code_with_strict(
     repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
@@ -60,7 +63,9 @@ def test_not_a_release_branch_exit_code_with_strict(
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, "--no-commit"]
     result = cli_runner.invoke(main, cli_cmd[1:])
-    assert result.exit_code == 2
+
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
 
 
 def test_not_a_release_branch_detached_head_exit_code(
@@ -78,7 +83,7 @@ def test_not_a_release_branch_detached_head_exit_code(
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # as non-strict, this will return success exit code
-    assert result.exit_code == 0
+    assert_successful_exit_code(result, cli_cmd)
     assert expected_err_msg in result.stderr
 
 
@@ -122,7 +127,9 @@ def test_default_config_is_used_when_none_in_toml_config_file(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
 
 @pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
 def test_default_config_is_used_when_none_in_json_config_file(
@@ -140,7 +147,9 @@ def test_default_config_is_used_when_none_in_json_config_file(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
 
 @pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
 def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
@@ -156,7 +165,9 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
 
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
-    assert result.exit_code == 0
+
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
     assert "does not exist" in result.stderr
 
 
@@ -171,8 +182,11 @@ def test_errors_when_config_file_invalid_configuration(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
+    # preprocess results
     stderr_lines = result.stderr.splitlines()
-    assert result.exit_code == 1
+
+    # Evaluate
+    assert_exit_code(1, result, cli_cmd)
     assert "1 validation error for RawConfig" in stderr_lines[0]
     assert "remote.type" in stderr_lines[1]
 
@@ -198,4 +212,5 @@ def test_uses_default_config_when_no_config_file_found(
         # Act
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)

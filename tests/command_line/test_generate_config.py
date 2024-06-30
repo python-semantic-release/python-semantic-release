@@ -10,6 +10,7 @@ from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import RawConfig
 
 from tests.const import MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD
+from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
     from typing import Any
@@ -34,7 +35,7 @@ def test_generate_config_toml(
 
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    assert_successful_exit_code(result, cli_cmd)
     assert expected_config_as_str == result.output.strip()
 
 
@@ -50,7 +51,7 @@ def test_generate_config_json(
 
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    assert_successful_exit_code(result, cli_cmd)
     assert expected_config_as_str == result.output.strip()
 
 
@@ -71,5 +72,5 @@ def test_generate_config_pyproject_toml(
 
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    assert_successful_exit_code(result, cli_cmd)
     assert expected_config_as_str == result.output.strip()
