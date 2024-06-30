@@ -36,6 +36,6 @@ def setup_hook(argv: list[str]) -> None:
     if len(argv) > 1 and any(
         cmd in argv for cmd in ["version", "publish", "changelog"]
     ):
-        from semantic_release.cli import main
+        from semantic_release.cli.commands.main import main
 
         main()
