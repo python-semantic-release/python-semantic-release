@@ -14,12 +14,12 @@ from requests import Session
 from semantic_release.cli.commands.main import main
 
 from tests.const import (
+    CHANGELOG_SUBCMD,
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
     MAIN_PROG_NAME,
-    CHANGELOG_SUBCMD,
 )
 from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,

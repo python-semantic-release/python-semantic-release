@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from semantic_release.cli.commands.main import Cli
 
 A_FULL_VERSION_STRING = "1.11.567"
