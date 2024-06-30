@@ -74,6 +74,22 @@ def assert_successful_exit_code(result: ClickInvokeResult, cli_cmd: list[str]) -
     return assert_exit_code(SUCCESS_EXIT_CODE, result, cli_cmd)
 
 
+def get_full_qualname(callable_obj: Callable) -> str:
+    parts = filter(
+        None,
+        [
+            callable_obj.__module__,
+            (
+                None
+                if callable_obj.__class__.__name__ == "function"
+                else callable_obj.__class__.__name__
+            ),
+            callable_obj.__name__,
+        ],
+    )
+    return str.join(".", parts)
+
+
 def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
     """Compatibility wrapper for shutil.copytree"""
     # python3.8+
