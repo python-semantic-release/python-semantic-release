@@ -77,6 +77,10 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
                 )
             )
 
+    if tag not in {tag.name for tag in repo.tags}:
+        log.error("Tag '%s' not found in local repository!", tag)
+        ctx.exit(1)
+
     if not isinstance(hvcs_client, RemoteHvcsBase):
         log.info(
             "Remote does not support artifact upload. Exiting with no action taken..."
