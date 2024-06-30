@@ -547,7 +547,8 @@ def version(  # noqa: C901
             tagged_date=commit_date,
         )
     except ValueError as ve:
-        ctx.fail(str(ve))
+        click.echo(str(ve), err=True)
+        ctx.exit(1)
 
     all_paths_to_add: list[str] = []
 
@@ -748,6 +749,8 @@ def version(  # noqa: C901
         template_dir=runtime.template_dir,
     )
 
+    exception = None
+    help_message = ""
     try:
         hvcs_client.create_release(
             tag=new_version.as_tag(),
@@ -757,26 +760,34 @@ def version(  # noqa: C901
             noop=opts.noop,
         )
     except HTTPError as err:
-        log.exception(err)
-        ctx.fail(str.join("\n", [str(err), "Failed to create release!"]))
+        exception = err
     except UnexpectedResponse as err:
-        log.exception(err)
-        ctx.fail(
-            str.join(
-                "\n",
-                [
-                    str(err),
-                    "Unexpected response from remote VCS!",
-                    str.join(
-                        " ",
-                        [
-                            "Before re-running, make sure to clean up any artifacts",
-                            "on the hvcs that may have already been created.",
-                        ],
-                    ),
-                ],
-            )
+        exception = err
+        help_message = str.join(
+            " ",
+            [
+                "Before re-running, make sure to clean up any artifacts",
+                "on the hvcs that may have already been created.",
+            ],
+        )
+        help_message = str.join(
+            "\n",
+            [
+                "Unexpected response from remote VCS!",
+                help_message,
+            ]
         )
     except Exception as e:
-        log.exception(e)
-        ctx.fail(str(e))
+        # TODO: Remove this catch-all exception handler in the future
+        exception = e
+    finally:
+        if exception is not None:
+            log.exception(exception)
+            click.echo(str(exception), err=True)
+            if help_message:
+                click.echo(help_message, err=True)
+            click.echo(
+                f"Failed to create release on {hvcs_client.__class__.__name__}!",
+                err=True
+            )
+            ctx.exit(1)
