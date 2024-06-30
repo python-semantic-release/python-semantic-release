@@ -14,6 +14,7 @@ import gitlab.v4
 import gitlab.v4.objects
 from urllib3.util.url import Url, parse_url
 
+from semantic_release.cli.util import noop_report
 from semantic_release.errors import UnexpectedResponse
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
@@ -100,6 +101,7 @@ class Gitlab(RemoteHvcsBase):
         release_notes: str,
         prerelease: bool = False,  # noqa: ARG002
         assets: list[str] | None = None,  # noqa: ARG002
+        noop: bool = False,
     ) -> str:
         """
         Create a release in a remote VCS, adding any release notes and assets to it
@@ -110,6 +112,7 @@ class Gitlab(RemoteHvcsBase):
             release_notes(str): The changelog description for this version only
             prerelease(bool): This parameter has no effect in GitLab
             assets(list[str]): A list of paths to files to upload as assets (TODO: not implemented)
+            noop(bool): If True, do not perform any actions, only log intents
 
         Returns:
         -------
@@ -121,6 +124,10 @@ class Gitlab(RemoteHvcsBase):
             GitlabCreateError: If the server cannot perform the request
 
         """
+        if noop:
+            noop_report(f"would have created a release for tag {tag}")
+            return tag
+
         log.info("Creating release for %s", tag)
         # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
         self.project.releases.create(
