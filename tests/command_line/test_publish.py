@@ -2,11 +2,10 @@ from unittest import mock
 
 import pytest
 
-from semantic_release.cli import main, publish
+from semantic_release.cli.commands.main import main
 from semantic_release.hvcs import Github
 
-
-@pytest.mark.usefixtures("repo_with_single_branch_angular_commits")
+from tests.const import MAIN_PROG_NAME, PUBLISH_SUBCMD
 @pytest.mark.parametrize("cmd_args", [(), ("--tag", "latest")])
 def test_publish_latest_uses_latest_tag(
     cli_runner,

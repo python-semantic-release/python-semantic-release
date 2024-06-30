@@ -4,8 +4,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import semantic_release
-from semantic_release.cli import changelog, generate_config, main, publish, version
+from semantic_release.cli.commands.changelog import changelog
+from semantic_release.cli.commands.generate_config import generate_config
+from semantic_release.cli.commands.main import main
+from semantic_release.cli.commands.publish import publish
+from semantic_release.cli.commands.version import version
+
+from tests.const import MAIN_PROG_NAME, SUCCESS_EXIT_CODE
 
 if TYPE_CHECKING:
     from click import Command
@@ -16,7 +21,7 @@ if TYPE_CHECKING:
 
 
 # Define the expected exit code for the help command
-help_exit_code = 0
+HELP_EXIT_CODE = SUCCESS_EXIT_CODE
 
 
 @pytest.mark.parametrize(
@@ -46,7 +51,7 @@ def test_help_no_repo(
                 None,
                 [
                     "Usage:",
-                    semantic_release.__name__,
+                    MAIN_PROG_NAME,
                     command.name if command.name != "main" else "",
                     "[OPTIONS]",
                     "" if command.name != main.name else "COMMAND [ARGS]...",
@@ -61,7 +66,7 @@ def test_help_no_repo(
     )
 
     # Run the command with the help option
-    result = cli_runner.invoke(main, args, prog_name=semantic_release.__name__)
+    result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
     assert help_exit_code == result.exit_code
@@ -94,7 +99,7 @@ def test_help_valid_config(
                 None,
                 [
                     "Usage:",
-                    semantic_release.__name__,
+                    MAIN_PROG_NAME,
                     command.name if command.name != main.name else "",
                     "[OPTIONS]",
                     "" if command.name != main.name else "COMMAND [ARGS]...",
@@ -109,7 +114,7 @@ def test_help_valid_config(
     )
 
     # Run the command with the help option
-    result = cli_runner.invoke(main, args, prog_name=semantic_release.__name__)
+    result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
     assert help_exit_code == result.exit_code
@@ -147,7 +152,7 @@ def test_help_invalid_config(
                 None,
                 [
                     "Usage:",
-                    semantic_release.__name__,
+                    MAIN_PROG_NAME,
                     command.name if command.name != "main" else "",
                     "[OPTIONS]",
                     "" if command.name != main.name else "COMMAND [ARGS]...",
@@ -162,7 +167,7 @@ def test_help_invalid_config(
     )
 
     # Run the command with the help option
-    result = cli_runner.invoke(main, args, prog_name=semantic_release.__name__)
+    result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
     assert help_exit_code == result.exit_code
@@ -200,7 +205,7 @@ def test_help_non_release_branch(
                 None,
                 [
                     "Usage:",
-                    semantic_release.__name__,
+                    MAIN_PROG_NAME,
                     command.name if command.name != "main" else "",
                     "[OPTIONS]",
                     "" if command.name != main.name else "COMMAND [ARGS]...",
@@ -215,7 +220,7 @@ def test_help_non_release_branch(
     )
 
     # Run the command with the help option
-    result = cli_runner.invoke(main, args, prog_name=semantic_release.__name__)
+    result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
     assert help_exit_code == result.exit_code
