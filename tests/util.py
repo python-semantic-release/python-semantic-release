@@ -6,6 +6,7 @@ import shutil
 import stat
 import string
 from contextlib import contextmanager, suppress
+from textwrap import indent
 from typing import TYPE_CHECKING, Tuple
 
 from pydantic.dataclasses import dataclass
@@ -17,10 +18,12 @@ from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseResult
 from semantic_release.enums import LevelBump
 
+from tests.const import SUCCESS_EXIT_CODE
+
 if TYPE_CHECKING:
     import filecmp
     from pathlib import Path
-    from typing import Any, Generator, Iterable, TypeVar
+    from typing import Any, Callable, Generator, Iterable, TypeVar
 
     try:
         from typing import TypeAlias
@@ -30,6 +33,7 @@ if TYPE_CHECKING:
 
     from unittest.mock import MagicMock
 
+    from click.testing import Result as ClickInvokeResult
     from git import Commit, Repo
 
     from semantic_release.cli.config import RuntimeContext
@@ -38,6 +42,36 @@ if TYPE_CHECKING:
     _R = TypeVar("_R")
 
     GitCommandWrapperType: TypeAlias = cli_config_module.Repo.GitCommandWrapperType
+
+
+def assert_exit_code(
+    exit_code: int, result: ClickInvokeResult, cli_cmd: list[str]
+) -> bool:
+    if result.exit_code != exit_code:
+        raise AssertionError(
+            str.join(
+                "\n",
+                [
+                    f"{result.exit_code} != {exit_code} (actual != expected)",
+                    "",
+                    # Explain what command failed
+                    "Unexpected exit code from command:",
+                    # f"  '{str.join(' ', cli_cmd)}'",
+                    indent(f"'{str.join(' ', cli_cmd)}'", " " * 2),
+                    "",
+                    # Add indentation to each line for stdout & stderr
+                    "stdout:",
+                    indent(result.stdout, " " * 2),
+                    "stderr:",
+                    indent(result.stderr, " " * 2),
+                ],
+            )
+        )
+    return True
+
+
+def assert_successful_exit_code(result: ClickInvokeResult, cli_cmd: list[str]) -> bool:
+    return assert_exit_code(SUCCESS_EXIT_CODE, result, cli_cmd)
 
 
 def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
