@@ -13,9 +13,14 @@ from semantic_release.version.declaration import (
 from semantic_release.version.version import Version
 
 from tests.const import EXAMPLE_PROJECT_VERSION
+from tests.fixtures.example_project import (
+    example_pyproject_toml,
+    example_setup_cfg,
+    init_example_project,
+)
 
 
-@pytest.mark.usefixtures("init_example_project")
+@pytest.mark.usefixtures(init_example_project.__name__)
 def test_pyproject_toml_version_found(example_pyproject_toml: Path):
     decl = TomlVersionDeclaration(
         example_pyproject_toml.resolve(), "tool.poetry.version"
@@ -25,7 +30,7 @@ def test_pyproject_toml_version_found(example_pyproject_toml: Path):
     assert versions.pop() == Version.parse(EXAMPLE_PROJECT_VERSION)
 
 
-@pytest.mark.usefixtures("init_example_project")
+@pytest.mark.usefixtures(init_example_project.__name__)
 def test_setup_cfg_version_found(example_setup_cfg: Path):
     decl = PatternVersionDeclaration(
         example_setup_cfg.resolve(), r"^version *= *(?P<version>.*)$"
@@ -40,17 +45,17 @@ def test_setup_cfg_version_found(example_setup_cfg: Path):
     [
         (
             TomlVersionDeclaration,
-            lazy_fixture("example_pyproject_toml"),
+            lazy_fixture(example_pyproject_toml.__name__),
             "tool.poetry.version",
         ),
         (
             PatternVersionDeclaration,
-            lazy_fixture("example_setup_cfg"),
+            lazy_fixture(example_setup_cfg.__name__),
             r"^version = (?P<version>.*)$",
         ),
     ],
 )
-@pytest.mark.usefixtures("init_example_project")
+@pytest.mark.usefixtures(init_example_project.__name__)
 def test_version_replace(decl_cls, config_file, search_text):
     new_version = Version(1, 0, 0)
     decl = decl_cls(config_file.resolve(), search_text)

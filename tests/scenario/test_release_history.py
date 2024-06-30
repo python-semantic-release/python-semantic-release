@@ -12,6 +12,14 @@ from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
 from tests.const import ANGULAR_COMMITS_MINOR, COMMIT_MESSAGE
+from tests.fixtures import (
+    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_with_git_flow_and_release_channels_angular_commits,
+    repo_with_git_flow_angular_commits,
+    repo_with_no_tags_angular_commits,
+    repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_angular_commits,
+)
 from tests.util import add_text_to_file
 
 # NOTE: not testing parser correctness here, just that the right commits end up
@@ -187,29 +195,33 @@ REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY = (
     [
         # ANGULAR parser
         (
-            lazy_fixture("repo_with_no_tags_angular_commits"),
+            lazy_fixture(repo_with_no_tags_angular_commits.__name__),
             REPO_WITH_NO_TAGS_EXPECTED_RELEASE_HISTORY,
         ),
         (
-            lazy_fixture("repo_with_single_branch_angular_commits"),
+            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
             REPO_WITH_SINGLE_BRANCH_EXPECTED_RELEASE_HISTORY,
         ),
         (
-            lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+            lazy_fixture(
+                repo_with_single_branch_and_prereleases_angular_commits.__name__
+            ),
             REPO_WITH_SINGLE_BRANCH_AND_PRERELEASES_EXPECTED_RELEASE_HISTORY,
         ),
         (
             lazy_fixture(
-                "repo_w_github_flow_w_feature_release_channel_angular_commits"
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
             ),
             REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY,
         ),
         (
-            lazy_fixture("repo_with_git_flow_angular_commits"),
+            lazy_fixture(repo_with_git_flow_angular_commits.__name__),
             REPO_WITH_GIT_FLOW_EXPECTED_RELEASE_HISTORY,
         ),
         (
-            lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+            lazy_fixture(
+                repo_with_git_flow_and_release_channels_angular_commits.__name__
+            ),
             REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY,
         ),
     ],
@@ -293,12 +305,14 @@ def test_release_history(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_release_history_releases(repo, default_angular_parser):
@@ -333,12 +347,14 @@ def test_release_history_releases(repo, default_angular_parser):
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_all_matching_repo_tags_are_released(repo, default_angular_parser):

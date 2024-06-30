@@ -9,7 +9,7 @@ import tomlkit
 from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import RawConfig
 
-from tests.const import MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD
+from tests.const import GENERATE_CONFIG_SUBCMD, MAIN_PROG_NAME
 from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
