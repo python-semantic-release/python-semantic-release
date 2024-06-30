@@ -6,8 +6,32 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jinja2 import Environment
 
-    from semantic_release.changelog.release_history import ReleaseHistory
+    from semantic_release.changelog.release_history import Release, ReleaseHistory
     from semantic_release.hvcs._base import HvcsBase
+    from semantic_release.version.version import Version
+
+
+@dataclass
+class ReleaseNotesContext:
+    repo_name: str
+    repo_owner: str
+    hvcs_type: str
+    version: Version
+    release: Release
+    filters: tuple[Callable[..., Any], ...] = ()
+
+    def bind_to_environment(self, env: Environment) -> Environment:
+        env_globals = dict(
+            filter(lambda k_v: k_v[0] != "filters", self.__dict__.items())
+        )
+
+        for g, v in env_globals.items():
+            env.globals[g] = v
+
+        for f in self.filters:
+            env.filters[f.__name__] = f
+
+        return env
 
 
 @dataclass
