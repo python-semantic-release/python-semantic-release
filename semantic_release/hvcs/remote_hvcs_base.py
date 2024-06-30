@@ -67,6 +67,7 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
         release_notes: str,
         prerelease: bool = False,
         assets: list[str] | None = None,
+        noop: bool = False,
     ) -> int | str:
         """
         Create a release in a remote VCS, if supported
