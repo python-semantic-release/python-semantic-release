@@ -11,13 +11,15 @@ import requests_mock
 from pytest_lazyfixture import lazy_fixture
 from requests import Session
 
-from semantic_release.cli import changelog, main
+from semantic_release.cli.commands.main import main
 
 from tests.const import (
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
+    MAIN_PROG_NAME,
+    CHANGELOG_SUBCMD,
     SUCCESS_EXIT_CODE,
 )
 from tests.fixtures.repos import (
@@ -58,9 +60,6 @@ if TYPE_CHECKING:
 
     from tests.command_line.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
-
-
-changelog_subcmd = changelog.name or changelog.__name__  # type: ignore[attr-defined]
 
 
 @pytest.mark.parametrize(
@@ -120,7 +119,8 @@ def test_changelog_noop_is_noop(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
-        result = cli_runner.invoke(main, ["--noop", changelog_subcmd, *args])
+        cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD, *args]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
 
@@ -177,7 +177,9 @@ def test_changelog_content_regenerated(
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
 
-    result = cli_runner.invoke(main, [changelog_subcmd])
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
     assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
 
     # Check that the changelog file was re-created
@@ -207,8 +209,11 @@ def test_changelog_release_tag_not_in_history(
     remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
-    result = cli_runner.invoke(main, [changelog_subcmd, *args])
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
+    # Evaluate
     assert expected_err_code == result.exit_code
     assert "not in release history" in result.stderr.lower()
 
@@ -253,7 +258,9 @@ def test_changelog_post_to_release(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ) as mocker, mock.patch.dict("os.environ", {}, clear=True):
-        result = cli_runner.invoke(main, [changelog_subcmd, *args])
+        # Act
+        cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
 
@@ -289,7 +296,9 @@ def test_custom_release_notes_template(
     release = release_history.released[version]
 
     # Act
-    resp = cli_runner.invoke(main, [changelog_subcmd, "--post-to-release-tag", tag])
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", tag]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
     expected_release_notes = (
         runtime_context_with_tags.template_environment.from_string(
             EXAMPLE_RELEASE_NOTES_TEMPLATE

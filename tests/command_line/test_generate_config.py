@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING
 import pytest
 import tomlkit
 
-from semantic_release.cli.commands.generate_config import generate_config
+from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import RawConfig
+
+from tests.const import MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD
 
 if TYPE_CHECKING:
     from typing import Any
@@ -28,7 +30,9 @@ def test_generate_config_toml(
         {"semantic_release": raw_config_dict}
     ).strip()
 
-    result = cli_runner.invoke(generate_config, args)
+    cli_cmd = [MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD, *args]
+
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
     assert result.exit_code == 0
     assert expected_config_as_str == result.output.strip()
@@ -42,7 +46,9 @@ def test_generate_config_json(
         {"semantic_release": raw_config_dict}, indent=4
     ).strip()
 
-    result = cli_runner.invoke(generate_config, args)
+    cli_cmd = [MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD, *args]
+
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
     assert result.exit_code == 0
     assert expected_config_as_str == result.output.strip()
@@ -55,7 +61,15 @@ def test_generate_config_pyproject_toml(
         {"tool": {"semantic_release": raw_config_dict}}
     ).strip()
 
-    result = cli_runner.invoke(generate_config, ["--format", "toml", "--pyproject"])
+    cli_cmd = [
+        MAIN_PROG_NAME,
+        GENERATE_CONFIG_SUBCMD,
+        "--format",
+        "toml",
+        "--pyproject",
+    ]
+
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
     assert result.exit_code == 0
     assert expected_config_as_str == result.output.strip()
