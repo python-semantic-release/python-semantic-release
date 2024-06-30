@@ -99,6 +99,7 @@ class ReleaseHistory:
                         committer=committer,
                         tagged_date=tagged_date,
                         elements=defaultdict(list),
+                        version=the_version,
                     )
 
                     released.setdefault(the_version, release)
@@ -165,6 +166,7 @@ class ReleaseHistory:
                     "committer": committer,
                     "tagged_date": tagged_date,
                     "elements": self.unreleased,
+                    "version": version,
                 },
                 **self.released,
             },
@@ -183,3 +185,4 @@ class Release(TypedDict):
     committer: Actor
     tagged_date: datetime
     elements: dict[str, list[ParseResult]]
+    version: Version
