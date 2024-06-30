@@ -1,4 +1,5 @@
 from datetime import datetime
+from semantic_release.cli.commands.main import Cli
 
 A_FULL_VERSION_STRING = "1.11.567"
 A_PRERELEASE_VERSION_STRING = "2.3.4-dev.23"
@@ -8,7 +9,13 @@ EXAMPLE_REPO_OWNER = "example_owner"
 EXAMPLE_REPO_NAME = "example_repo"
 EXAMPLE_HVCS_DOMAIN = "example.com"
 
+MAIN_PROG_NAME = str(__import__("semantic_release").__name__).replace("_", "-")
 SUCCESS_EXIT_CODE = 0
+
+CHANGELOG_SUBCMD = Cli.SubCmds.CHANGELOG.name.lower()
+GENERATE_CONFIG_SUBCMD = Cli.SubCmds.GENERATE_CONFIG.name.lower()
+PUBLISH_SUBCMD = Cli.SubCmds.PUBLISH.name.lower()
+VERSION_SUBCMD = Cli.SubCmds.VERSION.name.lower()
 
 TODAY_DATE_STR = datetime.now().strftime("%Y-%m-%d")
 """Date formatted as how it would appear in the changelog (Must match local timezone)"""
