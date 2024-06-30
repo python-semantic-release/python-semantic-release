@@ -14,12 +14,10 @@ from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git.exc import GitCommandError
 from requests import HTTPError
 
-from semantic_release.changelog import ReleaseHistory, environment, recursive_render
-from semantic_release.changelog.context import make_changelog_context
-from semantic_release.cli.common import (
-    get_release_notes_template,
-    render_default_changelog_file,
-    render_release_notes,
+from semantic_release.changelog import ReleaseHistory
+from semantic_release.cli.changelog_writer import (
+    generate_release_notes,
+    write_changelog_files,
 )
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
 from semantic_release.cli.util import indented, noop_report, rprint
@@ -357,10 +355,7 @@ def version(  # noqa: C901
         prerelease=runtime.prerelease,
     )
     hvcs_client = runtime.hvcs_client
-    changelog_file = runtime.changelog_file
     changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
-    env = runtime.template_environment
-    template_dir = runtime.template_dir
     assets = runtime.assets
     commit_author = runtime.commit_author
     commit_message = runtime.commit_message
@@ -509,40 +504,15 @@ def version(  # noqa: C901
     all_paths_to_add: list[str] = []
 
     if update_changelog:
-        changelog_context = make_changelog_context(
-            hvcs_client=hvcs_client, release_history=rh
-        )
-        changelog_context.bind_to_environment(env)
-
-        if template_dir.is_dir():
-            if opts.noop:
-                noop_report(
-                    f"would have recursively rendered the template directory "
-                    f"{template_dir!r} relative to {repo.working_dir!r}. "
-                    "Paths which would be modified by this operation cannot be "
-                    "determined in no-op mode."
-                )
-            else:
-                all_paths_to_add.extend(
-                    recursive_render(
-                        template_dir, environment=env, _root_dir=repo.working_dir
-                    )
-                )
-
-        else:
-            log.info(
-                "Path %r not found, using default changelog template", template_dir
+        # Write changelog files & add them to the list of files to commit
+        all_paths_to_add.extend(
+            write_changelog_files(
+                runtime_ctx=runtime,
+                release_history=release_history,
+                hvcs_client=hvcs_client,
+                noop=opts.noop,
             )
-            if opts.noop:
-                noop_report(
-                    "would have written your changelog to "
-                    + str(changelog_file.relative_to(repo.working_dir))
-                )
-            else:
-                changelog_text = render_default_changelog_file(env)
-                changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
-
-            all_paths_to_add.append(str(changelog_file.relative_to(repo.working_dir)))
+        )
 
     # Apply the new version to the source files
     files_with_new_version_written = apply_version_to_source_files(
@@ -566,8 +536,7 @@ def version(  # noqa: C901
         try:
             log.info("Running build command %s", build_command)
             rprint(
-                "[bold green]:hammer_and_wrench: Running build command: "
-                + build_command
+                f"[bold green]:hammer_and_wrench: Running build command: {build_command}"
             )
             shell(
                 build_command,
@@ -621,7 +590,7 @@ def version(  # noqa: C901
     elif commit_changes:
         # TODO: in future this loop should be 1 line:
         # repo.index.add(all_paths_to_add, force=False)  # noqa: ERA001
-        # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
+        # but since 'force' is deliberately ineffective (as in docstring) in gitpython 3.1.18
         # we have to do manually add each filepath, and catch the exception if it is an ignored file
         for updated_path in all_paths_to_add:
             try:
@@ -746,60 +715,51 @@ def version(  # noqa: C901
             # but we will avoid possibly pushing an separate tag that we didn't create.
             repo.git.push(remote_url, "tag", new_version.as_tag())
 
+    # Update GitHub Actions output value now that release has occurred
     gha_output.released = True
 
-    if make_vcs_release and isinstance(hvcs_client, RemoteHvcsBase):
-        if opts.noop:
-            noop_report(
-                f"would have created a release for the tag {new_version.as_tag()!r}"
-            )
+    if not make_vcs_release:
+        return
 
-        release = rh.released[new_version]
-        # Use a new, non-configurable environment for release notes -
-        # not user-configurable at the moment
-        release_note_environment = environment(template_dir=runtime.template_dir)
-        changelog_context = make_changelog_context(
-            hvcs_client=hvcs_client, release_history=rh
-        )
-        changelog_context.bind_to_environment(release_note_environment)
+    if not isinstance(hvcs_client, RemoteHvcsBase):
+        log.info("Remote does not support releases. Skipping release creation...")
+        return
 
-        template = get_release_notes_template(template_dir)
-        release_notes = render_release_notes(
-            release_notes_template=template,
-            template_environment=release_note_environment,
-            version=new_version,
-            release=release,
+    release_notes = generate_release_notes(
+        hvcs_client,
+        release_history.released[new_version],
+        template_dir=runtime.template_dir,
+    )
+
+    try:
+        hvcs_client.create_release(
+            tag=new_version.as_tag(),
+            release_notes=release_notes,
+            prerelease=new_version.is_prerelease,
+            assets=assets,
+            noop=opts.noop,
         )
-        if opts.noop:
-            noop_report(
-                "would have created the following release notes: \n" + release_notes
-            )
-            noop_report(f"would have uploaded the following assets: {runtime.assets}")
-        else:
-            try:
-                hvcs_client.create_release(
-                    tag=new_version.as_tag(),
-                    release_notes=release_notes,
-                    prerelease=new_version.is_prerelease,
-                    assets=assets,
-                )
-            except HTTPError as err:
-                log.exception(err)
-                ctx.fail(str.join("\n", [str(err), "Failed to create release!"]))
-            except UnexpectedResponse as err:
-                log.exception(err)
-                ctx.fail(
+    except HTTPError as err:
+        log.exception(err)
+        ctx.fail(str.join("\n", [str(err), "Failed to create release!"]))
+    except UnexpectedResponse as err:
+        log.exception(err)
+        ctx.fail(
+            str.join(
+                "\n",
+                [
+                    str(err),
+                    "Unexpected response from remote VCS!",
                     str.join(
-                        "\n",
+                        " ",
                         [
-                            str(err),
-                            "Unexpected response from remote VCS!",
-                            "Before re-running, make sure to clean up any artifacts on the hvcs that may have already been created.",
+                            "Before re-running, make sure to clean up any artifacts",
+                            "on the hvcs that may have already been created.",
                         ],
-                    )
-                )
-            except Exception as e:
-                log.exception(e)
-                ctx.fail(str(e))
-
-    return str(new_version)
+                    ),
+                ],
+            )
+        )
+    except Exception as e:
+        log.exception(e)
+        ctx.fail(str(e))
