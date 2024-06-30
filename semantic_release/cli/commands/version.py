@@ -191,6 +191,63 @@ def get_windows_env() -> Mapping[str, str | None]:
     }
 
 
+def build_distributions(
+    build_command: str | None,
+    build_command_env: Mapping[str, str] | None = None,
+    noop: bool = False
+) -> None:
+        if not build_command:
+            rprint("[green]No build command specified, skipping")
+            return
+
+        if noop:
+            noop_report(f"would have run the build_command {build_command}")
+            return
+
+        log.info("Running build command %s", build_command)
+        rprint(
+            f"[bold green]:hammer_and_wrench: Running build command: {build_command}"
+        )
+
+        build_env_vars = dict(
+            filter(
+                lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
+                {
+                    # Common values
+                    "PATH": os.getenv("PATH", ""),
+                    "HOME": os.getenv("HOME", None),
+                    "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
+                    # Windows environment variables
+                    **(get_windows_env() if is_windows() else {}),
+                    # affects build decisions
+                    "CI": os.getenv("CI", None),
+                    # Identifies which CI environment
+                    "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
+                    "GITLAB_CI": os.getenv("GITLAB_CI", None),
+                    "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
+                    "BITBUCKET_CI": (
+                        str(True).lower()
+                        if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
+                        else None
+                    ),
+                    "PSR_DOCKER_GITHUB_ACTION": os.getenv(
+                        "PSR_DOCKER_GITHUB_ACTION", None
+                    ),
+                    **(build_command_env or {}),
+                }.items(),
+            )
+        )
+
+        try:
+            shell(build_command, env=build_env_vars, check=True)
+            rprint("[bold green]Build completed successfully!")
+        except subprocess.CalledProcessError as exc:
+            log.exception(exc)
+            log.error("Build command failed with exit code %s", exc.returncode)
+            raise Exception() from exc
+
+
+
 @click.command(
     short_help="Detect and apply a new version",
     context_settings={
@@ -361,7 +418,6 @@ def version(  # noqa: C901
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
-    build_command = runtime.build_command
     opts = runtime.global_cli_options
     gha_output = VersionGitHubActionsOutput(released=False)
 
@@ -384,7 +440,16 @@ def version(  # noqa: C901
         log.info("No vcs release will be created because pushing changes is disabled")
         make_vcs_release &= push_changes
 
-    if forced_level_bump:
+    if not forced_level_bump:
+        new_version = next_version(
+            repo=repo,
+            translator=translator,
+            commit_parser=parser,
+            prerelease=prerelease,
+            major_on_zero=major_on_zero,
+            allow_zero_version=runtime.allow_zero_version,
+        )
+    else:
         log.warning(
             "Forcing a '%s' release due to '--%s' command-line flag",
             force_level,
@@ -406,16 +471,6 @@ def version(  # noqa: C901
             new_version.to_prerelease(token=translator.prerelease_token)
             if prerelease
             else new_version.finalize_version()
-        )
-
-    else:
-        new_version = next_version(
-            repo=repo,
-            translator=translator,
-            commit_parser=parser,
-            prerelease=prerelease,
-            major_on_zero=major_on_zero,
-            allow_zero_version=runtime.allow_zero_version,
         )
 
     if build_metadata:
@@ -454,26 +509,19 @@ def version(  # noqa: C901
     # If the new version has already been released, we fail and abort if strict;
     # otherwise we exit with 0.
     if new_version in previously_released_versions:
-        if opts.strict:
-            ctx.fail(
-                str.join(
-                    " ",
-                    [
-                        "No release will be made,",
-                        f"{new_version!s} has already been released!",
-                    ],
-                )
-            )
-
-        rprint(
-            str.join(
-                " ",
-                [
-                    "[bold orange1]No release will be made,",
-                    f"{new_version!s} has already been released!",
-                ],
-            )
+        err_msg = str.join(
+            " ",
+            [
+                "[bold orange1]No release will be made,",
+                f"{new_version!s} has already been released!",
+            ],
         )
+
+        if opts.strict:
+            click.echo(err_msg, err=True)
+            ctx.exit(1)
+
+        rprint(err_msg)
         return
 
     if print_only or print_only_tag:
@@ -528,53 +576,22 @@ def version(  # noqa: C901
     # build fails, modifications to the source code won't be committed
     if skip_build:
         rprint("[bold orange1]Skipping build due to --skip-build flag")
-    elif not build_command:
-        rprint("[green]No build command specified, skipping")
-    elif runtime.global_cli_options.noop:
-        noop_report(f"would have run the build_command {build_command}")
     else:
         try:
-            log.info("Running build command %s", build_command)
-            rprint(
-                f"[bold green]:hammer_and_wrench: Running build command: {build_command}"
+            build_distributions(
+                build_command=runtime.build_command,
+                build_command_env={
+                    # User defined overrides of environment (from config)
+                    **runtime.build_command_env,
+                    # PSR injected environment variables
+                    "NEW_VERSION": str(new_version),
+                },
+                noop=opts.noop,
             )
-            shell(
-                build_command,
-                check=True,
-                env=dict(
-                    filter(
-                        lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
-                        {
-                            # Common values
-                            "PATH": os.getenv("PATH", ""),
-                            "HOME": os.getenv("HOME", None),
-                            "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
-                            # Windows environment variables
-                            **(get_windows_env() if is_windows() else {}),
-                            # affects build decisions
-                            "CI": os.getenv("CI", None),
-                            # Identifies which CI environment
-                            "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
-                            "GITLAB_CI": os.getenv("GITLAB_CI", None),
-                            "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
-                            "BITBUCKET_CI": (
-                                str(True).lower()
-                                if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
-                                else None
-                            ),
-                            "PSR_DOCKER_GITHUB_ACTION": os.getenv(
-                                "PSR_DOCKER_GITHUB_ACTION", None
-                            ),
-                            # User defined overrides of environment (from config)
-                            **runtime.build_command_env,
-                            # PSR injected environment variables
-                            "NEW_VERSION": str(new_version),
-                        }.items(),
-                    )
-                ),
-            )
-        except subprocess.CalledProcessError as exc:
-            ctx.fail(str(exc))
+        except Exception as exc:
+            click.echo(str(exc), err=True)
+            click.echo("Build failed, aborting release", err=True)
+            ctx.exit(1)
 
     # Commit changes
     if commit_changes and opts.noop:
