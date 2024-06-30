@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
@@ -13,6 +12,10 @@ from semantic_release import __version__
 from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
+from tests.fixtures import (
+    repo_with_git_flow_angular_commits,
+    repo_with_no_tags_angular_commits,
+)
 from tests.util import assert_exit_code, assert_successful_exit_code
 
 if TYPE_CHECKING:
@@ -111,7 +114,7 @@ def json_file_with_no_configuration_for_psr(tmp_path: Path) -> Path:
     return path
 
 
-@pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
+@pytest.mark.usefixtures(repo_with_git_flow_angular_commits.__name__)
 def test_default_config_is_used_when_none_in_toml_config_file(
     cli_runner: CliRunner,
     toml_file_with_no_configuration_for_psr: Path,
@@ -131,7 +134,7 @@ def test_default_config_is_used_when_none_in_toml_config_file(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
+@pytest.mark.usefixtures(repo_with_git_flow_angular_commits.__name__)
 def test_default_config_is_used_when_none_in_json_config_file(
     cli_runner: CliRunner,
     json_file_with_no_configuration_for_psr: Path,
@@ -151,7 +154,7 @@ def test_default_config_is_used_when_none_in_json_config_file(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures("repo_with_git_flow_angular_commits")
+@pytest.mark.usefixtures(repo_with_git_flow_angular_commits.__name__)
 def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
     cli_runner: CliRunner,
 ):
@@ -171,7 +174,7 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
     assert "does not exist" in result.stderr
 
 
-@pytest.mark.usefixtures("repo_with_no_tags_angular_commits")
+@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
 def test_errors_when_config_file_invalid_configuration(
     cli_runner: CliRunner, update_pyproject_toml: UpdatePyprojectTomlFn
 ):
