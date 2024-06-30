@@ -6,6 +6,7 @@ from semantic_release.cli.commands.main import main
 from semantic_release.hvcs import Github
 
 from tests.const import MAIN_PROG_NAME, PUBLISH_SUBCMD
+from tests.util import assert_exit_code, assert_successful_exit_code
 @pytest.mark.parametrize("cmd_args", [(), ("--tag", "latest")])
 def test_publish_latest_uses_latest_tag(
     cli_runner,
