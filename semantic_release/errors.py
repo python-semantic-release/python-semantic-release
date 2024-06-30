@@ -63,6 +63,10 @@ class AssetUploadError(SemanticReleaseBaseError):
 
 class ParserLoadError(SemanticReleaseBaseError):
     """
-    Raised when there is a failure to find, load, or instaniate a custom parser
+    Raised when there is a failure to find, load, or instantiate a custom parser
     definition.
     """
+
+
+class BuildDistributionsError(SemanticReleaseBaseError):
+    """Raised when there is a failure to build the distribution files."""
