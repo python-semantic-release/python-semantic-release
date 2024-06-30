@@ -75,10 +75,13 @@ def post_release_notes(
 ) -> None:
     if noop:
         noop_report(
-            str.join("\n", [
-                f"would have posted the following release notes for tag {release_tag}:",
-                release_notes,
-            ])
+            str.join(
+                "\n",
+                [
+                    f"would have posted the following release notes for tag {release_tag}:",
+                    release_notes,
+                ],
+            )
         )
         return
 
@@ -152,17 +155,18 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
         return
 
     if not isinstance(hvcs_client, RemoteHvcsBase):
-        log.info(
-            "Remote does not support releases. Skipping release notes update..."
-        )
+        log.info("Remote does not support releases. Skipping release notes update...")
         return
 
     if not (version := translator.from_tag(release_tag)):
         ctx.fail(
-            str.join(" ", [
-                f"Tag {release_tag!r} does not match the tag format",
-                repr(translator.tag_format),
-            ])
+            str.join(
+                " ",
+                [
+                    f"Tag {release_tag!r} does not match the tag format",
+                    repr(translator.tag_format),
+                ],
+            )
         )
 
     try:

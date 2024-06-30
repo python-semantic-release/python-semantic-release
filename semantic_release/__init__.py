@@ -26,6 +26,24 @@ from semantic_release.version import (
 
 __version__ = "9.8.3"
 
+__all__ = [
+    "CommitParser",
+    "ParsedCommit",
+    "ParseError",
+    "ParseResult",
+    "ParseResultType",
+    "ParserOptions",
+    "LevelBump",
+    "SemanticReleaseBaseError",
+    "CommitParseError",
+    "InvalidConfiguration",
+    "InvalidVersion",
+    "Version",
+    "VersionTranslator",
+    "next_version",
+    "tags_and_versions",
+]
+
 
 def setup_hook(argv: list[str]) -> None:
     """
