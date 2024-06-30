@@ -339,6 +339,7 @@ def test_release_history_releases(repo, default_angular_parser):
             "committer": actor,
             "tagged_date": tagged_date,
             "elements": release_history.unreleased,
+            "version": new_version,
         },
         **release_history.released,
     }
