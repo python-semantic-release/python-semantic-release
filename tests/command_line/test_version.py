@@ -25,6 +25,8 @@ from tests.const import (
 )
 from tests.util import (
     actions_output_to_dict,
+    assert_exit_code,
+    assert_successful_exit_code,
     flatten_dircmp,
     get_release_history_from_context,
     remove_dir_tree,
@@ -85,11 +87,11 @@ def test_version_noop_is_noop(
     # Grab measurement values after the command
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
-
-    assert result.exit_code == 0
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-
     differing_files = flatten_dircmp(dcmp)
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert not differing_files
     assert tags_before == tags_after
     assert head_before == head_after
@@ -274,13 +276,14 @@ def test_version_print(
     # Grab measurement values after the command
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
+    differing_files = flatten_dircmp(dcmp)
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert tags_before == tags_after
     assert head_before == head_after
     assert result.stdout.rstrip("\n") == expected_stdout
-    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-    differing_files = flatten_dircmp(dcmp)
     assert not differing_files
 
 
@@ -304,6 +307,9 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
 
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
     assert "no release will be made" in result.stderr.lower()
 
 
@@ -467,11 +473,12 @@ def test_version_no_push_force_level(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
+    # Grab measurement values after the command
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
 
-    assert result.exit_code == 0
-
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert set(tags_before) < set(tags_after)
     assert head_before != head_after  # A commit has been made
     assert head_before in repo.head.commit.parents
@@ -541,7 +548,9 @@ def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: Cli
 
     # Verify we get "no version to release" without build metadata
     no_metadata_result = cli_runner.invoke(main, cli_cmd[1:])
-    assert no_metadata_result.exit_code == 2
+
+    # Evaluate no version was released because metadata is required to release at this point
+    assert_exit_code(2, no_metadata_result, cli_cmd)
     assert "no release will be made" in no_metadata_result.stderr.lower()
 
     metadata_suffix = "build.abc-12345"
@@ -556,7 +565,9 @@ def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: Cli
     ]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert repo.git.tag(l=f"*{metadata_suffix}")
 
 
@@ -567,7 +578,9 @@ def test_version_prints_current_version_if_no_new_version(
 
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
-    assert result.exit_code == 0
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert "no release will be made" in result.stderr.lower()
     assert result.stdout == "1.2.0-alpha.2\n"
 
@@ -616,9 +629,10 @@ def test_version_version_no_verify(
     # Take measurement after the command
     head_after = repo_with_single_branch_angular_commits.head.commit
 
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert head_before != head_after  # A commit has been made
     assert head_before in repo_with_single_branch_angular_commits.head.commit.parents
-    assert result.exit_code == 0
 
 
 @pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
@@ -680,7 +694,8 @@ def test_version_runs_build_command(
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-        assert result.exit_code == 0
+        # Evaluate
+        assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_called_once_with(
             [exe, "-c", build_command],
             check=True,
@@ -760,7 +775,8 @@ def test_version_runs_build_command_windows(
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-        assert result.exit_code == 0
+        # Evaluate
+        assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_called_once_with(
             [exe, "-c" if shell != "cmd" else "/c", build_command],
             check=True,
@@ -862,6 +878,11 @@ def test_version_runs_build_command_w_user_env(
         # ACT: run & force a new version that will trigger the build command
         result = cli_runner.invoke(main, cli_cmd[1:])
 
+        # Evaluate
+        # [1] Make sure it did not error internally
+        assert_successful_exit_code(result, cli_cmd)
+
+        # [2] Make sure the subprocess was called with the correct environment
         patched_subprocess_run.assert_called_once_with(
             ["bash", "-c", build_command],
             check=True,
@@ -887,9 +908,6 @@ def test_version_runs_build_command_w_user_env(
             },
         )
 
-        # Make sure it did not error internally
-        assert result.exit_code == 0
-
 
 def test_version_skips_build_command_with_skip_build(
     repo_with_git_flow_angular_commits, cli_runner
@@ -902,7 +920,8 @@ def test_version_skips_build_command_with_skip_build(
         # Act: force a new version
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-        assert result.exit_code == 0
+        # Evaluate
+        assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_not_called()
 
 
@@ -916,10 +935,14 @@ def test_version_writes_github_actions_output(
 
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Extract the output
     action_outputs = actions_output_to_dict(
         mock_output_file.read_text(encoding="utf-8")
     )
-    assert result.exit_code == 0
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert "released" in action_outputs
     assert action_outputs["released"] == "true"
     assert "version" in action_outputs
@@ -936,7 +959,9 @@ def test_version_exit_code_when_strict(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 2
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
+
 
 def test_version_exit_code_when_not_strict(
     repo_with_git_flow_angular_commits, cli_runner
@@ -947,7 +972,9 @@ def test_version_exit_code_when_not_strict(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
 
 def test_custom_release_notes_template(
     mocked_git_push: MagicMock,
@@ -983,12 +1010,8 @@ def test_custom_release_notes_template(
     )
 
     # Assert
+    assert_successful_exit_code(result, cli_cmd)
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
-    assert resp.exit_code == 0, (
-        "Unexpected failure in command "
-        f"'semantic-release {version_subcmd} --skip-build --vcs-release': "
-        + resp.stderr
-    )
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
     assert post_mocker.last_request.json()["body"] == expected_release_notes
@@ -1022,13 +1045,10 @@ def test_version_tag_only_push(
     head_after = runtime_context_with_no_tags.repo.head.commit
 
     # Assert
+    assert_successful_exit_code(result, cli_cmd)
     assert tag_after == "v0.1.0"
     assert head_before == head_after
     assert mocked_git_push.call_count == 1  # 0 for commit, 1 for tag
-    assert resp.exit_code == 0, (
-        "Unexpected failure in command "
-        f"'semantic-release {str.join(' ', args)}': " + resp.stderr
-    )
 
 
 def test_version_only_update_files_no_git_actions(
@@ -1068,19 +1088,16 @@ def test_version_only_update_files_no_git_actions(
     ]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
+    # capture values after the command
     tags_after = runtime_context_with_tags.repo.tags
     head_after = runtime_context_with_tags.repo.head.commit
 
     # Assert
+    assert_successful_exit_code(result, cli_cmd)
     assert tags_before == tags_after
     assert head_before == head_after
-    assert (
-        mocked_git_push.call_count == 0
-    )  # no push as it should be turned off automatically
-    assert resp.exit_code == 0, (
-        "Unexpected failure in command "
-        f"'semantic-release {str.join(' ', args)}': " + resp.stderr
-    )
+    # no push as it should be turned off automatically
+    assert mocked_git_push.call_count == 0
 
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
     differing_files = sorted(flatten_dircmp(dcmp))
@@ -1141,7 +1158,8 @@ def test_version_print_last_released_prints_version(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == "0.1.1\n"
 
 
@@ -1160,7 +1178,9 @@ def test_version_print_last_released_prints_released_if_commits(
 
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
-    assert result.exit_code == 0
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == "0.1.1\n"
 
 
@@ -1172,6 +1192,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
     assert "No release tags found." in caplog.text

@@ -11,6 +11,7 @@ from semantic_release.cli.commands.publish import publish
 from semantic_release.cli.commands.version import version
 
 from tests.const import MAIN_PROG_NAME, SUCCESS_EXIT_CODE
+from tests.util import assert_exit_code
 
 if TYPE_CHECKING:
     from click import Command
@@ -69,7 +70,7 @@ def test_help_no_repo(
     result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
-    assert help_exit_code == result.exit_code
+    assert_exit_code(HELP_EXIT_CODE, result, [MAIN_PROG_NAME, *args])
     assert cmd_usage in result.output
 
 
@@ -117,7 +118,7 @@ def test_help_valid_config(
     result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
-    assert help_exit_code == result.exit_code
+    assert_exit_code(HELP_EXIT_CODE, result, [MAIN_PROG_NAME, *args])
     assert cmd_usage in result.output
 
 
@@ -170,7 +171,7 @@ def test_help_invalid_config(
     result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
-    assert help_exit_code == result.exit_code
+    assert_exit_code(HELP_EXIT_CODE, result, [MAIN_PROG_NAME, *args])
     assert cmd_usage in result.output
 
 
@@ -223,5 +224,5 @@ def test_help_non_release_branch(
     result = cli_runner.invoke(main, args, prog_name=MAIN_PROG_NAME)
 
     # Evaluate result
-    assert help_exit_code == result.exit_code
+    assert_exit_code(HELP_EXIT_CODE, result, [MAIN_PROG_NAME, *args])
     assert cmd_usage in result.output

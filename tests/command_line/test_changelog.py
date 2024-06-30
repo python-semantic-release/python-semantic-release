@@ -20,7 +20,6 @@ from tests.const import (
     EXAMPLE_REPO_OWNER,
     MAIN_PROG_NAME,
     CHANGELOG_SUBCMD,
-    SUCCESS_EXIT_CODE,
 )
 from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,
@@ -49,7 +48,13 @@ from tests.fixtures.repos import (
     repo_with_single_branch_scipy_commits,
     repo_with_single_branch_tag_commits,
 )
-from tests.util import flatten_dircmp, get_release_history_from_context, remove_dir_tree
+from tests.util import (
+    assert_exit_code,
+    assert_successful_exit_code,
+    flatten_dircmp,
+    get_release_history_from_context,
+    remove_dir_tree,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -122,13 +127,13 @@ def test_changelog_noop_is_noop(
         cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD, *args]
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
-
+    # Capture differences after command
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-
     differing_files = flatten_dircmp(dcmp)
-    assert not differing_files
 
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+    assert not differing_files
     if args:
         assert not mocker.called
         assert not mock_adapter.called
@@ -180,7 +185,9 @@ def test_changelog_content_regenerated(
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
     result = cli_runner.invoke(main, cli_cmd[1:])
-    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
 
     # Check that the changelog file was re-created
     assert example_changelog_md.exists()
@@ -204,7 +211,6 @@ def test_changelog_release_tag_not_in_history(
     example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
-    expected_err_code = 2
     tempdir = tmp_path_factory.mktemp("test_changelog")
     remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
@@ -214,7 +220,7 @@ def test_changelog_release_tag_not_in_history(
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Evaluate
-    assert expected_err_code == result.exit_code
+    assert_exit_code(2, result, cli_cmd)
     assert "not in release history" in result.stderr.lower()
 
 
@@ -262,8 +268,8 @@ def test_changelog_post_to_release(
         cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
-
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert mocker.called
     assert mock_adapter.called
     assert mock_adapter.last_request is not None
@@ -307,11 +313,7 @@ def test_custom_release_notes_template(
     )
 
     # Assert
-    assert SUCCESS_EXIT_CODE == resp.exit_code, (  # noqa: SIM300
-        "Unexpected failure in command "
-        f"'semantic-release {changelog_subcmd} --post-to-release-tag {tag}': "
-        + resp.stderr
-    )
+    assert_successful_exit_code(result, cli_cmd)
     assert expected_call_count == post_mocker.call_count
     assert post_mocker.last_request is not None
     assert expected_release_notes == post_mocker.last_request.json()["body"]
