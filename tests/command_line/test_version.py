@@ -23,6 +23,14 @@ from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
 )
+from tests.fixtures import (
+    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_with_git_flow_and_release_channels_angular_commits,
+    repo_with_git_flow_angular_commits,
+    repo_with_no_tags_angular_commits,
+    repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_angular_commits,
+)
 from tests.util import (
     actions_output_to_dict,
     assert_exit_code,
@@ -50,12 +58,14 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_version_noop_is_noop(
@@ -105,7 +115,7 @@ def test_version_noop_is_noop(
     [
         *[
             (
-                lazy_fixture("repo_with_no_tags_angular_commits"),
+                lazy_fixture(repo_with_no_tags_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -128,7 +138,7 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_angular_commits"),
+                lazy_fixture(repo_with_single_branch_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -151,7 +161,9 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+                lazy_fixture(
+                    repo_with_single_branch_and_prereleases_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -200,7 +212,7 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_angular_commits"),
+                lazy_fixture(repo_with_git_flow_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -223,7 +235,9 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+                lazy_fixture(
+                    repo_with_git_flow_and_release_channels_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -291,12 +305,14 @@ def test_version_print(
     "repo",
     [
         # This project is yet to add any tags, so a release would be triggered
-        # so excluding lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        # so excluding lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
@@ -318,7 +334,7 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
     [
         *[
             (
-                lazy_fixture("repo_with_no_tags_angular_commits"),
+                lazy_fixture(repo_with_no_tags_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -340,7 +356,7 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_angular_commits"),
+                lazy_fixture(repo_with_single_branch_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -362,7 +378,9 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+                lazy_fixture(
+                    repo_with_single_branch_and_prereleases_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -409,7 +427,7 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_angular_commits"),
+                lazy_fixture(repo_with_git_flow_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -431,7 +449,9 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+                lazy_fixture(
+                    repo_with_git_flow_and_release_channels_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -536,11 +556,13 @@ def test_version_no_push_force_level(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: CliRunner):
@@ -564,7 +586,6 @@ def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: Cli
         metadata_suffix,
     ]
     result = cli_runner.invoke(main, cli_cmd[1:])
-
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -910,7 +931,7 @@ def test_version_runs_build_command_w_user_env(
 
 
 def test_version_skips_build_command_with_skip_build(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push", "--skip-build"]
 
@@ -926,7 +947,10 @@ def test_version_skips_build_command_with_skip_build(
 
 
 def test_version_writes_github_actions_output(
-    repo_with_git_flow_angular_commits, cli_runner, monkeypatch, tmp_path
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ):
     mock_output_file = tmp_path / "action.out"
     monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
@@ -964,7 +988,8 @@ def test_version_exit_code_when_strict(
 
 
 def test_version_exit_code_when_not_strict(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
 ):
     """Testing 'no release will be made'"""
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push"]
@@ -985,6 +1010,8 @@ def test_custom_release_notes_template(
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
+    # TODO: Improve test validity... a lot of testing via its own internal functions
+
     # Setup
     use_release_notes_template()
     runtime_context_with_no_tags = retrieve_runtime_context(
