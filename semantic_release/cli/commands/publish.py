@@ -10,7 +10,6 @@ from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import tags_and_versions
 
 if TYPE_CHECKING:
-    from typing import Tuple
     from semantic_release.cli.cli_context import CliContextObj
 
 
@@ -20,16 +19,19 @@ log = logging.getLogger(__name__)
 def publish_distributions(
     tag: str,
     hvcs_client: RemoteHvcsBase,
-    dist_glob_patterns: Tuple[str, ...],
-    noop: bool = False
+    dist_glob_patterns: tuple[str, ...],
+    noop: bool = False,
 ) -> None:
     if noop:
         noop_report(
-            str.join(" ", [
-                "would have uploaded files matching any of the globs",
-                str.join(", ", [repr(g) for g in dist_glob_patterns]),
-                "to a remote VCS release, if supported",
-            ])
+            str.join(
+                " ",
+                [
+                    "would have uploaded files matching any of the globs",
+                    str.join(", ", [repr(g) for g in dist_glob_patterns]),
+                    "to a remote VCS release, if supported",
+                ],
+            )
         )
         return
 
@@ -65,11 +67,14 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
             tag = str(tags_and_versions(repo.tags, translator)[0][0])
         except IndexError:
             ctx.fail(
-                str.join(" ", [
-                    "No tags found with format",
-                    repr(translator.tag_format),
-                    "couldn't identify latest version"
-                ])
+                str.join(
+                    " ",
+                    [
+                        "No tags found with format",
+                        repr(translator.tag_format),
+                        "couldn't identify latest version",
+                    ],
+                )
             )
 
     if not isinstance(hvcs_client, RemoteHvcsBase):
