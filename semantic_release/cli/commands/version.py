@@ -23,11 +23,9 @@ from semantic_release.cli.github_actions_output import VersionGitHubActionsOutpu
 from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.errors import UnexpectedResponse
+from semantic_release.errors import BuildDistributionsError, UnexpectedResponse
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import Version, next_version, tags_and_versions
-
-log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import ContextManager, Iterable, Mapping
@@ -38,6 +36,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.cli.cli_context import CliContextObj
     from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
+
+
+log = logging.getLogger(__name__)
 
 
 def is_forced_prerelease(
@@ -194,58 +195,70 @@ def get_windows_env() -> Mapping[str, str | None]:
 def build_distributions(
     build_command: str | None,
     build_command_env: Mapping[str, str] | None = None,
-    noop: bool = False
+    noop: bool = False,
 ) -> None:
-        if not build_command:
-            rprint("[green]No build command specified, skipping")
-            return
+    """
+    Run the build command to build the distributions.
 
-        if noop:
-            noop_report(f"would have run the build_command {build_command}")
-            return
+    Arguments:
+    ---------
+        build_command: str | None
+            The build command to run
+        build_command_env: Mapping[str, str] | None
+            The environment variables to use when running the build command
+        noop: bool
+            Whether or not to run the build command
 
-        log.info("Running build command %s", build_command)
-        rprint(
-            f"[bold green]:hammer_and_wrench: Running build command: {build_command}"
+    Raises:
+    ------
+        BuildDistributionsError: if the build command fails
+
+    """
+    if not build_command:
+        rprint("[green]No build command specified, skipping")
+        return
+
+    if noop:
+        noop_report(f"would have run the build_command {build_command}")
+        return
+
+    log.info("Running build command %s", build_command)
+    rprint(f"[bold green]:hammer_and_wrench: Running build command: {build_command}")
+
+    build_env_vars: dict[str, str] = dict(
+        filter(
+            lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
+            {
+                # Common values
+                "PATH": os.getenv("PATH", ""),
+                "HOME": os.getenv("HOME", None),
+                "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
+                # Windows environment variables
+                **(get_windows_env() if is_windows() else {}),
+                # affects build decisions
+                "CI": os.getenv("CI", None),
+                # Identifies which CI environment
+                "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
+                "GITLAB_CI": os.getenv("GITLAB_CI", None),
+                "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
+                "BITBUCKET_CI": (
+                    str(True).lower()
+                    if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
+                    else None
+                ),
+                "PSR_DOCKER_GITHUB_ACTION": os.getenv("PSR_DOCKER_GITHUB_ACTION", None),
+                **(build_command_env or {}),
+            }.items(),
         )
+    )
 
-        build_env_vars = dict(
-            filter(
-                lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
-                {
-                    # Common values
-                    "PATH": os.getenv("PATH", ""),
-                    "HOME": os.getenv("HOME", None),
-                    "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
-                    # Windows environment variables
-                    **(get_windows_env() if is_windows() else {}),
-                    # affects build decisions
-                    "CI": os.getenv("CI", None),
-                    # Identifies which CI environment
-                    "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
-                    "GITLAB_CI": os.getenv("GITLAB_CI", None),
-                    "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
-                    "BITBUCKET_CI": (
-                        str(True).lower()
-                        if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
-                        else None
-                    ),
-                    "PSR_DOCKER_GITHUB_ACTION": os.getenv(
-                        "PSR_DOCKER_GITHUB_ACTION", None
-                    ),
-                    **(build_command_env or {}),
-                }.items(),
-            )
-        )
-
-        try:
-            shell(build_command, env=build_env_vars, check=True)
-            rprint("[bold green]Build completed successfully!")
-        except subprocess.CalledProcessError as exc:
-            log.exception(exc)
-            log.error("Build command failed with exit code %s", exc.returncode)
-            raise Exception() from exc
-
+    try:
+        shell(build_command, env=build_env_vars, check=True)
+        rprint("[bold green]Build completed successfully!")
+    except subprocess.CalledProcessError as exc:
+        log.exception(exc)
+        log.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
+        raise BuildDistributionsError from exc
 
 
 @click.command(
@@ -519,7 +532,7 @@ def version(  # noqa: C901
 
         if opts.strict:
             click.echo(err_msg, err=True)
-            ctx.exit(1)
+            ctx.exit(2)
 
         rprint(err_msg)
         return
@@ -589,7 +602,7 @@ def version(  # noqa: C901
                 },
                 noop=opts.noop,
             )
-        except Exception as exc:
+        except BuildDistributionsError as exc:
             click.echo(str(exc), err=True)
             click.echo("Build failed, aborting release", err=True)
             ctx.exit(1)
@@ -749,7 +762,7 @@ def version(  # noqa: C901
         template_dir=runtime.template_dir,
     )
 
-    exception = None
+    exception: Exception | None = None
     help_message = ""
     try:
         hvcs_client.create_release(
@@ -775,11 +788,11 @@ def version(  # noqa: C901
             [
                 "Unexpected response from remote VCS!",
                 help_message,
-            ]
+            ],
         )
-    except Exception as e:
+    except Exception as err:  # noqa: BLE001
         # TODO: Remove this catch-all exception handler in the future
-        exception = e
+        exception = err
     finally:
         if exception is not None:
             log.exception(exception)
@@ -788,6 +801,6 @@ def version(  # noqa: C901
                 click.echo(help_message, err=True)
             click.echo(
                 f"Failed to create release on {hvcs_client.__class__.__name__}!",
-                err=True
+                err=True,
             )
             ctx.exit(1)
