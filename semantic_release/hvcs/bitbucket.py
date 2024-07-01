@@ -226,8 +226,9 @@ class Bitbucket(RemoteHvcsBase):
         release_notes: str,
         prerelease: bool = False,
         assets: list[str] | None = None,
+        noop: bool = False,
     ) -> int | str:
-        return super().create_release(tag, release_notes, prerelease, assets)
+        return super().create_release(tag, release_notes, prerelease, assets, noop)
 
 
 RemoteHvcsBase.register(Bitbucket)

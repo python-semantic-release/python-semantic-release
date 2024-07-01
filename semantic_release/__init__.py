@@ -26,6 +26,24 @@ from semantic_release.version import (
 
 __version__ = "9.8.3"
 
+__all__ = [
+    "CommitParser",
+    "ParsedCommit",
+    "ParseError",
+    "ParseResult",
+    "ParseResultType",
+    "ParserOptions",
+    "LevelBump",
+    "SemanticReleaseBaseError",
+    "CommitParseError",
+    "InvalidConfiguration",
+    "InvalidVersion",
+    "Version",
+    "VersionTranslator",
+    "next_version",
+    "tags_and_versions",
+]
+
 
 def setup_hook(argv: list[str]) -> None:
     """
@@ -36,6 +54,6 @@ def setup_hook(argv: list[str]) -> None:
     if len(argv) > 1 and any(
         cmd in argv for cmd in ["version", "publish", "changelog"]
     ):
-        from semantic_release.cli import main
+        from semantic_release.cli.commands.main import main
 
         main()

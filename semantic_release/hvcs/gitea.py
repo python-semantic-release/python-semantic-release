@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from requests import HTTPError, JSONDecodeError
 from urllib3.util.url import Url, parse_url
 
+from semantic_release.cli.util import noop_report
 from semantic_release.errors import (
     AssetUploadError,
     IncompleteReleaseError,
@@ -86,6 +87,7 @@ class Gitea(RemoteHvcsBase):
         release_notes: str,
         prerelease: bool = False,
         assets: list[str] | None = None,
+        noop: bool = False,
     ) -> int:
         """
         Create a new release
@@ -101,6 +103,29 @@ class Gitea(RemoteHvcsBase):
 
         :return: Whether the request succeeded
         """
+        if noop:
+            noop_report(
+                str.join(
+                    " ",
+                    [
+                        f"would have created a release for tag {tag}",
+                        "with the following notes:\n",
+                        release_notes,
+                    ],
+                )
+            )
+            if assets:
+                noop_report(
+                    str.join(
+                        "\n",
+                        [
+                            "would have uploaded the following assets to the release:",
+                            *assets,
+                        ],
+                    )
+                )
+            return -1
+
         log.info("Creating release for tag %s", tag)
         releases_endpoint = self.create_api_url(
             endpoint=f"/repos/{self.owner}/{self.repo_name}/releases",

@@ -14,22 +14,18 @@ from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git.exc import GitCommandError
 from requests import HTTPError
 
-from semantic_release.changelog import ReleaseHistory, environment, recursive_render
-from semantic_release.changelog.context import make_changelog_context
-from semantic_release.cli.common import (
-    get_release_notes_template,
-    render_default_changelog_file,
-    render_release_notes,
+from semantic_release.changelog import ReleaseHistory
+from semantic_release.cli.changelog_writer import (
+    generate_release_notes,
+    write_changelog_files,
 )
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
 from semantic_release.cli.util import indented, noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.errors import UnexpectedResponse
+from semantic_release.errors import BuildDistributionsError, UnexpectedResponse
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import Version, next_version, tags_and_versions
-
-log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import ContextManager, Iterable, Mapping
@@ -37,9 +33,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from git import Repo
     from git.refs.tag import Tag
 
-    from semantic_release.cli.commands.cli_context import CliContextObj
+    from semantic_release.cli.cli_context import CliContextObj
     from semantic_release.version import VersionTranslator
     from semantic_release.version.declaration import VersionDeclarationABC
+
+
+log = logging.getLogger(__name__)
 
 
 def is_forced_prerelease(
@@ -122,16 +121,18 @@ def apply_version_to_source_files(
         str(declaration.path.resolve().relative_to(working_dir))
         for declaration in version_declarations
     ]
+
     if noop:
         noop_report(
             "would have updated versions in the following paths:"
             + "".join(f"\n    {path}" for path in paths)
         )
-    else:
-        log.debug("writing version %s to source paths %s", version, paths)
-        for declaration in version_declarations:
-            new_content = declaration.replace(new_version=version)
-            declaration.path.write_text(new_content)
+        return paths
+
+    log.debug("writing version %s to source paths %s", version, paths)
+    for declaration in version_declarations:
+        new_content = declaration.replace(new_version=version)
+        declaration.path.write_text(new_content)
 
     return paths
 
@@ -189,6 +190,75 @@ def get_windows_env() -> Mapping[str, str | None]:
             "WINDIR",
         )
     }
+
+
+def build_distributions(
+    build_command: str | None,
+    build_command_env: Mapping[str, str] | None = None,
+    noop: bool = False,
+) -> None:
+    """
+    Run the build command to build the distributions.
+
+    Arguments:
+    ---------
+        build_command: str | None
+            The build command to run
+        build_command_env: Mapping[str, str] | None
+            The environment variables to use when running the build command
+        noop: bool
+            Whether or not to run the build command
+
+    Raises:
+    ------
+        BuildDistributionsError: if the build command fails
+
+    """
+    if not build_command:
+        rprint("[green]No build command specified, skipping")
+        return
+
+    if noop:
+        noop_report(f"would have run the build_command {build_command}")
+        return
+
+    log.info("Running build command %s", build_command)
+    rprint(f"[bold green]:hammer_and_wrench: Running build command: {build_command}")
+
+    build_env_vars: dict[str, str] = dict(
+        filter(
+            lambda k_v: k_v[1] is not None,  # type: ignore # noqa: PGH003
+            {
+                # Common values
+                "PATH": os.getenv("PATH", ""),
+                "HOME": os.getenv("HOME", None),
+                "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
+                # Windows environment variables
+                **(get_windows_env() if is_windows() else {}),
+                # affects build decisions
+                "CI": os.getenv("CI", None),
+                # Identifies which CI environment
+                "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
+                "GITLAB_CI": os.getenv("GITLAB_CI", None),
+                "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
+                "BITBUCKET_CI": (
+                    str(True).lower()
+                    if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
+                    else None
+                ),
+                "PSR_DOCKER_GITHUB_ACTION": os.getenv("PSR_DOCKER_GITHUB_ACTION", None),
+                **(build_command_env or {}),
+            }.items(),
+        )
+    )
+
+    try:
+        shell(build_command, env=build_env_vars, check=True)
+        rprint("[bold green]Build completed successfully!")
+    except subprocess.CalledProcessError as exc:
+        log.exception(exc)
+        log.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
+        raise BuildDistributionsError from exc
 
 
 @click.command(
@@ -299,21 +369,21 @@ def get_windows_env() -> Mapping[str, str | None]:
 @click.pass_obj
 def version(  # noqa: C901
     cli_ctx: CliContextObj,
-    print_only: bool = False,
-    print_only_tag: bool = False,
-    print_last_released: bool = False,
-    print_last_released_tag: bool = False,
-    as_prerelease: bool = False,
-    prerelease_token: str | None = None,
+    print_only: bool,
+    print_only_tag: bool,
+    print_last_released: bool,
+    print_last_released_tag: bool,
+    as_prerelease: bool,
+    prerelease_token: str | None,
+    commit_changes: bool,
+    create_tag: bool,
+    update_changelog: bool,
+    push_changes: bool,
+    make_vcs_release: bool,
+    build_metadata: str | None,
+    skip_build: bool,
     force_level: str | None = None,
-    commit_changes: bool = True,
-    create_tag: bool = True,
-    update_changelog: bool = True,
-    push_changes: bool = True,
-    make_vcs_release: bool = True,
-    build_metadata: str | None = None,
-    skip_build: bool = False,
-) -> str:
+) -> None:
     """
     Detect the semantically correct next version that should be applied to your
     project.
@@ -340,14 +410,12 @@ def version(  # noqa: C901
 
     # We can short circuit updating the release if we are only printing the last released version
     if print_last_released or print_last_released_tag:
-        if last_release := last_released(repo, translator):
-            if print_last_released:
-                click.echo(last_release[1])
-            if print_last_released_tag:
-                click.echo(last_release[0])
-        else:
+        if not (last_release := last_released(repo, translator)):
             log.warning("No release tags found.")
-        ctx.exit(0)
+            return
+
+        click.echo(last_release[0] if print_last_released_tag else last_release[1])
+        return
 
     parser = runtime.commit_parser
     forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
@@ -357,18 +425,14 @@ def version(  # noqa: C901
         prerelease=runtime.prerelease,
     )
     hvcs_client = runtime.hvcs_client
-    changelog_file = runtime.changelog_file
     changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
-    env = runtime.template_environment
-    template_dir = runtime.template_dir
     assets = runtime.assets
     commit_author = runtime.commit_author
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
-    build_command = runtime.build_command
     opts = runtime.global_cli_options
-    gha_output = VersionGitHubActionsOutput()
+    gha_output = VersionGitHubActionsOutput(released=False)
 
     if prerelease_token:
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
@@ -378,16 +442,27 @@ def version(  # noqa: C901
     if push_changes and not commit_changes and not create_tag:
         log.info("changes will not be pushed because --no-commit disables pushing")
         push_changes &= commit_changes
+
     # Only push if we're creating a tag
     if push_changes and not create_tag and not commit_changes:
         log.info("new tag will not be pushed because --no-tag disables pushing")
         push_changes &= create_tag
+
     # Only make a release if we're pushing the changes
     if make_vcs_release and not push_changes:
         log.info("No vcs release will be created because pushing changes is disabled")
         make_vcs_release &= push_changes
 
-    if forced_level_bump:
+    if not forced_level_bump:
+        new_version = next_version(
+            repo=repo,
+            translator=translator,
+            commit_parser=parser,
+            prerelease=prerelease,
+            major_on_zero=major_on_zero,
+            allow_zero_version=runtime.allow_zero_version,
+        )
+    else:
         log.warning(
             "Forcing a '%s' release due to '--%s' command-line flag",
             force_level,
@@ -411,16 +486,6 @@ def version(  # noqa: C901
             else new_version.finalize_version()
         )
 
-    else:
-        new_version = next_version(
-            repo=repo,
-            translator=translator,
-            commit_parser=parser,
-            prerelease=prerelease,
-            major_on_zero=major_on_zero,
-            allow_zero_version=runtime.allow_zero_version,
-        )
-
     if build_metadata:
         new_version.build_metadata = build_metadata
 
@@ -435,91 +500,81 @@ def version(  # noqa: C901
             new_version,
         )
 
-    gha_output.released = False
+    # Update GitHub Actions output value with new version & set delayed write
     gha_output.version = new_version
     ctx.call_on_close(gha_output.write_if_possible)
 
+    # Make string variant of version && Translate to tag if necessary
+    version_to_print = (
+        str(new_version)
+        if not print_only_tag
+        else translator.str_to_tag(str(new_version))
+    )
+
     # Print the new version so that command-line output capture will work
-    if print_only_tag:
-        click.echo(translator.str_to_tag(str(new_version)))
-    else:
-        click.echo(str(new_version))
+    click.echo(version_to_print)
+
+    # TODO: performance improvement - cache the result of tags_and_versions (previously done in next_version())
+    previously_released_versions = {
+        v for _, v in tags_and_versions(repo.tags, translator)
+    }
 
     # If the new version has already been released, we fail and abort if strict;
     # otherwise we exit with 0.
-    if new_version in {v for _, v in tags_and_versions(repo.tags, translator)}:
+    if new_version in previously_released_versions:
+        err_msg = str.join(
+            " ",
+            [
+                "[bold orange1]No release will be made,",
+                f"{new_version!s} has already been released!",
+            ],
+        )
+
         if opts.strict:
-            ctx.fail(
-                f"No release will be made, {new_version!s} has already been "
-                "released!"
-            )
-        else:
-            rprint(
-                f"[bold orange1]No release will be made, {new_version!s} has "
-                "already been released!"
-            )
-            ctx.exit(0)
+            click.echo(err_msg, err=True)
+            ctx.exit(2)
+
+        rprint(err_msg)
+        return
 
     if print_only or print_only_tag:
-        ctx.exit(0)
+        return
 
-    rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
-
-    rh = ReleaseHistory.from_git_history(
+    release_history = ReleaseHistory.from_git_history(
         repo=repo,
         translator=translator,
         commit_parser=parser,
         exclude_commit_patterns=changelog_excluded_commit_patterns,
     )
 
+    rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
+
     commit_date = datetime.now()
     try:
-        rh = rh.release(
+        # Create release object for the new version
+        # This will be used to generate the changelog prior to the commit and/or tag
+        release_history = release_history.release(
             new_version,
             tagger=commit_author,
             committer=commit_author,
             tagged_date=commit_date,
         )
     except ValueError as ve:
-        ctx.fail(str(ve))
+        click.echo(str(ve), err=True)
+        ctx.exit(1)
 
     all_paths_to_add: list[str] = []
 
     if update_changelog:
-        changelog_context = make_changelog_context(
-            hvcs_client=hvcs_client, release_history=rh
-        )
-        changelog_context.bind_to_environment(env)
-
-        if template_dir.is_dir():
-            if opts.noop:
-                noop_report(
-                    f"would have recursively rendered the template directory "
-                    f"{template_dir!r} relative to {repo.working_dir!r}. "
-                    "Paths which would be modified by this operation cannot be "
-                    "determined in no-op mode."
-                )
-            else:
-                all_paths_to_add.extend(
-                    recursive_render(
-                        template_dir, environment=env, _root_dir=repo.working_dir
-                    )
-                )
-
-        else:
-            log.info(
-                "Path %r not found, using default changelog template", template_dir
+        # Write changelog files & add them to the list of files to commit
+        all_paths_to_add.extend(
+            write_changelog_files(
+                runtime_ctx=runtime,
+                release_history=release_history,
+                hvcs_client=hvcs_client,
+                noop=opts.noop,
             )
-            if opts.noop:
-                noop_report(
-                    "would have written your changelog to "
-                    + str(changelog_file.relative_to(repo.working_dir))
-                )
-            else:
-                changelog_text = render_default_changelog_file(env)
-                changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
-
-            all_paths_to_add.append(str(changelog_file.relative_to(repo.working_dir)))
+        )
 
     # Apply the new version to the source files
     files_with_new_version_written = apply_version_to_source_files(
@@ -535,54 +590,22 @@ def version(  # noqa: C901
     # build fails, modifications to the source code won't be committed
     if skip_build:
         rprint("[bold orange1]Skipping build due to --skip-build flag")
-    elif not build_command:
-        rprint("[green]No build command specified, skipping")
-    elif runtime.global_cli_options.noop:
-        noop_report(f"would have run the build_command {build_command}")
     else:
         try:
-            log.info("Running build command %s", build_command)
-            rprint(
-                "[bold green]:hammer_and_wrench: Running build command: "
-                + build_command
+            build_distributions(
+                build_command=runtime.build_command,
+                build_command_env={
+                    # User defined overrides of environment (from config)
+                    **runtime.build_command_env,
+                    # PSR injected environment variables
+                    "NEW_VERSION": str(new_version),
+                },
+                noop=opts.noop,
             )
-            shell(
-                build_command,
-                check=True,
-                env=dict(
-                    filter(
-                        lambda k_v: k_v[1] is not None,  # type: ignore # noqa: PGH003
-                        {
-                            # Common values
-                            "PATH": os.getenv("PATH", ""),
-                            "HOME": os.getenv("HOME", None),
-                            "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
-                            # Windows environment variables
-                            **(get_windows_env() if is_windows() else {}),
-                            # affects build decisions
-                            "CI": os.getenv("CI", None),
-                            # Identifies which CI environment
-                            "GITHUB_ACTIONS": os.getenv("GITHUB_ACTIONS", None),
-                            "GITLAB_CI": os.getenv("GITLAB_CI", None),
-                            "GITEA_ACTIONS": os.getenv("GITEA_ACTIONS", None),
-                            "BITBUCKET_CI": (
-                                str(True).lower()
-                                if os.getenv("BITBUCKET_REPO_FULL_NAME", None)
-                                else None
-                            ),
-                            "PSR_DOCKER_GITHUB_ACTION": os.getenv(
-                                "PSR_DOCKER_GITHUB_ACTION", None
-                            ),
-                            # User defined overrides of environment (from config)
-                            **runtime.build_command_env,
-                            # PSR injected environment variables
-                            "NEW_VERSION": str(new_version),
-                        }.items(),
-                    )
-                ),
-            )
-        except subprocess.CalledProcessError as exc:
-            ctx.fail(str(exc))
+        except BuildDistributionsError as exc:
+            click.echo(str(exc), err=True)
+            click.echo("Build failed, aborting release", err=True)
+            ctx.exit(1)
 
     # Commit changes
     if commit_changes and opts.noop:
@@ -598,7 +621,7 @@ def version(  # noqa: C901
     elif commit_changes:
         # TODO: in future this loop should be 1 line:
         # repo.index.add(all_paths_to_add, force=False)  # noqa: ERA001
-        # but since 'force' is deliberally ineffective (as in docstring) in gitpython 3.1.18
+        # but since 'force' is deliberately ineffective (as in docstring) in gitpython 3.1.18
         # we have to do manually add each filepath, and catch the exception if it is an ignored file
         for updated_path in all_paths_to_add:
             try:
@@ -723,60 +746,61 @@ def version(  # noqa: C901
             # but we will avoid possibly pushing an separate tag that we didn't create.
             repo.git.push(remote_url, "tag", new_version.as_tag())
 
+    # Update GitHub Actions output value now that release has occurred
     gha_output.released = True
 
-    if make_vcs_release and isinstance(hvcs_client, RemoteHvcsBase):
-        if opts.noop:
-            noop_report(
-                f"would have created a release for the tag {new_version.as_tag()!r}"
-            )
+    if not make_vcs_release:
+        return
 
-        release = rh.released[new_version]
-        # Use a new, non-configurable environment for release notes -
-        # not user-configurable at the moment
-        release_note_environment = environment(template_dir=runtime.template_dir)
-        changelog_context = make_changelog_context(
-            hvcs_client=hvcs_client, release_history=rh
+    if not isinstance(hvcs_client, RemoteHvcsBase):
+        log.info("Remote does not support releases. Skipping release creation...")
+        return
+
+    release_notes = generate_release_notes(
+        hvcs_client,
+        release_history.released[new_version],
+        template_dir=runtime.template_dir,
+    )
+
+    exception: Exception | None = None
+    help_message = ""
+    try:
+        hvcs_client.create_release(
+            tag=new_version.as_tag(),
+            release_notes=release_notes,
+            prerelease=new_version.is_prerelease,
+            assets=assets,
+            noop=opts.noop,
         )
-        changelog_context.bind_to_environment(release_note_environment)
-
-        template = get_release_notes_template(template_dir)
-        release_notes = render_release_notes(
-            release_notes_template=template,
-            template_environment=release_note_environment,
-            version=new_version,
-            release=release,
+    except HTTPError as err:
+        exception = err
+    except UnexpectedResponse as err:
+        exception = err
+        help_message = str.join(
+            " ",
+            [
+                "Before re-running, make sure to clean up any artifacts",
+                "on the hvcs that may have already been created.",
+            ],
         )
-        if opts.noop:
-            noop_report(
-                "would have created the following release notes: \n" + release_notes
+        help_message = str.join(
+            "\n",
+            [
+                "Unexpected response from remote VCS!",
+                help_message,
+            ],
+        )
+    except Exception as err:  # noqa: BLE001
+        # TODO: Remove this catch-all exception handler in the future
+        exception = err
+    finally:
+        if exception is not None:
+            log.exception(exception)
+            click.echo(str(exception), err=True)
+            if help_message:
+                click.echo(help_message, err=True)
+            click.echo(
+                f"Failed to create release on {hvcs_client.__class__.__name__}!",
+                err=True,
             )
-            noop_report(f"would have uploaded the following assets: {runtime.assets}")
-        else:
-            try:
-                hvcs_client.create_release(
-                    tag=new_version.as_tag(),
-                    release_notes=release_notes,
-                    prerelease=new_version.is_prerelease,
-                    assets=assets,
-                )
-            except HTTPError as err:
-                log.exception(err)
-                ctx.fail(str.join("\n", [str(err), "Failed to create release!"]))
-            except UnexpectedResponse as err:
-                log.exception(err)
-                ctx.fail(
-                    str.join(
-                        "\n",
-                        [
-                            str(err),
-                            "Unexpected response from remote VCS!",
-                            "Before re-running, make sure to clean up any artifacts on the hvcs that may have already been created.",
-                        ],
-                    )
-                )
-            except Exception as e:
-                log.exception(e)
-                ctx.fail(str(e))
-
-    return str(new_version)
+            ctx.exit(1)

@@ -541,10 +541,24 @@ class RuntimeContext:
         # changelog_file
         changelog_file = Path(raw.changelog.changelog_file).resolve()
 
-        template_dir = Path(repo.working_tree_dir or ".") / raw.changelog.template_dir
+        # Prevent path traversal attacks
+        if Path(repo.working_dir).resolve() not in changelog_file.parents:
+            raise InvalidConfiguration(
+                "Changelog file destination must be inside of the repository directory."
+            )
+
+        template_dir = (
+            Path(repo.working_tree_dir or ".") / raw.changelog.template_dir
+        ).resolve()
+
+        # Prevent path traversal attacks
+        if Path(repo.working_dir).resolve() not in template_dir.parents:
+            raise InvalidConfiguration(
+                "Template directory must be inside of the repository directory."
+            )
 
         template_environment = environment(
-            template_dir=raw.changelog.template_dir,
+            template_dir=template_dir,
             **raw.changelog.environment.model_dump(),
         )
 

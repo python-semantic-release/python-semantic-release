@@ -89,7 +89,7 @@ def excluded_file(directory_path_with_hidden_subfolder: Path) -> Path:
     return file
 
 
-@pytest.mark.usefixtures("excluded_file")
+@pytest.mark.usefixtures(excluded_file.__name__)
 def test_recursive_render(
     init_example_project: None,
     example_project_dir: Path,

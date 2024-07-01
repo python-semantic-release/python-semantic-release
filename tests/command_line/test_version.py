@@ -15,11 +15,26 @@ import pytest
 import tomlkit
 from pytest_lazyfixture import lazy_fixture
 
-from semantic_release.cli import main, version
+from semantic_release.cli.commands.main import main
 
-from tests.const import EXAMPLE_PROJECT_NAME, EXAMPLE_RELEASE_NOTES_TEMPLATE
+from tests.const import (
+    EXAMPLE_PROJECT_NAME,
+    EXAMPLE_RELEASE_NOTES_TEMPLATE,
+    MAIN_PROG_NAME,
+    VERSION_SUBCMD,
+)
+from tests.fixtures import (
+    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_with_git_flow_and_release_channels_angular_commits,
+    repo_with_git_flow_angular_commits,
+    repo_with_no_tags_angular_commits,
+    repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_angular_commits,
+)
 from tests.util import (
     actions_output_to_dict,
+    assert_exit_code,
+    assert_successful_exit_code,
     flatten_dircmp,
     get_release_history_from_context,
     remove_dir_tree,
@@ -40,18 +55,17 @@ if TYPE_CHECKING:
     )
 
 
-version_subcmd = version.name or version.__name__
-
-
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_version_noop_is_noop(
@@ -75,15 +89,19 @@ def test_version_noop_is_noop(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, ["--noop", version_subcmd])
+    cli_cmd = [MAIN_PROG_NAME, "--noop", VERSION_SUBCMD]
 
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Grab measurement values after the command
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
-
-    assert result.exit_code == 0
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-
     differing_files = flatten_dircmp(dcmp)
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert not differing_files
     assert tags_before == tags_after
     assert head_before == head_after
@@ -97,7 +115,7 @@ def test_version_noop_is_noop(
     [
         *[
             (
-                lazy_fixture("repo_with_no_tags_angular_commits"),
+                lazy_fixture(repo_with_no_tags_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -120,7 +138,7 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_angular_commits"),
+                lazy_fixture(repo_with_single_branch_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -143,7 +161,9 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+                lazy_fixture(
+                    repo_with_single_branch_and_prereleases_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -192,7 +212,7 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_angular_commits"),
+                lazy_fixture(repo_with_git_flow_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -215,7 +235,9 @@ def test_version_noop_is_noop(
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+                lazy_fixture(
+                    repo_with_git_flow_and_release_channels_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -260,17 +282,22 @@ def test_version_print(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(main, [version_subcmd, *cli_args, "--print"])
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *cli_args, "--print"]
 
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Grab measurement values after the command
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
+    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
+    differing_files = flatten_dircmp(dcmp)
 
-    assert result.exit_code == 0
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert tags_before == tags_after
     assert head_before == head_after
     assert result.stdout.rstrip("\n") == expected_stdout
-    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-    differing_files = flatten_dircmp(dcmp)
     assert not differing_files
 
 
@@ -278,20 +305,27 @@ def test_version_print(
     "repo",
     [
         # This project is yet to add any tags, so a release would be triggered
-        # so excluding lazy_fixture("repo_with_no_tags_angular_commits"),
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        # so excluding lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
     # In these tests, unless arguments are supplied then the latest version
     # has already been released, so we expect an exit code of 2 with the message
     # to indicate that no release will be made
-    result = cli_runner.invoke(main, ["--strict", version_subcmd, "--no-push"])
-    assert result.exit_code == 2
+    cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, "--no-push"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
     assert "no release will be made" in result.stderr.lower()
 
 
@@ -300,7 +334,7 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
     [
         *[
             (
-                lazy_fixture("repo_with_no_tags_angular_commits"),
+                lazy_fixture(repo_with_no_tags_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -322,7 +356,7 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_angular_commits"),
+                lazy_fixture(repo_with_single_branch_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -344,7 +378,9 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
+                lazy_fixture(
+                    repo_with_single_branch_and_prereleases_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -391,7 +427,7 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_angular_commits"),
+                lazy_fixture(repo_with_git_flow_angular_commits.__name__),
                 cli_args,
                 expected_stdout,
             )
@@ -413,7 +449,9 @@ def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
         ],
         *[
             (
-                lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+                lazy_fixture(
+                    repo_with_git_flow_and_release_channels_angular_commits.__name__
+                ),
                 cli_args,
                 expected_stdout,
             )
@@ -450,15 +488,17 @@ def test_version_no_push_force_level(
     head_before = repo.head.commit
     tags_before = sorted(repo.tags, key=lambda tag: tag.name)
 
-    result = cli_runner.invoke(
-        main, [version_subcmd or "version", *cli_args, "--no-push"]
-    )
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *cli_args, "--no-push"]
 
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Grab measurement values after the command
     tags_after = sorted(repo.tags, key=lambda tag: tag.name)
     head_after = repo.head.commit
 
-    assert result.exit_code == 0
-
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert set(tags_before) < set(tags_after)
     assert head_before != head_after  # A commit has been made
     assert head_before in repo.head.commit.parents
@@ -516,34 +556,52 @@ def test_version_no_push_force_level(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture("repo_with_single_branch_angular_commits"),
-        lazy_fixture("repo_with_single_branch_and_prereleases_angular_commits"),
-        lazy_fixture("repo_w_github_flow_w_feature_release_channel_angular_commits"),
-        lazy_fixture("repo_with_git_flow_angular_commits"),
-        lazy_fixture("repo_with_git_flow_and_release_channels_angular_commits"),
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
+        lazy_fixture(
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
+        ),
+        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
 def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: CliRunner):
+    cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, "--no-push"]
+
     # Verify we get "no version to release" without build metadata
-    no_metadata_result = cli_runner.invoke(
-        main, ["--strict", version_subcmd, "--no-push"]
-    )
-    assert no_metadata_result.exit_code == 2
+    no_metadata_result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate no version was released because metadata is required to release at this point
+    assert_exit_code(2, no_metadata_result, cli_cmd)
     assert "no release will be made" in no_metadata_result.stderr.lower()
 
     metadata_suffix = "build.abc-12345"
-    result = cli_runner.invoke(
-        main, [version_subcmd, "--no-push", "--build-metadata", metadata_suffix]
-    )
-    assert result.exit_code == 0
+
+    # Verify we get a new version with build metadata
+    cli_cmd = [
+        MAIN_PROG_NAME,
+        VERSION_SUBCMD,
+        "--no-push",
+        "--build-metadata",
+        metadata_suffix,
+    ]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert repo.git.tag(l=f"*{metadata_suffix}")
 
 
 def test_version_prints_current_version_if_no_new_version(
     repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
-    result = cli_runner.invoke(main, [version_subcmd or "version", "--no-push"])
-    assert result.exit_code == 0
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert "no release will be made" in result.stderr.lower()
     assert result.stdout == "1.2.0-alpha.2\n"
 
@@ -581,20 +639,21 @@ def test_version_version_no_verify(
         ),
         local=True,
     )
+
     # Take measurement beforehand
     head_before = repo_with_single_branch_angular_commits.head.commit
 
     # Execute
-    result = cli_runner.invoke(
-        main, [version_subcmd, "--patch", "--no-tag", "--no-push"]
-    )
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-tag", "--no-push"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
-    # Evaluate
+    # Take measurement after the command
     head_after = repo_with_single_branch_angular_commits.head.commit
 
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert head_before != head_after  # A commit has been made
     assert head_before in repo_with_single_branch_angular_commits.head.commit.parents
-    assert result.exit_code == 0
 
 
 @pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
@@ -651,12 +710,13 @@ def test_version_runs_build_command(
     ), mock.patch("sys.platform", "linux"), mock.patch.dict(
         "os.environ", patched_os_environment, clear=True
     ):
-        # ACT: run & force a new version that will trigger the build command
-        result = cli_runner.invoke(
-            main, [version_subcmd or "version", "--patch", "--no-push"]
-        )
-        assert result.exit_code == 0
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
 
+        # ACT: run & force a new version that will trigger the build command
+        result = cli_runner.invoke(main, cli_cmd[1:])
+
+        # Evaluate
+        assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_called_once_with(
             [exe, "-c", build_command],
             check=True,
@@ -731,12 +791,13 @@ def test_version_runs_build_command_windows(
     ), mock.patch("sys.platform", "win32"), mock.patch.dict(
         "os.environ", patched_os_environment, clear=True
     ):
-        # ACT: run & force a new version that will trigger the build command
-        result = cli_runner.invoke(
-            main, [version_subcmd or "version", "--patch", "--no-push"]
-        )
-        assert result.exit_code == 0
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
 
+        # ACT: run & force a new version that will trigger the build command
+        result = cli_runner.invoke(main, cli_cmd[1:])
+
+        # Evaluate
+        assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_called_once_with(
             [exe, "-c" if shell != "cmd" else "/c", build_command],
             check=True,
@@ -825,19 +886,24 @@ def test_version_runs_build_command_w_user_env(
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=("bash", "/usr/bin/bash")
     ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
-        # ACT: run & force a new version that will trigger the build command
-        result = cli_runner.invoke(
-            main,
-            [
-                version_subcmd,
-                "--patch",
-                "--no-commit",
-                "--no-tag",
-                "--no-changelog",
-                "--no-push",
-            ],
-        )
+        cli_cmd = [
+            MAIN_PROG_NAME,
+            VERSION_SUBCMD,
+            "--patch",
+            "--no-commit",
+            "--no-tag",
+            "--no-changelog",
+            "--no-push",
+        ]
 
+        # ACT: run & force a new version that will trigger the build command
+        result = cli_runner.invoke(main, cli_cmd[1:])
+
+        # Evaluate
+        # [1] Make sure it did not error internally
+        assert_successful_exit_code(result, cli_cmd)
+
+        # [2] Make sure the subprocess was called with the correct environment
         patched_subprocess_run.assert_called_once_with(
             ["bash", "-c", build_command],
             check=True,
@@ -863,35 +929,44 @@ def test_version_runs_build_command_w_user_env(
             },
         )
 
-        # Make sure it did not error internally
-        assert result.exit_code == 0
-
 
 def test_version_skips_build_command_with_skip_build(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
 ):
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push", "--skip-build"]
+
     with mock.patch(
         "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
     ) as patched_subprocess_run:
-        result = cli_runner.invoke(
-            main, [version_subcmd, "--patch", "--no-push", "--skip-build"]
-        )  # force a new version
-        assert result.exit_code == 0
+        # Act: force a new version
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
+        # Evaluate
+        assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_not_called()
 
 
 def test_version_writes_github_actions_output(
-    repo_with_git_flow_angular_commits, cli_runner, monkeypatch, tmp_path
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ):
     mock_output_file = tmp_path / "action.out"
     monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
-    result = cli_runner.invoke(main, [version_subcmd, "--patch", "--no-push"])
-    assert result.exit_code == 0
 
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Extract the output
     action_outputs = actions_output_to_dict(
         mock_output_file.read_text(encoding="utf-8")
     )
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert "released" in action_outputs
     assert action_outputs["released"] == "true"
     assert "version" in action_outputs
@@ -900,17 +975,30 @@ def test_version_writes_github_actions_output(
     assert action_outputs["tag"] == "v1.2.1"
 
 
-def test_version_exit_code_when_strict(repo_with_git_flow_angular_commits, cli_runner):
-    result = cli_runner.invoke(main, ["--strict", version_subcmd, "--no-push"])
-    assert result.exit_code != 0
+def test_version_exit_code_when_strict(
+    repo_with_git_flow_angular_commits: Repo, cli_runner: CliRunner
+):
+    cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, "--no-push"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
 
 
 def test_version_exit_code_when_not_strict(
-    repo_with_git_flow_angular_commits, cli_runner
+    repo_with_git_flow_angular_commits: Repo,
+    cli_runner: CliRunner,
 ):
-    # Testing "no release will be made"
-    result = cli_runner.invoke(main, [version_subcmd, "--no-push"])
-    assert result.exit_code == 0
+    """Testing 'no release will be made'"""
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
 
 
 def test_custom_release_notes_template(
@@ -922,14 +1010,17 @@ def test_custom_release_notes_template(
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
+    # TODO: Improve test validity... a lot of testing via its own internal functions
+
     # Setup
     use_release_notes_template()
     runtime_context_with_no_tags = retrieve_runtime_context(
         repo_with_no_tags_angular_commits
     )
+    cli_cmd = ["semantic-release", VERSION_SUBCMD, "--skip-build", "--vcs-release"]
 
     # Act
-    resp = cli_runner.invoke(main, [version_subcmd, "--skip-build", "--vcs-release"])
+    result = cli_runner.invoke(main, cli_cmd[1:])
     release_history = get_release_history_from_context(runtime_context_with_no_tags)
     tag = runtime_context_with_no_tags.repo.tags[-1].name
 
@@ -946,12 +1037,8 @@ def test_custom_release_notes_template(
     )
 
     # Assert
+    assert_successful_exit_code(result, cli_cmd)
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
-    assert resp.exit_code == 0, (
-        "Unexpected failure in command "
-        f"'semantic-release {version_subcmd} --skip-build --vcs-release': "
-        + resp.stderr
-    )
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
     assert post_mocker.last_request.json()["body"] == expected_release_notes
@@ -970,20 +1057,25 @@ def test_version_tag_only_push(
     head_before = runtime_context_with_no_tags.repo.head.commit
 
     # Act
-    args = [version_subcmd, "--tag", "--no-commit", "--skip-build", "--no-vcs-release"]
-    resp = cli_runner.invoke(main, args)
+    cli_cmd = [
+        "semantic-release",
+        VERSION_SUBCMD,
+        "--tag",
+        "--no-commit",
+        "--skip-build",
+        "--no-vcs-release",
+    ]
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
+    # capture values after the command
     tag_after = runtime_context_with_no_tags.repo.tags[-1].name
     head_after = runtime_context_with_no_tags.repo.head.commit
 
     # Assert
+    assert_successful_exit_code(result, cli_cmd)
     assert tag_after == "v0.1.0"
     assert head_before == head_after
     assert mocked_git_push.call_count == 1  # 0 for commit, 1 for tag
-    assert resp.exit_code == 0, (
-        "Unexpected failure in command "
-        f"'semantic-release {str.join(' ', args)}': " + resp.stderr
-    )
 
 
 def test_version_only_update_files_no_git_actions(
@@ -1013,22 +1105,26 @@ def test_version_only_update_files_no_git_actions(
     tags_before = runtime_context_with_tags.repo.tags
 
     # Act
-    args = [version_subcmd, "--minor", "--no-tag", "--no-commit", "--skip-build"]
-    resp = cli_runner.invoke(main, args)
+    cli_cmd = [
+        MAIN_PROG_NAME,
+        VERSION_SUBCMD,
+        "--minor",
+        "--no-tag",
+        "--no-commit",
+        "--skip-build",
+    ]
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
+    # capture values after the command
     tags_after = runtime_context_with_tags.repo.tags
     head_after = runtime_context_with_tags.repo.head.commit
 
     # Assert
+    assert_successful_exit_code(result, cli_cmd)
     assert tags_before == tags_after
     assert head_before == head_after
-    assert (
-        mocked_git_push.call_count == 0
-    )  # no push as it should be turned off automatically
-    assert resp.exit_code == 0, (
-        "Unexpected failure in command "
-        f"'semantic-release {str.join(' ', args)}': " + resp.stderr
-    )
+    # no push as it should be turned off automatically
+    assert mocked_git_push.call_count == 0
 
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
     differing_files = sorted(flatten_dircmp(dcmp))
@@ -1084,8 +1180,13 @@ def test_version_only_update_files_no_git_actions(
 def test_version_print_last_released_prints_version(
     repo_with_single_branch_tag_commits: Repo, cli_runner: CliRunner
 ):
-    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released"])
-    assert result.exit_code == 0
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == "0.1.1\n"
 
 
@@ -1100,15 +1201,25 @@ def test_version_print_last_released_prints_released_if_commits(
     repo_with_single_branch_tag_commits.git.add(str(new_file.resolve()))
     repo_with_single_branch_tag_commits.git.commit(m="fix: temp new file")
 
-    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released"])
-    assert result.exit_code == 0
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == "0.1.1\n"
 
 
 def test_version_print_last_released_prints_nothing_if_no_tags(
     caplog, repo_with_no_tags_angular_commits: Repo, cli_runner: CliRunner
 ):
-    result = cli_runner.invoke(main, [version_subcmd, "--print-last-released"])
-    assert result.exit_code == 0
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
     assert "No release tags found." in caplog.text

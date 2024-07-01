@@ -11,14 +11,15 @@ import requests_mock
 from pytest_lazyfixture import lazy_fixture
 from requests import Session
 
-from semantic_release.cli import changelog, main
+from semantic_release.cli.commands.main import main
 
 from tests.const import (
+    CHANGELOG_SUBCMD,
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
-    SUCCESS_EXIT_CODE,
+    MAIN_PROG_NAME,
 )
 from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,
@@ -47,7 +48,13 @@ from tests.fixtures.repos import (
     repo_with_single_branch_scipy_commits,
     repo_with_single_branch_tag_commits,
 )
-from tests.util import flatten_dircmp, get_release_history_from_context, remove_dir_tree
+from tests.util import (
+    assert_exit_code,
+    assert_successful_exit_code,
+    flatten_dircmp,
+    get_release_history_from_context,
+    remove_dir_tree,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -58,9 +65,6 @@ if TYPE_CHECKING:
 
     from tests.command_line.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
-
-
-changelog_subcmd = changelog.name or changelog.__name__  # type: ignore # noqa: PGH003
 
 
 @pytest.mark.parametrize(
@@ -120,15 +124,16 @@ def test_changelog_noop_is_noop(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
-        result = cli_runner.invoke(main, ["--noop", changelog_subcmd, *args])
+        cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD, *args]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
-
+    # Capture differences after command
     dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-
     differing_files = flatten_dircmp(dcmp)
-    assert not differing_files
 
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+    assert not differing_files
     if args:
         assert not mocker.called
         assert not mock_adapter.called
@@ -177,8 +182,12 @@ def test_changelog_content_regenerated(
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
 
-    result = cli_runner.invoke(main, [changelog_subcmd])
-    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
 
     # Check that the changelog file was re-created
     assert example_changelog_md.exists()
@@ -202,14 +211,16 @@ def test_changelog_release_tag_not_in_history(
     example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
-    expected_err_code = 2
     tempdir = tmp_path_factory.mktemp("test_changelog")
     remove_dir_tree(tempdir.resolve(), force=True)
     shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
 
-    result = cli_runner.invoke(main, [changelog_subcmd, *args])
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
+    result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert expected_err_code == result.exit_code
+    # Evaluate
+    assert_exit_code(2, result, cli_cmd)
     assert "not in release history" in result.stderr.lower()
 
 
@@ -253,10 +264,12 @@ def test_changelog_post_to_release(
         "semantic_release.hvcs.github.build_requests_session",
         return_value=session,
     ) as mocker, mock.patch.dict("os.environ", {}, clear=True):
-        result = cli_runner.invoke(main, [changelog_subcmd, *args])
+        # Act
+        cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
-    assert SUCCESS_EXIT_CODE == result.exit_code  # noqa: SIM300
-
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
     assert mocker.called
     assert mock_adapter.called
     assert mock_adapter.last_request is not None
@@ -289,7 +302,9 @@ def test_custom_release_notes_template(
     release = release_history.released[version]
 
     # Act
-    resp = cli_runner.invoke(main, [changelog_subcmd, "--post-to-release-tag", tag])
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", tag]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
     expected_release_notes = (
         runtime_context_with_tags.template_environment.from_string(
             EXAMPLE_RELEASE_NOTES_TEMPLATE
@@ -298,11 +313,7 @@ def test_custom_release_notes_template(
     )
 
     # Assert
-    assert SUCCESS_EXIT_CODE == resp.exit_code, (  # noqa: SIM300
-        "Unexpected failure in command "
-        f"'semantic-release {changelog_subcmd} --post-to-release-tag {tag}': "
-        + resp.stderr
-    )
+    assert_successful_exit_code(result, cli_cmd)
     assert expected_call_count == post_mocker.call_count
     assert post_mocker.last_request is not None
     assert expected_release_notes == post_mocker.last_request.json()["body"]

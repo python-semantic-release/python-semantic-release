@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import importlib
 import logging
+from enum import Enum
 
 # from typing import TYPE_CHECKING
 import click
@@ -8,7 +10,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 import semantic_release
-from semantic_release.cli.commands.cli_context import CliContextObj
+from semantic_release.cli.cli_context import CliContextObj
 from semantic_release.cli.config import GlobalCommandLineOptions
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint
@@ -20,7 +22,35 @@ from semantic_release.cli.util import rprint
 FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
 
 
-@click.group(
+class Cli(click.MultiCommand):
+    """Root MultiCommand for the semantic-release CLI"""
+
+    class SubCmds(Enum):
+        """Subcommand import definitions"""
+
+        # SUBCMD_FUNCTION_NAME => MODULE_WITH_FUNCTION
+        CHANGELOG = f"{__package__}.changelog"
+        GENERATE_CONFIG = f"{__package__}.generate_config"
+        VERSION = f"{__package__}.version"
+        PUBLISH = f"{__package__}.publish"
+
+    def list_commands(self, _ctx: click.Context) -> list[str]:
+        # Used for shell-completion
+        return [subcmd.lower().replace("_", "-") for subcmd in Cli.SubCmds.__members__]
+
+    def get_command(self, _ctx: click.Context, name: str) -> click.Command | None:
+        subcmd_name = name.lower().replace("-", "_")
+        try:
+            subcmd_def: Cli.SubCmds = Cli.SubCmds.__dict__[subcmd_name.upper()]
+            module_path = subcmd_def.value
+            subcmd_module = importlib.import_module(module_path)
+            return getattr(subcmd_module, subcmd_name)
+        except (KeyError, ModuleNotFoundError, AttributeError):
+            return None
+
+
+@click.command(
+    cls=Cli,
     context_settings={
         "help_option_names": ["-h", "--help"],
     },
