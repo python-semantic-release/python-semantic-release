@@ -5,6 +5,7 @@ import os
 from typing import TYPE_CHECKING
 
 import click
+from git import Repo
 
 from semantic_release.changelog import ReleaseHistory, recursive_render
 from semantic_release.changelog.context import make_changelog_context
@@ -40,7 +41,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None = None) -> None:
     """Generate and optionally publish a changelog for your project"""
     ctx = click.get_current_context()
     runtime = cli_ctx.runtime_ctx
-    repo = runtime.repo
+    repo_dir = runtime.repo_dir
     parser = runtime.commit_parser
     translator = runtime.version_translator
     hvcs_client = runtime.hvcs_client
@@ -49,12 +50,13 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None = None) -> None:
     changelog_file = runtime.changelog_file
     changelog_excluded_commit_patterns = runtime.changelog_excluded_commit_patterns
 
-    rh = ReleaseHistory.from_git_history(
-        repo=repo,
-        translator=translator,
-        commit_parser=parser,
-        exclude_commit_patterns=changelog_excluded_commit_patterns,
-    )
+    with Repo(str(repo_dir)) as git_repo:
+        rh = ReleaseHistory.from_git_history(
+            repo=git_repo,
+            translator=translator,
+            commit_parser=parser,
+            exclude_commit_patterns=changelog_excluded_commit_patterns,
+        )
     changelog_context = make_changelog_context(
         hvcs_client=hvcs_client, release_history=rh
     )
@@ -65,7 +67,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None = None) -> None:
         if runtime.global_cli_options.noop:
             noop_report(
                 "would have written your changelog to "
-                + str(changelog_file.relative_to(repo.working_dir))
+                + str(changelog_file.relative_to(repo_dir))
             )
         else:
             changelog_text = render_default_changelog_file(env)
@@ -75,10 +77,10 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None = None) -> None:
         if runtime.global_cli_options.noop:
             noop_report(
                 f"would have recursively rendered the template directory "
-                f"{template_dir!r} relative to {repo.working_dir!r}"
+                f"{template_dir!r} relative to {repo_dir!r}"
             )
         else:
-            recursive_render(template_dir, environment=env, _root_dir=repo.working_dir)
+            recursive_render(template_dir, environment=env, _root_dir=repo_dir)
 
     if release_tag and isinstance(hvcs_client, RemoteHvcsBase):
         if runtime.global_cli_options.noop:

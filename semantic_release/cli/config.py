@@ -40,7 +40,9 @@ from semantic_release.commit_parser import (
 )
 from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
 from semantic_release.errors import (
+    DetachedHeadGitError,
     InvalidConfiguration,
+    MissingGitRemote,
     NotAReleaseBranch,
     ParserLoadError,
 )
@@ -227,12 +229,39 @@ class RawConfig(BaseModel):
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
     allow_zero_version: bool = True
+    repo_dir: Annotated[Path, Field(validate_default=True)] = Path(".")
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
     tag_format: str = "v{version}"
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
     version_variables: Optional[Tuple[str, ...]] = None
+
+    @field_validator("repo_dir", mode="before")
+    @classmethod
+    def convert_str_to_path(cls, value: Any) -> Path:
+        if not isinstance(value, (str, Path)):
+            raise ValueError(f"Invalid type: {type(value)}, expected str or Path.")
+        return Path(value)
+
+    @field_validator("repo_dir", mode="after")
+    @classmethod
+    def verify_git_repo_dir(cls, dir_path: Path) -> Path:
+        try:
+            # Check for repository & walk up parent directories
+            with Repo(str(dir_path), search_parent_directories=True) as git_repo:
+                found_path = Path(
+                    git_repo.working_tree_dir or git_repo.working_dir
+                ).absolute()
+
+            if dir_path.absolute() != found_path:
+                logging.warning(
+                    "Found .git/ in higher parent directory rather than provided in configuration."
+                )
+
+            return found_path
+        except InvalidGitRepositoryError as err:
+            raise InvalidGitRepositoryError("No valid git repository found!") from err
 
     @field_validator("build_command_env", mode="after")
     @classmethod
@@ -345,7 +374,7 @@ def _recursive_getattr(obj: Any, path: str) -> Any:
 class RuntimeContext:
     _mask_attrs_: ClassVar[List[str]] = ["hvcs_client.token"]
 
-    repo: Repo
+    repo_dir: Path
     commit_parser: CommitParser[ParseResult, ParserOptions]
     version_translator: VersionTranslator
     major_on_zero: bool
@@ -416,16 +445,20 @@ class RuntimeContext:
         # credentials masking for logging
         masker = MaskingFilter(_use_named_masks=raw.logging_use_named_masks)
 
-        try:
-            repo = Repo(".", search_parent_directories=True)
-            active_branch = repo.active_branch.name
-        except InvalidGitRepositoryError as err:
-            raise InvalidGitRepositoryError("No valid git repository found!") from err
-        except TypeError as err:
-            raise NotAReleaseBranch(
-                "Detached HEAD state cannot match any release groups; "
-                "no release will be made"
-            ) from err
+        # Retrieve details from repository
+        with Repo(str(raw.repo_dir)) as git_repo:
+            try:
+                remote_url = raw.remote.url or git_repo.remote(raw.remote.name).url
+                active_branch = git_repo.active_branch.name
+            except ValueError as err:
+                raise MissingGitRemote(
+                    f"Unable to locate remote named '{raw.remote.name}'."
+                ) from err
+            except TypeError as err:
+                raise DetachedHeadGitError(
+                    "Detached HEAD state cannot match any release groups; "
+                    "no release will be made"
+                ) from err
 
         # branch-specific configuration
         branch_config = cls.select_branch_options(raw.branches, active_branch)
@@ -525,9 +558,6 @@ class RuntimeContext:
             if not raw.remote.ignore_token_for_push:
                 log.warning("Token value is missing!")
 
-        # retrieve remote url
-        remote_url = raw.remote.url or repo.remote(raw.remote.name).url
-
         # hvcs_client
         hvcs_client_cls = _known_hvcs[raw.remote.type]
         hvcs_client = hvcs_client_cls(
@@ -541,7 +571,7 @@ class RuntimeContext:
         # changelog_file
         changelog_file = Path(raw.changelog.changelog_file).resolve()
 
-        template_dir = Path(repo.working_tree_dir or ".") / raw.changelog.template_dir
+        template_dir = raw.repo_dir / raw.changelog.template_dir
 
         template_environment = environment(
             template_dir=raw.changelog.template_dir,
@@ -579,7 +609,7 @@ class RuntimeContext:
             build_cmd_env[name] = env_val
 
         self = cls(
-            repo=repo,
+            repo_dir=raw.repo_dir,
             commit_parser=commit_parser,
             version_translator=version_translator,
             major_on_zero=raw.major_on_zero,

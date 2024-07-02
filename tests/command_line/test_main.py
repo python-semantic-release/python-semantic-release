@@ -62,8 +62,8 @@ def test_not_a_release_branch_detached_head_exit_code(
     repo_with_git_flow_angular_commits.git.checkout("HEAD", "--detach")
     result = cli_runner.invoke(main, ["version", "--no-commit"])
 
-    # as non-strict, this will return success exit code
-    assert result.exit_code == 0
+    # detached head states should throw an error as release branches cannot be determined
+    assert 1 == result.exit_code  # noqa: SIM300
     assert expected_err_msg in result.stderr
 
 
