@@ -116,6 +116,11 @@ The default configuration options for
         ":robot:",
         ":green_apple:",
     ]
+    non_triggering_tags = [
+        ":memo:",
+        ":construction_worker:",
+        ":recycle:",
+    ]
 
 .. _commit-parser-scipy:
 
