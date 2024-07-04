@@ -75,5 +75,7 @@ def test_publish_fails_on_nonexistant_tag(cli_runner: CliRunner):
 
         # Evaluate
         assert_exit_code(1, result, cli_cmd)
-        assert f"Tag '{non_existant_tag}' not found in local repository!" in result.stderr
+        assert (
+            f"Tag '{non_existant_tag}' not found in local repository!" in result.stderr
+        )
         mocked_upload_dists.assert_not_called()

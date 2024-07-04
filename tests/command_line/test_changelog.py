@@ -210,7 +210,8 @@ def test_changelog_content_regenerated(
     "args", [("--post-to-release-tag", "v1.99.91910000000000000000000000000")]
 )
 def test_changelog_release_tag_not_in_history(
-    args: list[str], cli_runner: CliRunner,
+    args: list[str],
+    cli_runner: CliRunner,
 ):
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
