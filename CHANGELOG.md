@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## v9.8.4 (2024-07-04)
+
+### Fix
+
+* fix(changelog-cmd): remove usage strings when error occured
+
+Resolves: #810 ([`348a51d`](https://github.com/python-semantic-release/python-semantic-release/commit/348a51db8a837d951966aff3789aa0c93d473829))
+
+* fix(publish-cmd): remove usage strings when error occured
+
+Resolves: #810 ([`afbb187`](https://github.com/python-semantic-release/python-semantic-release/commit/afbb187d6d405fdf6765082e2a1cecdcd7d357df))
+
+* fix(config): prevent path traversal manipulation of target changelog location ([`43e35d0`](https://github.com/python-semantic-release/python-semantic-release/commit/43e35d0972e8a29239d18ed079d1e2013342fcbd))
+
+* fix(version-cmd): remove usage strings when error occurred
+
+Resolves: #810 ([`a7c17c7`](https://github.com/python-semantic-release/python-semantic-release/commit/a7c17c73fd7becb6d0e042e45ff6765605187e2a))
+
+* fix(publish-cmd): prevent error when provided tag does not exist locally ([`16afbbb`](https://github.com/python-semantic-release/python-semantic-release/commit/16afbbb8fbc3a97243e96d7573f4ad2eba09aab9))
+
+* fix(config): prevent path traversal manipulation of target changelog location ([`3eb3dba`](https://github.com/python-semantic-release/python-semantic-release/commit/3eb3dbafec4223ee463b90e927e551639c69426b))
+
+* fix(changelog-cmd): render default changelog when user template directory exist but is empty ([`bded8de`](https://github.com/python-semantic-release/python-semantic-release/commit/bded8deae6c92f6dde9774802d9f3716a5cb5705))
+
 ## v9.8.3 (2024-06-18)
 
 ### Fix
