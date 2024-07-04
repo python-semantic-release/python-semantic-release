@@ -22,6 +22,7 @@ class ParserOptions(dict):
 
     >>> class MyCommitParser(AbstractCommitParser):
     ...     parser_options = MyParserOptions
+    ...
     ...     def parse(self, Commit):
     ...         print(self.options.prefix)
     ...         ...
@@ -77,7 +78,7 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
     # @staticmethod
     # @abstractmethod
     def get_default_options(self) -> _OPTS:
-        return self.parser_options()  # type: ignore # noqa: PGH003
+        return self.parser_options()  # type: ignore[return-value] # noqa: PGH003
 
     @abstractmethod
     def parse(self, commit: Commit) -> _TT: ...
