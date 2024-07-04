@@ -69,7 +69,7 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
         try:
             tag = str(tags_and_versions(repo_tags, translator)[0][0])
         except IndexError:
-            ctx.fail(
+            click.echo(
                 str.join(
                     " ",
                     [
@@ -77,16 +77,19 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
                         repr(translator.tag_format),
                         "couldn't identify latest version",
                     ],
-                )
+                ),
+                err=True,
             )
+            ctx.exit(1)
 
     if tag not in {tag.name for tag in repo_tags}:
-        log.error("Tag '%s' not found in local repository!", tag)
+        click.echo(f"Tag '{tag}' not found in local repository!", err=True)
         ctx.exit(1)
 
     if not isinstance(hvcs_client, RemoteHvcsBase):
-        log.info(
-            "Remote does not support artifact upload. Exiting with no action taken..."
+        click.echo(
+            "Remote does not support artifact upload. Exiting with no action taken...",
+            err=True,
         )
         return
 
