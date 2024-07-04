@@ -210,15 +210,8 @@ def test_changelog_content_regenerated(
     "args", [("--post-to-release-tag", "v1.99.91910000000000000000000000000")]
 )
 def test_changelog_release_tag_not_in_history(
-    args: list[str],
-    tmp_path_factory: pytest.TempPathFactory,
-    example_project_dir: ExProjectDir,
-    cli_runner: CliRunner,
+    args: list[str], cli_runner: CliRunner,
 ):
-    tempdir = tmp_path_factory.mktemp("test_changelog")
-    remove_dir_tree(tempdir.resolve(), force=True)
-    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
-
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
     result = cli_runner.invoke(main, cli_cmd[1:])

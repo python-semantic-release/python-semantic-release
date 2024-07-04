@@ -65,12 +65,15 @@ def test_publish_to_tag_uses_tag(
 
 @pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
 def test_publish_fails_on_nonexistant_tag(cli_runner: CliRunner):
+    non_existant_tag = "nonexistant-tag"
+
     with mock.patch.object(Github, Github.upload_dists.__name__) as mocked_upload_dists:
-        cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", "nonexistant-tag"]
+        cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", non_existant_tag]
 
         # Act
         result = cli_runner.invoke(main, cli_cmd[1:])
 
         # Evaluate
         assert_exit_code(1, result, cli_cmd)
+        assert f"Tag '{non_existant_tag}' not found in local repository!" in result.stderr
         mocked_upload_dists.assert_not_called()
