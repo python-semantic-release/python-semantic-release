@@ -568,7 +568,7 @@ class RuntimeContext:
         )
 
         # changelog_file
-        changelog_file = Path(raw.changelog.changelog_file).resolve()
+        changelog_file = Path(raw.changelog.changelog_file).expanduser().resolve()
 
         # Prevent path traversal attacks
         if raw.repo_dir not in changelog_file.parents:
@@ -576,7 +576,7 @@ class RuntimeContext:
                 "Changelog file destination must be inside of the repository directory."
             )
 
-        template_dir = (raw.repo_dir / raw.changelog.template_dir).resolve()
+        template_dir = Path(raw.changelog.template_dir).expanduser().resolve()
 
         # Prevent path traversal attacks
         if raw.repo_dir not in template_dir.parents:
