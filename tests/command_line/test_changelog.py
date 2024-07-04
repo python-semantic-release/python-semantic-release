@@ -64,7 +64,11 @@ if TYPE_CHECKING:
     from requests_mock import Mocker
 
     from tests.command_line.conftest import RetrieveRuntimeContextFn
-    from tests.fixtures.example_project import ExProjectDir, UseReleaseNotesTemplateFn
+    from tests.fixtures.example_project import (
+        ExProjectDir,
+        UpdatePyprojectTomlFn,
+        UseReleaseNotesTemplateFn,
+    )
 
 
 @pytest.mark.parametrize(
@@ -317,3 +321,66 @@ def test_custom_release_notes_template(
     assert expected_call_count == post_mocker.call_count
     assert post_mocker.last_request is not None
     assert expected_release_notes == post_mocker.last_request.json()["body"]
+
+
+@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+def test_changelog_default_on_empty_template_dir(
+    example_changelog_md: Path,
+    changelog_template_dir: Path,
+    example_project_template_dir: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    cli_runner: CliRunner,
+):
+    # Setup: Make sure default changelog doesn't already exist
+    example_changelog_md.unlink(missing_ok=True)
+
+    # Setup: Create an empty template directory
+    example_project_template_dir.mkdir(parents=True, exist_ok=True)
+
+    # Setup: Set the templates directory in the configuration
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        str(changelog_template_dir),
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Check that our default changelog was created because the user's template dir was empty
+    assert example_changelog_md.exists()
+
+
+@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+def test_changelog_default_on_incorrect_config_template_file(
+    example_changelog_md: Path,
+    changelog_template_dir: Path,
+    example_project_template_dir: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    cli_runner: CliRunner,
+):
+    # Setup: Make sure default changelog doesn't already exist
+    example_changelog_md.unlink(missing_ok=True)
+
+    # Setup: Create a file of the same name as the template directory
+    example_project_template_dir.parent.mkdir(parents=True, exist_ok=True)
+    example_project_template_dir.touch()
+
+    # Setup: Set the templates directory as the file in the configuration
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        str(changelog_template_dir),
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Check that our default changelog was created because the user's template dir was empty
+    assert example_changelog_md.exists()
