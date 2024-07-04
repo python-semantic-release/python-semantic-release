@@ -84,24 +84,30 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
         return
 
     if not isinstance(hvcs_client, RemoteHvcsBase):
-        log.info("Remote does not support releases. Skipping release notes update...")
+        click.echo(
+            "Remote does not support releases. Skipping release notes update...",
+            err=True,
+        )
         return
 
     if not (version := translator.from_tag(release_tag)):
-        ctx.fail(
+        click.echo(
             str.join(
                 " ",
                 [
                     f"Tag {release_tag!r} does not match the tag format",
                     repr(translator.tag_format),
                 ],
-            )
+            ),
+            err=True,
         )
+        ctx.exit(1)
 
     try:
         release = release_history.released[version]
     except KeyError:
-        ctx.fail(f"tag {release_tag} not in release history")
+        click.echo(f"tag {release_tag} not in release history", err=True)
+        ctx.exit(2)
 
     release_notes = generate_release_notes(
         hvcs_client,
@@ -119,4 +125,5 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
         )
     except Exception as e:
         log.exception(e)
-        ctx.fail(str(e))
+        click.echo("Failed to post release notes to remote", err=True)
+        ctx.exit(1)
