@@ -384,3 +384,53 @@ def test_changelog_default_on_incorrect_config_template_file(
 
     # Check that our default changelog was created because the user's template dir was empty
     assert example_changelog_md.exists()
+
+
+@pytest.mark.parametrize("bad_changelog_file_str", ("/etc/passwd", "../../.ssh/id_rsa"))
+@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+def test_changelog_prevent_malicious_path_traversal_file(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    bad_changelog_file_str: str,
+    cli_runner: CliRunner,
+):
+    # Setup: A malicious path traversal filepath outside of the repository
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.changelog_file",
+        bad_changelog_file_str,
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_exit_code(1, result, cli_cmd)
+    assert (
+        "Changelog file destination must be inside of the repository directory."
+        in result.stderr
+    )
+
+
+@pytest.mark.parametrize("template_dir_path", ("~/.ssh", "../../.ssh"))
+@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+def test_changelog_prevent_external_path_traversal_dir(
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    template_dir_path: str,
+    cli_runner: CliRunner,
+):
+    # Setup: A malicious path traversal filepath outside of the repository
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        template_dir_path,
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_exit_code(1, result, cli_cmd)
+    assert (
+        "Template directory must be inside of the repository directory."
+        in result.stderr
+    )
