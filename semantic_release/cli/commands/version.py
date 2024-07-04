@@ -551,7 +551,7 @@ def version(  # noqa: C901
                 check=True,
                 env=dict(
                     filter(
-                        lambda k_v: k_v[1] is not None,  # type: ignore[arg-type] # noqa: PGH003
+                        lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
                         {
                             # Common values
                             "PATH": os.getenv("PATH", ""),
