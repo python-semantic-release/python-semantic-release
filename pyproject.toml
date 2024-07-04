@@ -78,7 +78,7 @@ dev = [
 ]
 mypy = [
   "mypy == 1.10.1",
-  "types-requests ~= 2.31.0"
+  "types-requests ~= 2.32.0",
 ]
 
 [tool.pytest.ini_options]
