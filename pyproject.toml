@@ -156,6 +156,7 @@ show_error_context = true
 pretty = true
 error_summary = true
 follow_imports = "normal"
+enable_error_code = ["ignore-without-code"]
 ignore_missing_imports = true   # gitpython is very dynamic
 disallow_untyped_calls = true
 # warn_return_any = true
@@ -236,6 +237,8 @@ ignore = [
   "INP001",
   # Errors should end with "Error"
   "N818",
+  # mypy prevents blanket-type-ignore
+  "PGH003",
   # Fixtures that do not return a value need an underscore prefix.  The rule
   # does not handle generators.
   "PT004",
