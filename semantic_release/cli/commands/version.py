@@ -150,8 +150,8 @@ def shell(
     if not shell:
         raise TypeError("'shell' is None")
 
-    return subprocess.run(
-        [shell, "-c" if shell != "cmd" else "/c", cmd],  # noqa: S603
+    return subprocess.run(  # noqa: S603
+        [shell, "-c" if shell != "cmd" else "/c", cmd],
         env=(env or {}),
         check=check,
     )
