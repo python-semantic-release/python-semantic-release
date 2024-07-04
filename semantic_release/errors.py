@@ -78,3 +78,23 @@ class ParserLoadError(SemanticReleaseBaseError):
 
 class BuildDistributionsError(SemanticReleaseBaseError):
     """Raised when there is a failure to build the distribution files."""
+
+
+class GitAddError(SemanticReleaseBaseError):
+    """Raised when there is a failure to add files to the git index."""
+
+
+class GitCommitError(SemanticReleaseBaseError):
+    """Raised when there is a failure to commit the changes."""
+
+
+class GitCommitEmptyIndexError(SemanticReleaseBaseError):
+    """Raised when there is an attempt to commit an empty index."""
+
+
+class GitTagError(SemanticReleaseBaseError):
+    """Raised when there is a failure to tag the release."""
+
+
+class GitPushError(SemanticReleaseBaseError):
+    """Raised when there is a failure to push to the git remote."""

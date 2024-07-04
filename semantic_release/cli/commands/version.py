@@ -4,7 +4,6 @@ import logging
 import os
 import subprocess
 import sys
-from contextlib import nullcontext
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -12,7 +11,6 @@ import click
 import shellingham  # type: ignore[import]
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git import Repo
-from git.exc import GitCommandError
 from requests import HTTPError
 
 from semantic_release.changelog import ReleaseHistory
@@ -21,10 +19,15 @@ from semantic_release.cli.changelog_writer import (
     write_changelog_files,
 )
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
-from semantic_release.cli.util import indented, noop_report, rprint
+from semantic_release.cli.util import noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
-from semantic_release.errors import BuildDistributionsError, UnexpectedResponse
+from semantic_release.errors import (
+    BuildDistributionsError,
+    GitCommitEmptyIndexError,
+    UnexpectedResponse,
+)
+from semantic_release.gitproject import GitProject
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version import (
     Version,
@@ -35,7 +38,7 @@ from semantic_release.version import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
-    from typing import ContextManager, Iterable, Mapping
+    from typing import Iterable, Mapping
 
     from git.refs.tag import Tag
 
@@ -617,154 +620,64 @@ def version(  # noqa: C901
             click.echo("Build failed, aborting release", err=True)
             ctx.exit(1)
 
-    # Commit changes
-    if commit_changes and opts.noop:
-        noop_report(
-            indented(
-                f"""
-                would have run:
-                    git add {" ".join(all_paths_to_add)}
-                """
-            )
-        )
+    project = GitProject(
+        directory=runtime.repo_dir,
+        commit_author=runtime.commit_author,
+        credential_masker=runtime.masker,
+    )
 
-    elif commit_changes:
-        # TODO: in future this loop should be 1 line:
-        # repo.index.add(all_paths_to_add, force=False)  # noqa: ERA001
-        # but since 'force' is deliberately ineffective (as in docstring) in gitpython 3.1.18
-        # we have to do manually add each filepath, and catch the exception if it is an ignored file
-        with Repo(str(runtime.repo_dir)) as git_repo:
-            for updated_path in all_paths_to_add:
-                try:
-                    git_repo.git.add(updated_path)
-                except GitCommandError:  # noqa: PERF203
-                    log.warning("Failed to add path (%s) to index", updated_path)
+    # Preparing for committing changes
+    if commit_changes:
+        project.git_add(paths=all_paths_to_add, noop=opts.noop)
 
-    def custom_git_environment() -> ContextManager[None]:
-        """
-        git.custom_environment is a context manager but
-        is not reentrant, so once we have "used" it
-        we need to throw it away and re-create it in
-        order to use it again
-        """
-        with Repo(str(runtime.repo_dir)) as git_repo:
-            return (
-                nullcontext()
-                if not commit_author
-                else git_repo.git.custom_environment(
-                    GIT_AUTHOR_NAME=commit_author.name,
-                    GIT_AUTHOR_EMAIL=commit_author.email,
-                    GIT_COMMITTER_NAME=commit_author.name,
-                    GIT_COMMITTER_EMAIL=commit_author.email,
-                )
-            )
-
-    # If we haven't modified any source code then we skip trying to make a commit
-    # and any tag that we apply will be to the HEAD commit (made outside of
-    # running PSR
-    with Repo(str(runtime.repo_dir)) as git_repo:
-        curr_index_diff = git_repo.index.diff("HEAD")
-
-    if not curr_index_diff:
-        log.info("No local changes to add to any commit, skipping")
-
-    elif commit_changes and opts.noop:
-        command = (
-            f"""\
-            GIT_AUTHOR_NAME={commit_author.name} \\
-                GIT_AUTHOR_EMAIL={commit_author.email} \\
-                GIT_COMMITTER_NAME={commit_author.name} \\
-                GIT_COMMITTER_EMAIL={commit_author.email} \\
-                """
-            if commit_author
-            else ""
-        )
-
-        # Indents the newlines so that terminal formatting is happy - note the
-        # git commit line of the output is 24 spaces indented too
-        # Only this message needs such special handling because of the newlines
-        # that might be in a commit message between the subject and body
-        indented_commit_message = commit_message.format(version=new_version).replace(
-            "\n\n", "\n\n" + " " * 24
-        )
-
-        command += f"git commit -m '{indented_commit_message}'"
-        command += "--no-verify" if no_verify else ""
-
-        noop_report(
-            indented(
-                f"""
-                would have run:
-                    {command}
-                """
-            )
-        )
-
-    elif commit_changes:
-        with Repo(str(runtime.repo_dir)) as git_repo, custom_git_environment():
-            git_repo.git.commit(
-                m=commit_message.format(version=new_version),
+        # NOTE: If we haven't modified any source code then we skip trying to make a commit
+        # and any tag that we apply will be to the HEAD commit (made outside of
+        # running PSR
+        try:
+            project.git_commit(
+                message=commit_message.format(version=new_version),
                 date=int(commit_date.timestamp()),
                 no_verify=no_verify,
+                noop=opts.noop,
             )
+        except GitCommitEmptyIndexError:
+            log.info("No local changes to add to any commit, skipping")
 
-    # Run the tagging after potentially creating a new HEAD commit.
+    # Tag the version after potentially creating a new HEAD commit.
     # This way if no source code is modified, i.e. all metadata updates
     # are disabled, and the changelog generation is disabled or it's not
     # modified, then the HEAD commit will be tagged as a release commit
     # despite not being made by PSR
     if commit_changes or create_tag:
-        if opts.noop:
-            noop_report(
-                indented(
-                    f"""
-                    would have run:
-                        git tag -a {new_version.as_tag()} -m "{new_version.as_tag()}"
-                    """
-                )
-            )
-        else:
-            with Repo(str(runtime.repo_dir)) as git_repo, custom_git_environment():
-                git_repo.git.tag("-a", new_version.as_tag(), m=new_version.as_tag())
+        project.git_tag(
+            tag_name=new_version.as_tag(),
+            message=new_version.as_tag(),
+            noop=opts.noop,
+        )
 
     if push_changes:
         remote_url = runtime.hvcs_client.remote_url(
             use_token=not runtime.ignore_token_for_push
         )
 
-        with Repo(str(runtime.repo_dir)) as git_repo:
-            active_branch = git_repo.active_branch.name
-
-        if commit_changes and opts.noop:
-            noop_report(
-                indented(
-                    f"""
-                    would have run:
-                        git push {runtime.masker.mask(remote_url)} {active_branch}
-                    """  # noqa: E501
-                )
-            )
-        elif commit_changes:
+        if commit_changes:
+            # TODO: integrate into push branch
             with Repo(str(runtime.repo_dir)) as git_repo:
-                git_repo.git.push(remote_url, active_branch)
+                active_branch = git_repo.active_branch.name
 
-        if create_tag and opts.noop:
-            noop_report(
-                indented(
-                    f"""
-                    would have run:
-                        git push {runtime.masker.mask(remote_url)} tag {new_version.as_tag()}
-                    """  # noqa: E501
-                )
+            project.git_push_branch(
+                remote_url=remote_url,
+                branch=active_branch,
+                noop=opts.noop,
             )
-        elif create_tag:
+
+        if create_tag:
             # push specific tag refspec (that we made) to remote
-            # ---------------
-            # Resolves issue #803 where a tag that already existed was pushed and caused
-            # a failure. Its not clear why there was an incorrect tag (likely user error change)
-            # but we will avoid possibly pushing an separate tag that we didn't create.
-            with Repo(str(runtime.repo_dir)) as git_repo:
-                git_repo.git.push(remote_url, "tag", new_version.as_tag())
+            project.git_push_tag(
+                remote_url=remote_url,
+                tag=new_version.as_tag(),
+                noop=opts.noop,
+            )
 
     # Update GitHub Actions output value now that release has occurred
     gha_output.released = True
