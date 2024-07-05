@@ -85,8 +85,8 @@ def test_not_a_release_branch_detached_head_exit_code(
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-commit"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    # as non-strict, this will return success exit code
-    assert_successful_exit_code(result, cli_cmd)
+    # detached head states should throw an error as release branches cannot be determined
+    assert_exit_code(1, result, cli_cmd)
     assert expected_err_msg in result.stderr
 
 
