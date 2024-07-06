@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## v9.8.5 (2024-07-06)
+
+### Fix
+
+* fix: enable `--print-last-released*` when in detached head or non-release branch (#926)
+
+* test(version-cmd): add tests to print when detached or non-release branch
+
+  ref: #900
+
+* fix(version-cmd): drop branch restriction for `--print-last-released*` opts
+
+  Resolves: #900 ([`782c0a6`](https://github.com/python-semantic-release/python-semantic-release/commit/782c0a6109fb49e168c37f279928c0a4959f8ac6))
+
+### Performance
+
+* perf: improve git history processing for changelog generation (#972)
+
+* perf(changelog): improve git history parser changelog generation
+
+  This converts the double for-loop (`O(n^2)`) down to `O(n)` using a
+  lookup table to match the current commit with a known tag rather than
+  iterating through all the tags of the repository every time.
+
+* fix(changelog): resolve commit ordering issue when dates are similar ([`bfda159`](https://github.com/python-semantic-release/python-semantic-release/commit/bfda1593af59e9e728c584dd88d7927fc52c879f))
+
 ## v9.8.4 (2024-07-04)
 
 ### Fix
@@ -1448,6 +1474,18 @@ to allow custom file changes alongside the release commits. ([`3e34f95`](https:/
 
 ## v7.21.0 (2021-11-21)
 
+### Feature
+
+* feat: use gitlab-ci or github actions env vars
+
+return owner and project name from Gitlab/Github environment variables if available
+
+Issue #363 ([`8ca8dd4`](https://github.com/python-semantic-release/python-semantic-release/commit/8ca8dd40f742f823af147928bd75a9577c50d0fd))
+
+### Fix
+
+* fix: remove invalid repository exception ([`746b62d`](https://github.com/python-semantic-release/python-semantic-release/commit/746b62d4e207a5d491eecd4ca96d096eb22e3bed))
+
 ## v7.20.0 (2021-11-21)
 
 ### Documentation
@@ -1472,17 +1510,9 @@ executable. No-op mode now respected by artifact upload. ([`cfb20af`](https://gi
 * PYPI_TOKEN can now be customized by setting pypi_token_var
 * PYPI_USERNAME can now be customized by setting pypi_user_var ([`372cda3`](https://github.com/python-semantic-release/python-semantic-release/commit/372cda3497f16ead2209e6e1377d38f497144883))
 
-* feat: use gitlab-ci or github actions env vars
-
-return owner and project name from Gitlab/Github environment variables if available
-
-Issue #363 ([`8ca8dd4`](https://github.com/python-semantic-release/python-semantic-release/commit/8ca8dd40f742f823af147928bd75a9577c50d0fd))
-
 ### Fix
 
 * fix: mypy errors in vcs_helpers ([`13ca0fe`](https://github.com/python-semantic-release/python-semantic-release/commit/13ca0fe650125be2f5e953f6193fdc4d44d3c75a))
-
-* fix: remove invalid repository exception ([`746b62d`](https://github.com/python-semantic-release/python-semantic-release/commit/746b62d4e207a5d491eecd4ca96d096eb22e3bed))
 
 * fix: skip removing the build folder if it doesn&#39;t exist
 
@@ -1788,14 +1818,6 @@ This issue occurs when some commits are available but are all to level 0. ([`8ab
 
 * feat(build): allow falsy values for build_command to disable build step ([`c07a440`](https://github.com/python-semantic-release/python-semantic-release/commit/c07a440f2dfc45a2ad8f7c454aaac180c4651f70))
 
-* feat(repository): Add to settings artifact repository
-
-- Add new config var to set repository (repository_url)
-- Remove &#39;Pypi&#39; word when it refers generically to an artifact repository system
-- Depreciate &#39;PYPI_USERNAME&#39; and &#39;PYPI_PASSWORD&#39; and prefer &#39;REPOSITORY_USERNAME&#39; and &#39;REPOSITORY_PASSWORD&#39; env vars
-- Depreciate every config key with &#39;pypi&#39; and prefer repository
-- Update doc in accordance with those changes ([`f4ef373`](https://github.com/python-semantic-release/python-semantic-release/commit/f4ef3733b948282fba5a832c5c0af134609b26d2))
-
 ## v7.9.0 (2020-12-21)
 
 ### Feature
@@ -1827,6 +1849,16 @@ This resolves deprecation warnings, and updates this to a more 3.x
 compatible syntax ([`5087e54`](https://github.com/python-semantic-release/python-semantic-release/commit/5087e549399648cf2e23339a037b33ca8b62d954))
 
 ## v7.8.2 (2020-12-19)
+
+### Feature
+
+* feat(repository): Add to settings artifact repository
+
+- Add new config var to set repository (repository_url)
+- Remove &#39;Pypi&#39; word when it refers generically to an artifact repository system
+- Depreciate &#39;PYPI_USERNAME&#39; and &#39;PYPI_PASSWORD&#39; and prefer &#39;REPOSITORY_USERNAME&#39; and &#39;REPOSITORY_PASSWORD&#39; env vars
+- Depreciate every config key with &#39;pypi&#39; and prefer repository
+- Update doc in accordance with those changes ([`f4ef373`](https://github.com/python-semantic-release/python-semantic-release/commit/f4ef3733b948282fba5a832c5c0af134609b26d2))
 
 ### Fix
 
@@ -3086,6 +3118,10 @@ Fixes #28 ([`191369e`](https://github.com/python-semantic-release/python-semanti
 
 * fix: Add pandoc to travis settings ([`17d40a7`](https://github.com/python-semantic-release/python-semantic-release/commit/17d40a73062ffa774542d0abc0f59fc16b68be37))
 
+### Unknown
+
+* Upgrade dependency click to ==6.2 ([`1c5f3cd`](https://github.com/python-semantic-release/python-semantic-release/commit/1c5f3cde6a8a892b1fe48eae39424d3d483b5935))
+
 ## v3.3.0 (2015-12-20)
 
 ### Feature
@@ -3103,10 +3139,6 @@ Fixes #28 ([`191369e`](https://github.com/python-semantic-release/python-semanti
 * fix: Better filtering of github token in push error ([`9b31da4`](https://github.com/python-semantic-release/python-semantic-release/commit/9b31da4dc27edfb01f685e6036ddbd4c715c9f60))
 
 * fix: Make sure the github token is not in the output ([`55356b7`](https://github.com/python-semantic-release/python-semantic-release/commit/55356b718f74d94dd92e6c2db8a15423a6824eb5))
-
-### Unknown
-
-* Upgrade dependency click to ==6.2 ([`1c5f3cd`](https://github.com/python-semantic-release/python-semantic-release/commit/1c5f3cde6a8a892b1fe48eae39424d3d483b5935))
 
 ## v3.2.1 (2015-12-20)
 
@@ -3135,8 +3167,6 @@ clients will then download the latest sdist package available. ([`a1a35f4`](http
 
 ### Unknown
 
-* Add links to the node project ([`3567952`](https://github.com/python-semantic-release/python-semantic-release/commit/3567952d8e84235c58aa7e310689de8d4b07f7ad))
-
 * Upgrade dependency twine to ==1.6.3 ([`f96e9b2`](https://github.com/python-semantic-release/python-semantic-release/commit/f96e9b2e066465e657b3d25708713f5d20b6942f))
 
 * Upgrade dependency semver to ==2.2.1 ([`63b4b99`](https://github.com/python-semantic-release/python-semantic-release/commit/63b4b9949816cef110a2ce3c10707525623bd8ef))
@@ -3154,6 +3184,8 @@ clients will then download the latest sdist package available. ([`a1a35f4`](http
 * Upgrade dependency click to ==5.1 ([`d0b6c7d`](https://github.com/python-semantic-release/python-semantic-release/commit/d0b6c7d968961d7bc84560ca22f3b9a8634e08a9))
 
 * Upgrade dependency responses to ==0.5.0 ([`fcf9e1a`](https://github.com/python-semantic-release/python-semantic-release/commit/fcf9e1a806236fc09a472ba6e58cf44f57b2147f))
+
+* Add links to the node project ([`3567952`](https://github.com/python-semantic-release/python-semantic-release/commit/3567952d8e84235c58aa7e310689de8d4b07f7ad))
 
 ## v3.1.0 (2015-08-31)
 
