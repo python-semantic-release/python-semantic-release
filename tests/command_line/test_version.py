@@ -16,6 +16,7 @@ import tomlkit
 from pytest_lazyfixture import lazy_fixture
 
 from semantic_release.cli.commands.main import main
+from semantic_release.hvcs.github import Github
 
 from tests.const import (
     EXAMPLE_PROJECT_NAME,
@@ -53,6 +54,7 @@ if TYPE_CHECKING:
         UpdatePyprojectTomlFn,
         UseReleaseNotesTemplateFn,
     )
+    from tests.fixtures.git_repo import SimulateChangeCommitsNReturnChangelogEntryFn
 
 
 @pytest.mark.parametrize(
@@ -1001,6 +1003,33 @@ def test_version_exit_code_when_not_strict(
     assert_successful_exit_code(result, cli_cmd)
 
 
+@pytest.mark.parametrize(
+    "is_strict, exit_code", [(True, 2), (False, 0)], ids=["strict", "non-strict"]
+)
+def test_version_on_nonrelease_branch(
+    repo_with_single_branch_angular_commits: Repo,
+    cli_runner: CliRunner,
+    is_strict: bool,
+    exit_code: int,
+):
+    branch = repo_with_single_branch_angular_commits.create_head("next")
+    branch.checkout()
+    expected_error_msg = (
+        f"branch '{branch.name}' isn't in any release groups; no release will be made\n"
+    )
+
+    # Act
+    cli_cmd = list(
+        filter(None, [MAIN_PROG_NAME, "--strict" if is_strict else "", VERSION_SUBCMD])
+    )
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate (expected -> actual)
+    assert_exit_code(exit_code, result, cli_cmd)
+    assert not result.stdout
+    assert expected_error_msg == result.stderr
+
+
 def test_custom_release_notes_template(
     mocked_git_push: MagicMock,
     repo_with_no_tags_angular_commits: Repo,
@@ -1017,7 +1046,7 @@ def test_custom_release_notes_template(
     runtime_context_with_no_tags = retrieve_runtime_context(
         repo_with_no_tags_angular_commits
     )
-    cli_cmd = ["semantic-release", VERSION_SUBCMD, "--skip-build", "--vcs-release"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--skip-build", "--vcs-release"]
 
     # Act
     result = cli_runner.invoke(main, cli_cmd[1:])
@@ -1056,7 +1085,7 @@ def test_version_tag_only_push(
 
     # Act
     cli_cmd = [
-        "semantic-release",
+        MAIN_PROG_NAME,
         VERSION_SUBCMD,
         "--tag",
         "--no-commit",
@@ -1219,3 +1248,102 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
     assert "No release tags found." in caplog.text
+
+
+def test_version_print_last_released_on_detached_head(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version = "0.1.1"
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate (expected -> actual)
+    assert_successful_exit_code(result, cli_cmd)
+    assert not result.stderr
+    assert last_version == result.stdout.rstrip()
+
+
+def test_version_print_last_released_on_nonrelease_branch(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version = "0.1.1"
+    repo_with_single_branch_tag_commits.create_head("next").checkout()
+
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate (expected -> actual)
+    assert_successful_exit_code(result, cli_cmd)
+    assert not result.stderr
+    assert last_version == result.stdout.rstrip()
+
+
+def test_version_print_last_released_tag_on_detached_head(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version = "v0.1.1"
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate (expected -> actual)
+    assert_successful_exit_code(result, cli_cmd)
+    assert not result.stderr
+    assert last_version == result.stdout.rstrip()
+
+
+def test_version_print_last_released_tag_on_nonrelease_branch(
+    cli_runner: CliRunner,
+    repo_with_single_branch_tag_commits: Repo,
+):
+    last_version_tag = "v0.1.1"
+    repo_with_single_branch_tag_commits.create_head("next").checkout()
+
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
+
+    # Act
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate (expected -> actual)
+    assert_successful_exit_code(result, cli_cmd)
+    assert not result.stderr
+    assert last_version_tag == result.stdout.rstrip()
+
+
+def test_version_print_next_version_fails_on_detached_head(
+    cli_runner: CliRunner,
+    example_git_ssh_url: str,
+    repo_with_single_branch_tag_commits: Repo,
+    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+):
+    # Setup
+    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    simulate_change_commits_n_rtn_changelog_entry(
+        repo_with_single_branch_tag_commits,
+        ["fix: make a patch fix to codebase"],
+        Github(example_git_ssh_url),
+    )
+    expected_error_msg = (
+        "Detached HEAD state cannot match any release groups; no release will be made\n"
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate (expected -> actual)
+    assert_exit_code(1, result, cli_cmd)
+    assert not result.stdout
+    assert expected_error_msg == result.stderr
