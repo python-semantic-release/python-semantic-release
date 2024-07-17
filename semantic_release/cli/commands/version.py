@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import sys
+from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -160,8 +161,17 @@ def shell(
     if not shell:
         raise TypeError("'shell' is None")
 
+    shell_cmd_param = defaultdict(
+        lambda: "-c",
+        {
+            "cmd": "/c",
+            "powershell": "-Command",
+            "pwsh": "-Command",
+        },
+    )
+
     return subprocess.run(  # noqa: S603
-        [shell, "-c" if shell != "cmd" else "/c", cmd],
+        [shell, shell_cmd_param[shell], cmd],
         env=(env or {}),
         check=check,
     )

@@ -658,7 +658,7 @@ def test_version_version_no_verify(
     assert head_before in repo_with_single_branch_angular_commits.head.commit.parents
 
 
-@pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh", "powershell"))
+@pytest.mark.parametrize("shell", ("/usr/bin/bash", "/usr/bin/zsh"))
 def test_version_runs_build_command(
     repo_with_git_flow_angular_commits: Repo,
     cli_runner: CliRunner,
@@ -739,7 +739,7 @@ def test_version_runs_build_command(
         )
 
 
-@pytest.mark.parametrize("shell", ("powershell", "cmd"))
+@pytest.mark.parametrize("shell", ("powershell", "pwsh", "cmd"))
 def test_version_runs_build_command_windows(
     repo_with_git_flow_angular_commits: Repo,
     cli_runner: CliRunner,
@@ -801,7 +801,7 @@ def test_version_runs_build_command_windows(
         # Evaluate
         assert_successful_exit_code(result, cli_cmd)
         patched_subprocess_run.assert_called_once_with(
-            [exe, "-c" if shell != "cmd" else "/c", build_command],
+            [exe, "/c" if shell == "cmd" else "-Command", build_command],
             check=True,
             env={
                 "NEW_VERSION": "1.2.1",  # injected into environment
