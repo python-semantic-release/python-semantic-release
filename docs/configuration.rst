@@ -561,7 +561,7 @@ Author used in commits in the format ``name <email>``.
 .. note::
   If you are using the built-in GitHub Action, the default value is set to
   ``github-actions <actions@github.com>``. You can modify this with the
-  ``git_committer_name`` and ``git_committer_name`` inputs.
+  ``git_committer_name`` and ``git_committer_email`` inputs.
 
 .. seealso::
    - :ref:`github-actions`
