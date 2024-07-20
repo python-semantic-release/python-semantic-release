@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v9.8.6 (2024-07-20)
+
+### Documentation
+
+* docs(configuration): correct GHA parameter name for commit email (#981)
+
+`git_committer_name` was repeated; replace one instance of it with
+`git_committer_email` ([`ce9ffdb`](https://github.com/python-semantic-release/python-semantic-release/commit/ce9ffdb82c2358184b288fa18e83a4075f333277))
+
+### Fix
+
+* fix(version-cmd): resolve build command execution in powershell (#980)
+
+Fixes the command line option for passing a shell command to Powershell. Also included a similar shell detection result for
+pwsh (Powershell Core) ([`32c8e70`](https://github.com/python-semantic-release/python-semantic-release/commit/32c8e70915634d8e560b470c3cf38c27cebd7ae0))
+
 ## v9.8.5 (2024-07-06)
 
 ### Fix
