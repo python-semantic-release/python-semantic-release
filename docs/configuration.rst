@@ -292,7 +292,12 @@ This section outlines the configuration options available that modify changelog 
 
 **Type:** ``str``
 
-Specify the name of the changelog file (after template rendering has taken place).
+Specify the name of the changelog file that will be created. This file will be created
+or overwritten (if it previously exists) with the rendered default template included
+with Python Semantic Release.
+
+If you are using the ``template_dir`` setting for providing customized templates,
+this setting is not used. See :ref:`config-changelog-template_dir` for more information.
 
 **Default:** ``"CHANGELOG.md"``
 
@@ -309,14 +314,13 @@ Specify the name of the changelog file (after template rendering has taken place
    passed directly to the `jinja2.Environment`_ constructor, and further
    documentation one these parameters can be found there.
 
-.. _`jinja2.Environment`: https://jinja.palletsprojects.com/en/3.1.x/api/#jinja2.Environment
-
-.. note::
     **pyproject.toml:** ``[tool.semantic_release.changelog.environment]``
 
     **releaserc.toml:** ``[semantic_release.changelog.environment]``
 
     **releaserc.json:** ``{ "semantic_release": { "changelog": { "environment": {} } } }``
+
+.. _`jinja2.Environment`: https://jinja.palletsprojects.com/en/3.1.x/api/#jinja2.Environment
 
 ----
 
@@ -540,8 +544,14 @@ The patterns in this list are treated as regular expressions.
 
 **Type:** ``str``
 
-If given, specifies a directory of templates that will be rendered during creation
-of the changelog. If not given, the default changelog template will be used.
+When files exist within the specified directory, they will be used as templates for
+the changelog rendering process. Regardless if the directory includes a changelog file,
+the provided directory will be rendered and files placed relative to the root of the
+project directory.
+
+No default changelog template or release notes template will be used when this directory
+exists and the directory is not empty. If the directory is empty, the default changelog
+template will be used.
 
 This option is discussed in more detail at :ref:`changelog-templates`
 
