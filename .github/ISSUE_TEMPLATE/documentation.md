@@ -1,9 +1,17 @@
 ---
 name: Documentation
 about: I found an error or gap in the docs
-title: ""
-labels: docs
-assignees: ""
+labels:
+    - docs
+    - triage
 ---
 
-_Please describe your problem. Include links to any relevant pages or files._
+## Documentation Error
+
+### Description
+<!--
+Please provide a description of your documentation improvement or issue.
+
+As necessary please include links to any relevant pages or files.
+-->
+

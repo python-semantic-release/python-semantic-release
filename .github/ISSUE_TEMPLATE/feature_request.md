@@ -1,20 +1,27 @@
 ---
-name: Feature request
+name: Feature Request
 about: Suggest a new idea
-title: ''
-labels: feature
-assignees: ''
-
+labels:
+    - feature
+    - triage
 ---
 
-## Description
+## Feature Request
 
-*A clear and concise description of your idea.*
+### Description
+<!-- A clear and concise description of your idea. -->
 
-## Use cases
 
-*List some reasons this would be useful.*
 
-## Possible implementation
+### Use cases
+<!-- List some reasons this would be useful. -->
 
-*Describe any ideas you have for how this could work.*
+
+
+### Possible implementation
+<!-- Describe any ideas you have for how this could work. -->
+
+
+
+### Alternative solutions
+<!-- Describe any alternative solutions or features you've considered. -->
