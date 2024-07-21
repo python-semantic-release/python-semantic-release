@@ -3,22 +3,16 @@
 Changelog Templates
 ===================
 
-.. warning::
-    If you have an existing changelog in the location you have configured with
-    the :ref:`changelog_file <config-changelog-changelog_file>` setting,
-    or if you have a template inside your :ref:`template directory <config-changelog-template_dir>`
-    which will render to the location of an existing file, Python Semantic Release will
-    overwrite the contents of this file.
 
-    Please make sure to refer to :ref:`changelog-templates-migrating-existing-changelog`.
+By default, Python Semantic Release (PSR) will generate a changelog for your project. In the default
+configuration, PSR will use a built-in template files to render the changelog at the file location
+defined by the :ref:`changelog_file <config-changelog-changelog_file>` setting.
 
-Python Semantic Release can write a changelog for your project. By default, it uses an
-in-built template; once rendered this will be written to the location you configure with the
-:ref:`changelog_file <config-changelog-changelog_file>` setting.
-
-However, Python Semantic Release is also capable of rendering an entire directory tree
-of templates during the changelog generation process. This directory is specified
-using the :ref:`template directory <config-changelog-template_dir>` setting.
+However, you can customize the appearance and file structure of the changelog generation process
+by creating your own template files. This option is available by setting the
+:ref:`template_dir <config-changelog-template_dir>` configuration and populating the directory
+with your custom template files. It will render the an entire directory tree of templates
+as desired if they exist within the template directory.
 
 Python Semantic Release uses `Jinja`_ as its template engine, so you should refer to the
 `Template Designer Documentation`_ for guidance on how to customize the appearance of
@@ -31,6 +25,15 @@ You can disable changelog generation entirely during the :ref:`cmd-version` comm
 providing the :ref:`--no-changelog <cmd-version-option-changelog>` command-line option.
 
 The changelog template is re-rendered on each release.
+
+.. warning::
+    If you have an existing changelog in the location you have configured with
+    the :ref:`changelog_file <config-changelog-changelog_file>` setting,
+    or if you have a template inside your :ref:`template directory <config-changelog-template_dir>`
+    which will render to the location of an existing file, Python Semantic Release will
+    overwrite the contents of this file.
+
+    Please make sure to refer to :ref:`changelog-templates-migrating-existing-changelog`.
 
 .. _Jinja: https://jinja.palletsprojects.com/en/3.1.x/
 .. _Template Designer Documentation: https://jinja.palletsprojects.com/en/3.1.x/templates/
