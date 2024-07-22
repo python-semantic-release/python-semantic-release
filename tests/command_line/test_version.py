@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 import tomlkit
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.commands.main import main
 from semantic_release.hvcs.github import Github

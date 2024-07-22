@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 # Limitation in pytest-lazy-fixture - see https://stackoverflow.com/a/69884019
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.version.algorithm import next_version
 from semantic_release.version.translator import VersionTranslator
