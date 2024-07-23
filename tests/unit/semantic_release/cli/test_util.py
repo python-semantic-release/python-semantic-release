@@ -4,7 +4,7 @@ import json
 from textwrap import dedent
 
 import pytest
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.util import load_raw_config_file, parse_toml
 from semantic_release.errors import InvalidConfiguration

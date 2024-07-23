@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.hvcs._base import HvcsBase
 
