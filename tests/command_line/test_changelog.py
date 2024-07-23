@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 import requests_mock
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from requests import Session
 
 from semantic_release.cli.commands.main import main

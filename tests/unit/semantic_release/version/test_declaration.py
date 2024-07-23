@@ -4,7 +4,7 @@ from textwrap import dedent
 from unittest import mock
 
 import pytest
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,

@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 import pytest
 from git import Actor
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.version.translator import VersionTranslator
