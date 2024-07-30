@@ -208,6 +208,7 @@ VIRTUAL_ENV               Pass-through ``VIRTUAL_ENV`` if exists in process env,
 ========================  ======================================================================
 
 In addition, on windows systems these environment variables are passed:
+
 ========================  ======================================================================
 Variable Name             Description
 ========================  ======================================================================
