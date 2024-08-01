@@ -1,0 +1,77 @@
+# CHANGELOG
+{#
+#}{% from '.macros/commit_msg_links.j2' import commit_msg_links
+%}{% from '.macros/headings.emoji.j2' import section_headings
+
+%}{% if context.history.unreleased | length > 0
+%}{{
+        "\n## Unreleased\n"
+
+}}{%    for type_ in section_headings if type_ in context.history.unreleased
+%}{{
+            "\n### %s\n" | format(type_ | capitalize)
+
+}}{%        for commit in context.history.unreleased[type_] | selectattr("scope") | sort(attribute='scope')
+%}{{
+                "\n- **%s**: %s\n" | format(commit.scope, commit_msg_links(commit) )
+
+}}{%        endfor
+%}{%        for commit in context.history.unreleased[type_] | rejectattr("scope") | sort(attribute='descriptions.0')
+%}{{
+                "\n- %s\n" | format(commit_msg_links(commit))
+
+}}{%        endfor
+%}{%    endfor
+%}{{    "\n"
+}}{% endif
+%}{#
+
+RELEASED
+
+#}{% for version, release in context.history.released.items()
+%}{{
+        "\n## %s (%s)\n" | format(
+            version.as_semver_tag(),
+            release.tagged_date.strftime("%Y-%m-%d")
+        )
+
+}}{%    for type_ in section_headings if type_ in release["elements"]
+%}{{
+            "\n### %s\n" | format(type_ | capitalize)
+
+}}{%        for commit in release["elements"][type_] | selectattr("scope") | sort(attribute='scope')
+%}{{
+                "\n- **%s**: %s\n" | format(commit.scope, commit_msg_links(commit) )
+
+}}{%        endfor
+%}{%        for commit in release["elements"][type_] | rejectattr("scope") | sort(attribute='descriptions.0')
+%}{{
+                "\n- %s\n" | format(commit_msg_links(commit))
+
+}}{%        endfor
+%}{%    endfor
+%}{#
+
+#}{%    if "breaking" in release["elements"]
+%}{{
+            "\n### BREAKING CHANGES\n"
+}}{#
+#}{%        set breaking_commits = release["elements"]["breaking"] | selectattr("breaking_descriptions")
+%}{%        for commit in breaking_commits | selectattr("scope") | sort(attribute='scope')
+%}{{
+                "\n- **%s**: %s\n" | format(
+                    commit.scope,
+                    commit.breaking_descriptions | join("\n\n") | indent(4) | capitalize
+                )
+
+}}{%        endfor
+%}{%        for commit in breaking_commits | rejectattr("scope") | sort(attribute='breaking_descriptions.0')
+%}{{
+                "\n- %s\n" | format(
+                    commit.breaking_descriptions | join("\n\n") | indent(4) | capitalize
+                )
+
+}}{%        endfor
+%}{%    endif
+%}{% endfor
+%}

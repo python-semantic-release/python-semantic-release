@@ -1,0 +1,18 @@
+
+{% set heading_to_emoji_map = {
+    'breaking': '💥',
+    'feature': '✨',
+    'fix': '🪲',
+    'performance': '⚡',
+    'refactor': '♻️',
+    'chore': '🧹',
+    'documentation': '📖',
+    'test': '✅',
+    'ci': '🤖',
+    'style': '🎨',
+    'build system': '⚙️',
+    'unknown': '❗',
+} %}
+
+{# The ordered list of which headings to display in order #}
+{% set section_headings = heading_to_emoji_map.keys() %}
