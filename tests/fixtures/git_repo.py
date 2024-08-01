@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import reduce
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -49,6 +50,11 @@ if TYPE_CHECKING:
 
         changelog_sections: list[ChangelogTypeHeadingDef]
         commits: list[CommitMsg]
+
+    class BaseAccumulatorVersionReduction(TypedDict):
+        limit_value: str
+        limit_found: bool
+        repo_def: dict[VersionStr, RepoVersionDef]
 
     class ChangelogTypeHeadingDef(TypedDict):
         section: ChangelogTypeHeading
@@ -107,6 +113,7 @@ if TYPE_CHECKING:
             self,
             repo_definition: RepoDefinition,
             dest_file: Path | None = None,
+            max_version: str | None = None,
         ) -> str: ...
 
 
@@ -326,6 +333,18 @@ def build_configured_base_repo(  # noqa: C901
 
 @pytest.fixture(scope="session")
 def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
+    def reduce_repo_def(
+        acc: BaseAccumulatorVersionReduction, ver_2_def: tuple[str, RepoVersionDef]
+    ) -> BaseAccumulatorVersionReduction:
+        if acc["limit_found"]:
+            return acc
+
+        if ver_2_def[0] == acc["limit_value"]:
+            acc["limit_found"] = True
+
+        acc["repo_def"][ver_2_def[0]] = ver_2_def[1]
+        return acc
+
     def build_version_entry(version: VersionStr, version_def: RepoVersionDef) -> str:
         version_entry = []
         if version == "Unreleased":
@@ -344,11 +363,26 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
     def _mimic_semantic_release_default_changelog(
         repo_definition: RepoDefinition,
         dest_file: Path | None = None,
+        max_version: str | None = None,
     ) -> str:
         header = "# CHANGELOG"
         version_entries = []
 
-        for version, version_def in repo_definition.items():
+        repo_def = (
+            repo_definition
+            if max_version is None
+            else reduce(
+                reduce_repo_def,
+                repo_definition.items(),
+                {
+                    "limit_value": max_version,
+                    "limit_found": False,
+                    "repo_def": {},
+                },
+            )["repo_def"]
+        )
+
+        for version, version_def in repo_def.items():
             # prepend entries to force reverse ordering
             version_entries.insert(0, build_version_entry(version, version_def))
 
