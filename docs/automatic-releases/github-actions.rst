@@ -51,7 +51,9 @@ Example Workflow
            fetch-depth: 0
 
        - name: Python Semantic Release
-         uses: python-semantic-release/python-semantic-release@master
+	 # Replace with desired / current version. Currently, there is no
+	 # moving major tag, e.g., v9 will not work.
+         uses: python-semantic-release/python-semantic-release@v9.8.6
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -92,13 +94,13 @@ multiple projects.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: python-semantic-release/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@v9.8.6
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
 
    - name: Release Project 2
-     uses: python-semantic-release/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@v9.8.6
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
