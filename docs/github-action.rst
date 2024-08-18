@@ -129,8 +129,8 @@ provide the following inputs:
 
    # ... the rest of the workflow
    - name: Python Semantic Release
-     # Replace with desired / current version. Currently, there is no moving
-     # major tag, e.g., v9 will not work.
+     # Adjust tag with desired version if applicable. Version shorthand
+     # is NOT available, e.g. vX or vX.X will not work.
      uses: python-semantic-release/python-semantic-release@v9.8.6
      with:
        # ... other options

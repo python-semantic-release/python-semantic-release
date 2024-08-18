@@ -30,32 +30,32 @@ Example Workflow
 
 .. code:: yaml
 
-   name: Semantic Release
+    name: Semantic Release
 
-   on:
-     push:
-       branches:
-         - master
+    on:
+      push:
+        branches:
+          - master
 
-   jobs:
-     release:
-       runs-on: ubuntu-latest
-       concurrency: release
-       permissions:
-         id-token: write
-         contents: write
+    jobs:
+      release:
+        runs-on: ubuntu-latest
+        concurrency: release
+        permissions:
+          id-token: write
+          contents: write
 
-       steps:
-       - uses: actions/checkout@v3
-         with:
-           fetch-depth: 0
+        steps:
+          - uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
 
-       - name: Python Semantic Release
-	 # Replace with desired / current version. Currently, there is no
-	 # moving major tag, e.g., v9 will not work.
-         uses: python-semantic-release/python-semantic-release@v9.8.6
-         with:
-           github_token: ${{ secrets.GITHUB_TOKEN }}
+          - name: Python Semantic Release
+            # Adjust tag with desired version if applicable. Version shorthand
+            # is NOT available, e.g. vX or vX.X will not work.
+            uses: python-semantic-release/python-semantic-release@v9.8.6
+            with:
+              github_token: ${{ secrets.GITHUB_TOKEN }}
 
 ``concurrency`` is a
 `beta feature of GitHub Actions <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency>`_
