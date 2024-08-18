@@ -34,7 +34,9 @@ def post_release_notes(
                 "\n",
                 [
                     f"would have posted the following release notes for tag {release_tag}:",
-                    release_notes,
+                    # Escape square brackets to ensure all content is displayed in the console
+                    # (i.e. prevent interpretation of ansi escape sequences that is valid markdown)
+                    release_notes.replace("[", "\\["),
                 ],
             )
         )
