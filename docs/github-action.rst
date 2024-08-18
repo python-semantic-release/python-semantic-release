@@ -129,7 +129,9 @@ provide the following inputs:
 
    # ... the rest of the workflow
    - name: Python Semantic Release
-     uses: python-semantic-release/python-semantic-release@v8.0.0
+     # Adjust tag with desired version if applicable. Version shorthand
+     # is NOT available, e.g. vX or vX.X will not work.
+     uses: python-semantic-release/python-semantic-release@v9.8.6
      with:
        # ... other options
        force: "patch"

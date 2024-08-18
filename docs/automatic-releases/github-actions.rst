@@ -30,40 +30,42 @@ Example Workflow
 
 .. code:: yaml
 
-   name: Semantic Release
+    name: Semantic Release
 
-   on:
-     push:
-       branches:
-         - master
+    on:
+      push:
+        branches:
+          - master
 
-   jobs:
-     release:
-       runs-on: ubuntu-latest
-       concurrency: release
-       permissions:
-         id-token: write
-         contents: write
+    jobs:
+      release:
+        runs-on: ubuntu-latest
+        concurrency: release
+        permissions:
+          id-token: write
+          contents: write
 
-       steps:
-       - uses: actions/checkout@v3
-         with:
-           fetch-depth: 0
+        steps:
+          - uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
 
-       - name: Python Semantic Release
-         uses: python-semantic-release/python-semantic-release@master
-         with:
-           github_token: ${{ secrets.GITHUB_TOKEN }}
+          - name: Python Semantic Release
+            # Adjust tag with desired version if applicable. Version shorthand
+            # is NOT available, e.g. vX or vX.X will not work.
+            uses: python-semantic-release/python-semantic-release@v9.8.6
+            with:
+              github_token: ${{ secrets.GITHUB_TOKEN }}
 
-``concurrency`` is a
-`beta feature of GitHub Actions <https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency>`_
-which disallows two or more release jobs to run in parallel. This prevents race
-conditions if there are multiple pushes in a short period of time.
+``concurrency`` is a `beta feature of GitHub Actions`_ which disallows two or more
+release jobs to run in parallel. This prevents race conditions if there are multiple
+pushes in a short period of time.
 
 If you would like to use Python Semantic Release to create GitHub Releases against
 your repository, you will need to allow the additional ``contents: write`` permission.
 More information can be found in the `permissions for GitHub Apps documentation`_
 
+.. _beta feature of GitHub Actions: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency
 .. _permissions for GitHub Apps documentation: https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#contents
 
 .. warning::
@@ -92,13 +94,13 @@ multiple projects.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: python-semantic-release/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@v9.8.6
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
 
    - name: Release Project 2
-     uses: python-semantic-release/python-semantic-release@master
+     uses: python-semantic-release/python-semantic-release@v9.8.6
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}

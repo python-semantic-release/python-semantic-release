@@ -375,6 +375,7 @@ ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 logging_use_named_masks = true
 commit_parser = "angular"
 build_command = """
+    python -m scripts.bump_version_in_docs
     python -m pip install -e .[build]
     python -m build .
 """
