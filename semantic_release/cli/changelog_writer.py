@@ -149,6 +149,7 @@ def generate_release_notes(
     hvcs_client: HvcsBase,
     release: Release,
     template_dir: Path,
+    history: ReleaseHistory,
 ) -> str:
     release_notes_env = ReleaseNotesContext(
         repo_name=hvcs_client.repo_name,
@@ -162,6 +163,11 @@ def generate_release_notes(
         # not user-configurable at the moment
         environment(template_dir=template_dir)
     )
+
+    # TODO: Remove in v10
+    release_notes_env.globals["context"] = {
+        "history": history,
+    }
 
     return render_release_notes(
         release_notes_template=get_release_notes_template(template_dir),

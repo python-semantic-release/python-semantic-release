@@ -112,7 +112,8 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
     release_notes = generate_release_notes(
         hvcs_client,
         release,
-        template_dir=runtime.template_dir,
+        runtime.template_dir,
+        release_history,
     )
 
     try:
