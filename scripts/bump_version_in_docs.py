@@ -8,18 +8,21 @@ from re import compile as RegExp  # noqa: N812
 PROJ_DIR = Path(__file__).resolve().parent.parent
 DOCS_DIR = PROJ_DIR / "docs"
 
+
 def update_github_actions_example(filepath: Path, new_version: str) -> None:
     psr_regex = RegExp(r"(uses:.*python-semantic-release)@v\d+\.\d+\.\d+")
     file_content_lines = filepath.read_text().splitlines()
 
     for regex in [psr_regex]:
-        file_content_lines = list(map(
-            lambda line, regex=regex: regex.sub(r'\1@v'+new_version, line),
-            file_content_lines
-        ))
+        file_content_lines = list(
+            map(
+                lambda line, regex=regex: regex.sub(r"\1@v" + new_version, line),
+                file_content_lines,
+            )
+        )
 
     print(f"Bumping version in {filepath} to", new_version)
-    filepath.write_text(str.join("\n", file_content_lines) + '\n')
+    filepath.write_text(str.join("\n", file_content_lines) + "\n")
 
 
 if __name__ == "__main__":
@@ -31,6 +34,5 @@ if __name__ == "__main__":
 
     update_github_actions_example(DOCS_DIR / "github-action.rst", new_version)
     update_github_actions_example(
-        DOCS_DIR / "automatic-releases" / "github-actions.rst",
-        new_version
+        DOCS_DIR / "automatic-releases" / "github-actions.rst", new_version
     )
