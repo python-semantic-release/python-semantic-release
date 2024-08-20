@@ -1,5 +1,57 @@
 # CHANGELOG
 
+## v9.8.7 (2024-08-20)
+
+### Documentation
+
+* docs: use pinned version for GHA examples (#1004)
+
+* docs(github-actions): use pinned version for GHA examples
+
+  Fixes #1003
+
+* chore(scripts): add auto version bump to non dynamic docs text (i.e. code snippets)
+
+* docs(github-actions): adjust formatting &amp; version warning in code snippets
+
+* style(docs-github-actions): adjust formatting for readability
+
+---------
+
+Co-authored-by: codejedi365 &lt;codejedi365@gmail.com&gt; ([`5fdf761`](https://github.com/python-semantic-release/python-semantic-release/commit/5fdf7614c036a77ffb051cd30f57d0a63c062c0d))
+
+* docs(configuration): fix build_command_env table rendering (#996) ([`a5eff0b`](https://github.com/python-semantic-release/python-semantic-release/commit/a5eff0bfe41d2fd5d9ead152a132010b718b7772))
+
+* docs(changelog): clarify description of the default changelog generation process ([`399fa65`](https://github.com/python-semantic-release/python-semantic-release/commit/399fa6521d5c6c4397b1d6e9b13ea7945ae92543))
+
+* docs(configuration): clarify `changelog_file` vs `template_dir` option usage
+
+Provided additional description that warns about the mutually-exclusive nature of
+the `changelog_file` option and the `template_dir` option.
+
+Resolves: #983 ([`a7199c8`](https://github.com/python-semantic-release/python-semantic-release/commit/a7199c8cd6041a9de017694302e49b139bbcb034))
+
+### Fix
+
+* fix: provide `context.history` global in release notes templates (#1005)
+
+* fix(release-notes): provide `context.history` global in release note templates
+
+  Temporarily return the `context.history` variable to release notes generation
+  as many users are using it in their release documentation. It was never intended
+  to be provided and will be removed in the future.
+
+  context was removed in `v9.8.3` during a refactor and condensing of changelog
+  and release notes functionality.
+
+  Resolves: #984
+
+* fix(release-notes): fix noop-changelog to print raw release notes
+
+  Some markdown sequences can be interpreted as ansi escape sequences which dilute
+  debugging of release note templates by the user. This change ensures the raw
+  content is displayed to the console as expected. ([`5bd91b4`](https://github.com/python-semantic-release/python-semantic-release/commit/5bd91b4d7ac33ddf10446f3e66d7d11e0724aeb2))
+
 ## v9.8.6 (2024-07-20)
 
 ### Documentation
