@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -57,5 +58,14 @@ def make_changelog_context(
         repo_owner=hvcs_client.owner,
         history=release_history,
         hvcs_type=hvcs_client.__class__.__name__.lower(),
-        filters=(*hvcs_client.get_changelog_context_filters(),),
+        filters=(*hvcs_client.get_changelog_context_filters(), read_file),
     )
+
+
+def read_file(filepath: str) -> str:
+    try:
+        with open(filepath, "r") as f:
+            return f.read()
+    except FileNotFoundError as err:
+        logging.warning(err)
+        return ""
