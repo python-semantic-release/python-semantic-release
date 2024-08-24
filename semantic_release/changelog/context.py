@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
 if TYPE_CHECKING:
@@ -48,6 +49,7 @@ class ChangelogContext:
     hvcs_type: str
     history: ReleaseHistory
     changelog_mode: Literal["update", "init"]
+    prev_changelog_file: str
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
@@ -61,12 +63,14 @@ def make_changelog_context(
     hvcs_client: HvcsBase,
     release_history: ReleaseHistory,
     mode: ChangelogMode = ChangelogMode.INIT,
+    prev_changelog_file: Path = Path("CHANGELOG.md"),
 ) -> ChangelogContext:
     return ChangelogContext(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
         history=release_history,
         changelog_mode=mode.value,
+        prev_changelog_file=str(prev_changelog_file),
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         filters=(*hvcs_client.get_changelog_context_filters(), read_file),
     )
