@@ -107,11 +107,15 @@ def recursive_render(
             src_file_path = str((root / file).relative_to(template_dir))
             output_file_path = str((output_path / output_filename).resolve())
 
+            # Although, file stream rendering is possible and preferred in most
+            # situations, here it is not desired as you cannot read the previous
+            # contents of a file during the rendering of the template. This mechanism
+            # is used for inserting into a current changelog. When using stream rendering
+            # of the same file, it always came back empty
             log.debug("rendering %s to %s", src_file_path, output_file_path)
-            stream = environment.get_template(src_file_path).stream()
-
-            with open(output_file_path, "wb+") as output_file:
-                stream.dump(output_file, encoding="utf-8")
+            rendered_file = environment.get_template(src_file_path).render()
+            with open(output_file_path, "w", encoding="utf-8") as output_file:
+                output_file.write(rendered_file)
 
             rendered_paths.append(output_file_path)
         else:
