@@ -55,6 +55,7 @@ class ChangelogContext:
 
     def bind_to_environment(self, env: Environment) -> Environment:
         env.globals["context"] = self
+        env.globals["ctx"] = self
         for f in self.filters:
             env.filters[f.__name__] = f
         return env
