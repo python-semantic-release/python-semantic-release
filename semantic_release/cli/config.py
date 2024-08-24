@@ -108,7 +108,7 @@ class ChangelogEnvironmentConfig(BaseModel):
     newline_sequence: Literal["\n", "\r", "\r\n"] = "\n"
     keep_trailing_newline: bool = False
     extensions: Tuple[str, ...] = ()
-    autoescape: Union[bool, str] = True
+    autoescape: Union[bool, str] = False
 
 
 class ChangelogConfig(BaseModel):
