@@ -50,6 +50,7 @@ class ChangelogContext:
     history: ReleaseHistory
     changelog_mode: Literal["update", "init"]
     prev_changelog_file: str
+    changelog_insertion_flag: str
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
@@ -64,12 +65,14 @@ def make_changelog_context(
     release_history: ReleaseHistory,
     mode: ChangelogMode = ChangelogMode.INIT,
     prev_changelog_file: Path = Path("CHANGELOG.md"),
+    insertion_flag: str = "<!-- version list -->",
 ) -> ChangelogContext:
     return ChangelogContext(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
         history=release_history,
         changelog_mode=mode.value,
+        changelog_insertion_flag=insertion_flag,
         prev_changelog_file=str(prev_changelog_file),
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         filters=(*hvcs_client.get_changelog_context_filters(), read_file),
