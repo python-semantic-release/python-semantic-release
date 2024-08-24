@@ -346,7 +346,7 @@ constructor.
 If this setting is a boolean, it is passed directly to the `jinja2.Environment`_
 constructor.
 
-**Default:** ``true``
+**Default:** ``false``
 
 ----
 
