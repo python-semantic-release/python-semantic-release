@@ -337,7 +337,7 @@ Semantic Release will attempt to dynamically import this string, which should
 represent a path to a suitable callable that satisfies the following:
 
     As of Jinja 2.4 this can also be a callable that is passed the template name
-    and has to return ``True`` or ``False`` depending on autoescape should be
+    and has to return ``true`` or ``false`` depending on autoescape should be
     enabled by default.
 
 The result of this dynamic import is passed directly to the `jinja2.Environment`_
@@ -851,7 +851,7 @@ as ``bitbucket.org``, and ``github.com``.
 
 Including the protocol schemes, such as ``https://``, for the API domain is optional.
 Secure ``HTTPS`` connections are assumed unless the setting of
-:ref:`remote.insecure <config-remote-insecure>` is ``True``.
+:ref:`remote.insecure <config-remote-insecure>` is ``true``.
 
 **Default:** ``None``
 
@@ -875,7 +875,7 @@ For example, when ``remote.type="github"`` is specified the default domain of
 
 Including the protocol schemes, such as ``https://``, for the domain value is optional.
 Secure ``HTTPS`` connections are assumed unless the setting of
-:ref:`remote.insecure <config-remote-insecure>` is ``True``.
+:ref:`remote.insecure <config-remote-insecure>` is ``true``.
 
 This setting also supports reading from an environment variable for ease-of-use
 in CI pipelines. See :ref:`Environment Variable <config-environment-variables>` for
@@ -899,11 +899,11 @@ variable when ``remote.domain`` is not specified.
 
 **Type:** ``bool``
 
-If set to ``True``, ignore the authentication token when pushing changes to the remote.
+If set to ``true``, ignore the authentication token when pushing changes to the remote.
 This is ideal, for example, if you already have SSH keys set up which can be used for
 pushing.
 
-**Default:** ``False``
+**Default:** ``false``
 
 ----
 
@@ -915,8 +915,8 @@ pushing.
 **Type:** ``bool``
 
 Insecure is used to allow non-secure ``HTTP`` connections to your HVCS server. If set to
-``True``, any domain value passed will assume ``http://`` if it is not specified and allow
-it. When set to ``False`` (implicitly or explicitly), it will force ``https://`` communications.
+``true``, any domain value passed will assume ``http://`` if it is not specified and allow
+it. When set to ``false`` (implicitly or explicitly), it will force ``https://`` communications.
 
 When a custom ``domain`` or ``api_domain`` is provided as a configuration, this flag governs
 the protocol scheme used for those connections. If the protocol scheme is not provided in
@@ -928,7 +928,7 @@ The purpose of this flag is to prevent any typos in provided ``domain`` and ``ap
 values that accidently specify an insecure connection but allow users to toggle the protection
 scheme off when desired.
 
-**Default:** ``False``
+**Default:** ``false``
 
 ----
 
