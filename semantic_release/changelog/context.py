@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 if TYPE_CHECKING:
     from jinja2 import Environment
@@ -35,12 +36,18 @@ class ReleaseNotesContext:
         return env
 
 
+class ChangelogMode(Enum):
+    INIT = "init"
+    UPDATE = "update"
+
+
 @dataclass
 class ChangelogContext:
     repo_name: str
     repo_owner: str
     hvcs_type: str
     history: ReleaseHistory
+    changelog_mode: Literal["update", "init"]
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
@@ -51,12 +58,15 @@ class ChangelogContext:
 
 
 def make_changelog_context(
-    hvcs_client: HvcsBase, release_history: ReleaseHistory
+    hvcs_client: HvcsBase,
+    release_history: ReleaseHistory,
+    mode: ChangelogMode = ChangelogMode.INIT,
 ) -> ChangelogContext:
     return ChangelogContext(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
         history=release_history,
+        changelog_mode=mode.value,
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         filters=(*hvcs_client.get_changelog_context_filters(), read_file),
     )
