@@ -118,6 +118,7 @@ class ChangelogConfig(BaseModel):
     exclude_commit_patterns: Tuple[str, ...] = ()
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
     mode: ChangelogMode = ChangelogMode.INIT
+    insertion_flag: str = "<!-- version list -->"
 
 
 class BranchConfig(BaseModel):
@@ -388,6 +389,7 @@ class RuntimeContext:
     changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: hvcs.HvcsBase
+    changelog_insertion_flag: str
     changelog_mode: ChangelogMode
     changelog_file: Path
     ignore_token_for_push: bool
@@ -655,6 +657,7 @@ class RuntimeContext:
             hvcs_client=hvcs_client,
             changelog_file=changelog_file,
             changelog_mode=raw.changelog.mode,
+            changelog_insertion_flag=raw.changelog.insertion_flag,
             assets=raw.assets,
             commit_author=commit_author,
             commit_message=raw.commit_message,

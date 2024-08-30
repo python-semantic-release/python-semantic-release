@@ -66,7 +66,7 @@ def make_changelog_context(
     release_history: ReleaseHistory,
     mode: ChangelogMode,
     prev_changelog_file: Path = Path("CHANGELOG.md"),
-    insertion_flag: str = "<!-- version list -->",
+    insertion_flag: str,
 ) -> ChangelogContext:
     return ChangelogContext(
         repo_name=hvcs_client.repo_name,
