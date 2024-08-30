@@ -119,6 +119,7 @@ def write_changelog_files(
         release_history=release_history,
         mode=runtime_ctx.changelog_mode,
         insertion_flag=runtime_ctx.changelog_insertion_flag,
+        prev_changelog_file=runtime_ctx.changelog_file,
     )
 
     changelog_context.bind_to_environment(runtime_ctx.template_environment)

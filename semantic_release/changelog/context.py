@@ -65,7 +65,7 @@ def make_changelog_context(
     hvcs_client: HvcsBase,
     release_history: ReleaseHistory,
     mode: ChangelogMode,
-    prev_changelog_file: Path = Path("CHANGELOG.md"),
+    prev_changelog_file: Path,
     insertion_flag: str,
 ) -> ChangelogContext:
     return ChangelogContext(
