@@ -64,7 +64,7 @@ class ChangelogContext:
 def make_changelog_context(
     hvcs_client: HvcsBase,
     release_history: ReleaseHistory,
-    mode: ChangelogMode = ChangelogMode.INIT,
+    mode: ChangelogMode,
     prev_changelog_file: Path = Path("CHANGELOG.md"),
     insertion_flag: str = "<!-- version list -->",
 ) -> ChangelogContext:

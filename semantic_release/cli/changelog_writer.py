@@ -117,6 +117,7 @@ def write_changelog_files(
     changelog_context = make_changelog_context(
         hvcs_client=hvcs_client,
         release_history=release_history,
+        mode=runtime_ctx.changelog_mode,
     )
 
     changelog_context.bind_to_environment(runtime_ctx.template_environment)
