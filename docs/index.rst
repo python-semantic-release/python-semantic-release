@@ -63,7 +63,7 @@ Documentation Contents
    Changelog Templates <changelog_templates>
    Multibranch Releases <multibranch_releases>
    automatic-releases/index
-   Python Semantic Release GitHub Action <github-action>
+   Python Semantic Release GitHub Action <automatic-releases/github-actions>
    troubleshooting
    contributing
    contributors
