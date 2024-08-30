@@ -32,7 +32,6 @@ if __name__ == "__main__":
         print("NEW_VERSION environment variable is not set")
         exit(1)
 
-    update_github_actions_example(DOCS_DIR / "github-action.rst", new_version)
     update_github_actions_example(
         DOCS_DIR / "automatic-releases" / "github-actions.rst", new_version
     )
