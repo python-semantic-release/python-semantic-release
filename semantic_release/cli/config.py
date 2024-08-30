@@ -113,12 +113,12 @@ class ChangelogEnvironmentConfig(BaseModel):
 
 
 class ChangelogConfig(BaseModel):
-    template_dir: str = "templates"
     changelog_file: str = "CHANGELOG.md"
-    exclude_commit_patterns: Tuple[str, ...] = ()
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
+    exclude_commit_patterns: Tuple[str, ...] = ()
     mode: ChangelogMode = ChangelogMode.INIT
     insertion_flag: str = "<!-- version list -->"
+    template_dir: str = "templates"
 
 
 class BranchConfig(BaseModel):
