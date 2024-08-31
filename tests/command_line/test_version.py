@@ -513,7 +513,7 @@ def test_version_no_push_force_level(
         [
             "CHANGELOG.md",
             "pyproject.toml",
-            f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
+            str(Path(f"src/{EXAMPLE_PROJECT_NAME}/_version.py")),
         ]
     )
 
@@ -1159,7 +1159,7 @@ def test_version_only_update_files_no_git_actions(
         [
             "CHANGELOG.md",
             "pyproject.toml",
-            f"src/{EXAMPLE_PROJECT_NAME}/_version.py",
+            str(Path(f"src/{EXAMPLE_PROJECT_NAME}/_version.py")),
         ]
     )
     assert expected_changed_files == differing_files
