@@ -6,11 +6,12 @@ on:
 
 jobs:
   test:
-    name: Python ${{ matrix.python-version }} tests
-    runs-on: ubuntu-latest
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }} tests
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +37,9 @@ jobs:
           python -m pip install .[test]
           python -m pip install pytest-github-actions-annotate-failures
 
-      - name: pytest
-        id: tests
+      - name: pytest on Linux
+        id: tests-linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           python -m pytest              \
             -vv                         \
@@ -48,9 +50,33 @@ jobs:
             --cov-fail-under=80         \
             --junit-xml=tests/reports/pytest-results.xml
 
-      - name: Report | Upload Test Results
+      - name: pytest on windows
+        id: tests-win
+        if: ${{ matrix.os == 'windows-latest' }}
+        # env:
+          # Required for GitPython to work on Windows because of getpass.getuser()
+          # USERNAME: "runneradmin"
+          # Because GHA is currently broken on Windows to pass these varables, we do it manually
+        run: |
+          $env:USERNAME = "runneradmin"
+          python -m pytest               `
+            -vv                          `
+            -nauto                       `
+            `--cov=semantic_release      `
+            `--cov-context=test          `
+            `--cov-report=term-missing   `
+            `--cov-fail-under=80         `
+            `--junit-xml=tests/reports/pytest-results.xml
+
+      - name: Report | Upload Linux Test Results
         uses: mikepenz/action-junit-report@v4.3.1
-        if: ${{ always() && steps.tests.outcome != 'skipped' }}
+        if: ${{ always() && steps.tests-linux.outcome != 'skipped' }}
+        with:
+          report_paths: ./tests/reports/*.xml
+
+      - name: Report | Upload Windows Test Results
+        uses: mikepenz/action-junit-report@v4.3.1
+        if: ${{ always() && steps.tests-win.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
 
