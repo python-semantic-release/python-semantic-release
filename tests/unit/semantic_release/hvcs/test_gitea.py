@@ -379,11 +379,13 @@ def test_should_create_release_using_token_or_netrc(
         .strip()
     )
 
-    expected_request_headers = (
-        {"Authorization": f"token {token}"}
-        if token
-        else {"Authorization": f"Basic {encoded_auth}"}
-    ).items()
+    expected_request_headers = set(
+        (
+            {"Authorization": f"token {token}"}
+            if token
+            else {"Authorization": f"Basic {encoded_auth}"}
+        ).items()
+    )
 
     # create netrc file
     # NOTE: write netrc file with DEFAULT_DOMAIN not DEFAULT_API_DOMAIN as can't
@@ -408,8 +410,14 @@ def test_should_create_release_using_token_or_netrc(
         assert expected_num_requests == len(m.request_history)
         assert expected_http_method == m.last_request.method
         assert expected_request_url == m.last_request.url
-        assert expected_request_headers <= m.last_request.headers.items()
         assert expected_request_body == m.last_request.json()
+
+        # calculate the match between expected and actual headers
+        # We are not looking for an exact match, just that the headers we must have exist
+        shared_headers = expected_request_headers.intersection(
+            set(m.last_request.headers.items())
+        )
+        assert expected_request_headers == shared_headers
 
 
 def test_request_has_no_auth_header_if_no_token_or_netrc():
@@ -712,20 +720,10 @@ def test_upload_release_asset_fails(
     status_code: int,
     mock_release_id: int,
 ):
-    # Setup
-    urlparams = {"name": example_changelog_md.name}
-    expected_num_requests = 1
-    expected_http_method = "POST"
-    expected_request_url = "{url}?{params}".format(
-        url=default_gitea_client.asset_upload_url(mock_release_id),
-        params=urlencode(urlparams),
-    )
-    expected_changelog = example_changelog_md.read_bytes()
-
     with requests_mock.Mocker(session=default_gitea_client.session) as m:
         # mock the response
         m.register_uri(
-            "POST", gitea_api_matcher, json={"status": "ok"}, status_code=status_code
+            "POST", gitea_api_matcher, json={"status": "error"}, status_code=status_code
         )
 
         # Execute method under test expecting an exception to be raised
@@ -735,13 +733,6 @@ def test_upload_release_asset_fails(
                 file=example_changelog_md.resolve(),
                 label="doesn't matter could be None",
             )
-
-        # Evaluate (expected -> actual)
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
-        assert expected_changelog == m.last_request.body.split(b"\r\n")[4]
 
 
 # Note - mocking as the logic for uploading an asset

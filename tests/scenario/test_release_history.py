@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
 from git import Actor
@@ -21,6 +21,9 @@ from tests.fixtures import (
     repo_with_single_branch_angular_commits,
 )
 from tests.util import add_text_to_file
+
+if TYPE_CHECKING:
+    from git import Repo
 
 # NOTE: not testing parser correctness here, just that the right commits end up
 # in the right places. So we only compare that the commits with the messages
@@ -315,7 +318,7 @@ def test_release_history(
         lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
     ],
 )
-def test_release_history_releases(repo, default_angular_parser):
+def test_release_history_releases(repo: Repo, default_angular_parser):
     new_version = Version.parse("100.10.1")
     actor = Actor("semantic-release", "semantic-release")
     release_history = ReleaseHistory.from_git_history(
