@@ -1,0 +1,33 @@
+{#
+This Update changelog template uses the following logic:
+
+  1. Read previous changelog file (ex. project_root/CHANGELOG.md)
+  2. Split on insertion flag (ex. <!-- version list -->)
+  3. Print top half of previous changelog
+  3. New Changes (unreleased commits & newly released)
+  4. Print bottom half of previous changelog
+
+  Note: if a previous file was not found, it does not write anything at the bottom
+        but render does NOT fail
+
+#}{% set prev_changelog_contents = prev_changelog_file | read_file
+%}{% set changelog_parts = prev_changelog_contents.split(insertion_flag)
+%}{#
+   # Print top half of changelog w/ insertion_flag
+#}{{ "%s\n\n%s\n" | format(changelog_parts[0] | safe | trim, insertion_flag | trim)
+}}{#
+   #  Any Unreleased Details (uncommon)
+#}{%  include ".unreleased_changes.md.j2"
+-%}{#
+   #  Latest Release Details
+#}{%  for version, release in new_releases
+%}{{    "\n"
+}}{%    include ".versioned_changes.md.j2"
+-%}{{   "\n"
+}}{%  endfor
+%}{#
+   #  Previous Changelog
+#}{%  if changelog_parts | length > 1
+%}{{    changelog_parts[1] | safe | trim
+}}{%  endif
+%}
