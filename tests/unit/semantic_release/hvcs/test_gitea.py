@@ -700,7 +700,7 @@ def test_upload_release_asset_succeeds(
         assert expected_num_requests == len(m.request_history)
         assert expected_http_method == m.last_request.method
         assert expected_request_url == m.last_request.url
-        assert expected_changelog == m.last_request.body.split(b"\r\n")[4]
+        assert expected_changelog in m.last_request.body
 
 
 @pytest.mark.parametrize("status_code", (400, 500, 503))

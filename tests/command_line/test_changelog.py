@@ -3,6 +3,7 @@ from __future__ import annotations
 import filecmp
 import os
 import shutil
+import sys
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -11,6 +12,7 @@ import requests_mock
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from requests import Session
 
+import semantic_release.hvcs.github
 from semantic_release.cli.commands.main import main
 
 from tests.const import (
@@ -226,17 +228,7 @@ def test_changelog_release_tag_not_in_history(
     repo_with_single_branch_and_prereleases_angular_commits.__name__
 )
 @pytest.mark.parametrize("args", [("--post-to-release-tag", "v0.1.0")])
-def test_changelog_post_to_release(
-    args: list[str],
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path_factory: pytest.TempPathFactory,
-    example_project_dir: ExProjectDir,
-    cli_runner: CliRunner,
-):
-    tempdir = tmp_path_factory.mktemp("test_changelog")
-    remove_dir_tree(tempdir.resolve(), force=True)
-    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
-
+def test_changelog_post_to_release(args: list[str], cli_runner: CliRunner):
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're
     # made
 
@@ -256,19 +248,63 @@ def test_changelog_post_to_release(
         repo_name=EXAMPLE_REPO_NAME,
     )
 
+    clean_os_environment = dict(
+        filter(
+            lambda k_v: k_v[1] is not None,
+            {
+                "CI": "true",
+                "PATH": os.getenv("PATH"),
+                "HOME": os.getenv("HOME"),
+                "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
+                **(
+                    {}
+                    if sys.platform != "win32"
+                    else {
+                        # Windows Required variables
+                        "ALLUSERSAPPDATA": os.getenv("ALLUSERSAPPDATA"),
+                        "ALLUSERSPROFILE": os.getenv("ALLUSERSPROFILE"),
+                        "APPDATA": os.getenv("APPDATA"),
+                        "COMMONPROGRAMFILES": os.getenv("COMMONPROGRAMFILES"),
+                        "COMMONPROGRAMFILES(X86)": os.getenv("COMMONPROGRAMFILES(X86)"),
+                        "DEFAULTUSERPROFILE": os.getenv("DEFAULTUSERPROFILE"),
+                        "HOMEPATH": os.getenv("HOMEPATH"),
+                        "PATHEXT": os.getenv("PATHEXT"),
+                        "PROFILESFOLDER": os.getenv("PROFILESFOLDER"),
+                        "PROGRAMFILES": os.getenv("PROGRAMFILES"),
+                        "PROGRAMFILES(X86)": os.getenv("PROGRAMFILES(X86)"),
+                        "SYSTEM": os.getenv("SYSTEM"),
+                        "SYSTEM16": os.getenv("SYSTEM16"),
+                        "SYSTEM32": os.getenv("SYSTEM32"),
+                        "SYSTEMDRIVE": os.getenv("SYSTEMDRIVE"),
+                        "SYSTEMROOT": os.getenv("SYSTEMROOT"),
+                        "TEMP": os.getenv("TEMP"),
+                        "TMP": os.getenv("TMP"),
+                        "USERPROFILE": os.getenv("USERPROFILE"),
+                        "USERSID": os.getenv("USERSID"),
+                        "USERNAME": os.getenv("USERNAME"),
+                        "WINDIR": os.getenv("WINDIR"),
+                    }
+                ),
+            }.items(),
+        )
+    )
+
     # Patch out env vars that affect changelog URLs but only get set in e.g.
     # Github actions
     with mock.patch(
-        "semantic_release.hvcs.github.build_requests_session",
+        # Patching the specific module's reference to the build_requests_session function
+        f"{semantic_release.hvcs.github.__name__}.{semantic_release.hvcs.github.build_requests_session.__name__}",
         return_value=session,
-    ) as mocker, mock.patch.dict("os.environ", {}, clear=True):
+    ) as build_requests_session_mock, mock.patch.dict(
+        os.environ, clean_os_environment, clear=True
+    ):
         # Act
         cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
         result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
-    assert mocker.called
+    assert build_requests_session_mock.called
     assert mock_adapter.called
     assert mock_adapter.last_request is not None
     assert expected_request_url == mock_adapter.last_request.url
