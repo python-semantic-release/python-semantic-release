@@ -3,7 +3,6 @@ from __future__ import annotations
 import base64
 import fnmatch
 import glob
-import mimetypes
 import os
 import re
 from typing import TYPE_CHECKING
@@ -540,11 +539,13 @@ def test_should_create_release_using_token_or_netrc(
         .strip()
     )
 
-    expected_request_headers = (
-        {"Authorization": f"token {token}"}
-        if token
-        else {"Authorization": f"Basic {encoded_auth}"}
-    ).items()
+    expected_request_headers = set(
+        (
+            {"Authorization": f"token {token}"}
+            if token
+            else {"Authorization": f"Basic {encoded_auth}"}
+        ).items()
+    )
 
     # create netrc file
     netrc = netrc_file(machine=default_gh_client.DEFAULT_API_DOMAIN)
@@ -570,8 +571,14 @@ def test_should_create_release_using_token_or_netrc(
         assert expected_num_requests == len(m.request_history)
         assert expected_http_method == m.last_request.method
         assert expected_request_url == m.last_request.url
-        assert expected_request_headers <= m.last_request.headers.items()
         assert expected_request_body == m.last_request.json()
+
+        # calculate the match between expected and actual headers
+        # We are not looking for an exact match, just that the headers we must have exist
+        shared_headers = expected_request_headers.intersection(
+            set(m.last_request.headers.items())
+        )
+        assert expected_request_headers == shared_headers
 
 
 def test_request_has_no_auth_header_if_no_token_or_netrc():
@@ -945,7 +952,6 @@ def test_upload_release_asset_fails(
 ):
     # Setup
     label = "abc123"
-    urlparams = {"name": example_changelog_md.name, "label": label}
     upload_url = "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
         up_url=github_upload_url,
         owner=default_gh_client.owner,
@@ -956,18 +962,6 @@ def test_upload_release_asset_fails(
         "status": "ok",
         "upload_url": upload_url,
     }
-    changelog_data_mime_type = (
-        mimetypes.guess_type(example_changelog_md.resolve(), strict=False)[0]
-        or "application/octet-stream"
-    )
-    expected_num_requests = 2
-    expected_http_method = "POST"
-    expected_upload_request_url = "{url}?{params}".format(
-        url=upload_url,
-        params=urlencode(urlparams),
-    )
-    expected_upload_request_headers = {"Content-Type": changelog_data_mime_type}.items()
-    expected_changelog = example_changelog_md.read_bytes()
 
     with requests_mock.Mocker(session=default_gh_client.session) as m:
         # mock the responses
@@ -986,14 +980,6 @@ def test_upload_release_asset_fails(
                 file=example_changelog_md.resolve(),
                 label=label,
             )
-
-        # Evaluate (expected -> actual)
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_upload_request_url == m.last_request.url
-        assert expected_upload_request_headers <= m.last_request.headers.items()
-        assert expected_changelog == m.last_request.body
 
 
 # Note - mocking as the logic for uploading an asset

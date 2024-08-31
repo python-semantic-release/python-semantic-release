@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -75,7 +76,7 @@ def test_load_hvcs_default_token(
     remote_config: dict[str, Any],
     expected_token: str,
 ):
-    with mock.patch.dict("os.environ", patched_os_environ, clear=True):
+    with mock.patch.dict(os.environ, patched_os_environ, clear=True):
         raw_config = RawConfig.model_validate(
             {
                 "remote": remote_config,
@@ -185,7 +186,7 @@ def test_commit_author_configurable(
 ):
     content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
 
-    with mock.patch.dict("os.environ", mock_env):
+    with mock.patch.dict(os.environ, mock_env):
         raw = RawConfig.model_validate(content)
         runtime = RuntimeContext.from_raw_config(
             raw=raw,

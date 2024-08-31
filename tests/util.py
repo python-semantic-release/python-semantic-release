@@ -45,6 +45,10 @@ if TYPE_CHECKING:
     GitCommandWrapperType: TypeAlias = cli_config_module.Repo.GitCommandWrapperType
 
 
+def get_func_qual_name(func: Callable) -> str:
+    return f"{func.__module__}.{func.__qualname__}"
+
+
 def assert_exit_code(
     exit_code: int, result: ClickInvokeResult, cli_cmd: list[str]
 ) -> bool:

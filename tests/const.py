@@ -138,7 +138,7 @@ version_variables = [
     "src/{EXAMPLE_PROJECT_NAME}/_version.py:__version__",
 ]
 version_toml = ["pyproject.toml:tool.poetry.version"]
-"""
+""".lstrip()
 
 EXAMPLE_SETUP_CFG_CONTENT = rf"""
 [metadata]
@@ -202,7 +202,7 @@ line_length=88
 
 [flake8]
 max-line-length = 88
-"""
+""".lstrip()
 
 EXAMPLE_SETUP_PY_CONTENT = rf"""
 import re
@@ -284,7 +284,7 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
 )
-"""
+""".lstrip()
 
 EXAMPLE_CHANGELOG_MD_CONTENT = r"""
 # CHANGELOG.md
@@ -295,15 +295,16 @@ EXAMPLE_CHANGELOG_MD_CONTENT = r"""
 * Various bugfixes, security enhancements
 * Extra cookies to enhance your experience
 * ~Removed~ simplified cookie opt-out handling logic
-"""
+""".lstrip()
 
-EXAMPLE_RELEASE_NOTES_TEMPLATE = r"""## What's Changed
+EXAMPLE_RELEASE_NOTES_TEMPLATE = r"""
+## What's Changed
 {% for type_, commits in release["elements"] | dictsort %}
 ### {{ type_ | capitalize }}
 {%- if type_ != "unknown" %}
 {% for commit in commits %}
 * {{ commit.commit.summary.rstrip() }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
 {%- endfor %}{% endif %}{% endfor %}
-"""  # noqa: E501
+""".lstrip()  # noqa: E501
 
 RELEASE_NOTES = "# Release Notes"

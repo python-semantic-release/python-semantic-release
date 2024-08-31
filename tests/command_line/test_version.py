@@ -709,11 +709,12 @@ def test_version_runs_build_command(
 
     # Mock out subprocess.run
     with mock.patch(
-        "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
+        get_func_qual_name(subprocess.run),
+        return_value=CompletedProcess(args=(), returncode=0),
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
     ), mock.patch("sys.platform", "linux"), mock.patch.dict(
-        "os.environ", patched_os_environment, clear=True
+        os.environ, patched_os_environment, clear=True
     ):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
 
@@ -791,11 +792,12 @@ def test_version_runs_build_command_windows(
 
     # Mock out subprocess.run
     with mock.patch(
-        "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
+        get_func_qual_name(subprocess.run),
+        return_value=CompletedProcess(args=(), returncode=0),
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=(exe, shell)
     ), mock.patch("sys.platform", "win32"), mock.patch.dict(
-        "os.environ", patched_os_environment, clear=True
+        os.environ, patched_os_environment, clear=True
     ):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
 
@@ -890,10 +892,11 @@ def test_version_runs_build_command_w_user_env(
 
     # Mock out subprocess.run
     with mock.patch(
-        "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
+        get_func_qual_name(subprocess.run),
+        return_value=CompletedProcess(args=(), returncode=0),
     ) as patched_subprocess_run, mock.patch(
         "shellingham.detect_shell", return_value=("bash", "/usr/bin/bash")
-    ), mock.patch.dict("os.environ", patched_os_environment, clear=True):
+    ), mock.patch.dict(os.environ, patched_os_environment, clear=True):
         cli_cmd = [
             MAIN_PROG_NAME,
             VERSION_SUBCMD,
@@ -944,7 +947,8 @@ def test_version_skips_build_command_with_skip_build(
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push", "--skip-build"]
 
     with mock.patch(
-        "subprocess.run", return_value=CompletedProcess(args=(), returncode=0)
+        get_func_qual_name(subprocess.run),
+        return_value=CompletedProcess(args=(), returncode=0),
     ) as patched_subprocess_run:
         # Act: force a new version
         result = cli_runner.invoke(main, cli_cmd[1:])
