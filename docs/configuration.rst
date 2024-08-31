@@ -538,6 +538,54 @@ The patterns in this list are treated as regular expressions.
 
 ----
 
+.. _config-changelog-mode:
+
+``mode``
+********
+
+**Type:** ``Literal["init", "update"]``
+
+This setting is a flag that is ultimately passed into the changelog context environment. It sets
+the value of ``context.changelog_mode`` to a string value of either ``init`` or ``update``.
+
+When used with the provided changelog template, it will determine the behavior of how the changelog
+is written. When the mode is set to ``init``, the changelog file will be written from scratch,
+overwriting any existing changelog file. This is the ``v8`` and ``v9`` default behavior.
+
+When the mode is set to ``update``, the changelog file will look for the ``insertion_flag`` value
+in the changelog file (defined by :ref:`config-changelog-changelog_file`) and insert the new
+version information at that location.
+
+If you are using a custom template directory, the `context.changelog_mode` value will exist in the
+changelog context but it is up to your implementation to determine if and/or how to use it.
+
+**Default:** ``init``
+
+----
+
+.. _config-changelog-insertion_flag:
+
+``insertion_flag``
+******************
+
+**Type:** ``str``
+
+A string that will be used to identify where the new version should be inserted into the
+changelog file (as defined by :ref:`config-changelog-changelog_file`) when the changelog mode
+is set to ``update``.
+
+When the changelog mode is set to ``init``, this string will be included as part of the
+header of the changelog file to initialize the changelog with a format that will be condusive
+for future version insertions.
+
+If you modify this value in your config, you will need to manually update any saved changelog
+file to match the new insertion flag if you use the ``update`` mode.  In ``init`` mode, the
+changelog file will be overwritten with the new insertion flag as normal.
+
+**Default:** ``<!-- version list -->``
+
+----
+
 .. _config-changelog-template_dir:
 
 ``template_dir``
