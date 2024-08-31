@@ -131,7 +131,7 @@ provide the following inputs:
    - name: Python Semantic Release
      # Adjust tag with desired version if applicable. Version shorthand
      # is NOT available, e.g. vX or vX.X will not work.
-     uses: python-semantic-release/python-semantic-release@v9.8.6
+     uses: python-semantic-release/python-semantic-release@v9.8.7
      with:
        # ... other options
        force: "patch"
