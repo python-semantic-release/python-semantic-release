@@ -376,6 +376,7 @@ logging_use_named_masks = true
 commit_parser = "angular"
 build_command = """
     python -m scripts.bump_version_in_docs
+    git add docs/*
     python -m pip install -e .[build]
     python -m build .
 """
