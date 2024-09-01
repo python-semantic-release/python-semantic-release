@@ -216,13 +216,13 @@ ALLUSERSAPPDATA           Pass-through ``ALLUSERAPPDATA`` if exists in process e
 ALLUSERSPROFILE           Pass-through ``ALLUSERSPPPROFILE`` if exists in process env, unset otherwise
 APPDATA                   Pass-through ``APPDATA`` if exists in process env, unset otherwise
 COMMONPROGRAMFILES        Pass-through ``COMMONPROGRAMFILES`` if exists in process env, unset otherwise
-COMMONPROGRAMFILES(x86)   Pass-through ``COMMONPROGRAMFILES(x86)`` if exists in process env, unset otherwise
+COMMONPROGRAMFILES(X86)   Pass-through ``COMMONPROGRAMFILES(X86)`` if exists in process env, unset otherwise
 DEFAULTUSERPROFILE        Pass-through ``DEFAULTUSERPROFILE`` if exists in process env, unset otherwise
 HOMEPATH                  Pass-through ``HOMEPATH`` if exists in process env, unset otherwise
 PATHEXT                   Pass-through ``PATHEXT`` if exists in process env, unset otherwise
 PROFILESFOLDER            Pass-through ``PROFILESFOLDER`` if exists in process env, unset otherwise
 PROGRAMFILES              Pass-through ``PROGRAMFILES`` if exists in process env, unset otherwise
-PROGRAMFILES(x86)         Pass-through ``PROGRAMFILES(x86)`` if exists in process env, unset otherwise
+PROGRAMFILES(X86)         Pass-through ``PROGRAMFILES(X86)`` if exists in process env, unset otherwise
 SYSTEM                    Pass-through ``SYSTEM`` if exists in process env, unset otherwise
 SYSTEM16                  Pass-through ``SYSTEM16`` if exists in process env, unset otherwise
 SYSTEM32                  Pass-through ``SYSTEM32`` if exists in process env, unset otherwise
