@@ -760,11 +760,17 @@ def test_create_or_update_release_when_create_succeeds(
 ):
     tag = "v1.0.0"
     with mock.patch.object(
-        default_gh_client, "create_release", return_value=mock_release_id
+        default_gh_client,
+        default_gh_client.create_release.__name__,
+        return_value=mock_release_id,
     ) as mock_create_release, mock.patch.object(
-        default_gh_client, "get_release_id_by_tag", return_value=mock_release_id
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=mock_release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "edit_release_notes", return_value=mock_release_id
+        default_gh_client,
+        default_gh_client.edit_release_notes.__name__,
+        return_value=mock_release_id,
     ) as mock_edit_release_notes:
         # Execute in mock environment
         result = default_gh_client.create_or_update_release(
@@ -792,15 +798,15 @@ def test_create_or_update_release_when_create_fails_and_update_succeeds(
 
     with mock.patch.object(
         default_gh_client,
-        "create_release",
+        default_gh_client.create_release.__name__,
         side_effect=not_found,
     ) as mock_create_release, mock.patch.object(
         default_gh_client,
-        "get_release_id_by_tag",
+        default_gh_client.get_release_id_by_tag.__name__,
         return_value=mock_release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gh_client,
-        "edit_release_notes",
+        default_gh_client.edit_release_notes.__name__,
         return_value=mock_release_id,
     ) as mock_edit_release_notes:
         # Execute in mock environment
@@ -826,11 +832,17 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
     not_found.response.status_code = 404
 
     with mock.patch.object(
-        default_gh_client, "create_release", side_effect=not_found
+        default_gh_client,
+        default_gh_client.create_release.__name__,
+        side_effect=not_found,
     ) as mock_create_release, mock.patch.object(
-        default_gh_client, "get_release_id_by_tag", return_value=None
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=None,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "edit_release_notes", return_value=None
+        default_gh_client,
+        default_gh_client.edit_release_notes.__name__,
+        return_value=None,
     ) as mock_edit_release_notes:
         # Execute in mock environment expecting an exception to be raised
         with pytest.raises(ValueError):
@@ -999,10 +1011,10 @@ def test_upload_dists_when_release_id_not_found(default_gh_client):
     # Set up mock environment
     with mock.patch.object(
         default_gh_client,
-        "get_release_id_by_tag",
+        default_gh_client.get_release_id_by_tag.__name__,
         return_value=None,
     ) as mock_get_release_id_by_tag, mock.patch.object(
-        default_gh_client, "upload_release_asset"
+        default_gh_client, default_gh_client.upload_release_asset.__name__
     ) as mock_upload_release_asset:
         # Execute method under test
         result = default_gh_client.upload_dists(tag, path)
@@ -1044,11 +1056,11 @@ def test_upload_dists_when_release_id_found(
     # Set up mock environment
     with mocked_globber, mocked_isfile, mock.patch.object(
         default_gh_client,
-        "get_release_id_by_tag",
+        default_gh_client.get_release_id_by_tag.__name__,
         return_value=release_id,
     ) as mock_get_release_id_by_tag, mock.patch.object(
         default_gh_client,
-        "upload_release_asset",
+        default_gh_client.upload_release_asset.__name__,
         side_effect=upload_statuses,
     ) as mock_upload_release_asset:
         # Execute method under test
