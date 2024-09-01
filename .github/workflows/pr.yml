@@ -73,12 +73,14 @@ jobs:
         if: ${{ always() && steps.tests-linux.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
+          annotate_only: true
 
       - name: Report | Upload Windows Test Results
         uses: mikepenz/action-junit-report@v4.3.1
         if: ${{ always() && steps.tests-win.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
+          annotate_only: true
 
   lint:
     runs-on: ubuntu-latest
