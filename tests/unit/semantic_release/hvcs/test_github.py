@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import fnmatch
 import glob
 import os
@@ -12,6 +11,7 @@ from urllib.parse import urlencode
 import pytest
 import requests_mock
 from requests import HTTPError, Response, Session
+from requests.auth import _basic_auth_str
 
 from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.token_auth import TokenAuth
@@ -510,6 +510,7 @@ def test_should_create_release_using_token_or_netrc(
     default_netrc_username: str,
     default_netrc_password: str,
     netrc_file: NetrcFileFn,
+    clean_os_environment: dict[str, str],
 ):
     # Setup
     default_gh_client.token = token
@@ -531,28 +532,26 @@ def test_should_create_release_using_token_or_netrc(
         "prerelease": False,
     }
 
-    encoded_auth = (
-        base64.encodebytes(
-            f"{default_netrc_username}:{default_netrc_password}".encode()
-        )
-        .decode("ascii")
-        .strip()
-    )
-
     expected_request_headers = set(
         (
             {"Authorization": f"token {token}"}
             if token
-            else {"Authorization": f"Basic {encoded_auth}"}
+            else {
+                "Authorization": _basic_auth_str(
+                    default_netrc_username, default_netrc_password
+                )
+            }
         ).items()
     )
 
     # create netrc file
     netrc = netrc_file(machine=default_gh_client.DEFAULT_API_DOMAIN)
 
+    mocked_os_environ = {**clean_os_environment, "NETRC": netrc.name}
+
     # Monkeypatch to create the Mocked environment
     with requests_mock.Mocker(session=default_gh_client.session) as m, mock.patch.dict(
-        os.environ, {"NETRC": netrc.name}, clear=True
+        os.environ, mocked_os_environ, clear=True
     ):
         # mock the response
         m.register_uri(
@@ -578,7 +577,15 @@ def test_should_create_release_using_token_or_netrc(
         shared_headers = expected_request_headers.intersection(
             set(m.last_request.headers.items())
         )
-        assert expected_request_headers == shared_headers
+        assert expected_request_headers == shared_headers, str.join(
+            "\n",
+            [
+                "Actual headers are missing some of the expected headers",
+                f"Matching: {shared_headers}",
+                f"Missing: {expected_request_headers - shared_headers}",
+                f"Extra: {set(m.last_request.headers.items()) - expected_request_headers}",
+            ],
+        )
 
 
 def test_request_has_no_auth_header_if_no_token_or_netrc():
