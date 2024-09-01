@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## v9.8.8 (2024-09-01)
+
+### Documentation
+
+* docs(configuration): update `build_command` env table for windows to use all capital vars ([`0e8451c`](https://github.com/python-semantic-release/python-semantic-release/commit/0e8451cf9003c6a3bdcae6878039d7d9a23d6d5b))
+
+* docs(github-actions): update version in examples to latest version ([`3c894ea`](https://github.com/python-semantic-release/python-semantic-release/commit/3c894ea8a555d20b454ebf34785e772959bbb4fe))
+
+### Fix
+
+* fix(config): fix path traversal detection for windows compatibility (#1014)
+
+  The original implementation of the path traversal detection expected that `resolve()`
+  works the same on windows as it does with Linux/Mac. Windows requires the folder paths
+  to exist to be resolved and that is not the case when the `template_dir` is not being
+  used.
+
+  Resolves: #994 ([`16e6daa`](https://github.com/python-semantic-release/python-semantic-release/commit/16e6daaf851ce1eabf5fbd5aa9fe310a8b0f22b3))
+
 ## v9.8.7 (2024-08-20)
 
 ### Documentation
