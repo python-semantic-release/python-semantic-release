@@ -43,31 +43,24 @@ def netrc_file(
     default_netrc_username: str,
     default_netrc_password: str,
 ) -> Generator[NetrcFileFn, None, None]:
-    entered_context_managers: list[_TemporaryFileWrapper[str]] = []
+    temporary_files: list[str] = []
 
     def _netrc_file(machine: str) -> _TemporaryFileWrapper[str]:
-        ctx_mgr = NamedTemporaryFile("w")
-        netrc_fd = ctx_mgr.__enter__()
-        entered_context_managers.append(ctx_mgr)
+        ctx_mgr = NamedTemporaryFile("w", delete=False)
+        with ctx_mgr as netrc_fd:
+            temporary_files.append(ctx_mgr.name)
 
-        netrc_fd.write(f"machine {machine}" + "\n")
-        netrc_fd.write(f"login {default_netrc_username}" + "\n")
-        netrc_fd.write(f"password {default_netrc_password}" + "\n")
-        netrc_fd.flush()
-        return ctx_mgr
+            netrc_fd.write(f"machine {machine}{os.linesep}")
+            netrc_fd.write(f"login {default_netrc_username}{os.linesep}")
+            netrc_fd.write(f"password {default_netrc_password}{os.linesep}")
+            netrc_fd.flush()
+            return ctx_mgr
 
-    exception = None
     try:
         yield _netrc_file
-    except Exception as err:  # noqa: BLE001
-        exception = err
     finally:
-        for context_manager in entered_context_managers:
-            context_manager.__exit__(
-                None if not exception else type(exception),
-                exception,
-                None if not exception else exception.__traceback__,
-            )
+        for temp_file in temporary_files:
+            os.unlink(temp_file)
 
 
 @pytest.fixture(scope="session")
