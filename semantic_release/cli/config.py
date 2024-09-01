@@ -568,7 +568,12 @@ class RuntimeContext:
         )
 
         # changelog_file
-        changelog_file = Path(raw.changelog.changelog_file).expanduser().resolve()
+        # Must use absolute after resolve because windows does not resolve if the path does not exist
+        # which means it returns a relative path. So we force absolute to ensure path is complete
+        # for the next check of path matching
+        changelog_file = (
+            Path(raw.changelog.changelog_file).expanduser().resolve().absolute()
+        )
 
         # Prevent path traversal attacks
         if raw.repo_dir not in changelog_file.parents:
@@ -576,7 +581,12 @@ class RuntimeContext:
                 "Changelog file destination must be inside of the repository directory."
             )
 
-        template_dir = Path(raw.changelog.template_dir).expanduser().resolve()
+        # Must use absolute after resolve because windows does not resolve if the path does not exist
+        # which means it returns a relative path. So we force absolute to ensure path is complete
+        # for the next check of path matching
+        template_dir = (
+            Path(raw.changelog.template_dir).expanduser().resolve().absolute()
+        )
 
         # Prevent path traversal attacks
         if raw.repo_dir not in template_dir.parents:
