@@ -20,11 +20,12 @@ class VersionDeclarationABC(ABC):
     within the source tree of the repository
     """
 
-    def __init__(self, path: Path | str, search_text: str) -> None:
+    def __init__(self, path: Path | str, search_text: str, version_compat: str) -> None:
         self.path = Path(path)
         if not self.path.exists():
             raise FileNotFoundError(f"path {self.path.resolve()!r} does not exist")
         self.search_text = search_text
+        self.version_compat = version_compat
         self._content: str | None = None
 
     @property
@@ -106,7 +107,7 @@ class TomlVersionDeclaration(VersionDeclarationABC):
                 self.search_text,
                 maybe_version,
             )
-            valid_version = Version.parse(maybe_version)
+            valid_version = Version.parse(maybe_version, version_compat=self.version_compat)
             return {valid_version} if valid_version else set()
         # Maybe in future raise error if not found?
         return set()
@@ -137,8 +138,8 @@ class PatternVersionDeclaration(VersionDeclarationABC):
 
     _VERSION_GROUP_NAME = "version"
 
-    def __init__(self, path: Path | str, search_text: str) -> None:
-        super().__init__(path, search_text)
+    def __init__(self, path: Path | str, search_text: str, version_compat: str) -> None:
+        super().__init__(path, search_text, version_compat)
         self.search_re = re.compile(self.search_text, flags=re.MULTILINE)
         if self._VERSION_GROUP_NAME not in self.search_re.groupindex:
             raise ValueError(
@@ -159,7 +160,7 @@ class PatternVersionDeclaration(VersionDeclarationABC):
         to check for this condition.
         """
         versions = {
-            Version.parse(m.group(self._VERSION_GROUP_NAME))
+            Version.parse(m.group(self._VERSION_GROUP_NAME), version_compat=self.version_compat)
             for m in self.search_re.finditer(self.content, re.MULTILINE)
         }
 

@@ -6,7 +6,7 @@ from functools import wraps
 from itertools import zip_longest
 from typing import Callable, Union, overload
 
-from semantic_release.const import SEMVER_REGEX
+from semantic_release.const import SEMVER_REGEX, PEP440_REGEX
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidVersion
 from semantic_release.helpers import check_tag_format
@@ -55,6 +55,7 @@ def _comparator(
                     other,
                     tag_format=self.tag_format,
                     prerelease_token=self.prerelease_token,
+                    version_compat=self.version_compat,
                 )
             except InvalidVersion as ex:
                 raise TypeError(str(ex)) from ex
@@ -77,6 +78,7 @@ class Version:
         *,
         prerelease_token: str = "rc",  # noqa: S107
         prerelease_revision: int | None = None,
+        version_compat: str = "semver",
         build_metadata: str = "",
         tag_format: str = "v{version}",
     ) -> None:
@@ -86,6 +88,7 @@ class Version:
         self.prerelease_token = prerelease_token
         self.prerelease_revision = prerelease_revision
         self.build_metadata = build_metadata
+        self.version_compat = version_compat
         self._tag_format = tag_format
 
     @property
@@ -104,6 +107,7 @@ class Version:
         version_str: str,
         tag_format: str = "v{version}",
         prerelease_token: str = "rc",  # noqa: S107
+        version_compat: str = "semver"
     ) -> Version:
         """
         Parse version string to a Version instance.
@@ -113,6 +117,16 @@ class Version:
         :param prerelease_token: will be ignored if the version string is a prerelease,
             the parsed token from `version_str` will be used instead.
         """
+        if version_compat == "pep440":
+            cls._VERSION_REGEX = PEP440_REGEX
+        elif version_compat == "semver":
+            cls._VERSION_REGEX = SEMVER_REGEX
+        else:
+            raise ValueError(
+                f"Invalid version compatibility mode {version_compat!r}. "
+                "Valid options are 'pep440' and 'semver'."
+            )
+
         if not isinstance(version_str, str):
             raise InvalidVersion(f"{version_str!r} cannot be parsed as a Version")
 
@@ -123,14 +137,29 @@ class Version:
 
         prerelease = match.group("prerelease")
         if prerelease:
-            pm = re.match(r"(?P<token>[a-zA-Z0-9-\.]+)\.(?P<revision>\d+)", prerelease)
-            if not pm:
+            if version_compat == "semver":
+                pm = re.match(r"(?P<token>[a-zA-Z0-9-\.]+)\.(?P<revision>\d+)", prerelease)
+                if not pm:
+                    raise NotImplementedError(
+                        f"{cls.__qualname__} currently supports only prereleases "
+                        r"of the format (-([a-zA-Z0-9-])\.\(\d+)), for example "
+                        r"'1.2.3-my-custom-3rc.4'."
+                    )
+                prerelease_token, prerelease_revision = pm.groups()
+            elif version_compat == "pep440":
+                pm = re.match(r"(?P<token>(a|b|c|rc|alpha|beta|pre|preview|dev|post|rev|r))[-_\.]?(?P<revision>\d+)", prerelease)
+                if not pm:
+                    raise NotImplementedError(
+                        f"{cls.__qualname__} currently supports only prereleases "
+                        r"of the format ([-_\.](a|b|c|rc|alpha|beta|pre|preview|dev|post|rev|r)[-_\.]\(\d+)), for example "
+                        r"'1.2.3.dev4'."
+                    )
+                prerelease_token, _, prerelease_revision = pm.groups()
+            else:
                 raise NotImplementedError(
-                    f"{cls.__qualname__} currently supports only prereleases "
-                    r"of the format (-([a-zA-Z0-9-])\.\(\d+)), for example "
-                    r"'1.2.3-my-custom-3rc.4'."
+                    f"Invalid version compatibility mode {version_compat!r}. "
+                    "Valid options are 'pep440' and 'semver'."
                 )
-            prerelease_token, prerelease_revision = pm.groups()
             log.debug(
                 "parsed prerelease_token %s, prerelease_revision %s from version "
                 "string %s",
@@ -159,6 +188,7 @@ class Version:
             ),
             build_metadata=build_metadata,
             tag_format=tag_format,
+            version_compat=version_compat,
         )
 
     @property
@@ -167,8 +197,31 @@ class Version:
 
     def __str__(self) -> str:
         full = f"{self.major}.{self.minor}.{self.patch}"
+        if self.version_compat == "semver":
+            pre_str = f"-{self.prerelease_token}.{self.prerelease_revision}"
+        elif self.version_compat == "pep440":
+            if self.prerelease_token == "dev":
+                pre_str = f".{self.prerelease_token}{self.prerelease_revision}"
+            elif self.prerelease_token in ("post", "rev", "r"):
+                pre_str = f".post{self.prerelease_revision}"
+            elif self.prerelease_token in ("rc", "c", "pre", "preview"):
+                pre_str = f"rc{self.prerelease_revision}"
+            elif self.prerelease_token in ("alpha", "a"):
+                pre_str = f"a{self.prerelease_revision}"
+            elif self.prerelease_token in ("beta", "b"):
+                pre_str = f"b{self.prerelease_revision}"
+            else:
+                raise NotImplementedError(
+                    f"Invalid prerelease token {self.prerelease_token!r}. "
+                    "Valid options are 'dev', 'post', 'rev', 'r', 'rc', 'c', 'pre', 'preview', 'alpha', 'a', 'beta', 'b'."
+                )
+        else:
+            raise NotImplementedError(
+                f"Invalid version compatibility mode {self.version_compat!r}. "
+                "Valid options are 'pep440' and 'semver'."
+            )
         prerelease = (
-            f"-{self.prerelease_token}.{self.prerelease_revision}"
+            pre_str
             if self.prerelease_revision
             else ""
         )
@@ -381,6 +434,7 @@ class Version:
             prerelease_token=token or self.prerelease_token,
             prerelease_revision=(revision or self.prerelease_revision) or 1,
             tag_format=self.tag_format,
+            version_compat=self.version_compat,
         )
 
     def finalize_version(self) -> Version:
