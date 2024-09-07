@@ -45,7 +45,12 @@ from semantic_release.commit_parser import (
     ScipyCommitParser,
     TagCommitParser,
 )
-from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
+from semantic_release.const import (
+    COMMIT_MESSAGE,
+    DEFAULT_COMMIT_AUTHOR,
+    PEP440_REGEX,
+    SEMVER_REGEX,
+)
 from semantic_release.errors import (
     DetachedHeadGitError,
     InvalidConfiguration,
@@ -239,6 +244,7 @@ class BranchConfig(BaseModel):
     match: str = "(main|master)"
     prerelease_token: str = "rc"  # noqa: S105
     prerelease: bool = False
+    version_compat: str = "semver"
 
     @field_validator("match", mode="after")
     @classmethod
@@ -712,7 +718,9 @@ class RuntimeContext:
             try:
                 path, search_text = decl.split(":", maxsplit=1)
                 # VersionDeclarationABC handles path existence check
-                vd = TomlVersionDeclaration(path, search_text)
+                vd = TomlVersionDeclaration(
+                    path, search_text, version_compat=branch_config.version_compat
+                )
             except ValueError as exc:
                 log.exception("Invalid TOML declaration %r", decl)
                 raise InvalidConfiguration(
@@ -724,6 +732,10 @@ class RuntimeContext:
         for decl in () if raw.version_variables is None else raw.version_variables:
             try:
                 path, variable = decl.split(":", maxsplit=1)
+                if branch_config.version_compat == "pep440":
+                    version_pattern = PEP440_REGEX
+                else:
+                    version_pattern = SEMVER_REGEX
                 # VersionDeclarationABC handles path existence check
                 search_text = str.join(
                     "",
@@ -734,10 +746,10 @@ class RuntimeContext:
                         # Supports walrus, equals sign, or colon as assignment operator ignoring whitespace separation
                         r"\s*(:=|[:=])\s*",
                         # Supports optional matching quotations around version number of a SEMVER pattern
-                        f"""(?P<quote2>['"])?(?P<version>{SEMVER_REGEX.pattern})(?P=quote2)?""",
+                        f"""(?P<quote2>['"])?(?P<version>{version_pattern.pattern})(?P=quote2)?""",
                     ],
                 )
-                pd = PatternVersionDeclaration(path, search_text)
+                pd = PatternVersionDeclaration(path, search_text, version_compat=branch_config.version_compat)
             except ValueError as exc:
                 log.exception("Invalid variable declaration %r", decl)
                 raise InvalidConfiguration(
@@ -800,7 +812,9 @@ class RuntimeContext:
 
         # version_translator
         version_translator = VersionTranslator(
-            tag_format=raw.tag_format, prerelease_token=branch_config.prerelease_token
+            tag_format=raw.tag_format,
+            prerelease_token=branch_config.prerelease_token,
+            version_compat=branch_config.version_compat,
         )
 
         build_cmd_env = {}
