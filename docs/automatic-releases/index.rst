@@ -16,11 +16,3 @@ Guides
     travis
     github-actions
     cronjobs
-
-.. _automatic-github:
-
-Configuring push to Github
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-In order to push to Github and post the changelog to Github the environment variable
-:ref:`GH_TOKEN <index-creating-vcs-releases>` has to be set. It needs access to the
-``public_repo`` scope for public repositories and ``repo`` for private repositories.
