@@ -165,19 +165,28 @@ Creating VCS Releases
 You can set up Python Semantic Release to create Releases in your remote version
 control system, so you can publish assets and release notes for your project.
 
-In order to do so, you will need to place an authentication token in the appropriate
-environment variable so that Python Semantic Release can authenticate with the remote
-VCS to push tags, create releases, or upload files.
-You should use the appropriate steps below to set this up.
+In order to do so, you will need to place an authentication token in the
+appropriate environment variable so that Python Semantic Release can authenticate
+with the remote VCS to push tags, create releases, or upload files.
 
 GitHub (``GH_TOKEN``)
 """""""""""""""""""""
 
-Use a personal access token from GitHub. See :ref:`automatic-github` for
-usage. This token should be stored in the ``GH_TOKEN`` environment variable
+For local publishing to GitHub, you should use a personal access token and
+store it in your environment variables. Specify the name of the environment
+variable in your configuration setting :ref:`remote.token <config-remote-token>`.
+The default is ``GH_TOKEN``.
 
-To generate a token go to https://github.com/settings/tokens
-and click on *Personal access token*.
+To generate a token go to https://github.com/settings/tokens and click on
+"Generate new token".
+
+For Personal Access Token (classic), you will need the ``repo`` scope to write
+(ie. push) to the repository.
+
+For fine-grained Personal Access Tokens, you will need the `contents`__
+permission.
+
+__ https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens#repository-permissions-for-contents
 
 GitLab (``GITLAB_TOKEN``)
 """""""""""""""""""""""""
