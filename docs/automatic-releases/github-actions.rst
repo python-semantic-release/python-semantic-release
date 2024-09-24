@@ -3,7 +3,7 @@
 GitHub Actions
 ==============
 
-The official GitHub Action for Python Semantic Release:
+There are two official GitHub Actions for Python Semantic Release:
 
 1. :ref:`python-semantic-release@TAG <gh_actions-psr>`
     This is the main action that runs the :ref:`version <cmd-version>` CLI
@@ -13,6 +13,11 @@ The official GitHub Action for Python Semantic Release:
     (8) create a GitHub release. For more information review the
     :ref:`version command documentation <cmd-version>` and see
     :ref:`below <gh_actions-psr>` for the Action configuration options.
+
+2. :ref:`python-semantic-release/publish-action@TAG <gh_actions-publish>`
+    This action is used to execute the :ref:`publish <cmd-publish>` CLI command.
+    It is used to upload files, such as distribution artifacts and other assets,
+    to a GitHub release.
 
 .. note::
   These GitHub Actions are only simplified wrappers around the
@@ -307,7 +312,7 @@ before the :ref:`version <cmd-version>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release@v9.8.9
+    - uses: python-semantic-release/python-semantic-release@v9.8.9
       with:
         root_options: "-vv --noop"
 
@@ -444,6 +449,155 @@ Example: ``v1.2.3``
 
 ----
 
+.. _gh_actions-publish:
+
+Python Semantic Release Publish Action
+''''''''''''''''''''''''''''''''''''''
+
+The official `Python Semantic Release Publish Action`_ is a `GitHub Docker Action`_, which
+means at the beginning of the job it will build a Docker image that contains the Python
+Semantic Release package and its dependencies. It will then run the job step inside the
+Docker Container. This is done to ensure that the environment is consistent across all
+GitHub Runners regardless of platform. With this choice, comes some limitations of
+non-configurable options like a pre-defined python version, lack of additional 3rd party
+tools, and an inability to utilize caching.
+
+The primary benefit of using the GitHub Action is that it is easy to set up and use for
+most projects. We handle some additional configuration under the hood, so you don't have
+to handle it yourself. We do however provide a few customization options which are detailed
+individually below.
+
+Most importantly your project's configuration file will be used as normal, as your project
+will be mounted into the container for the action to use.
+
+If you have issues with the action, please open an issue on the
+`python-semantic-release/publish-action`_ repository.
+
+.. _Python Semantic Release Publish Action: https://github.com/marketplace/actions/python-semantic-release-publish
+
+.. seealso::
+
+  - `action.yml`__: the code definition for the publish action
+
+  __ https://github.com/python-semantic-release/publish-action/blob/main/action.yml
+
+.. _gh_actions-publish-inputs:
+
+Inputs
+------
+
+GitHub Action inputs are used for select configuration and provide the necessary
+information to execute the action. The inputs are passed to the action using the
+``with`` keyword in the workflow file. Many inputs will mirror the command line
+options available in the :ref:`publish <cmd-publish>` command and others will be
+specific to adjustment of the action environment. This section outlines each
+supported input and its purpose.
+
+----
+
+.. _gh_actions-publish-inputs-directory:
+
+``directory``
+"""""""""""""
+
+If the project is not at the root of the repository (like in monorepos), you
+can specify a sub-directory to change into before running semantic-release.
+
+**Required:** ``false``
+
+**Default:** ``.``
+
+----
+
+.. _gh_actions-publish-inputs-github_token:
+
+``github_token``
+""""""""""""""""
+
+The GitHub Token is essential for access to your GitHub repository to allow the
+publish of assets to a release. Not only do you need to provide the token as an
+input but you also need to ensure that the token has the correct permissions.
+
+The token should have the following `permissions`_:
+
+* ``contents: write``: Required for modifying a GitHub Release
+
+**Required:** ``true``
+
+.. _permissions: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idpermissions
+
+----
+
+.. _gh_actions-publish-inputs-root_options:
+
+``root_options``
+""""""""""""""""
+
+Additional options for the main ``semantic-release`` command, which will come
+before the :ref:`publish <cmd-publish>` subcommand.
+
+  **Example**
+
+  .. code:: yaml
+
+    - uses: python-semantic-release-publish@v9.8.9
+      with:
+        root_options: "-vv --noop"
+
+  This configuration would cause the command to be
+  ``semantic-release -vv --noop publish``, which would run the publish command
+  verbosely but in no-operation mode.
+
+**Required:** ``false``
+
+**Default:** ``-v``
+
+.. seealso::
+
+  - :ref:`Options <cmd-main-options>` for the :ref:`semantic-release <cmd-main>`
+    command
+
+----
+
+.. _gh_actions-publish-inputs-tag:
+
+``tag``
+"""""""
+
+**Type:** ``string``
+
+The tag corresponding to the GitHub Release that the artifacts should be published
+to. This option is equivalent to running the command:
+
+.. code:: shell
+
+  semantic-release publish --tag <tag>
+
+Python Semantic Release will automatically determine the latest release if no
+``--tag`` option is provided.
+
+**Required:** ``false``
+
+.. seealso::
+
+  - :ref:`cmd-publish-option-tag` option for the :ref:`publish <cmd-publish>` command
+
+----
+
+.. _gh_actions-publish-outputs:
+
+Outputs
+-------
+
+There are no outputs provided by the Python Semantic Release Publish Action at this time.
+
+.. note::
+  If you would like outputs to be provided by this action, please open an issue
+  on the `python-semantic-release/publish-action`_ repository.
+
+.. _python-semantic-release/publish-action: https://github.com/python-semantic-release/publish-action/issues
+
+----
 
 .. _gh_actions-examples:
 
@@ -494,6 +648,13 @@ to the GitHub Release Assets as well.
           - name: Publish | Upload package to PyPI
             uses: pypa/gh-action-pypi-publish@v1
             if: steps.release.outputs.released == 'true'
+
+          - name: Publish | Upload to GitHub Release Assets
+            uses: python-semantic-release/publish-action@v9.8.9
+            if: steps.release.outputs.released == 'true'
+            with:
+              github_token: ${{ secrets.GITHUB_TOKEN }}
+              tag: ${{ steps.release.outputs.tag }}
 
 .. important::
   The `concurrency`_ directive is used on the job to prevent race conditions of more than
