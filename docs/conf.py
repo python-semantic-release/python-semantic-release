@@ -16,6 +16,8 @@ extensions = [
     "sphinxcontrib.apidoc",
 ]
 
+autodoc_default_options = {"ignore-module-all": True}
+
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"

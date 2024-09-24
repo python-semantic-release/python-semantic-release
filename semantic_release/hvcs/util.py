@@ -21,12 +21,14 @@ def build_requests_session(
 ) -> Session:
     """
     Create a requests session.
+
     :param raise_for_status: If True, a hook to invoke raise_for_status be installed
     :param retry: If true, it will use default Retry configuration. if an integer, it
-                  will use default Retry configuration with given integer as total retry
-                  count. if Retry instance, it will use this instance.
+        will use default Retry configuration with given integer as total retry
+        count. if Retry instance, it will use this instance.
     :param auth: Optional TokenAuth instance to be used to provide the Authorization
-                 header to the session
+        header to the session
+
     :return: configured requests Session
     """
     session = Session()
