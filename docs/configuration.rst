@@ -575,7 +575,7 @@ Author used in commits in the format ``name <email>``.
   ``git_committer_name`` and ``git_committer_email`` inputs.
 
 .. seealso::
-   - :ref:`github-actions`
+   - :ref:`gh_actions`
 
 **Default:** ``semantic-release <semantic-release>``
 
