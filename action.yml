@@ -1,7 +1,10 @@
 ---
 name: Python Semantic Release
 
-description: Automatic Semantic Versioning for Python projects
+description: Automated Releases via SemVer and Commit Message Conventions
+
+branding:
+  color: orange
 
 inputs:
   root_options:
@@ -103,13 +106,13 @@ outputs:
     description: |
       "true" if a release was made, "false" otherwise
 
-  version:
-    description: |
-      The newly released version if one was made, otherwise the current version
-
   tag:
     description: |
       The Git tag corresponding to the version output
+
+  version:
+    description: |
+      The newly released version if one was made, otherwise the current version
 
 runs:
   using: docker
