@@ -106,23 +106,16 @@ class Gitlab(RemoteHvcsBase):
         """
         Create a release in a remote VCS, adding any release notes and assets to it
 
-        Arguments:
-        ---------
-            tag(str): The tag to create the release for
-            release_notes(str): The changelog description for this version only
-            prerelease(bool): This parameter has no effect in GitLab
-            assets(list[str]): A list of paths to files to upload as assets (TODO: not implemented)
-            noop(bool): If True, do not perform any actions, only log intents
+        :param tag: The tag to create the release for
+        :param release_notes: The changelog description for this version only
+        :param prerelease: This parameter has no effect in GitLab
+        :param assets: A list of paths to files to upload as assets (TODO: not implemented)
+        :param noop: If True, do not perform any actions, only log intents
 
-        Returns:
-        -------
-            str: The tag of the release
+        :return: The tag of the release
 
-        Raises:
-        ------
-            GitlabAuthenticationError: If authentication is not correct
-            GitlabCreateError: If the server cannot perform the request
-
+        :raises: GitlabAuthenticationError: If authentication is not correct
+        :raises: GitlabCreateError: If the server cannot perform the request
         """
         if noop:
             noop_report(f"would have created a release for tag {tag}")
@@ -145,20 +138,13 @@ class Gitlab(RemoteHvcsBase):
     @suppress_not_found
     def get_release_by_tag(self, tag: str) -> gitlab.v4.objects.ProjectRelease | None:
         """
-        Get a release by its tag name
+        Get a release by its tag name.
 
-        Arguments:
-        ---------
-            tag(str): The tag name to get the release for
+        :param tag: The tag name to get the release for
 
-        Returns:
-        -------
-            gitlab.v4.objects.ProjectRelease | None: The release object or None if not found
+        :return: gitlab.v4.objects.ProjectRelease or None if not found
 
-        Raises:
-        ------
-            gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
-
+        :raises: gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
         """
         try:
             return self.project.releases.get(tag)
@@ -175,21 +161,15 @@ class Gitlab(RemoteHvcsBase):
         release_notes: str,
     ) -> str:
         """
-        Update the release notes for a given release
+        Update the release notes for a given release.
 
-        Arguments:
-        ---------
-            release(gitlab.v4.objects.ProjectRelease): The release object to update
-            release_notes(str): The new release notes
+        :param release: The release object to update
+        :param release_notes: The new release notes
 
-        Returns:
-        -------
-            str: The release id
+        :return: The release id
 
-        Raises:
-        ------
-            GitlabAuthenticationError: If authentication is not correct
-            GitlabUpdateError: If the server cannot perform the request
+        :raises: GitlabAuthenticationError: If authentication is not correct
+        :raises: GitlabUpdateError: If the server cannot perform the request
 
         """
         log.info(
@@ -206,24 +186,17 @@ class Gitlab(RemoteHvcsBase):
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> str:
         """
-        Create or update a release for the given tag in a remote VCS
+        Create or update a release for the given tag in a remote VCS.
 
-        Arguments:
-        ---------
-            tag(str): The tag to create or update the release for
-            release_notes(str): The changelog description for this version only
-            prerelease(bool): This parameter has no effect in GitLab
+        :param tag: The tag to create or update the release for
+        :param release_notes: The changelog description for this version only
+        :param prerelease: This parameter has no effect in GitLab
 
-        Returns:
-        -------
-            str: The release id
+        :return: The release id
 
-        Raises:
-        ------
-            ValueError: If the release could not be created or updated
-            gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
-            GitlabUpdateError: If the server cannot perform the request
-
+        :raises ValueError: If the release could not be created or updated
+        :raises gitlab.exceptions.GitlabAuthenticationError: If the user is not authenticated
+        :raises GitlabUpdateError: If the server cannot perform the request
         """
         try:
             return self.create_release(

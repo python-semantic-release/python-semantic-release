@@ -95,11 +95,9 @@ class Gitea(RemoteHvcsBase):
         Ref: https://gitea.com/api/swagger#/repository/repoCreateRelease
 
         :param tag: Tag to create release for
-
         :param release_notes: The release notes for this version
-
         :param prerelease: Whether or not this release should be specified as a
-        prerelease
+            prerelease
 
         :return: Whether the request succeeded
         """
@@ -181,6 +179,7 @@ class Gitea(RemoteHvcsBase):
         Get a release by its tag name
         https://gitea.com/api/swagger#/repository/repoGetReleaseByTag
         :param tag: Tag to get release for
+
         :return: ID of found release
         """
         tag_endpoint = self.create_api_url(
@@ -206,6 +205,7 @@ class Gitea(RemoteHvcsBase):
         https://gitea.com/api/swagger#/repository/repoEditRelease
         :param id: ID of release to update
         :param release_notes: The release notes for this version
+
         :return: The ID of the release that was edited
         """
         log.info("Updating release %s", release_id)
@@ -231,6 +231,7 @@ class Gitea(RemoteHvcsBase):
         Post release changelog
         :param version: The version number
         :param changelog: The release notes for this version
+
         :return: The status of the request
         """
         log.info("Creating release for %s", tag)
@@ -274,6 +275,7 @@ class Gitea(RemoteHvcsBase):
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
         :param label: this parameter has no effect
+
         :return: The status of the request
         """
         url = self.asset_upload_url(release_id)
@@ -312,6 +314,7 @@ class Gitea(RemoteHvcsBase):
         Upload distributions to a release
         :param tag: Tag to upload for
         :param path: Path to the dist directory
+
         :return: The number of distributions successfully uploaded
         """
         # Find the release corresponding to this tag
