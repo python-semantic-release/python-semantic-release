@@ -5,7 +5,7 @@ GitHub Actions
 
 There are two official GitHub Actions for Python Semantic Release:
 
-1. :ref:`python-semantic-release@TAG <gh_actions-psr>`
+1. :ref:`python-semantic-release/python-semantic-release@TAG <gh_actions-psr>`
     This is the main action that runs the :ref:`version <cmd-version>` CLI
     command. It is used to (1) determine the next version number, (2) stamp the
     version number, (3) run the build command, (4) build the changelog, (5) commit
@@ -540,7 +540,7 @@ before the :ref:`publish <cmd-publish>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release-publish@v9.8.9
+    - uses: python-semantic-release/publish-action@v9.8.9
       with:
         root_options: "-vv --noop"
 
@@ -639,7 +639,7 @@ to the GitHub Release Assets as well.
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release@v9.8.9
+            uses: python-semantic-release/python-semantic-release@v9.8.9
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
@@ -699,7 +699,7 @@ The equivalent GitHub Action configuration would be:
 
   - name: Action | Semantic Version Release
     # Adjust tag with desired version if applicable.
-    uses: python-semantic-release@v9.8.9
+    uses: python-semantic-release/python-semantic-release@v9.8.9
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
       force: patch
@@ -727,13 +727,13 @@ Publish Action.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: python-semantic-release@v9.8.9
+     uses: python-semantic-release/python-semantic-release@v9.8.9
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
 
    - name: Release Project 2
-     uses: python-semantic-release@v9.8.9
+     uses: python-semantic-release/python-semantic-release@v9.8.9
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
