@@ -1,5 +1,47 @@
 # CHANGELOG
 
+## v9.8.9 (2024-09-27)
+
+### Documentation
+
+* docs: update docstrings to resolve sphinx failures (#1030)
+
+set `ignore-module-all` for `autodoc_default_options` to resolve some
+Sphinx errors about duplicate / ambiguous references
+https://github.com/sphinx-doc/sphinx/issues/4961#issuecomment-1543858623
+
+Standardize some non-standard (Google-ish) docstrings to Sphinx
+format, to avoid ruff and Sphinx arguing about underline length.
+
+Fix indents and other minor whitespace / formatting changes.
+
+Fixes #1029 ([`d84efc7`](https://github.com/python-semantic-release/python-semantic-release/commit/d84efc7719a8679e6979d513d1c8c60904af7384))
+
+### Fix
+
+* fix(version-cmd): improve `version_variables` flexibility w/ quotes (ie. json, yaml, etc) (#1028)
+
+* fix(version-cmd): increase `version_variable` flexibility with quotations (ie. json, yaml, etc)
+
+  Previously json would not work due to the key being wrapped in quotes, yaml also has issues
+  when it does not usually use quotes. The regex we created originally only wrapped the version
+  to be replaced in quotes but now both the key and version can optionally be wrapped in
+  different kind of quotations.
+
+  Resolves: #601, #706, #962, #1026
+
+* docs(configuration): add clarity to `version_variables` usage &amp; limitations
+
+  Ref: #941
+
+* fix(version-cmd): ensure `version_variables` do not match partial variable names
+
+* build(deps-test): add `PyYAML` as a test dependency
+
+* test(fixtures): refactor location of fixture for global use of cli runner
+
+* test(stamp-version): add test cases to stamp json, python, &amp; yaml files ([`156915c`](https://github.com/python-semantic-release/python-semantic-release/commit/156915c7d759098f65cf9de7c4e980b40b38d5f1))
+
 ## v9.8.8 (2024-09-01)
 
 ### Documentation

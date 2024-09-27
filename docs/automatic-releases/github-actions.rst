@@ -53,7 +53,7 @@ Example Workflow
           - name: Python Semantic Release
             # Adjust tag with desired version if applicable. Version shorthand
             # is NOT available, e.g. vX or vX.X will not work.
-            uses: python-semantic-release/python-semantic-release@v9.8.8
+            uses: python-semantic-release/python-semantic-release@v9.8.9
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -94,13 +94,13 @@ multiple projects.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: python-semantic-release/python-semantic-release@v9.8.8
+     uses: python-semantic-release/python-semantic-release@v9.8.9
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
 
    - name: Release Project 2
-     uses: python-semantic-release/python-semantic-release@v9.8.8
+     uses: python-semantic-release/python-semantic-release@v9.8.9
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
