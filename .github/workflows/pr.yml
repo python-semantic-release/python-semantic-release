@@ -27,7 +27,7 @@ jobs:
               - .dockerignore
               - scripts/**
             ci:
-              - .github/workflows/**
+              - .github/workflows/pr.yml
             docs:
               - docs/**
               - README.rst
