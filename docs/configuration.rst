@@ -1102,4 +1102,33 @@ specified in ``file:variable`` format. For example:
         "docs/conf.py:version",
     ]
 
+Each version variable will be transformed into a Regular Expression that will be used
+to substitute the version number in the file. The replacement algorithm is **ONLY** a
+pattern match and replace. It will **NOT** evaluate the code nor will PSR understand
+any internal object structures (ie. ``file:object.version`` will not work).
+
+.. important::
+    The Regular Expression expects a version value to exist in the file to be replaced.
+    It cannot be an empty string or a non-semver compliant string. If this is the very
+    first time you are using PSR, we recommend you set the version to ``0.0.0``. This
+    may become more flexible in the future with resolution of issue `#941`_.
+
+.. _#941: https://github.com/python-semantic-release/python-semantic-release/issues/941
+
+Given the pattern matching nature of this feature, the Regular Expression is able to
+support most file formats as a variable declaration in most languages is very similar.
+We specifically support Python, YAML, and JSON as these have been the most common
+requests. This configuration option will also work regardless of file extension
+because its only a pattern match.
+
+.. note::
+    This will also work for TOML but we recommend using :ref:`config-version_toml` for
+    TOML files as it actually will interpret the TOML file and replace the version
+    number before writing the file back to disk.
+
+.. warning::
+    If the file (ex. JSON) you are replacing has two of the same variable name in it,
+    this pattern match will not be able to differentiate between the two and will replace
+    both. This is a limitation of the pattern matching and not a bug.
+
 **Default:** ``[]``

@@ -540,7 +540,18 @@ class RuntimeContext:
             try:
                 path, variable = decl.split(":", maxsplit=1)
                 # VersionDeclarationABC handles path existence check
-                search_text = rf"(?x){variable}\s*(:=|[:=])\s*(?P<quote>['\"])(?P<version>{SEMVER_REGEX.pattern})(?P=quote)"  # noqa: E501
+                search_text = str.join(
+                    "",
+                    [
+                        # Supports optional matching quotations around variable name
+                        # Negative lookbehind to ensure we don't match part of a variable name
+                        f"""(?x)(?P<quote1>['"])?(?<![\\w.-]){variable}(?P=quote1)?""",
+                        # Supports walrus, equals sign, or colon as assignment operator ignoring whitespace separation
+                        r"\s*(:=|[:=])\s*",
+                        # Supports optional matching quotations around version number of a SEMVER pattern
+                        f"""(?P<quote2>['"])?(?P<version>{SEMVER_REGEX.pattern})(?P=quote2)?""",
+                    ],
+                )
                 pd = PatternVersionDeclaration(path, search_text)
             except ValueError as exc:
                 log.exception("Invalid variable declaration %r", decl)
