@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
-from click.testing import CliRunner
 from requests_mock import ANY
 
 from semantic_release.cli import config as cli_config_module
@@ -38,11 +37,6 @@ if TYPE_CHECKING:
         """Retrieve the runtime context for a repo."""
 
         def __call__(self, repo: Repo) -> RuntimeContext: ...
-
-
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner(mix_stderr=False)
 
 
 @pytest.fixture

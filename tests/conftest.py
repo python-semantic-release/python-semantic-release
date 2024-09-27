@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 
 import pytest
+from click.testing import CliRunner
 from git import Commit, Repo
 
 from tests.fixtures import *
@@ -26,6 +27,11 @@ if TYPE_CHECKING:
 
     class TeardownCachedDirFn(Protocol):
         def __call__(self, directory: Path) -> Path: ...
+
+
+@pytest.fixture
+def cli_runner() -> CliRunner:
+    return CliRunner(mix_stderr=False)
 
 
 @pytest.fixture(scope="session")
