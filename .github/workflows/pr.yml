@@ -191,24 +191,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.12
 
       - name: Install mypy & dev packages
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install ".[dev, mypy]"
+          python -m pip install .[dev,mypy]
 
-      - name: ruff
+      - name: Lint | Ruff Evaluation
+        id: lint
         run: |
-          python -m ruff check . \
+          python -m ruff check \
+            --config pyproject.toml \
             --output-format=full \
             --exit-non-zero-on-fix
 
-      - name: mypy
-        run: python -m mypy --ignore-missing-imports semantic_release
+      - name: Type-Check | MyPy Evaluation
+        id: type-check
+        if: ${{ always() && steps.lint.outcome != 'skipped' }}
+        run: |
+          python -m mypy --ignore-missing-imports semantic_release
+
+      - name: Format-Check | Ruff Evaluation
+        id: format-check
+        if: ${{ always() && steps.type-check.outcome != 'skipped' }}
+        run: |
+          python -m ruff format --check --config pyproject.toml
 
 
   commitlint:
