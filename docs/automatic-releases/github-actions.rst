@@ -410,6 +410,17 @@ and any actions that were taken.
 
 ----
 
+.. _gh_actions-psr-outputs-is_prerelease:
+
+``is_prerelease``
+""""""""""""""""
+
+**Type:** ``Literal["true", "false"]``
+
+A boolean value indicating whether the released version is a prerelease.
+
+----
+
 .. _gh_actions-psr-outputs-released:
 
 ``released``
