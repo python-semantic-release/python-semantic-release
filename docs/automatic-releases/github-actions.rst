@@ -643,9 +643,18 @@ to the GitHub Release Assets as well.
           contents: write
 
         steps:
-          - uses: actions/checkout@v4
+          # Note: we need to checkout the repository at the workflow sha in case during the workflow
+          # the branch was updated. To keep PSR working with the configured release branches,
+          # we force a checkout of the desired release branch but at the workflow sha HEAD.
+          - name: Setup | Checkout Repository at workflow sha
+            uses: actions/checkout@v4
             with:
               fetch-depth: 0
+              ref: ${{ github.sha }}
+
+          - name: Setup | Force correct release branch on workflow sha
+            run: |
+              git checkout -B ${{ github.ref_name }} ${{ github.sha }}
 
           - name: Action | Semantic Version Release
             id: release
