@@ -24,7 +24,7 @@ from semantic_release.version import (
     tags_and_versions,
 )
 
-__version__ = "9.8.9"
+__version__ = "9.9.0"
 
 __all__ = [
     "CommitParser",

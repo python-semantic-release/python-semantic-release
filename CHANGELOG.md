@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## v9.9.0 (2024-09-28)
+
+### Documentation
+
+* docs(github-actions): clarify &amp; consolidate GitHub Actions usage docs (#1011)
+
+  Resolves: #907
+
+* chore(scripts): remove non-existant file from version bump script
+
+* docs(automatic-releases): drop extrenous github push configuration
+
+* docs(homepage): remove link to old github config &amp; update token scope config
+
+* docs(github-actions): expand descriptions &amp; clarity of actions configs
+
+* docs(github-actions): add configuration &amp; description of publish action
+
+* docs(github-actions): revert removal of namespace prefix from examples ([`2135c68`](https://github.com/python-semantic-release/python-semantic-release/commit/2135c68ccbdad94378809902b52fcad546efd5b3))
+
+### Feature
+
+* feat(github-actions): add `is_prerelease` output to the version action (#1038)
+
+* test(github-actions): add test to ensure `is_prerelease` is a action output
+
+* docs(github-actions): add description of new `is_prerelease` output for version action ([`6a5d35d`](https://github.com/python-semantic-release/python-semantic-release/commit/6a5d35d0d9124d6a6ee7910711b4154b006b8773))
+
 ## v9.8.9 (2024-09-27)
 
 ### Documentation
