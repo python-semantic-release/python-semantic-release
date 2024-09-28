@@ -9,9 +9,64 @@ on:
       - "pre/*"
 
 jobs:
+
+  eval-changes:
+    name: Evaluate changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Evaluate | Check specific file types for changes
+        id: changed-files
+        uses: tj-actions/changed-files@v45.0.2
+        with:
+          files_yaml: |
+            build:
+              - MANIFEST.in
+              - Dockerfile
+              - .dockerignore
+              - scripts/**
+            ci:
+              - .github/workflows/main.yml
+            docs:
+              - docs/**
+              - README.rst
+              - AUTHORS.rst
+              - CONTRIBUTING.rst
+              - CHANGELOG.rst
+            src:
+              - semantic_release/**
+              - pyproject.toml
+            tests:
+              - tests/**
+
+      - name: Evaluate | Detect if any of the combinations of file sets have changed
+        id: all-changes
+        run: |
+          printf '%s\n' "any_changed=false" >> $GITHUB_OUTPUT
+          if [ "${{ steps.changed-files.outputs.build_any_changed }}" == "true" ] || \
+             [ "${{ steps.changed-files.outputs.ci_any_changed }}" == "true" ] || \
+             [ "${{ steps.changed-files.outputs.docs_any_changed }}" == "true" ] || \
+             [ "${{ steps.changed-files.outputs.src_any_changed }}" == "true" ] || \
+             [ "${{ steps.changed-files.outputs.tests_any_changed }}" == "true" ]; then
+             printf '%s\n' "any_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      any-file-changes: ${{ steps.all-changes.outputs.any_changed }}
+      build-changes: ${{ steps.changed-files.outputs.build_any_changed }}
+      ci-changes: ${{ steps.changed-files.outputs.ci_any_changed }}
+      doc-changes: ${{ steps.changed-files.outputs.docs_any_changed }}
+      src-changes: ${{ steps.changed-files.outputs.src_any_changed }}
+      test-changes: ${{ steps.changed-files.outputs.tests_any_changed }}
+
+
   test:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }} tests
     runs-on: ${{ matrix.os }}
+    needs: eval-changes
+    if: ${{ needs.eval-changes.outputs.src-changes == 'true' || needs.eval-changes.outputs.test-changes == 'true' || needs.eval-changes.outputs.ci-changes == 'true' }}
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -83,7 +138,10 @@ jobs:
         with:
           report_paths: ./tests/reports/*.xml
 
+
   lint:
+    needs: eval-changes
+    if: ${{ needs.eval-changes.outputs.any-file-changes == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
