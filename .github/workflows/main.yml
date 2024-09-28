@@ -205,6 +205,24 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           root_options: "-vv"
 
+      - name: Update Minor Release Tag Reference
+        if: steps.release.outputs.released == 'true' && steps.release.outputs.is_prerelease == 'false'
+        env:
+          FULL_VERSION_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          MINOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1,2)"
+          git tag --force --annotate "$MINOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MINOR_VERSION_TAG"
+          git push -u origin "$MINOR_VERSION_TAG" --force
+
+      - name: Update Major Release Tag Reference
+        if: steps.release.outputs.released == 'true' && steps.release.outputs.is_prerelease == 'false'
+        env:
+          FULL_VERSION_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          MAJOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1)"
+          git tag --force --annotate "$MAJOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MAJOR_VERSION_TAG"
+          git push -u origin "$MAJOR_VERSION_TAG" --force
+
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
         id: pypi-publish
