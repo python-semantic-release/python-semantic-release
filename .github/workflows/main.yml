@@ -89,75 +89,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.12
 
       - name: Install mypy & dev packages
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install ".[dev, mypy]"
+          python -m pip install .[dev,mypy]
 
-      - name: ruff
+      - name: Lint | Ruff Evaluation
+        id: lint
         run: |
-          python -m ruff check . \
+          python -m ruff check \
             --config pyproject.toml \
             --output-format=full \
             --exit-non-zero-on-fix
 
-      - name: mypy
+      - name: Type-Check | MyPy Evaluation
+        id: type-check
+        if: ${{ always() && steps.lint.outcome != 'skipped' }}
         run: |
           python -m mypy --ignore-missing-imports semantic_release
 
-  beautify:
-    name: Beautify
-    runs-on: ubuntu-latest
-    concurrency: push
-    needs: [test, lint]
-    outputs:
-      new_sha: ${{ steps.sha.outputs.SHA }}
-    permissions:
-      id-token: write
-      contents: write
-
-    steps:
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Ruff
+      - name: Format-Check | Ruff Evaluation
+        id: format-check
+        if: ${{ always() && steps.type-check.outcome != 'skipped' }}
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install ".[dev]"
+          python -m ruff format --check --config pyproject.toml
 
-      - name: Format
-        run: |
-          python -m ruff format .
-
-      - name: Commit and push changes
-        uses: github-actions-x/commit@v2.9
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "style: beautify ${{ github.sha }}"
-          name: github-actions
-          email: action@github.com
-
-      - name: Get new SHA
-        id: sha
-        run: |
-          new_sha=$(git rev-parse HEAD)
-          echo "SHA=$new_sha" >> $GITHUB_OUTPUT
 
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
     concurrency: push
-    needs: [test, lint, beautify]
+    needs: [test, lint]
     if: github.repository == 'python-semantic-release/python-semantic-release'
     environment:
       name: pypi
