@@ -12,7 +12,9 @@ class VersionGitHubActionsOutput:
     OUTPUT_ENV_VAR = "GITHUB_OUTPUT"
 
     def __init__(
-        self, released: bool | None = None, version: Version | None = None
+        self,
+        released: bool | None = None,
+        version: Version | None = None,
     ) -> None:
         self._released = released
         self._version = version
@@ -29,9 +31,7 @@ class VersionGitHubActionsOutput:
 
     @property
     def version(self) -> Version | None:
-        if self._version is None:
-            return None
-        return self._version
+        return self._version if self._version is not None else None
 
     @version.setter
     def version(self, value: Version) -> None:
@@ -41,9 +41,11 @@ class VersionGitHubActionsOutput:
 
     @property
     def tag(self) -> str | None:
-        if self._version is None:
-            return None
-        return self._version.as_tag()
+        return self.version.as_tag() if self.version is not None else None
+
+    @property
+    def is_prerelease(self) -> bool | None:
+        return self.version.is_prerelease if self.version is not None else None
 
     def to_output_text(self) -> str:
         missing = set()
@@ -61,6 +63,7 @@ class VersionGitHubActionsOutput:
             "released": str(self.released).lower(),
             "version": str(self.version),
             "tag": self.tag,
+            "is_prerelease": str(self.is_prerelease).lower(),
         }
 
         return str.join("", [f"{key}={value!s}\n" for key, value in outputs.items()])

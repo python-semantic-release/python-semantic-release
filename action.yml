@@ -102,6 +102,10 @@ inputs:
       Build metadata to append to the new version
 
 outputs:
+  is_prerelease:
+    description: |
+      "true" if the version is a prerelease, "false" otherwise
+
   released:
     description: |
       "true" if a release was made, "false" otherwise
