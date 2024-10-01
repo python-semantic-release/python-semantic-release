@@ -207,6 +207,8 @@ def test_uses_default_config_when_no_config_file_found(
             config.set_value("user", "name", "semantic release testing")
             config.set_value("user", "email", "not_a_real@email.com")
             config.set_value("commit", "gpgsign", False)
+            config.set_value("tag", "gpgsign", False)
+
         repo.create_remote(name="origin", url="foo@barvcs.com:user/repo.git")
         repo.git.commit("-m", "feat: initial commit", "--allow-empty")
 
