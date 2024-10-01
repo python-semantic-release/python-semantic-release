@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from logging import getLogger
-from os import listdir
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -13,6 +13,11 @@ from semantic_release.changelog.context import (
     make_changelog_context,
 )
 from semantic_release.changelog.template import environment, recursive_render
+from semantic_release.cli.const import (
+    DEFAULT_CHANGELOG_NAME_STEM,
+    DEFAULT_RELEASE_NOTES_TPL_FILE,
+    JINJA2_EXTENSION,
+)
 from semantic_release.cli.util import noop_report
 
 if TYPE_CHECKING:
@@ -122,17 +127,29 @@ def write_changelog_files(
         prev_changelog_file=runtime_ctx.changelog_file,
     )
 
-    changelog_context.bind_to_environment(runtime_ctx.template_environment)
+    user_templates = []
 
-    use_user_template_dir = bool(
-        # Directory exists and directory is not empty
-        template_dir.exists() and template_dir.is_dir() and listdir(template_dir)
-    )
+    # Update known templates list if Directory exists and directory has actual files to render
+    if template_dir.is_dir():
+        user_templates.extend(
+            [
+                f
+                for f in template_dir.rglob("*")
+                if f.is_file() and f.suffix == JINJA2_EXTENSION
+            ]
+        )
 
-    if use_user_template_dir:
+        with suppress(ValueError):
+            # do not include a release notes override when considering number of changelog templates
+            user_templates.remove(template_dir / f".{DEFAULT_RELEASE_NOTES_TPL_FILE}")
+
+    # Render user templates if found
+    if len(user_templates) > 0:
         return apply_user_changelog_template_directory(
             template_dir=template_dir,
-            environment=runtime_ctx.template_environment,
+            environment=changelog_context.bind_to_environment(
+                runtime_ctx.template_environment
+            ),
             destination_dir=project_dir,
             noop=noop,
         )
