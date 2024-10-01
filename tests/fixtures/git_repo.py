@@ -231,6 +231,7 @@ def cached_example_git_project(
             config.set_value("user", "name", commit_author.name)
             config.set_value("user", "email", commit_author.email)
             config.set_value("commit", "gpgsign", False)
+            config.set_value("tag", "gpgsign", False)
 
         repo.create_remote(name="origin", url=example_git_https_url)
 
