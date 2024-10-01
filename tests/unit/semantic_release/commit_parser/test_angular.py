@@ -63,13 +63,13 @@ def test_parser_returns_correct_bump_level(
 @pytest.mark.parametrize(
     "message, type_",
     [
-        ("feat(parser): ...", "feature"),
-        ("fix(parser): ...", "fix"),
-        ("test(parser): ...", "test"),
+        ("feat(parser): ...", "features"),
+        ("fix(parser): ...", "fixes"),
+        ("test(parser): ...", "testing"),
         ("docs(parser): ...", "documentation"),
-        ("style(parser): ...", "style"),
-        ("refactor(parser): ...", "refactor"),
-        ("chore(parser): ...", "chore"),
+        ("style(parser): ...", "code style"),
+        ("refactor(parser): ...", "refactoring"),
+        ("chore(parser): ...", "chores"),
     ],
 )
 def test_parser_return_type_from_commit_message(
