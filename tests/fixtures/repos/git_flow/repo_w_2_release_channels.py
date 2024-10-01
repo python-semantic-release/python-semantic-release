@@ -53,7 +53,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
         },
         "0.1.1-rc.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [{"section": "Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
                 "tag": [{"section": "Fix", "i_commits": [0]}],
@@ -85,7 +85,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
         },
         "1.0.0": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -101,7 +101,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
         },
         "1.1.0": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -117,7 +117,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
         },
         "1.1.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [{"section": "Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
                 "tag": [{"section": "Fix", "i_commits": [0]}],
@@ -133,7 +133,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
         },
         "1.2.0-alpha.1": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -153,8 +153,8 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
                 # But value is ultimately defined by the commits, which means the commits are
                 # referenced by index value
                 "angular": [
-                    {"section": "Feature", "i_commits": [0]},
-                    {"section": "Fix", "i_commits": [1]},
+                    {"section": "Features", "i_commits": [0]},
+                    {"section": "Fixes", "i_commits": [1]},
                 ],
                 "emoji": [
                     {"section": ":bug:", "i_commits": [1]},

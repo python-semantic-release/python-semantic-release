@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import pytest
@@ -346,7 +347,14 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
         repo_definition: RepoDefinition,
         dest_file: Path | None = None,
     ) -> str:
-        header = "# CHANGELOG"
+        header = dedent(
+            """\
+            # CHANGELOG
+
+            <!-- version list -->
+            """
+        ).rstrip()
+
         version_entries = []
 
         for version, version_def in repo_definition.items():
@@ -354,7 +362,9 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
             version_entries.insert(0, build_version_entry(version, version_def))
 
         changelog_content = (
-            str.join("\n" * 2, [header, str.join("\n", list(version_entries))]).rstrip()
+            str.join(
+                "\n" * 2, [header, str.join("\n" * 2, list(version_entries))]
+            ).rstrip()
             + "\n"
         )
 

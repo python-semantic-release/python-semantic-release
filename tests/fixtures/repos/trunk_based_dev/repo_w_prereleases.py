@@ -53,7 +53,7 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
         },
         "0.1.1-rc.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [{"section": "Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
                 "tag": [{"section": "Fix", "i_commits": [0]}],
@@ -69,7 +69,7 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
         },
         "0.2.0-rc.1": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -85,7 +85,7 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
         },
         "0.2.0": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
