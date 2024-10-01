@@ -1,0 +1,22 @@
+{#
+This changelog template initializes a full changelog for the project,
+it follows the following logic:
+  1. Header
+  2. Any Unreleased Details (uncommon)
+  3. all previous releases
+
+#}{#
+   #   Header
+#}{%   include ".changelog_header.rst.j2"
+-%}{#
+   #   Any Unreleased Details (uncommon)
+#}{%   include ".unreleased_changes.rst.j2"
+%}{#
+   #   Since this is initialization, we are generating all the previous
+   #   release notes per version.
+#}{%   for release in context.history.released.values()
+%}{{       "\n"
+}}{%       include ".versioned_changes.rst.j2"
+-%}{{      "\n"
+}}{%   endfor
+%}

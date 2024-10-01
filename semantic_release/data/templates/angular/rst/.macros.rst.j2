@@ -1,0 +1,16 @@
+{# MACRO: format a post-paragraph link reference in RST #}
+{%    macro format_link_reference(link, label)
+%}{{    ".. _%s: %s" | format(label, link)
+}}{%  endmacro
+%}
+
+{# MACRO: generate a heading underline that matches the exact length of the header #}
+{%    macro generate_heading_underline(header, underline_char)
+%}{%    set header_underline = []
+%}{%    for _ in header
+%}{{      header_underline.append(underline_char) | default("", true)
+}}{%    endfor
+%}{#    # Print out the header underline
+#}{{    header_underline | join
+}}{%  endmacro
+%}

@@ -99,7 +99,7 @@ class ChangelogOutputFormat(str, Enum):
     """Supported changelog output formats when using the default templates."""
 
     MARKDOWN = "md"
-    # RESTRUCTURED_TEXT = "rst"
+    RESTRUCTURED_TEXT = "rst"
 
 
 class ChangelogEnvironmentConfig(BaseModel):
