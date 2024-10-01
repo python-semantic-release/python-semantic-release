@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 # NOTE: use backport with newer API than stdlib
 from importlib_resources import files
 
+import semantic_release
 from semantic_release.changelog.context import (
     ReleaseNotesContext,
     make_changelog_context,
@@ -19,38 +20,59 @@ from semantic_release.cli.const import (
     JINJA2_EXTENSION,
 )
 from semantic_release.cli.util import noop_report
+from semantic_release.errors import InternalError
 
 if TYPE_CHECKING:
     from jinja2 import Environment
 
+    from semantic_release.changelog.context import ChangelogContext
     from semantic_release.changelog.release_history import Release, ReleaseHistory
-    from semantic_release.cli.config import RuntimeContext
+    from semantic_release.cli.config import ChangelogOutputFormat, RuntimeContext
     from semantic_release.hvcs._base import HvcsBase
 
 
 log = getLogger(__name__)
 
 
-def get_release_notes_template(template_dir: Path) -> str:
-    """Read the project's template for release notes, falling back to the default."""
-    fname = template_dir / ".release_notes.md.j2"
-    try:
-        return fname.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return (
-            files("semantic_release")
-            .joinpath("data/templates/release_notes.md.j2")
-            .read_text(encoding="utf-8")
-        )
-
-
-def render_default_changelog_file(template_env: Environment) -> str:
-    changelog_text = (
-        files("semantic_release")
-        .joinpath("data/templates/CHANGELOG.md.j2")
-        .read_text(encoding="utf-8")
+def get_default_tpl_dir(style: str, sub_dir: str | None = None) -> Path:
+    module_base_path = Path(str(files(semantic_release.__name__)))
+    default_templates_path = module_base_path.joinpath(
+        f"data/templates/{style}",
+        "" if sub_dir is None else sub_dir.strip("/"),
     )
-    template = template_env.from_string(changelog_text)
+
+    if default_templates_path.is_dir():
+        return default_templates_path
+
+    raise InternalError(
+        str.join(
+            " ",
+            [
+                "Default template directory not found at",
+                f"{default_templates_path}. Installation corrupted!",
+            ],
+        )
+    )
+
+
+def render_default_changelog_file(
+    output_format: ChangelogOutputFormat,
+    changelog_context: ChangelogContext,
+    changelog_style: str,
+) -> str:
+    tpl_dir = get_default_tpl_dir(style=changelog_style, sub_dir=output_format.value)
+    changelog_tpl_file = Path(DEFAULT_CHANGELOG_NAME_STEM).with_suffix(
+        str.join(".", ["", output_format.value, JINJA2_EXTENSION.lstrip(".")])
+    )
+
+    # Create a new environment as we don't want user's configuration as it might
+    # not match our default template structure
+    template_env = changelog_context.bind_to_environment(
+        environment(autoescape=False, template_dir=tpl_dir)
+    )
+
+    # Using the proper enviroment with the changelog context, render the template
+    template = template_env.get_template(str(changelog_tpl_file))
     return template.render().rstrip()
 
 
@@ -90,7 +112,9 @@ def apply_user_changelog_template_directory(
 def write_default_changelog(
     changelog_file: Path,
     destination_dir: Path,
-    environment: Environment,
+    output_format: ChangelogOutputFormat,
+    changelog_context: ChangelogContext,
+    changelog_style: str,
     noop: bool = False,
 ) -> str:
     if noop:
@@ -103,9 +127,14 @@ def write_default_changelog(
                 ],
             )
         )
-    else:
-        changelog_text = render_default_changelog_file(environment)
-        changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
+        return str(changelog_file)
+
+    changelog_text = render_default_changelog_file(
+        output_format=output_format,
+        changelog_context=changelog_context,
+        changelog_style=changelog_style,
+    )
+    changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
 
     return str(changelog_file)
 
@@ -159,7 +188,9 @@ def write_changelog_files(
         write_default_changelog(
             changelog_file=runtime_ctx.changelog_file,
             destination_dir=project_dir,
-            environment=runtime_ctx.template_environment,
+            output_format=runtime_ctx.changelog_output_format,
+            changelog_context=changelog_context,
+            changelog_style=runtime_ctx.changelog_style,
             noop=noop,
         )
     ]
