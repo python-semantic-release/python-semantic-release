@@ -82,8 +82,7 @@ def make_changelog_context(
 
 def read_file(filepath: str) -> str:
     try:
-        with open(filepath, "r") as f:
-            return f.read()
+        return Path(filepath).read_text()
     except FileNotFoundError as err:
         logging.warning(err)
         return ""

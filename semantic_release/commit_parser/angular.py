@@ -26,6 +26,7 @@ def _logged_parse_error(commit: Commit, error: str) -> ParseError:
     log.debug(error)
     return ParseError(commit, error=error)
 
+
 # TODO: Remove from here, allow for user customization instead via options
 # types with long names in changelog
 LONG_TYPE_NAMES = {
