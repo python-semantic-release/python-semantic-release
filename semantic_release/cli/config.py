@@ -124,6 +124,19 @@ class DefaultChangelogTemplatesConfig(BaseModel):
     # changelog_file: str = "CHANGELOG.md"
     output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN
 
+    # @model_validator(mode="after")
+    # def interpret_output_format(self) -> Self:
+    #     # Set the output format value when no user input is given
+    #     if not self.output_format:
+    #         try:
+    #             self.output_format = ChangelogOutputFormats(
+    #                 Path(self.changelog_file).suffix.lstrip(".")
+    #             )
+    #         except ValueError:
+    #             self.output_format = ChangelogOutputFormats.MARKDOWN
+
+    #     return self
+
 
 class ChangelogConfig(BaseModel):
     # TODO: BREAKING CHANGE v10, move to DefaultChangelogTemplatesConfig
@@ -136,6 +149,20 @@ class ChangelogConfig(BaseModel):
     mode: ChangelogMode = ChangelogMode.INIT
     insertion_flag: str = "<!-- version list -->"
     template_dir: str = "templates"
+
+    # TODO: Remove this method in v10 and uncomment the model_validator above
+    @model_validator(mode="after")
+    def interpret_output_format(self) -> Self:
+        # Set the output format value when no user input is given
+        if not self.default_templates.output_format:
+            try:
+                self.default_templates.output_format = ChangelogOutputFormat(
+                    Path(self.changelog_file).suffix.lstrip(".")
+                )
+            except ValueError:
+                self.default_templates.output_format = ChangelogOutputFormat.MARKDOWN
+
+        return self
 
 
 class BranchConfig(BaseModel):
