@@ -81,6 +81,11 @@ mypy = [
   "types-requests ~= 2.32.0",
 ]
 
+
+[tool.setuptools.package-dir]
+semantic_release = "semantic_release"
+
+
 [tool.pytest.ini_options]
 env = [
   "PYTHONHASHSEED = 123456"
