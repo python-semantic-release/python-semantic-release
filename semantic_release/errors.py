@@ -8,6 +8,10 @@ class SemanticReleaseBaseError(Exception):
     """
 
 
+class InternalError(SemanticReleaseBaseError):
+    """Raised when an internal error occurs, which should never happen"""
+
+
 class InvalidConfiguration(SemanticReleaseBaseError):
     """Raised when configuration is deemed invalid"""
 
