@@ -6,13 +6,14 @@ import shutil
 import stat
 import string
 from contextlib import contextmanager, suppress
+from pathlib import Path
 from textwrap import indent
 from typing import TYPE_CHECKING, Tuple
 
 from git import Repo
 from pydantic.dataclasses import dataclass
 
-from semantic_release.changelog.context import make_changelog_context
+from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli import config as cli_config_module
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
@@ -23,7 +24,6 @@ from tests.const import SUCCESS_EXIT_CODE
 
 if TYPE_CHECKING:
     import filecmp
-    from pathlib import Path
     from typing import Any, Callable, Generator, Iterable, TypeVar
 
     try:
@@ -179,15 +179,21 @@ def actions_output_to_dict(output: str) -> dict[str, str]:
 
 def get_release_history_from_context(runtime_context: RuntimeContext) -> ReleaseHistory:
     with Repo(str(runtime_context.repo_dir)) as git_repo:
-        rh = ReleaseHistory.from_git_history(
+        release_history = ReleaseHistory.from_git_history(
             git_repo,
             runtime_context.version_translator,
             runtime_context.commit_parser,
             runtime_context.changelog_excluded_commit_patterns,
         )
-    changelog_context = make_changelog_context(runtime_context.hvcs_client, rh)
+    changelog_context = make_changelog_context(
+        hvcs_client=runtime_context.hvcs_client,
+        release_history=release_history,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=Path("CHANGELOG.md"),
+        insertion_flag="",
+    )
     changelog_context.bind_to_environment(runtime_context.template_environment)
-    return rh
+    return release_history
 
 
 def prepare_mocked_git_command_wrapper_type(

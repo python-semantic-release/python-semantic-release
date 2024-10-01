@@ -11,7 +11,7 @@ from git import Commit, Object, Repo
 from importlib_resources import files
 
 import semantic_release
-from semantic_release.changelog.context import make_changelog_context
+from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.changelog.template import environment
 from semantic_release.commit_parser import ParsedCommit
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 def default_changelog_template() -> str:
     """Retrieve the semantic-release default changelog template."""
     version_notes_template = files(semantic_release.__name__).joinpath(
-        Path("data", "templates", "CHANGELOG.md.j2")
+        Path("data", "templates", "angular", "md", "CHANGELOG.md.j2")
     )
     return version_notes_template.read_text(encoding="utf-8")
 
@@ -85,6 +85,7 @@ def artificial_release_history(commit_author: Actor):
                     "feature": [feat_commit_parsed],
                     "fix": [fix_commit_parsed],
                 },
+                version=version,
             )
         },
     )
@@ -96,6 +97,7 @@ def test_default_changelog_template(
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     version_str = "1.0.0"
     version = Version.parse(version_str)
@@ -133,6 +135,9 @@ def test_default_changelog_template(
     context = make_changelog_context(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),
         release_history=rh,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
     )
     context.bind_to_environment(env)
     actual_changelog = env.from_string(default_changelog_template).render()
@@ -145,6 +150,7 @@ def test_default_changelog_template_w_unreleased_changes(
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     version_str = "1.0.0"
     version = Version.parse(version_str)
@@ -183,6 +189,9 @@ def test_default_changelog_template_w_unreleased_changes(
     context = make_changelog_context(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),
         release_history=artificial_release_history,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
     )
     context.bind_to_environment(env)
     actual_changelog = env.from_string(default_changelog_template).render()
