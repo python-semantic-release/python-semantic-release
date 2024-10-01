@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Iterable
+from typing import TYPE_CHECKING
 
 from jinja2 import FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
@@ -12,7 +12,7 @@ from jinja2.sandbox import SandboxedEnvironment
 from semantic_release.helpers import dynamic_import
 
 if TYPE_CHECKING:
-    from typing import Literal
+    from typing import Callable, Iterable, Literal
 
     from jinja2 import Environment
 
@@ -56,7 +56,7 @@ def environment(
         autoescape_value = autoescape
     log.debug("%s", locals())
 
-    return SandboxedEnvironment(
+    return ComplexDirectorySandboxedEnvironment(
         block_start_string=block_start_string,
         block_end_string=block_end_string,
         variable_start_string=variable_start_string,
@@ -73,6 +73,22 @@ def environment(
         autoescape=autoescape_value,
         loader=FileSystemLoader(template_dir, encoding="utf-8"),
     )
+
+
+class ComplexDirectorySandboxedEnvironment(SandboxedEnvironment):
+    def join_path(self, template: str, parent: str) -> str:
+        """
+        Add support for complex directory structures in the template directory.
+
+        This method overrides the default functionality of the SandboxedEnvironment
+        where all 'include' keywords expect to be in the same directory as the calling
+        template, however this is unintuitive when using a complex directory structure.
+
+        This override simulates the changing of directories when you include the template
+        from a child directory. When the child then includes a template, it will make the
+        path relative to the child directory rather than the top level template directory.
+        """
+        return str(Path(parent).parent / template)
 
 
 # pylint: disable=redefined-outer-name
