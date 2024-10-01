@@ -12,9 +12,8 @@ from git.objects import Object
 from importlib_resources import files
 
 import semantic_release
-from semantic_release.changelog.context import make_changelog_context
 from semantic_release.changelog.release_history import Release, ReleaseHistory
-from semantic_release.changelog.template import environment
+from semantic_release.cli.changelog_writer import generate_release_notes
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.enums import LevelBump
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
@@ -58,6 +57,7 @@ def artificial_release_history(commit_author: Actor):
                 elements={
                     "fix": [fix_commit_parsed],
                 },
+                version=version,
             )
         },
     )
@@ -67,7 +67,7 @@ def artificial_release_history(commit_author: Actor):
 def release_notes_template() -> str:
     """Retrieve the semantic-release default release notes template."""
     version_notes_template = files(semantic_release.__name__).joinpath(
-        Path("data", "templates", "release_notes.md.j2")
+        Path("data", "templates", "angular", "release_notes.md.j2")
     )
     return version_notes_template.read_text(encoding="utf-8")
 
@@ -94,19 +94,21 @@ def test_default_release_notes_template(
     expected_content = str.join(
         "\n",
         [
-            f"# v{version_str} ({TODAY_DATE_STR})",
-            "## Fix",
+            f"## v{version_str} ({TODAY_DATE_STR})",
+            "",
+            "### Fix",
+            "",
             f"* {commit_description} ([`{commit_obj.commit.hexsha[:7]}`]({commit_url}))",
             "",
         ],
     )
-    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(
+
+    actual_content = generate_release_notes(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),
-        release_history=artificial_release_history,
+        release=artificial_release_history.released[version],
+        template_dir=Path(""),
+        history=artificial_release_history,
+        style="angular",
     )
-    context.bind_to_environment(env)
-    actual_content = env.from_string(release_notes_template).render(
-        version=version, release=context.history.released[version]
-    )
+
     assert expected_content == actual_content
