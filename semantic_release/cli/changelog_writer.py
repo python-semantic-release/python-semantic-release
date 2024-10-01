@@ -77,10 +77,12 @@ def render_default_changelog_file(
 
 
 def render_release_notes(
-    release_notes_template: str,
+    release_notes_template_file: str,
     template_env: Environment,
 ) -> str:
-    template = template_env.from_string(release_notes_template)
+    # NOTE: release_notes_template_file must be a relative path to the template directory
+    # because jinja2's filtering and template loading filter is janky
+    template = template_env.get_template(release_notes_template_file)
     return template.render().rstrip()
 
 
@@ -201,7 +203,22 @@ def generate_release_notes(
     release: Release,
     template_dir: Path,
     history: ReleaseHistory,
+    style: str,
 ) -> str:
+    users_tpl_file = template_dir / f".{DEFAULT_RELEASE_NOTES_TPL_FILE}"
+
+    # Determine if the user has a custom release notes template or we should use
+    # the default template directory with our default release notes template
+    tpl_dir = (
+        template_dir if users_tpl_file.is_file() else get_default_tpl_dir(style=style)
+    )
+
+    release_notes_tpl_file = (
+        users_tpl_file.name
+        if users_tpl_file.is_file()
+        else DEFAULT_RELEASE_NOTES_TPL_FILE
+    )
+
     release_notes_env = ReleaseNotesContext(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
@@ -212,7 +229,7 @@ def generate_release_notes(
     ).bind_to_environment(
         # Use a new, non-configurable environment for release notes -
         # not user-configurable at the moment
-        environment(template_dir=template_dir)
+        environment(autoescape=False, template_dir=tpl_dir)
     )
 
     # TODO: Remove in v10
@@ -221,6 +238,6 @@ def generate_release_notes(
     }
 
     return render_release_notes(
-        release_notes_template=get_release_notes_template(template_dir),
+        release_notes_template_file=release_notes_tpl_file,
         template_env=release_notes_env,
     )
