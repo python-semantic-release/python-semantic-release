@@ -83,7 +83,12 @@ def render_release_notes(
     # NOTE: release_notes_template_file must be a relative path to the template directory
     # because jinja2's filtering and template loading filter is janky
     template = template_env.get_template(release_notes_template_file)
-    return template.render().rstrip()
+    release_notes = template.render().rstrip() + os.linesep
+
+    # Normalize line endings to match the current platform
+    return str.join(
+        os.linesep, [line.replace("\r", "") for line in release_notes.split("\n")]
+    )
 
 
 def apply_user_changelog_template_directory(
