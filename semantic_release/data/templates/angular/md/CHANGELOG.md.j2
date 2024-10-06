@@ -14,7 +14,10 @@
 %}{#
 #}{% elif ctx.changelog_mode == "update"
 %}{%    set prev_changelog_file = ctx.prev_changelog_file
-%}{%    set new_releases = [ctx.history.released.items() | first]
+%}{%    set new_releases = []
+%}{%    if ctx.history.released.values() | length > 0
+%}{%        set new_releases = [ctx.history.released.values() | first]
+%}{%    endif
 %}{%    include ".changelog_update.md.j2"
 %}{#
 #}{% endif
