@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from contextlib import suppress
 from logging import getLogger
 from pathlib import Path
@@ -68,11 +69,17 @@ def render_default_changelog_file(
     # Create a new environment as we don't want user's configuration as it might
     # not match our default template structure
     template_env = changelog_context.bind_to_environment(
-        environment(autoescape=False, template_dir=tpl_dir)
+        environment(
+            autoescape=False,
+            newline_sequence="\n",
+            template_dir=tpl_dir,
+        )
     )
 
     # Using the proper enviroment with the changelog context, render the template
     template = template_env.get_template(str(changelog_tpl_file))
+
+    # newline normalization will happen on writing the file, so we use universal newlines only
     return template.render().rstrip()
 
 
@@ -141,6 +148,7 @@ def write_default_changelog(
         changelog_context=changelog_context,
         changelog_style=changelog_style,
     )
+    # write_text() will automatically normalize newlines to the OS, so we just use an universal newline here
     changelog_file.write_text(f"{changelog_text}\n", encoding="utf-8")
 
     return str(changelog_file)
