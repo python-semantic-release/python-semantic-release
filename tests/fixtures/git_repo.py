@@ -340,7 +340,9 @@ def build_configured_base_repo(  # noqa: C901
 
 
 @pytest.fixture(scope="session")
-def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
+def simulate_default_changelog_creation(
+    default_md_changelog_insertion_flag: str,
+) -> SimulateDefaultChangelogCreationFn:
     def reduce_repo_def(
         acc: BaseAccumulatorVersionReduction, ver_2_def: tuple[str, RepoVersionDef]
     ) -> BaseAccumulatorVersionReduction:
@@ -374,10 +376,10 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
         max_version: str | None = None,
     ) -> str:
         header = dedent(
-            """\
+            f"""\
             # CHANGELOG
 
-            <!-- version list -->
+            {default_md_changelog_insertion_flag}
             """
         ).rstrip()
 
