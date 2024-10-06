@@ -6,18 +6,18 @@ it follows the following logic:
   3. all previous releases
 
 #}{#
-   #   Header
-#}{%   include ".changelog_header.md.j2"
--%}{{  "\n"
+   #    Header
+#}{%    include ".changelog_header.md.j2"
+-%}{{   "\n"
 }}{#
-   #   Any Unreleased Details (uncommon)
-#}{%   include ".unreleased_changes.md.j2"
+   #    Any Unreleased Details (uncommon)
+#}{%    include ".unreleased_changes.md.j2"
 %}{#
-   #   Since this is initialization, we are generating all the previous
-   #   release notes per version.
-#}{%   for release in context.history.released.values()
-%}{{       "\n"
-}}{%       include ".versioned_changes.md.j2"
--%}{{      "\n"
-}}{%   endfor
+   #    Since this is initialization, we are generating all the previous
+   #    release notes per version.
+#}{%    for release in context.history.released.values()
+%}{{      "\n"
+}}{%      include ".versioned_changes.md.j2"
+-%}{{     "\n"
+}}{%    endfor
 %}
