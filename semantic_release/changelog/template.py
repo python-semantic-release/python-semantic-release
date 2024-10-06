@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
 from jinja2 import FileSystemLoader
@@ -88,7 +88,8 @@ class ComplexDirectorySandboxedEnvironment(SandboxedEnvironment):
         from a child directory. When the child then includes a template, it will make the
         path relative to the child directory rather than the top level template directory.
         """
-        return str(Path(parent).parent / template)
+        # Must be posixpath because jinja only knows how to handle posix path includes
+        return str(PurePosixPath(parent).parent / template)
 
 
 # pylint: disable=redefined-outer-name
