@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -90,9 +91,9 @@ def test_default_release_notes_template(
     commit_url = hvcs_client(example_git_https_url).commit_hash_url(
         commit_obj.commit.hexsha
     )
-    commit_description = str.join("\n", commit_obj.descriptions)
+    commit_description = str.join(os.linesep, commit_obj.descriptions)
     expected_content = str.join(
-        "\n",
+        os.linesep,
         [
             f"## v{version_str} ({TODAY_DATE_STR})",
             "",

@@ -798,8 +798,10 @@ def test_custom_release_notes_template(
     expected_release_notes = (
         runtime_context_with_tags.template_environment.from_string(
             EXAMPLE_RELEASE_NOTES_TEMPLATE
-        ).render(version=version, release=release)
-        + "\n"
+        )
+        .render(version=version, release=release)
+        .rstrip()
+        + os.linesep
     )
 
     # Assert

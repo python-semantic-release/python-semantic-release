@@ -321,7 +321,7 @@ def test_version_print(
     assert_successful_exit_code(result, cli_cmd)
     assert tags_before == tags_after
     assert head_before == head_after
-    assert result.stdout.rstrip("\n") == expected_stdout
+    assert result.stdout.rstrip(os.linesep) == expected_stdout
     assert not differing_files
 
 
@@ -1092,7 +1092,10 @@ def test_custom_release_notes_template(
     expected_release_notes = (
         runtime_context_with_no_tags.template_environment.from_string(
             EXAMPLE_RELEASE_NOTES_TEMPLATE
-        ).render(version=release_version, release=release)
+        )
+        .render(version=release_version, release=release)
+        .rstrip()
+        + os.linesep
     )
 
     # Assert
