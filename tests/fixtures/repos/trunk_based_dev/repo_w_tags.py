@@ -146,6 +146,13 @@ def build_trunk_only_repo_w_tags(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Publish initial feature release (v0.1.0) [updates tool.poetry.version]
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -158,7 +165,7 @@ def build_trunk_only_repo_w_tags(
                 git_repo, next_version_def["commits"], hvcs
             )
 
-            # write expected changelog (should match template changelog)
+            # write complete changelog (should match template changelog)
             simulate_default_changelog_creation(
                 repo_def,
                 repo_dir.joinpath(changelog_md_file),

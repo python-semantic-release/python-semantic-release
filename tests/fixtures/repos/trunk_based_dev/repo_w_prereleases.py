@@ -177,6 +177,13 @@ def build_trunk_only_repo_w_prerelease_tags(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Make initial feature release (v0.1.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -189,6 +196,13 @@ def build_trunk_only_repo_w_prerelease_tags(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Make a patch level release candidate (v0.1.1-rc.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -199,6 +213,13 @@ def build_trunk_only_repo_w_prerelease_tags(
             # Make a minor level change
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # Make the next feature level prerelease (v0.2.0-rc.1)

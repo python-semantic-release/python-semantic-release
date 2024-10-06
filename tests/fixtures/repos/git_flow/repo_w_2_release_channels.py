@@ -279,6 +279,13 @@ def build_git_flow_repo_with_2_release_channels(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Publish initial feature release (v0.1.0) [updates tool.poetry.version]
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -290,6 +297,13 @@ def build_git_flow_repo_with_2_release_channels(
             # modify && commit modification -> update commit msg with sha & url
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # Make a patch level release candidate (v0.1.1-rc.1)
@@ -305,6 +319,13 @@ def build_git_flow_repo_with_2_release_channels(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Make a major feature release candidate (v1.0.0-rc.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -316,6 +337,13 @@ def build_git_flow_repo_with_2_release_channels(
             # modify && commit modification -> update commit msg with sha & url
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # Make a major feature release (v1.0.0)
@@ -337,6 +365,13 @@ def build_git_flow_repo_with_2_release_channels(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # TODO: ERROR releasing on dev branch
             # Make a minor feature release (v1.1.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
@@ -349,6 +384,13 @@ def build_git_flow_repo_with_2_release_channels(
             # modify && commit modification -> update commit msg with sha & url
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # TODO: ERROR releasing on dev branch
@@ -367,6 +409,13 @@ def build_git_flow_repo_with_2_release_channels(
             # modify && commit modification -> update commit msg with sha & url
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # Make an alpha prerelease (v1.2.0-alpha.1) on the feature branch
