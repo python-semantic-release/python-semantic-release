@@ -55,7 +55,7 @@ def assert_exit_code(
     if result.exit_code != exit_code:
         raise AssertionError(
             str.join(
-                "\n",
+                os.linesep,
                 [
                     f"{result.exit_code} != {exit_code} (actual != expected)",
                     "",
@@ -141,7 +141,7 @@ def shortuid(length: int = 8) -> str:
 def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
     with open(f"{repo.working_tree_dir}/{filename}", "a+") as f:
         f.write(text or f"default text {shortuid(12)}")
-        f.write("\n")
+        f.write(os.linesep)
 
     repo.index.add(filename)
 
