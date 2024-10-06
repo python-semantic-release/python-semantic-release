@@ -93,7 +93,7 @@ env = [
 addopts = [
   # TO DEBUG in single process, swap auto to 0
   # "-nauto",
-  "-n0",
+  # "-n0",
   "-ra",
   "--diff-symbols",
   "--cache-clear",
