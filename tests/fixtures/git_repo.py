@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import reduce
 from pathlib import Path
 from textwrap import dedent
+from time import sleep
 from typing import TYPE_CHECKING
 
 import pytest
@@ -159,9 +160,13 @@ def create_release_tagged_commit(
         # commit --all files with version number commit message
         git_repo.git.commit(a=True, m=COMMIT_MESSAGE.format(version=version))
 
+        sleep(1)  # ensure commit timestamps are unique
+
         # tag commit with version number
         tag_str = tag_format.format(version=version)
         git_repo.git.tag(tag_str, m=tag_str)
+
+        sleep(1)  # ensure commit timestamps are unique
 
     return _mimic_semantic_release_commit
 
@@ -201,6 +206,7 @@ def simulate_change_commits_n_rtn_changelog_entry(
             changelog_entries.append(
                 commit_n_rtn_changelog_entry(git_repo, commit_msg, hvcs)
             )
+            sleep(1)  # ensure commit timestamps are unique
         return changelog_entries
 
     return _simulate_change_commits_n_rtn_changelog_entry
