@@ -1,4 +1,9 @@
 # CHANGELOG
 
-{#   IMPORTANT: insertion flag for next version update
-#}{{ insertion_flag }}
+{%    if ctx.changelog_mode == "update"
+%}{#  # IMPORTANT: add insertion flag for next version update
+#}{{
+        insertion_flag
+
+}}{%  endif
+%}
