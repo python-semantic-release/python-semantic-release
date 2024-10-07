@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Iterable
+from pathlib import Path, PurePosixPath
+from typing import TYPE_CHECKING
 
 from jinja2 import FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
@@ -12,7 +12,7 @@ from jinja2.sandbox import SandboxedEnvironment
 from semantic_release.helpers import dynamic_import
 
 if TYPE_CHECKING:
-    from typing import Literal
+    from typing import Callable, Iterable, Literal
 
     from jinja2 import Environment
 
@@ -56,7 +56,7 @@ def environment(
         autoescape_value = autoescape
     log.debug("%s", locals())
 
-    return SandboxedEnvironment(
+    return ComplexDirectorySandboxedEnvironment(
         block_start_string=block_start_string,
         block_end_string=block_end_string,
         variable_start_string=variable_start_string,
@@ -73,6 +73,23 @@ def environment(
         autoescape=autoescape_value,
         loader=FileSystemLoader(template_dir, encoding="utf-8"),
     )
+
+
+class ComplexDirectorySandboxedEnvironment(SandboxedEnvironment):
+    def join_path(self, template: str, parent: str) -> str:
+        """
+        Add support for complex directory structures in the template directory.
+
+        This method overrides the default functionality of the SandboxedEnvironment
+        where all 'include' keywords expect to be in the same directory as the calling
+        template, however this is unintuitive when using a complex directory structure.
+
+        This override simulates the changing of directories when you include the template
+        from a child directory. When the child then includes a template, it will make the
+        path relative to the child directory rather than the top level template directory.
+        """
+        # Must be posixpath because jinja only knows how to handle posix path includes
+        return str(PurePosixPath(parent).parent / template)
 
 
 # pylint: disable=redefined-outer-name
@@ -107,11 +124,15 @@ def recursive_render(
             src_file_path = str((root / file).relative_to(template_dir))
             output_file_path = str((output_path / output_filename).resolve())
 
+            # Although, file stream rendering is possible and preferred in most
+            # situations, here it is not desired as you cannot read the previous
+            # contents of a file during the rendering of the template. This mechanism
+            # is used for inserting into a current changelog. When using stream rendering
+            # of the same file, it always came back empty
             log.debug("rendering %s to %s", src_file_path, output_file_path)
-            stream = environment.get_template(src_file_path).stream()
-
-            with open(output_file_path, "wb+") as output_file:
-                stream.dump(output_file, encoding="utf-8")
+            rendered_file = environment.get_template(src_file_path).render()
+            with open(output_file_path, "w", encoding="utf-8") as output_file:
+                output_file.write(rendered_file)
 
             rendered_paths.append(output_file_path)
         else:

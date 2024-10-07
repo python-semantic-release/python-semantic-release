@@ -83,6 +83,11 @@ def changelog_template_dir() -> Path:
     return Path("templates")
 
 
+@pytest.fixture(scope="session")
+def default_md_changelog_insertion_flag() -> str:
+    return "<!-- version list -->"
+
+
 @pytest.fixture
 def example_project_dir(tmp_path: Path) -> ExProjectDir:
     return tmp_path.resolve()

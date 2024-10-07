@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from functools import reduce
 from pathlib import Path
+from textwrap import dedent
+from time import sleep
 from typing import TYPE_CHECKING
 
 import pytest
@@ -49,6 +52,11 @@ if TYPE_CHECKING:
 
         changelog_sections: list[ChangelogTypeHeadingDef]
         commits: list[CommitMsg]
+
+    class BaseAccumulatorVersionReduction(TypedDict):
+        limit_value: str
+        limit_found: bool
+        repo_def: dict[VersionStr, RepoVersionDef]
 
     class ChangelogTypeHeadingDef(TypedDict):
         section: ChangelogTypeHeading
@@ -107,6 +115,7 @@ if TYPE_CHECKING:
             self,
             repo_definition: RepoDefinition,
             dest_file: Path | None = None,
+            max_version: str | None = None,
         ) -> str: ...
 
 
@@ -151,9 +160,13 @@ def create_release_tagged_commit(
         # commit --all files with version number commit message
         git_repo.git.commit(a=True, m=COMMIT_MESSAGE.format(version=version))
 
+        sleep(1)  # ensure commit timestamps are unique
+
         # tag commit with version number
         tag_str = tag_format.format(version=version)
         git_repo.git.tag(tag_str, m=tag_str)
+
+        sleep(1)  # ensure commit timestamps are unique
 
     return _mimic_semantic_release_commit
 
@@ -193,6 +206,7 @@ def simulate_change_commits_n_rtn_changelog_entry(
             changelog_entries.append(
                 commit_n_rtn_changelog_entry(git_repo, commit_msg, hvcs)
             )
+            sleep(1)  # ensure commit timestamps are unique
         return changelog_entries
 
     return _simulate_change_commits_n_rtn_changelog_entry
@@ -326,7 +340,21 @@ def build_configured_base_repo(  # noqa: C901
 
 
 @pytest.fixture(scope="session")
-def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
+def simulate_default_changelog_creation(
+    default_md_changelog_insertion_flag: str,
+) -> SimulateDefaultChangelogCreationFn:
+    def reduce_repo_def(
+        acc: BaseAccumulatorVersionReduction, ver_2_def: tuple[str, RepoVersionDef]
+    ) -> BaseAccumulatorVersionReduction:
+        if acc["limit_found"]:
+            return acc
+
+        if ver_2_def[0] == acc["limit_value"]:
+            acc["limit_found"] = True
+
+        acc["repo_def"][ver_2_def[0]] = ver_2_def[1]
+        return acc
+
     def build_version_entry(version: VersionStr, version_def: RepoVersionDef) -> str:
         version_entry = []
         if version == "Unreleased":
@@ -345,16 +373,40 @@ def simulate_default_changelog_creation() -> SimulateDefaultChangelogCreationFn:
     def _mimic_semantic_release_default_changelog(
         repo_definition: RepoDefinition,
         dest_file: Path | None = None,
+        max_version: str | None = None,
     ) -> str:
-        header = "# CHANGELOG"
+        header = dedent(
+            f"""\
+            # CHANGELOG
+
+            {default_md_changelog_insertion_flag}
+            """
+        ).rstrip()
+
         version_entries = []
 
-        for version, version_def in repo_definition.items():
+        repo_def = (
+            repo_definition
+            if max_version is None
+            else reduce(
+                reduce_repo_def,
+                repo_definition.items(),
+                {
+                    "limit_value": max_version,
+                    "limit_found": False,
+                    "repo_def": {},
+                },
+            )["repo_def"]
+        )
+
+        for version, version_def in repo_def.items():
             # prepend entries to force reverse ordering
             version_entries.insert(0, build_version_entry(version, version_def))
 
         changelog_content = (
-            str.join("\n" * 2, [header, str.join("\n", list(version_entries))]).rstrip()
+            str.join(
+                "\n" * 2, [header, str.join("\n" * 2, list(version_entries))]
+            ).rstrip()
             + "\n"
         )
 

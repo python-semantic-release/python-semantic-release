@@ -4,6 +4,7 @@ import filecmp
 import os
 import shutil
 import sys
+from textwrap import dedent
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -13,7 +14,9 @@ from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from requests import Session
 
 import semantic_release.hvcs.github
+from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
+from semantic_release.hvcs.github import Github
 
 from tests.const import (
     CHANGELOG_SUBCMD,
@@ -51,6 +54,7 @@ from tests.fixtures.repos import (
     repo_with_single_branch_tag_commits,
 )
 from tests.util import (
+    add_text_to_file,
     assert_exit_code,
     assert_successful_exit_code,
     flatten_dircmp,
@@ -71,6 +75,7 @@ if TYPE_CHECKING:
         UpdatePyprojectTomlFn,
         UseReleaseNotesTemplateFn,
     )
+    from tests.fixtures.git_repo import CommitNReturnChangelogEntryFn
 
 
 @pytest.mark.parametrize(
@@ -182,8 +187,18 @@ def test_changelog_content_regenerated(
     repo: Repo,
     example_changelog_md: Path,
     cli_runner: CliRunner,
+    default_md_changelog_insertion_flag: str,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
 ):
-    expected_changelog_content = example_changelog_md.read_text()
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.INIT.value
+    )
+
+    # Because we are in init mode, the insertion flag is not present in the changelog
+    # we must take it out manually because our repo generation fixture includes it automatically
+    expected_changelog_content = example_changelog_md.read_text().replace(
+        f"{default_md_changelog_insertion_flag}\n", ""
+    )
 
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
@@ -196,6 +211,460 @@ def test_changelog_content_regenerated(
     assert_successful_exit_code(result, cli_cmd)
 
     # Check that the changelog file was re-created
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_unchanged(
+    repo: Repo,
+    example_changelog_md: Path,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    """
+    Given that the changelog file already exists for the current release,
+    When the changelog command is run in "update" mode,
+    Then the changelog file is not modified.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Capture the expected changelog content
+    expected_changelog_content = example_changelog_md.read_text()
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Check that the changelog file was re-created
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            repo_with_no_tags_angular_commits.__name__,
+            repo_with_no_tags_emoji_commits.__name__,
+            repo_with_no_tags_scipy_commits.__name__,
+            repo_with_no_tags_tag_commits.__name__,
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_no_prev_changelog(
+    repo: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    example_changelog_md: Path,
+):
+    """
+    Given that the changelog file does not exist,
+    When the changelog command is run in "update" mode,
+    Then the changelog file is initialized with the default content.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Capture the expected changelog content
+    expected_changelog_content = example_changelog_md.read_text()
+
+    # Remove any previous changelog to update
+    os.remove(str(example_changelog_md.resolve()))
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Check that the changelog file was re-created
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_no_flag(
+    repo: Repo,
+    example_changelog_md: Path,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_md_changelog_insertion_flag: str,
+):
+    """
+    Given a changelog template without the insertion flag,
+    When the changelog command is run in "update" mode,
+    Then the changelog is not modified.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Remove the insertion flag from the changelog
+    example_changelog_md.write_text(
+        example_changelog_md.read_text().replace(
+            f"{default_md_changelog_insertion_flag}\n",
+            "",
+            1,
+        )
+    )
+
+    # Capture the expected changelog content
+    expected_changelog_content = example_changelog_md.read_text()
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # MUST HAVE at least 2 tags!
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_no_header(
+    repo: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    changelog_md_file: Path,
+):
+    """
+    Given a changelog template with the insertion flag at the beginning of the file,
+    When the changelog command is run in "update" mode,
+    Then the changelog is rebuilt with the latest release prepended to the existing content.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.insertion_flag",
+        f"# CHANGELOG{os.linesep}{os.linesep}<!-- version list -->",
+    )
+
+    # Capture the expected changelog content of current release
+    with changelog_md_file.open(newline=os.linesep) as rfd:
+        expected_changelog_content = rfd.read()
+
+    # Reset changelog file to last release
+    repo.git.checkout(repo.tags[-2].name, "--", str(changelog_md_file))
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
+    assert changelog_md_file.exists()
+
+    with changelog_md_file.open(newline=os.linesep) as rfd:
+        actual_content = rfd.read()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # MUST HAVE at least 2 tags!
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_no_footer(
+    repo: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    example_changelog_md: Path,
+    default_md_changelog_insertion_flag: str,
+):
+    """
+    Given a changelog template with the insertion flag at the end of the file,
+    When the changelog command is run in "update" mode,
+    Then the changelog is rebuilt with only the latest release.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Capture the expected changelog content of current release
+    expected_changelog_content = example_changelog_md.read_text().split(
+        f"\n\n## {repo.tags[-2].name}"
+    )[0]
+
+    # Remove any text after the insertion flag
+    example_changelog_md.write_text(
+        str.join(
+            "\n",
+            [
+                example_changelog_md.read_text().split(
+                    default_md_changelog_insertion_flag
+                )[0],
+                f"{default_md_changelog_insertion_flag}\n",
+            ],
+        )
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content only includes the latest release as there
+    # is no previous release information as the insertion flag is at the end of the file
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # Must not have a single release/tag
+            repo_with_no_tags_angular_commits.__name__,
+            repo_with_no_tags_emoji_commits.__name__,
+            repo_with_no_tags_scipy_commits.__name__,
+            repo_with_no_tags_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_no_releases(
+    repo: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_md_changelog_insertion_flag: str,
+    example_changelog_md: Path,
+):
+    """
+    Given the repository has no releases and the user has provided a initialized changelog,
+    When the changelog command is run in "update" mode,
+    Then the changelog is populated with unreleased changes.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Custom text to maintain (must be different from the default)
+    custom_text = "---\n\nCustom footer text\n"
+
+    # Capture and modify the current changelog content to become the expected output
+    initial_changelog_parts = example_changelog_md.read_text().split(
+        default_md_changelog_insertion_flag
+    )
+    expected_changelog_content = str.join(
+        default_md_changelog_insertion_flag,
+        [
+            initial_changelog_parts[0],
+            str.join(
+                "\n\n",
+                [
+                    initial_changelog_parts[1],
+                    custom_text,
+                ],
+            ),
+        ],
+    )
+
+    # Grab the Unreleased changelog & create the initalized user changelog
+    example_changelog_md.write_text(
+        str.join(
+            default_md_changelog_insertion_flag,
+            [initial_changelog_parts[0], f"\n\n{custom_text}"],
+        )
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog footer is maintained and updated with Unreleased info
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo, commit_type",
+    [
+        (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
+        for repo_fixture in [
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+        ]
+    ],
+)
+def test_changelog_update_mode_unreleased_n_released(
+    repo: Repo,
+    commit_type: str,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    example_changelog_md: Path,
+    example_git_ssh_url: str,
+    file_in_repo: str,
+    commit_n_rtn_changelog_entry: CommitNReturnChangelogEntryFn,
+    default_md_changelog_insertion_flag: str,
+):
+    """
+    Given there are unreleased changes and a previous release in the changelog,
+    When the changelog command is run in "update" mode,
+    Then the changelog is only updated with the unreleased changes.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    commit_n_section = {
+        "angular": {
+            "commit": "perf: improve the performance of the application",
+            "section": "Performance Improvements",
+        },
+        "emoji": {
+            "commit": ":zap: improve the performance of the application",
+            "section": ":zap:",
+        },
+        "scipy": {
+            "commit": "MAINT: maintain the codebase",
+            "section": "Fix",
+        },
+        "tag": {
+            "commit": ":nut_and_bolt: improve the performance of the algorithm",
+            "section": "Fix",
+        },
+    }
+
+    # Custom text to maintain (must be different from the default)
+    custom_text = "---\n\nCustom footer text\n"
+
+    # Update the changelog with the custom footer text
+    example_changelog_md.write_text(
+        str.join(
+            "\n\n",
+            [
+                example_changelog_md.read_text(),
+                custom_text,
+            ],
+        )
+    )
+
+    initial_changelog_parts = example_changelog_md.read_text().split(
+        default_md_changelog_insertion_flag
+    )
+
+    # Make a change to the repo to create unreleased changes
+    add_text_to_file(repo, file_in_repo)
+    unreleased_commit_entry = commit_n_rtn_changelog_entry(
+        repo,
+        commit_n_section[commit_type]["commit"],
+        Github(remote_url=example_git_ssh_url, hvcs_domain=EXAMPLE_HVCS_DOMAIN),
+    )
+
+    # Generate the expected changelog content
+    expected_changelog_content = str.join(
+        default_md_changelog_insertion_flag,
+        [
+            initial_changelog_parts[0],
+            str.join(
+                "",
+                [
+                    "\n",
+                    # Unreleased changes
+                    dedent(
+                        f"""
+                        ## Unreleased
+
+                        ### {commit_n_section[commit_type]["section"]}
+
+                        * {unreleased_commit_entry}
+                        """
+                    ),
+                    # Previous release notes
+                    initial_changelog_parts[1],
+                ],
+            ),
+        ],
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
     assert example_changelog_md.exists()
 
     actual_content = example_changelog_md.read_text()
@@ -339,18 +808,30 @@ def test_custom_release_notes_template(
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", tag]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    expected_release_notes = (
-        runtime_context_with_tags.template_environment.from_string(
-            EXAMPLE_RELEASE_NOTES_TEMPLATE
-        ).render(version=version, release=release)
-        + "\n"
+    expected_release_notes = str.join(
+        # ensure normalized line endings after render
+        os.linesep,
+        [
+            line.replace("\r", "")
+            for line in str.split(
+                runtime_context_with_tags.template_environment.from_string(
+                    EXAMPLE_RELEASE_NOTES_TEMPLATE
+                )
+                .render(version=version, release=release)
+                .rstrip()
+                + os.linesep,
+                "\n",
+            )
+        ],
     )
 
     # Assert
     assert_successful_exit_code(result, cli_cmd)
     assert expected_call_count == post_mocker.call_count
     assert post_mocker.last_request is not None
-    assert expected_release_notes == post_mocker.last_request.json()["body"]
+
+    actual_notes = post_mocker.last_request.json()["body"]
+    assert expected_release_notes == actual_notes
 
 
 @pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)

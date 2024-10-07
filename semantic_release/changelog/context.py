@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import logging
+import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from enum import Enum
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 if TYPE_CHECKING:
     from jinja2 import Environment
@@ -34,28 +38,53 @@ class ReleaseNotesContext:
         return env
 
 
+class ChangelogMode(Enum):
+    INIT = "init"
+    UPDATE = "update"
+
+
 @dataclass
 class ChangelogContext:
     repo_name: str
     repo_owner: str
     hvcs_type: str
     history: ReleaseHistory
+    changelog_mode: Literal["update", "init"]
+    prev_changelog_file: str
+    changelog_insertion_flag: str
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
         env.globals["context"] = self
+        env.globals["ctx"] = self
         for f in self.filters:
             env.filters[f.__name__] = f
         return env
 
 
 def make_changelog_context(
-    hvcs_client: HvcsBase, release_history: ReleaseHistory
+    hvcs_client: HvcsBase,
+    release_history: ReleaseHistory,
+    mode: ChangelogMode,
+    prev_changelog_file: Path,
+    insertion_flag: str,
 ) -> ChangelogContext:
     return ChangelogContext(
         repo_name=hvcs_client.repo_name,
         repo_owner=hvcs_client.owner,
         history=release_history,
+        changelog_mode=mode.value,
+        changelog_insertion_flag=insertion_flag,
+        prev_changelog_file=str(prev_changelog_file),
         hvcs_type=hvcs_client.__class__.__name__.lower(),
-        filters=(*hvcs_client.get_changelog_context_filters(),),
+        filters=(*hvcs_client.get_changelog_context_filters(), read_file),
     )
+
+
+def read_file(filepath: str) -> str:
+    try:
+        with Path(filepath).open(newline=os.linesep) as rfd:
+            return rfd.read()
+    except FileNotFoundError as err:
+        logging.warning(err)
+        return ""

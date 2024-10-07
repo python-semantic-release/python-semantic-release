@@ -43,7 +43,9 @@ def post_release_notes(
         return
 
     hvcs_client.create_or_update_release(
-        release_tag, f"{release_notes}\n", prerelease=prerelease
+        release_tag,
+        release_notes,
+        prerelease=prerelease,
     )
 
 
@@ -116,6 +118,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
         release,
         runtime.template_dir,
         release_history,
+        style=runtime.changelog_style,
     )
 
     try:

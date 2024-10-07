@@ -1,0 +1,16 @@
+{#
+#}{%  for type_, commits in commit_objects
+%}{{
+        "\n### %s\n" | format(type_ | title)
+
+}}{%    for commit in commits
+%}{{
+          "\n* %s ([`%s`](%s))\n" | format(
+              commit.message.rstrip(),
+              commit.short_hash,
+              commit.hexsha | commit_hash_url,
+          )
+
+}}{%    endfor
+%}{%  endfor
+%}

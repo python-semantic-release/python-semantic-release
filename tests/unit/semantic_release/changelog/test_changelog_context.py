@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Commit, Object, Repo
 
-from semantic_release.changelog.context import make_changelog_context
+from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.changelog.template import environment
 from semantic_release.commit_parser import ParsedCommit
@@ -16,6 +16,8 @@ from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 from semantic_release.version.translator import Version
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from git import Actor
 
 
@@ -165,6 +167,7 @@ def artificial_release_history(commit_author: Actor):
                     "feature": [feat_commit_parsed],
                     "fix": [fix_commit_parsed],
                 },
+                version=version,
             )
         },
     )
@@ -174,6 +177,7 @@ def test_changelog_context_bitbucket(
     changelog_tpl_bitbucket_context: str,
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     hvcs = Bitbucket(example_git_https_url)
 
@@ -198,7 +202,11 @@ def test_changelog_context_bitbucket(
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
-        hvcs_client=hvcs, release_history=artificial_release_history
+        hvcs_client=hvcs,
+        release_history=artificial_release_history,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
     )
     context.bind_to_environment(env)
 
@@ -213,6 +221,7 @@ def test_changelog_context_github(
     changelog_tpl_github_context: str,
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     hvcs = Github(example_git_https_url)
 
@@ -241,7 +250,11 @@ def test_changelog_context_github(
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
-        hvcs_client=hvcs, release_history=artificial_release_history
+        hvcs_client=hvcs,
+        release_history=artificial_release_history,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
     )
     context.bind_to_environment(env)
 
@@ -256,6 +269,7 @@ def test_changelog_context_gitea(
     changelog_tpl_gitea_context: str,
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     hvcs = Gitea(example_git_https_url)
 
@@ -282,7 +296,11 @@ def test_changelog_context_gitea(
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
-        hvcs_client=hvcs, release_history=artificial_release_history
+        hvcs_client=hvcs,
+        release_history=artificial_release_history,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
     )
     context.bind_to_environment(env)
 
@@ -297,6 +315,7 @@ def test_changelog_context_gitlab(
     changelog_tpl_gitlab_context: str,
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     hvcs = Gitlab(example_git_https_url)
 
@@ -326,7 +345,11 @@ def test_changelog_context_gitlab(
 
     env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     context = make_changelog_context(
-        hvcs_client=hvcs, release_history=artificial_release_history
+        hvcs_client=hvcs,
+        release_history=artificial_release_history,
+        mode=ChangelogMode.INIT,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
     )
     context.bind_to_environment(env)
 

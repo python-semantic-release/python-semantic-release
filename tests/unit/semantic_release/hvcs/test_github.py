@@ -578,7 +578,7 @@ def test_should_create_release_using_token_or_netrc(
             set(m.last_request.headers.items())
         )
         assert expected_request_headers == shared_headers, str.join(
-            "\n",
+            os.linesep,
             [
                 "Actual headers are missing some of the expected headers",
                 f"Matching: {shared_headers}",

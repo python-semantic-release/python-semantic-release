@@ -11,9 +11,10 @@ from git import Commit, Object, Repo
 from importlib_resources import files
 
 import semantic_release
-from semantic_release.changelog.context import make_changelog_context
+from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import Release, ReleaseHistory
-from semantic_release.changelog.template import environment
+from semantic_release.cli.changelog_writer import render_default_changelog_file
+from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.enums import LevelBump
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 def default_changelog_template() -> str:
     """Retrieve the semantic-release default changelog template."""
     version_notes_template = files(semantic_release.__name__).joinpath(
-        Path("data", "templates", "CHANGELOG.md.j2")
+        Path("data", "templates", "angular", "md", "CHANGELOG.md.j2")
     )
     return version_notes_template.read_text(encoding="utf-8")
 
@@ -85,6 +86,7 @@ def artificial_release_history(commit_author: Actor):
                     "feature": [feat_commit_parsed],
                     "fix": [fix_commit_parsed],
                 },
+                version=version,
             )
         },
     )
@@ -92,10 +94,10 @@ def artificial_release_history(commit_author: Actor):
 
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template(
-    default_changelog_template: str,
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     version_str = "1.0.0"
     version = Version.parse(version_str)
@@ -121,30 +123,41 @@ def test_default_changelog_template(
         "\n",
         [
             "# CHANGELOG",
-            f"## v{version_str} ({TODAY_DATE_STR})",
-            "### Feature",
-            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
-            "### Fix",
-            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
             "",
+            "",
+            f"## v{version_str} ({TODAY_DATE_STR})",
+            "",
+            "### Feature",
+            "",
+            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            "",
+            "### Fix",
+            "",
+            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
         ],
     )
-    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(
-        hvcs_client=hvcs_client(remote_url=example_git_https_url),
-        release_history=rh,
+
+    actual_changelog = render_default_changelog_file(
+        output_format=ChangelogOutputFormat.MARKDOWN,
+        changelog_context=make_changelog_context(
+            hvcs_client=hvcs_client(remote_url=example_git_https_url),
+            release_history=rh,
+            mode=ChangelogMode.INIT,
+            prev_changelog_file=changelog_md_file,
+            insertion_flag="",
+        ),
+        changelog_style="angular",
     )
-    context.bind_to_environment(env)
-    actual_changelog = env.from_string(default_changelog_template).render()
+
     assert expected_changelog == actual_changelog
 
 
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template_w_unreleased_changes(
-    default_changelog_template: str,
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
 ):
     version_str = "1.0.0"
     version = Version.parse(version_str)
@@ -168,22 +181,37 @@ def test_default_changelog_template_w_unreleased_changes(
         "\n",
         [
             "# CHANGELOG",
-            "## Unreleased",
-            "### Feature",
-            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
-            f"## v{version_str} ({TODAY_DATE_STR})",
-            "### Feature",
-            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
-            "### Fix",
-            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
             "",
+            "",
+            "## Unreleased",
+            "",
+            "### Feature",
+            "",
+            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            "",
+            "",
+            f"## v{version_str} ({TODAY_DATE_STR})",
+            "",
+            "### Feature",
+            "",
+            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            "",
+            "### Fix",
+            "",
+            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
         ],
     )
-    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
-    context = make_changelog_context(
-        hvcs_client=hvcs_client(remote_url=example_git_https_url),
-        release_history=artificial_release_history,
+
+    actual_changelog = render_default_changelog_file(
+        output_format=ChangelogOutputFormat.MARKDOWN,
+        changelog_context=make_changelog_context(
+            hvcs_client=hvcs_client(remote_url=example_git_https_url),
+            release_history=artificial_release_history,
+            mode=ChangelogMode.INIT,
+            prev_changelog_file=changelog_md_file,
+            insertion_flag="",
+        ),
+        changelog_style="angular",
     )
-    context.bind_to_environment(env)
-    actual_changelog = env.from_string(default_changelog_template).render()
+
     assert expected_changelog == actual_changelog

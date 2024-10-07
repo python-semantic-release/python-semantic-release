@@ -122,6 +122,8 @@ sure to use the correct root key dependending on the configuration format you ar
 ``allow_zero_version``
 """"""""""""""""""""""
 
+*Introduced in v9.2.0*
+
 **Type:** ``bool``
 
 This flag controls whether or not Python Semantic Release will use version
@@ -244,6 +246,8 @@ WINDIR                    Pass-through ``WINDIR`` if exists in process env, unse
 ``build_command_env``
 """""""""""""""""""""
 
+*Introduced in v9.7.2*
+
 **Type:** ``Optional[list[str]]``
 
 List of environment variables to include or pass-through on to the build command that executes
@@ -304,6 +308,40 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 
 ----
 
+.. _config-changelog-default_templates:
+
+``default_templates``
+*********************
+
+.. note::
+    This section of the configuration contains options which customize or modify
+    the default changelog templates included with PSR.
+
+    **pyproject.toml:** ``[tool.semantic_release.changelog.default_templates]``
+
+    **releaserc.toml:** ``[semantic_release.changelog.default_templates]``
+
+    **releaserc.json:** ``{ "semantic_release": { "changelog": { "default_templates": {} } } }``
+
+----
+
+.. _config-changelog-default_templates-output_format:
+
+``output_format``
+'''''''''''''''''
+
+*Introduced in v9.10.0*
+
+**Type:** ``Literal["md"]``
+
+This setting is used to specify the output format the default changelog template
+will use when rendering the changelog. Currently, the only supported format is
+``md`` for Markdown.
+
+**Default:** ``"md"``
+
+----
+
 .. _config-changelog-environment:
 
 ``environment``
@@ -337,7 +375,7 @@ Semantic Release will attempt to dynamically import this string, which should
 represent a path to a suitable callable that satisfies the following:
 
     As of Jinja 2.4 this can also be a callable that is passed the template name
-    and has to return ``True`` or ``False`` depending on autoescape should be
+    and has to return ``true`` or ``false`` depending on autoescape should be
     enabled by default.
 
 The result of this dynamic import is passed directly to the `jinja2.Environment`_
@@ -346,7 +384,7 @@ constructor.
 If this setting is a boolean, it is passed directly to the `jinja2.Environment`_
 constructor.
 
-**Default:** ``true``
+**Default:** ``false``
 
 ----
 
@@ -535,6 +573,61 @@ making commits, you may wish to add the *old* commit message pattern here.
 The patterns in this list are treated as regular expressions.
 
 **Default:** ``[]``
+
+----
+
+.. _config-changelog-mode:
+
+``mode``
+********
+
+*Introduced in v9.10.0*
+
+**Type:** ``Literal["init", "update"]``
+
+This setting is a flag that is ultimately passed into the changelog context environment. It sets
+the value of ``context.changelog_mode`` to a string value of either ``init`` or ``update``.
+
+When used with the provided changelog template, it will determine the behavior of how the changelog
+is written. When the mode is set to ``init``, the changelog file will be written from scratch,
+overwriting any existing changelog file. This is the ``v8`` and ``v9`` default behavior.
+
+When the mode is set to ``update``, the changelog file will look for the ``insertion_flag`` value
+in the changelog file (defined by :ref:`config-changelog-changelog_file`) and insert the new
+version information at that location.
+
+If you are using a custom template directory, the `context.changelog_mode` value will exist in the
+changelog context but it is up to your implementation to determine if and/or how to use it.
+
+**Default:** ``init``
+
+.. seealso::
+   - :ref:`changelog-templates-default_changelog`
+
+----
+
+.. _config-changelog-insertion_flag:
+
+``insertion_flag``
+******************
+
+*Introduced in v9.10.0*
+
+**Type:** ``str``
+
+A string that will be used to identify where the new version should be inserted into the
+changelog file (as defined by :ref:`config-changelog-changelog_file`) when the changelog mode
+is set to ``update``.
+
+When the changelog mode is set to ``init``, this string will be included as part of the
+header of the changelog file to initialize the changelog with a format that will be condusive
+for future version insertions.
+
+If you modify this value in your config, you will need to manually update any saved changelog
+file to match the new insertion flag if you use the ``update`` mode.  In ``init`` mode, the
+changelog file will be overwritten with the new insertion flag as normal.
+
+**Default:** ``<!-- version list -->``
 
 ----
 
@@ -745,6 +838,8 @@ When :ref:`config-allow_zero_version` is set to ``false``, this setting is ignor
 ``no_git_verify``
 """""""""""""""""
 
+*Introduced in v9.8.0*
+
 **Type:** ``bool``
 
 This flag is passed along to ``git`` upon performing a ``git commit`` during :ref:`cmd-version`.
@@ -851,7 +946,7 @@ as ``bitbucket.org``, and ``github.com``.
 
 Including the protocol schemes, such as ``https://``, for the API domain is optional.
 Secure ``HTTPS`` connections are assumed unless the setting of
-:ref:`remote.insecure <config-remote-insecure>` is ``True``.
+:ref:`remote.insecure <config-remote-insecure>` is ``true``.
 
 **Default:** ``None``
 
@@ -875,7 +970,7 @@ For example, when ``remote.type="github"`` is specified the default domain of
 
 Including the protocol schemes, such as ``https://``, for the domain value is optional.
 Secure ``HTTPS`` connections are assumed unless the setting of
-:ref:`remote.insecure <config-remote-insecure>` is ``True``.
+:ref:`remote.insecure <config-remote-insecure>` is ``true``.
 
 This setting also supports reading from an environment variable for ease-of-use
 in CI pipelines. See :ref:`Environment Variable <config-environment-variables>` for
@@ -899,11 +994,11 @@ variable when ``remote.domain`` is not specified.
 
 **Type:** ``bool``
 
-If set to ``True``, ignore the authentication token when pushing changes to the remote.
+If set to ``true``, ignore the authentication token when pushing changes to the remote.
 This is ideal, for example, if you already have SSH keys set up which can be used for
 pushing.
 
-**Default:** ``False``
+**Default:** ``false``
 
 ----
 
@@ -912,11 +1007,13 @@ pushing.
 ``insecure``
 ************
 
+*Introduced in v9.4.2*
+
 **Type:** ``bool``
 
 Insecure is used to allow non-secure ``HTTP`` connections to your HVCS server. If set to
-``True``, any domain value passed will assume ``http://`` if it is not specified and allow
-it. When set to ``False`` (implicitly or explicitly), it will force ``https://`` communications.
+``true``, any domain value passed will assume ``http://`` if it is not specified and allow
+it. When set to ``false`` (implicitly or explicitly), it will force ``https://`` communications.
 
 When a custom ``domain`` or ``api_domain`` is provided as a configuration, this flag governs
 the protocol scheme used for those connections. If the protocol scheme is not provided in
@@ -928,7 +1025,7 @@ The purpose of this flag is to prevent any typos in provided ``domain`` and ``ap
 values that accidently specify an insecure connection but allow users to toggle the protection
 scheme off when desired.
 
-**Default:** ``False``
+**Default:** ``false``
 
 ----
 

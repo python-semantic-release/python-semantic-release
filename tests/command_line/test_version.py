@@ -23,15 +23,35 @@ from tests.const import (
     EXAMPLE_PROJECT_NAME,
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     MAIN_PROG_NAME,
+    TODAY_DATE_STR,
     VERSION_SUBCMD,
 )
-from tests.fixtures import (
+from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_emoji_commits,
+    repo_w_github_flow_w_feature_release_channel_scipy_commits,
+    repo_w_github_flow_w_feature_release_channel_tag_commits,
     repo_with_git_flow_and_release_channels_angular_commits,
+    repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
+    repo_with_git_flow_and_release_channels_emoji_commits,
+    repo_with_git_flow_and_release_channels_scipy_commits,
+    repo_with_git_flow_and_release_channels_tag_commits,
     repo_with_git_flow_angular_commits,
+    repo_with_git_flow_emoji_commits,
+    repo_with_git_flow_scipy_commits,
+    repo_with_git_flow_tag_commits,
     repo_with_no_tags_angular_commits,
+    repo_with_no_tags_emoji_commits,
+    repo_with_no_tags_scipy_commits,
+    repo_with_no_tags_tag_commits,
     repo_with_single_branch_and_prereleases_angular_commits,
+    repo_with_single_branch_and_prereleases_emoji_commits,
+    repo_with_single_branch_and_prereleases_scipy_commits,
+    repo_with_single_branch_and_prereleases_tag_commits,
     repo_with_single_branch_angular_commits,
+    repo_with_single_branch_emoji_commits,
+    repo_with_single_branch_scipy_commits,
+    repo_with_single_branch_tag_commits,
 )
 from tests.util import (
     actions_output_to_dict,
@@ -301,7 +321,7 @@ def test_version_print(
     assert_successful_exit_code(result, cli_cmd)
     assert tags_before == tags_after
     assert head_before == head_after
-    assert result.stdout.rstrip("\n") == expected_stdout
+    assert result.stdout.rstrip(os.linesep) == expected_stdout
     assert not differing_files
 
 
@@ -1069,10 +1089,21 @@ def test_custom_release_notes_template(
 
     release = release_history.released[release_version]
 
-    expected_release_notes = (
-        runtime_context_with_no_tags.template_environment.from_string(
-            EXAMPLE_RELEASE_NOTES_TEMPLATE
-        ).render(version=release_version, release=release)
+    expected_release_notes = str.join(
+        # ensure normalized line endings after render
+        os.linesep,
+        [
+            line.replace("\r", "")
+            for line in str.split(
+                runtime_context_with_no_tags.template_environment.from_string(
+                    EXAMPLE_RELEASE_NOTES_TEMPLATE
+                )
+                .render(version=release_version, release=release)
+                .rstrip()
+                + os.linesep,
+                "\n",
+            )
+        ],
     )
 
     # Assert
@@ -1080,7 +1111,289 @@ def test_custom_release_notes_template(
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
-    assert post_mocker.last_request.json()["body"] == expected_release_notes
+
+    actual_notes = post_mocker.last_request.json()["body"]
+    assert expected_release_notes == actual_notes
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # Must have a previous release/tag
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+            repo_with_single_branch_and_prereleases_angular_commits.__name__,
+            repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+            repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+            repo_with_single_branch_and_prereleases_tag_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_tag_commits.__name__,
+            repo_with_git_flow_angular_commits.__name__,
+            repo_with_git_flow_emoji_commits.__name__,
+            repo_with_git_flow_scipy_commits.__name__,
+            repo_with_git_flow_tag_commits.__name__,
+            repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+            repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+            repo_with_git_flow_and_release_channels_tag_commits.__name__,
+            repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+        ]
+    ],
+)
+def test_version_updates_changelog_w_new_version(
+    repo: Repo,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    cli_runner: CliRunner,
+    default_md_changelog_insertion_flag: str,
+    example_changelog_md: Path,
+):
+    """
+    Given a previously released custom modified changelog file,
+    When the version command is run with changelog.mode set to "update",
+    Then the version is created and the changelog file is updated with new release info
+        while maintaining the previously customized content
+    """
+    # Custom text to maintain (must be different from the default)
+    custom_text = "---\n\nCustom footer text\n"
+
+    # Capture expected changelog content
+    initial_changelog_parts = example_changelog_md.read_text().split(
+        default_md_changelog_insertion_flag
+    )
+    expected_changelog_content = str.join(
+        default_md_changelog_insertion_flag,
+        [
+            initial_changelog_parts[0],
+            str.join(
+                "\n",
+                [
+                    initial_changelog_parts[1],
+                    custom_text,
+                ],
+            ),
+        ],
+    )
+
+    # Reverse last release
+    repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
+    repo.git.tag("-d", repo_tags[0])
+    repo.git.reset("--hard", "HEAD~1")
+
+    # Set the changelog mode to "update"
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Modify the current changelog with our custom text at bottom
+    example_changelog_md.write_text(
+        str.join(
+            "\n",
+            [
+                example_changelog_md.read_text(),
+                custom_text,
+            ],
+        )
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Capture the new changelog content
+    resulting_changelog_content = example_changelog_md.read_text()
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+    assert expected_changelog_content == resulting_changelog_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # Must not have a single release/tag
+            repo_with_no_tags_angular_commits.__name__,
+            repo_with_no_tags_emoji_commits.__name__,
+            repo_with_no_tags_scipy_commits.__name__,
+            repo_with_no_tags_tag_commits.__name__,
+        ]
+    ],
+)
+def test_version_updates_changelog_wo_prev_releases(
+    repo: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_md_changelog_insertion_flag: str,
+    example_changelog_md: Path,
+):
+    """
+    Given the repository has no releases and the user has provided a initialized changelog,
+    When the version command is run with changelog.mode set to "update",
+    Then the version is created and the changelog file is updated with new release info
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Custom text to maintain (must be different from the default)
+    custom_text = "---\n\nCustom footer text\n"
+
+    # Capture and modify the current changelog content to become the expected output
+    initial_changelog_parts = example_changelog_md.read_text().split(
+        default_md_changelog_insertion_flag
+    )
+    expected_changelog_content = str.join(
+        default_md_changelog_insertion_flag,
+        [
+            initial_changelog_parts[0],
+            str.join(
+                "\n\n",
+                [
+                    initial_changelog_parts[1].replace(
+                        "## Unreleased",
+                        f"## v0.1.0 ({TODAY_DATE_STR})",
+                    ),
+                    custom_text,
+                ],
+            ),
+        ],
+    )
+
+    # Grab the Unreleased changelog & create the initalized user changelog
+    example_changelog_md.write_text(
+        str.join(
+            default_md_changelog_insertion_flag,
+            [initial_changelog_parts[0], f"\n\n{custom_text}"],
+        )
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog footer is maintained and updated with Unreleased info
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # Must have a previous release/tag
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+            repo_with_single_branch_tag_commits.__name__,
+            repo_with_single_branch_and_prereleases_angular_commits.__name__,
+            repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+            repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+            repo_with_single_branch_and_prereleases_tag_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+            repo_w_github_flow_w_feature_release_channel_tag_commits.__name__,
+            repo_with_git_flow_angular_commits.__name__,
+            repo_with_git_flow_emoji_commits.__name__,
+            repo_with_git_flow_scipy_commits.__name__,
+            repo_with_git_flow_tag_commits.__name__,
+            repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+            repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+            repo_with_git_flow_and_release_channels_tag_commits.__name__,
+            repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+        ]
+    ],
+)
+def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
+    repo: Repo,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    example_changelog_md: Path,
+):
+    """
+    Given that the changelog file does not exist,
+    When the version command is run with changelog.mode set to "update",
+    Then the version is created and the changelog file is initialized
+    with the default content.
+    """
+    # Capture the expected changelog content
+    expected_changelog_content = example_changelog_md.read_text()
+
+    # Reverse last release
+    repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
+    repo.git.tag("-d", repo_tags[0])
+    repo.git.reset("--hard", "HEAD~1")
+
+    # Set the changelog mode to "update"
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Remove any previous changelog to update
+    os.remove(str(example_changelog_md.resolve()))
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Check that the changelog file was re-created
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+def test_version_maintains_changelog_in_update_mode_w_no_flag(
+    example_changelog_md: Path,
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_md_changelog_insertion_flag: str,
+):
+    """
+    Given that the changelog file exists but does not contain the insertion flag,
+    When the version command is run with changelog.mode set to "update",
+    Then the version is created but the changelog file is not updated.
+    """
+    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+
+    # Remove the insertion flag from the existing changelog
+    expected_changelog_content = example_changelog_md.read_text().replace(
+        f"{default_md_changelog_insertion_flag}\n",
+        "",
+        1,
+    )
+    example_changelog_md.write_text(expected_changelog_content)
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Ensure changelog exists
+    assert example_changelog_md.exists()
+
+    actual_content = example_changelog_md.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
 
 
 def test_version_tag_only_push(

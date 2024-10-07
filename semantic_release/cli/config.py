@@ -27,6 +27,7 @@ from urllib3.util.url import parse_url
 
 from semantic_release import hvcs
 from semantic_release.changelog import environment
+from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.commit_parser import (
@@ -94,6 +95,13 @@ class EnvConfigVar(BaseModel):
 MaybeFromEnv = Union[EnvConfigVar, str]
 
 
+class ChangelogOutputFormat(str, Enum):
+    """Supported changelog output formats when using the default templates."""
+
+    MARKDOWN = "md"
+    # RESTRUCTURED_TEXT = "rst"
+
+
 class ChangelogEnvironmentConfig(BaseModel):
     block_start_string: str = "{%"
     block_end_string: str = "%}"
@@ -108,14 +116,26 @@ class ChangelogEnvironmentConfig(BaseModel):
     newline_sequence: Literal["\n", "\r", "\r\n"] = "\n"
     keep_trailing_newline: bool = False
     extensions: Tuple[str, ...] = ()
-    autoescape: Union[bool, str] = True
+    autoescape: Union[bool, str] = False
+
+
+class DefaultChangelogTemplatesConfig(BaseModel):
+    # TODO: BREAKING CHANGE v10
+    # changelog_file: str = "CHANGELOG.md"
+    output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN
 
 
 class ChangelogConfig(BaseModel):
-    template_dir: str = "templates"
+    # TODO: BREAKING CHANGE v10, move to DefaultChangelogTemplatesConfig
     changelog_file: str = "CHANGELOG.md"
-    exclude_commit_patterns: Tuple[str, ...] = ()
+    default_templates: DefaultChangelogTemplatesConfig = (
+        DefaultChangelogTemplatesConfig()
+    )
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
+    exclude_commit_patterns: Tuple[str, ...] = ()
+    mode: ChangelogMode = ChangelogMode.INIT
+    insertion_flag: str = "<!-- version list -->"
+    template_dir: str = "templates"
 
 
 class BranchConfig(BaseModel):
@@ -386,7 +406,11 @@ class RuntimeContext:
     changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: hvcs.HvcsBase
+    changelog_insertion_flag: str
+    changelog_mode: ChangelogMode
     changelog_file: Path
+    changelog_style: str
+    changelog_output_format: ChangelogOutputFormat
     ignore_token_for_push: bool
     template_environment: Environment
     template_dir: Path
@@ -640,6 +664,18 @@ class RuntimeContext:
 
             build_cmd_env[name] = env_val
 
+        # TODO: better support for custom parsers that actually just extend defaults
+        #
+        # Here we just assume the desired changelog style matches the parser name
+        # as we provide templates specific to each parser type. Unfortunately if the user has
+        # provided a custom parser, it would be up to the user to provide custom templates
+        # but we just assume the base template is angular
+        # changelog_style = (
+        #     raw.commit_parser
+        #     if raw.commit_parser in _known_commit_parsers
+        #     else "angular"
+        # )
+
         self = cls(
             repo_dir=raw.repo_dir,
             commit_parser=commit_parser,
@@ -651,10 +687,16 @@ class RuntimeContext:
             version_declarations=tuple(version_declarations),
             hvcs_client=hvcs_client,
             changelog_file=changelog_file,
+            changelog_mode=raw.changelog.mode,
+            changelog_insertion_flag=raw.changelog.insertion_flag,
             assets=raw.assets,
             commit_author=commit_author,
             commit_message=raw.commit_message,
             changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
+            # TODO: change when we have other styles per parser
+            # changelog_style=changelog_style,
+            changelog_style="angular",
+            changelog_output_format=raw.changelog.default_templates.output_format,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,
             template_dir=template_dir,

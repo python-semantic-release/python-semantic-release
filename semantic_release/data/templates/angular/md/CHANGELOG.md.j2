@@ -1,0 +1,24 @@
+{#
+    This changelog template controls which changelog creation occurs
+    based on which mode is provided.
+
+    Modes:
+        - init: Initialize a full changelog from scratch
+        - update: Insert new version details where the placeholder exists in the current changelog
+
+#}{%  set insertion_flag = ctx.changelog_insertion_flag
+%}{%  set unreleased_commits = ctx.history.unreleased | dictsort
+%}{#
+#}{%  if ctx.changelog_mode == "init"
+%}{%    include ".changelog_init.md.j2"
+%}{#
+#}{%  elif ctx.changelog_mode == "update"
+%}{%    set prev_changelog_file = ctx.prev_changelog_file
+%}{%    set new_releases = []
+%}{%    if ctx.history.released.values() | length > 0
+%}{%      set new_releases = [ctx.history.released.values() | first]
+%}{%    endif
+%}{%    include ".changelog_update.md.j2"
+%}{#
+#}{%  endif
+%}

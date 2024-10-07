@@ -53,7 +53,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
         },
         "0.1.1-rc.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [{"section": "Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
                 "tag": [{"section": "Fix", "i_commits": [0]}],
@@ -69,7 +69,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
         },
         "0.2.0-rc.1": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -85,7 +85,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
         },
         "0.2.0": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -101,7 +101,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel() -> GetRepoDefin
         },
         "0.3.0-beta.1": {
             "changelog_sections": {
-                "angular": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
                 "tag": [{"section": "Feature", "i_commits": [0]}],
@@ -206,6 +206,13 @@ def build_github_flow_repo_w_feature_release_channel(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Make initial feature release (v0.1.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -216,6 +223,13 @@ def build_github_flow_repo_w_feature_release_channel(
             # Make a patch level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # Make a patch level release candidate (v0.1.1-rc.1)
@@ -230,6 +244,13 @@ def build_github_flow_repo_w_feature_release_channel(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Make a minor level release candidate (v0.2.0-rc.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -240,6 +261,13 @@ def build_github_flow_repo_w_feature_release_channel(
             # Make a minor level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo, next_version_def["commits"], hvcs
+            )
+
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
             )
 
             # Make a minor level release (v0.2.0)

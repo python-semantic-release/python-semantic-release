@@ -53,7 +53,7 @@ def get_commits_for_trunk_only_repo_w_tags() -> GetRepoDefinitionFn:
         },
         "0.1.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [{"section": "Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
                 "tag": [{"section": "Fix", "i_commits": [0]}],
@@ -146,6 +146,13 @@ def build_trunk_only_repo_w_tags(
                 git_repo, next_version_def["commits"], hvcs
             )
 
+            # write changelog to this version (should match template changelog)
+            simulate_default_changelog_creation(
+                repo_def,
+                repo_dir.joinpath(changelog_md_file),
+                max_version=next_version,
+            )
+
             # Publish initial feature release (v0.1.0) [updates tool.poetry.version]
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -158,7 +165,7 @@ def build_trunk_only_repo_w_tags(
                 git_repo, next_version_def["commits"], hvcs
             )
 
-            # write expected changelog (should match template changelog)
+            # write complete changelog (should match template changelog)
             simulate_default_changelog_creation(
                 repo_def,
                 repo_dir.joinpath(changelog_md_file),
