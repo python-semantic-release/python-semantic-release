@@ -73,7 +73,7 @@ test = [
   "requests-mock ~= 1.10",
 ]
 dev = [
-  "pre-commit ~= 3.5",
+  "pre-commit ~= 4.0",
   "tox ~= 4.11",
   "ruff == 0.6.1"
 ]
