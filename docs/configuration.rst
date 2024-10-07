@@ -308,6 +308,40 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 
 ----
 
+.. _config-changelog-default_templates:
+
+``default_templates``
+*********************
+
+.. note::
+    This section of the configuration contains options which customize or modify
+    the default changelog templates included with PSR.
+
+    **pyproject.toml:** ``[tool.semantic_release.changelog.default_templates]``
+
+    **releaserc.toml:** ``[semantic_release.changelog.default_templates]``
+
+    **releaserc.json:** ``{ "semantic_release": { "changelog": { "default_templates": {} } } }``
+
+----
+
+.. _config-changelog-default_templates-output_format:
+
+``output_format``
+'''''''''''''''''
+
+*Introduced in v9.10.0*
+
+**Type:** ``Literal["md"]``
+
+This setting is used to specify the output format the default changelog template
+will use when rendering the changelog. Currently, the only supported format is
+``md`` for Markdown.
+
+**Default:** ``"md"``
+
+----
+
 .. _config-changelog-environment:
 
 ``environment``
