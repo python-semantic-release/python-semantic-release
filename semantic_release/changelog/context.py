@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -82,7 +83,8 @@ def make_changelog_context(
 
 def read_file(filepath: str) -> str:
     try:
-        return Path(filepath).read_text()
+        with Path(filepath).open(newline=os.linesep) as rfd:
+            return rfd.read()
     except FileNotFoundError as err:
         logging.warning(err)
         return ""
