@@ -68,6 +68,31 @@ outlines each supported input and its purpose.
 
 ----
 
+.. _gh_actions-psr-inputs-build:
+
+``build``
+""""""""
+
+**Type:** ``Literal["true", "false"]``
+
+Override whether the action should execute the build command or not. This option is
+equivalent to adding the command line switch ``--skip-build`` (when ``false``) to
+the :ref:`version <cmd-version>` command. If set to ``true``, no command line switch
+is passed and the default behavior of the :ref:`version <cmd-version>` is used.
+
+**Required:** ``false``
+
+.. note::
+  If not set or set to ``true``, the default behavior is defined by the
+  :ref:`version <cmd-version>` command and any user :ref:`configurations <config-root>`.
+
+.. seealso::
+
+  - :ref:`cmd-version-option-skip_build` option for the :ref:`version <cmd-version>`
+    command.
+
+----
+
 .. _gh_actions-psr-inputs-build_metadata:
 
 ``build_metadata``

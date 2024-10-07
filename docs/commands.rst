@@ -367,10 +367,13 @@ remote VCS, this option will not cause a command failure, but will produce a war
 **Default:** ``--no-vcs-release`` if ``--no-push`` is supplied (including where this is
 implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
 
+.. _cmd-version-option-skip_build:
+
 ``--skip-build``
 ****************
 
-If passed, skip building the current project using :ref:`build_command <config-build_command>`.
+If passed, skip execution of the :ref:`build_command <config-build_command>` after
+version stamping and changelog generation.
 
 .. _cmd-publish:
 
