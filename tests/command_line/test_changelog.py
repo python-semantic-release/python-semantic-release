@@ -14,6 +14,7 @@ from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from requests import Session
 
 import semantic_release.hvcs.github
+from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
 from semantic_release.hvcs.github import Github
 
@@ -186,8 +187,18 @@ def test_changelog_content_regenerated(
     repo: Repo,
     example_changelog_md: Path,
     cli_runner: CliRunner,
+    default_md_changelog_insertion_flag: str,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
 ):
-    expected_changelog_content = example_changelog_md.read_text()
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.INIT.value
+    )
+
+    # Because we are in init mode, the insertion flag is not present in the changelog
+    # we must take it out manually because our repo generation fixture includes it automatically
+    expected_changelog_content = example_changelog_md.read_text().replace(
+        f"{default_md_changelog_insertion_flag}\n", ""
+    )
 
     # Remove the changelog and then check that we can regenerate it
     os.remove(str(example_changelog_md.resolve()))
