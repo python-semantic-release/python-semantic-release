@@ -13,6 +13,8 @@ Guides
 ^^^^^^
 
 .. toctree::
+    :maxdepth: 2
+
     travis
     github-actions
     cronjobs
