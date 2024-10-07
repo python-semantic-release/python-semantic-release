@@ -1089,13 +1089,21 @@ def test_custom_release_notes_template(
 
     release = release_history.released[release_version]
 
-    expected_release_notes = (
-        runtime_context_with_no_tags.template_environment.from_string(
-            EXAMPLE_RELEASE_NOTES_TEMPLATE
-        )
-        .render(version=release_version, release=release)
-        .rstrip()
-        + os.linesep
+    expected_release_notes = str.join(
+        # ensure normalized line endings after render
+        os.linesep,
+        [
+            line.replace("\r", "")
+            for line in str.split(
+                runtime_context_with_no_tags.template_environment.from_string(
+                    EXAMPLE_RELEASE_NOTES_TEMPLATE
+                )
+                .render(version=release_version, release=release)
+                .rstrip()
+                + os.linesep,
+                "\n",
+            )
+        ],
     )
 
     # Assert
@@ -1103,7 +1111,9 @@ def test_custom_release_notes_template(
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
-    assert post_mocker.last_request.json()["body"] == expected_release_notes
+
+    actual_notes = post_mocker.last_request.json()["body"]
+    assert expected_release_notes == actual_notes
 
 
 @pytest.mark.parametrize(
