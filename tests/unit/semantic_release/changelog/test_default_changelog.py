@@ -125,7 +125,6 @@ def test_default_changelog_template(
             "# CHANGELOG",
             "",
             "",
-            "",
             f"## v{version_str} ({TODAY_DATE_STR})",
             "",
             "### Feature",
@@ -182,7 +181,6 @@ def test_default_changelog_template_w_unreleased_changes(
         "\n",
         [
             "# CHANGELOG",
-            "",
             "",
             "",
             "## Unreleased",
