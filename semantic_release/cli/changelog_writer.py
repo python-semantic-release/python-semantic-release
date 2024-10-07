@@ -78,9 +78,16 @@ def render_default_changelog_file(
 
     # Using the proper enviroment with the changelog context, render the template
     template = template_env.get_template(str(changelog_tpl_file))
+    changelog_content = template.render().rstrip()
 
-    # newline normalization will happen on writing the file, so we use universal newlines only
-    return template.render().rstrip()
+    # Normalize line endings to ensure universal newlines because that is what is expected
+    # of the content when we write it to a file. When using pathlib.Path.write_text(), it
+    # will automatically normalize the file to the OS. At this point after render, we may
+    # have mixed line endings because of the read_file() call of the previous changelog
+    # (which may be /r/n or /n)
+    return str.join(
+        "\n", [line.replace("\r", "") for line in changelog_content.split("\n")]
+    )
 
 
 def render_release_notes(
