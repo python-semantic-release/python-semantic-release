@@ -388,7 +388,8 @@ def test_changelog_update_mode_no_header(
     )
 
     # Capture the expected changelog content of current release
-    expected_changelog_content = changelog_md_file.read_text()
+    with changelog_md_file.open(newline=os.linesep) as rfd:
+        expected_changelog_content = rfd.read()
 
     # Reset changelog file to last release
     repo.git.checkout(repo.tags[-2].name, "--", str(changelog_md_file))
@@ -403,7 +404,8 @@ def test_changelog_update_mode_no_header(
     # Ensure changelog exists
     assert changelog_md_file.exists()
 
-    actual_content = changelog_md_file.read_text()
+    with changelog_md_file.open(newline=os.linesep) as rfd:
+        actual_content = rfd.read()
 
     # Check that the changelog content is the same as before
     assert expected_changelog_content == actual_content
@@ -795,20 +797,30 @@ def test_custom_release_notes_template(
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", tag]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    expected_release_notes = (
-        runtime_context_with_tags.template_environment.from_string(
-            EXAMPLE_RELEASE_NOTES_TEMPLATE
-        )
-        .render(version=version, release=release)
-        .rstrip()
-        + os.linesep
+    expected_release_notes = str.join(
+        # ensure normalized line endings after render
+        os.linesep,
+        [
+            line.replace("\r", "")
+            for line in str.split(
+                runtime_context_with_tags.template_environment.from_string(
+                    EXAMPLE_RELEASE_NOTES_TEMPLATE
+                )
+                .render(version=version, release=release)
+                .rstrip()
+                + os.linesep,
+                "\n",
+            )
+        ],
     )
 
     # Assert
     assert_successful_exit_code(result, cli_cmd)
     assert expected_call_count == post_mocker.call_count
     assert post_mocker.last_request is not None
-    assert expected_release_notes == post_mocker.last_request.json()["body"]
+
+    actual_notes = post_mocker.last_request.json()["body"]
+    assert expected_release_notes == actual_notes
 
 
 @pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
