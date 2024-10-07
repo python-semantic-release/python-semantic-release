@@ -122,6 +122,8 @@ sure to use the correct root key dependending on the configuration format you ar
 ``allow_zero_version``
 """"""""""""""""""""""
 
+*Introduced in v9.2.0*
+
 **Type:** ``bool``
 
 This flag controls whether or not Python Semantic Release will use version
@@ -243,6 +245,8 @@ WINDIR                    Pass-through ``WINDIR`` if exists in process env, unse
 
 ``build_command_env``
 """""""""""""""""""""
+
+*Introduced in v9.7.2*
 
 **Type:** ``Optional[list[str]]``
 
@@ -543,6 +547,8 @@ The patterns in this list are treated as regular expressions.
 ``mode``
 ********
 
+*Introduced in v9.10.0*
+
 **Type:** ``Literal["init", "update"]``
 
 This setting is a flag that is ultimately passed into the changelog context environment. It sets
@@ -561,12 +567,17 @@ changelog context but it is up to your implementation to determine if and/or how
 
 **Default:** ``init``
 
+.. seealso::
+   - :ref:`changelog-templates-default_changelog`
+
 ----
 
 .. _config-changelog-insertion_flag:
 
 ``insertion_flag``
 ******************
+
+*Introduced in v9.10.0*
 
 **Type:** ``str``
 
@@ -793,6 +804,8 @@ When :ref:`config-allow_zero_version` is set to ``false``, this setting is ignor
 ``no_git_verify``
 """""""""""""""""
 
+*Introduced in v9.8.0*
+
 **Type:** ``bool``
 
 This flag is passed along to ``git`` upon performing a ``git commit`` during :ref:`cmd-version`.
@@ -959,6 +972,8 @@ pushing.
 
 ``insecure``
 ************
+
+*Introduced in v9.4.2*
 
 **Type:** ``bool``
 
