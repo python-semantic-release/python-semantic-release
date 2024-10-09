@@ -143,6 +143,19 @@ class BranchConfig(BaseModel):
     prerelease_token: str = "rc"  # noqa: S105
     prerelease: bool = False
 
+    @field_validator("match", mode="after")
+    @classmethod
+    def validate_match(cls, match: str) -> str:
+        # Allow the special case of a plain wildcard although it's not a valid regex
+        if match == "*":
+            return ".*"
+
+        try:
+            re.compile(match)
+        except re.error as err:
+            raise ValueError(f"Invalid regex {match!r}") from err
+        return match
+
 
 class RemoteConfig(BaseModel):
     name: str = "origin"

@@ -10,6 +10,7 @@ from pydantic import RootModel, ValidationError
 
 import semantic_release
 from semantic_release.cli.config import (
+    BranchConfig,
     GlobalCommandLineOptions,
     HvcsClient,
     RawConfig,
@@ -277,4 +278,28 @@ def test_load_invalid_custom_parser(
         RuntimeContext.from_raw_config(
             RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
             global_cli_options=GlobalCommandLineOptions(),
+        )
+
+
+def test_branch_config_with_plain_wildcard():
+    branch_config = BranchConfig(
+        match="*",
+    )
+    assert branch_config.match == ".*"
+
+
+@pytest.mark.parametrize(
+    "invalid_regex",
+    [
+        "*abc",
+        "[a-z",
+        "(.+",
+        "{2,3}",
+        "a{3,2}",
+    ],
+)
+def test_branch_config_with_invalid_regex(invalid_regex: str):
+    with pytest.raises(ValidationError):
+        BranchConfig(
+            match=invalid_regex,
         )
