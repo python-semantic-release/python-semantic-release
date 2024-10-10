@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v9.10.1 (2024-10-10)
+
+### Fixes
+
+* fix(config): handle branch match regex errors gracefully (#1054)
+
+prevents stacktrace error when user provided regex for a branch name match
+is invalid. Translates most common failure of a plain wildcard `*` character to
+the implied proper regex ([`4d12251`](https://github.com/python-semantic-release/python-semantic-release/commit/4d12251c678a38de6b71cac5b9c1390eb9dd8ad6))
+
+
 ## v9.10.0 (2024-10-08)
 
 ### Documentation
