@@ -147,7 +147,7 @@ class ChangelogConfig(BaseModel):
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
     exclude_commit_patterns: Tuple[str, ...] = ()
     mode: ChangelogMode = ChangelogMode.INIT
-    insertion_flag: str = "<!-- version list -->"
+    insertion_flag: Optional[str] = None
     template_dir: str = "templates"
 
     # TODO: Remove this method in v10 and uncomment the model_validator above
@@ -161,6 +161,23 @@ class ChangelogConfig(BaseModel):
                 )
             except ValueError:
                 self.default_templates.output_format = ChangelogOutputFormat.MARKDOWN
+
+        return self
+
+    @model_validator(mode="after")
+    def load_default_insertion_flag_on_missing(self) -> Self:
+        # Set the insertion flag value when no user input is given
+        if not self.insertion_flag:
+            defaults = {
+                ChangelogOutputFormat.MARKDOWN: "<!-- version list -->",
+                ChangelogOutputFormat.RESTRUCTURED_TEXT: f"..{os.linesep}    version list",
+            }
+            try:
+                self.insertion_flag = defaults[self.default_templates.output_format]
+            except KeyError as err:
+                raise ValueError(
+                    "changelog.default_templates.output_format cannot be None"
+                ) from err
 
         return self
 
