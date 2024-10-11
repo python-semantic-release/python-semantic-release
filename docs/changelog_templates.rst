@@ -493,6 +493,24 @@ arguments are passed in parentheses like normal function calls.
 
 The filters provided vary based on the VCS configured and available features:
 
+* ``convert_md_to_rst (Callable[[MdStr], RstStr])``: given a markdown string, convert it to
+  reStructuredText format. This filter is useful when building a reStructuredText changelog
+  but your commit messages are in markdown format. It is utilized by the default RST changelog
+  template. It is limited in its ability to convert all markdown to reStructuredText, but it
+  handles most common cases (bold, italics, inline-raw, etc.) within commit messages.
+
+  *Introduced in v9.11.0.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{  "\n* %s (`%s`_)\n" | format(
+            commit.message.rstrip() | convert_md_to_rst,
+            commit.short_hash,
+          )
+      }}
+
 * ``create_server_url (Callable[[PathStr, AuthStr | None, QueryStr | None, FragmentStr | None], UrlStr])``:
   when given a path, prepend the configured vcs server host and url scheme.  Optionally you
   can provide, a auth string, a query string or a url fragment to be normalized into the
@@ -632,6 +650,7 @@ Availability of the documented filters can be found in the table below:
 ======================  =========  =====  ======  ======
 **filter - hvcs_type**  bitbucket  gitea  github  gitlab
 ======================  =========  =====  ======  ======
+convert_md_to_rst          ✅       ✅      ✅      ✅
 create_server_url          ✅       ✅      ✅      ✅
 create_repo_url            ✅       ✅      ✅      ✅
 commit_hash_url            ✅       ✅      ✅      ✅
