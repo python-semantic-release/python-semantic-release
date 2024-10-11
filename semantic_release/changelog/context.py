@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from re import compile as regexp
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
 if TYPE_CHECKING:
@@ -77,7 +78,11 @@ def make_changelog_context(
         changelog_insertion_flag=insertion_flag,
         prev_changelog_file=str(prev_changelog_file),
         hvcs_type=hvcs_client.__class__.__name__.lower(),
-        filters=(*hvcs_client.get_changelog_context_filters(), read_file),
+        filters=(
+            *hvcs_client.get_changelog_context_filters(),
+            read_file,
+            convert_md_to_rst,
+        ),
     )
 
 
@@ -88,3 +93,22 @@ def read_file(filepath: str) -> str:
     except FileNotFoundError as err:
         logging.warning(err)
         return ""
+
+
+def convert_md_to_rst(md_content: str) -> str:
+    rst_content = md_content
+    replacements = {
+        # Replace markdown doubleunder bold with rst bold
+        "bold-inline": (regexp(r"(?<=\s)__(.+?)__(?=\s|$)"), r"**\1**"),
+        # Replace markdown italics with rst italics
+        "italic-inline": (regexp(r"(?<=\s)_([^_].+?[^_])_(?=\s|$)"), r"*\1*"),
+        # Replace markdown bullets with rst bullets
+        "bullets": (regexp(r"^(\s*)-(\s)"), r"\1*\2"),
+        # Replace markdown inline raw content with rst inline raw content
+        "raw-inline": (regexp(r"(?<=\s)(`[^`]+`)(?![`_])(?=\s|$)"), r"`\1`"),
+    }
+
+    for pattern, replacement in replacements.values():
+        rst_content = pattern.sub(replacement, rst_content)
+
+    return rst_content
