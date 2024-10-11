@@ -332,13 +332,22 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 
 *Introduced in v9.10.0*
 
-**Type:** ``Literal["md"]``
+**Type:** ``Literal["md", "rst"]``
 
 This setting is used to specify the output format the default changelog template
-will use when rendering the changelog. Currently, the only supported format is
-``md`` for Markdown.
+will use when rendering the changelog. PSR supports both Markdown (``md``) and
+reStructuredText (``rst``) formats.
+
+This setting will take presendence over the file extension of the
+:ref:`config-changelog-default_templates-changelog_file` setting. If this setting is
+omitted, the file extension of the :ref:`config-changelog-default_templates-changelog_file`
+setting will be used to determine the output format. If the file extension is not recognized,
+the output format will default to Markdown.
 
 **Default:** ``"md"``
+
+.. seealso::
+   - :ref:`config-changelog-default_templates-changelog_file`
 
 ----
 
