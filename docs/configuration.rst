@@ -295,11 +295,22 @@ This section outlines the configuration options available that modify changelog 
 ``changelog_file``
 ******************
 
+.. warning::
+    *Deprecated in v9.11.0.* This setting has been moved to
+    :ref:`changelog.default_templates.changelog_file <config-changelog-default_templates-changelog_file>`
+    for a more logical grouping. This setting will be removed in a future major release.
+
 **Type:** ``str``
 
 Specify the name of the changelog file that will be created. This file will be created
 or overwritten (if it previously exists) with the rendered default template included
 with Python Semantic Release.
+
+Depending on the file extension of this setting, the changelog will be rendered in the
+format designated by the extension. PSR, as of v9.11.0, provides a default changelog template
+in both Markdown (``.md``) and reStructuredText (``.rst``) formats. If the file extension is
+not recognized, the changelog will be rendered in Markdown format, unless the
+:ref:`config-changelog-default_templates-output_format` setting is set.
 
 If you are using the ``template_dir`` setting for providing customized templates,
 this setting is not used. See :ref:`config-changelog-template_dir` for more information.
@@ -322,6 +333,32 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
     **releaserc.toml:** ``[semantic_release.changelog.default_templates]``
 
     **releaserc.json:** ``{ "semantic_release": { "changelog": { "default_templates": {} } } }``
+
+----
+
+.. _config-changelog-default_templates-changelog_file:
+
+``changelog_file``
+''''''''''''''''''
+
+*Introduced in v9.11.0.*
+
+**Type:** ``str``
+
+Specify the name of the changelog file that will be created. This file will be created
+or overwritten (if it previously exists) with the rendered default template included
+with Python Semantic Release.
+
+Depending on the file extension of this setting, the changelog will be rendered in the
+format designated by the extension. PSR, as of v9.11.0, provides a default changelog template
+in both Markdown (``.md``) and reStructuredText (``.rst``) formats. If the file extension is
+not recognized, the changelog will be rendered in Markdown format, unless the
+:ref:`config-changelog-default_templates-output_format` setting is set.
+
+If you are using the ``template_dir`` setting for providing customized templates,
+this setting is not used. See :ref:`config-changelog-template_dir` for more information.
+
+**Default:** ``"CHANGELOG.md"``
 
 ----
 
