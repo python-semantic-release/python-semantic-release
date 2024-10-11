@@ -625,9 +625,20 @@ for future version insertions.
 
 If you modify this value in your config, you will need to manually update any saved changelog
 file to match the new insertion flag if you use the ``update`` mode.  In ``init`` mode, the
-changelog file will be overwritten with the new insertion flag as normal.
+changelog file will be overwritten as normal.
 
-**Default:** ``<!-- version list -->``
+In v9.11.0, the ``insertion_flag`` default value became more dynamic with the introduction of
+an reStructuredText template. The default value will be set depending on the
+:ref:`config-changelog-default_templates-output_format` setting. The default flag values are:
+
+==================  =========================
+Output Format       Default Insertion Flag
+==================  =========================
+Markdown (``md``)   ``<!-- version list -->``
+reStructuredText    ``..\n    version list``
+==================  =========================
+
+**Default:** various, see above
 
 ----
 
