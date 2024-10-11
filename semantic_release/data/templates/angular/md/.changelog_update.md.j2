@@ -46,7 +46,7 @@ This Update changelog template uses the following logic:
 %}{#      # Check if the release version is already in the changelog and if not, add it
 #}{%      if "# " ~ release.version.as_semver_tag() ~ " " not in changelog_parts[1]
 %}{{        "\n"
-}}{%        include ".versioned_changes.md.j2"
+}}{%-       include ".versioned_changes.md.j2"
 -%}{{       "\n"
 }}{%      endif
 %}{%    endfor
