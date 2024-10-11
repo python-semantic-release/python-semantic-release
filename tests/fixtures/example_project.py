@@ -20,6 +20,7 @@ from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
+    EXAMPLE_CHANGELOG_RST_CONTENT,
     EXAMPLE_PROJECT_NAME,
     EXAMPLE_PROJECT_VERSION,
     EXAMPLE_PYPROJECT_TOML_CONTENT,
@@ -79,6 +80,11 @@ def changelog_md_file() -> Path:
 
 
 @pytest.fixture(scope="session")
+def changelog_rst_file() -> Path:
+    return Path("CHANGELOG.rst")
+
+
+@pytest.fixture(scope="session")
 def changelog_template_dir() -> Path:
     return Path("templates")
 
@@ -86,6 +92,11 @@ def changelog_template_dir() -> Path:
 @pytest.fixture(scope="session")
 def default_md_changelog_insertion_flag() -> str:
     return "<!-- version list -->"
+
+
+@pytest.fixture(scope="session")
+def default_rst_changelog_insertion_flag() -> str:
+    return f"..{os.linesep}    version list"
 
 
 @pytest.fixture
@@ -115,6 +126,7 @@ def cached_example_project(
     setup_cfg_file: Path,
     setup_py_file: Path,
     changelog_md_file: Path,
+    changelog_rst_file: Path,
     cached_files_dir: Path,
     teardown_cached_dir: TeardownCachedDirFn,
 ) -> Path:
@@ -159,6 +171,7 @@ def cached_example_project(
         (setup_cfg_file, EXAMPLE_SETUP_CFG_CONTENT),
         (setup_py_file, EXAMPLE_SETUP_PY_CONTENT),
         (changelog_md_file, EXAMPLE_CHANGELOG_MD_CONTENT),
+        (changelog_rst_file, EXAMPLE_CHANGELOG_RST_CONTENT),
     ]:
         abs_filepath = cached_project_path.joinpath(file).resolve()
         # make sure the parent directory exists
@@ -243,6 +256,15 @@ def example_changelog_md(
     changelog_md_file: Path,
 ) -> Path:
     return example_project_dir / changelog_md_file
+
+
+# Note this is just the path and the content may change
+@pytest.fixture
+def example_changelog_rst(
+    example_project_dir: ExProjectDir,
+    changelog_rst_file: Path,
+) -> Path:
+    return example_project_dir / changelog_rst_file
 
 
 @pytest.fixture

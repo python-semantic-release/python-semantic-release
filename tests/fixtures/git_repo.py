@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Actor, Repo
 
+from semantic_release.cli.config import ChangelogOutputFormat
+
 from tests.const import (
     COMMIT_MESSAGE,
     EXAMPLE_HVCS_DOMAIN,
@@ -51,7 +53,7 @@ if TYPE_CHECKING:
         """
 
         changelog_sections: list[ChangelogTypeHeadingDef]
-        commits: list[CommitMsg]
+        commits: list[CommitDef]
 
     class BaseAccumulatorVersionReduction(TypedDict):
         limit_value: str
@@ -63,11 +65,15 @@ if TYPE_CHECKING:
         i_commits: list[int]
         """List of indexes values to match to the commits list in the RepoVersionDef"""
 
+    class CommitDef(TypedDict):
+        msg: CommitMsg
+        sha: str
+
     class BaseRepoVersionDef(TypedDict):
         """A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types"""
 
         changelog_sections: dict[CommitConvention, list[ChangelogTypeHeadingDef]]
-        commits: list[dict[CommitConvention, CommitMsg]]
+        commits: list[dict[CommitConvention, CommitDef]]
 
     class BuildRepoFn(Protocol):
         def __call__(
@@ -81,12 +87,12 @@ if TYPE_CHECKING:
         ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
-        def __call__(self, git_repo: Repo, commit_msg: str, hvcs: HvcsBase) -> str: ...
+        def __call__(self, git_repo: Repo, commit: CommitDef) -> CommitDef: ...
 
     class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
         def __call__(
-            self, git_repo: Repo, commit_msgs: list[CommitMsg], hvcs: HvcsBase
-        ) -> list[CommitMsg]: ...
+            self, git_repo: Repo, commit_msgs: list[CommitDef]
+        ) -> list[CommitDef]: ...
 
     class CreateReleaseFn(Protocol):
         def __call__(
@@ -114,8 +120,10 @@ if TYPE_CHECKING:
         def __call__(
             self,
             repo_definition: RepoDefinition,
+            hvcs: HvcsBase,
             dest_file: Path | None = None,
             max_version: str | None = None,
+            output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
         ) -> str: ...
 
 
@@ -173,21 +181,15 @@ def create_release_tagged_commit(
 
 @pytest.fixture(scope="session")
 def commit_n_rtn_changelog_entry() -> CommitNReturnChangelogEntryFn:
-    def _commit_n_rtn_changelog_entry(
-        git_repo: Repo, commit_msg: str, hvcs: HvcsBase
-    ) -> str:
+    def _commit_n_rtn_changelog_entry(git_repo: Repo, commit: CommitDef) -> CommitDef:
         # make commit with --all files
-        git_repo.git.commit(a=True, m=commit_msg)
+        git_repo.git.commit(a=True, m=commit["msg"])
 
-        # log commit in changelog format after commit action
-        commit_sha = git_repo.head.commit.hexsha
-        return str.join(
-            " ",
-            [
-                str(git_repo.head.commit.message).strip(),
-                f"([`{commit_sha[:7]}`]({hvcs.commit_hash_url(commit_sha)}))",
-            ],
-        )
+        # Capture the resulting commit message and sha
+        return {
+            "msg": str(git_repo.head.commit.message).strip(),
+            "sha": git_repo.head.commit.hexsha,
+        }
 
     return _commit_n_rtn_changelog_entry
 
@@ -198,14 +200,12 @@ def simulate_change_commits_n_rtn_changelog_entry(
     file_in_repo: str,
 ) -> SimulateChangeCommitsNReturnChangelogEntryFn:
     def _simulate_change_commits_n_rtn_changelog_entry(
-        git_repo: Repo, commit_msgs: list[str], hvcs: HvcsBase
-    ) -> list[str]:
+        git_repo: Repo, commit_msgs: list[CommitDef]
+    ) -> list[CommitDef]:
         changelog_entries = []
         for commit_msg in commit_msgs:
             add_text_to_file(git_repo, file_in_repo)
-            changelog_entries.append(
-                commit_n_rtn_changelog_entry(git_repo, commit_msg, hvcs)
-            )
+            changelog_entries.append(commit_n_rtn_changelog_entry(git_repo, commit_msg))
             sleep(1)  # ensure commit timestamps are unique
         return changelog_entries
 
@@ -340,8 +340,9 @@ def build_configured_base_repo(  # noqa: C901
 
 
 @pytest.fixture(scope="session")
-def simulate_default_changelog_creation(
+def simulate_default_changelog_creation(  # noqa: C901
     default_md_changelog_insertion_flag: str,
+    default_rst_changelog_insertion_flag: str,
 ) -> SimulateDefaultChangelogCreationFn:
     def reduce_repo_def(
         acc: BaseAccumulatorVersionReduction, ver_2_def: tuple[str, RepoVersionDef]
@@ -355,33 +356,142 @@ def simulate_default_changelog_creation(
         acc["repo_def"][ver_2_def[0]] = ver_2_def[1]
         return acc
 
-    def build_version_entry(version: VersionStr, version_def: RepoVersionDef) -> str:
-        version_entry = []
-        if version == "Unreleased":
-            version_entry.append(f"## {version}\n")
-        else:
-            version_entry.append(f"## v{version} ({TODAY_DATE_STR})\n")
+    def build_version_entry_markdown(
+        version: VersionStr,
+        version_def: RepoVersionDef,
+        hvcs: HvcsBase,
+    ) -> str:
+        version_entry = [
+            f"## {version}\n"
+            if version == "Unreleased"
+            else f"## v{version} ({TODAY_DATE_STR})\n"
+        ]
 
         for section_def in version_def["changelog_sections"]:
+            # Create Markdown section heading
             version_entry.append(f"### {section_def['section']}\n")
+
+            # Add commits to section
             version_entry.extend(
-                [f"* {version_def['commits'][i]}\n" for i in section_def["i_commits"]]
+                [
+                    "* {commit_msg} ([`{short_sha}`]({commit_url}))\n".format(
+                        commit_msg=version_def["commits"][i]["msg"],
+                        short_sha=version_def["commits"][i]["sha"][:7],
+                        commit_url=hvcs.commit_hash_url(
+                            version_def["commits"][i]["sha"]
+                        ),
+                    )
+                    for i in section_def["i_commits"]
+                ]
             )
 
         return str.join("\n", version_entry)
 
+    def build_version_entry_restructured_text(
+        version: VersionStr,
+        version_def: RepoVersionDef,
+        hvcs: HvcsBase,
+    ) -> str:
+        version_entry = [
+            (
+                ".. _changelog-unreleased:"
+                if version == "Unreleased"
+                else f".. _changelog-v{version}:"
+            ),
+            "",
+            (
+                f"{version}"
+                if version == "Unreleased"
+                else f"v{version} ({TODAY_DATE_STR})"
+            ),
+        ]
+        version_entry.append("=" * len(version_entry[-1]))
+        version_entry.append("")  # Add newline
+
+        urls = []
+        for section_def in version_def["changelog_sections"]:
+            # Create RestructuredText section heading
+            version_entry.append(f"{section_def['section']}")
+            version_entry.append("-" * (len(version_entry[-1])))
+
+            version_entry.extend(
+                [
+                    "",
+                    # Add commits to section
+                    *[
+                        "* {commit_msg} (`{short_sha}`_)\n".format(
+                            commit_msg=version_def["commits"][i]["msg"],
+                            short_sha=version_def["commits"][i]["sha"][:7],
+                        )
+                        for i in section_def["i_commits"]
+                    ],
+                ]
+            )
+            urls.extend(
+                [
+                    ".. _{short_sha}: {commit_url}".format(
+                        short_sha=version_def["commits"][i]["sha"][:7],
+                        commit_url=hvcs.commit_hash_url(
+                            version_def["commits"][i]["sha"]
+                        ),
+                    )
+                    for i in section_def["i_commits"]
+                ]
+            )
+
+        # Add commit URLs to the end of the version entry
+        version_entry.extend(urls)
+
+        return str.join("\n", version_entry) + "\n"
+
+    def build_version_entry(
+        version: VersionStr,
+        version_def: RepoVersionDef,
+        output_format: ChangelogOutputFormat,
+        hvcs: HvcsBase,
+    ) -> str:
+        output_functions = {
+            ChangelogOutputFormat.MARKDOWN: build_version_entry_markdown,
+            ChangelogOutputFormat.RESTRUCTURED_TEXT: build_version_entry_restructured_text,
+        }
+        return output_functions[output_format](version, version_def, hvcs)
+
     def _mimic_semantic_release_default_changelog(
         repo_definition: RepoDefinition,
+        hvcs: HvcsBase,
         dest_file: Path | None = None,
         max_version: str | None = None,
+        output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
     ) -> str:
-        header = dedent(
-            f"""\
-            # CHANGELOG
+        if output_format == ChangelogOutputFormat.MARKDOWN:
+            header = dedent(
+                f"""\
+                # CHANGELOG
 
-            {default_md_changelog_insertion_flag}
-            """
-        ).rstrip()
+                {default_md_changelog_insertion_flag}
+                """
+            ).rstrip()
+        elif output_format == ChangelogOutputFormat.RESTRUCTURED_TEXT:
+            universal_newline_insertion_flag = (
+                default_rst_changelog_insertion_flag.replace("\r", "")
+            )
+            header = str.join(
+                "\n\n",
+                [
+                    dedent(
+                        """\
+                        .. _changelog:
+
+                        =========
+                        CHANGELOG
+                        =========
+                        """
+                    ).rstrip(),
+                    universal_newline_insertion_flag,
+                ],
+            )
+        else:
+            raise ValueError(f"Unknown output format: {output_format}")
 
         version_entries = []
 
@@ -401,7 +511,9 @@ def simulate_default_changelog_creation(
 
         for version, version_def in repo_def.items():
             # prepend entries to force reverse ordering
-            version_entries.insert(0, build_version_entry(version, version_def))
+            version_entries.insert(
+                0, build_version_entry(version, version_def, output_format, hvcs)
+            )
 
         changelog_content = (
             str.join(
@@ -411,6 +523,7 @@ def simulate_default_changelog_creation(
         )
 
         if dest_file is not None:
+            # Converts uninversal newlines to the OS-specific upon write
             dest_file.write_text(changelog_content)
 
         return changelog_content
