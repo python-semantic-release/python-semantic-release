@@ -16,7 +16,9 @@ import pytest
 import tomlkit
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
+from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
+from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.hvcs.github import Github
 
 from tests.const import (
@@ -25,6 +27,12 @@ from tests.const import (
     MAIN_PROG_NAME,
     TODAY_DATE_STR,
     VERSION_SUBCMD,
+)
+from tests.fixtures.example_project import (
+    default_md_changelog_insertion_flag,
+    default_rst_changelog_insertion_flag,
+    example_changelog_md,
+    example_changelog_rst,
 )
 from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,
@@ -1146,12 +1154,27 @@ def test_custom_release_notes_template(
         ]
     ],
 )
+@pytest.mark.parametrize(
+    "changelog_file, insertion_flag",
+    [
+        (
+            # ChangelogOutputFormat.MARKDOWN
+            lazy_fixture(example_changelog_md.__name__),
+            lazy_fixture(default_md_changelog_insertion_flag.__name__),
+        ),
+        (
+            # ChangelogOutputFormat.RESTRUCTURED_TEXT
+            lazy_fixture(example_changelog_rst.__name__),
+            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
+        ),
+    ],
+)
 def test_version_updates_changelog_w_new_version(
     repo: Repo,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
-    default_md_changelog_insertion_flag: str,
-    example_changelog_md: Path,
+    changelog_file: Path,
+    insertion_flag: str,
 ):
     """
     Given a previously released custom modified changelog file,
@@ -1160,20 +1183,21 @@ def test_version_updates_changelog_w_new_version(
         while maintaining the previously customized content
     """
     # Custom text to maintain (must be different from the default)
-    custom_text = "---\n\nCustom footer text\n"
+    custom_text = "---{ls}{ls}Custom footer text{ls}".format(ls=os.linesep)
 
     # Capture expected changelog content
-    initial_changelog_parts = example_changelog_md.read_text().split(
-        default_md_changelog_insertion_flag
-    )
+    with changelog_file.open(newline=os.linesep) as rfd:
+        initial_changelog_parts = rfd.read().split(insertion_flag)
+
     expected_changelog_content = str.join(
-        default_md_changelog_insertion_flag,
+        insertion_flag,
         [
             initial_changelog_parts[0],
             str.join(
-                "\n",
+                os.linesep,
                 [
                     initial_changelog_parts[1],
+                    "",
                     custom_text,
                 ],
             ),
@@ -1185,15 +1209,24 @@ def test_version_updates_changelog_w_new_version(
     repo.git.tag("-d", repo_tags[0])
     repo.git.reset("--hard", "HEAD~1")
 
-    # Set the changelog mode to "update"
-    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+    # Set the project configurations
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.UPDATE.value
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        str(changelog_file.name),
+    )
 
     # Modify the current changelog with our custom text at bottom
-    example_changelog_md.write_text(
+    # Universal newlines is ok here since we are writing it back out
+    # and not working with the os-specific insertion flag
+    changelog_file.write_text(
         str.join(
             "\n",
             [
-                example_changelog_md.read_text(),
+                changelog_file.read_text(),
+                "",
                 custom_text,
             ],
         )
@@ -1203,12 +1236,13 @@ def test_version_updates_changelog_w_new_version(
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
-    # Capture the new changelog content
-    resulting_changelog_content = example_changelog_md.read_text()
+    # Capture the new changelog content (os aware because of expected content)
+    with changelog_file.open(newline=os.linesep) as rfd:
+        actual_content = rfd.read()
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
-    assert expected_changelog_content == resulting_changelog_content
+    assert expected_changelog_content == actual_content
 
 
 @pytest.mark.parametrize(
@@ -1224,38 +1258,91 @@ def test_version_updates_changelog_w_new_version(
         ]
     ],
 )
+@pytest.mark.parametrize(
+    "changelog_format, changelog_file, insertion_flag",
+    [
+        (
+            ChangelogOutputFormat.MARKDOWN,
+            lazy_fixture(example_changelog_md.__name__),
+            lazy_fixture(default_md_changelog_insertion_flag.__name__),
+        ),
+        (
+            ChangelogOutputFormat.RESTRUCTURED_TEXT,
+            lazy_fixture(example_changelog_rst.__name__),
+            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
+        ),
+    ],
+)
 def test_version_updates_changelog_wo_prev_releases(
     repo: Repo,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    default_md_changelog_insertion_flag: str,
-    example_changelog_md: Path,
+    changelog_format: ChangelogOutputFormat,
+    changelog_file: Path,
+    insertion_flag: str,
 ):
     """
     Given the repository has no releases and the user has provided a initialized changelog,
     When the version command is run with changelog.mode set to "update",
     Then the version is created and the changelog file is updated with new release info
     """
-    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
-
     # Custom text to maintain (must be different from the default)
-    custom_text = "---\n\nCustom footer text\n"
+    custom_text = "---{ls}{ls}Custom footer text{ls}".format(ls=os.linesep)
+
+    # Set the project configurations
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.UPDATE.value
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        str(changelog_file.name),
+    )
+
+    version = "v0.1.0"
+    rst_version_header = f"{version} ({TODAY_DATE_STR})"
+    search_n_replacements = {
+        ChangelogOutputFormat.MARKDOWN: (
+            "## Unreleased",
+            f"## {version} ({TODAY_DATE_STR})",
+        ),
+        ChangelogOutputFormat.RESTRUCTURED_TEXT: (
+            ".. _changelog-unreleased:{ls}{ls}Unreleased{ls}{underline}".format(
+                ls=os.linesep,
+                underline="=" * len("Unreleased"),
+            ),
+            str.join(
+                os.linesep,
+                [
+                    f".. _changelog-{version}:",
+                    "",
+                    rst_version_header,
+                    f"{'=' * len(rst_version_header)}",
+                ],
+            ),
+        ),
+    }
+
+    search_text = search_n_replacements[changelog_format][0]
+    replacement_text = search_n_replacements[changelog_format][1]
 
     # Capture and modify the current changelog content to become the expected output
-    initial_changelog_parts = example_changelog_md.read_text().split(
-        default_md_changelog_insertion_flag
-    )
+    # We much use os.linesep here since the insertion flag is os-specific
+    with changelog_file.open(newline=os.linesep) as rfd:
+        initial_changelog_parts = rfd.read().split(insertion_flag)
+
+    # content is os-specific because of the insertion flag & how we read the original file
     expected_changelog_content = str.join(
-        default_md_changelog_insertion_flag,
+        insertion_flag,
         [
             initial_changelog_parts[0],
             str.join(
-                "\n\n",
+                os.linesep,
                 [
                     initial_changelog_parts[1].replace(
-                        "## Unreleased",
-                        f"## v0.1.0 ({TODAY_DATE_STR})",
+                        search_text,
+                        replacement_text,
                     ),
+                    "",
                     custom_text,
                 ],
             ),
@@ -1263,12 +1350,15 @@ def test_version_updates_changelog_wo_prev_releases(
     )
 
     # Grab the Unreleased changelog & create the initalized user changelog
-    example_changelog_md.write_text(
-        str.join(
-            default_md_changelog_insertion_flag,
-            [initial_changelog_parts[0], f"\n\n{custom_text}"],
+    # force output to not perform any newline translations
+    with changelog_file.open(mode="w", newline="") as wfd:
+        wfd.write(
+            str.join(
+                insertion_flag,
+                [initial_changelog_parts[0], f"{os.linesep * 2}{custom_text}"],
+            )
         )
-    )
+        wfd.flush()
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
@@ -1278,9 +1368,11 @@ def test_version_updates_changelog_wo_prev_releases(
     assert_successful_exit_code(result, cli_cmd)
 
     # Ensure changelog exists
-    assert example_changelog_md.exists()
+    assert changelog_file.exists()
 
-    actual_content = example_changelog_md.read_text()
+    # Capture the new changelog content (os aware because of expected content)
+    with changelog_file.open(newline=os.linesep) as rfd:
+        actual_content = rfd.read()
 
     # Check that the changelog footer is maintained and updated with Unreleased info
     assert expected_changelog_content == actual_content
@@ -1316,11 +1408,18 @@ def test_version_updates_changelog_wo_prev_releases(
         ]
     ],
 )
+@pytest.mark.parametrize(
+    "changelog_file",
+    [
+        lazy_fixture(example_changelog_md.__name__),
+        lazy_fixture(example_changelog_rst.__name__),
+    ],
+)
 def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     repo: Repo,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    example_changelog_md: Path,
+    changelog_file: Path,
 ):
     """
     Given that the changelog file does not exist,
@@ -1329,18 +1428,24 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     with the default content.
     """
     # Capture the expected changelog content
-    expected_changelog_content = example_changelog_md.read_text()
+    expected_changelog_content = changelog_file.read_text()
 
     # Reverse last release
     repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
     repo.git.tag("-d", repo_tags[0])
     repo.git.reset("--hard", "HEAD~1")
 
-    # Set the changelog mode to "update"
-    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+    # Set the project configurations
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.UPDATE.value
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        str(changelog_file.name),
+    )
 
     # Remove any previous changelog to update
-    os.remove(str(example_changelog_md.resolve()))
+    os.remove(str(changelog_file.resolve()))
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
@@ -1350,35 +1455,57 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     assert_successful_exit_code(result, cli_cmd)
 
     # Check that the changelog file was re-created
-    assert example_changelog_md.exists()
+    assert changelog_file.exists()
 
-    actual_content = example_changelog_md.read_text()
+    actual_content = changelog_file.read_text()
 
     # Check that the changelog content is the same as before
     assert expected_changelog_content == actual_content
 
 
+@pytest.mark.parametrize(
+    "changelog_file, insertion_flag",
+    [
+        (
+            lazy_fixture(example_changelog_md.__name__),
+            lazy_fixture(default_md_changelog_insertion_flag.__name__),
+        ),
+        (
+            lazy_fixture(example_changelog_rst.__name__),
+            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
+        ),
+    ],
+)
 @pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
 def test_version_maintains_changelog_in_update_mode_w_no_flag(
-    example_changelog_md: Path,
+    changelog_file: Path,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    default_md_changelog_insertion_flag: str,
+    insertion_flag: str,
 ):
     """
     Given that the changelog file exists but does not contain the insertion flag,
     When the version command is run with changelog.mode set to "update",
     Then the version is created but the changelog file is not updated.
     """
-    update_pyproject_toml("tool.semantic_release.changelog.mode", "update")
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.UPDATE.value
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        str(changelog_file.name),
+    )
 
     # Remove the insertion flag from the existing changelog
-    expected_changelog_content = example_changelog_md.read_text().replace(
-        f"{default_md_changelog_insertion_flag}\n",
-        "",
-        1,
-    )
-    example_changelog_md.write_text(expected_changelog_content)
+    with changelog_file.open(newline=os.linesep) as rfd:
+        expected_changelog_content = rfd.read().replace(
+            f"{insertion_flag}{os.linesep}",
+            "",
+            1,
+        )
+    # no newline translations
+    with changelog_file.open("w", newline="") as wfd:
+        wfd.write(expected_changelog_content)
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
@@ -1388,9 +1515,11 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
     assert_successful_exit_code(result, cli_cmd)
 
     # Ensure changelog exists
-    assert example_changelog_md.exists()
+    assert changelog_file.exists()
 
-    actual_content = example_changelog_md.read_text()
+    # Capture the new changelog content (os aware because of expected content)
+    with changelog_file.open(newline=os.linesep) as rfd:
+        actual_content = rfd.read()
 
     # Check that the changelog content is the same as before
     assert expected_changelog_content == actual_content
