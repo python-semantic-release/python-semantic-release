@@ -13,6 +13,12 @@ from semantic_release.version.version import Version
 
 from tests.const import ANGULAR_COMMITS_MINOR, COMMIT_MESSAGE
 from tests.fixtures import (
+    get_commits_for_git_flow_repo_w_3_release_channels,
+    get_commits_for_git_flow_repo_with_2_release_channels,
+    get_commits_for_github_flow_repo_w_feature_release_channel,
+    get_commits_for_trunk_only_repo_w_no_tags,
+    get_commits_for_trunk_only_repo_w_prerelease_tags,
+    get_commits_for_trunk_only_repo_w_tags,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_with_git_flow_and_release_channels_angular_commits,
     repo_with_git_flow_angular_commits,
@@ -23,7 +29,16 @@ from tests.fixtures import (
 from tests.util import add_text_to_file
 
 if TYPE_CHECKING:
+    from typing import Protocol
+
     from git import Repo
+
+    from semantic_release.commit_parser.angular import AngularCommitParser
+
+    from tests.fixtures.git_repo import GetRepoDefinitionFn, RepoDefinition
+
+    class CreateReleaseHistoryFromRepoDefFn(Protocol):
+        def __call__(self, repo_def: RepoDefinition) -> FakeReleaseHistoryElements: ...
 
 # NOTE: not testing parser correctness here, just that the right commits end up
 # in the right places. So we only compare that the commits with the messages
@@ -39,219 +54,120 @@ class FakeReleaseHistoryElements(NamedTuple):
     released: dict[Version, dict[str, list[str]]]
 
 
-REPO_WITH_NO_TAGS_EXPECTED_RELEASE_HISTORY = FakeReleaseHistoryElements(
-    unreleased={
-        "feature": ["feat: add much more text\n"],
-        "fix": ["fix: add some more text\n", "fix: more text\n"],
-        "unknown": ["Initial commit\n"],
-    },
-    released={},
-)
+@pytest.fixture(scope="session")
+def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
+    def _create_release_history_from_repo_def(
+        repo_def: RepoDefinition,
+    ) -> FakeReleaseHistoryElements:
+        unreleased_history = {}
+        released_history = {}
 
-REPO_WITH_SINGLE_BRANCH_EXPECTED_RELEASE_HISTORY = FakeReleaseHistoryElements(
-    unreleased={},
-    released={
-        Version.parse("0.1.0"): {
-            "unknown": ["Initial commit\n", COMMIT_MESSAGE.format(version="0.1.0")],
-        },
-        Version.parse("0.1.1"): {
-            "fix": ["fix: add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="0.1.1")],
-        },
-    },
-)
+        for version_str, version_def in repo_def.items():
+            # extract the commit messages
+            commit_msgs = [
+                # TODO: remove the newline when our release history strips whitespace from commit messages
+                commit["msg"].strip() + "\n"
+                for commit in version_def["commits"]
+            ]
 
-REPO_WITH_SINGLE_BRANCH_AND_PRERELEASES_EXPECTED_RELEASE_HISTORY = (
-    FakeReleaseHistoryElements(
-        unreleased={},
-        released={
-            Version.parse("0.1.0"): {
-                "unknown": ["Initial commit\n", COMMIT_MESSAGE.format(version="0.1.0")],
-            },
-            Version.parse("0.1.1-rc.1"): {
-                "fix": ["fix: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.1.1-rc.1")],
-            },
-            Version.parse("0.2.0-rc.1"): {
-                "feature": ["feat: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.2.0-rc.1")],
-            },
-            Version.parse("0.2.0"): {
-                "feature": ["feat: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.2.0")],
-            },
-        },
-    )
-)
+            commits_per_group: dict[str, list] = {
+                "Unknown": [],
+            }
+            for group_def in version_def["changelog_sections"]:
+                group_name = group_def["section"]
+                commits_per_group[group_name] = [
+                    commit_msgs[index] for index in group_def["i_commits"]
+                ]
 
-REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY = (
-    FakeReleaseHistoryElements(
-        unreleased={},
-        released={
-            Version.parse("0.1.0"): {
-                "unknown": ["Initial commit\n", COMMIT_MESSAGE.format(version="0.1.0")],
-            },
-            Version.parse("0.1.1-rc.1"): {
-                "fix": ["fix: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.1.1-rc.1")],
-            },
-            Version.parse("0.2.0-rc.1"): {
-                "feature": ["feat: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.2.0-rc.1")],
-            },
-            Version.parse("0.2.0"): {
-                "feature": ["feat: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.2.0")],
-            },
-            Version.parse("0.3.0-beta.1"): {
-                "feature": ["feat(feature): add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.3.0-beta.1")],
-            },
-        },
-    )
-)
+            if version_str == "Unreleased":
+                unreleased_history = commits_per_group
+                continue
 
-REPO_WITH_GIT_FLOW_EXPECTED_RELEASE_HISTORY = FakeReleaseHistoryElements(
-    unreleased={},
-    released={
-        Version.parse("0.1.0"): {
-            "unknown": ["Initial commit\n", COMMIT_MESSAGE.format(version="0.1.0")],
-        },
-        Version.parse("0.1.1-rc.1"): {
-            "fix": ["fix: add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="0.1.1-rc.1")],
-        },
-        Version.parse("1.0.0-rc.1"): {
-            "breaking": ["feat!: add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.0.0-rc.1")],
-        },
-        Version.parse("1.0.0"): {
-            "feature": ["feat: add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.0.0")],
-        },
-        Version.parse("1.1.0"): {
-            "feature": ["feat(dev): add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.1.0")],
-        },
-        Version.parse("1.1.1"): {
-            "fix": ["fix(dev): add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.1.1")],
-        },
-        Version.parse("1.2.0-alpha.1"): {
-            "feature": ["feat(feature): add some more text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.2.0-alpha.1")],
-        },
-        Version.parse("1.2.0-alpha.2"): {
-            "feature": ["feat(feature): add some more text\n"],
-            "fix": ["fix(feature): add some missing text\n"],
-            "unknown": [COMMIT_MESSAGE.format(version="1.2.0-alpha.2")],
-        },
-    },
-)
+            # handle released versions
+            version = Version.parse(version_str)
 
-REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY = (
-    FakeReleaseHistoryElements(
-        unreleased={},
-        released={
-            Version.parse("0.1.0"): {
-                "unknown": ["Initial commit\n", COMMIT_MESSAGE.format(version="0.1.0")],
-            },
-            Version.parse("0.1.1-rc.1"): {
-                "fix": ["fix: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="0.1.1-rc.1")],
-            },
-            Version.parse("1.0.0-rc.1"): {
-                "breaking": ["feat!: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.0.0-rc.1")],
-            },
-            Version.parse("1.0.0"): {
-                "feature": ["feat: add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.0.0")],
-            },
-            Version.parse("1.1.0-rc.1"): {
-                "feature": ["feat(dev): add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.1.0-rc.1")],
-            },
-            Version.parse("1.1.0-rc.2"): {
-                "fix": ["fix(dev): add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.1.0-rc.2")],
-            },
-            Version.parse("1.1.0-alpha.1"): {
-                "feature": ["feat(feature): add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.1.0-alpha.1")],
-            },
-            Version.parse("1.1.0-alpha.2"): {
-                "feature": ["feat(feature): add some more text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.1.0-alpha.2")],
-            },
-            Version.parse("1.1.0-alpha.3"): {
-                "fix": ["fix(feature): add some missing text\n"],
-                "unknown": [COMMIT_MESSAGE.format(version="1.1.0-alpha.3")],
-            },
-        },
-    )
-)
+            # add the PSR version commit message
+            commits_per_group["Unknown"].append(COMMIT_MESSAGE.format(version=version))
+
+            # store the organized commits for this version
+            released_history[version] = commits_per_group
+
+        return FakeReleaseHistoryElements(
+            unreleased=unreleased_history,
+            released=released_history,
+        )
+
+    return _create_release_history_from_repo_def
 
 
 @pytest.mark.parametrize(
-    "repo, expected_release_history",
+    "repo, get_repo_definition",
     [
         # ANGULAR parser
         (
             lazy_fixture(repo_with_no_tags_angular_commits.__name__),
-            REPO_WITH_NO_TAGS_EXPECTED_RELEASE_HISTORY,
+            lazy_fixture(get_commits_for_trunk_only_repo_w_no_tags.__name__),
         ),
         (
             lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-            REPO_WITH_SINGLE_BRANCH_EXPECTED_RELEASE_HISTORY,
+            lazy_fixture(get_commits_for_trunk_only_repo_w_tags.__name__),
         ),
         (
             lazy_fixture(
                 repo_with_single_branch_and_prereleases_angular_commits.__name__
             ),
-            REPO_WITH_SINGLE_BRANCH_AND_PRERELEASES_EXPECTED_RELEASE_HISTORY,
+            lazy_fixture(get_commits_for_trunk_only_repo_w_prerelease_tags.__name__),
         ),
         (
             lazy_fixture(
                 repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
             ),
-            REPO_WITH_MAIN_AND_FEATURE_BRANCHES_EXPECTED_RELEASE_HISTORY,
+            lazy_fixture(
+                get_commits_for_github_flow_repo_w_feature_release_channel.__name__
+            ),
         ),
         (
             lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-            REPO_WITH_GIT_FLOW_EXPECTED_RELEASE_HISTORY,
+            lazy_fixture(
+                get_commits_for_git_flow_repo_with_2_release_channels.__name__
+            ),
         ),
         (
             lazy_fixture(
                 repo_with_git_flow_and_release_channels_angular_commits.__name__
             ),
-            REPO_WITH_GIT_FLOW_AND_RELEASE_CHANNELS_EXPECTED_RELEASE_HISTORY,
+            lazy_fixture(get_commits_for_git_flow_repo_w_3_release_channels.__name__),
         ),
     ],
 )
 def test_release_history(
-    repo, default_angular_parser, expected_release_history, file_in_repo
+    repo: Repo,
+    default_angular_parser: AngularCommitParser,
+    get_repo_definition: GetRepoDefinitionFn,
+    file_in_repo: str,
+    create_release_history_from_repo_def: CreateReleaseHistoryFromRepoDefFn,
 ):
+    expected_release_history = create_release_history_from_repo_def(
+        get_repo_definition("angular")
+    )
+
     translator = VersionTranslator()
     # Nothing has unreleased commits currently
     _, released = ReleaseHistory.from_git_history(
         repo, translator, default_angular_parser
     )
-    assert (
-        expected_release_history.released.keys() == released.keys()
-    ), "versions mismatched, missing: {missing}, extra: {extra}".format(
-        missing=", ".join(
-            map(str, expected_release_history.released.keys() - released.keys())
-        ),
-        extra=", ".join(
-            map(str, released.keys() - expected_release_history.released.keys())
-        ),
+
+    expected_released_versions = sorted(
+        map(str, expected_release_history.released.keys())
     )
+    actual_released_versions = sorted(map(str, released.keys()))
+    assert expected_released_versions == actual_released_versions
+
     for k in expected_release_history.released:
         expected = expected_release_history.released[k]
         actual = released[k]["elements"]
         actual_released_messages = str.join(
-            "\n\n",
+            "\n---\n",
             sorted(
                 [
                     str(res.commit.message)
@@ -261,7 +177,7 @@ def test_release_history(
             ),
         )
         expected_released_messages = str.join(
-            "\n\n", sorted([msg for bucket in expected.values() for msg in bucket])
+            "\n---\n", sorted([msg for bucket in expected.values() for msg in bucket])
         )
         assert expected_released_messages == actual_released_messages
 
@@ -275,7 +191,7 @@ def test_release_history(
     )
 
     actual_unreleased_messages = str.join(
-        "\n\n",
+        "\n---\n",
         sorted(
             [
                 str(res.commit.message)
@@ -286,7 +202,7 @@ def test_release_history(
     )
 
     expected_unreleased_messages = str.join(
-        "\n\n",
+        "\n---\n",
         sorted(
             [
                 msg
