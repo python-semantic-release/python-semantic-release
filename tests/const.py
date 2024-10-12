@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import git
+
 from semantic_release.cli.commands.main import Cli
 
 A_FULL_VERSION_STRING = "1.11.567"
@@ -17,6 +19,8 @@ CHANGELOG_SUBCMD = Cli.SubCmds.CHANGELOG.name.lower()
 GENERATE_CONFIG_SUBCMD = Cli.SubCmds.GENERATE_CONFIG.name.lower()
 PUBLISH_SUBCMD = Cli.SubCmds.PUBLISH.name.lower()
 VERSION_SUBCMD = Cli.SubCmds.VERSION.name.lower()
+
+NULL_HEX_SHA = git.Object.NULL_HEX_SHA
 
 TODAY_DATE_STR = datetime.now().strftime("%Y-%m-%d")
 """Date formatted as how it would appear in the changelog (Must match local timezone)"""
@@ -287,11 +291,31 @@ setup(
 """.lstrip()
 
 EXAMPLE_CHANGELOG_MD_CONTENT = r"""
-# CHANGELOG.md
-
-## This is an example changelog
+# CHANGELOG
+<!-- This is an example changelog -->
 
 ## v1.0.0
+
+* Various bugfixes, security enhancements
+* Extra cookies to enhance your experience
+* ~Removed~ simplified cookie opt-out handling logic
+
+""".lstrip()
+
+EXAMPLE_CHANGELOG_RST_CONTENT = r"""
+.. _changelog:
+=========
+CHANGELOG
+=========
+
+..
+  example project base changelog
+
+.. _changelog-v1.0.0:
+
+v1.0.0 (1970-01-01)
+===================
+
 * Various bugfixes, security enhancements
 * Extra cookies to enhance your experience
 * ~Removed~ simplified cookie opt-out handling logic

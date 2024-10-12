@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING
 import pytest
 from git import Repo
 
-from tests.const import EXAMPLE_HVCS_DOMAIN
+from semantic_release.cli.config import ChangelogOutputFormat
+
+from tests.const import EXAMPLE_HVCS_DOMAIN, NULL_HEX_SHA
 from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
@@ -44,11 +46,11 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
             },
             "commits": [
                 {
-                    "angular": "Initial commit",
-                    "emoji": "Initial commit",
-                    "scipy": "Initial commit",
-                    "tag": "Initial commit",
-                }
+                    "angular": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
+                    "emoji": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
+                    "scipy": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
+                    "tag": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
+                },
             ],
         },
         "0.1.1-rc.1": {
@@ -60,11 +62,14 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
             },
             "commits": [
                 {
-                    "angular": "fix: add some more text",
-                    "emoji": ":bug: add some more text",
-                    "scipy": "MAINT: add some more text",
-                    "tag": ":nut_and_bolt: add some more text",
-                }
+                    "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
+                    "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
+                    "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
+                    "tag": {
+                        "msg": ":nut_and_bolt: correct some text",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
             ],
         },
         "0.2.0-rc.1": {
@@ -76,11 +81,17 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
             },
             "commits": [
                 {
-                    "angular": "feat: add some more text",
-                    "emoji": ":sparkles: add some more text",
-                    "scipy": "ENH: add some more text",
-                    "tag": ":sparkles: add some more text",
-                },
+                    "angular": {"msg": "feat: add some more text", "sha": NULL_HEX_SHA},
+                    "emoji": {
+                        "msg": ":sparkles: add some more text",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {"msg": "ENH: add some more text", "sha": NULL_HEX_SHA},
+                    "tag": {
+                        "msg": ":sparkles: add some more text",
+                        "sha": NULL_HEX_SHA,
+                    },
+                }
             ],
         },
         "0.2.0": {
@@ -92,11 +103,17 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
             },
             "commits": [
                 {
-                    "angular": "feat: add some more text",
-                    "emoji": ":sparkles: add some more text",
-                    "scipy": "ENH: add some more text",
-                    "tag": ":sparkles: add some more text",
-                },
+                    "angular": {"msg": "feat: add some more text", "sha": NULL_HEX_SHA},
+                    "emoji": {
+                        "msg": ":sparkles: add some more text",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {"msg": "ENH: add some more text", "sha": NULL_HEX_SHA},
+                    "tag": {
+                        "msg": ":sparkles: add some more text",
+                        "sha": NULL_HEX_SHA,
+                    },
+                }
             ],
         },
     }
@@ -114,7 +131,7 @@ def get_commits_for_trunk_only_repo_w_prerelease_tags() -> GetRepoDefinitionFn:
                 ),
                 "commits": [
                     # Extract the correct commit message for the commit type
-                    message_variants[commit_type]
+                    deepcopy(message_variants[commit_type])
                     for message_variants in version_def["commits"]
                 ],
             }
@@ -140,6 +157,7 @@ def build_trunk_only_repo_w_prerelease_tags(
     build_configured_base_repo: BuildRepoFn,
     default_tag_format_str: str,
     changelog_md_file: Path,
+    changelog_rst_file: Path,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
     create_release_tagged_commit: CreateReleaseFn,
@@ -174,14 +192,26 @@ def build_trunk_only_repo_w_prerelease_tags(
         with temporary_working_directory(repo_dir), Repo(".") as git_repo:
             # commit initial files & update commit msg with sha & url
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, next_version_def["commits"], hvcs
+                git_repo,
+                next_version_def["commits"],
             )
 
-            # write changelog to this version (should match template changelog)
+            # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
                 repo_def,
-                repo_dir.joinpath(changelog_md_file),
+                hvcs=hvcs,
                 max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_md_file),
+                output_format=ChangelogOutputFormat.MARKDOWN,
+            )
+
+            # write expected RST changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_rst_file),
+                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
             # Make initial feature release (v0.1.0)
@@ -193,14 +223,26 @@ def build_trunk_only_repo_w_prerelease_tags(
 
             # Add a patch level change
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, next_version_def["commits"], hvcs
+                git_repo,
+                next_version_def["commits"],
             )
 
-            # write changelog to this version (should match template changelog)
+            # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
                 repo_def,
-                repo_dir.joinpath(changelog_md_file),
+                hvcs=hvcs,
                 max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_md_file),
+                output_format=ChangelogOutputFormat.MARKDOWN,
+            )
+
+            # write expected RST changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_rst_file),
+                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
             # Make a patch level release candidate (v0.1.1-rc.1)
@@ -212,14 +254,26 @@ def build_trunk_only_repo_w_prerelease_tags(
 
             # Make a minor level change
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, next_version_def["commits"], hvcs
+                git_repo,
+                next_version_def["commits"],
             )
 
-            # write changelog to this version (should match template changelog)
+            # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
                 repo_def,
-                repo_dir.joinpath(changelog_md_file),
+                hvcs=hvcs,
                 max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_md_file),
+                output_format=ChangelogOutputFormat.MARKDOWN,
+            )
+
+            # write expected RST changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_rst_file),
+                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
             # Make the next feature level prerelease (v0.2.0-rc.1)
@@ -231,13 +285,24 @@ def build_trunk_only_repo_w_prerelease_tags(
 
             # Make a minor level change
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo, next_version_def["commits"], hvcs
+                git_repo,
+                next_version_def["commits"],
             )
 
-            # write expected changelog (should match template changelog)
+            # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
                 repo_def,
-                repo_dir.joinpath(changelog_md_file),
+                hvcs=hvcs,
+                dest_file=repo_dir.joinpath(changelog_md_file),
+                output_format=ChangelogOutputFormat.MARKDOWN,
+            )
+
+            # write expected RST changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                dest_file=repo_dir.joinpath(changelog_rst_file),
+                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
             # Make a full release

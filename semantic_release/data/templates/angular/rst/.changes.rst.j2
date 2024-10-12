@@ -1,0 +1,36 @@
+{% from '.macros.rst.j2' import generate_heading_underline, format_link_reference
+%}{#
+
+Features
+--------
+
+* summary (`8a7b8ec`_)
+
+Fixes
+-----
+
+* summary (`8a7b8ec`_)
+
+.. _8a7B8ec: https://github.com/owner/repo/commit/8a7b8ec
+
+#}{% set post_paragraph_links = []
+%}{#
+#}{% for type_, commits in commit_objects
+%}{%    set section_header = "%s" | format(type_ | title)
+%}{{    "\n"
+}}{{    section_header ~ "\n"
+}}{{    generate_heading_underline(section_header, '-') ~ "\n"
+}}{#
+#}{%    for commit in commits
+%}{%        set commit_link_reference = format_link_reference(commit.hexsha | commit_hash_url, commit.short_hash)
+%}{{        post_paragraph_links.append(commit_link_reference) | default("", true)
+}}{{
+            "\n* %s (`%s`_)\n" | format(
+                commit.message.rstrip() | convert_md_to_rst,
+                commit.short_hash,
+            )
+
+}}{%    endfor
+%}{% endfor
+%}
+{{ post_paragraph_links | join("\n") ~ "\n" }}

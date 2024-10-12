@@ -36,8 +36,48 @@ the :ref:`--no-changelog <cmd-version-option-changelog>` command-line option.
 Using the Default Changelog
 ---------------------------
 
-There are 2 modes that change the output method of the default changelog and the mode
-is determined by the :ref:`changelog.mode <config-changelog-mode>` setting.
+If you don't provide any custom templates in the
+:ref:`changelog.template_dir <config-changelog-template_dir>`, the default changelog
+templates will be used to render the changelog.
+
+PSR provides two default changelog output formats:
+
+1.  Markdown (``.md``), *default*
+
+2.  reStructuredText (``.rst``), *available since v9.11.0*
+
+Both formats are kept in sync with one another to display the equivalent information
+in the respective format. The default changelog template is located in the
+``data/templates/`` directory within the PSR package. The templates are written in
+modular style (ie. multiple files) and during the render proccess are ultimately
+combined together to render the final changelog output. The rendering start point
+is the ``CHANGELOG.{FORMAT_EXT}.j2`` underneath the respective format directory.
+
+PSR provides a few configuration options to customize the default changelog output
+and can be found under the
+:ref:`changelog.default_templates <config-changelog-default_templates>` section
+as well as some common configuration options under the :ref:`config-changelog`
+section.
+
+To toggle the output format, you only need to set the
+:ref:`changelog.default_templates.changelog_file <config-changelog-default_templates-changelog_file>`
+file name to include the desired file extension (``.md`` or ``.rst``). If you would
+like a different extension for the resulting changelog file, but would like
+to still have control over the template format, you can set the
+:ref:`changelog.default_templates.output_format <config-changelog-default_templates-output_format>`
+configuration setting to the desired format.
+
+A common and *highly-recommended* configuration option is the
+:ref:`changelog.exclude_commit_patterns <config-changelog-exclude_commit_patterns>`
+setting which allows the user to define regular expressions that will exclude commits
+from the changelog output. This is useful to filter out change messages that are not
+relevant to your external consumers (ex. ``ci`` and ``test`` in the angular commit
+convention) and only include the important changes that impact the consumer of your
+software.
+
+Another important configuration option is the :ref:`changelog.mode <config-changelog-mode>`
+setting which determines the behavior of the changelog generation. There are 2
+modes that available that described in detail below.
 
 1.  :ref:`changelog-templates-default_changelog-init` when ``mode = "init"``.
 
@@ -151,6 +191,60 @@ information will be inserted after the insertion flag.
     ## 1.0.0
 
     - Initial Release
+
+
+.. _changelog-templates-default_changelog-examples:
+
+Configuration Examples
+^^^^^^^^^^^^^^^^^^^^^^
+
+1.  Goal: Configure an updating reStructuredText changelog with a custom insertion
+    flag within ``pyproject.toml``.
+
+    .. code:: toml
+
+        [tool.semantic_release.changelog]
+        mode = "update"
+        insertion_flag = "..\n    All versions below are listed in reverse chronological order"
+
+        [tool.semantic_release.changelog.default_templates]
+        changelog_file = "CHANGELOG.rst"
+        output_format = "rst"  # optional because of the file extension
+
+2.  Goal: Configure an updating Markdown changelog with custom file name and default
+    insertion flag within a separate config file ``releaserc.json``.
+
+    .. code:: json
+
+        {
+          "semantic_release": {
+            "changelog": {
+              "mode": "update",
+              "default_templates": {
+                "changelog_file": "docs/HISTORY",
+                "output_format": "md"
+              }
+            }
+          }
+        }
+
+3.  Goal: Configure an initializing reStructuredText changelog with filtered angular
+    commits patterns and merge commits within a custom config file ``releaserc.toml``.
+
+    .. code:: toml
+
+        [semantic_release.changelog]
+        mode = "init"
+        default_templates = { changelog_file = "docs/CHANGELOG.rst" }
+        exclude_commit_patterns = [
+          '''chore(?:\([^)]*?\))?: .+''',
+          '''ci(?:\([^)]*?\))?: .+''',
+          '''refactor(?:\([^)]*?\))?: .+''',
+          '''style(?:\([^)]*?\))?: .+''',
+          '''test(?:\([^)]*?\))?: .+''',
+          '''build\((?!deps\): .+)''',
+          '''Merged? .*''',
+        ]
 
 
 .. _changelog-templates-default_release_notes:
@@ -493,6 +587,24 @@ arguments are passed in parentheses like normal function calls.
 
 The filters provided vary based on the VCS configured and available features:
 
+* ``convert_md_to_rst (Callable[[MdStr], RstStr])``: given a markdown string, convert it to
+  reStructuredText format. This filter is useful when building a reStructuredText changelog
+  but your commit messages are in markdown format. It is utilized by the default RST changelog
+  template. It is limited in its ability to convert all markdown to reStructuredText, but it
+  handles most common cases (bold, italics, inline-raw, etc.) within commit messages.
+
+  *Introduced in v9.11.0.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{  "\n* %s (`%s`_)\n" | format(
+            commit.message.rstrip() | convert_md_to_rst,
+            commit.short_hash,
+          )
+      }}
+
 * ``create_server_url (Callable[[PathStr, AuthStr | None, QueryStr | None, FragmentStr | None], UrlStr])``:
   when given a path, prepend the configured vcs server host and url scheme.  Optionally you
   can provide, a auth string, a query string or a url fragment to be normalized into the
@@ -632,6 +744,7 @@ Availability of the documented filters can be found in the table below:
 ======================  =========  =====  ======  ======
 **filter - hvcs_type**  bitbucket  gitea  github  gitlab
 ======================  =========  =====  ======  ======
+convert_md_to_rst          ✅       ✅      ✅      ✅
 create_server_url          ✅       ✅      ✅      ✅
 create_repo_url            ✅       ✅      ✅      ✅
 commit_hash_url            ✅       ✅      ✅      ✅
@@ -829,6 +942,11 @@ existing changelog, follow these steps:
 3.  **Add the insertion flag to your changelog file.** This must match the value you set in
     step 2. The insertion flag should be placed in the location above where you would like
     the new release information to be inserted.
+
+.. note::
+    If you are trying to convert an existing changelog to a new format, you will need to do
+    most of the conversion manually (or rebuild via init and modify) and make sure to include
+    your insertion flag into the format of the new changelog.
 
 **Prior to v9.10.0**
 

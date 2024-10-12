@@ -295,11 +295,22 @@ This section outlines the configuration options available that modify changelog 
 ``changelog_file``
 ******************
 
+.. warning::
+    *Deprecated in v9.11.0.* This setting has been moved to
+    :ref:`changelog.default_templates.changelog_file <config-changelog-default_templates-changelog_file>`
+    for a more logical grouping. This setting will be removed in a future major release.
+
 **Type:** ``str``
 
 Specify the name of the changelog file that will be created. This file will be created
 or overwritten (if it previously exists) with the rendered default template included
 with Python Semantic Release.
+
+Depending on the file extension of this setting, the changelog will be rendered in the
+format designated by the extension. PSR, as of v9.11.0, provides a default changelog template
+in both Markdown (``.md``) and reStructuredText (``.rst``) formats. If the file extension is
+not recognized, the changelog will be rendered in Markdown format, unless the
+:ref:`config-changelog-default_templates-output_format` setting is set.
 
 If you are using the ``template_dir`` setting for providing customized templates,
 this setting is not used. See :ref:`config-changelog-template_dir` for more information.
@@ -325,6 +336,32 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 
 ----
 
+.. _config-changelog-default_templates-changelog_file:
+
+``changelog_file``
+''''''''''''''''''
+
+*Introduced in v9.11.0.*
+
+**Type:** ``str``
+
+Specify the name of the changelog file that will be created. This file will be created
+or overwritten (if it previously exists) with the rendered default template included
+with Python Semantic Release.
+
+Depending on the file extension of this setting, the changelog will be rendered in the
+format designated by the extension. PSR, as of v9.11.0, provides a default changelog template
+in both Markdown (``.md``) and reStructuredText (``.rst``) formats. If the file extension is
+not recognized, the changelog will be rendered in Markdown format, unless the
+:ref:`config-changelog-default_templates-output_format` setting is set.
+
+If you are using the ``template_dir`` setting for providing customized templates,
+this setting is not used. See :ref:`config-changelog-template_dir` for more information.
+
+**Default:** ``"CHANGELOG.md"``
+
+----
+
 .. _config-changelog-default_templates-output_format:
 
 ``output_format``
@@ -332,13 +369,22 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 
 *Introduced in v9.10.0*
 
-**Type:** ``Literal["md"]``
+**Type:** ``Literal["md", "rst"]``
 
 This setting is used to specify the output format the default changelog template
-will use when rendering the changelog. Currently, the only supported format is
-``md`` for Markdown.
+will use when rendering the changelog. PSR supports both Markdown (``md``) and
+reStructuredText (``rst``) formats.
+
+This setting will take presendence over the file extension of the
+:ref:`config-changelog-default_templates-changelog_file` setting. If this setting is
+omitted, the file extension of the :ref:`config-changelog-default_templates-changelog_file`
+setting will be used to determine the output format. If the file extension is not recognized,
+the output format will default to Markdown.
 
 **Default:** ``"md"``
+
+.. seealso::
+   - :ref:`config-changelog-default_templates-changelog_file`
 
 ----
 
@@ -625,9 +671,20 @@ for future version insertions.
 
 If you modify this value in your config, you will need to manually update any saved changelog
 file to match the new insertion flag if you use the ``update`` mode.  In ``init`` mode, the
-changelog file will be overwritten with the new insertion flag as normal.
+changelog file will be overwritten as normal.
 
-**Default:** ``<!-- version list -->``
+In v9.11.0, the ``insertion_flag`` default value became more dynamic with the introduction of
+an reStructuredText template. The default value will be set depending on the
+:ref:`config-changelog-default_templates-output_format` setting. The default flag values are:
+
+==================  =========================
+Output Format       Default Insertion Flag
+==================  =========================
+Markdown (``md``)   ``<!-- version list -->``
+reStructuredText    ``..\n    version list``
+==================  =========================
+
+**Default:** various, see above
 
 ----
 

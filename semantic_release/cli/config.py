@@ -99,7 +99,8 @@ class ChangelogOutputFormat(str, Enum):
     """Supported changelog output formats when using the default templates."""
 
     MARKDOWN = "md"
-    # RESTRUCTURED_TEXT = "rst"
+    RESTRUCTURED_TEXT = "rst"
+    NONE = ""
 
 
 class ChangelogEnvironmentConfig(BaseModel):
@@ -120,22 +121,96 @@ class ChangelogEnvironmentConfig(BaseModel):
 
 
 class DefaultChangelogTemplatesConfig(BaseModel):
-    # TODO: BREAKING CHANGE v10
-    # changelog_file: str = "CHANGELOG.md"
-    output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN
+    changelog_file: str = "CHANGELOG.md"
+    output_format: ChangelogOutputFormat = ChangelogOutputFormat.NONE
+
+    @model_validator(mode="after")
+    def interpret_output_format(self) -> Self:
+        # Set the output format value when no user input is given
+        if self.output_format == ChangelogOutputFormat.NONE:
+            try:
+                # Note: If the user gave no extension, force '.' so enumeration fails,
+                # and defaults to markdown
+                # Otherwise normal files with extensions will just look for the extension support
+                self.output_format = ChangelogOutputFormat(
+                    Path(self.changelog_file).suffix.lstrip(".") or "."
+                )
+            except ValueError:
+                self.output_format = ChangelogOutputFormat.MARKDOWN
+
+        return self
 
 
 class ChangelogConfig(BaseModel):
     # TODO: BREAKING CHANGE v10, move to DefaultChangelogTemplatesConfig
-    changelog_file: str = "CHANGELOG.md"
+    changelog_file: str = ""
+    """Deprecated! Moved to 'default_templates.changelog_file'"""
+
     default_templates: DefaultChangelogTemplatesConfig = (
-        DefaultChangelogTemplatesConfig()
+        DefaultChangelogTemplatesConfig(output_format=ChangelogOutputFormat.NONE)
     )
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
     exclude_commit_patterns: Tuple[str, ...] = ()
     mode: ChangelogMode = ChangelogMode.INIT
-    insertion_flag: str = "<!-- version list -->"
+    insertion_flag: str = ""
     template_dir: str = "templates"
+
+    @field_validator("changelog_file", mode="after")
+    @classmethod
+    def changelog_file_deprecation_warning(cls, val: str) -> str:
+        log.warning(
+            str.join(
+                " ",
+                [
+                    "The 'changelog.changelog_file' configuration option is moving to 'changelog.default_templates.changelog_file'.",
+                    "Please update your configuration as the compatibility will break in v10.",
+                ],
+            )
+        )
+        return val
+
+    @model_validator(mode="after")
+    def move_changelog_file(self) -> Self:
+        # TODO: Remove this method in v10
+        if not self.changelog_file:
+            return self
+
+        if self.changelog_file == self.default_templates.changelog_file:
+            return self
+
+        # Re-evaluate now that we are passing the changelog_file option down to default_templates
+        # and only reset the output_format if it was not already set by the user
+        self.default_templates = DefaultChangelogTemplatesConfig.model_validate(
+            {
+                **self.default_templates.model_dump(),
+                "changelog_file": self.changelog_file,
+                "output_format": (
+                    self.default_templates.output_format
+                    if self.default_templates.output_format
+                    != ChangelogOutputFormat.MARKDOWN
+                    else ChangelogOutputFormat.NONE
+                ),
+            }
+        )
+
+        return self
+
+    @model_validator(mode="after")
+    def load_default_insertion_flag_on_missing(self) -> Self:
+        # Set the insertion flag value when no user input is given
+        if not self.insertion_flag:
+            defaults = {
+                ChangelogOutputFormat.MARKDOWN: "<!-- version list -->",
+                ChangelogOutputFormat.RESTRUCTURED_TEXT: f"..{os.linesep}    version list",
+            }
+            try:
+                self.insertion_flag = defaults[self.default_templates.output_format]
+            except KeyError as err:
+                raise ValueError(
+                    "changelog.default_templates.output_format cannot be None"
+                ) from err
+
+        return self
 
 
 class BranchConfig(BaseModel):
@@ -620,7 +695,10 @@ class RuntimeContext:
         # which means it returns a relative path. So we force absolute to ensure path is complete
         # for the next check of path matching
         changelog_file = (
-            Path(raw.changelog.changelog_file).expanduser().resolve().absolute()
+            Path(raw.changelog.default_templates.changelog_file)
+            .expanduser()
+            .resolve()
+            .absolute()
         )
 
         # Prevent path traversal attacks
