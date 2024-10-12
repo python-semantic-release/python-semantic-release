@@ -19,12 +19,12 @@ from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import ChangelogOutputFormat
-from semantic_release.hvcs.github import Github
 
 from tests.const import (
     EXAMPLE_PROJECT_NAME,
     EXAMPLE_RELEASE_NOTES_TEMPLATE,
     MAIN_PROG_NAME,
+    NULL_HEX_SHA,
     TODAY_DATE_STR,
     VERSION_SUBCMD,
 )
@@ -1776,7 +1776,6 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
 def test_version_print_next_version_fails_on_detached_head(
     cli_runner: CliRunner,
-    example_git_ssh_url: str,
     repo_with_single_branch_tag_commits: Repo,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
 ):
@@ -1784,8 +1783,7 @@ def test_version_print_next_version_fails_on_detached_head(
     repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
     simulate_change_commits_n_rtn_changelog_entry(
         repo_with_single_branch_tag_commits,
-        ["fix: make a patch fix to codebase"],
-        Github(example_git_ssh_url),
+        [{"msg": "fix: make a patch fix to codebase", "sha": NULL_HEX_SHA}],
     )
     expected_error_msg = (
         "Detached HEAD state cannot match any release groups; no release will be made\n"
