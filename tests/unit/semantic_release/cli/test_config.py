@@ -11,6 +11,8 @@ from pydantic import RootModel, ValidationError
 import semantic_release
 from semantic_release.cli.config import (
     BranchConfig,
+    ChangelogConfig,
+    ChangelogOutputFormat,
     GlobalCommandLineOptions,
     HvcsClient,
     RawConfig,
@@ -303,3 +305,31 @@ def test_branch_config_with_invalid_regex(invalid_regex: str):
         BranchConfig(
             match=invalid_regex,
         )
+
+
+@pytest.mark.parametrize(
+    "output_format, insertion_flag",
+    [
+        (
+            ChangelogOutputFormat.MARKDOWN.value,
+            "<!-- version list -->",
+        ),
+        (
+            ChangelogOutputFormat.RESTRUCTURED_TEXT.value,
+            f"..{os.linesep}    version list",
+        ),
+    ],
+)
+def test_changelog_config_default_insertion_flag(
+    output_format: str,
+    insertion_flag: str,
+):
+    changelog_config = ChangelogConfig.model_validate(
+        {
+            "default_templates": {
+                "output_format": output_format,
+            }
+        }
+    )
+
+    assert changelog_config.insertion_flag == insertion_flag
