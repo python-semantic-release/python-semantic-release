@@ -1,4 +1,5 @@
-{%    from 'macros.md.j2' import apply_alphabetical_ordering_by_descriptions
+{%    from 'macros.md.j2' import apply_alphabetical_ordering_by_brk_descriptions
+%}{%  from 'macros.md.j2' import apply_alphabetical_ordering_by_descriptions
 %}{%  from 'macros.md.j2' import format_breaking_changes_description, format_commit_summary_line
 %}{#
 EXAMPLE:
@@ -67,9 +68,12 @@ EXAMPLE:
 %}{#
 #}{%  if breaking_commits | length > 0
 %}{#    PREPROCESS COMMITS
+#}{%    set brk_ns = namespace(commits=breaking_commits)
+%}{{    apply_alphabetical_ordering_by_descriptions(brk_ns) | default("", true)
+}}{#
 #}{%    set brking_descriptions = []
 %}{#
-#}{%    for commit in breaking_commits
+#}{%    for commit in brk_ns.commits
 %}{%      set full_description = "- %s" | format(
             format_breaking_changes_description(commit).split("\n\n") | join("\n\n- ")
           )
