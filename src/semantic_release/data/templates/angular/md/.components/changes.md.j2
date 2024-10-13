@@ -1,4 +1,5 @@
-{%   from 'macros.md.j2' import format_commit_summary_line
+{%    from 'macros.md.j2' import apply_alphabetical_ordering_by_descriptions
+%}{%  from 'macros.md.j2' import format_commit_summary_line
 %}{#
 EXAMPLE:
 
@@ -19,8 +20,12 @@ EXAMPLE:
 %}{#
 #}{%  for type_, commits in commit_objects if type_ != "unknown"
 %}{#    PREPROCESS COMMITS (order by description & format description line)
+#}{%    set ns = namespace(commits=commits)
+%}{{    apply_alphabetical_ordering_by_descriptions(ns) | default("", true)
+}}{#
 #}{%    set commit_descriptions = []
-%}{%    for commit in commits
+%}{#
+#}{%    for commit in ns.commits
 %}{#      # Update the first line with reference links and if commit description
           # has more than one line, add the rest of the lines
           # NOTE: This is specifically to make sure to not hide contents
@@ -39,6 +44,6 @@ EXAMPLE:
 #}{{    "\n"
 }}{{    "### %s\n" | format(type_ | title)
 }}{{    "\n"
-}}{{    "%s\n" | format(commit_descriptions | unique | sort | join("\n\n"))
+}}{{    "%s\n" | format(commit_descriptions | unique | join("\n\n"))
 }}{%  endfor
 %}
