@@ -1,0 +1,11 @@
+{#
+
+## vX.X.X (YYYY-MMM-DD)
+
+#}{{
+"## %s (%s)" | format(
+    release.version.as_semver_tag(),
+    release.tagged_date.strftime("%Y-%m-%d")
+)}}
+
+- Initial Release
