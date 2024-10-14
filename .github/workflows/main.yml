@@ -22,7 +22,7 @@ jobs:
 
       - name: Evaluate | Check specific file types for changes
         id: changed-files
-        uses: tj-actions/changed-files@v45.0.2
+        uses: tj-actions/changed-files@v45.0.3
         with:
           base_sha: ${{ github.event.push.before }}
           files_yaml: |
@@ -258,7 +258,7 @@ jobs:
         # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
         # See https://github.com/actions/runner/issues/1173
         if: steps.release.outputs.released == 'true'
-        uses: python-semantic-release/publish-action@v9.9.0
+        uses: python-semantic-release/publish-action@v9.11.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
