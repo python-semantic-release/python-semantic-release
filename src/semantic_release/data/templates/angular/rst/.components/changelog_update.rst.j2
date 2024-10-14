@@ -41,15 +41,22 @@ This Update changelog template uses the following logic:
    #    Any Unreleased Details (uncommon)
 #}{%    include "unreleased_changes.rst.j2"
 -%}{#
-   #    Latest Release Details
-#}{%    for release in new_releases
-%}{#      # Check if the release version is already in the changelog and if not, add it
-#}{%      if release.version.as_semver_tag() ~ " (" not in changelog_parts[1]
-%}{{        "\n"
-}}{%-       include "versioned_changes.rst.j2"
--%}{{       "\n"
-}}{%      endif
-%}{%    endfor
+#}{%    if releases | length == 1
+%}{#      # First Release detected
+#}{{      "\n"
+}}{%-     include "first_release.rst.j2"
+-%}{{     "\n"
+}}{%    else
+%}{#      # Latest Release Details
+#}{%      for release in new_releases
+%}{#        # Check if the release version is already in the changelog and if not, add it
+#}{%        if release.version.as_semver_tag() ~ " (" not in changelog_parts[1]
+%}{{          "\n"
+}}{%-         include "versioned_changes.rst.j2"
+-%}{{         "\n"
+}}{%        endif
+%}{%      endfor
+%}{%    endif
 %}{#
    #    Previous Changelog Footer
    #      - skips printing footer if empty, which happens when the insertion_flag
