@@ -1,36 +1,75 @@
-{% from 'macros.rst.j2' import generate_heading_underline, format_link_reference
+{%   from 'macros.rst.j2' import extract_pr_link_reference, format_link_reference
+%}{% from 'macros.rst.j2' import format_commit_summary_line, generate_heading_underline
 %}{#
 
 Features
 --------
 
-* summary (`8a7b8ec`_)
+* Add new feature (`#10`_, `8a7b8ec`_)
+
+* Add another feature (`abcdef0`_)
 
 Fixes
 -----
 
-* summary (`8a7b8ec`_)
+* Fix bug (`#11`_, `8a7b8ec`_)
 
-.. _8a7B8ec: https://github.com/owner/repo/commit/8a7b8ec
+.. _10: https://domain.com/namespace/repo/pull/10
+.. _8a7B8ec: https://domain.com/owner/repo/commit/8a7b8ec
+.. _abcdef0: https://domain.com/owner/repo/commit/abcdef0
+.. _11: https://domain.com/namespace/repo/pull/11
 
-#}{% set post_paragraph_links = []
+#}{%  set max_line_width = 100
+%}{%  set hanging_indent = 2
 %}{#
-#}{% for type_, commits in commit_objects
-%}{%    set section_header = "%s" | format(type_ | title)
-%}{{    "\n"
+#}{%  set post_paragraph_links = []
+%}{#
+#}{%  for type_, commits in commit_objects
+%}{#    PREPARE SECTION HEADER
+#}{%    set section_header = "%s" | format(type_ | title)
+%}{#    PREPROCESS COMMITS
+#}{%    set commit_descriptions = []
+%}{#
+#}{%    for commit in commits
+%}{#      # Extract PR/MR reference if it exists and store it for later
+#}{%      set pr_link_reference = extract_pr_link_reference(commit) | default("", true)
+%}{%      if pr_link_reference != ""
+%}{{        post_paragraph_links.append(pr_link_reference) | default("", true)
+}}{%      endif
+%}{#
+   #      # Always generate a commit hash reference link and store it for later
+#}{%      set commit_hash_link_reference = format_link_reference(
+            commit.hexsha | commit_hash_url,
+            commit.short_hash
+          )
+%}{{      post_paragraph_links.append(commit_hash_link_reference) | default("", true)
+}}{#
+          # Generate the commit summary line and format it for RST
+          # Update the first line with reference links and if commit description
+          # has more than one line, add the rest of the lines
+          # NOTE: This is specifically to make sure to not hide contents
+          # of squash commits (until parse support is added)
+#}{%      set description = "* %s" | format(format_commit_summary_line(commit))
+%}{%      if commit.descriptions | length > 1
+%}{%        set description = "%s\n%s" | format(
+              description, commit.descriptions[1:] | join("\n") | trim | indent(2, True)
+            )
+%}{%      endif
+%}{%      set description = description | convert_md_to_rst
+%}{%      set description = description | autofit_text_width(max_line_width, hanging_indent)
+%}{{      commit_descriptions.append(description) | default("", true)
+}}{%    endfor
+%}{#
+   #    # PRINT SECTION (Header & Commits)
+#}{{    "\n"
 }}{{    section_header ~ "\n"
 }}{{    generate_heading_underline(section_header, '-') ~ "\n"
-}}{#
-#}{%    for commit in commits
-%}{%        set commit_link_reference = format_link_reference(commit.hexsha | commit_hash_url, commit.short_hash)
-%}{{        post_paragraph_links.append(commit_link_reference) | default("", true)
 }}{{
-            "\n* %s (`%s`_)\n" | format(
-                commit.message.rstrip() | convert_md_to_rst,
-                commit.short_hash,
-            )
+        "\n%s\n" | format(commit_descriptions | unique | join("\n\n"))
 
-}}{%    endfor
-%}{% endfor
-%}
-{{ post_paragraph_links | join("\n") ~ "\n" }}
+}}{%  endfor
+%}{#
+   # # Print out any PR/MR or Issue URL references that were found in the commit messages
+#}{{
+  "\n%s\n" | format(post_paragraph_links | unique | sort | join("\n"))
+}}

@@ -1,8 +1,66 @@
-{# MACRO: format a post-paragraph link reference in RST #}
-{%    macro format_link_reference(link, label)
+{#
+  MACRO: format a post-paragraph link reference in RST
+#}{%  macro format_link_reference(link, label)
 %}{{    ".. _%s: %s" | format(label, link)
 }}{%  endmacro
 %}
+
+
+{#
+  MACRO: format commit summary line
+#}{%  macro format_commit_summary_line(commit)
+%}{{    commit_msg_links(commit)
+}}{%  endmacro
+%}
+
+
+{#
+  MACRO: Create & return an non-inline RST link from a commit message
+  - Returns empty string if no PR/MR identifier is found
+#}{%  macro extract_pr_link_reference(commit)
+%}{%    if commit.error is undefined
+%}{%      set summary_line = commit.descriptions[0]
+%}{#
+#}{%      if commit.linked_merge_request != ""
+%}{#        # Create a PR/MR reference url
+#}{{        format_link_reference(
+              commit.linked_merge_request | pull_request_url,
+              commit.linked_merge_request,
+            )
+}}{%      endif
+%}{%    endif
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: formats a commit message for a non-inline RST link for a commit hash and/or PR/MR
+#}{%  macro commit_msg_links(commit, hvcs_type)
+%}{%    if commit.error is undefined
+%}{%      set commit_hash_link = "`%s`_" | format(commit.short_hash)
+%}{#
+#}{%      set summary_line = commit.descriptions[0] | safe
+%}{%      set summary_line = [
+            summary_line.split(" ", maxsplit=1)[0] | capitalize,
+            summary_line.split(" ", maxsplit=1)[1]
+          ] | join(" ")
+%}{#
+#}{%      if commit.linked_merge_request != ""
+%}{#        # Add PR references with a link to the PR
+#}{%        set pr_link = "`%s`_" | format(commit.linked_merge_request)
+%}{%        set summary_line = "%s (%s, %s)" | format(summary_line, pr_link, commit_hash_link)
+%}{#
+          # DEFAULT: No PR identifier found, so just append a commit hash as url to the commit summary_line
+#}{%      else
+%}{%        set summary_line = "%s (%s)" | format(summary_line, commit_hash_link)
+%}{%      endif
+%}{#
+          # Return the modified summary_line
+#}{{      summary_line
+}}{%    endif
+%}{%  endmacro
+%}
+
 
 {# MACRO: generate a heading underline that matches the exact length of the header #}
 {%    macro generate_heading_underline(header, underline_char)
