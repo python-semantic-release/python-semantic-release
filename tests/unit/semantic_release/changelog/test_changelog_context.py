@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from textwrap import dedent
 from typing import TYPE_CHECKING
@@ -15,10 +16,14 @@ from semantic_release.enums import LevelBump
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 from semantic_release.version.translator import Version
 
+from tests.const import EXAMPLE_CHANGELOG_MD_CONTENT
+
 if TYPE_CHECKING:
     from pathlib import Path
 
     from git import Actor
+
+    from tests.fixtures.git_repo import BuildRepoFn
 
 
 @pytest.fixture
@@ -355,6 +360,82 @@ def test_changelog_context_gitlab(
 
     # Create changelog from template with environment
     actual_changelog = env.from_string(changelog_tpl_gitlab_context).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_read_file(
+    example_git_https_url: str,
+    build_configured_base_repo: BuildRepoFn,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+    change_to_ex_proj_dir: Path,
+    example_project_dir: Path,
+):
+    build_configured_base_repo(example_project_dir)
+
+    # normalize expected to os specific newlines
+    expected_changelog = str.join(
+        os.linesep,
+        [
+            *[
+                line.replace("\r", "")
+                for line in EXAMPLE_CHANGELOG_MD_CONTENT.strip().split("\n")
+            ],
+            "",
+        ],
+    )
+
+    changelog_tpl = """{{ "%s" | read_file | trim }}%ls""".replace(
+        "%s", str(changelog_md_file)
+    ).replace("%ls", os.linesep)
+
+    env = environment(
+        newline_sequence="\n" if os.linesep == "\n" else "\r\n",
+        trim_blocks=True,
+        lstrip_blocks=True,
+        keep_trailing_newline=True,
+        autoescape=False,
+    )
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog.encode() == actual_changelog.encode()
+
+
+@pytest.mark.parametrize("file_path", ["", "nonexistent.md"])
+def test_changelog_context_read_file_fails_gracefully(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+    file_path: str,
+):
+    changelog_tpl = """{{ "%s" | read_file }}""".replace("%s", file_path)
+    expected_changelog = ""
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
 
     # Evaluate
     assert expected_changelog == actual_changelog
