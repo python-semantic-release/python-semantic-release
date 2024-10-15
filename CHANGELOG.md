@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v9.11.1 (2024-10-15)
+
+### Fixes
+
+* fix(changelog): prevent custom template errors when components are in hidden folders (#1060) ([`a7614b0`](https://github.com/python-semantic-release/python-semantic-release/commit/a7614b0db8ce791e4252209e66f42b5b5275dffd))
+
+
 ## v9.11.0 (2024-10-12)
 
 ### Features
