@@ -88,8 +88,12 @@ def make_changelog_context(
 
 def read_file(filepath: str) -> str:
     try:
+        if not filepath:
+            raise FileNotFoundError("No file path provided")  # noqa: TRY301
+
         with Path(filepath).open(newline=os.linesep) as rfd:
             return rfd.read()
+
     except FileNotFoundError as err:
         logging.warning(err)
         return ""
