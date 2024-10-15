@@ -19,11 +19,11 @@ from semantic_release.enums import LevelBump
 if TYPE_CHECKING:
     from git.objects.commit import Commit
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _logged_parse_error(commit: Commit, error: str) -> ParseError:
-    log.debug(error)
+    logger.debug(error)
     return ParseError(commit, error=error)
 
 
@@ -131,12 +131,15 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             level_bump = LevelBump.PATCH
         else:
             level_bump = self.options.default_bump_level
-            log.debug(
+            logger.debug(
                 "commit %s introduces a level bump of %s due to the default_bump_level",
-                commit.hexsha,
+                commit.hexsha[:8],
                 level_bump,
             )
-        log.debug("commit %s introduces a %s level_bump", commit.hexsha, level_bump)
+
+        logger.debug(
+            "commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump
+        )
 
         return ParsedCommit(
             bump=level_bump,
