@@ -133,10 +133,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             level_bump = self.options.default_bump_level
             log.debug(
                 "commit %s introduces a level bump of %s due to the default_bump_level",
-                commit.hexsha,
+                commit.hexsha[:8],
                 level_bump,
             )
-        log.debug("commit %s introduces a %s level_bump", commit.hexsha, level_bump)
+        log.debug("commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump)
 
         return ParsedCommit(
             bump=level_bump,
