@@ -92,7 +92,6 @@ class ComplexDirectorySandboxedEnvironment(SandboxedEnvironment):
         return str(PurePosixPath(parent).parent / template)
 
 
-# pylint: disable=redefined-outer-name
 def recursive_render(
     template_dir: Path,
     environment: Environment,
@@ -103,13 +102,8 @@ def recursive_render(
         (Path(root), file)
         for root, _, files in os.walk(template_dir)
         for file in files
-        # we slice relpath.parts[1:] to allow the top-level
-        # template folder to have a dot prefix.
-        # e.g. to permit ".github/psr-templates" to contain the templates,
-        # rather than enforcing a top-level, non-hidden directory
         if not any(
-            elem.startswith(".")
-            for elem in Path(root).relative_to(template_dir).parts[1:]
+            elem.startswith(".") for elem in Path(root).relative_to(template_dir).parts
         )
         and not file.startswith(".")
     ):
