@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, TypedDict
 from git.objects.tag import TagObject
 
 from semantic_release.commit_parser import ParseError
+from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import tags_and_versions
 
 if TYPE_CHECKING:
@@ -113,10 +114,21 @@ class ReleaseHistory:
                 "unknown" if isinstance(parse_result, ParseError) else parse_result.type
             )
 
-            # Skip excluded commits except for any commit causing a breaking change
-            if any(
+            has_exclusion_match = any(
                 pattern.match(commit_message) for pattern in exclude_commit_patterns
-            ):
+            )
+
+            commit_level_bump = (
+                LevelBump.NO_RELEASE
+                if isinstance(parse_result, ParseError)
+                else parse_result.bump
+            )
+
+            # Skip excluded commits except for any commit causing a version bump
+            # Reasoning: if a commit causes a version bump, and no other commits
+            # are included, then the changelog will be empty. Even if ther was other
+            # commits included, the true reason for a version bump would be missing.
+            if has_exclusion_match and commit_level_bump == LevelBump.NO_RELEASE:
                 log.info(
                     "Excluding commit [%s] %s",
                     commit.hexsha[:8],
