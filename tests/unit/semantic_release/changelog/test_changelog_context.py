@@ -439,3 +439,53 @@ def test_changelog_context_read_file_fails_gracefully(
 
     # Evaluate
     assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_autofit_text_width(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog_tpl = """{{ "This is a long line that should be autofitted" | autofit_text_width(20) }}"""
+    expected_changelog = "This is a long line\nthat should be\nautofitted"
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_autofit_text_width_w_indent(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog_tpl = """{{ "This is a long line that should be autofitted" | autofit_text_width(20, indent_size=2) }}"""
+    expected_changelog = "This is a long line\n  that should be\n  autofitted"
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog

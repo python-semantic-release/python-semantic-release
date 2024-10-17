@@ -587,6 +587,24 @@ arguments are passed in parentheses like normal function calls.
 
 The filters provided vary based on the VCS configured and available features:
 
+* ``autofit_text_width (Callable[[textStr, maxWidthInt, indent_sizeInt], textStr])``: given a
+  text string, fit the text to the maximum width provided. This filter is useful when you want
+  to wrap text to a specific width. The filter will attempt to break the text at word boundaries
+  and will indent the text by the amount specified in the ``indent_size`` parameter.
+
+  *Introduced in v9.12.0.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{ "This is a long string that needs to be wrapped to a specific width" | autofit_text_width(40, 4) }}
+
+  .. code:: markdown
+
+      This is a long string that needs to be
+          wrapped to a specific width
+
 * ``convert_md_to_rst (Callable[[MdStr], RstStr])``: given a markdown string, convert it to
   reStructuredText format. This filter is useful when building a reStructuredText changelog
   but your commit messages are in markdown format. It is utilized by the default RST changelog
@@ -744,6 +762,7 @@ Availability of the documented filters can be found in the table below:
 ======================  =========  =====  ======  ======
 **filter - hvcs_type**  bitbucket  gitea  github  gitlab
 ======================  =========  =====  ======  ======
+autofit_text_width         ✅       ✅      ✅      ✅
 convert_md_to_rst          ✅       ✅      ✅      ✅
 create_server_url          ✅       ✅      ✅      ✅
 create_repo_url            ✅       ✅      ✅      ✅

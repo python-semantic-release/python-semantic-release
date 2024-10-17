@@ -82,6 +82,7 @@ def make_changelog_context(
             *hvcs_client.get_changelog_context_filters(),
             read_file,
             convert_md_to_rst,
+            autofit_text_width,
         ),
     )
 
@@ -116,3 +117,51 @@ def convert_md_to_rst(md_content: str) -> str:
         rst_content = pattern.sub(replacement, rst_content)
 
     return rst_content
+
+
+def autofit_text_width(text: str, maxwidth: int = 100, indent_size: int = 0) -> str:
+    """Format the description text to fit within a specified width"""
+    input_text = text.strip()
+
+    if len(input_text) <= maxwidth:
+        # If the text is already within the maxwidth, return immediately
+        return input_text
+
+    indent = " " * indent_size
+    formatted_description = []
+
+    # Re-format text to fit within the maxwidth
+    for paragraph in input_text.split("\n\n"):
+        formatted_paragraph = []
+
+        # Split the paragraph into words with no empty strings
+        words = list(
+            filter(
+                None, paragraph.replace("\r", "").replace("\n", " ").strip().split(" ")
+            )
+        )
+
+        # Initialize the line for each paragraph
+        line = words[0]
+        next_line = ""
+
+        for word in words[1:]:
+            # Check if the current line + the next word (and a space) will fit within the maxwidth
+            # If it does, then update the current line
+            next_line = f"{line} {word}"
+            if len(next_line) <= maxwidth:
+                line = next_line
+                continue
+
+            # Add the current line to the paragraph and start a new line
+            formatted_paragraph.append(line)
+            line = f"{indent}{word}"
+
+        # Store the last line in the paragraph since it hasn't reached the maxwidth yet
+        formatted_paragraph.append(line)
+
+        #
+        formatted_description.append(str.join("\n", formatted_paragraph))
+
+    # Print the formatted description
+    return str.join("\n\n", formatted_description).strip()
