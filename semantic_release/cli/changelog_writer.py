@@ -12,6 +12,7 @@ from importlib_resources import files
 import semantic_release
 from semantic_release.changelog.context import (
     ReleaseNotesContext,
+    autofit_text_width,
     make_changelog_context,
 )
 from semantic_release.changelog.template import environment, recursive_render
@@ -245,7 +246,7 @@ def generate_release_notes(
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         version=release["version"],
         release=release,
-        filters=(*hvcs_client.get_changelog_context_filters(),),
+        filters=(*hvcs_client.get_changelog_context_filters(), autofit_text_width),
     ).bind_to_environment(
         # Use a new, non-configurable environment for release notes -
         # not user-configurable at the moment
