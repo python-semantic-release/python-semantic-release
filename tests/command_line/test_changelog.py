@@ -40,28 +40,22 @@ from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
-    repo_w_github_flow_w_feature_release_channel_tag_commits,
     repo_with_git_flow_and_release_channels_angular_commits,
     repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
     repo_with_git_flow_and_release_channels_emoji_commits,
     repo_with_git_flow_and_release_channels_scipy_commits,
-    repo_with_git_flow_and_release_channels_tag_commits,
     repo_with_git_flow_angular_commits,
     repo_with_git_flow_emoji_commits,
     repo_with_git_flow_scipy_commits,
-    repo_with_git_flow_tag_commits,
     repo_with_no_tags_angular_commits,
     repo_with_no_tags_emoji_commits,
     repo_with_no_tags_scipy_commits,
-    repo_with_no_tags_tag_commits,
     repo_with_single_branch_and_prereleases_angular_commits,
     repo_with_single_branch_and_prereleases_emoji_commits,
     repo_with_single_branch_and_prereleases_scipy_commits,
-    repo_with_single_branch_and_prereleases_tag_commits,
     repo_with_single_branch_angular_commits,
     repo_with_single_branch_emoji_commits,
     repo_with_single_branch_scipy_commits,
-    repo_with_single_branch_tag_commits,
 )
 from tests.util import (
     add_text_to_file,
@@ -168,27 +162,21 @@ def test_changelog_noop_is_noop(
             repo_with_no_tags_angular_commits.__name__,
             repo_with_no_tags_emoji_commits.__name__,
             repo_with_no_tags_scipy_commits.__name__,
-            repo_with_no_tags_tag_commits.__name__,
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
             repo_with_single_branch_and_prereleases_angular_commits.__name__,
             repo_with_single_branch_and_prereleases_emoji_commits.__name__,
             repo_with_single_branch_and_prereleases_scipy_commits.__name__,
-            repo_with_single_branch_and_prereleases_tag_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_tag_commits.__name__,
             repo_with_git_flow_angular_commits.__name__,
             repo_with_git_flow_emoji_commits.__name__,
             repo_with_git_flow_scipy_commits.__name__,
-            repo_with_git_flow_tag_commits.__name__,
             repo_with_git_flow_and_release_channels_angular_commits.__name__,
             repo_with_git_flow_and_release_channels_emoji_commits.__name__,
             repo_with_git_flow_and_release_channels_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_tag_commits.__name__,
             repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
         ]
     ],
@@ -260,7 +248,6 @@ def test_changelog_content_regenerated(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
         ]
     ],
 )
@@ -318,11 +305,9 @@ def test_changelog_update_mode_unchanged(
             repo_with_no_tags_angular_commits.__name__,
             repo_with_no_tags_emoji_commits.__name__,
             repo_with_no_tags_scipy_commits.__name__,
-            repo_with_no_tags_tag_commits.__name__,
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
         ]
     ],
 )
@@ -383,7 +368,6 @@ def test_changelog_update_mode_no_prev_changelog(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
         ]
     ],
 )
@@ -460,7 +444,6 @@ def test_changelog_update_mode_no_flag(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
         ]
     ],
 )
@@ -557,7 +540,6 @@ def test_changelog_update_mode_no_header(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
         ]
     ],
 )
@@ -657,7 +639,6 @@ def test_changelog_update_mode_no_footer(
             repo_with_no_tags_angular_commits.__name__,
             repo_with_no_tags_emoji_commits.__name__,
             repo_with_no_tags_scipy_commits.__name__,
-            repo_with_no_tags_tag_commits.__name__,
         ]
     ],
 )
@@ -757,7 +738,6 @@ def test_changelog_update_mode_no_releases(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
         ]
     ],
 )

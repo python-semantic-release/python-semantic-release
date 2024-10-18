@@ -38,28 +38,22 @@ from tests.fixtures.repos import (
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
-    repo_w_github_flow_w_feature_release_channel_tag_commits,
     repo_with_git_flow_and_release_channels_angular_commits,
     repo_with_git_flow_and_release_channels_angular_commits_using_tag_format,
     repo_with_git_flow_and_release_channels_emoji_commits,
     repo_with_git_flow_and_release_channels_scipy_commits,
-    repo_with_git_flow_and_release_channels_tag_commits,
     repo_with_git_flow_angular_commits,
     repo_with_git_flow_emoji_commits,
     repo_with_git_flow_scipy_commits,
-    repo_with_git_flow_tag_commits,
     repo_with_no_tags_angular_commits,
     repo_with_no_tags_emoji_commits,
     repo_with_no_tags_scipy_commits,
-    repo_with_no_tags_tag_commits,
     repo_with_single_branch_and_prereleases_angular_commits,
     repo_with_single_branch_and_prereleases_emoji_commits,
     repo_with_single_branch_and_prereleases_scipy_commits,
-    repo_with_single_branch_and_prereleases_tag_commits,
     repo_with_single_branch_angular_commits,
     repo_with_single_branch_emoji_commits,
     repo_with_single_branch_scipy_commits,
-    repo_with_single_branch_tag_commits,
 )
 from tests.util import (
     actions_output_to_dict,
@@ -1136,23 +1130,18 @@ def test_custom_release_notes_template(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
             repo_with_single_branch_and_prereleases_angular_commits.__name__,
             repo_with_single_branch_and_prereleases_emoji_commits.__name__,
             repo_with_single_branch_and_prereleases_scipy_commits.__name__,
-            repo_with_single_branch_and_prereleases_tag_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_tag_commits.__name__,
             repo_with_git_flow_angular_commits.__name__,
             repo_with_git_flow_emoji_commits.__name__,
             repo_with_git_flow_scipy_commits.__name__,
-            repo_with_git_flow_tag_commits.__name__,
             repo_with_git_flow_and_release_channels_angular_commits.__name__,
             repo_with_git_flow_and_release_channels_emoji_commits.__name__,
             repo_with_git_flow_and_release_channels_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_tag_commits.__name__,
             repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
         ]
     ],
@@ -1257,7 +1246,6 @@ def test_version_updates_changelog_w_new_version(
             repo_with_no_tags_angular_commits.__name__,
             repo_with_no_tags_emoji_commits.__name__,
             repo_with_no_tags_scipy_commits.__name__,
-            repo_with_no_tags_tag_commits.__name__,
         ]
     ],
 )
@@ -1390,23 +1378,18 @@ def test_version_updates_changelog_wo_prev_releases(
             repo_with_single_branch_angular_commits.__name__,
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_tag_commits.__name__,
             repo_with_single_branch_and_prereleases_angular_commits.__name__,
             repo_with_single_branch_and_prereleases_emoji_commits.__name__,
             repo_with_single_branch_and_prereleases_scipy_commits.__name__,
-            repo_with_single_branch_and_prereleases_tag_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
             repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_tag_commits.__name__,
             repo_with_git_flow_angular_commits.__name__,
             repo_with_git_flow_emoji_commits.__name__,
             repo_with_git_flow_scipy_commits.__name__,
-            repo_with_git_flow_tag_commits.__name__,
             repo_with_git_flow_and_release_channels_angular_commits.__name__,
             repo_with_git_flow_and_release_channels_emoji_commits.__name__,
             repo_with_git_flow_and_release_channels_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_tag_commits.__name__,
             repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
         ]
     ],
@@ -1728,7 +1711,7 @@ def test_version_only_update_files_no_git_actions(
 
 
 def test_version_print_last_released_prints_version(
-    repo_with_single_branch_tag_commits: Repo, cli_runner: CliRunner
+    repo_with_single_branch_angular_commits: Repo, cli_runner: CliRunner
 ):
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
 
@@ -1741,15 +1724,15 @@ def test_version_print_last_released_prints_version(
 
 
 def test_version_print_last_released_prints_released_if_commits(
-    repo_with_single_branch_tag_commits: Repo,
+    repo_with_single_branch_angular_commits: Repo,
     example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
     new_file = example_project_dir / "temp.txt"
     new_file.write_text("test --print-last-released")
 
-    repo_with_single_branch_tag_commits.git.add(str(new_file.resolve()))
-    repo_with_single_branch_tag_commits.git.commit(m="fix: temp new file")
+    repo_with_single_branch_angular_commits.git.add(str(new_file.resolve()))
+    repo_with_single_branch_angular_commits.git.commit(m="fix: temp new file")
 
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
 
@@ -1777,10 +1760,10 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
 
 def test_version_print_last_released_on_detached_head(
     cli_runner: CliRunner,
-    repo_with_single_branch_tag_commits: Repo,
+    repo_with_single_branch_angular_commits: Repo,
 ):
     last_version = "0.1.1"
-    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    repo_with_single_branch_angular_commits.git.checkout("HEAD", detach=True)
 
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
 
@@ -1795,10 +1778,10 @@ def test_version_print_last_released_on_detached_head(
 
 def test_version_print_last_released_on_nonrelease_branch(
     cli_runner: CliRunner,
-    repo_with_single_branch_tag_commits: Repo,
+    repo_with_single_branch_angular_commits: Repo,
 ):
     last_version = "0.1.1"
-    repo_with_single_branch_tag_commits.create_head("next").checkout()
+    repo_with_single_branch_angular_commits.create_head("next").checkout()
 
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
 
@@ -1813,10 +1796,10 @@ def test_version_print_last_released_on_nonrelease_branch(
 
 def test_version_print_last_released_tag_on_detached_head(
     cli_runner: CliRunner,
-    repo_with_single_branch_tag_commits: Repo,
+    repo_with_single_branch_angular_commits: Repo,
 ):
     last_version = "v0.1.1"
-    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    repo_with_single_branch_angular_commits.git.checkout("HEAD", detach=True)
 
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
 
@@ -1831,10 +1814,10 @@ def test_version_print_last_released_tag_on_detached_head(
 
 def test_version_print_last_released_tag_on_nonrelease_branch(
     cli_runner: CliRunner,
-    repo_with_single_branch_tag_commits: Repo,
+    repo_with_single_branch_angular_commits: Repo,
 ):
     last_version_tag = "v0.1.1"
-    repo_with_single_branch_tag_commits.create_head("next").checkout()
+    repo_with_single_branch_angular_commits.create_head("next").checkout()
 
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
 
@@ -1849,13 +1832,13 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
 def test_version_print_next_version_fails_on_detached_head(
     cli_runner: CliRunner,
-    repo_with_single_branch_tag_commits: Repo,
+    repo_with_single_branch_angular_commits: Repo,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
 ):
     # Setup
-    repo_with_single_branch_tag_commits.git.checkout("HEAD", detach=True)
+    repo_with_single_branch_angular_commits.git.checkout("HEAD", detach=True)
     simulate_change_commits_n_rtn_changelog_entry(
-        repo_with_single_branch_tag_commits,
+        repo_with_single_branch_angular_commits,
         [{"msg": "fix: make a patch fix to codebase", "sha": NULL_HEX_SHA}],
     )
     expected_error_msg = (

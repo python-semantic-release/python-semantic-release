@@ -80,38 +80,8 @@ EMOJI_COMMITS_MINOR = [
 EMOJI_COMMITS_MAJOR = EMOJI_COMMITS_MINOR.copy()
 EMOJI_COMMITS_MAJOR.insert(4, ":boom: Move to the blockchain")
 
-
 # Note - the scipy commit fixtures for commits that should evaluate to the various scopes
 # are in tests/fixtures/scipy
-
-
-TAG_COMMITS_PATCH = [
-    ":nut_and_bolt: something annoying\n",
-    "fixup the bugfix\n",
-    "oops it broke again\n",
-    "fix\n",
-    "fix\n",
-    "fix\n",
-    "fix\n",
-    ":persevere: fix\n",
-    ":nut_and_bolt: release the bugfix-fix\n",
-]
-TAG_COMMITS_MINOR = [
-    ":sparkles: something special\n",
-    ":nut_and_bolt: needed a tweak\n",
-    "tweaked again\n",
-    "tweaked again\n",
-    "tweaked again\n",
-    "fix\n",
-    "fix\n",
-    ":sparkles: last minute rush order\n",
-]
-TAG_COMMITS_MAJOR = TAG_COMMITS_MINOR.copy()
-TAG_COMMITS_MAJOR.insert(
-    4,
-    ":nut_and_bolt: big change\n\nBREAKING CHANGE: reworked something for previous "
-    "feature\n",
-)
 
 EXAMPLE_PROJECT_NAME = "example"
 EXAMPLE_PROJECT_VERSION = "0.0.0"
