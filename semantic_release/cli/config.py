@@ -370,6 +370,22 @@ class RawConfig(BaseModel):
             )
         return found_path
 
+    @field_validator("commit_parser", mode="after")
+    @classmethod
+    def tag_commit_parser_deprecation_warning(cls, val: str) -> str:
+        if val == "tag":
+            log.warning(
+                str.join(
+                    " ",
+                    [
+                        "The legacy 'tag' parser is deprecated and will be removed in v11.",
+                        "Recommend swapping to our emoji parser (higher-compatibility)",
+                        "or switch to another supported parser.",
+                    ],
+                )
+            )
+        return val
+
     @field_validator("build_command_env", mode="after")
     @classmethod
     def remove_whitespace(cls, val: list[str]) -> list[str]:
