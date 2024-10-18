@@ -35,7 +35,7 @@ LONG_TYPE_NAMES = {
     "chore": "chores",
     "docs": "documentation",
     "feat": "features",
-    "fix": "fixes",
+    "fix": "bug fixes",
     "perf": "performance improvements",
     "refactor": "refactoring",
     "style": "code style",

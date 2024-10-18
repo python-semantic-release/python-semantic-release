@@ -39,7 +39,7 @@ def changelog_tpl_github_context() -> str:
 
         {{ "[Change Summary](%s)" | format("v1.0.0" | compare_url("v2.0.0")) }}
 
-        ### Fixes
+        ### Bug Fixes
 
         - Fixed a minor bug {{ "([#%s](%s))" | format(22, 22 | pull_request_url) }}
         - **cli:** fix a problem {{ "([%s](%s))" | format("000000", "000000" | commit_hash_url) }}
@@ -62,7 +62,7 @@ def changelog_tpl_gitea_context() -> str:
 
         ## v2.0.0
 
-        ### Fixes
+        ### Bug Fixes
 
         - Fixed a minor bug {{ "([#%s](%s))" | format(22, 22 | pull_request_url) }}
         - **cli:** fix a problem {{ "([%s](%s))" | format("000000", "000000" | commit_hash_url) }}
@@ -87,7 +87,7 @@ def changelog_tpl_gitlab_context() -> str:
 
         {{ "[Change Summary](%s)" | format("v1.0.0" | compare_url("v2.0.0")) }}
 
-        ### Fixes
+        ### Bug Fixes
 
         - Fixed a minor bug {{ "([#%s](%s))" | format(22, 22 | merge_request_url) }}
         - Fixed a performance bug {{ "([#%s](%s))" | format(25, 25 | pull_request_url) }}
@@ -113,7 +113,7 @@ def changelog_tpl_bitbucket_context() -> str:
 
         {{ "[Change Summary](%s)" | format("v1.0.0" | compare_url("v2.0.0")) }}
 
-        ### Fixes
+        ### Bug Fixes
 
         - Fixed a minor bug {{ "([#%s](%s))" | format(22, 22 | pull_request_url) }}
         - **cli:** fix a problem {{ "([%s](%s))" | format("000000", "000000" | commit_hash_url) }}
@@ -197,7 +197,7 @@ def test_changelog_context_bitbucket(
             "",
             f'[Change Summary]({hvcs.compare_url("v1.0.0", "v2.0.0")})',
             "",
-            "### Fixes",
+            "### Bug Fixes",
             "",
             f"- Fixed a minor bug ([#22]({hvcs.pull_request_url(22)}))",
             f'- **cli:** fix a problem ([000000]({hvcs.commit_hash_url("000000")}))',
@@ -241,7 +241,7 @@ def test_changelog_context_github(
             "",
             f'[Change Summary]({hvcs.compare_url("v1.0.0", "v2.0.0")})',
             "",
-            "### Fixes",
+            "### Bug Fixes",
             "",
             f"- Fixed a minor bug ([#22]({hvcs.pull_request_url(22)}))",
             f'- **cli:** fix a problem ([000000]({hvcs.commit_hash_url("000000")}))',
@@ -287,7 +287,7 @@ def test_changelog_context_gitea(
             "",
             "## v2.0.0",
             "",
-            "### Fixes",
+            "### Bug Fixes",
             "",
             f"- Fixed a minor bug ([#22]({hvcs.pull_request_url(22)}))",
             f'- **cli:** fix a problem ([000000]({hvcs.commit_hash_url("000000")}))',
@@ -335,7 +335,7 @@ def test_changelog_context_gitlab(
             "",
             f'[Change Summary]({hvcs.compare_url("v1.0.0", "v2.0.0")})',
             "",
-            "### Fixes",
+            "### Bug Fixes",
             "",
             f"- Fixed a minor bug ([#22]({hvcs.merge_request_url(22)}))",
             f"- Fixed a performance bug ([#25]({hvcs.pull_request_url(25)}))",
