@@ -91,11 +91,6 @@ def emoji_chore_commits() -> list[str]:
     return [":broom: change dev tool configuration"]
 
 
-@pytest.fixture
-def tag_chore_commits() -> list[str]:
-    return [":broom: change dev tool configuration"]
-
-
 # TODO: it'd be nice to not hard-code the versions into
 # this testing
 
