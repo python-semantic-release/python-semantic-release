@@ -763,7 +763,7 @@ Built-in parsers:
     * ``angular`` - :ref:`AngularCommitParser <commit-parser-angular>`
     * ``emoji`` - :ref:`EmojiCommitParser <commit-parser-emoji>`
     * ``scipy`` - :ref:`ScipyCommitParser <commit-parser-scipy>`
-    * ``tag`` - :ref:`TagCommitParser <commit-parser-tag>`
+    * ``tag`` - :ref:`TagCommitParser <commit-parser-tag>` *(deprecated in v9.12.0)*
 
 You can set any of the built-in parsers by their keyword but you can also specify
 your own commit parser in ``module:attr`` form.
