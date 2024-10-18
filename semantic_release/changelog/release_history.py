@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, TypedDict
 from git.objects.tag import TagObject
 
 from semantic_release.commit_parser import ParseError
+from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import tags_and_versions
 
 if TYPE_CHECKING:
@@ -58,20 +59,11 @@ class ReleaseHistory:
         # we place the key-value mapping type_ to ParseResult as before.
         # We do this until we encounter a commit which another tag matches.
 
-        is_commit_released = False
         the_version: Version | None = None
 
         for commit in repo.iter_commits("HEAD", topo_order=True):
-            # mypy will be happy if we make this an explicit string
-            commit_message = str(commit.message)
-
-            parse_result = commit_parser.parse(commit)
-            commit_type = (
-                "unknown" if isinstance(parse_result, ParseError) else parse_result.type
-            )
-            log.debug("commit has type %s", commit_type)
-
-            log.debug("checking if commit %s matches any tags", commit.hexsha)
+            # Determine if we have found another release
+            log.debug("checking if commit %s matches any tags", commit.hexsha[:7])
             t_v = tag_sha_2_version_lookup.get(commit.hexsha, None)
 
             if t_v is None:
@@ -82,7 +74,6 @@ class ReleaseHistory:
                 # we have found the latest commit introduced by this tag
                 # so we create a new Release entry
                 log.debug("found commit %s for tag %s", commit.hexsha, tag.name)
-                is_commit_released = True
 
                 # tag.object is a Commit if the tag is lightweight, otherwise
                 # it is a TagObject with additional metadata about the tag
@@ -110,27 +101,55 @@ class ReleaseHistory:
 
                 released.setdefault(the_version, release)
 
-            if any(pat.match(commit_message) for pat in exclude_commit_patterns):
-                log.debug(
-                    "Skipping excluded commit %s (%s)",
-                    commit.hexsha,
-                    commit_message.replace("\n", " ")[:20],
+            # mypy will be happy if we make this an explicit string
+            commit_message = str(commit.message)
+
+            log.info(
+                "parsing commit [%s] %s",
+                commit.hexsha[:8],
+                commit_message.replace("\n", " ")[:54],
+            )
+            parse_result = commit_parser.parse(commit)
+            commit_type = (
+                "unknown" if isinstance(parse_result, ParseError) else parse_result.type
+            )
+
+            has_exclusion_match = any(
+                pattern.match(commit_message) for pattern in exclude_commit_patterns
+            )
+
+            commit_level_bump = (
+                LevelBump.NO_RELEASE
+                if isinstance(parse_result, ParseError)
+                else parse_result.bump
+            )
+
+            # Skip excluded commits except for any commit causing a version bump
+            # Reasoning: if a commit causes a version bump, and no other commits
+            # are included, then the changelog will be empty. Even if ther was other
+            # commits included, the true reason for a version bump would be missing.
+            if has_exclusion_match and commit_level_bump == LevelBump.NO_RELEASE:
+                log.info(
+                    "Excluding commit [%s] %s",
+                    commit.hexsha[:8],
+                    commit_message.replace("\n", " ")[:50],
                 )
                 continue
 
-            if not is_commit_released:
-                log.debug("adding commit %s to unreleased commits", commit.hexsha)
+            if the_version is None:
+                log.info(
+                    "[Unreleased] adding '%s' commit(%s) to list",
+                    commit.hexsha[:8],
+                    commit_type,
+                )
                 unreleased[commit_type].append(parse_result)
                 continue
 
-            if the_version is None:
-                raise RuntimeError("expected a version to be found")
-
-            log.debug(
-                "adding commit %s with type %s to release section for %s",
-                commit.hexsha,
-                commit_type,
+            log.info(
+                "[%s] adding '%s' commit(%s) to release",
                 the_version,
+                commit_type,
+                commit.hexsha[:8],
             )
 
             released[the_version]["elements"][commit_type].append(parse_result)
