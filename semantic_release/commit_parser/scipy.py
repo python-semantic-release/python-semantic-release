@@ -59,11 +59,11 @@ from semantic_release.enums import LevelBump
 if TYPE_CHECKING:
     from git.objects.commit import Commit
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _logged_parse_error(commit: Commit, error: str) -> ParseError:
-    log.debug(error)
+    logger.debug(error)
     return ParseError(commit, error=error)
 
 
@@ -165,17 +165,19 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
                 level_bump = self.options.tag_to_level.get(
                     tag, self.options.default_level_bump
                 )
-                log.debug(
-                    "commit %s introduces a %s level_bump", commit.hexsha, level_bump
+                logger.debug(
+                    "commit %s introduces a %s level_bump",
+                    commit.hexsha[:8],
+                    level_bump,
                 )
                 break
         else:
             # some commits may not have a tag, e.g. if they belong to a PR that
             # wasn't squashed (for maintainability) ignore them
             section, level_bump = "None", self.options.default_level_bump
-            log.debug(
-                "commit %s introduces a level bump of %s due to the default_bump_level",
-                commit.hexsha,
+            logger.debug(
+                "commit %s introduces a level bump of %s due to the default bump level",
+                commit.hexsha[:8],
                 level_bump,
             )
 
@@ -185,9 +187,9 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         ]
         if migration_instructions:
             level_bump = LevelBump.MAJOR
-            log.debug(
-                "commit %s upgraded to a %s level_bump due to migration_instructions",
-                commit.hexsha,
+            logger.debug(
+                "commit %s upgraded to a %s level bump due to included migration instructions",
+                commit.hexsha[:8],
                 level_bump,
             )
 
