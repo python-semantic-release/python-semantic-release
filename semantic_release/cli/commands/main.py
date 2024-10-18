@@ -19,7 +19,7 @@ from semantic_release.cli.util import rprint
 #     pass
 
 
-FORMAT = "[%(name)s] %(levelname)s %(module)s.%(funcName)s: %(message)s"
+FORMAT = "[%(module)s.%(funcName)s] %(message)s"
 
 
 class Cli(click.MultiCommand):
