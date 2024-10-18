@@ -55,7 +55,7 @@ def get_commits_for_trunk_only_repo_w_tags() -> GetRepoDefinitionFn:
         },
         "0.1.1": {
             "changelog_sections": {
-                "angular": [{"section": "Fixes", "i_commits": [0]}],
+                "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
                 "tag": [{"section": "Fix", "i_commits": [0]}],
