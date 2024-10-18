@@ -337,7 +337,7 @@ before the :ref:`version <cmd-version>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release/python-semantic-release@v9.11.1
+    - uses: python-semantic-release/python-semantic-release@v9.12.0
       with:
         root_options: "-vv --noop"
 
@@ -684,7 +684,7 @@ to the GitHub Release Assets as well.
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release/python-semantic-release@v9.11.1
+            uses: python-semantic-release/python-semantic-release@v9.12.0
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
@@ -744,7 +744,7 @@ The equivalent GitHub Action configuration would be:
 
   - name: Action | Semantic Version Release
     # Adjust tag with desired version if applicable.
-    uses: python-semantic-release/python-semantic-release@v9.11.1
+    uses: python-semantic-release/python-semantic-release@v9.12.0
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
       force: patch
@@ -772,13 +772,13 @@ Publish Action.
 .. code:: yaml
 
    - name: Release Project 1
-     uses: python-semantic-release/python-semantic-release@v9.11.1
+     uses: python-semantic-release/python-semantic-release@v9.12.0
      with:
        directory: ./project1
        github_token: ${{ secrets.GITHUB_TOKEN }}
 
    - name: Release Project 2
-     uses: python-semantic-release/python-semantic-release@v9.11.1
+     uses: python-semantic-release/python-semantic-release@v9.12.0
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
