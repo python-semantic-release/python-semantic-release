@@ -43,7 +43,7 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
                 # referenced by index value
                 "angular": [
                     {"section": "Features", "i_commits": [2]},
-                    {"section": "Fixes", "i_commits": [3, 1]},
+                    {"section": "Bug Fixes", "i_commits": [3, 1]},
                     {"section": "Unknown", "i_commits": [0]},
                 ],
                 "emoji": [
