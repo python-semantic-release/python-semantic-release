@@ -64,7 +64,7 @@ def test_parser_returns_correct_bump_level(
     "message, type_",
     [
         ("feat(parser): ...", "features"),
-        ("fix(parser): ...", "fixes"),
+        ("fix(parser): ...", "bug fixes"),
         ("test(parser): ...", "testing"),
         ("docs(parser): ...", "documentation"),
         ("style(parser): ...", "code style"),
