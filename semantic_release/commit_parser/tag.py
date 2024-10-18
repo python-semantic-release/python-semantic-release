@@ -11,7 +11,7 @@ from semantic_release.commit_parser.token import ParsedCommit, ParseError, Parse
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 re_parser = re.compile(r"(?P<subject>[^\n]+)" + r"(:?\n\n(?P<text>.+))?", re.DOTALL)
 
@@ -23,7 +23,7 @@ class TagParserOptions(ParserOptions):
 
 
 def _logged_parse_error(commit: Commit, error: str) -> ParseError:
-    log.debug(error)
+    logger.debug(error)
     return ParseError(commit, error=error)
 
 
@@ -87,11 +87,15 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
         if breaking_descriptions:
             level = "breaking"
             level_bump = LevelBump.MAJOR
-            log.debug(
-                "commit %s upgraded to a %s level_bump due to breaking_descriptions",
-                commit.hexsha,
+            logger.debug(
+                "commit %s upgraded to a %s level_bump due to included breaking descriptions",
+                commit.hexsha[:8],
                 level_bump,
             )
+
+        logger.debug(
+            "commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump
+        )
 
         return ParsedCommit(
             bump=level_bump,
