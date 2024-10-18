@@ -97,6 +97,10 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
                 level_bump,
             )
 
+        logger.debug(
+            "commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump
+        )
+
         # All emojis will remain part of the returned description
         descriptions = parse_paragraphs(message)
         return ParsedCommit(
