@@ -14,7 +14,6 @@ from semantic_release.commit_parser import (
     AngularCommitParser,
     EmojiCommitParser,
     ScipyCommitParser,
-    TagCommitParser,
 )
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
@@ -367,20 +366,6 @@ def use_scipy_parser(
         return ScipyCommitParser
 
     return _use_scipy_parser
-
-
-@pytest.fixture(scope="session")
-def use_tag_parser(
-    update_pyproject_toml: UpdatePyprojectTomlFn,
-    pyproject_toml_config_option_parser: str,
-) -> UseParserFn:
-    """Modify the configuration file to use the Tag parser."""
-
-    def _use_tag_parser() -> type[CommitParser]:
-        update_pyproject_toml(pyproject_toml_config_option_parser, "tag")
-        return TagCommitParser
-
-    return _use_tag_parser
 
 
 @pytest.fixture(scope="session")

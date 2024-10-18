@@ -42,14 +42,12 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Unknown", "i_commits": [0]}],
                 "emoji": [{"section": "Other", "i_commits": [0]}],
                 "scipy": [{"section": "Unknown", "i_commits": [0]}],
-                "tag": [{"section": "Unknown", "i_commits": [0]}],
             },
             "commits": [
                 {
                     "angular": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
                     "emoji": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
                     "scipy": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
-                    "tag": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
                 },
             ],
         },
@@ -58,17 +56,12 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
-                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
             "commits": [
                 {
                     "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
                     "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
                     "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
-                    "tag": {
-                        "msg": ":nut_and_bolt: correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 }
             ],
         },
@@ -77,7 +70,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Breaking", "i_commits": [0]}],
                 "emoji": [{"section": ":boom:", "i_commits": [0]}],
                 "scipy": [{"section": "Breaking", "i_commits": [0]}],
-                "tag": [{"section": "Breaking", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -93,10 +85,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                         "msg": "API: add revolutionary feature",
                         "sha": NULL_HEX_SHA,
                     },
-                    "tag": {
-                        "msg": ":sparkles: add revolutionary feature\n\nBREAKING CHANGE: add revolutionary feature",
-                        "sha": NULL_HEX_SHA,
-                    },
                 }
             ],
         },
@@ -105,7 +93,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
-                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -115,10 +102,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                         "sha": NULL_HEX_SHA,
                     },
                     "scipy": {"msg": "ENH: add some more text", "sha": NULL_HEX_SHA},
-                    "tag": {
-                        "msg": ":sparkles: add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 }
             ],
         },
@@ -127,7 +110,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
-                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -143,10 +125,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                         "msg": "ENH(dev): add some more text",
                         "sha": NULL_HEX_SHA,
                     },
-                    "tag": {
-                        "msg": ":sparkles: (dev) add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 }
             ],
         },
@@ -155,7 +133,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
-                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -171,10 +148,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                         "msg": "MAINT(dev): correct some text",
                         "sha": NULL_HEX_SHA,
                     },
-                    "tag": {
-                        "msg": ":nut_and_bolt: correct dev-scoped text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 }
             ],
         },
@@ -183,7 +156,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
-                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -199,7 +171,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                         "msg": "ENH(scope): add some more text",
                         "sha": NULL_HEX_SHA,
                     },
-                    "tag": {"msg": ":sparkles: add scoped change", "sha": NULL_HEX_SHA},
                 }
             ],
         },
@@ -208,7 +179,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
                 "scipy": [{"section": "Feature", "i_commits": [0]}],
-                "tag": [{"section": "Feature", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -224,7 +194,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                         "msg": "ENH(scope): add some more text",
                         "sha": NULL_HEX_SHA,
                     },
-                    "tag": {"msg": ":sparkles: add scoped change", "sha": NULL_HEX_SHA},
                 },
             ],
         },
@@ -233,7 +202,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                 "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
                 "scipy": [{"section": "Fix", "i_commits": [0]}],
-                "tag": [{"section": "Fix", "i_commits": [0]}],
             },
             "commits": [
                 {
@@ -247,10 +215,6 @@ def get_commits_for_git_flow_repo_w_3_release_channels() -> GetRepoDefinitionFn:
                     },
                     "scipy": {
                         "msg": "MAINT(scope): correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "tag": {
-                        "msg": ":nut_and_bolt: correct feature-scoped text",
                         "sha": NULL_HEX_SHA,
                     },
                 }
@@ -692,19 +656,6 @@ def cached_repo_w_git_flow_n_3_release_channels_scipy_commits(
     return teardown_cached_dir(cached_repo_path)
 
 
-@pytest.fixture(scope="session")
-def cached_repo_w_git_flow_n_3_release_channels_tag_commits(
-    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_w_git_flow_n_3_release_channels_tag_commits.__name__
-    )
-    build_git_flow_repo_w_3_release_channels(cached_repo_path, "tag")
-    return teardown_cached_dir(cached_repo_path)
-
-
 # --------------------------------------------------------------------------- #
 # Test-level fixtures to use to set up temporary test directory               #
 # --------------------------------------------------------------------------- #
@@ -769,22 +720,6 @@ def repo_with_git_flow_and_release_channels_scipy_commits(
         raise RuntimeError("Unable to find cached repository!")
     copy_dir_tree(
         cached_repo_w_git_flow_n_3_release_channels_scipy_commits,
-        example_project_dir,
-    )
-    return example_project_git_repo()
-
-
-@pytest.fixture
-def repo_with_git_flow_and_release_channels_tag_commits(
-    cached_repo_w_git_flow_n_3_release_channels_tag_commits: Path,
-    example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: ExProjectDir,
-    change_to_ex_proj_dir: None,
-) -> Repo:
-    if not cached_repo_w_git_flow_n_3_release_channels_tag_commits.exists():
-        raise RuntimeError("Unable to find cached repository!")
-    copy_dir_tree(
-        cached_repo_w_git_flow_n_3_release_channels_tag_commits,
         example_project_dir,
     )
     return example_project_git_repo()
