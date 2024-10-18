@@ -160,6 +160,9 @@ The default configuration options for
 ``semantic_release.history.TagCommitParser``
 """"""""""""""""""""""""""""""""""""""""""""
 
+.. warning::
+  This parser was deprecated in ``v9.12.0``. It will be removed in a future release.
+
 The original parser from v1.0.0 of Python Semantic Release. Similar to the
 emoji parser above, but with less features.
 
