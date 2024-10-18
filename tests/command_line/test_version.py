@@ -84,7 +84,10 @@ if TYPE_CHECKING:
         UpdatePyprojectTomlFn,
         UseReleaseNotesTemplateFn,
     )
-    from tests.fixtures.git_repo import SimulateChangeCommitsNReturnChangelogEntryFn
+    from tests.fixtures.git_repo import (
+        GetRepoDefinitionFn,
+        SimulateChangeCommitsNReturnChangelogEntryFn,
+    )
 
 
 @pytest.mark.parametrize(
@@ -1523,6 +1526,76 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
 
     # Check that the changelog content is the same as before
     assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "repo, commit_type",
+    [
+        (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
+        for repo_fixture in [
+            # Must have a previous release/tag
+            repo_with_single_branch_angular_commits.__name__,
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "changelog_file",
+    [
+        lazy_fixture(example_changelog_md.__name__),
+        lazy_fixture(example_changelog_rst.__name__),
+    ],
+)
+def test_version_updates_changelog_w_new_version_n_filtered_commit(
+    repo: Repo,
+    commit_type: str,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    cli_runner: CliRunner,
+    changelog_file: Path,
+    get_commits_for_trunk_only_repo_w_tags: GetRepoDefinitionFn,
+):
+    """
+    Given a project that has a version bumping change but also an exclusion pattern for the same change type,
+    When the version command is run,
+    Then the version is created and the changelog file is updated with the excluded commit
+        info anyway.
+    """
+    repo_definition = get_commits_for_trunk_only_repo_w_tags(commit_type)
+
+    # expected version bump commit (that should be in changelog)
+    expected_bump_message = list(repo_definition.values())[-1]["commits"][-1]["msg"]
+
+    # Capture the expected changelog content
+    expected_changelog_content = changelog_file.read_text()
+
+    # Reverse last release
+    repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
+    repo.git.tag("-d", repo_tags[0])
+    repo.git.reset("--hard", "HEAD~1")
+
+    # Set the project configurations
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.UPDATE.value
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        str(changelog_file.name),
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.exclude_commit_patterns",
+        ["fix: .*"],
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Capture the new changelog content (os aware because of expected content)
+    actual_content = changelog_file.read_text()
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+    assert expected_changelog_content == actual_content
+    assert expected_bump_message in actual_content
 
 
 def test_version_tag_only_push(
