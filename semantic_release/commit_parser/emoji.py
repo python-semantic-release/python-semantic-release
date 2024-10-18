@@ -89,6 +89,13 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             level_bump = LevelBump.MINOR
         elif primary_emoji in self.options.patch_tags:
             level_bump = LevelBump.PATCH
+        else:
+            level_bump = self.options.default_bump_level
+            logger.debug(
+                "commit %s introduces a level bump of %s due to the default_bump_level",
+                commit.hexsha[:8],
+                level_bump,
+            )
 
         # All emojis will remain part of the returned description
         descriptions = parse_paragraphs(message)
