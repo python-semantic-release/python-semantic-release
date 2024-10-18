@@ -56,27 +56,17 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
                     {"section": "Fix", "i_commits": [3, 1]},
                     {"section": "Unknown", "i_commits": [0]},
                 ],
-                "tag": [
-                    {"section": "Feature", "i_commits": [2]},
-                    {"section": "Fix", "i_commits": [3, 1]},
-                    {"section": "Unknown", "i_commits": [0]},
-                ],
             },
             "commits": [
                 {
                     "angular": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
                     "emoji": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
                     "scipy": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
-                    "tag": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
                 },
                 {
                     "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
                     "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
                     "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
-                    "tag": {
-                        "msg": ":nut_and_bolt: correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 },
                 {
                     "angular": {"msg": "feat: add much more text", "sha": NULL_HEX_SHA},
@@ -85,19 +75,11 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
                         "sha": NULL_HEX_SHA,
                     },
                     "scipy": {"msg": "ENH: add much more text", "sha": NULL_HEX_SHA},
-                    "tag": {
-                        "msg": ":sparkles: add much more text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 },
                 {
                     "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
                     "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
                     "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
-                    "tag": {
-                        "msg": ":nut_and_bolt: correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
                 },
             ],
         },
@@ -239,19 +221,6 @@ def cached_repo_with_no_tags_scipy_commits(
     return teardown_cached_dir(cached_repo_path)
 
 
-@pytest.fixture(scope="session")
-def cached_repo_with_no_tags_tag_commits(
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_with_no_tags_tag_commits.__name__
-    )
-    build_trunk_only_repo_w_no_tags(cached_repo_path, "tag")
-    return teardown_cached_dir(cached_repo_path)
-
-
 # --------------------------------------------------------------------------- #
 # Test-level fixtures to use to set up temporary test directory               #
 # --------------------------------------------------------------------------- #
@@ -293,17 +262,4 @@ def repo_with_no_tags_scipy_commits(
     if not cached_repo_with_no_tags_scipy_commits.exists():
         raise RuntimeError("Unable to find cached repo!")
     copy_dir_tree(cached_repo_with_no_tags_scipy_commits, example_project_dir)
-    return example_project_git_repo()
-
-
-@pytest.fixture
-def repo_with_no_tags_tag_commits(
-    cached_repo_with_no_tags_tag_commits: Path,
-    example_project_git_repo: ExProjectGitRepoFn,
-    example_project_dir: ExProjectDir,
-    change_to_ex_proj_dir: None,
-) -> Repo:
-    if not cached_repo_with_no_tags_tag_commits.exists():
-        raise RuntimeError("Unable to find cached repo!")
-    copy_dir_tree(cached_repo_with_no_tags_tag_commits, example_project_dir)
     return example_project_git_repo()

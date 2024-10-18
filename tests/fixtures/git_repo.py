@@ -268,7 +268,6 @@ def build_configured_base_repo(  # noqa: C901
     use_angular_parser: UseParserFn,
     use_emoji_parser: UseParserFn,
     use_scipy_parser: UseParserFn,
-    use_tag_parser: UseParserFn,
     use_custom_parser: UseCustomParserFn,
     example_git_https_url: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
@@ -303,8 +302,6 @@ def build_configured_base_repo(  # noqa: C901
                 use_emoji_parser()
             elif commit_type == "scipy":
                 use_scipy_parser()
-            elif commit_type == "tag":
-                use_tag_parser()
             else:
                 use_custom_parser(commit_type)
 
