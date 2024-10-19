@@ -68,7 +68,7 @@ def artificial_release_history(commit_author: Actor):
 def release_notes_template() -> str:
     """Retrieve the semantic-release default release notes template."""
     version_notes_template = files(semantic_release.__name__).joinpath(
-        Path("data", "templates", "angular", "release_notes.md.j2")
+        Path("data", "templates", "angular", "md", ".release_notes.md.j2")
     )
     return version_notes_template.read_text(encoding="utf-8")
 
@@ -77,7 +77,6 @@ def release_notes_template() -> str:
 def test_default_release_notes_template(
     example_git_https_url: str,
     hvcs_client: type[HvcsBase],
-    release_notes_template: str,
     artificial_release_history: ReleaseHistory,
 ):
     """
