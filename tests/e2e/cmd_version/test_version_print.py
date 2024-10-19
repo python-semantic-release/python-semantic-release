@@ -166,7 +166,7 @@ def test_version_print_last_released_prints_version(
     tags_before = {tag.name for tag in repo.tags}
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--version-compat=semver", "--print-last-released"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # take measurement after running the version command
@@ -221,7 +221,7 @@ def test_version_print_last_released_prints_released_if_commits(
     tags_before = {tag.name for tag in repo.tags}
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--version-compat=semver", "--print-last-released"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # take measurement after running the version command
@@ -312,7 +312,7 @@ def test_version_print_last_released_on_detached_head(
     tags_before = {tag.name for tag in repo.tags}
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--version-compat=semver", "--print-last-released"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # take measurement after running the version command
@@ -359,7 +359,7 @@ def test_version_print_last_released_on_nonrelease_branch(
     tags_before = {tag.name for tag in repo.tags}
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--version-compat=semver", "--print-last-released"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # take measurement after running the version command
@@ -406,7 +406,7 @@ def test_version_print_last_released_tag_on_detached_head(
     tags_before = {tag.name for tag in repo.tags}
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--version-compat=semver", "--print-last-released-tag"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # take measurement after running the version command
@@ -453,7 +453,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
     tags_before = {tag.name for tag in repo.tags}
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--version-compat=semver", "--print-last-released-tag"]
     result = cli_runner.invoke(main, cli_cmd[1:])
 
     # take measurement after running the version command
