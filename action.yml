@@ -108,6 +108,12 @@ inputs:
     description: |
       Build metadata to append to the new version
 
+  pep440:
+    type: string
+    required: false
+    description: |
+      Whether or not to use PEP440 versioning.
+
 outputs:
   is_prerelease:
     description: |
