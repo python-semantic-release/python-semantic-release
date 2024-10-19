@@ -1,5 +1,7 @@
-{%   from 'macros.rst.j2' import extract_pr_link_reference, format_link_reference
-%}{% from 'macros.rst.j2' import format_commit_summary_line, generate_heading_underline
+{%   from 'macros.rst.j2' import apply_alphabetical_ordering_by_descriptions
+%}{% from 'macros.rst.j2' import extract_pr_link_reference
+%}{% from 'macros.rst.j2' import format_commit_summary_line, format_link_reference
+%}{% from 'macros.rst.j2' import generate_heading_underline
 %}{#
 
 Features
@@ -25,12 +27,16 @@ Fixes
 #}{%  set post_paragraph_links = []
 %}{#
 #}{%  for type_, commits in commit_objects if type_ != "unknown"
-%}{#    PREPARE SECTION HEADER
+%}{#    # PREPARE SECTION HEADER
 #}{%    set section_header = "%s" | format(type_ | title)
-%}{#    PREPROCESS COMMITS
+%}{#
+   #    # PREPROCESS COMMITS
+#}{%    set ns = namespace(commits=commits)
+%}{{    apply_alphabetical_ordering_by_descriptions(ns) | default("", true)
+}}{#
 #}{%    set commit_descriptions = []
 %}{#
-#}{%    for commit in commits
+#}{%    for commit in ns.commits
 %}{#      # Extract PR/MR reference if it exists and store it for later
 #}{%      set pr_link_reference = extract_pr_link_reference(commit) | default("", true)
 %}{%      if pr_link_reference != ""
@@ -65,7 +71,7 @@ Fixes
 }}{{    section_header ~ "\n"
 }}{{    generate_heading_underline(section_header, '-') ~ "\n"
 }}{{
-        "\n%s\n" | format(commit_descriptions | unique | sort | join("\n\n"))
+        "\n%s\n" | format(commit_descriptions | unique | join("\n\n"))
 
 }}{%  endfor
 %}{#
