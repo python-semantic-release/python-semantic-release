@@ -16,6 +16,7 @@ from semantic_release.changelog.context import (
     make_changelog_context,
 )
 from semantic_release.changelog.template import environment, recursive_render
+from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.cli.const import (
     DEFAULT_CHANGELOG_NAME_STEM,
     DEFAULT_RELEASE_NOTES_TPL_FILE,
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 
     from semantic_release.changelog.context import ChangelogContext
     from semantic_release.changelog.release_history import Release, ReleaseHistory
-    from semantic_release.cli.config import ChangelogOutputFormat, RuntimeContext
+    from semantic_release.cli.config import RuntimeContext
     from semantic_release.hvcs._base import HvcsBase
 
 
@@ -233,7 +234,9 @@ def generate_release_notes(
     tpl_dir = (
         template_dir
         if users_tpl_file.is_file()
-        else get_default_tpl_dir(style=style, sub_dir=ChangelogOutputFormat.MARKDOWN.value)
+        else get_default_tpl_dir(
+            style=style, sub_dir=ChangelogOutputFormat.MARKDOWN.value
+        )
     )
 
     release_notes_tpl_file = (
@@ -257,6 +260,9 @@ def generate_release_notes(
 
     # TODO: Remove in v10
     release_notes_env.globals["context"] = {
+        "history": history,
+    }
+    release_notes_env.globals["ctx"] = {
         "history": history,
     }
 
