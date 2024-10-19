@@ -1,0 +1,10 @@
+{%    if unreleased_commits | length > 0 %}
+.. _changelog-unreleased:
+
+Unreleased
+==========
+{%      set commit_objects = unreleased_commits
+%}{%    include "changes.rst.j2"
+-%}{{   "\n"
+}}{%  endif
+%}

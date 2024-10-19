@@ -1,0 +1,15 @@
+{#  EXAMPLE:
+
+## vX.X.X (YYYY-MMM-DD)
+
+{{ change_sections }}
+
+#}{{
+"## %s (%s)\n" | format(
+  release.version.as_semver_tag(),
+  release.tagged_date.strftime("%Y-%m-%d")
+)
+}}{#
+#}{%  set commit_objects = release["elements"]
+%}{%  include "changes.md.j2"
+-%}

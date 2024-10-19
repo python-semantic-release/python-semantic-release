@@ -1,0 +1,25 @@
+{% from 'macros.rst.j2' import generate_heading_underline %}{#
+
+.. _changelog-X.X.X:
+
+vX.X.X (YYYY-MMM-DD)
+====================
+
+{{ change_sections }}
+
+#}{%  set version_header = "%s (%s)" | format(
+        release.version.as_semver_tag(),
+        release.tagged_date.strftime("%Y-%m-%d")
+      )
+%}{#
+#}{{
+
+".. _changelog-%s:" | format(release.version.as_semver_tag()) }}
+
+{{  version_header }}
+{{  generate_heading_underline(version_header, "=") }}
+{#
+
+#}{%  set commit_objects = release["elements"]
+%}{%  include "changes.rst.j2"
+-%}
