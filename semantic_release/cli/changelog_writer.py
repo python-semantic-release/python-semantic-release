@@ -193,7 +193,7 @@ def write_changelog_files(
 
         with suppress(ValueError):
             # do not include a release notes override when considering number of changelog templates
-            user_templates.remove(template_dir / f".{DEFAULT_RELEASE_NOTES_TPL_FILE}")
+            user_templates.remove(template_dir / DEFAULT_RELEASE_NOTES_TPL_FILE)
 
     # Render user templates if found
     if len(user_templates) > 0:
@@ -226,12 +226,14 @@ def generate_release_notes(
     history: ReleaseHistory,
     style: str,
 ) -> str:
-    users_tpl_file = template_dir / f".{DEFAULT_RELEASE_NOTES_TPL_FILE}"
+    users_tpl_file = template_dir / DEFAULT_RELEASE_NOTES_TPL_FILE
 
     # Determine if the user has a custom release notes template or we should use
     # the default template directory with our default release notes template
     tpl_dir = (
-        template_dir if users_tpl_file.is_file() else get_default_tpl_dir(style=style)
+        template_dir
+        if users_tpl_file.is_file()
+        else get_default_tpl_dir(style=style, sub_dir=ChangelogOutputFormat.MARKDOWN.value)
     )
 
     release_notes_tpl_file = (

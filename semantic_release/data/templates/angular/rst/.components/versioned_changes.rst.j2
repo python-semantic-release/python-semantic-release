@@ -1,4 +1,4 @@
-{% from '.macros.rst.j2' import generate_heading_underline %}{#
+{% from 'macros.rst.j2' import generate_heading_underline %}{#
 
 .. _changelog-X.X.X:
 
@@ -19,5 +19,5 @@ vX.X.X (YYYY-MMM-DD)
 {#
 
 #}{%  set commit_objects = release["elements"] | dictsort
-%}{%  include ".changes.rst.j2"
+%}{%  include "changes.rst.j2"
 -%}

@@ -863,7 +863,7 @@ the template directory structure and modularity is maintained.
 .. tip::
     When initially starting out at customizing your own release notes template, you
     should reference the default template embedded within PSR. The release notes template
-    can be found in the directory ``data/templates/<parser>`` within the PSR package.
+    can be found in the directory ``data/templates/<parser>/md`` within the PSR package.
 
 
 .. _changelog-templates-custom_release_notes-context:
@@ -1018,29 +1018,29 @@ __ https://github.com/python-semantic-release/python-semantic-release/tree/maste
 2.  **Use the new read_file filter** to read in the existing changelog file
     ``ctx.prev_changelog_file``. This will allow you to include the existing
     changelog content in your new changelog file. See
-    ``data/templates/*/md/.changelog_update.md.j2`` for reference.
+    ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
 3.  **Split the changelog content based on the insertion flag.** This will
     allow you to insert the new release information after the insertion flag
     (``ctx.changelog_insertion_flag``). See
-    ``data/templates/*/md/.changelog_update.md.j2`` for reference.
+    ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
 4.  **Print the leading content before the insertion flag.** This ensures you
     maintain any content that should be included before the new release information.
-    See ``data/templates/*/md/.changelog_update.md.j2`` for reference.
+    See ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
 5.  **Print your insertion flag.** This is impartive to ensure that the resulting
     changelog can be updated in the future. See
-    ``data/templates/*/md/.changelog_update.md.j2`` for reference.
+    ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
 6.  **Print the new release information.** Be sure to consider both unreleased
     and released commits during this step because of the :ref:`cmd-changelog`
     command that can be run at any time. See
-    ``data/templates/*/md/.changelog_update.md.j2`` for reference.
+    ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
 7.  **Print the trailing content after the insertion flag.** This ensures you
     maintain any content that should be included after the new release information.
-    See ``data/templates/*/md/.changelog_update.md.j2`` for reference.
+    See ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
 
 .. tip::

@@ -20,7 +20,7 @@ This Update changelog template uses the following logic:
 #}{{      changelog_parts[0]
 }}{%    else
 %}{#      # File was empty or did not exist, therefore, it will be created from scratch
-#}{%      include ".changelog_init.md.j2"
+#}{%      include "changelog_init.rst.j2"
 %}{%    endif
 %}{%  else
 %}{#
@@ -39,14 +39,14 @@ This Update changelog template uses the following logic:
 }}{%    endif
 %}{#
    #    Any Unreleased Details (uncommon)
-#}{%    include ".unreleased_changes.md.j2"
+#}{%    include "unreleased_changes.rst.j2"
 -%}{#
    #    Latest Release Details
 #}{%    for release in new_releases
 %}{#      # Check if the release version is already in the changelog and if not, add it
-#}{%      if "# " ~ release.version.as_semver_tag() ~ " " not in changelog_parts[1]
+#}{%      if release.version.as_semver_tag() ~ " (" not in changelog_parts[1]
 %}{{        "\n"
-}}{%-       include ".versioned_changes.md.j2"
+}}{%-       include "versioned_changes.rst.j2"
 -%}{{       "\n"
 }}{%      endif
 %}{%    endfor

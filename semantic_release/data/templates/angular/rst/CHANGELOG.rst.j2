@@ -10,7 +10,7 @@
 %}{%  set unreleased_commits = ctx.history.unreleased | dictsort
 %}{#
 #}{%  if ctx.changelog_mode == "init"
-%}{%    include ".changelog_init.rst.j2"
+%}{%    include ".components/changelog_init.rst.j2"
 %}{#
 #}{%  elif ctx.changelog_mode == "update"
 %}{%    set prev_changelog_file = ctx.prev_changelog_file
@@ -18,7 +18,7 @@
 %}{%    if ctx.history.released.values() | length > 0
 %}{%      set new_releases = [ctx.history.released.values() | first]
 %}{%    endif
-%}{%    include ".changelog_update.rst.j2"
+%}{%    include ".components/changelog_update.rst.j2"
 %}{#
 #}{%  endif
 %}
