@@ -35,6 +35,7 @@ ARGS+=("$(eval_boolean_action_input "push" "$INPUT_PUSH" "--push" "--no-push")")
 ARGS+=("$(eval_boolean_action_input "changelog" "$INPUT_CHANGELOG" "--changelog" "--no-changelog")") || exit 1
 ARGS+=("$(eval_boolean_action_input "vcs_release" "$INPUT_VCS_RELEASE" "--vcs-release" "--no-vcs-release")") || exit 1
 ARGS+=("$(eval_boolean_action_input "build" "$INPUT_BUILD" "" "--skip-build")") || exit 1
+ARGS+=("$(eval_boolean_action_input "pep440" "$INPUT_PEP440" "--version-compat=pep440" "--version-compat=semver")") || exit 1
 
 # Handle --patch, --minor, --major
 # https://stackoverflow.com/a/47541882
