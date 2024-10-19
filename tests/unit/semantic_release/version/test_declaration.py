@@ -23,7 +23,7 @@ from tests.fixtures.example_project import (
 @pytest.mark.usefixtures(init_example_project.__name__)
 def test_pyproject_toml_version_found(example_pyproject_toml: Path):
     decl = TomlVersionDeclaration(
-        example_pyproject_toml.resolve(), "tool.poetry.version"
+        example_pyproject_toml.resolve(), "tool.poetry.version", version_compat="semver"
     )
     versions = decl.parse()
     assert len(versions) == 1
@@ -33,7 +33,9 @@ def test_pyproject_toml_version_found(example_pyproject_toml: Path):
 @pytest.mark.usefixtures(init_example_project.__name__)
 def test_setup_cfg_version_found(example_setup_cfg: Path):
     decl = PatternVersionDeclaration(
-        example_setup_cfg.resolve(), r"^version *= *(?P<version>.*)$"
+        example_setup_cfg.resolve(),
+        r"^version *= *(?P<version>.*)$",
+        version_compat="semver",
     )
     versions = decl.parse()
     assert len(versions) == 1
@@ -58,12 +60,12 @@ def test_setup_cfg_version_found(example_setup_cfg: Path):
 @pytest.mark.usefixtures(init_example_project.__name__)
 def test_version_replace(decl_cls, config_file, search_text):
     new_version = Version(1, 0, 0)
-    decl = decl_cls(config_file.resolve(), search_text)
+    decl = decl_cls(config_file.resolve(), search_text, version_compat="semver")
     orig_content = decl.content
     new_content = decl.replace(new_version=new_version)
     decl.write(new_content)
 
-    new_decl = decl_cls(config_file.resolve(), search_text)
+    new_decl = decl_cls(config_file.resolve(), search_text, version_compat="semver")
     assert new_decl.parse() == {new_version}
 
     d = difflib.Differ()
@@ -95,7 +97,9 @@ def test_bad_version_regex_fails(search_text):
         ValueError, match="must use 'version'"
     ):
         mock_path_exists.return_value = True
-        PatternVersionDeclaration("doesn't matter", search_text)
+        PatternVersionDeclaration(
+            "doesn't matter", search_text, version_compat="semver"
+        )
 
 
 def test_pyproject_toml_no_version(tmp_path):
@@ -109,7 +113,9 @@ def test_pyproject_toml_no_version(tmp_path):
         )
     )
 
-    decl = TomlVersionDeclaration(pyproject_toml.resolve(), "tool.poetry.version")
+    decl = TomlVersionDeclaration(
+        pyproject_toml.resolve(), "tool.poetry.version", version_compat="semver"
+    )
     assert decl.parse() == set()
 
 
@@ -125,7 +131,7 @@ def test_setup_cfg_no_version(tmp_path):
     )
 
     decl = PatternVersionDeclaration(
-        setup_cfg.resolve(), r"^version = (?P<version>.*)$"
+        setup_cfg.resolve(), r"^version = (?P<version>.*)$", version_compat="semver"
     )
     assert decl.parse() == set()
 
@@ -135,4 +141,8 @@ def test_setup_cfg_no_version(tmp_path):
 )
 def test_version_decl_error_on_missing_file(decl_cls):
     with pytest.raises(FileNotFoundError):
-        decl_cls("/this/is/definitely/a/missing/path/asdfghjkl", "random search text")
+        decl_cls(
+            "/this/is/definitely/a/missing/path/asdfghjkl",
+            "random search text",
+            version_compat="semver",
+        )
