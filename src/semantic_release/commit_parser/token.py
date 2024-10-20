@@ -131,6 +131,9 @@ class ParsedCommit(NamedTuple):
         """An alias to the linked_merge_request attribute."""
         return self.linked_merge_request
 
+    def is_merge_commit(self) -> bool:
+        return bool(len(self.commit.parents) > 1)
+
     @staticmethod
     def from_parsed_message_result(
         commit: Commit, parsed_message_result: ParsedMessageResult
@@ -184,6 +187,9 @@ class ParseError(NamedTuple):
     def short_hash(self) -> str:
         """A short representation of the hash value (in hex) of the commit."""
         return self.hexsha[:7]
+
+    def is_merge_commit(self) -> bool:
+        return bool(len(self.commit.parents) > 1)
 
     def raise_error(self) -> NoReturn:
         """A convience method to raise a CommitParseError with the error message."""
