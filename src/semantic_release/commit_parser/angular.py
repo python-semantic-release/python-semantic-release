@@ -169,10 +169,6 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             )
         )
 
-        # TODO: remove in the future
-        if level_bump == LevelBump.MAJOR:
-            parsed_type = "breaking"
-
         return ParsedMessageResult(
             bump=level_bump,
             type=parsed_type,
