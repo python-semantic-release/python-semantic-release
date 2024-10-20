@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import re
+from re import compile as regexp
 from typing import TYPE_CHECKING, Tuple
 
 from pydantic.dataclasses import dataclass
@@ -47,21 +48,27 @@ LONG_TYPE_NAMES = {
 class AngularParserOptions(ParserOptions):
     """Options dataclass for AngularCommitParser"""
 
+    minor_tags: Tuple[str, ...] = ("feat",)
+    patch_tags: Tuple[str, ...] = ("fix", "perf")
     allowed_tags: Tuple[str, ...] = (
+        *minor_tags,
+        *patch_tags,
         "build",
         "chore",
         "ci",
         "docs",
-        "feat",
-        "fix",
-        "perf",
         "style",
         "refactor",
         "test",
     )
-    minor_tags: Tuple[str, ...] = ("feat",)
-    patch_tags: Tuple[str, ...] = ("fix", "perf")
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
+
+    def __post_init__(self) -> None:
+        self.tag_to_level = {tag: self.default_bump_level for tag in self.allowed_tags}
+        for tag in self.patch_tags:
+            self.tag_to_level[tag] = LevelBump.PATCH
+        for tag in self.minor_tags:
+            self.tag_to_level[tag] = LevelBump.MINOR
 
 
 class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
@@ -75,15 +82,20 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
 
     def __init__(self, options: AngularParserOptions | None = None) -> None:
         super().__init__(options)
-        self.re_parser = re.compile(
-            rf"""
-            (?P<type>{"|".join(self.options.allowed_tags)})  # e.g. feat
-            (?:\((?P<scope>[^\n]+)\))?  # or feat(parser)
-            (?P<break>!)?:\s+  # breaking if feat!:
-            (?P<subject>[^\n]+)  # commit subject
-            (:?\n\n(?P<text>.+))?  # commit body
-            """,
-            flags=re.VERBOSE | re.DOTALL,
+        all_possible_types = str.join("|", self.options.allowed_tags)
+        self.re_parser = regexp(
+            str.join(
+                "",
+                [
+                    r"(?P<type>%s)" % all_possible_types,
+                    r"(?:\((?P<scope>[^\n]+)\))?",
+                    # TODO: remove ! support as it is not part of the angular commit spec (its part of conventional commits spec)
+                    r"(?P<break>!)?:\s+",
+                    r"(?P<subject>[^\n]+)",
+                    r"(?:\n\n(?P<text>.+))?",  # commit body
+                ],
+            ),
+            flags=re.DOTALL,
         )
 
     @staticmethod
@@ -122,20 +134,13 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             if match
         ]
 
+        level_bump = self.options.tag_to_level.get(
+            parsed_type, self.options.default_bump_level
+        )
+
         if parsed_break or breaking_descriptions:
             level_bump = LevelBump.MAJOR
             parsed_type = "breaking"
-        elif parsed_type in self.options.minor_tags:
-            level_bump = LevelBump.MINOR
-        elif parsed_type in self.options.patch_tags:
-            level_bump = LevelBump.PATCH
-        else:
-            level_bump = self.options.default_bump_level
-            logger.debug(
-                "commit %s introduces a level bump of %s due to the default_bump_level",
-                commit.hexsha[:8],
-                level_bump,
-            )
 
         logger.debug(
             "commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump
