@@ -110,7 +110,7 @@ def convert_md_to_rst(md_content: str) -> str:
         # Replace markdown bullets with rst bullets
         "bullets": (regexp(r"^(\s*)-(\s)"), r"\1*\2"),
         # Replace markdown inline raw content with rst inline raw content
-        "raw-inline": (regexp(r"(?<=\s)(`[^`]+`)(?![`_])(?=\s|$)"), r"`\1`"),
+        "raw-inline": (regexp(r"(?<=\s)(`[^`]+`)(?![`_])"), r"`\1`"),
     }
 
     for pattern, replacement in replacements.values():
