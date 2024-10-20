@@ -17,6 +17,7 @@ class ParsedCommit(NamedTuple):
     descriptions: list[str]
     breaking_descriptions: list[str]
     commit: Commit
+    linked_merge_request: str = ""
 
     @property
     def message(self) -> str:
@@ -31,6 +32,10 @@ class ParsedCommit(NamedTuple):
     @property
     def short_hash(self) -> str:
         return self.commit.hexsha[:7]
+
+    @property
+    def linked_pull_request(self) -> str:
+        return self.linked_merge_request
 
 
 class ParseError(NamedTuple):
