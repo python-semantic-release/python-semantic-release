@@ -9,6 +9,7 @@ import logging
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
+from re import compile as regexp
 from typing import TYPE_CHECKING
 
 from urllib3.util.url import Url, parse_url
@@ -201,7 +202,18 @@ class Bitbucket(RemoteHvcsBase):
         return self.create_repo_url(repo_path=f"/commits/{commit_hash}")
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        return self.create_repo_url(repo_path=f"/pull-requests/{pr_number}")
+        if isinstance(pr_number, str):
+            # Strips off any character prefix like '#' that usually exists
+            if match := regexp(r'(\d+)$').search(pr_number):
+                try:
+                    pr_number = int(match.group(1))
+                except ValueError:
+                    return ""
+
+        if isinstance(pr_number, int):
+            return self.create_repo_url(repo_path=f"/pull-requests/{pr_number}")
+
+        return ""
 
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (
