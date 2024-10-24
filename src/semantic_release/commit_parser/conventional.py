@@ -234,10 +234,9 @@ class ConventionalCommitParser(
     ) -> dict[str, list[str]]:
         if (match := breaking_re.match(text)) and (brk_desc := match.group(1)):
             accumulator["breaking_descriptions"].append(brk_desc)
-            # TODO: breaking change v10, removes breaking change footers from descriptions
-            # return accumulator
+            return accumulator
 
-        elif (match := self.notice_selector.match(text)) and (
+        if (match := self.notice_selector.match(text)) and (
             notice := match.group("notice")
         ):
             accumulator["notices"].append(notice)
