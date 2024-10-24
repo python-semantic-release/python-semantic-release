@@ -98,6 +98,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             ),
             flags=re.DOTALL,
         )
+        # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
+        self.mr_selector = regexp(
+            r"[\t ]\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
+        )
 
     @staticmethod
     def get_default_options() -> AngularParserOptions:
@@ -134,6 +138,13 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         parsed_subject = parsed.group("subject")
         parsed_text = parsed.group("text")
         parsed_type = parsed.group("type")
+
+        linked_merge_request = ""
+        if mr_match := self.mr_selector.search(parsed_subject):
+            linked_merge_request = mr_match.group("mr_number")
+            # TODO: breaking change v10, removes PR number from subject/descriptions
+            # expects changelog template to format the line accordingly
+            # parsed_subject = self.pr_selector.sub("", parsed_subject).strip()
 
         body_components: dict[str, list[str]] = reduce(
             self.commit_body_components_separator,
@@ -172,4 +183,5 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             descriptions=body_components["descriptions"],
             breaking_descriptions=body_components["breaking_descriptions"],
             commit=commit,
+            linked_merge_request=linked_merge_request,
         )
