@@ -345,7 +345,35 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         )
 
         # Parse each commit individually if there were more than one
-        return list(map(self.parse_commit, separate_commits))
+        parsed_commits = list(map(self.parse_commit, separate_commits))
+
+        # TODO: improve this for other VCS systems other than GitHub
+        # Github works as the first commit in a squash merge commit has the PR number
+        # appended to the first line of the commit message
+        lead_commit = parsed_commits[0]
+
+        if isinstance(lead_commit, ParsedCommit) and lead_commit.linked_merge_request:
+            # If the first commit has linked merge requests, assume all commits
+            # are part of the same PR and add the linked merge requests to all
+            # parsed commits
+            def add_linked_merge_request(parsed_result: ParseResult) -> ParseResult:
+                return (
+                    parsed_result
+                    if not isinstance(parsed_result, ParsedCommit)
+                    else ParsedCommit(
+                        **{
+                            **parsed_result._asdict(),
+                            "linked_merge_request": lead_commit.linked_merge_request,
+                        }
+                    )
+                )
+
+            parsed_commits = [
+                lead_commit,
+                *map(add_linked_merge_request, parsed_commits[1:]),
+            ]
+
+        return parsed_commits
 
     def unsquash_commit(self, commit: Commit) -> list[Commit]:
         # GitHub EXAMPLE:
