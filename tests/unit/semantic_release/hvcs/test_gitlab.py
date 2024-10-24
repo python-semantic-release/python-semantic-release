@@ -376,7 +376,7 @@ def test_issue_url(default_gl_client: Gitlab, issue_number: int | str):
         repo=default_gl_client.repo_name,
         issue_num=issue_number,
     )
-    actual_url = default_gl_client.issue_url(issue_number=issue_number)
+    actual_url = default_gl_client.issue_url(issue_num=issue_number)
     assert expected_url == actual_url
 
 

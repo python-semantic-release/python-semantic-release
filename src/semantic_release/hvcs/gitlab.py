@@ -6,6 +6,7 @@ import logging
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
+from re import compile as regexp
 from typing import TYPE_CHECKING
 
 import gitlab
@@ -239,8 +240,19 @@ class Gitlab(RemoteHvcsBase):
     def commit_hash_url(self, commit_hash: str) -> str:
         return self.create_repo_url(repo_path=f"/-/commit/{commit_hash}")
 
-    def issue_url(self, issue_number: str | int) -> str:
-        return self.create_repo_url(repo_path=f"/-/issues/{issue_number}")
+    def issue_url(self, issue_num: str | int) -> str:
+        if isinstance(issue_num, str):
+            # Strips off any character prefix like '#' that usually exists
+            if match := regexp(r'(\d+)$').search(issue_num):
+                try:
+                    issue_num = int(match.group(1))
+                except ValueError:
+                    return ""
+
+        if isinstance(issue_num, int):
+            return self.create_repo_url(repo_path=f"/-/issues/{issue_num}")
+
+        return ""
 
     def merge_request_url(self, mr_number: str | int) -> str:
         return self.create_repo_url(repo_path=f"/-/merge_requests/{mr_number}")
