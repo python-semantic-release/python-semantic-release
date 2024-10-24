@@ -255,10 +255,20 @@ class Gitlab(RemoteHvcsBase):
         return ""
 
     def merge_request_url(self, mr_number: str | int) -> str:
-        return self.create_repo_url(repo_path=f"/-/merge_requests/{mr_number}")
+        if isinstance(mr_number, str):
+            # Strips off any character prefix like '!' that usually exists
+            if match := regexp(r'(\d+)$').search(mr_number):
+                try:
+                    mr_number = int(match.group(1))
+                except ValueError:
+                    return ""
+
+        if isinstance(mr_number, int):
+            return self.create_repo_url(repo_path=f"/-/merge_requests/{mr_number}")
+
+        return ""
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        # TODO: deprecate in v11, add warning in v10
         return self.merge_request_url(mr_number=pr_number)
 
     def upload_dists(self, tag: str, dist_glob: str) -> int:
