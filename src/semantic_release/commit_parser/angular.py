@@ -157,6 +157,16 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         self.mr_selector = regexp(
             r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
         )
+        self.issue_selector = regexp(
+            str.join(
+                "",
+                [
+                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
+                    r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
+                ],
+            ),
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
 
     @staticmethod
     def get_default_options() -> AngularParserOptions:
@@ -170,7 +180,31 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             # TODO: breaking change v10, removes breaking change footers from descriptions
             # return accumulator
 
-        accumulator["descriptions"].append(text)
+        elif match := self.issue_selector.search(text):
+            # if match := self.issue_selector.search(text):
+            predicate = regexp(r",? and | *[,;/& ] *").sub(
+                ",", match.group("issue_predicate") or ""
+            )
+            # Almost all issue trackers use a number to reference an issue so
+            # we use a simple regexp to validate the existence of a number which helps filter out
+            # any non-issue references that don't fit our expected format
+            has_number = regexp(r"\d+")
+            new_issue_refs: set[str] = set(
+                filter(
+                    lambda issue_str, validator=has_number: validator.search(issue_str),  # type: ignore[arg-type]
+                    predicate.split(","),
+                )
+            )
+            accumulator["linked_issues"] = sorted(
+                set(accumulator["linked_issues"]).union(new_issue_refs)
+            )
+            # TODO: breaking change v10, removes resolution footers from descriptions
+            # return accumulator
+
+        # Prevent appending duplicate descriptions
+        if text not in accumulator["descriptions"]:
+            accumulator["descriptions"].append(text)
+
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult | None:
@@ -200,6 +234,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             {
                 "breaking_descriptions": [],
                 "descriptions": [],
+                "linked_issues": [],
             },
         )
 
@@ -219,6 +254,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             scope=parsed_scope,
             descriptions=tuple(body_components["descriptions"]),
             breaking_descriptions=tuple(body_components["breaking_descriptions"]),
+            linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
 
