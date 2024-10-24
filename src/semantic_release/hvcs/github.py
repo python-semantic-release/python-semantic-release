@@ -516,7 +516,18 @@ class Github(RemoteHvcsBase):
         return ""
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        return self.create_repo_url(repo_path=f"/pull/{pr_number}")
+        if isinstance(pr_number, str):
+            # Strips off any character prefix like '#' that usually exists
+            if match := regexp(r'(\d+)$').search(pr_number):
+                try:
+                    pr_number = int(match.group(1))
+                except ValueError:
+                    return ""
+
+        if isinstance(pr_number, int):
+            return self.create_repo_url(repo_path=f"/pull/{pr_number}")
+
+        return ""
 
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (
