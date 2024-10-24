@@ -6,6 +6,7 @@ import glob
 import logging
 import os
 from pathlib import PurePosixPath
+from re import compile as regexp
 from typing import TYPE_CHECKING
 
 from requests import HTTPError, JSONDecodeError
@@ -350,7 +351,18 @@ class Gitea(RemoteHvcsBase):
         return self.create_repo_url(repo_path=f"/commit/{commit_hash}")
 
     def issue_url(self, issue_num: str | int) -> str:
-        return self.create_repo_url(repo_path=f"/issues/{issue_num}")
+        if isinstance(issue_num, str):
+            # Strips off any character prefix like '#' that usually exists
+            if match := regexp(r'(\d+)$').search(issue_num):
+                try:
+                    issue_num = int(match.group(1))
+                except ValueError:
+                    return ""
+
+        if isinstance(issue_num, int):
+            return self.create_repo_url(repo_path=f"/issues/{issue_num}")
+
+        return ""
 
     def pull_request_url(self, pr_number: str | int) -> str:
         return self.create_repo_url(repo_path=f"/pulls/{pr_number}")
