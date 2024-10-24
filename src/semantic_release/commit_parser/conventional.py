@@ -282,9 +282,7 @@ class ConventionalCommitParser(
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(parsed_subject):
             linked_merge_request = mr_match.group("mr_number")
-            # TODO: breaking change v10, removes PR number from subject/descriptions
-            # expects changelog template to format the line accordingly
-            # parsed_subject = self.pr_selector.sub("", parsed_subject).strip()
+            parsed_subject = self.mr_selector.sub("", parsed_subject).strip()
 
         body_components: dict[str, list[str]] = reduce(
             self.commit_body_components_separator,
