@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import re
+from functools import reduce
 from re import compile as regexp
 from typing import TYPE_CHECKING, Tuple
 
@@ -102,6 +103,17 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     def get_default_options() -> AngularParserOptions:
         return AngularParserOptions()
 
+    def commit_body_components_separator(
+        self, accumulator: dict[str, list[str]], text: str
+    ) -> dict[str, list[str]]:
+        if match := breaking_re.match(text):
+            accumulator["breaking_descriptions"].append(match.group(1) or "")
+            # TODO: breaking change v10, removes breaking change footers from descriptions
+            # return accumulator
+
+        accumulator["descriptions"].append(text)
+        return accumulator
+
     # Maybe this can be cached as an optimization, similar to how
     # mypy/pytest use their own caching directories, for very large commit
     # histories?
@@ -123,23 +135,30 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         parsed_text = parsed.group("text")
         parsed_type = parsed.group("type")
 
-        descriptions = parse_paragraphs(parsed_text) if parsed_text else []
-        # Insert the subject before the other paragraphs
-        descriptions.insert(0, parsed_subject)
-
-        # Look for descriptions of breaking changes
-        breaking_descriptions = [
-            match.group(1)
-            for match in (breaking_re.match(p) for p in descriptions[1:])
-            if match
-        ]
-
-        level_bump = self.options.tag_to_level.get(
-            parsed_type, self.options.default_bump_level
+        body_components: dict[str, list[str]] = reduce(
+            self.commit_body_components_separator,
+            [
+                # Insert the subject before the other paragraphs
+                parsed_subject,
+                *parse_paragraphs(parsed_text or ""),
+            ],
+            {
+                "breaking_descriptions": [],
+                "descriptions": [],
+            },
         )
 
-        if parsed_break or breaking_descriptions:
-            level_bump = LevelBump.MAJOR
+        level_bump = (
+            LevelBump.MAJOR
+            # TODO: remove parsed break support as it is not part of the angular commit spec (its part of conventional commits spec)
+            if body_components["breaking_descriptions"] or parsed_break
+            else self.options.tag_to_level.get(
+                parsed_type, self.options.default_bump_level
+            )
+        )
+
+        # TODO: remove in the future
+        if level_bump == LevelBump.MAJOR:
             parsed_type = "breaking"
 
         logger.debug(
@@ -150,7 +169,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             bump=level_bump,
             type=LONG_TYPE_NAMES.get(parsed_type, parsed_type),
             scope=parsed_scope,
-            descriptions=descriptions,
-            breaking_descriptions=breaking_descriptions,
+            descriptions=body_components["descriptions"],
+            breaking_descriptions=body_components["breaking_descriptions"],
             commit=commit,
         )
