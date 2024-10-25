@@ -101,6 +101,10 @@ class AngularParserOptions(ParserOptions):
     parse_squash_commits: bool = False
     """Toggle flag for whether or not to parse squash commits"""
 
+    # TODO: breaking change v10, change default to True
+    ignore_merge_commits: bool = False
+    """Toggle flag for whether or not to ignore merge commits"""
+
     @property
     def tag_to_level(self) -> dict[str, LevelBump]:
         """A mapping of commit tags to the level bump they should result in."""
@@ -315,6 +319,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             linked_merge_request=linked_merge_request,
         )
 
+    @staticmethod
+    def is_merge_commit(commit: Commit) -> bool:
+        return len(commit.parents) > 1
+
     def parse_commit(self, commit: Commit) -> ParseResult:
         if not (parsed_msg_result := self.parse_message(force_str(commit.message))):
             return _logged_parse_error(
@@ -336,6 +344,11 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         multiple commits, each of which will be parsed separately. Single commits
         will be returned as a list of a single ParseResult.
         """
+        if self.options.ignore_merge_commits and self.is_merge_commit(commit):
+            return _logged_parse_error(
+                commit, "Ignoring merge commit: %s" % commit.hexsha[:8]
+            )
+
         separate_commits: list[Commit] = (
             self.unsquash_commit(commit)
             if self.options.parse_squash_commits
