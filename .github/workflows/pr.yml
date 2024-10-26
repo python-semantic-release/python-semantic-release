@@ -61,6 +61,59 @@ jobs:
       test-changes: ${{ steps.changed-files.outputs.tests_any_changed }}
 
 
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: eval-changes
+    if: ${{ needs.eval-changes.outputs.src-changes == 'true' || needs.eval-changes.outputs.test-changes == 'true' || needs.eval-changes.outputs.ci-changes == 'true' }}
+    env:
+      python-version: "3.8"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.python-version }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install .[test]
+          python -m pip install pytest-github-actions-annotate-failures
+
+      - name: Test
+        id: tests
+        run: |
+          python -m pytest              \
+            -vv                         \
+            -nauto                      \
+            -m unit                     \
+            --cov=semantic_release      \
+            --cov-context=test          \
+            --cov-report=term-missing   \
+            --cov-fail-under=80         \
+            --junit-xml=tests/reports/pytest-results.xml
+
+      - name: Report | Upload Test Results
+        uses: mikepenz/action-junit-report@v4.3.1
+        if: ${{ always() && steps.tests.outcome != 'skipped' }}
+        with:
+          report_paths: ./tests/reports/*.xml
+          annotate_only: true
+
+
   test-linux:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }} tests
     runs-on: ${{ matrix.os }}
