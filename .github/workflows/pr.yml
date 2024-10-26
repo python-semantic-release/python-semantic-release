@@ -117,7 +117,9 @@ jobs:
   test-linux:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }} tests
     runs-on: ${{ matrix.os }}
-    needs: eval-changes
+    needs:
+      - eval-changes
+      - unit-test
     if: ${{ needs.eval-changes.outputs.src-changes == 'true' || needs.eval-changes.outputs.test-changes == 'true' || needs.eval-changes.outputs.ci-changes == 'true' }}
     strategy:
       matrix:
@@ -160,6 +162,8 @@ jobs:
           python -m pytest              \
             -vv                         \
             -nauto                      \
+            -m 'not unit'               \
+            --comprehensive             \
             --cov=semantic_release      \
             --cov-context=test          \
             --cov-report=term-missing   \
@@ -177,7 +181,9 @@ jobs:
   test-windows:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }} tests
     runs-on: ${{ matrix.os }}
-    needs: eval-changes
+    needs:
+      - eval-changes
+      - unit-test
     if: ${{ needs.eval-changes.outputs.src-changes == 'true' || needs.eval-changes.outputs.test-changes == 'true' || needs.eval-changes.outputs.ci-changes == 'true' }}
     strategy:
       # Since the current test suite takes 10-15 minutes to complete on windows, we are
@@ -222,6 +228,7 @@ jobs:
           python -m pytest               `
             -vv                          `
             -nauto                       `
+            -m "not unit"                `
             `--cov=semantic_release      `
             `--cov-context=test          `
             `--cov-report=term-missing   `
