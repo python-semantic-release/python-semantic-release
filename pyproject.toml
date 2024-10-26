@@ -106,6 +106,12 @@ addopts = [
 testpaths = [
   "tests"
 ]
+markers = [
+  "unit: mark a test as a unit test",
+  "scenario: mark a test as a scenario test",
+  "commandline: mark a test as a command line test",
+  "comprehensive: mark a test as a comprehensive test",
+]
 
 [tool.coverage.html]
 show_contexts = true
