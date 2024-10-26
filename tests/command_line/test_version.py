@@ -88,13 +88,17 @@ if TYPE_CHECKING:
     "repo",
     [
         lazy_fixture(repo_with_no_tags_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
-        lazy_fixture(
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
-        ),
-        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # repo_with_no_tags_angular_commits.__name__,  # default
+                repo_with_single_branch_angular_commits.__name__,
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            ]
+        ]
     ],
 )
 def test_version_noop_is_noop(
@@ -333,15 +337,18 @@ def test_version_print(
 @pytest.mark.parametrize(
     "repo",
     [
-        # This project is yet to add any tags, so a release would be triggered
-        # so excluding lazy_fixture(repo_with_no_tags_angular_commits.__name__),
         lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
-        lazy_fixture(
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
-        ),
-        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # Must have a previous release/tag
+                # repo_with_single_branch_angular_commits.__name__, # default
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            ]
+        ]
     ],
 )
 def test_version_already_released_no_push(repo: Repo, cli_runner: CliRunner):
@@ -586,12 +593,17 @@ def test_version_no_push_force_level(
     "repo",
     [
         lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
-        lazy_fixture(
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
-        ),
-        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # Must have a previous release/tag
+                # repo_with_single_branch_angular_commits.__name__, # default
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            ]
+        ]
     ],
 )
 def test_version_build_metadata_triggers_new_version(repo: Repo, cli_runner: CliRunner):
@@ -1124,25 +1136,28 @@ def test_custom_release_notes_template(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            # Must have a previous release/tag
-            repo_with_single_branch_angular_commits.__name__,
-            repo_with_single_branch_emoji_commits.__name__,
-            repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_and_prereleases_angular_commits.__name__,
-            repo_with_single_branch_and_prereleases_emoji_commits.__name__,
-            repo_with_single_branch_and_prereleases_scipy_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-            repo_with_git_flow_angular_commits.__name__,
-            repo_with_git_flow_emoji_commits.__name__,
-            repo_with_git_flow_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_angular_commits.__name__,
-            repo_with_git_flow_and_release_channels_emoji_commits.__name__,
-            repo_with_git_flow_and_release_channels_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # Must have a previous release/tag
+                # repo_with_single_branch_angular_commits.__name__, # default
+                repo_with_single_branch_emoji_commits.__name__,
+                repo_with_single_branch_scipy_commits.__name__,
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+                repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_emoji_commits.__name__,
+                repo_with_git_flow_scipy_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+                repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+            ]
         ]
     ],
 )
@@ -1240,12 +1255,15 @@ def test_version_updates_changelog_w_new_version(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            # Must not have a single release/tag
-            repo_with_no_tags_angular_commits.__name__,
-            repo_with_no_tags_emoji_commits.__name__,
-            repo_with_no_tags_scipy_commits.__name__,
+        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # Must not have a single release/tag
+                # repo_with_no_tags_angular_commits.__name__, # default
+                repo_with_no_tags_emoji_commits.__name__,
+                repo_with_no_tags_scipy_commits.__name__,
+            ]
         ]
     ],
 )
@@ -1372,25 +1390,28 @@ def test_version_updates_changelog_wo_prev_releases(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            # Must have a previous release/tag
-            repo_with_single_branch_angular_commits.__name__,
-            repo_with_single_branch_emoji_commits.__name__,
-            repo_with_single_branch_scipy_commits.__name__,
-            repo_with_single_branch_and_prereleases_angular_commits.__name__,
-            repo_with_single_branch_and_prereleases_emoji_commits.__name__,
-            repo_with_single_branch_and_prereleases_scipy_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
-            repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-            repo_with_git_flow_angular_commits.__name__,
-            repo_with_git_flow_emoji_commits.__name__,
-            repo_with_git_flow_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_angular_commits.__name__,
-            repo_with_git_flow_and_release_channels_emoji_commits.__name__,
-            repo_with_git_flow_and_release_channels_scipy_commits.__name__,
-            repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # Must have a previous release/tag
+                # repo_with_single_branch_angular_commits.__name__, # default
+                repo_with_single_branch_emoji_commits.__name__,
+                repo_with_single_branch_scipy_commits.__name__,
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+                repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_emoji_commits.__name__,
+                repo_with_git_flow_scipy_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+                repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+            ]
         ]
     ],
 )
