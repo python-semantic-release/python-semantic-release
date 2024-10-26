@@ -29,6 +29,87 @@ if TYPE_CHECKING:
         def __call__(self, directory: Path) -> Path: ...
 
 
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager):
+    parser.addoption(
+        "--comprehensive",
+        help="Run full test suite including slow tests",
+        default=False,
+        action="store_true",
+    )
+
+
+def pytest_configure(config: pytest.Config):
+    """
+    If no test selection modifications are provided, default to running only unit tests.
+
+    See `pytest_collection_modifyitems` for more information on test selection modifications.
+    """
+    user_desired_comprehensive_evaluation = config.getoption("--comprehensive")
+    user_provided_filter = str(config.getoption("-k"))
+    user_provided_markers = str(config.getoption("-m"))
+
+    root_test_dir = Path(__file__).parent.relative_to(config.rootpath)
+    user_provided_test_path = bool(config.args != [str(root_test_dir)])
+
+    # If no options are provided, default to running only unit tests
+    if not any(
+        (
+            user_desired_comprehensive_evaluation,
+            user_provided_test_path,
+            user_provided_filter,
+            user_provided_markers,
+        )
+    ):
+        config.option.markexpr = pytest.mark.unit.name
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]):
+    """
+    Test selection modifier based on markers and command line options.
+
+    Examples:
+        pytest
+            only unit tests that are not marked comprehensive are executed
+
+        pytest --comprehensive
+            all tests are executed
+
+        pytest -m unit
+            only unit tests that are not marked comprehensive are executed (same as no options)
+
+        pytest -m "commandline"
+            only commandline tests that are not marked comprehensive are executed
+
+        pytest -m "scenario"
+            only scenario tests that are not marked comprehensive are executed
+
+        pytest -m "commandline" --comprehensive
+            all commandline tests are executed
+
+        pytest -m "not unit"
+            only tests that are not marked unit or comprehensive are executed
+
+        pytest -m "not unit" --comprehensive
+            all tests that are not marked unit are executed
+
+        pytest -k "test_name"
+            only tests that match the substring "test_name" (but not marked comprehensive) are executed
+
+        pytest -k "test_name" --comprehensive
+            all tests that match the substring "test_name" are executed
+    """
+    disable_comprehensive_tests = not config.getoption("--comprehensive")
+    comprehensive_test_skip_marker = pytest.mark.skip(
+        reason="comprehensive tests are disabled by default"
+    )
+
+    if any((disable_comprehensive_tests,)):
+        for item in items:
+            if disable_comprehensive_tests and "comprehensive" in item.keywords:
+                item.add_marker(comprehensive_test_skip_marker)
+
+
 @pytest.fixture
 def cli_runner() -> CliRunner:
     return CliRunner(mix_stderr=False)

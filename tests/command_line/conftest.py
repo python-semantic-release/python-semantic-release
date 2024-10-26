@@ -39,6 +39,15 @@ if TYPE_CHECKING:
         def __call__(self, repo: Repo) -> RuntimeContext: ...
 
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Apply the commandline marker to all tests in the command_line test directory."""
+    cli_test_directory = Path(__file__).parent
+    for item in items:
+        if cli_test_directory in item.path.parents:
+            item.add_marker(pytest.mark.commandline)
+
+
 @pytest.fixture
 def post_mocker(requests_mock: Mocker) -> Mocker:
     """Patch all POST requests, mocking a response body for VCS release creation."""
