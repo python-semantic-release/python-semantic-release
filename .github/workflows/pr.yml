@@ -162,7 +162,7 @@ jobs:
           python -m pytest              \
             -vv                         \
             -nauto                      \
-            -m 'not unit'               \
+            -m e2e                      \
             --comprehensive             \
             --cov=semantic_release      \
             --cov-context=test          \
@@ -228,7 +228,7 @@ jobs:
           python -m pytest               `
             -vv                          `
             -nauto                       `
-            -m "not unit"                `
+            -m e2e                       `
             `--cov=semantic_release      `
             `--cov-context=test          `
             `--cov-report=term-missing   `
