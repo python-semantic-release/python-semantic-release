@@ -78,14 +78,11 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         pytest -m unit
             only unit tests that are not marked comprehensive are executed (same as no options)
 
-        pytest -m "commandline"
-            only commandline tests that are not marked comprehensive are executed
+        pytest -m e2e
+            only end-to-end tests that are not marked comprehensive are executed
 
-        pytest -m "scenario"
-            only scenario tests that are not marked comprehensive are executed
-
-        pytest -m "commandline" --comprehensive
-            all commandline tests are executed
+        pytest -m e2e --comprehensive
+            all end-to-end tests are executed
 
         pytest -m "not unit"
             only tests that are not marked unit or comprehensive are executed

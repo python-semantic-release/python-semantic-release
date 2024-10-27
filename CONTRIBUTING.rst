@@ -60,8 +60,8 @@ To test your modifications locally:
     # or
     pytest -vv -m unit
 
-    # Run integration tests for your current installed Python version (with full error output)
-    pytest -vv -m commandline [--comprehensive]
+    # Run end-to-end tests for your current installed Python version (with full error output)
+    pytest -vv -m e2e [--comprehensive]
 
 The ``--comprehensive`` flag is optional and will run all the variations of tests and it does
 take significantly longer to run.
