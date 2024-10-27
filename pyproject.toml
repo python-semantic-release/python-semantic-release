@@ -108,9 +108,8 @@ testpaths = [
 ]
 markers = [
   "unit: mark a test as a unit test",
-  "scenario: mark a test as a scenario test",
-  "commandline: mark a test as a command line test",
-  "comprehensive: mark a test as a comprehensive test",
+  "e2e: mark a test as a end-to-end test",
+  "comprehensive: mark a test as a comprehensive (multiple variations) test",
 ]
 
 [tool.coverage.html]
