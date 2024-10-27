@@ -41,11 +41,11 @@ if TYPE_CHECKING:
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Apply the commandline marker to all tests in the command_line test directory."""
+    """Apply the e2e marker to all tests in the end-to-end test directory."""
     cli_test_directory = Path(__file__).parent
     for item in items:
         if cli_test_directory in item.path.parents:
-            item.add_marker(pytest.mark.commandline)
+            item.add_marker(pytest.mark.e2e)
 
 
 @pytest.fixture
