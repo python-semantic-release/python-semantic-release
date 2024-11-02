@@ -512,17 +512,6 @@ def version(  # noqa: C901
     if build_metadata:
         new_version.build_metadata = build_metadata
 
-    if as_prerelease:
-        before_conversion, new_version = (
-            new_version,
-            new_version.to_prerelease(token=translator.prerelease_token),
-        )
-        log.info(
-            "Converting %s to %s due to '--as-prerelease' command-line option",
-            before_conversion,
-            new_version,
-        )
-
     # Update GitHub Actions output value with new version & set delayed write
     gha_output.version = new_version
     ctx.call_on_close(gha_output.write_if_possible)
