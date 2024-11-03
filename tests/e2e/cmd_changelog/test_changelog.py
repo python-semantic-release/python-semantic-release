@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import filecmp
 import os
-import shutil
 import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING
@@ -18,6 +16,7 @@ from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.hvcs.github import Github
+from semantic_release.version.version import Version
 
 from tests.const import (
     CHANGELOG_SUBCMD,
@@ -57,13 +56,15 @@ from tests.fixtures.repos import (
     repo_with_single_branch_emoji_commits,
     repo_with_single_branch_scipy_commits,
 )
+from tests.fixtures.repos.trunk_based_dev.repo_w_prereleases import (
+    get_versions_for_trunk_only_repo_w_prerelease_tags,
+)
 from tests.util import (
     add_text_to_file,
     assert_exit_code,
     assert_successful_exit_code,
-    flatten_dircmp,
+    get_func_qual_name,
     get_release_history_from_context,
-    remove_dir_tree,
 )
 
 if TYPE_CHECKING:
@@ -73,33 +74,44 @@ if TYPE_CHECKING:
     from git import Repo
     from requests_mock import Mocker
 
-    from tests.command_line.conftest import RetrieveRuntimeContextFn
+    from tests.e2e.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import (
-        ExProjectDir,
         UpdatePyprojectTomlFn,
         UseReleaseNotesTemplateFn,
     )
-    from tests.fixtures.git_repo import CommitNReturnChangelogEntryFn
+    from tests.fixtures.git_repo import (
+        CommitNReturnChangelogEntryFn,
+        GetVersionStringsFn,
+    )
 
 
 @pytest.mark.parametrize(
-    "repo,tag",
+    "repo, tag",
     [
-        (lazy_fixture(repo_fixture), tag)
-        for repo_fixture, tag in (
-            (repo_with_no_tags_angular_commits.__name__, None),
-            (repo_with_single_branch_angular_commits.__name__, "v0.1.1"),
-            (repo_with_single_branch_and_prereleases_angular_commits.__name__, "v0.2.0"),
-            (
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                "v0.2.0",
-            ),
-            (repo_with_git_flow_angular_commits.__name__, "v1.0.0"),
-            (
-                repo_with_git_flow_and_release_channels_angular_commits.__name__,
-                "v1.1.0-alpha.3",
-            ),
-        )
+        (lazy_fixture(repo_with_no_tags_angular_commits.__name__), None),
+        *[
+            pytest.param(
+                lazy_fixture(repo_fixture),
+                tag,
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture, tag in (
+                (repo_with_single_branch_angular_commits.__name__, "v0.1.1"),
+                (
+                    repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                    "v0.2.0",
+                ),
+                (
+                    repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                    "v0.2.0",
+                ),
+                (repo_with_git_flow_angular_commits.__name__, "v1.0.0"),
+                (
+                    repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                    "v1.1.0",
+                ),
+            )
+        ],
     ],
 )
 @pytest.mark.parametrize("arg0", [None, "--post-to-release-tag"])
@@ -107,18 +119,12 @@ def test_changelog_noop_is_noop(
     repo: Repo,
     tag: str | None,
     arg0: str | None,
-    tmp_path_factory: pytest.TempPathFactory,
-    example_project_dir: ExProjectDir,
     cli_runner: CliRunner,
 ):
-    args = [arg0, tag] if tag and arg0 else []
-    tempdir = tmp_path_factory.mktemp("test_noop")
-    remove_dir_tree(tempdir.resolve(), force=True)
-    shutil.copytree(src=str(example_project_dir.resolve()), dst=tempdir)
+    repo.git.reset("--hard")
 
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure
     # they're made
-
     session = Session()
     session.hooks = {"response": [lambda r, *_, **__: r.raise_for_status()]}
 
@@ -130,19 +136,16 @@ def test_changelog_noop_is_noop(
     session.mount("https://", mock_adapter)
 
     with mock.patch(
-        "semantic_release.hvcs.github.build_requests_session",
+        get_func_qual_name(semantic_release.hvcs.github.build_requests_session),
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
+        args = [arg0, tag] if tag and arg0 else []
         cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD, *args]
         result = cli_runner.invoke(main, cli_cmd[1:])
 
-    # Capture differences after command
-    dcmp = filecmp.dircmp(str(example_project_dir.resolve()), tempdir)
-    differing_files = flatten_dircmp(dcmp)
-
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
-    assert not differing_files
+    assert not repo.git.status(short=True)
     if args:
         assert not mocker.called
         assert not mock_adapter.called
@@ -184,7 +187,7 @@ def test_changelog_noop_is_noop(
                 repo_with_git_flow_and_release_channels_scipy_commits.__name__,
                 repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
             ]
-        ]
+        ],
     ],
 )
 @pytest.mark.parametrize(
@@ -1021,51 +1024,52 @@ def test_changelog_post_to_release(args: list[str], cli_runner: CliRunner):
     assert expected_request_url == mock_adapter.last_request.url
 
 
+@pytest.mark.parametrize(
+    "repo, get_version_strings",
+    [
+        (
+            lazy_fixture(
+                repo_with_single_branch_and_prereleases_angular_commits.__name__
+            ),
+            lazy_fixture(get_versions_for_trunk_only_repo_w_prerelease_tags.__name__),
+        ),
+    ],
+)
 def test_custom_release_notes_template(
-    repo_with_single_branch_and_prereleases_angular_commits: Repo,
+    repo: Repo,
+    get_version_strings: GetVersionStringsFn,
     use_release_notes_template: UseReleaseNotesTemplateFn,
     retrieve_runtime_context: RetrieveRuntimeContextFn,
     post_mocker: Mocker,
     cli_runner: CliRunner,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
+    expected_call_count = 1
+    version = Version.parse(get_version_strings()[-1])
+
     # Setup
     use_release_notes_template()
-    runtime_context_with_tags = retrieve_runtime_context(
-        repo_with_single_branch_and_prereleases_angular_commits
-    )
-    expected_call_count = 1
-
-    # Arrange
-    release_history = get_release_history_from_context(runtime_context_with_tags)
-    tag = repo_with_single_branch_and_prereleases_angular_commits.tags[-1].name
-
-    version = runtime_context_with_tags.version_translator.from_tag(tag)
-    if version is None:
-        raise ValueError(f"Tag {tag} not in release history")
-
+    runtime_context = retrieve_runtime_context(repo)
+    release_history = get_release_history_from_context(runtime_context)
     release = release_history.released[version]
+    tag = runtime_context.version_translator.str_to_tag(str(version))
+
+    expected_release_notes = (
+        runtime_context.template_environment.from_string(EXAMPLE_RELEASE_NOTES_TEMPLATE)
+        .render(release=release)
+        .rstrip()
+        + os.linesep
+    )
+
+    # ensure normalized line endings after render
+    expected_release_notes = str.join(
+        os.linesep,
+        str.split(expected_release_notes.replace("\r", ""), "\n"),
+    )
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", tag]
     result = cli_runner.invoke(main, cli_cmd[1:])
-
-    expected_release_notes = str.join(
-        # ensure normalized line endings after render
-        os.linesep,
-        [
-            line.replace("\r", "")
-            for line in str.split(
-                runtime_context_with_tags.template_environment.from_string(
-                    EXAMPLE_RELEASE_NOTES_TEMPLATE
-                )
-                .render(version=version, release=release)
-                .rstrip()
-                + os.linesep,
-                "\n",
-            )
-        ],
-    )
 
     # Assert
     assert_successful_exit_code(result, cli_cmd)
