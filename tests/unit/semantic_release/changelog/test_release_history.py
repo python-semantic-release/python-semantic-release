@@ -108,38 +108,38 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
             lazy_fixture(repo_with_no_tags_angular_commits.__name__),
             lazy_fixture(get_commits_for_trunk_only_repo_w_no_tags.__name__),
         ),
-        (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-            lazy_fixture(get_commits_for_trunk_only_repo_w_tags.__name__),
-        ),
-        (
-            lazy_fixture(
-                repo_with_single_branch_and_prereleases_angular_commits.__name__
-            ),
-            lazy_fixture(get_commits_for_trunk_only_repo_w_prerelease_tags.__name__),
-        ),
-        (
-            lazy_fixture(
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
-            ),
-            lazy_fixture(
-                get_commits_for_github_flow_repo_w_feature_release_channel.__name__
-            ),
-        ),
-        (
-            lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-            lazy_fixture(
-                get_commits_for_git_flow_repo_with_2_release_channels.__name__
-            ),
-        ),
-        (
-            lazy_fixture(
-                repo_with_git_flow_and_release_channels_angular_commits.__name__
-            ),
-            lazy_fixture(get_commits_for_git_flow_repo_w_3_release_channels.__name__),
-        ),
+        *[
+            pytest.param(
+                lazy_fixture(repo_fixture_name),
+                lazy_fixture(get_commits_for_repo_fixture_name),
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture_name, get_commits_for_repo_fixture_name in [
+                (
+                    repo_with_single_branch_angular_commits.__name__,
+                    get_commits_for_trunk_only_repo_w_tags.__name__,
+                ),
+                (
+                    repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                    get_commits_for_trunk_only_repo_w_prerelease_tags.__name__,
+                ),
+                (
+                    repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                    get_commits_for_github_flow_repo_w_feature_release_channel.__name__,
+                ),
+                (
+                    repo_with_git_flow_angular_commits.__name__,
+                    get_commits_for_git_flow_repo_with_2_release_channels.__name__,
+                ),
+                (
+                    repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                    get_commits_for_git_flow_repo_w_3_release_channels.__name__,
+                ),
+            ]
+        ],
     ],
 )
+@pytest.mark.order("last")
 def test_release_history(
     repo: Repo,
     default_angular_parser: AngularCommitParser,
@@ -150,6 +150,9 @@ def test_release_history(
     expected_release_history = create_release_history_from_repo_def(
         get_repo_definition("angular")
     )
+    expected_released_versions = sorted(
+        map(str, expected_release_history.released.keys())
+    )
 
     translator = VersionTranslator()
     # Nothing has unreleased commits currently
@@ -157,14 +160,15 @@ def test_release_history(
         repo, translator, default_angular_parser
     )
 
-    expected_released_versions = sorted(
-        map(str, expected_release_history.released.keys())
-    )
     actual_released_versions = sorted(map(str, released.keys()))
     assert expected_released_versions == actual_released_versions
 
     for k in expected_release_history.released:
         expected = expected_release_history.released[k]
+        expected_released_messages = str.join(
+            "\n---\n", sorted([msg for bucket in expected.values() for msg in bucket])
+        )
+
         actual = released[k]["elements"]
         actual_released_messages = str.join(
             "\n---\n",
@@ -176,14 +180,27 @@ def test_release_history(
                 ]
             ),
         )
-        expected_released_messages = str.join(
-            "\n---\n", sorted([msg for bucket in expected.values() for msg in bucket])
-        )
         assert expected_released_messages == actual_released_messages
+
+    # PART 2: add some commits to the repo and check that they are in the right place
 
     for commit_message in ANGULAR_COMMITS_MINOR:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message)
+
+    expected_unreleased_messages = str.join(
+        "\n---\n",
+        sorted(
+            [
+                msg
+                for bucket in [
+                    ANGULAR_COMMITS_MINOR[::-1],
+                    *expected_release_history.unreleased.values(),
+                ]
+                for msg in bucket
+            ]
+        ),
+    )
 
     # Now we should have some unreleased commits, and nothing new released
     new_unreleased, new_released = ReleaseHistory.from_git_history(
@@ -201,20 +218,6 @@ def test_release_history(
         ),
     )
 
-    expected_unreleased_messages = str.join(
-        "\n---\n",
-        sorted(
-            [
-                msg
-                for bucket in [
-                    ANGULAR_COMMITS_MINOR[::-1],
-                    *expected_release_history.unreleased.values(),
-                ]
-                for msg in bucket
-            ]
-        ),
-    )
-
     assert expected_unreleased_messages == actual_unreleased_messages
     assert (
         new_released == released
@@ -225,16 +228,25 @@ def test_release_history(
     "repo",
     [
         lazy_fixture(repo_with_no_tags_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
-        lazy_fixture(
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
-        ),
-        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
+        *[
+            pytest.param(
+                lazy_fixture(repo_fixture_name),
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture_name in [
+                repo_with_single_branch_angular_commits.__name__,
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            ]
+        ],
     ],
 )
-def test_release_history_releases(repo: Repo, default_angular_parser):
+@pytest.mark.order("last")
+def test_release_history_releases(
+    repo: Repo, default_angular_parser: AngularCommitParser
+):
     new_version = Version.parse("100.10.1")
     actor = Actor("semantic-release", "semantic-release")
     release_history = ReleaseHistory.from_git_history(
@@ -268,16 +280,25 @@ def test_release_history_releases(repo: Repo, default_angular_parser):
     "repo",
     [
         lazy_fixture(repo_with_no_tags_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_angular_commits.__name__),
-        lazy_fixture(repo_with_single_branch_and_prereleases_angular_commits.__name__),
-        lazy_fixture(
-            repo_w_github_flow_w_feature_release_channel_angular_commits.__name__
-        ),
-        lazy_fixture(repo_with_git_flow_angular_commits.__name__),
-        lazy_fixture(repo_with_git_flow_and_release_channels_angular_commits.__name__),
+        *[
+            pytest.param(
+                lazy_fixture(repo_fixture_name),
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture_name in [
+                repo_with_single_branch_angular_commits.__name__,
+                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_with_git_flow_angular_commits.__name__,
+                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+            ]
+        ],
     ],
 )
-def test_all_matching_repo_tags_are_released(repo, default_angular_parser):
+@pytest.mark.order("last")
+def test_all_matching_repo_tags_are_released(
+    repo: Repo, default_angular_parser: AngularCommitParser
+):
     translator = VersionTranslator()
     release_history = ReleaseHistory.from_git_history(
         repo=repo,
