@@ -1009,7 +1009,7 @@ primarily you should review the embedded default templates in the PSR package
 for a full example. You can find the default templates at `data/templates/`__
 directory.
 
-__ https://github.com/python-semantic-release/python-semantic-release/tree/master/semantic_release/data/templates
+__ https://github.com/python-semantic-release/python-semantic-release/tree/master/src/semantic_release/data/templates
 
 1.  **Add a conditional to check the changelog_mode.** This will allow you
     to determine if you should render the entire changelog or just the new
