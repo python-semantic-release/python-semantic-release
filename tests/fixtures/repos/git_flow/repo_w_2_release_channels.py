@@ -51,7 +51,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
                 },
             ],
         },
-        "0.1.1-rc.1": {
+        "0.1.1-alpha.1": {
             "changelog_sections": {
                 "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
@@ -65,7 +65,7 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
                 }
             ],
         },
-        "1.0.0-rc.1": {
+        "1.0.0-alpha.1": {
             "changelog_sections": {
                 "angular": [{"section": "Breaking", "i_commits": [0]}],
                 "emoji": [{"section": ":boom:", "i_commits": [0]}],
@@ -90,9 +90,18 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
         },
         "1.0.0": {
             "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [
+                    {"section": "Features", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [2, 1]},
+                ],
+                "emoji": [
+                    {"section": ":sparkles:", "i_commits": [0]},
+                    {"section": "Other", "i_commits": [2, 1]},
+                ],
+                "scipy": [
+                    {"section": "Feature", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [2, 1]},
+                ],
             },
             "commits": [
                 {
@@ -102,14 +111,51 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
                         "sha": NULL_HEX_SHA,
                     },
                     "scipy": {"msg": "ENH: add some more text", "sha": NULL_HEX_SHA},
-                }
+                },
+                {
+                    "angular": {
+                        "msg": "Merge branch 'feat/feature-1' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "emoji": {
+                        "msg": "Merge branch 'feat/feature-1' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {
+                        "msg": "Merge branch 'feat/feature-1' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
+                {
+                    "angular": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "emoji": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
             ],
         },
         "1.1.0": {
             "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [
+                    {"section": "Features", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [2, 1]},
+                ],
+                "emoji": [
+                    {"section": ":sparkles:", "i_commits": [0]},
+                    {"section": "Other", "i_commits": [2, 1]},
+                ],
+                "scipy": [
+                    {"section": "Feature", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [2, 1]},
+                ],
             },
             "commits": [
                 {
@@ -125,14 +171,51 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
                         "msg": "ENH(dev): add some more text",
                         "sha": NULL_HEX_SHA,
                     },
-                }
+                },
+                {
+                    "angular": {
+                        "msg": "Merge branch 'feat/feature-2' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "emoji": {
+                        "msg": "Merge branch 'feat/feature-2' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {
+                        "msg": "Merge branch 'feat/feature-2' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
+                {
+                    "angular": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "emoji": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
             ],
         },
         "1.1.1": {
             "changelog_sections": {
-                "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
-                "emoji": [{"section": ":bug:", "i_commits": [0]}],
-                "scipy": [{"section": "Fix", "i_commits": [0]}],
+                "angular": [
+                    {"section": "Bug Fixes", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [2, 1]},
+                ],
+                "emoji": [
+                    {"section": ":bug:", "i_commits": [0]},
+                    {"section": "Other", "i_commits": [2, 1]},
+                ],
+                "scipy": [
+                    {"section": "Fix", "i_commits": [0]},
+                    {"section": "Unknown", "i_commits": [2, 1]},
+                ],
             },
             "commits": [
                 {
@@ -148,7 +231,35 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
                         "msg": "MAINT(dev): correct some text",
                         "sha": NULL_HEX_SHA,
                     },
-                }
+                },
+                {
+                    "angular": {
+                        "msg": "Merge branch 'fix/patch-1' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "emoji": {
+                        "msg": "Merge branch 'fix/patch-1' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {
+                        "msg": "Merge branch 'fix/patch-1' into 'dev'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
+                {
+                    "angular": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "emoji": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                    "scipy": {
+                        "msg": "Merge branch 'dev' into 'main'",
+                        "sha": NULL_HEX_SHA,
+                    },
+                },
             ],
         },
         "1.2.0-alpha.1": {
@@ -291,9 +402,14 @@ def build_git_flow_repo_with_2_release_channels(
             hvcs_domain=hvcs_domain,
             tag_format_str=tag_format_str,
             extra_configs={
+                # Set the default release branch
+                "tool.semantic_release.branches.main": {
+                    "match": r"^(main|master)$",
+                    "prerelease": False,
+                },
                 # branch "feature" has prerelease suffix of "alpha"
                 "tool.semantic_release.branches.features": {
-                    "match": "feat.*",
+                    "match": r"feat/.+",
                     "prerelease": True,
                     "prerelease_token": "alpha",
                 },
@@ -320,6 +436,9 @@ def build_git_flow_repo_with_2_release_channels(
                 next_version_def["commits"],
             )
 
+            # Grab reference to main branch
+            main_branch_head = git_repo.heads["main"]
+
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
                 repo_def,
@@ -345,7 +464,19 @@ def build_git_flow_repo_with_2_release_channels(
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
-            # Prepare to do a prerelease (by adding a change)
+            # Change to a dev branch
+            dev_branch_head = git_repo.create_head(
+                "dev", commit=main_branch_head.commit
+            )
+            dev_branch_head.checkout()
+
+            # Change to a feature branch
+            feat_branch_head = git_repo.create_head(
+                "feat/feature-1", commit=dev_branch_head.commit
+            )
+            feat_branch_head.checkout()
+
+            # Prepare for a prerelease (by adding a change, direct commit to dev branch)
             # modify && commit modification -> update commit msg with sha & url
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
                 git_repo,
@@ -370,7 +501,7 @@ def build_git_flow_repo_with_2_release_channels(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # Make a patch level release candidate (v0.1.1-rc.1)
+            # Make a patch level alpha release (v0.1.1-alpha.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
@@ -402,7 +533,7 @@ def build_git_flow_repo_with_2_release_channels(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # Make a major feature release candidate (v1.0.0-rc.1)
+            # Make a major feature alpha release (v1.0.0-alpha.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
@@ -411,10 +542,35 @@ def build_git_flow_repo_with_2_release_channels(
 
             # Prepare for a major feature release
             # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
+            next_version_def["commits"] = [
+                *simulate_change_commits_n_rtn_changelog_entry(
+                    git_repo,
+                    next_version_def["commits"][:-2],
+                ),
+                *next_version_def["commits"][-2:],
+            ]
+
+            # checkout dev branch (in prep for merge)
+            dev_branch_head.checkout()
+
+            # Merge feature branch into dev branch
+            git_repo.git.merge(
+                feat_branch_head.name,
+                no_ff=True,
+                m=next_version_def["commits"][-2]["msg"],
             )
+            next_version_def["commits"][-2]["sha"] = git_repo.head.commit.hexsha
+
+            # checkout main branch (in prep for merge & release)
+            main_branch_head.checkout()
+
+            # Merge dev branch into main branch
+            git_repo.git.merge(
+                dev_branch_head.name,
+                no_ff=True,
+                m=next_version_def["commits"][-1]["msg"],
+            )
+            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -441,18 +597,47 @@ def build_git_flow_repo_with_2_release_channels(
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
-            # Change to a dev branch
-            git_repo.create_head("dev")
-            git_repo.heads.dev.checkout()
+            # Update & Change to the dev branch
+            dev_branch_head.checkout()
+            git_repo.git.merge(main_branch_head.name, ff=True)
 
-            # TODO: FIX this section... its not proper Git Flow
+            # Switch to a feature branch
+            feat_branch_head = git_repo.create_head(
+                "feat/feature-2", commit=dev_branch_head.commit
+            )
+            feat_branch_head.checkout()
 
             # Prepare for a minor feature release
             # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
+            next_version_def["commits"] = [
+                *simulate_change_commits_n_rtn_changelog_entry(
+                    git_repo,
+                    next_version_def["commits"][:-2],
+                ),
+                *next_version_def["commits"][-2:],
+            ]
+
+            # checkout dev branch (in prep for merge)
+            dev_branch_head.checkout()
+
+            # Merge feature branch into dev branch
+            git_repo.git.merge(
+                feat_branch_head.name,
+                no_ff=True,
+                m=next_version_def["commits"][-2]["msg"],
             )
+            next_version_def["commits"][-2]["sha"] = git_repo.head.commit.hexsha
+
+            # checkout main branch (in prep for merge & release)
+            main_branch_head.checkout()
+
+            # Merge dev branch into main branch
+            git_repo.git.merge(
+                dev_branch_head.name,
+                no_ff=True,
+                m=next_version_def["commits"][-1]["msg"],
+            )
+            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -472,7 +657,6 @@ def build_git_flow_repo_with_2_release_channels(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # TODO: ERROR releasing on dev branch
             # Make a minor feature release (v1.1.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -480,12 +664,47 @@ def build_git_flow_repo_with_2_release_channels(
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
+            # Update & Change to the dev branch
+            dev_branch_head.checkout()
+            git_repo.git.merge(main_branch_head.name, ff=True)
+
+            # Switch to a fix branch
+            fix_branch_head = git_repo.create_head(
+                "fix/patch-1", commit=dev_branch_head.commit
+            )
+            fix_branch_head.checkout()
+
             # Prepare for a patch level release
             # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
+            next_version_def["commits"] = [
+                *simulate_change_commits_n_rtn_changelog_entry(
+                    git_repo,
+                    next_version_def["commits"][:-2],
+                ),
+                *next_version_def["commits"][-2:],
+            ]
+
+            # checkout dev branch (in prep for merge)
+            dev_branch_head.checkout()
+
+            # Merge feature branch into dev branch
+            git_repo.git.merge(
+                fix_branch_head.name,
+                no_ff=True,
+                m=next_version_def["commits"][-2]["msg"],
             )
+            next_version_def["commits"][-2]["sha"] = git_repo.head.commit.hexsha
+
+            # checkout main branch (in prep for merge & release)
+            main_branch_head.checkout()
+
+            # Merge dev branch into main branch
+            git_repo.git.merge(
+                dev_branch_head.name,
+                no_ff=True,
+                m=next_version_def["commits"][-1]["msg"],
+            )
+            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -505,7 +724,6 @@ def build_git_flow_repo_with_2_release_channels(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # TODO: ERROR releasing on dev branch
             # Make a patch level release (v1.1.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
@@ -513,9 +731,15 @@ def build_git_flow_repo_with_2_release_channels(
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
-            # Change to a feature branch
-            git_repo.create_head("feature")
-            git_repo.heads.feature.checkout()
+            # Update & Change to the dev branch
+            dev_branch_head.checkout()
+            git_repo.git.merge(main_branch_head.name, ff=True)
+
+            # Switch to a feature branch
+            feat_branch_head = git_repo.create_head(
+                "feat/feature-3", commit=dev_branch_head.commit
+            )
+            feat_branch_head.checkout()
 
             # Prepare for an alpha prerelease
             # modify && commit modification -> update commit msg with sha & url

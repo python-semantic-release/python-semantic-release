@@ -39,6 +39,9 @@ if TYPE_CHECKING:
 
     ExProjectDir = Path
 
+    class GetWheelFileFn(Protocol):
+        def __call__(self, version_str: str) -> Path: ...
+
     class SetFlagFn(Protocol):
         def __call__(self, flag: bool) -> None: ...
 
@@ -74,6 +77,11 @@ def setup_py_file() -> Path:
 
 
 @pytest.fixture(scope="session")
+def dist_dir() -> Path:
+    return Path("dist")
+
+
+@pytest.fixture(scope="session")
 def changelog_md_file() -> Path:
     return Path("CHANGELOG.md")
 
@@ -96,6 +104,14 @@ def default_md_changelog_insertion_flag() -> str:
 @pytest.fixture(scope="session")
 def default_rst_changelog_insertion_flag() -> str:
     return f"..{os.linesep}    version list"
+
+
+@pytest.fixture(scope="session")
+def get_wheel_file(dist_dir: Path) -> GetWheelFileFn:
+    def _get_wheel_file(version_str: str) -> Path:
+        return dist_dir / f"{EXAMPLE_PROJECT_NAME}-{version_str}-py3-none-any.whl"
+
+    return _get_wheel_file
 
 
 @pytest.fixture
@@ -246,6 +262,22 @@ def example_setup_py(
     setup_py_file: Path,
 ) -> Path:
     return example_project_dir / setup_py_file
+
+
+@pytest.fixture
+def example_dist_dir(
+    example_project_dir: ExProjectDir,
+    dist_dir: Path,
+) -> Path:
+    return example_project_dir / dist_dir
+
+
+@pytest.fixture
+def example_project_wheel_file(
+    example_dist_dir: Path,
+    get_wheel_file: GetWheelFileFn,
+) -> Path:
+    return example_dist_dir / get_wheel_file(EXAMPLE_PROJECT_VERSION)
 
 
 # Note this is just the path and the content may change

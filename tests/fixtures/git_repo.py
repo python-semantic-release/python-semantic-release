@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from functools import reduce
 from pathlib import Path
 from textwrap import dedent
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
     from tests.conftest import TeardownCachedDirFn
     from tests.fixtures.example_project import (
         ExProjectDir,
+        GetWheelFileFn,
         UpdatePyprojectTomlFn,
         UseCustomParserFn,
         UseHvcsFn,
@@ -271,6 +273,7 @@ def build_configured_base_repo(  # noqa: C901
     use_custom_parser: UseCustomParserFn,
     example_git_https_url: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    get_wheel_file: GetWheelFileFn,
 ) -> BuildRepoFn:
     """
     This fixture is intended to simplify repo scenario building by initially
@@ -325,6 +328,28 @@ def build_configured_base_repo(  # noqa: C901
                 update_pyproject_toml(
                     "tool.semantic_release.tag_format", tag_format_str
                 )
+
+            # Set the build_command to create a wheel file (using the build_command_env version variable)
+            build_result_file = (
+                get_wheel_file("$NEW_VERSION")
+                if sys.platform != "win32"
+                else get_wheel_file("$Env:NEW_VERSION")
+            )
+            update_pyproject_toml(
+                # NOTE: must work in both bash and Powershell
+                "tool.semantic_release.build_command",
+                dedent(
+                    f"""\
+                    mkdir -p "{build_result_file.parent}"
+                    touch "{build_result_file}"
+                    """
+                    if sys.platform != "win32"
+                    else f"""\
+                    mkdir {build_result_file.parent} > $null
+                    New-Item -ItemType file -Path "{build_result_file}" -Force | Select-Object OriginalPath
+                    """
+                ),
+            )
 
             # Apply configurations to pyproject.toml
             if extra_configs is not None:

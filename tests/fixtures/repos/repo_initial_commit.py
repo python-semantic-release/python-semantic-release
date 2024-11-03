@@ -158,9 +158,7 @@ def cached_repo_w_initial_commit(
     cached_files_dir: Path,
     teardown_cached_dir: TeardownCachedDirFn,
 ) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_w_initial_commit.__name__
-    )
+    cached_repo_path = cached_files_dir.joinpath(cached_repo_w_initial_commit.__name__)
     build_repo_w_initial_commit(cached_repo_path)
     return teardown_cached_dir(cached_repo_path)
 
