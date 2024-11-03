@@ -68,7 +68,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     """
     Test selection modifier based on markers and command line options.
 
-    Examples:
+    Examples
+    --------
         pytest
             only unit tests that are not marked comprehensive are executed
 
@@ -95,14 +96,18 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
         pytest -k "test_name" --comprehensive
             all tests that match the substring "test_name" are executed
+
     """
     disable_comprehensive_tests = not config.getoption("--comprehensive")
     comprehensive_test_skip_marker = pytest.mark.skip(
         reason="comprehensive tests are disabled by default"
     )
+    user_provided_filter = str(config.getoption("-k"))
 
     if any((disable_comprehensive_tests,)):
         for item in items:
+            if user_provided_filter and user_provided_filter in item.name:
+                continue
             if disable_comprehensive_tests and "comprehensive" in item.keywords:
                 item.add_marker(comprehensive_test_skip_marker)
 
