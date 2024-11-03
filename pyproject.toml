@@ -149,7 +149,7 @@ commands =
 [testenv:mypy]
 deps = .[mypy]
 commands =
-    mypy semantic_release
+    mypy src/
 
 [testenv:coverage]
 deps = coverage[toml]
@@ -166,7 +166,6 @@ commands =
 
 [tool.mypy]
 python_version = "3.8"
-packages = ["semantic_release"]
 show_column_numbers = true
 show_error_context = true
 pretty = true

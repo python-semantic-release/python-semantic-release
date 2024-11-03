@@ -12,7 +12,7 @@ docs:
     - CONTRIBUTING.rst
     - CHANGELOG.rst
 src:
-    - semantic_release/**
+    - src/**
     - pyproject.toml
 tests:
     - tests/**

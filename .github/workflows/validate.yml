@@ -350,7 +350,7 @@ jobs:
         id: type-check
         if: ${{ always() && steps.lint.outcome != 'skipped' }}
         run: |
-          mypy --ignore-missing-imports semantic_release
+          mypy --ignore-missing-imports src/
 
       - name: Format-Check | Ruff Evaluation
         id: format-check

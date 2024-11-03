@@ -1252,7 +1252,7 @@ specified in ``file:variable`` format. For example:
 
     [semantic_release]
     version_variables = [
-        "semantic_release/__init__.py:__version__",
+        "src/semantic_release/__init__.py:__version__",
         "docs/conf.py:version",
     ]
 
