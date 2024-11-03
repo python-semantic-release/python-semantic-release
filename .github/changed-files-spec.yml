@@ -1,0 +1,18 @@
+---
+
+build:
+    - MANIFEST.in
+    - Dockerfile
+    - .dockerignore
+    - scripts/**
+docs:
+    - docs/**
+    - README.rst
+    - AUTHORS.rst
+    - CONTRIBUTING.rst
+    - CHANGELOG.rst
+src:
+    - semantic_release/**
+    - pyproject.toml
+tests:
+    - tests/**

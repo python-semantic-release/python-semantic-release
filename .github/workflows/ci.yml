@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: # Target branches
+      - main
+
+# default token permissions = none
+permissions: {}
+
+jobs:
+
+  commitlint:
+    # condition: Execute IFF it is protected branch update, or a PR that is NOT in a draft state
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: wagoid/commitlint-github-action@v6
+
+
+  eval-changes:
+    name: Evaluate changes
+    # condition: Execute IFF it is protected branch update, or a PR that is NOT in a draft state
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+
+      - name: Evaluate | Check common file types for changes
+        id: core-changed-files
+        uses: tj-actions/changed-files@v45.0.2
+        with:
+          files_yaml_from_source_file: .github/changed-files-spec.yml
+
+      - name: Evaluate | Check specific file types for changes
+        id: ci-changed-files
+        uses: tj-actions/changed-files@v45.0.2
+        with:
+          files_yaml: |
+            ci:
+              - .github/workflows/ci.yml
+              - .github/workflows/validate.yml
+
+      - name: Evaluate | Detect if any of the combinations of file sets have changed
+        id: all-changes
+        run: |
+          printf '%s\n' "any_changed=false" >> $GITHUB_OUTPUT
+          if [ "${{ steps.core-changed-files.outputs.build_any_changed }}" == "true" ] || \
+             [ "${{ steps.ci-changed-files.outputs.ci_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.docs_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.src_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.tests_any_changed }}" == "true" ]; then
+             printf '%s\n' "any_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      # essentially casts the string output to a boolean for GitHub
+      any-file-changes: ${{ steps.all-changes.outputs.any_changed }}
+      build-changes: ${{ steps.core-changed-files.outputs.build_any_changed }}
+      ci-changes: ${{ steps.ci-changed-files.outputs.ci_any_changed }}
+      doc-changes: ${{ steps.core-changed-files.outputs.docs_any_changed }}
+      src-changes: ${{ steps.core-changed-files.outputs.src_any_changed }}
+      test-changes: ${{ steps.core-changed-files.outputs.tests_any_changed }}
+
+
+  validate:
+    needs: eval-changes
+    uses: ./.github/workflows/validate.yml
+    with:
+      python-versions-linux: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
+      # Since the test suite takes ~4 minutes to complete on windows, and windows is billed higher
+      # we are only going to run it on the oldest version of python we support. The older version
+      # will be the most likely area to fail as newer minor versions maintain compatibility.
+      python-versions-windows: '["3.8"]'
+      files-changed: ${{ needs.eval-changes.outputs.any-file-changes }}
+      build-files-changed: ${{ needs.eval-changes.outputs.build-changes }}
+      ci-files-changed: ${{ needs.eval-changes.outputs.ci-changes }}
+      doc-files-changed: ${{ needs.eval-changes.outputs.doc-changes }}
+      src-files-changed: ${{ needs.eval-changes.outputs.src-changes }}
+      test-files-changed: ${{ needs.eval-changes.outputs.test-changes }}
+    permissions: {}
+    secrets: {}
