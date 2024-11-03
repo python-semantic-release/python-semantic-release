@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 import semantic_release
+from semantic_release import globals
 from semantic_release.cli.cli_context import CliContextObj
 from semantic_release.cli.config import GlobalCommandLineOptions
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
@@ -121,6 +122,9 @@ def main(
 
     logger = logging.getLogger(__name__)
     logger.debug("logging level set to: %s", logging.getLevelName(log_level))
+
+    if log_level == logging.DEBUG:
+        globals.debug = True
 
     if noop:
         rprint(
