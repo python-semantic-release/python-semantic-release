@@ -100,6 +100,7 @@ jobs:
             -vv                         \
             -nauto                      \
             -m unit                     \
+            --comprehensive             \
             --cov=semantic_release      \
             --cov-context=test          \
             --cov-report=term-missing   \
