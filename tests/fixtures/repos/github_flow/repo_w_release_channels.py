@@ -182,6 +182,11 @@ def build_github_flow_repo_w_feature_release_channel(
             hvcs_domain=hvcs_domain,
             tag_format_str=tag_format_str,
             extra_configs={
+                # Set the default release branch
+                "tool.semantic_release.branches.main": {
+                    "match": "^(main|master)$",
+                    "prerelease": False,
+                },
                 # branch "beta-testing" has prerelease suffix of "beta"
                 "tool.semantic_release.branches.beta-testing": {
                     "match": "beta.*",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import os
 import secrets
 import shutil
@@ -120,6 +121,13 @@ def remove_dir_tree(directory: Path | str = ".", force: bool = False) -> None:
     # Prevent error if already deleted or never existed, that is our desired state
     with suppress(FileNotFoundError):
         shutil.rmtree(str(directory), onerror=on_read_only_error if force else None)
+
+
+def dynamic_python_import(file_path: Path, module_name: str):
+    spec = importlib.util.spec_from_file_location(module_name, str(file_path))
+    module = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(module)  # type: ignore
+    return module
 
 
 @contextmanager
