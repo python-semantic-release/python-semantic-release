@@ -83,8 +83,12 @@ mypy = [
 ]
 
 
-[tool.setuptools.package-dir]
-semantic_release = "semantic_release"
+[tool.setuptools]
+include-package-data = true
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 
 [tool.pytest.ini_options]
@@ -311,11 +315,11 @@ quote-style = "double"
 # Imported but unused
 "__init__.py" = ["F401"]
 # pydantic 1 can't handle __future__ annotations-enabled syntax on < 3.10
-"semantic_release/cli/config.py" = ["UP", "TCH"]
-"semantic_release/commit_parser/*" = ["UP", "FA", "TCH"]
+"src/semantic_release/cli/config.py" = ["UP", "TCH"]
+"src/semantic_release/commit_parser/*" = ["UP", "FA", "TCH"]
 # Method argument not used. This is mostly a base class
 # anyway
-"semantic_release/hvcs/_base.py" = ["ARG002"]
+"src/semantic_release/hvcs/_base.py" = ["ARG002"]
 # from tests.fixtures import * is deliberate
 "tests/conftest.py" = ["F403"]
 "tests/fixtures/**/__init__.py" = ["F403"]
@@ -394,7 +398,7 @@ build_command = """
     python -m build .
 """
 major_on_zero = true
-version_variables = ["semantic_release/__init__.py:__version__"]
+version_variables = ["src/semantic_release/__init__.py:__version__"]
 version_toml = ["pyproject.toml:project.version"]
 
 [tool.semantic_release.changelog]
