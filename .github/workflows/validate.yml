@@ -200,9 +200,6 @@ jobs:
         id: install
         # To ensure we are testing our installed package (not the src code), we must
         # uninstall the editable install (symlink) first then install the distribution artifact.
-        # Unfortunately because of the source code being at the top level, we must delete the source
-        # code folder to prevent python from selecting the source code over the installed package on import
-        # TODO: move to a src-format directory and this will not be an issue
         # Lastly, we ask python to give us the installation location of our distribution artifact
         # so that we can use it in the pytest command for coverage
         run: |
@@ -210,7 +207,6 @@ jobs:
           pip install -e .[test]
           pip install pytest-github-actions-annotate-failures
           pip uninstall -y python-semantic-release
-          rm -rf semantic_release
           pip install dist/python_semantic_release-*.whl
           python -c 'import pathlib, semantic_release; print(f"PKG_INSTALLED_DIR={pathlib.Path(semantic_release.__file__).resolve().parent}")' >> $GITHUB_OUTPUT
 
@@ -271,9 +267,6 @@ jobs:
         id: install
         # To ensure we are testing our installed package (not the src code), we must
         # uninstall the editable install (symlink) first then install the distribution artifact.
-        # Unfortunately because of the source code being at the top level, we must delete the source
-        # code folder to prevent python from selecting the source code over the installed package on import
-        # TODO: move to a src-format directory and this will not be an issue
         # Lastly, we ask python to give us the installation location of our distribution artifact
         # so that we can use it in the pytest command for coverage
         shell: pwsh
@@ -283,7 +276,6 @@ jobs:
           pip install -e .[test]
           pip install pytest-github-actions-annotate-failures
           pip uninstall -y python-semantic-release
-          Remove-Item -LiteralPath semantic_release -Recurse -Force
           $psrWheelFile = Get-ChildItem dist\python_semantic_release-*.whl -File | Select-Object -Index 0
           pip install "$psrWheelFile"
           python -c 'import pathlib, semantic_release; print(f"PKG_INSTALLED_DIR={pathlib.Path(semantic_release.__file__).resolve().parent}")' | Tee-Object -Variable cmdOutput
