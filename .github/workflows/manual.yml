@@ -1,0 +1,138 @@
+name: CI (Manual)
+
+on:
+  # Enable execution directly from Actions page
+  workflow_dispatch:
+    inputs:
+      linux:
+        description: 'Test on Linux?'
+        type: boolean
+        required: true
+        default: true
+      windows:
+        description: 'Test on Windows?'
+        type: boolean
+        required: true
+        default: true
+      python3-13:
+        description: 'Test Python 3.13?'
+        type: boolean
+        required: true
+        default: true
+      python3-12:
+        description: 'Test Python 3.12?'
+        type: boolean
+        required: true
+        default: true
+      python3-11:
+        description: 'Test Python 3.11?'
+        type: boolean
+        required: true
+        default: true
+      python3-10:
+        description: 'Test Python 3.10?'
+        type: boolean
+        required: true
+        default: true
+      python3-9:
+        description: 'Test Python 3.9?'
+        type: boolean
+        required: true
+        default: true
+      python3-8:
+        description: 'Test Python 3.8?'
+        type: boolean
+        required: true
+        default: true
+
+
+# default token permissions = none
+permissions: {}
+
+env:
+  COMMON_PYTHON_VERSION: '3.11'
+
+jobs:
+
+  eval-input:
+    name: Evaluate inputs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.COMMON_PYTHON_VERSION }}
+
+      - name: Setup | Write file
+        uses: DamianReeves/write-file-action@v1.3
+        with:
+          path: .github/manual_eval_input.py
+          write-mode: overwrite
+          contents: |
+            import json, os
+
+            version_list = list(filter(None, [
+                "3.8" if str(os.getenv("INPUT_PY3_8", False)).lower() == str(True).lower() else None,
+                "3.9" if str(os.getenv("INPUT_PY3_9", False)).lower() == str(True).lower() else None,
+                "3.10" if str(os.getenv("INPUT_PY3_10", False)).lower() == str(True).lower() else None,
+                "3.11" if str(os.getenv("INPUT_PY3_11", False)).lower() == str(True).lower() else None,
+                "3.12" if str(os.getenv("INPUT_PY3_12", False)).lower() == str(True).lower() else None,
+                "3.13" if str(os.getenv("INPUT_PY3_13", False)).lower() == str(True).lower() else None,
+            ]))
+
+            linux_versions = (
+                version_list
+                if str(os.getenv("INPUT_LINUX", False)).lower() == str(True).lower()
+                else []
+            )
+            windows_versions = (
+                version_list
+                if str(os.getenv("INPUT_WINDOWS", False)).lower() == str(True).lower()
+                else []
+            )
+
+            print(f"PYTHON_VERSIONS_LINUX={json.dumps(linux_versions)}")
+            print(f"PYTHON_VERSIONS_WINDOWS={json.dumps(windows_versions)}")
+
+
+      - name: Evaluate | Generate Test Matrix
+        id: test-matrix
+        env:
+          INPUT_PY3_8: ${{ inputs.python3-8 }}
+          INPUT_PY3_9: ${{ inputs.python3-9 }}
+          INPUT_PY3_10: ${{ inputs.python3-10 }}
+          INPUT_PY3_11: ${{ inputs.python3-11 }}
+          INPUT_PY3_12: ${{ inputs.python3-12 }}
+          INPUT_PY3_13: ${{ inputs.python3-13 }}
+          INPUT_LINUX: ${{ inputs.linux }}
+          INPUT_WINDOWS: ${{ inputs.windows }}
+        run: |
+          if ! vars="$(python3 .github/manual_eval_input.py)"; then
+            printf '%s\n' "::error::Failed to evaluate input"
+            exit 1
+          fi
+          printf '%s\n' "$vars"
+          printf '%s\n' "$vars" >> $GITHUB_OUTPUT
+
+    outputs:
+      python-versions-linux: ${{ steps.test-matrix.outputs.PYTHON_VERSIONS_LINUX }}
+      python-versions-windows: ${{ steps.test-matrix.outputs.PYTHON_VERSIONS_WINDOWS }}
+
+
+  validate:
+    needs: eval-input
+    uses: ./.github/workflows/validate.yml
+    with:
+      python-versions-linux: ${{ needs.eval-input.outputs.python-versions-linux }}
+      python-versions-windows: ${{ needs.eval-input.outputs.python-versions-windows }}
+      # There is no way to check for file changes on a manual workflow so
+      # we just assume everything has changed
+      build-files-changed: true
+      ci-files-changed: true
+      doc-files-changed: true
+      src-files-changed: true
+      test-files-changed: true
+      files-changed: true
+    permissions: {}
+    secrets: {}
