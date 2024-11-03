@@ -98,6 +98,7 @@ addopts = [
   "-ra",
   "--diff-symbols",
   "--cache-clear",
+  "--durations=20",
   # No default coverage - causes problems with debuggers
   # "--cov=semantic_release",
   # "--cov-context=test",
