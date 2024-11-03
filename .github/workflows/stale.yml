@@ -37,7 +37,7 @@ jobs:
           stale-issue-label: stale
           days-before-issue-stale: ${{ env.STALE_ISSUE_WARNING_DAYS }}
           days-before-issue-close: ${{ env.STALE_ISSUE_CLOSURE_DAYS }}
-          exempt-issue-labels: confirmed, help-wanted
+          exempt-issue-labels: confirmed, help-wanted, info
           stale-issue-message: >
             This issue is stale because it has not been confirmed or planned by the maintainers
             and has been open ${{ env.STALE_ISSUE_WARNING_DAYS }} days with no recent activity.
