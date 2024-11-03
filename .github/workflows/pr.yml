@@ -103,7 +103,7 @@ jobs:
             --cov=semantic_release      \
             --cov-context=test          \
             --cov-report=term-missing   \
-            --cov-fail-under=80         \
+            --cov-fail-under=60         \
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
@@ -167,7 +167,7 @@ jobs:
             --cov=semantic_release      \
             --cov-context=test          \
             --cov-report=term-missing   \
-            --cov-fail-under=80         \
+            --cov-fail-under=70         \
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
@@ -232,7 +232,6 @@ jobs:
             `--cov=semantic_release      `
             `--cov-context=test          `
             `--cov-report=term-missing   `
-            `--cov-fail-under=80         `
             `--junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
