@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v9.12.1 (2024-11-04)
+
+### Bug Fixes
+
+* fix(cmd-version): fix `--as-prerelease` when no commit change from last full release (#1076) ([`3b7b772`](https://github.com/python-semantic-release/python-semantic-release/commit/3b7b77246100cedd8cc8f289395f7641187ffdec))
+
+* fix(changelog): fix raw-inline pattern replacement in `convert_md_to_rst` filter ([`2dc70a6`](https://github.com/python-semantic-release/python-semantic-release/commit/2dc70a6106776106b0fba474b0029071317d639f))
+
+* fix(release-notes): add context variable shorthand `ctx` like docs claim & changelog has ([`d618d83`](https://github.com/python-semantic-release/python-semantic-release/commit/d618d83360c4409fc149f70b97c5fe338fa89968))
+
+### Documentation
+
+* docs(contributing): update local testing instructions ([`74f03d4`](https://github.com/python-semantic-release/python-semantic-release/commit/74f03d44684b7b2d84f9f5e471425b02f8bf91c3))
+
+
 ## v9.12.0 (2024-10-18)
 
 ### Bug Fixes
