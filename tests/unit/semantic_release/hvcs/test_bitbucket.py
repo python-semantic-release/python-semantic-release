@@ -301,13 +301,13 @@ def test_commit_hash_url(default_bitbucket_client: Bitbucket):
     assert expected_url == default_bitbucket_client.commit_hash_url(sha)
 
 
-@pytest.mark.parametrize("pr_number", (420, "420"))
+@pytest.mark.parametrize("pr_number", (666, "666", "#666"))
 def test_pull_request_url(default_bitbucket_client: Bitbucket, pr_number: int | str):
     expected_url = "{server}/{owner}/{repo}/pull-requests/{pr_number}".format(
         server=default_bitbucket_client.hvcs_domain,
         owner=default_bitbucket_client.owner,
         repo=default_bitbucket_client.repo_name,
-        pr_number=pr_number,
+        pr_number=str(pr_number).lstrip("#"),
     )
     actual_url = default_bitbucket_client.pull_request_url(pr_number=pr_number)
     assert expected_url == actual_url
