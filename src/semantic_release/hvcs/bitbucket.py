@@ -202,13 +202,14 @@ class Bitbucket(RemoteHvcsBase):
         return self.create_repo_url(repo_path=f"/commits/{commit_hash}")
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        if isinstance(pr_number, str):
-            # Strips off any character prefix like '#' that usually exists
-            if match := regexp(r'(\d+)$').search(pr_number):
-                try:
-                    pr_number = int(match.group(1))
-                except ValueError:
-                    return ""
+        # Strips off any character prefix like '#' that usually exists
+        if isinstance(pr_number, str) and (
+            match := regexp(r"(\d+)$").search(pr_number)
+        ):
+            try:
+                pr_number = int(match.group(1))
+            except ValueError:
+                return ""
 
         if isinstance(pr_number, int):
             return self.create_repo_url(repo_path=f"/pull-requests/{pr_number}")

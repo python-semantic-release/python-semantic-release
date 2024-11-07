@@ -351,13 +351,14 @@ class Gitea(RemoteHvcsBase):
         return self.create_repo_url(repo_path=f"/commit/{commit_hash}")
 
     def issue_url(self, issue_num: str | int) -> str:
-        if isinstance(issue_num, str):
-            # Strips off any character prefix like '#' that usually exists
-            if match := regexp(r'(\d+)$').search(issue_num):
-                try:
-                    issue_num = int(match.group(1))
-                except ValueError:
-                    return ""
+        # Strips off any character prefix like '#' that usually exists
+        if isinstance(issue_num, str) and (
+            match := regexp(r"(\d+)$").search(issue_num)
+        ):
+            try:
+                issue_num = int(match.group(1))
+            except ValueError:
+                return ""
 
         if isinstance(issue_num, int):
             return self.create_repo_url(repo_path=f"/issues/{issue_num}")
@@ -365,13 +366,14 @@ class Gitea(RemoteHvcsBase):
         return ""
 
     def pull_request_url(self, pr_number: str | int) -> str:
-        if isinstance(pr_number, str):
-            # Strips off any character prefix like '#' that usually exists
-            if match := regexp(r'(\d+)$').search(pr_number):
-                try:
-                    pr_number = int(match.group(1))
-                except ValueError:
-                    return ""
+        # Strips off any character prefix like '#' that usually exists
+        if isinstance(pr_number, str) and (
+            match := regexp(r"(\d+)$").search(pr_number)
+        ):
+            try:
+                pr_number = int(match.group(1))
+            except ValueError:
+                return ""
 
         if isinstance(pr_number, int):
             return self.create_repo_url(repo_path=f"/pulls/{pr_number}")
