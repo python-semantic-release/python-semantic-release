@@ -512,60 +512,72 @@ the ``context`` object has the following attributes:
 Release History
 """""""""""""""
 
-A ``ReleaseHistory`` object has two attributes: ``released`` and ``unreleased``.
+A :py:class:`ReleaseHistory <semantic_release.changelog.release_history.ReleaseHistory>`
+object has two attributes: ``released`` and ``unreleased``.
 
 The ``unreleased`` attribute is of type ``Dict[str, List[ParseResult]]``. Each commit
 in the current branch's commit history since the last release on this branch is grouped
-by the ``type`` attribute of the ``ParsedCommit`` returned by the commit parser,
-or if the parser returned a ``ParseError`` then the result is grouped under the
-``"unknown"`` key.
+by the ``type`` attribute of the
+:py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>`
+returned by the commit parser, or if the parser returned a
+:py:class:`ParseError <semantic_release.commit_parser.token.ParseError>`
+then the result is grouped under the ``"unknown"`` key.
 
 For this reason, every element of ``ReleaseHistory.unreleased["unknown"]`` is a
-``ParseError``, and every element of every other value in ``ReleaseHistory.unreleased``
-is of type ``ParsedCommit``.
+:py:class:`ParseError <semantic_release.commit_parser.token.ParseError>`, and
+every element of every other value in ``ReleaseHistory.unreleased`` is of type
+:py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>`.
 
 Typically, commit types will be ``"feature"``, ``"fix"``, ``"breaking"``, though the
 specific types are determined by the parser. For example, the
-:py:class:`semantic_release.commit_parser.EmojiCommitParser` uses a textual
-representation of the emoji corresponding to the most significant change introduced
-in a commit (e.g. ``":boom:"``) as the different commit types. As a template author,
-you are free to customise how these are presented in the rendered template.
+:py:class:`EmojiCommitParser <semantic_release.commit_parser.emoji.EmojiCommitParser>`
+uses a textual representation of the emoji corresponding to the most significant change
+introduced in a commit (e.g. ``":boom:"``) as the different commit types. As a template
+author, you are free to customize how these are presented in the rendered template.
 
 .. note::
    If you are using a custom commit parser following the guide at
    :ref:`commit-parser-writing-your-own-parser`, your custom implementations of
-   :py:class:`semantic_release.ParseResult`, :py:class:`semantic_release.ParseError`
-   and :py:class:`semantic_release.ParsedCommit` will be used in place of the built-in
-   types.
+   :py:class:`ParseResult <semantic_release.commit_parser.token.ParseResult>`,
+   :py:class:`ParseError <semantic_release.commit_parser.token.ParseError>`
+   and :py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>`
+   will be used in place of the built-in types.
 
 The ``released`` attribute is of type ``Dict[Version, Release]``. The keys of this
 dictionary correspond to each version released within this branch's history, and
-are of type ``semantic_release.Version``. You can use the ``as_tag()`` method to
-render these as the Git tag that they correspond to inside your template.
+are of type :py:class:`Version <semantic_release.version.version.Version>`. You can
+use the ``as_tag()`` method to render these as the Git tag that they correspond to
+inside your template.
 
-A ``Release`` object has an ``elements`` attribute, which has the same
-structure as the ``unreleased`` attribute of a ``ReleaseHistory``; that is,
-``elements`` is of type ``Dict[str, List[ParseResult]]``, where every element
-of ``elements["unknown"]`` is a ``ParseError``, and elements of every other
-value correspond to the ``type`` attribute of the ``ParsedCommit`` returned
+A :py:class:`Release <semantic_release.changelog.release_history.Release>`object
+has an ``elements`` attribute, which has the same structure as the ``unreleased``
+attribute of a
+:py:class:`ReleaseHistory <semantic_release.changelog.release_history.ReleaseHistory>`;
+that is, ``elements`` is of type ``Dict[str, List[ParseResult]]``, where every element
+of ``elements["unknown"]`` is a
+:py:class:`ParseError <semantic_release.commit_parser.token.ParseError>`, and elements
+of every other value correspond to the ``type`` attribute of the
+:py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>` returned
 by the commit parser.
 
 The commits represented within each ``ReleaseHistory.released[version].elements``
-grouping are the commits which were made between ``version`` and the release
-corresponding to the previous version.
-That is, given two releases ``Version(1, 0, 0)`` and ``Version(1, 1, 0)``,
-``ReleaseHistory.released[Version(1, 0, 0)].elements`` contains only commits
-made after the release of ``Version(1, 0, 0)`` up to and including the release
-of ``Version(1, 1, 0)``.
+grouping are the commits which were made between version and the release corresponding
+to the previous version. That is, given two releases ``Version(1, 0, 0)`` and
+``Version(1, 1, 0)``, ``ReleaseHistory.released[Version(1, 0, 0)].elements`` contains
+only commits made after the release of ``Version(1, 0, 0)`` up to and including the
+release of ``Version(1, 1, 0)``.
 
 To maintain a consistent order of subsections in the changelog headed by the commit
-type, it's recommended to use Jinja's `dictsort <https://jinja.palletsprojects.com/en/3.1.x/templates/#jinja-filters.dictsort>`_
+type, it's recommended to use Jinja's
+`dictsort <https://jinja.palletsprojects.com/en/3.1.x/templates/#jinja-filters.dictsort>`_
 filter.
 
 Each ``Release`` object also has the following attributes:
 
 * ``tagger: git.Actor``: The tagger who tagged the release.
+
 * ``committer: git.Actor``: The committer who made the release commit.
+
 * ``tagged_date: datetime``: The date and time at which the release was tagged.
 
 .. seealso::
@@ -895,12 +907,12 @@ exposed to the `Jinja`_ template when rendering the release notes.
 
 Additionally, the following two globals are available to the template:
 
-* ``release`` (:class:`Release <semantic_release.changelog.release_history.Release>`):
+* ``release`` (:py:class:`Release <semantic_release.changelog.release_history.Release>`):
   contains metadata about the content of the release, as parsed from commit logs
 
   *Introduced in v8.0.0.*
 
-* ``version`` (:class:`Version <semantic_release.version.version.Version>`): contains
+* ``version`` (:py:class:`Version <semantic_release.version.version.Version>`): contains
   metadata about the software version to be released and its ``git`` tag
 
   *Introduced in v8.0.0.*

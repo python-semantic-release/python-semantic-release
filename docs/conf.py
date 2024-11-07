@@ -38,7 +38,7 @@ htmlhelp_basename = "python-semantic-releasedoc"
 
 docs_path = os.path.dirname(__file__)
 apidoc_output_dir = os.path.join(docs_path, "api")
-apidoc_module_dir = os.path.join(docs_path, "..", "semantic_release")
+apidoc_module_dir = os.path.join(docs_path, "..", "src")
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["-d", "3"]
