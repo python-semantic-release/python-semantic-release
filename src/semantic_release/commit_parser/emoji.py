@@ -1,6 +1,9 @@
 """Commit parser which looks for emojis to determine the type of commit"""
 
+from __future__ import annotations
+
 import logging
+from re import compile as regexp
 from typing import Tuple
 
 from git.objects.commit import Commit
@@ -60,6 +63,13 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     # TODO: Deprecate in lieu of get_default_options()
     parser_options = EmojiParserOptions
 
+    def __init__(self, options: EmojiParserOptions | None = None) -> None:
+        super().__init__(options)
+        # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
+        self.mr_selector = regexp(
+            r"[\t ]\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
+        )
+
     @staticmethod
     def get_default_options() -> EmojiParserOptions:
         return EmojiParserOptions()
@@ -71,6 +81,13 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
 
         message = str(commit.message)
         subject = message.split("\n")[0]
+
+        linked_merge_request = ""
+        if mr_match := self.mr_selector.search(subject):
+            linked_merge_request = mr_match.group("mr_number")
+            # TODO: breaking change v10, removes PR number from subject/descriptions
+            # expects changelog template to format the line accordingly
+            # subject = self.mr_selector.sub("", subject).strip()
 
         # Loop over emojis from most important to least important
         # Therefore, we find the highest level emoji first
@@ -112,4 +129,5 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
                 descriptions[1:] if level_bump is LevelBump.MAJOR else []
             ),
             commit=commit,
+            linked_merge_request=linked_merge_request,
         )
