@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from semantic_release.commit_parser.scipy import tag_to_section
 from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.enums import LevelBump
@@ -124,3 +126,46 @@ def test_valid_scipy_parsed_major_commits(
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
         assert result.scope is None
+
+
+@pytest.mark.parametrize(
+    "message, subject, merge_request_number",
+    # TODO: in v10, we will remove the merge request number from the subject line
+    [
+        # GitHub, Gitea style
+        (
+            "ENH: add new feature (#123)",
+            "add new feature (#123)",
+            "#123",
+        ),
+        # GitLab style
+        (
+            "BUG: fix regex in parser (!456)",
+            "fix regex in parser (!456)",
+            "!456",
+        ),
+        # BitBucket style
+        (
+            "ENH: add new feature (pull request #123)",
+            "add new feature (pull request #123)",
+            "#123",
+        ),
+        # Both a linked merge request and an issue footer (should return the linked merge request)
+        ("DEP: add dependency (#123)\n\nCloses: #400", "add dependency (#123)", "#123"),
+        # None
+        ("BUG: superfix", "superfix", ""),
+        # None but includes an issue footer it should not be considered a linked merge request
+        ("BUG: superfix\n\nCloses: #400", "superfix", ""),
+    ],
+)
+def test_parser_return_linked_merge_request_from_commit_message(
+    default_scipy_parser: ScipyCommitParser,
+    message: str,
+    subject: str,
+    merge_request_number: str,
+    make_commit_obj: MakeCommitObjFn,
+):
+    result = default_scipy_parser.parse(make_commit_obj(message))
+    assert isinstance(result, ParsedCommit)
+    assert merge_request_number == result.linked_merge_request
+    assert subject == result.descriptions[0]
