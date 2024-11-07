@@ -83,3 +83,46 @@ def test_default_emoji_parser(
     assert type_ == result.type
     assert descriptions == result.descriptions
     assert breaking_descriptions == result.breaking_descriptions
+
+
+@pytest.mark.parametrize(
+    "message, subject, merge_request_number",
+    # TODO: in v10, we will remove the merge request number from the subject line
+    [
+        # GitHub, Gitea style
+        (
+            ":sparkles: add new feature (#123)",
+            ":sparkles: add new feature (#123)",
+            "#123",
+        ),
+        # GitLab style
+        (
+            ":bug: fix regex in parser (!456)",
+            ":bug: fix regex in parser (!456)",
+            "!456",
+        ),
+        # BitBucket style
+        (
+            ":sparkles: add new feature (pull request #123)",
+            ":sparkles: add new feature (pull request #123)",
+            "#123",
+        ),
+        # Both a linked merge request and an issue footer (should return the linked merge request)
+        (":bug: superfix (#123)\n\nCloses: #400", ":bug: superfix (#123)", "#123"),
+        # None
+        (":bug: superfix", ":bug: superfix", ""),
+        # None but includes an issue footer it should not be considered a linked merge request
+        (":bug: superfix\n\nCloses: #400", ":bug: superfix", ""),
+    ],
+)
+def test_parser_return_linked_merge_request_from_commit_message(
+    default_emoji_parser: EmojiCommitParser,
+    message: str,
+    subject: str,
+    merge_request_number: str,
+    make_commit_obj: MakeCommitObjFn,
+):
+    result = default_emoji_parser.parse(make_commit_obj(message))
+    assert isinstance(result, ParsedCommit)
+    assert merge_request_number == result.linked_merge_request
+    assert subject == result.descriptions[0]
