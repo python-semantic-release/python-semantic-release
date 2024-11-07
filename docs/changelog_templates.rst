@@ -724,11 +724,17 @@ The filters provided vary based on the VCS configured and available features:
 
   .. code:: jinja
 
-      {{ "29" | merge_request_url }}
+      {{
+          "[%s](%s)" | format(
+            commit.linked_merge_request,
+            commit.linked_merge_request | merge_request_url
+          )
+      }}
+      {# commit.linked_merge_request is only available in v9.13.0 or greater #}
 
   .. code:: markdown
 
-      https://example.com/example/repo/-/merge_requests/29
+      [#29](https://example.com/example/repo/-/merge_requests/29)
 
 * ``pull_request_url (Callable[[PullReqStr | PullReqInt], UrlStr])``: given a pull
   request number, return a URL to the pull request in the remote. For remote vcs'
@@ -743,11 +749,17 @@ The filters provided vary based on the VCS configured and available features:
 
   .. code:: jinja
 
-      {{ "29" | pull_request_url }}
+      {{
+          "[%s](%s)" | format(
+            commit.linked_merge_request,
+            commit.linked_merge_request | pull_request_url
+          )
+      }}
+      {# commit.linked_merge_request is only available in v9.13.0 or greater #}
 
   .. code:: markdown
 
-      https://example.com/example/repo/pull/29
+      [#29](https://example.com/example/repo/pull/29)
 
 * ``read_file (Callable[[str], str])``: given a file path, read the file and
   return the contents as a string. This function was added specifically to
