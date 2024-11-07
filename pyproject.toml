@@ -37,8 +37,8 @@ dependencies = [
 ]
 
 [project.scripts]
-semantic-release = "semantic_release.cli.commands.main:main"
-psr = "semantic_release.cli.commands.main:main"
+semantic-release = "semantic_release.__main__:main"
+psr = "semantic_release.__main__:main"
 
 [project.urls]
 changelog = "https://github.com/python-semantic-release/python-semantic-release/blob/master/CHANGELOG.md"
