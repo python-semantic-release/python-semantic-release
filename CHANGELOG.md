@@ -1,6 +1,43 @@
 # CHANGELOG
 
 
+## v9.12.2 (2024-11-07)
+
+### Bug Fixes
+
+* fix(hvcs-*): add flexibility to issue & MR/PR url jinja filters (#1089)
+
+* fix(github): fix `issue_url` filter to ignore an issue prefix gracefully
+
+* fix(github): fix `pull_request_url` filter to ignore an PR prefix gracefully
+
+* fix(gitlab): fix `issue_url` filter to ignore an issue prefix gracefully
+
+* fix(gitlab): fix `merge_request_url` filter to ignore an PR prefix gracefully
+
+* fix(gitea): fix `issue_url` filter to ignore an issue prefix gracefully
+
+* fix(gitea): fix `pull_request_url` filter to ignore an PR prefix gracefully
+
+* fix(bitbucket): fix `pull_request_url` filter to ignore an PR prefix gracefully
+
+* test(bitbucket): add test case for prefixed PR numbers
+
+* test(gitea): add test case for prefixed PR & issue numbers
+
+* test(gitlab): add test case for prefixed PR & issue numbers
+
+* test(github): add test case for prefixed PR & issue numbers
+
+* style(hvcs): fix logical lint errors
+
+* docs(changelog-templates): update descriptions of issue & MR/PR url jinja filters ([`275ec88`](https://github.com/python-semantic-release/python-semantic-release/commit/275ec88e6d1637c47065bb752a60017ceba9876c))
+
+* fix(cli): gracefully capture all exceptions unless in very verbose debug mode (#1088)
+
+* refactor(cli): consolidate entrypoints into the module execute file ([`13ca44f`](https://github.com/python-semantic-release/python-semantic-release/commit/13ca44f4434098331f70e6937684679cf1b4106a))
+
+
 ## v9.12.1 (2024-11-06)
 
 ### Bug Fixes
