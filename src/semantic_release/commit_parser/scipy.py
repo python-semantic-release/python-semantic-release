@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import logging
 import re
+from re import compile as regexp
 from typing import TYPE_CHECKING, Tuple
 
 from pydantic.dataclasses import dataclass
@@ -125,13 +126,17 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
 
     def __init__(self, options: ScipyParserOptions | None = None) -> None:
         super().__init__(options)
-        self.re_parser = re.compile(
+        self.re_parser = regexp(
             rf"(?P<tag>{_COMMIT_FILTER})?"
             r"(?:\((?P<scope>[^\n]+)\))?"
             r":? "
             r"(?P<subject>[^\n]+):?"
             r"(\n\n(?P<text>.*))?",
             re.DOTALL,
+        )
+        # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
+        self.mr_selector = regexp(
+            r"[\t ]\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
         )
 
     @staticmethod
@@ -193,6 +198,13 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
                 level_bump,
             )
 
+        linked_merge_request = ""
+        if mr_match := self.mr_selector.search(subject):
+            linked_merge_request = mr_match.group("mr_number")
+            # TODO: breaking change v10, removes PR number from subject/descriptions
+            # expects changelog template to format the line accordingly
+            # subject = self.mr_selector.sub("", subject).strip()
+
         return ParsedCommit(
             bump=level_bump,
             type=section,
@@ -200,4 +212,5 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
             descriptions=blocks,
             breaking_descriptions=migration_instructions,
             commit=commit,
+            linked_merge_request=linked_merge_request,
         )
