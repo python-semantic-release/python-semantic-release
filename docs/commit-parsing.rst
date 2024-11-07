@@ -45,9 +45,12 @@ The following parsers are built in to Python Semantic Release:
 ``semantic_release.commit_parser.AngularCommitParser``
 """"""""""""""""""""""""""""""""""""""""""""""""""""""
 
-The default parser, which uses the `Angular commit style <https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits>`_ with the following differences:
+The default parser, which uses the
+`Angular commit style <https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits>`_
+with the following differences:
 
   - Multiple ``BREAKING CHANGE:`` paragraphs are supported
+
   - ``revert`` is not currently supported
 
 The default configuration options for
@@ -222,26 +225,41 @@ as the commit history of a repository is being parsed. Python Semantic Release d
 not raise an exception if a commit cannot be parsed.
 
 Python Semantic Release uses :py:class:`semantic_release.ParsedCommit`
-as the return type of a successful parse operation, and :py:class:`semantic_release.ParseError`
-as the return type from an unsuccessful parse of a commit. :py:class:`semantic_release.ParsedCommit` is a `namedtuple`_ which has the following fields:
+as the return type of a successful parse operation, and
+:py:class:`semantic_release.ParseError` as the return type from an unsuccessful
+parse of a commit. :py:class:`semantic_release.ParsedCommit` is a `namedtuple`_
+which has the following fields:
 
-* bump: a :py:class:`semantic_release.LevelBump` indicating what type of change this commit introduces.
-* type: the *type* of the commit as a string, per the commit message style. This is up to the
-  parser to implement; for example, the :py:class:`semantic_release.commit_parser.EmojiCommitParser`
-  parser fills this field with the emoji representing the most significant change for the commit.
-  The field is named after the representation in the Angular commit specification.
-* scope: The scope, as a string, parsed from the commit. Commit styles which do not have a meaningful
-  concept of "scope" should fill this field with an empty string.
-* descriptions: A list of paragraphs (strings) (delimited by a double-newline) from the commit message.
-* breaking_descriptions: A list of paragraphs (strings) which are deemed to identify and describe
-  breaking changes by the parser. An example would be a paragraph which begins with the text
-  ``BREAKING CHANGE:``.
-* commit: The original commit object that was parsed.
+* **bump**: a :py:class:`semantic_release.LevelBump` indicating what type of change
+  this commit introduces.
+
+* **type**: the *type* of the commit as a string, per the commit message style. This
+  is up to the parser to implement; for example, the
+  :py:class:`semantic_release.commit_parser.EmojiCommitParser` parser fills this field
+  with the emoji representing the most significant change for the commit. The field is
+  named after the representation in the Angular commit specification.
+
+* **scope**: The scope, as a string, parsed from the commit. Commit styles which do
+  not have a meaningful concept of "scope" should fill this field with an empty string.
+
+* **descriptions**: A list of paragraphs (strings) (delimited by a double-newline)
+  from the commit message.
+
+* **breaking_descriptions**: A list of paragraphs (strings) which are deemed to
+  identify and describe breaking changes by the parser. An example would be a
+  paragraph which begins with the text ``BREAKING CHANGE:``.
+
+* **commit**: The original commit object (a class defined by GitPython) that was parsed.
+
+* **linked_merge_request**: A pull request or merge request definition, if the commit is
+  labeled with a pull/merge request number. This is a string value which includes any
+  special character prefix used by the VCS (e.g. ``#`` for GitLab, ``!`` for Bitbucket).
 
 :py:class:`semantic_release.ParseError` is a `namedtuple`_ which has the following fields:
 
-* commit: The original commit object that was parsed.
-* error: A string with a meaningful error message as to why the commit parsing failed.
+* **commit**: The original commit object that was parsed.
+
+* **error**: A string with a meaningful error message as to why the commit parsing failed.
 
 In addition, :py:class:`semantic_release.ParseError` implements an additional method, ``raise_error``.
 This method raises a :py:class:`semantic_release.CommitParseError` with the message contained in the
@@ -252,10 +270,12 @@ attributes available, each implemented as a ``property`` which is computed, as a
 convenience for template authors - therefore custom implementations should ensure
 these properties can also be computed:
 
-* message: the ``message`` attribute of the ``commit``; where the message is of type ``bytes``
-  this should be decoded to a ``UTF-8`` string.
-* hexsha: the ``hexsha`` attribute of the ``commit``, representing its hash.
-* short_hash: the first 7 characters of the ``hexsha`` attribute of the ``commit``.
+* **message**: the ``message`` attribute of the ``commit``; where the message is of type
+  ``bytes`` this should be decoded to a ``UTF-8`` string.
+
+* **hexsha**: the ``hexsha`` attribute of the ``commit``, representing its hash.
+
+* **short_hash**: the first 7 characters of the ``hexsha`` attribute of the ``commit``.
 
 In Python Semantic Release, the class :py:class:`semantic_release.ParseResult`
 is defined as ``ParseResultType[ParsedCommit, ParseError]``, as a convenient shorthand.
@@ -268,7 +288,9 @@ type returned on an unsuccessful parse of the ``commit``.
 A custom parser result type, therefore, could be implemented as follows:
 
 * ``MyParsedCommit`` subclasses ``ParsedCommit``
+
 * ``MyParseError`` subclasses ``ParseError``
+
 * ``MyParseResult = ParseResultType[MyParsedCommit, MyParseError]``
 
 Internally, Python Semantic Release uses ``isinstance`` to determine if the result
@@ -326,8 +348,10 @@ the following:
 
 * A class-level attribute ``parser_options``, which must be set to
   :py:class:`semantic_release.ParserOptions` or a subclass of this.
+
 * An ``__init__`` method which takes a single parameter, ``options``, that should be
   of the same type as the class' ``parser_options`` attribute.
+
 * A method, ``parse``, which takes a single parameter ``commit`` that is of type
   `git.objects.commit.Commit <gitpython-commit-object>`_, and returns
   :py:class:`semantic_release.token.ParseResult`, or a subclass of this.
