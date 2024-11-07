@@ -51,8 +51,8 @@ Fixes
           # of squash commits (until parse support is added)
 #}{%      set description = "* %s" | format(format_commit_summary_line(commit))
 %}{%      if commit.descriptions | length > 1
-%}{%        set description = "%s\n%s" | format(
-              description, commit.descriptions[1:] | join("\n") | trim | indent(2, True)
+%}{%        set description = "%s\n\n%s" | format(
+              description, commit.descriptions[1:] | join("\n\n") | trim
             )
 %}{%      endif
 %}{%      set description = description | convert_md_to_rst

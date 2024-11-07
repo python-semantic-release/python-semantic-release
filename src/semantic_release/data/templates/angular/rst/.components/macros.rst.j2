@@ -51,7 +51,7 @@
 %}{#
    #        TODO: breaking change v10, remove summary line replacers as PSR will do it for us
 #}{%        set summary_line = "%s (%s, %s)" | format(
-              summary_line | replace("(pull request", "(") | replace("(" ~ pr_num ~ ")", ""),
+              summary_line | replace("(pull request ", "(") | replace("(" ~ commit.linked_merge_request ~ ")", ""),
               pr_link,
               commit_hash_link,
             )
