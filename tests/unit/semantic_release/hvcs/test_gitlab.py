@@ -368,25 +368,25 @@ def test_commit_hash_url(default_gl_client: Gitlab):
     assert expected_url == default_gl_client.commit_hash_url(REF)
 
 
-@pytest.mark.parametrize("issue_number", (420, "420"))
+@pytest.mark.parametrize("issue_number", (666, "666", "#666"))
 def test_issue_url(default_gl_client: Gitlab, issue_number: int | str):
     expected_url = "{server}/{owner}/{repo}/-/issues/{issue_num}".format(
         server=default_gl_client.hvcs_domain.url,
         owner=default_gl_client.owner,
         repo=default_gl_client.repo_name,
-        issue_num=issue_number,
+        issue_num=str(issue_number).lstrip("#"),
     )
-    actual_url = default_gl_client.issue_url(issue_number=issue_number)
+    actual_url = default_gl_client.issue_url(issue_num=issue_number)
     assert expected_url == actual_url
 
 
-@pytest.mark.parametrize("pr_number", (420, "420"))
+@pytest.mark.parametrize("pr_number", (666, "666", "!666"))
 def test_pull_request_url(default_gl_client: Gitlab, pr_number: int | str):
     expected_url = "{server}/{owner}/{repo}/-/merge_requests/{pr_number}".format(
         server=default_gl_client.hvcs_domain.url,
         owner=default_gl_client.owner,
         repo=default_gl_client.repo_name,
-        pr_number=pr_number,
+        pr_number=str(pr_number).lstrip("!"),
     )
     actual_url = default_gl_client.pull_request_url(pr_number=pr_number)
     assert expected_url == actual_url

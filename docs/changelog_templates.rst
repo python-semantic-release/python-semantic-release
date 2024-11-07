@@ -694,10 +694,12 @@ The filters provided vary based on the VCS configured and available features:
 
       https://example.com/example/repo/compare/v1.0.0...v1.1.0
 
-* ``issue_url (Callable[[IssueNumStr | IssueNumInt], UrlStr])``: given an issue number, return
-  a URL to the issue on the remote vcs.
+* ``issue_url (Callable[[IssueNumStr | IssueNumInt], UrlStr])``: given an issue
+  number, return a URL to the issue on the remote vcs. In v9.12.2, this filter
+  was updated to handle a string that has leading prefix symbols (ex. ``#29``)
+  and will strip the prefix before generating the URL.
 
-  *Introduced in v9.6.0.*
+  *Introduced in v9.6.0, Modified in v9.12.2.*
 
   **Example Usage:**
 
@@ -712,9 +714,11 @@ The filters provided vary based on the VCS configured and available features:
 * ``merge_request_url (Callable[[MergeReqStr | MergeReqInt], UrlStr])``: given a
   merge request number, return a URL to the merge request in the remote. This is
   an alias to the ``pull_request_url`` but only available for the VCS that uses
-  the merge request terminology.
+  the merge request terminology. In v9.12.2, this filter was updated to handle
+  a string that has leading prefix symbols (ex. ``#29``) and will strip the prefix
+  before generating the URL.
 
-  *Introduced in v9.6.0.*
+  *Introduced in v9.6.0, Modified in v9.12.2.*
 
   **Example Usage:**
 
@@ -729,9 +733,11 @@ The filters provided vary based on the VCS configured and available features:
 * ``pull_request_url (Callable[[PullReqStr | PullReqInt], UrlStr])``: given a pull
   request number, return a URL to the pull request in the remote. For remote vcs'
   that use merge request terminology, this filter is an alias to the
-  ``merge_request_url`` filter function.
+  ``merge_request_url`` filter function. In v9.12.2, this filter was updated to
+  handle a string that has leading prefix symbols (ex. ``#29``) and will strip
+  the prefix before generating the URL.
 
-  *Introduced in v9.6.0.*
+  *Introduced in v9.6.0, Modified in v9.12.2.*
 
   **Example Usage:**
 
