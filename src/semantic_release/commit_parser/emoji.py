@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from itertools import zip_longest
 from re import compile as regexp
 from typing import Tuple
 
@@ -10,7 +11,11 @@ from git.objects.commit import Commit
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParsedCommit, ParseResult
+from semantic_release.commit_parser.token import (
+    ParsedCommit,
+    ParsedMessageResult,
+    ParseResult,
+)
 from semantic_release.commit_parser.util import parse_paragraphs
 from semantic_release.enums import LevelBump
 
@@ -44,7 +49,25 @@ class EmojiParserOptions(ParserOptions):
         ":robot:",
         ":green_apple:",
     )
+    allowed_tags: Tuple[str, ...] = (
+        *major_tags,
+        *minor_tags,
+        *patch_tags,
+    )
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
+
+    def __post_init__(self) -> None:
+        self.tag_to_level: dict[str, LevelBump] = dict(
+            [
+                # we have to do a type ignore as zip_longest provides a type that is not specific enough
+                # for our expected output. Due to the empty second array, we know the first is always longest
+                # and that means no values in the first entry of the tuples will ever be a LevelBump.
+                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),  # type: ignore[list-item]
+                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),  # type: ignore[list-item]
+                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),  # type: ignore[list-item]
+                *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),  # type: ignore[list-item]
+            ]
+        )
 
 
 class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
@@ -65,6 +88,16 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
 
     def __init__(self, options: EmojiParserOptions | None = None) -> None:
         super().__init__(options)
+        prcedence_order_regex = str.join(
+            "|",
+            [
+                *self.options.major_tags,
+                *self.options.minor_tags,
+                *self.options.patch_tags,
+            ],
+        )
+        self.emoji_selector = regexp(r"(?P<type>%s)" % prcedence_order_regex)
+
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
             r"[\t ]\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
@@ -74,13 +107,8 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     def get_default_options() -> EmojiParserOptions:
         return EmojiParserOptions()
 
-    def parse(self, commit: Commit) -> ParseResult:
-        all_emojis = (
-            self.options.major_tags + self.options.minor_tags + self.options.patch_tags
-        )
-
-        message = str(commit.message)
-        subject = message.split("\n")[0]
+    def parse_message(self, message: str) -> ParsedMessageResult:
+        subject = message.split("\n", maxsplit=1)[0]
 
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(subject):
@@ -89,45 +117,46 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             # expects changelog template to format the line accordingly
             # subject = self.mr_selector.sub("", subject).strip()
 
-        # Loop over emojis from most important to least important
-        # Therefore, we find the highest level emoji first
-        primary_emoji = "Other"
-        for emoji in all_emojis:
-            if emoji in subject:
-                primary_emoji = emoji
-                break
-        logger.debug("Selected %s as the primary emoji", primary_emoji)
+        # Search for emoji of the highest importance in the subject
+        primary_emoji = (
+            match.group("type")
+            if (match := self.emoji_selector.search(subject))
+            else "Other"
+        )
 
-        # Find which level this commit was from
-        level_bump = LevelBump.NO_RELEASE
-        if primary_emoji in self.options.major_tags:
-            level_bump = LevelBump.MAJOR
-        elif primary_emoji in self.options.minor_tags:
-            level_bump = LevelBump.MINOR
-        elif primary_emoji in self.options.patch_tags:
-            level_bump = LevelBump.PATCH
-        else:
-            level_bump = self.options.default_bump_level
-            logger.debug(
-                "commit %s introduces a level bump of %s due to the default_bump_level",
-                commit.hexsha[:8],
-                level_bump,
-            )
-
-        logger.debug(
-            "commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump
+        level_bump = self.options.tag_to_level.get(
+            primary_emoji, self.options.default_bump_level
         )
 
         # All emojis will remain part of the returned description
-        descriptions = parse_paragraphs(message)
-        return ParsedCommit(
+        descriptions = tuple(parse_paragraphs(message))
+        return ParsedMessageResult(
             bump=level_bump,
             type=primary_emoji,
-            scope="",
+            category=primary_emoji,
+            scope="",  # TODO: add scope support
+            # TODO: breaking change v10, removes breaking change footers from descriptions
+            # descriptions=(
+            #     descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions
+            # )
             descriptions=descriptions,
             breaking_descriptions=(
-                descriptions[1:] if level_bump is LevelBump.MAJOR else []
+                descriptions[1:] if level_bump is LevelBump.MAJOR else ()
             ),
-            commit=commit,
             linked_merge_request=linked_merge_request,
         )
+
+    def parse(self, commit: Commit) -> ParseResult:
+        """
+        Attempt to parse the commit message with a regular expression into a
+        ParseResult
+        """
+        pmsg_result = self.parse_message(str(commit.message))
+
+        logger.debug(
+            "commit %s introduces a %s level_bump",
+            commit.hexsha[:8],
+            pmsg_result.bump,
+        )
+
+        return ParsedCommit.from_parsed_message_result(commit, pmsg_result)
