@@ -47,14 +47,18 @@ Supported Changelog Sections::
 from __future__ import annotations
 
 import logging
-import re
-from re import compile as regexp
 from typing import TYPE_CHECKING, Tuple
 
 from pydantic.dataclasses import dataclass
 
-from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
+from semantic_release.commit_parser.angular import (
+    AngularCommitParser,
+    AngularParserOptions,
+)
+from semantic_release.commit_parser.token import (
+    ParsedMessageResult,
+    ParseError,
+)
 from semantic_release.enums import LevelBump
 
 if TYPE_CHECKING:
@@ -87,11 +91,16 @@ tag_to_section = {
     "TEST": "None",
 }
 
-_COMMIT_FILTER = "|".join(tag_to_section)
-
 
 @dataclass
-class ScipyParserOptions(ParserOptions):
+class ScipyParserOptions(AngularParserOptions):
+    """
+    Options dataclass for ScipyCommitParser
+
+    Scipy-style commit messages follow the same format as Angular-style commit
+    just with different tag names.
+    """
+
     major_tags: Tuple[str, ...] = ("API",)
     minor_tags: Tuple[str, ...] = ("DEP", "DEV", "ENH", "REV", "FEAT")
     patch_tags: Tuple[str, ...] = ("BLD", "BUG", "MAINT")
@@ -106,19 +115,18 @@ class ScipyParserOptions(ParserOptions):
         "REL",
         "TEST",
     )
+    # TODO: breaking v10, make consistent with AngularParserOptions
     default_level_bump: LevelBump = LevelBump.NO_RELEASE
 
     def __post_init__(self) -> None:
-        self.tag_to_level = {tag: LevelBump.NO_RELEASE for tag in self.allowed_tags}
-        for tag in self.patch_tags:
-            self.tag_to_level[tag] = LevelBump.PATCH
-        for tag in self.minor_tags:
-            self.tag_to_level[tag] = LevelBump.MINOR
+        # TODO: breaking v10, remove as the name is now consistent
+        self.default_bump_level = self.default_level_bump
+        super().__post_init__()
         for tag in self.major_tags:
             self.tag_to_level[tag] = LevelBump.MAJOR
 
 
-class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
+class ScipyCommitParser(AngularCommitParser):
     """Parser for scipy-style commit messages"""
 
     # TODO: Deprecate in lieu of get_default_options()
@@ -126,91 +134,19 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
 
     def __init__(self, options: ScipyParserOptions | None = None) -> None:
         super().__init__(options)
-        self.re_parser = regexp(
-            rf"(?P<tag>{_COMMIT_FILTER})?"
-            r"(?:\((?P<scope>[^\n]+)\))?"
-            r":? "
-            r"(?P<subject>[^\n]+):?"
-            r"(\n\n(?P<text>.*))?",
-            re.DOTALL,
-        )
-        # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
-        self.mr_selector = regexp(
-            r"[\t ]\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
-        )
 
     @staticmethod
     def get_default_options() -> ScipyParserOptions:
         return ScipyParserOptions()
 
-    def parse(self, commit: Commit) -> ParseResult:
-        message = str(commit.message)
-        parsed = self.re_parser.match(message)
-
-        if not parsed:
-            return _logged_parse_error(
-                commit, f"Unable to parse the given commit message: {message}"
+    def parse_message(self, message: str) -> ParsedMessageResult | None:
+        return (
+            None
+            if not (pmsg_result := super().parse_message(message))
+            else ParsedMessageResult(
+                **{
+                    **pmsg_result._asdict(),
+                    "category": tag_to_section.get(pmsg_result.type, "None"),
+                }
             )
-
-        if parsed.group("subject"):
-            subject = parsed.group("subject")
-        else:
-            return _logged_parse_error(commit, f"Commit has no subject {message!r}")
-
-        if parsed.group("text"):
-            blocks = parsed.group("text").split("\n\n")
-            blocks = [x for x in blocks if x]
-            blocks.insert(0, subject)
-        else:
-            blocks = [subject]
-
-        for tag in self.options.allowed_tags:
-            if tag == parsed.group("tag"):
-                section = tag_to_section.get(tag, "None")
-                level_bump = self.options.tag_to_level.get(
-                    tag, self.options.default_level_bump
-                )
-                logger.debug(
-                    "commit %s introduces a %s level_bump",
-                    commit.hexsha[:8],
-                    level_bump,
-                )
-                break
-        else:
-            # some commits may not have a tag, e.g. if they belong to a PR that
-            # wasn't squashed (for maintainability) ignore them
-            section, level_bump = "None", self.options.default_level_bump
-            logger.debug(
-                "commit %s introduces a level bump of %s due to the default bump level",
-                commit.hexsha[:8],
-                level_bump,
-            )
-
-        # Look for descriptions of breaking changes
-        migration_instructions = [
-            block for block in blocks if block.startswith("BREAKING CHANGE")
-        ]
-        if migration_instructions:
-            level_bump = LevelBump.MAJOR
-            logger.debug(
-                "commit %s upgraded to a %s level bump due to included migration instructions",
-                commit.hexsha[:8],
-                level_bump,
-            )
-
-        linked_merge_request = ""
-        if mr_match := self.mr_selector.search(subject):
-            linked_merge_request = mr_match.group("mr_number")
-            # TODO: breaking change v10, removes PR number from subject/descriptions
-            # expects changelog template to format the line accordingly
-            # subject = self.mr_selector.sub("", subject).strip()
-
-        return ParsedCommit(
-            bump=level_bump,
-            type=section,
-            scope=parsed.group("scope"),
-            descriptions=blocks,
-            breaking_descriptions=migration_instructions,
-            commit=commit,
-            linked_merge_request=linked_merge_request,
         )
