@@ -14,12 +14,18 @@ from typing import TYPE_CHECKING, Tuple
 from pydantic.dataclasses import dataclass
 
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
+from semantic_release.commit_parser.token import (
+    ParsedCommit,
+    ParsedMessageResult,
+    ParseError,
+    ParseResult,
+)
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 
 if TYPE_CHECKING:
     from git.objects.commit import Commit
+
 
 logger = logging.getLogger(__name__)
 
@@ -118,21 +124,10 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         accumulator["descriptions"].append(text)
         return accumulator
 
-    # Maybe this can be cached as an optimization, similar to how
-    # mypy/pytest use their own caching directories, for very large commit
-    # histories?
-    # The problem is the cache likely won't be present in CI environments
-    def parse(self, commit: Commit) -> ParseResult:
-        """
-        Attempt to parse the commit message with a regular expression into a
-        ParseResult
-        """
-        message = str(commit.message)
-        parsed = self.re_parser.match(message)
-        if not parsed:
-            return _logged_parse_error(
-                commit, f"Unable to parse commit message: {message}"
-            )
+    def parse_message(self, message: str) -> ParsedMessageResult | None:
+        if not (parsed := self.re_parser.match(message)):
+            return None
+
         parsed_break = parsed.group("break")
         parsed_scope = parsed.group("scope")
         parsed_subject = parsed.group("subject")
@@ -172,16 +167,34 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         if level_bump == LevelBump.MAJOR:
             parsed_type = "breaking"
 
-        logger.debug(
-            "commit %s introduces a %s level_bump", commit.hexsha[:8], level_bump
-        )
-
-        return ParsedCommit(
+        return ParsedMessageResult(
             bump=level_bump,
-            type=LONG_TYPE_NAMES.get(parsed_type, parsed_type),
+            type=parsed_type,
+            category=LONG_TYPE_NAMES.get(parsed_type, parsed_type),
             scope=parsed_scope,
-            descriptions=body_components["descriptions"],
-            breaking_descriptions=body_components["breaking_descriptions"],
-            commit=commit,
+            descriptions=tuple(body_components["descriptions"]),
+            breaking_descriptions=tuple(body_components["breaking_descriptions"]),
             linked_merge_request=linked_merge_request,
         )
+
+    # Maybe this can be cached as an optimization, similar to how
+    # mypy/pytest use their own caching directories, for very large commit
+    # histories?
+    # The problem is the cache likely won't be present in CI environments
+    def parse(self, commit: Commit) -> ParseResult:
+        """
+        Attempt to parse the commit message with a regular expression into a
+        ParseResult
+        """
+        if not (pmsg_result := self.parse_message(str(commit.message))):
+            return _logged_parse_error(
+                commit, f"Unable to parse commit message: {commit.message!r}"
+            )
+
+        logger.debug(
+            "commit %s introduces a %s level_bump",
+            commit.hexsha[:8],
+            pmsg_result.bump,
+        )
+
+        return ParsedCommit.from_parsed_message_result(commit, pmsg_result)
