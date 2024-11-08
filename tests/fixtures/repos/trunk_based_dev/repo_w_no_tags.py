@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import pytest
@@ -8,7 +7,7 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import EXAMPLE_HVCS_DOMAIN, NULL_HEX_SHA
+from tests.const import EXAMPLE_HVCS_DOMAIN
 from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
@@ -23,6 +22,7 @@ if TYPE_CHECKING:
         BuildRepoFn,
         CommitConvention,
         ExProjectGitRepoFn,
+        ExtractRepoDefinitionFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
@@ -34,7 +34,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="session")
-def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
+def get_commits_for_trunk_only_repo_w_no_tags(
+    extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
+) -> GetRepoDefinitionFn:
     base_definition: dict[str, BaseRepoVersionDef] = {
         "Unreleased": {
             "changelog_sections": {
@@ -59,27 +61,24 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
             },
             "commits": [
                 {
-                    "angular": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
-                    "emoji": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
-                    "scipy": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
+                    "angular": "Initial commit",
+                    "emoji": "Initial commit",
+                    "scipy": "Initial commit",
                 },
                 {
-                    "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
-                    "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
-                    "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
+                    "angular": "fix: correct some text",
+                    "emoji": ":bug: correct some text",
+                    "scipy": "MAINT: correct some text",
                 },
                 {
-                    "angular": {"msg": "feat: add much more text", "sha": NULL_HEX_SHA},
-                    "emoji": {
-                        "msg": ":sparkles: add much more text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {"msg": "ENH: add much more text", "sha": NULL_HEX_SHA},
+                    "angular": "feat: add much more text",
+                    "emoji": ":sparkles: add much more text",
+                    "scipy": "ENH: add much more text",
                 },
                 {
-                    "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
-                    "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
-                    "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
+                    "angular": "fix: correct some text",
+                    "emoji": ":bug: correct some text",
+                    "scipy": "MAINT: correct some text",
                 },
             ],
         },
@@ -88,22 +87,9 @@ def get_commits_for_trunk_only_repo_w_no_tags() -> GetRepoDefinitionFn:
     def _get_commits_for_trunk_only_repo_w_no_tags(
         commit_type: CommitConvention = "angular",
     ) -> RepoDefinition:
-        definition: RepoDefinition = {}
-
-        for version, version_def in base_definition.items():
-            definition[version] = {
-                # Extract the correct changelog section header for the commit type
-                "changelog_sections": deepcopy(
-                    version_def["changelog_sections"][commit_type]
-                ),
-                "commits": [
-                    # Extract the correct commit message for the commit type
-                    deepcopy(message_variants[commit_type])
-                    for message_variants in version_def["commits"]
-                ],
-            }
-
-        return definition
+        return extract_commit_convention_from_base_repo_def(
+            base_definition, commit_type
+        )
 
     return _get_commits_for_trunk_only_repo_w_no_tags
 

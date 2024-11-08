@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import TYPE_CHECKING
 
 import pytest
@@ -8,7 +7,7 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import EXAMPLE_HVCS_DOMAIN, NULL_HEX_SHA
+from tests.const import EXAMPLE_HVCS_DOMAIN
 from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
@@ -24,6 +23,7 @@ if TYPE_CHECKING:
         CommitConvention,
         CreateReleaseFn,
         ExProjectGitRepoFn,
+        ExtractRepoDefinitionFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
@@ -35,7 +35,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="session")
-def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinitionFn:
+def get_commits_for_git_flow_repo_with_2_release_channels(
+    extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
+) -> GetRepoDefinitionFn:
     base_definition: dict[str, BaseRepoVersionDef] = {
         "0.1.0": {
             "changelog_sections": {
@@ -45,9 +47,9 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
-                    "emoji": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
-                    "scipy": {"msg": "Initial commit", "sha": NULL_HEX_SHA},
+                    "angular": "Initial commit",
+                    "emoji": "Initial commit",
+                    "scipy": "Initial commit",
                 },
             ],
         },
@@ -59,9 +61,9 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {"msg": "fix: correct some text", "sha": NULL_HEX_SHA},
-                    "emoji": {"msg": ":bug: correct some text", "sha": NULL_HEX_SHA},
-                    "scipy": {"msg": "MAINT: correct some text", "sha": NULL_HEX_SHA},
+                    "angular": "fix: correct some text",
+                    "emoji": ":bug: correct some text",
+                    "scipy": "MAINT: correct some text",
                 }
             ],
         },
@@ -73,18 +75,9 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {
-                        "msg": "feat!: add revolutionary feature",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": ":boom: add revolutionary feature",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "API: add revolutionary feature",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "feat!: add revolutionary feature",
+                    "emoji": ":boom: add revolutionary feature",
+                    "scipy": "API: add revolutionary feature",
                 }
             ],
         },
@@ -105,40 +98,19 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {"msg": "feat: add some more text", "sha": NULL_HEX_SHA},
-                    "emoji": {
-                        "msg": ":sparkles: add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {"msg": "ENH: add some more text", "sha": NULL_HEX_SHA},
+                    "angular": "feat: add some more text",
+                    "emoji": ":sparkles: add some more text",
+                    "scipy": "ENH: add some more text",
                 },
                 {
-                    "angular": {
-                        "msg": "Merge branch 'feat/feature-1' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": "Merge branch 'feat/feature-1' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "Merge branch 'feat/feature-1' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "Merge branch 'feat/feature-1' into 'dev'",
+                    "emoji": "Merge branch 'feat/feature-1' into 'dev'",
+                    "scipy": "Merge branch 'feat/feature-1' into 'dev'",
                 },
                 {
-                    "angular": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "Merge branch 'dev' into 'main'",
+                    "emoji": "Merge branch 'dev' into 'main'",
+                    "scipy": "Merge branch 'dev' into 'main'",
                 },
             ],
         },
@@ -159,46 +131,19 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {
-                        "msg": "feat(dev): add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": ":sparkles: (dev) add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "ENH(dev): add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "feat(dev): add some more text",
+                    "emoji": ":sparkles: (dev) add some more text",
+                    "scipy": "ENH(dev): add some more text",
                 },
                 {
-                    "angular": {
-                        "msg": "Merge branch 'feat/feature-2' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": "Merge branch 'feat/feature-2' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "Merge branch 'feat/feature-2' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "Merge branch 'feat/feature-2' into 'dev'",
+                    "emoji": "Merge branch 'feat/feature-2' into 'dev'",
+                    "scipy": "Merge branch 'feat/feature-2' into 'dev'",
                 },
                 {
-                    "angular": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "Merge branch 'dev' into 'main'",
+                    "emoji": "Merge branch 'dev' into 'main'",
+                    "scipy": "Merge branch 'dev' into 'main'",
                 },
             ],
         },
@@ -219,46 +164,19 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {
-                        "msg": "fix(dev): correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": ":bug: correct dev-scoped text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "MAINT(dev): correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "fix(dev): correct some text",
+                    "emoji": ":bug: correct dev-scoped text",
+                    "scipy": "MAINT(dev): correct some text",
                 },
                 {
-                    "angular": {
-                        "msg": "Merge branch 'fix/patch-1' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": "Merge branch 'fix/patch-1' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "Merge branch 'fix/patch-1' into 'dev'",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "Merge branch 'fix/patch-1' into 'dev'",
+                    "emoji": "Merge branch 'fix/patch-1' into 'dev'",
+                    "scipy": "Merge branch 'fix/patch-1' into 'dev'",
                 },
                 {
-                    "angular": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "Merge branch 'dev' into 'main'",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "Merge branch 'dev' into 'main'",
+                    "emoji": "Merge branch 'dev' into 'main'",
+                    "scipy": "Merge branch 'dev' into 'main'",
                 },
             ],
         },
@@ -270,18 +188,9 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {
-                        "msg": "feat(scope): add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": ":sparkles: add scoped change",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "ENH(scope): add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "feat(scope): add some more text",
+                    "emoji": ":sparkles: add scoped change",
+                    "scipy": "ENH(scope): add some more text",
                 }
             ],
         },
@@ -305,32 +214,14 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
             },
             "commits": [
                 {
-                    "angular": {
-                        "msg": "feat(scope): add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": ":sparkles: add scoped change",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "ENH(scope): add some more text",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "feat(scope): add some more text",
+                    "emoji": ":sparkles: add scoped change",
+                    "scipy": "ENH(scope): add some more text",
                 },
                 {
-                    "angular": {
-                        "msg": "fix(scope): correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "emoji": {
-                        "msg": ":bug: correct feature-scoped text",
-                        "sha": NULL_HEX_SHA,
-                    },
-                    "scipy": {
-                        "msg": "MAINT(scope): correct some text",
-                        "sha": NULL_HEX_SHA,
-                    },
+                    "angular": "fix(scope): correct some text",
+                    "emoji": ":bug: correct feature-scoped text",
+                    "scipy": "MAINT(scope): correct some text",
                 },
             ],
         },
@@ -339,22 +230,9 @@ def get_commits_for_git_flow_repo_with_2_release_channels() -> GetRepoDefinition
     def _get_commits_for_git_flow_repo_with_2_release_channels(
         commit_type: CommitConvention = "angular",
     ) -> RepoDefinition:
-        definition: RepoDefinition = {}
-
-        for version, version_def in base_definition.items():
-            definition[version] = {
-                # Extract the correct changelog section header for the commit type
-                "changelog_sections": deepcopy(
-                    version_def["changelog_sections"][commit_type]
-                ),
-                "commits": [
-                    # Extract the correct commit message for the commit type
-                    deepcopy(message_variants[commit_type])
-                    for message_variants in version_def["commits"]
-                ],
-            }
-
-        return definition
+        return extract_commit_convention_from_base_repo_def(
+            base_definition, commit_type
+        )
 
     return _get_commits_for_git_flow_repo_with_2_release_channels
 

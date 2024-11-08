@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from copy import deepcopy
 from functools import reduce
 from pathlib import Path
 from textwrap import dedent
@@ -17,6 +18,7 @@ from tests.const import (
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
+    NULL_HEX_SHA,
     TODAY_DATE_STR,
 )
 from tests.util import (
@@ -27,8 +29,11 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
-    from typing import Generator, Protocol, TypedDict, Union
+    from typing import Generator, Literal, Protocol, TypedDict, Union
 
+    from semantic_release.commit_parser.angular import AngularCommitParser
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
     from semantic_release.hvcs import HvcsBase
 
     from tests.conftest import TeardownCachedDirFn
@@ -41,7 +46,7 @@ if TYPE_CHECKING:
         UseParserFn,
     )
 
-    CommitConvention = str
+    CommitConvention = Literal["angular", "emoji", "scipy"]
     VersionStr = str
     CommitMsg = str
     ChangelogTypeHeading = str
@@ -69,13 +74,15 @@ if TYPE_CHECKING:
 
     class CommitDef(TypedDict):
         msg: CommitMsg
+        type: str
+        desc: str
         sha: str
 
     class BaseRepoVersionDef(TypedDict):
         """A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types"""
 
         changelog_sections: dict[CommitConvention, list[ChangelogTypeHeadingDef]]
-        commits: list[dict[CommitConvention, CommitDef]]
+        commits: list[dict[CommitConvention, str]]
 
     class BuildRepoFn(Protocol):
         def __call__(
@@ -103,6 +110,16 @@ if TYPE_CHECKING:
 
     class ExProjectGitRepoFn(Protocol):
         def __call__(self) -> Repo: ...
+
+    class ExtractRepoDefinitionFn(Protocol):
+        def __call__(
+            self,
+            base_repo_def: dict[str, BaseRepoVersionDef],
+            commit_type: CommitConvention,
+        ) -> RepoDefinition: ...
+
+    class GetCommitDefFn(Protocol):
+        def __call__(self, msg: str) -> CommitDef: ...
 
     class GetVersionStringsFn(Protocol):
         def __call__(self) -> list[VersionStr]: ...
@@ -155,6 +172,103 @@ def example_git_https_url():
 
 
 @pytest.fixture(scope="session")
+def extract_commit_convention_from_base_repo_def(
+    get_commit_def_of_angular_commit: GetCommitDefFn,
+    get_commit_def_of_emoji_commit: GetCommitDefFn,
+    get_commit_def_of_scipy_commit: GetCommitDefFn,
+) -> ExtractRepoDefinitionFn:
+    message_parsers: dict[CommitConvention, GetCommitDefFn] = {
+        "angular": get_commit_def_of_angular_commit,
+        "emoji": get_commit_def_of_emoji_commit,
+        "scipy": get_commit_def_of_scipy_commit,
+    }
+
+    def _extract_commit_convention_from_base_repo_def(
+        base_repo_def: dict[str, BaseRepoVersionDef],
+        commit_type: CommitConvention,
+    ) -> RepoDefinition:
+        definition: RepoDefinition = {}
+        parse_msg_fn = message_parsers[commit_type]
+
+        for version, version_def in base_repo_def.items():
+            definition[version] = {
+                # Extract the correct changelog section header for the commit type
+                "changelog_sections": deepcopy(
+                    version_def["changelog_sections"][commit_type]
+                ),
+                "commits": [
+                    # Extract the correct commit message for the commit type
+                    parse_msg_fn(message_variants[commit_type])
+                    for message_variants in version_def["commits"]
+                ],
+            }
+
+        return definition
+
+    return _extract_commit_convention_from_base_repo_def
+
+
+@pytest.fixture(scope="session")
+def get_commit_def_of_angular_commit(
+    default_angular_parser: AngularCommitParser,
+) -> GetCommitDefFn:
+    def _get_commit_def_of_angular_commit(msg: str) -> CommitDef:
+        parsed_result = default_angular_parser.parse_message(msg)
+        return {
+            "msg": msg,
+            "type": "unknown" if parsed_result is None else parsed_result.type,
+            "desc": (
+                msg
+                if parsed_result is None
+                else str.join("\n", parsed_result.descriptions)
+            ),
+            "sha": NULL_HEX_SHA,
+        }
+
+    return _get_commit_def_of_angular_commit
+
+
+@pytest.fixture(scope="session")
+def get_commit_def_of_emoji_commit(
+    default_emoji_parser: EmojiCommitParser,
+) -> GetCommitDefFn:
+    def _get_commit_def_of_emoji_commit(msg: str) -> CommitDef:
+        parsed_result = default_emoji_parser.parse_message(msg)
+        return {
+            "msg": msg,
+            "type": "unknown" if parsed_result is None else parsed_result.type,
+            "desc": (
+                msg
+                if parsed_result is None
+                else str.join("\n", parsed_result.descriptions)
+            ),
+            "sha": NULL_HEX_SHA,
+        }
+
+    return _get_commit_def_of_emoji_commit
+
+
+@pytest.fixture(scope="session")
+def get_commit_def_of_scipy_commit(
+    default_scipy_parser: ScipyCommitParser,
+) -> GetCommitDefFn:
+    def _get_commit_def_of_scipy_commit(msg: str) -> CommitDef:
+        parsed_result = default_scipy_parser.parse_message(msg)
+        return {
+            "msg": msg,
+            "type": "unknown" if parsed_result is None else parsed_result.type,
+            "desc": (
+                msg
+                if parsed_result is None
+                else str.join("\n", parsed_result.descriptions)
+            ),
+            "sha": NULL_HEX_SHA,
+        }
+
+    return _get_commit_def_of_scipy_commit
+
+
+@pytest.fixture(scope="session")
 def create_release_tagged_commit(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     default_tag_format_str: str,
@@ -190,6 +304,8 @@ def commit_n_rtn_changelog_entry() -> CommitNReturnChangelogEntryFn:
         # Capture the resulting commit message and sha
         return {
             "msg": str(git_repo.head.commit.message).strip(),
+            "type": commit["type"],
+            "desc": commit["desc"],
             "sha": git_repo.head.commit.hexsha,
         }
 
