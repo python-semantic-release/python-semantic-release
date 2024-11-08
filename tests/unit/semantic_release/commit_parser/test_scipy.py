@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from re import compile as regexp
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,6 +15,9 @@ if TYPE_CHECKING:
     from tests.conftest import MakeCommitObjFn
 
 
+unwordwrap = regexp(r"((?<!-)\n(?![\s*-]))")
+
+
 def test_valid_scipy_parsed_chore_commits(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,
@@ -24,10 +28,11 @@ def test_valid_scipy_parsed_chore_commits(
 
     for i, full_commit_msg in enumerate(scipy_chore_commits):
         (commit_type, subject, commit_bodies) = expected_parts[i]
-        exepcted_type = tag_to_section[commit_type]
+        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
+        expected_type = tag_to_section[commit_type]
         expected_descriptions = [
             subject,
-            *[body for body in commit_bodies if body],
+            *[body.rstrip() for body in commit_bodies if body],
         ]
         expected_brk_desc = []
 
@@ -36,7 +41,7 @@ def test_valid_scipy_parsed_chore_commits(
 
         assert isinstance(result, ParsedCommit)
         assert LevelBump.NO_RELEASE is result.bump
-        assert exepcted_type == result.type
+        assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
         assert result.scope is None
@@ -52,10 +57,11 @@ def test_valid_scipy_parsed_patch_commits(
 
     for i, full_commit_msg in enumerate(scipy_patch_commits):
         (commit_type, subject, commit_bodies) = expected_parts[i]
-        exepcted_type = tag_to_section[commit_type]
+        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
+        expected_type = tag_to_section[commit_type]
         expected_descriptions = [
             subject,
-            *[body for body in commit_bodies if body],
+            *[body.rstrip() for body in commit_bodies if body],
         ]
         expected_brk_desc = []
 
@@ -64,7 +70,7 @@ def test_valid_scipy_parsed_patch_commits(
 
         assert isinstance(result, ParsedCommit)
         assert LevelBump.PATCH is result.bump
-        assert exepcted_type == result.type
+        assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
         assert result.scope is None
@@ -80,7 +86,8 @@ def test_valid_scipy_parsed_minor_commits(
 
     for i, full_commit_msg in enumerate(scipy_minor_commits):
         (commit_type, subject, commit_bodies) = expected_parts[i]
-        exepcted_type = tag_to_section[commit_type]
+        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
+        expected_type = tag_to_section[commit_type]
         expected_descriptions = [
             subject,
             *[body for body in commit_bodies if body],
@@ -92,7 +99,7 @@ def test_valid_scipy_parsed_minor_commits(
 
         assert isinstance(result, ParsedCommit)
         assert LevelBump.MINOR is result.bump
-        assert exepcted_type == result.type
+        assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
         assert result.scope is None
@@ -108,13 +115,16 @@ def test_valid_scipy_parsed_major_commits(
 
     for i, full_commit_msg in enumerate(scipy_major_commits):
         (commit_type, subject, commit_bodies) = expected_parts[i]
-        exepcted_type = tag_to_section[commit_type]
+        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
+        expected_type = tag_to_section[commit_type]
         expected_descriptions = [
             subject,
             *[body for body in commit_bodies if body],
         ]
         expected_brk_desc = [
-            block for block in commit_bodies if block.startswith("BREAKING CHANGE")
+            block.removeprefix("BREAKING CHANGE: ")
+            for block in commit_bodies
+            if block.startswith("BREAKING CHANGE")
         ]
 
         commit = make_commit_obj(full_commit_msg)
@@ -122,7 +132,7 @@ def test_valid_scipy_parsed_major_commits(
 
         assert isinstance(result, ParsedCommit)
         assert LevelBump.MAJOR is result.bump
-        assert exepcted_type == result.type
+        assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
         assert result.scope is None
