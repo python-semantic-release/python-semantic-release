@@ -10,6 +10,16 @@ if TYPE_CHECKING:
     from semantic_release.enums import LevelBump
 
 
+class ParsedMessageResult(NamedTuple):
+    bump: LevelBump
+    type: str
+    category: str
+    scope: str
+    descriptions: tuple[str, ...]
+    breaking_descriptions: tuple[str, ...] = ()
+    linked_merge_request: str = ""
+
+
 class ParsedCommit(NamedTuple):
     bump: LevelBump
     type: str
@@ -36,6 +46,21 @@ class ParsedCommit(NamedTuple):
     @property
     def linked_pull_request(self) -> str:
         return self.linked_merge_request
+
+    @staticmethod
+    def from_parsed_message_result(
+        commit: Commit, parsed_message_result: ParsedMessageResult
+    ) -> ParsedCommit:
+        return ParsedCommit(
+            bump=parsed_message_result.bump,
+            # TODO: breaking v10, swap back to type rather than category
+            type=parsed_message_result.category,
+            scope=parsed_message_result.scope,
+            descriptions=list(parsed_message_result.descriptions),
+            breaking_descriptions=list(parsed_message_result.breaking_descriptions),
+            commit=commit,
+            linked_merge_request=parsed_message_result.linked_merge_request,
+        )
 
 
 class ParseError(NamedTuple):
