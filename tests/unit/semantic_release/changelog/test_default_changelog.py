@@ -38,37 +38,40 @@ def default_changelog_template() -> str:
 @pytest.fixture
 def artificial_release_history(commit_author: Actor):
     version = Version.parse("1.0.0")
-
-    commit_subject = "fix(cli): fix a problem"
+    fix_commit_subject = "fix a problem"
+    fix_commit_type = "fix"
+    fix_commit_scope = "cli"
 
     fix_commit = Commit(
         Repo("."),
         Object.NULL_HEX_SHA[:20].encode("utf-8"),
-        message=commit_subject,
+        message=f"{fix_commit_type}({fix_commit_scope}): {fix_commit_subject}",
     )
 
     fix_commit_parsed = ParsedCommit(
         bump=LevelBump.PATCH,
         type="fix",
-        scope="cli",
-        descriptions=[commit_subject],
+        scope=fix_commit_scope,
+        descriptions=[fix_commit_subject],
         breaking_descriptions=[],
         commit=fix_commit,
     )
 
-    commit_subject = "feat(cli): add a new feature"
+    feat_commit_subject = "add a new feature"
+    feat_commit_type = "feat"
+    feat_commit_scope = "cli"
 
     feat_commit = Commit(
         Repo("."),
         Object.NULL_HEX_SHA[:20].encode("utf-8"),
-        message=commit_subject,
+        message=f"{feat_commit_type}({feat_commit_scope}): {feat_commit_subject}",
     )
 
     feat_commit_parsed = ParsedCommit(
         bump=LevelBump.MINOR,
-        type="feat",
-        scope="cli",
-        descriptions=[commit_subject],
+        type="feature",
+        scope=feat_commit_scope,
+        descriptions=[feat_commit_subject],
         breaking_descriptions=[],
         commit=feat_commit,
     )
@@ -129,11 +132,13 @@ def test_default_changelog_template(
             "",
             "### Feature",
             "",
-            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            f"- {feat_description[0].capitalize()}{feat_description[1:]}",
+            f"  ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
             "",
             "### Fix",
             "",
-            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            f"- {fix_description[0].capitalize()}{fix_description[1:]}",
+            f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
         ],
     )
 
@@ -187,18 +192,21 @@ def test_default_changelog_template_w_unreleased_changes(
             "",
             "### Feature",
             "",
-            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            f"- {feat_description[0].capitalize()}{feat_description[1:]}",
+            f"  ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
             "",
             "",
             f"## v{version_str} ({TODAY_DATE_STR})",
             "",
             "### Feature",
             "",
-            f"* {feat_description} ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
+            f"- {feat_description[0].capitalize()}{feat_description[1:]}",
+            f"  ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
             "",
             "### Fix",
             "",
-            f"* {fix_description} ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            f"- {fix_description[0].capitalize()}{fix_description[1:]}",
+            f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
         ],
     )
 

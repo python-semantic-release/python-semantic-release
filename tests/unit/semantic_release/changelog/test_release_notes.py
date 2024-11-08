@@ -31,18 +31,20 @@ if TYPE_CHECKING:
 @pytest.fixture
 def artificial_release_history(commit_author: Actor):
     version = Version.parse("1.1.0-alpha.3")
-    commit_subject = "fix(cli): fix a problem"
+    commit_subject = "fix a problem"
+    commit_type = "fix"
+    commit_scope = "cli"
 
     fix_commit = Commit(
         Repo("."),
         Object.NULL_HEX_SHA[:20].encode("utf-8"),
-        message=commit_subject,
+        message=f"{commit_type}({commit_scope}): {commit_subject}",
     )
 
     fix_commit_parsed = ParsedCommit(
         bump=LevelBump.PATCH,
-        type="fix",
-        scope="cli",
+        type=commit_type,
+        scope=commit_scope,
         descriptions=[commit_subject],
         breaking_descriptions=[],
         commit=fix_commit,
@@ -98,7 +100,9 @@ def test_default_release_notes_template(
             "",
             "### Fix",
             "",
-            f"* {commit_description} ([`{commit_obj.commit.hexsha[:7]}`]({commit_url}))",
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- {commit_description[0].capitalize()}{commit_description[1:]}",
+            f"  ([`{commit_obj.commit.hexsha[:7]}`]({commit_url}))",
             "",
         ],
     )
