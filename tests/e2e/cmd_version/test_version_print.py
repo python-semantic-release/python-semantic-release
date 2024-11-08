@@ -500,7 +500,14 @@ def test_version_print_next_version_fails_on_detached_head(
     # Setup: make a commit to ensure we have something to release
     simulate_change_commits_n_rtn_changelog_entry(
         repo,
-        [{"msg": "fix: make a patch fix to codebase", "sha": NULL_HEX_SHA}],
+        [
+            {
+                "msg": "fix: make a patch fix to codebase",
+                "type": "fix",
+                "desc": "make a patch fix to codebase",
+                "sha": NULL_HEX_SHA,
+            }
+        ],
     )
 
     # Setup: take measurement before running the version command

@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from git import Repo
 
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
-    from tests.fixtures.git_repo import GetRepoDefinitionFn
+    from tests.fixtures.git_repo import CommitConvention, GetRepoDefinitionFn
 
 
 @pytest.mark.parametrize(
@@ -468,7 +468,7 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
 )
 def test_version_updates_changelog_w_new_version_n_filtered_commit(
     repo: Repo,
-    commit_type: str,
+    commit_type: CommitConvention,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
     changelog_file: Path,
@@ -483,7 +483,9 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     repo_definition = get_commits_for_trunk_only_repo_w_tags(commit_type)
 
     # expected version bump commit (that should be in changelog)
-    expected_bump_message = list(repo_definition.values())[-1]["commits"][-1]["msg"]
+    expected_bump_message = list(repo_definition.values())[-1]["commits"][-1][
+        "desc"
+    ].capitalize()
 
     # Capture the expected changelog content
     expected_changelog_content = changelog_file.read_text()
