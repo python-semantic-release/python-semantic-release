@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import re
 from functools import reduce
+from itertools import zip_longest
 from re import compile as regexp
 from typing import TYPE_CHECKING, Tuple
 
@@ -71,11 +72,16 @@ class AngularParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
     def __post_init__(self) -> None:
-        self.tag_to_level = {tag: self.default_bump_level for tag in self.allowed_tags}
-        for tag in self.patch_tags:
-            self.tag_to_level[tag] = LevelBump.PATCH
-        for tag in self.minor_tags:
-            self.tag_to_level[tag] = LevelBump.MINOR
+        self.tag_to_level: dict[str, LevelBump] = dict(
+            [
+                # we have to do a type ignore as zip_longest provides a type that is not specific enough
+                # for our expected output. Due to the empty second array, we know the first is always longest
+                # and that means no values in the first entry of the tuples will ever be a LevelBump.
+                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),  # type: ignore[list-item]
+                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),  # type: ignore[list-item]
+                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),  # type: ignore[list-item]
+            ]
+        )
 
 
 class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
