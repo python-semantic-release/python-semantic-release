@@ -512,8 +512,10 @@ def simulate_default_changelog_creation(  # noqa: C901
             # Add commits to section
             version_entry.extend(
                 [
-                    "* {commit_msg} ([`{short_sha}`]({commit_url}))\n".format(
-                        commit_msg=version_def["commits"][i]["msg"],
+                    # NOTE: we assume url is always too long for the line so put it on the next line
+                    # to meet the autofit 100 character limit
+                    "- {commit_desc}\n  ([`{short_sha}`]({commit_url}))\n".format(
+                        commit_desc=version_def["commits"][i]["desc"].capitalize(),
                         short_sha=version_def["commits"][i]["sha"][:7],
                         commit_url=hvcs.commit_hash_url(
                             version_def["commits"][i]["sha"]
@@ -557,8 +559,8 @@ def simulate_default_changelog_creation(  # noqa: C901
                     "",
                     # Add commits to section
                     *[
-                        "* {commit_msg} (`{short_sha}`_)\n".format(
-                            commit_msg=version_def["commits"][i]["msg"],
+                        "* {commit_desc} (`{short_sha}`_)\n".format(
+                            commit_desc=version_def["commits"][i]["desc"].capitalize(),
                             short_sha=version_def["commits"][i]["sha"][:7],
                         )
                         for i in section_def["i_commits"]
