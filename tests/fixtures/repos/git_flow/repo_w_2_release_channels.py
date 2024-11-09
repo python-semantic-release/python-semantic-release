@@ -41,15 +41,23 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
     base_definition: dict[str, BaseRepoVersionDef] = {
         "0.1.0": {
             "changelog_sections": {
-                "angular": [{"section": "Unknown", "i_commits": [0]}],
-                "emoji": [{"section": "Other", "i_commits": [0]}],
-                "scipy": [{"section": "Unknown", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [1]}],
+                "emoji": [
+                    {"section": ":sparkles:", "i_commits": [1]},
+                    {"section": "Other", "i_commits": [0]},
+                ],
+                "scipy": [{"section": "Feature", "i_commits": [1]}],
             },
             "commits": [
                 {
                     "angular": "Initial commit",
                     "emoji": "Initial commit",
                     "scipy": "Initial commit",
+                },
+                {
+                    "angular": "feat: add new feature",
+                    "emoji": ":sparkles: add new feature",
+                    "scipy": "ENH: add new feature",
                 },
             ],
         },
@@ -69,15 +77,15 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
         },
         "1.0.0-alpha.1": {
             "changelog_sections": {
-                "angular": [{"section": "Breaking", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [0]}],
                 "emoji": [{"section": ":boom:", "i_commits": [0]}],
                 "scipy": [{"section": "Breaking", "i_commits": [0]}],
             },
             "commits": [
                 {
-                    "angular": "feat!: add revolutionary feature",
-                    "emoji": ":boom: add revolutionary feature",
-                    "scipy": "API: add revolutionary feature",
+                    "angular": "feat!: add revolutionary feature\n\nBREAKING CHANGE: this is a breaking change",
+                    "emoji": ":boom: add revolutionary feature\n\nThis change is a breaking change",
+                    "scipy": "API: add revolutionary feature\n\nBREAKING CHANGE: this is a breaking change",
                 }
             ],
         },
@@ -85,7 +93,6 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
             "changelog_sections": {
                 "angular": [
                     {"section": "Features", "i_commits": [0]},
-                    {"section": "Unknown", "i_commits": [2, 1]},
                 ],
                 "emoji": [
                     {"section": ":sparkles:", "i_commits": [0]},
@@ -93,7 +100,6 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
                 ],
                 "scipy": [
                     {"section": "Feature", "i_commits": [0]},
-                    {"section": "Unknown", "i_commits": [2, 1]},
                 ],
             },
             "commits": [
@@ -118,7 +124,6 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
             "changelog_sections": {
                 "angular": [
                     {"section": "Features", "i_commits": [0]},
-                    {"section": "Unknown", "i_commits": [2, 1]},
                 ],
                 "emoji": [
                     {"section": ":sparkles:", "i_commits": [0]},
@@ -126,7 +131,6 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
                 ],
                 "scipy": [
                     {"section": "Feature", "i_commits": [0]},
-                    {"section": "Unknown", "i_commits": [2, 1]},
                 ],
             },
             "commits": [
@@ -151,7 +155,6 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
             "changelog_sections": {
                 "angular": [
                     {"section": "Bug Fixes", "i_commits": [0]},
-                    {"section": "Unknown", "i_commits": [2, 1]},
                 ],
                 "emoji": [
                     {"section": ":bug:", "i_commits": [0]},
@@ -159,7 +162,6 @@ def get_commits_for_git_flow_repo_with_2_release_channels(
                 ],
                 "scipy": [
                     {"section": "Fix", "i_commits": [0]},
-                    {"section": "Unknown", "i_commits": [2, 1]},
                 ],
             },
             "commits": [

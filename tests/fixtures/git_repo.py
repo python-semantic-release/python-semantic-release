@@ -220,7 +220,7 @@ def get_commit_def_of_angular_commit(
             "desc": (
                 msg
                 if parsed_result is None
-                else str.join("\n", parsed_result.descriptions)
+                else str.join("\n\n", parsed_result.descriptions)
             ),
             "sha": NULL_HEX_SHA,
         }
@@ -240,7 +240,7 @@ def get_commit_def_of_emoji_commit(
             "desc": (
                 msg
                 if parsed_result is None
-                else str.join("\n", parsed_result.descriptions)
+                else str.join("\n\n", parsed_result.descriptions)
             ),
             "sha": NULL_HEX_SHA,
         }
@@ -260,7 +260,7 @@ def get_commit_def_of_scipy_commit(
             "desc": (
                 msg
                 if parsed_result is None
-                else str.join("\n", parsed_result.descriptions)
+                else str.join("\n\n", parsed_result.descriptions)
             ),
             "sha": NULL_HEX_SHA,
         }
@@ -509,21 +509,23 @@ def simulate_default_changelog_creation(  # noqa: C901
             # Create Markdown section heading
             version_entry.append(f"### {section_def['section']}\n")
 
-            # Add commits to section
-            version_entry.extend(
-                [
-                    # NOTE: we assume url is always too long for the line so put it on the next line
-                    # to meet the autofit 100 character limit
-                    "- {commit_desc}\n  ([`{short_sha}`]({commit_url}))\n".format(
-                        commit_desc=version_def["commits"][i]["desc"].capitalize(),
-                        short_sha=version_def["commits"][i]["sha"][:7],
-                        commit_url=hvcs.commit_hash_url(
-                            version_def["commits"][i]["sha"]
-                        ),
-                    )
-                    for i in section_def["i_commits"]
-                ]
-            )
+            for i in section_def["i_commits"]:
+                descriptions = version_def["commits"][i]["desc"].split("\n\n")
+                # NOTE: we assume url is always too long for the line so put it on the next line
+                # to meet the autofit 100 character limit
+                commit_cl_desc = "- {commit_desc}\n  ([`{short_sha}`]({commit_url}))\n".format(
+                    commit_desc=descriptions[0].capitalize(),
+                    short_sha=version_def["commits"][i]["sha"][:7],
+                    commit_url=hvcs.commit_hash_url(
+                        version_def["commits"][i]["sha"]
+                    ),
+                )
+
+                if len(descriptions) > 1:
+                    commit_cl_desc += str.join("\n", ["", *descriptions[1:], ""])
+
+                # Add commits to section
+                version_entry.append(commit_cl_desc)
 
         return str.join("\n", version_entry)
 
@@ -552,21 +554,21 @@ def simulate_default_changelog_creation(  # noqa: C901
         for section_def in version_def["changelog_sections"]:
             # Create RestructuredText section heading
             version_entry.append(f"{section_def['section']}")
-            version_entry.append("-" * (len(version_entry[-1])))
+            version_entry.append("-" * (len(version_entry[-1])) + "\n")
 
-            version_entry.extend(
-                [
-                    "",
-                    # Add commits to section
-                    *[
-                        "* {commit_desc} (`{short_sha}`_)\n".format(
-                            commit_desc=version_def["commits"][i]["desc"].capitalize(),
-                            short_sha=version_def["commits"][i]["sha"][:7],
-                        )
-                        for i in section_def["i_commits"]
-                    ],
-                ]
-            )
+            for i in section_def["i_commits"]:
+                descriptions = version_def["commits"][i]["desc"].split("\n\n")
+                commit_cl_desc = "* {commit_desc} (`{short_sha}`_)\n".format(
+                    commit_desc=descriptions[0].capitalize(),
+                    short_sha=version_def["commits"][i]["sha"][:7],
+                )
+
+                if len(descriptions) > 1:
+                    commit_cl_desc += str.join("\n", ["", *descriptions[1:], ""])
+
+                # Add commits to section
+                version_entry.append(commit_cl_desc)
+
             urls.extend(
                 [
                     ".. _{short_sha}: {commit_url}".format(
@@ -580,7 +582,7 @@ def simulate_default_changelog_creation(  # noqa: C901
             )
 
         # Add commit URLs to the end of the version entry
-        version_entry.extend(urls)
+        version_entry.extend(sorted(urls))
 
         return str.join("\n", version_entry) + "\n"
 

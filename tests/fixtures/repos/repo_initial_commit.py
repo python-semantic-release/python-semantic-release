@@ -37,21 +37,26 @@ if TYPE_CHECKING:
 def get_commits_for_repo_w_initial_commit(
     extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
 ) -> GetRepoDefinitionFn:
+    INITIAL_COMMIT_MSG = "Initial commit"
     base_definition: dict[str, BaseRepoVersionDef] = {
         "Unreleased": {
             "changelog_sections": {
                 # ORDER matters here since greater than 1 commit, changelogs sections are alphabetized
                 # But value is ultimately defined by the commits, which means the commits are
                 # referenced by index value
-                "angular": [{"section": "Unknown", "i_commits": [0]}],
+                #
+                # NOTE: Since Initial commit is not a valid commit type, it is not included in the
+                #       changelog sections, except for the Emoji Parser because it does not fail when
+                #       no emoji is found.
+                "angular": [],
                 "emoji": [{"section": "Other", "i_commits": [0]}],
-                "scipy": [{"section": "Unknown", "i_commits": [0]}],
+                "scipy": [],
             },
             "commits": [
                 {
-                    "angular": "Initial commit",
-                    "emoji": "Initial commit",
-                    "scipy": "Initial commit",
+                    "angular": INITIAL_COMMIT_MSG,
+                    "emoji": INITIAL_COMMIT_MSG,
+                    "scipy": INITIAL_COMMIT_MSG,
                 },
             ],
         },

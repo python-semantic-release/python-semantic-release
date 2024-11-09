@@ -41,15 +41,23 @@ def get_commits_for_github_flow_repo_w_feature_release_channel(
     base_definition: dict[str, BaseRepoVersionDef] = {
         "0.1.0": {
             "changelog_sections": {
-                "angular": [{"section": "Unknown", "i_commits": [0]}],
-                "emoji": [{"section": "Other", "i_commits": [0]}],
-                "scipy": [{"section": "Unknown", "i_commits": [0]}],
+                "angular": [{"section": "Features", "i_commits": [1]}],
+                "emoji": [
+                    {"section": ":sparkles:", "i_commits": [1]},
+                    {"section": "Other", "i_commits": [0]},
+                ],
+                "scipy": [{"section": "Feature", "i_commits": [1]}],
             },
             "commits": [
                 {
                     "angular": "Initial commit",
                     "emoji": "Initial commit",
                     "scipy": "Initial commit",
+                },
+                {
+                    "angular": "feat: add new feature",
+                    "emoji": ":sparkles: add new feature",
+                    "scipy": "ENH: add new feature",
                 },
             ],
         },
