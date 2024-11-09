@@ -38,6 +38,10 @@
 {#
   MACRO: format commit summary line
 #}{%  macro format_commit_summary_line(commit)
-%}{{    commit_msg_links(commit)
-}}{%  endmacro
+%}{%    if commit.error is undefined
+%}{{      commit_msg_links(commit)
+}}{%    else
+%}{{      (commit.commit.message | string).split("\n", maxsplit=1)[0]
+}}{%    endif
+%}{%  endmacro
 %}
