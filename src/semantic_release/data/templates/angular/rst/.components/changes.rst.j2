@@ -24,7 +24,7 @@ Fixes
 %}{#
 #}{%  set post_paragraph_links = []
 %}{#
-#}{%  for type_, commits in commit_objects
+#}{%  for type_, commits in commit_objects if type_ != "unknown"
 %}{#    PREPARE SECTION HEADER
 #}{%    set section_header = "%s" | format(type_ | title)
 %}{#    PREPROCESS COMMITS
