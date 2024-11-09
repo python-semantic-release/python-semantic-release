@@ -81,6 +81,7 @@ if TYPE_CHECKING:
     )
     from tests.fixtures.git_repo import (
         CommitNReturnChangelogEntryFn,
+        GetCommitDefFn,
         GetVersionStringsFn,
     )
 
@@ -776,6 +777,9 @@ def test_changelog_update_mode_unreleased_n_released(
     commit_n_rtn_changelog_entry: CommitNReturnChangelogEntryFn,
     changelog_file: Path,
     insertion_flag: str,
+    get_commit_def_of_angular_commit: GetCommitDefFn,
+    get_commit_def_of_emoji_commit: GetCommitDefFn,
+    get_commit_def_of_scipy_commit: GetCommitDefFn,
 ):
     """
     Given there are unreleased changes and a previous release in the changelog,
@@ -793,28 +797,19 @@ def test_changelog_update_mode_unreleased_n_released(
 
     commit_n_section = {
         "angular": {
-            "commit": {
-                "msg": "perf: improve the performance of the application",
-                "sha": NULL_HEX_SHA,
-            },
+            "commit": get_commit_def_of_angular_commit(
+                "perf: improve the performance of the application"
+            ),
             "section": "Performance Improvements",
         },
         "emoji": {
-            "commit": {
-                "msg": ":zap: improve the performance of the application",
-                "sha": NULL_HEX_SHA,
-            },
+            "commit": get_commit_def_of_emoji_commit(
+                ":zap: improve the performance of the application"
+            ),
             "section": ":zap:",
         },
         "scipy": {
-            "commit": {"msg": "MAINT: fix an issue", "sha": NULL_HEX_SHA},
-            "section": "Fix",
-        },
-        "tag": {
-            "commit": {
-                "msg": ":nut_and_bolt: improve the performance of the application",
-                "sha": NULL_HEX_SHA,
-            },
+            "commit": get_commit_def_of_scipy_commit("MAINT: fix an issue"),
             "section": "Fix",
         },
     }
@@ -853,7 +848,8 @@ def test_changelog_update_mode_unreleased_n_released(
 
             ### {commit_n_section[commit_type]["section"]}
 
-            * {unreleased_commit_entry['msg']} ([`{unreleased_commit_entry['sha'][:7]}`]({hvcs.commit_hash_url(unreleased_commit_entry['sha'])}))
+            - {unreleased_commit_entry['desc'].capitalize()}
+              ([`{unreleased_commit_entry['sha'][:7]}`]({hvcs.commit_hash_url(unreleased_commit_entry['sha'])}))
             """
         ),
         ChangelogOutputFormat.RESTRUCTURED_TEXT: dedent(
@@ -866,7 +862,7 @@ def test_changelog_update_mode_unreleased_n_released(
             {commit_n_section[commit_type]["section"]}
             {"-" * len(commit_n_section[commit_type]["section"])}
 
-            * {unreleased_commit_entry['msg']} (`{unreleased_commit_entry['sha'][:7]}`_)
+            * {unreleased_commit_entry['desc'].capitalize()} (`{unreleased_commit_entry['sha'][:7]}`_)
 
             .. _{unreleased_commit_entry['sha'][:7]}: {hvcs.commit_hash_url(unreleased_commit_entry['sha'])}
             """

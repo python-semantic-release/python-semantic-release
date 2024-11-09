@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from functools import reduce
 from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
@@ -78,6 +79,19 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
                 commits_per_group[group_name] = [
                     commit_msgs[index] for index in group_def["i_commits"]
                 ]
+
+            released_commits = set(reduce(
+                lambda acc, val: [*(acc or []), *val],
+                commits_per_group.values(),
+                [],
+            ))
+
+            commits_per_group["Unknown"] = list(
+                filter(
+                    lambda msg, released_set=released_commits: msg not in released_set,
+                    commit_msgs,
+                )
+            )
 
             if version_str == "Unreleased":
                 unreleased_history = commits_per_group
