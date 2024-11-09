@@ -153,6 +153,21 @@ def test_changelog_noop_is_noop(
 
 
 @pytest.mark.parametrize(
+    "changelog_file, insertion_flag",
+    [
+        (
+            # ChangelogOutputFormat.MARKDOWN
+            lazy_fixture(example_changelog_md.__name__),
+            lazy_fixture(default_md_changelog_insertion_flag.__name__),
+        ),
+        (
+            # ChangelogOutputFormat.RESTRUCTURED_TEXT
+            lazy_fixture(example_changelog_rst.__name__),
+            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "repo",
     [
         *[
@@ -189,21 +204,6 @@ def test_changelog_noop_is_noop(
                 repo_with_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
             ]
         ],
-    ],
-)
-@pytest.mark.parametrize(
-    "changelog_file, insertion_flag",
-    [
-        (
-            # ChangelogOutputFormat.MARKDOWN
-            lazy_fixture(example_changelog_md.__name__),
-            lazy_fixture(default_md_changelog_insertion_flag.__name__),
-        ),
-        (
-            # ChangelogOutputFormat.RESTRUCTURED_TEXT
-            lazy_fixture(example_changelog_rst.__name__),
-            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
-        ),
     ],
 )
 def test_changelog_content_regenerated(
@@ -251,6 +251,13 @@ def test_changelog_content_regenerated(
 
 
 @pytest.mark.parametrize(
+    "changelog_file",
+    [
+        lazy_fixture(example_changelog_md.__name__),
+        lazy_fixture(example_changelog_rst.__name__),
+    ],
+)
+@pytest.mark.parametrize(
     "repo",
     [
         lazy_fixture(repo_fixture)
@@ -259,13 +266,6 @@ def test_changelog_content_regenerated(
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
         ]
-    ],
-)
-@pytest.mark.parametrize(
-    "changelog_file",
-    [
-        lazy_fixture(example_changelog_md.__name__),
-        lazy_fixture(example_changelog_rst.__name__),
     ],
 )
 def test_changelog_update_mode_unchanged(
@@ -308,6 +308,13 @@ def test_changelog_update_mode_unchanged(
 
 
 @pytest.mark.parametrize(
+    "changelog_file",
+    [
+        lazy_fixture(example_changelog_md.__name__),
+        lazy_fixture(example_changelog_rst.__name__),
+    ],
+)
+@pytest.mark.parametrize(
     "repo",
     [
         lazy_fixture(repo_fixture)
@@ -319,13 +326,6 @@ def test_changelog_update_mode_unchanged(
             repo_with_single_branch_emoji_commits.__name__,
             repo_with_single_branch_scipy_commits.__name__,
         ]
-    ],
-)
-@pytest.mark.parametrize(
-    "changelog_file",
-    [
-        lazy_fixture(example_changelog_md.__name__),
-        lazy_fixture(example_changelog_rst.__name__),
     ],
 )
 def test_changelog_update_mode_no_prev_changelog(
@@ -371,17 +371,6 @@ def test_changelog_update_mode_no_prev_changelog(
 
 
 @pytest.mark.parametrize(
-    "repo",
-    [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            repo_with_single_branch_angular_commits.__name__,
-            repo_with_single_branch_emoji_commits.__name__,
-            repo_with_single_branch_scipy_commits.__name__,
-        ]
-    ],
-)
-@pytest.mark.parametrize(
     "changelog_file, insertion_flag",
     [
         (
@@ -394,6 +383,17 @@ def test_changelog_update_mode_no_prev_changelog(
             lazy_fixture(example_changelog_rst.__name__),
             lazy_fixture(default_rst_changelog_insertion_flag.__name__),
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+        ]
     ],
 )
 def test_changelog_update_mode_no_flag(
@@ -446,18 +446,6 @@ def test_changelog_update_mode_no_flag(
 
 
 @pytest.mark.parametrize(
-    "repo",
-    [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            # MUST HAVE at least 2 tags!
-            repo_with_single_branch_angular_commits.__name__,
-            repo_with_single_branch_emoji_commits.__name__,
-            repo_with_single_branch_scipy_commits.__name__,
-        ]
-    ],
-)
-@pytest.mark.parametrize(
     "changelog_format, changelog_file",
     [
         (
@@ -468,6 +456,18 @@ def test_changelog_update_mode_no_flag(
             ChangelogOutputFormat.RESTRUCTURED_TEXT,
             lazy_fixture(changelog_rst_file.__name__),
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # MUST HAVE at least 2 tags!
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+        ]
     ],
 )
 def test_changelog_update_mode_no_header(
@@ -542,18 +542,6 @@ def test_changelog_update_mode_no_header(
 
 
 @pytest.mark.parametrize(
-    "repo",
-    [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            # MUST HAVE at least 2 tags!
-            repo_with_single_branch_angular_commits.__name__,
-            repo_with_single_branch_emoji_commits.__name__,
-            repo_with_single_branch_scipy_commits.__name__,
-        ]
-    ],
-)
-@pytest.mark.parametrize(
     "changelog_format, changelog_file, insertion_flag",
     [
         (
@@ -566,6 +554,18 @@ def test_changelog_update_mode_no_header(
             lazy_fixture(example_changelog_rst.__name__),
             lazy_fixture(default_rst_changelog_insertion_flag.__name__),
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # MUST HAVE at least 2 tags!
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+        ]
     ],
 )
 def test_changelog_update_mode_no_footer(
@@ -641,18 +641,6 @@ def test_changelog_update_mode_no_footer(
 
 
 @pytest.mark.parametrize(
-    "repo",
-    [
-        lazy_fixture(repo_fixture)
-        for repo_fixture in [
-            # Must not have a single release/tag
-            repo_with_no_tags_angular_commits.__name__,
-            repo_with_no_tags_emoji_commits.__name__,
-            repo_with_no_tags_scipy_commits.__name__,
-        ]
-    ],
-)
-@pytest.mark.parametrize(
     "changelog_file, insertion_flag",
     [
         (
@@ -665,6 +653,18 @@ def test_changelog_update_mode_no_footer(
             lazy_fixture(example_changelog_rst.__name__),
             lazy_fixture(default_rst_changelog_insertion_flag.__name__),
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_fixture)
+        for repo_fixture in [
+            # Must not have a single release/tag
+            repo_with_no_tags_angular_commits.__name__,
+            repo_with_no_tags_emoji_commits.__name__,
+            repo_with_no_tags_scipy_commits.__name__,
+        ]
     ],
 )
 def test_changelog_update_mode_no_releases(
@@ -741,17 +741,6 @@ def test_changelog_update_mode_no_releases(
 
 
 @pytest.mark.parametrize(
-    "repo, commit_type",
-    [
-        (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
-        for repo_fixture in [
-            repo_with_single_branch_angular_commits.__name__,
-            repo_with_single_branch_emoji_commits.__name__,
-            repo_with_single_branch_scipy_commits.__name__,
-        ]
-    ],
-)
-@pytest.mark.parametrize(
     "changelog_format, changelog_file, insertion_flag",
     [
         (
@@ -764,6 +753,17 @@ def test_changelog_update_mode_no_releases(
             lazy_fixture(example_changelog_rst.__name__),
             lazy_fixture(default_rst_changelog_insertion_flag.__name__),
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "repo, commit_type",
+    [
+        (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
+        for repo_fixture in [
+            repo_with_single_branch_angular_commits.__name__,
+            repo_with_single_branch_emoji_commits.__name__,
+            repo_with_single_branch_scipy_commits.__name__,
+        ]
     ],
 )
 def test_changelog_update_mode_unreleased_n_released(
