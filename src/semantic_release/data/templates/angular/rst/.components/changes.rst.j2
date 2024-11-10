@@ -69,7 +69,8 @@ Fixes
 
 }}{%  endfor
 %}{#
-   # # Print out any PR/MR or Issue URL references that were found in the commit messages
-#}{{
-  "\n%s\n" | format(post_paragraph_links | unique | sort | join("\n"))
-}}
+#}{%  if post_paragraph_links | length > 0
+%}{#    # Print out any PR/MR or Issue URL references that were found in the commit messages
+#}{{    "\n%s\n" | format(post_paragraph_links | unique | sort | join("\n"))
+}}{%  endif
+%}
