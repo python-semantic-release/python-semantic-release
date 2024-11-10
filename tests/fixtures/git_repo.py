@@ -15,6 +15,7 @@ from semantic_release.cli.config import ChangelogOutputFormat
 
 from tests.const import (
     COMMIT_MESSAGE,
+    DEFAULT_BRANCH_NAME,
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
@@ -145,6 +146,53 @@ if TYPE_CHECKING:
             output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
         ) -> str: ...
 
+    class FormatGitSquashCommitMsgFn(Protocol):
+        def __call__(
+            self,
+            squashed_commits: list[CommitDef],
+        ) -> str: ...
+
+    class FormatGitHubSquashCommitMsgFn(Protocol):
+        def __call__(
+            self,
+            pr_title: str,
+            pr_number: int,
+            squashed_commits: list[CommitDef | str],
+        ) -> str: ...
+
+    class FormatBitBucketSquashCommitMsgFn(Protocol):
+        def __call__(
+            self,
+            branch_name: str,
+            pr_title: str,
+            pr_number: int,
+            squashed_commits: list[CommitDef],
+        ) -> str: ...
+
+    class FormatGitMergeCommitMsgFn(Protocol):
+        def __call__(self, branch_name: str, tgt_branch_name: str) -> str: ...
+
+    class FormatGitHubMergeCommitMsgFn(Protocol):
+        def __call__(self, pr_number: int, branch_name: str) -> str: ...
+
+    class CreateMergeCommitFn(Protocol):
+        def __call__(
+            self,
+            git_repo: Repo,
+            branch_name: str,
+            commit_def: CommitDef,
+            fast_forward: bool = True,
+        ) -> CommitDef: ...
+
+    class CreateSquashMergeCommitFn(Protocol):
+        def __call__(
+            self,
+            git_repo: Repo,
+            branch_name: str,
+            commit_def: CommitDef,
+            strategy_option: str = "theirs",
+        ) -> CommitDef: ...
+
 
 @pytest.fixture(scope="session")
 def commit_author():
@@ -269,6 +317,163 @@ def get_commit_def_of_scipy_commit(
 
 
 @pytest.fixture(scope="session")
+def format_merge_commit_msg_git() -> FormatGitMergeCommitMsgFn:
+    def _format_merge_commit_msg_git(branch_name: str, tgt_branch_name: str) -> str:
+        return f"Merge branch '{branch_name}' into '{tgt_branch_name}'"
+
+    return _format_merge_commit_msg_git
+
+
+@pytest.fixture(scope="session")
+def format_merge_commit_msg_github() -> FormatGitHubMergeCommitMsgFn:
+    def _format_merge_commit_msg_git(pr_number: int, branch_name: str) -> str:
+        return f"Merge pull request #{pr_number} from '{branch_name}'"
+
+    return _format_merge_commit_msg_git
+
+
+@pytest.fixture(scope="session")
+def format_squash_commit_msg_git(commit_author: Actor) -> FormatGitSquashCommitMsgFn:
+    def _format_squash_commit_msg_git(
+        squashed_commits: list[CommitDef],
+    ) -> str:
+        return (
+            str.join(
+                "\n\n",
+                [
+                    "Squashed commit of the following:",
+                    *[
+                        str.join(
+                            "\n",
+                            [
+                                f"commit {commit['sha']}",
+                                f"Author: {commit_author.name} <{commit_author.email}>",
+                                # TODO: get date from CommitDef object
+                                "Date:   Day Mon DD HH:MM:SS YYYY +HHMM",
+                                "",
+                                *[f"    {line}" for line in commit["msg"].split("\n")],
+                            ],
+                        )
+                        for commit in squashed_commits
+                    ],
+                ],
+            )
+            + "\n"
+        )
+
+    return _format_squash_commit_msg_git
+
+
+@pytest.fixture(scope="session")
+def format_squash_commit_msg_github() -> FormatGitHubSquashCommitMsgFn:
+    def _format_squash_commit_msg_github(
+        pr_title: str,
+        pr_number: int,
+        squashed_commits: list[CommitDef | str],
+    ) -> str:
+        sq_cmts: list[str] = (  # type: ignore
+            squashed_commits
+            if not isinstance(squashed_commits[0], dict)
+            else [commit["msg"] for commit in squashed_commits]  # type: ignore
+        )
+        return (
+            str.join(
+                "\n\n",
+                [
+                    f"{pr_title} (#{pr_number})",
+                    *[f"* {commit_str}" for commit_str in sq_cmts],
+                ],
+            )
+            + "\n"
+        )
+
+    return _format_squash_commit_msg_github
+
+
+@pytest.fixture(scope="session")
+def format_squash_commit_msg_bitbucket() -> FormatBitBucketSquashCommitMsgFn:
+    def _format_squash_commit_msg_bitbucket(
+        branch_name: str,
+        pr_title: str,
+        pr_number: int,
+        squashed_commits: list[CommitDef],
+    ) -> str:
+        # See #1085, for detail on BitBucket squash commit message format
+        return (
+            str.join(
+                "\n\n",
+                [
+                    f"Merged in {branch_name}  (pull request #{pr_number})",
+                    f"{pr_title}",
+                    *[f"* {commit_str}" for commit_str in squashed_commits],
+                ],
+            )
+            + "\n"
+        )
+
+    return _format_squash_commit_msg_bitbucket
+
+
+@pytest.fixture(scope="session")
+def create_merge_commit() -> CreateMergeCommitFn:
+    def _create_merge_commit(
+        git_repo: Repo,
+        branch_name: str,
+        commit_def: CommitDef,
+        fast_forward: bool = True,
+    ) -> CommitDef:
+        git_repo.git.merge(
+            branch_name,
+            ff=fast_forward,
+            no_ff=bool(not fast_forward),
+            m=commit_def["msg"],
+        )
+
+        sleep(1)  # ensure commit timestamps are unique
+
+        # return the commit definition with the sha & message updated
+        return {
+            **commit_def,
+            "msg": str(git_repo.head.commit.message).strip(),
+            "sha": git_repo.head.commit.hexsha,
+        }
+
+    return _create_merge_commit
+
+
+@pytest.fixture(scope="session")
+def create_squash_merge_commit() -> CreateSquashMergeCommitFn:
+    def _create_squash_merge_commit(
+        git_repo: Repo,
+        branch_name: str,
+        commit_def: CommitDef,
+        strategy_option: str = "theirs",
+    ) -> CommitDef:
+        # merge --squash never commits on action, first it stages the changes
+        git_repo.git.merge(
+            branch_name,
+            squash=True,
+            strategy_option=strategy_option,
+        )
+
+        # commit the squashed changes
+        git_repo.git.commit(
+            m=commit_def["msg"],
+        )
+
+        sleep(1)  # ensure commit timestamps are unique
+
+        # return the commit definition with the sha & message updated
+        return {
+            **commit_def,
+            "msg": str(git_repo.head.commit.message).strip(),
+            "sha": git_repo.head.commit.hexsha,
+        }
+
+    return _create_squash_merge_commit
+
+
+@pytest.fixture(scope="session")
 def create_release_tagged_commit(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     default_tag_format_str: str,
@@ -358,7 +563,7 @@ def cached_example_git_project(
     # the implementation on Windows holds some file descriptors open until close is called.
     with Repo.init(cached_git_proj_path) as repo:
         # Without this the global config may set it to "master", we want consistency
-        repo.git.branch("-M", "main")
+        repo.git.branch("-M", DEFAULT_BRANCH_NAME)
         with repo.config_writer("repository") as config:
             config.set_value("user", "name", commit_author.name)
             config.set_value("user", "email", commit_author.email)

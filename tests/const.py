@@ -13,6 +13,9 @@ EXAMPLE_REPO_OWNER = "example_owner"
 EXAMPLE_REPO_NAME = "example_repo"
 EXAMPLE_HVCS_DOMAIN = "example.com"
 
+DEFAULT_BRANCH_NAME = "main"
+INITIAL_COMMIT_MESSAGE = "Initial commit"
+
 MAIN_PROG_NAME = str(semantic_release.__name__).replace("_", "-")
 SUCCESS_EXIT_CODE = 0
 

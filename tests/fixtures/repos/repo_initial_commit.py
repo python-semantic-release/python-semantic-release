@@ -7,7 +7,7 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import EXAMPLE_HVCS_DOMAIN
+from tests.const import EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
 from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
@@ -37,7 +37,6 @@ if TYPE_CHECKING:
 def get_commits_for_repo_w_initial_commit(
     extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
 ) -> GetRepoDefinitionFn:
-    INITIAL_COMMIT_MSG = "Initial commit"
     base_definition: dict[str, BaseRepoVersionDef] = {
         "Unreleased": {
             "changelog_sections": {
@@ -54,9 +53,9 @@ def get_commits_for_repo_w_initial_commit(
             },
             "commits": [
                 {
-                    "angular": INITIAL_COMMIT_MSG,
-                    "emoji": INITIAL_COMMIT_MSG,
-                    "scipy": INITIAL_COMMIT_MSG,
+                    "angular": INITIAL_COMMIT_MESSAGE,
+                    "emoji": INITIAL_COMMIT_MESSAGE,
+                    "scipy": INITIAL_COMMIT_MESSAGE,
                 },
             ],
         },

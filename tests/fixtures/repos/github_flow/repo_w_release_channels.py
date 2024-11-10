@@ -7,7 +7,7 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import EXAMPLE_HVCS_DOMAIN
+from tests.const import DEFAULT_BRANCH_NAME, EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
 from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
@@ -21,9 +21,11 @@ if TYPE_CHECKING:
         BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
+        CreateMergeCommitFn,
         CreateReleaseFn,
         ExProjectGitRepoFn,
         ExtractRepoDefinitionFn,
+        FormatGitHubMergeCommitMsgFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
@@ -34,12 +36,18 @@ if TYPE_CHECKING:
     )
 
 
+FIX_BRANCH_1_NAME = "fix/patch-1"
+FEAT_BRANCH_1_NAME = "feat/feature-1"
+FEAT_BRANCH_2_NAME = "feat/feature-2"
+
+
 @pytest.fixture(scope="session")
 def get_commits_for_github_flow_repo_w_feature_release_channel(
     extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
+    format_merge_commit_msg_github: FormatGitHubMergeCommitMsgFn,
 ) -> GetRepoDefinitionFn:
     base_definition: dict[str, BaseRepoVersionDef] = {
-        "0.1.0": {
+        "1.0.0": {
             "changelog_sections": {
                 "angular": [{"section": "Features", "i_commits": [1]}],
                 "emoji": [
@@ -50,9 +58,9 @@ def get_commits_for_github_flow_repo_w_feature_release_channel(
             },
             "commits": [
                 {
-                    "angular": "Initial commit",
-                    "emoji": "Initial commit",
-                    "scipy": "Initial commit",
+                    "angular": INITIAL_COMMIT_MESSAGE,
+                    "emoji": INITIAL_COMMIT_MESSAGE,
+                    "scipy": INITIAL_COMMIT_MESSAGE,
                 },
                 {
                     "angular": "feat: add new feature",
@@ -61,7 +69,7 @@ def get_commits_for_github_flow_repo_w_feature_release_channel(
                 },
             ],
         },
-        "0.1.1-rc.1": {
+        "1.0.1-alpha.1": {
             "changelog_sections": {
                 "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
                 "emoji": [{"section": ":bug:", "i_commits": [0]}],
@@ -75,46 +83,86 @@ def get_commits_for_github_flow_repo_w_feature_release_channel(
                 }
             ],
         },
-        "0.2.0-rc.1": {
+        "1.0.1-alpha.2": {
             "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
+                "emoji": [{"section": ":bug:", "i_commits": [0]}],
+                "scipy": [{"section": "Fix", "i_commits": [0]}],
+            },
+            "commits": [
+                {
+                    "angular": "fix: adjust text to resolve",
+                    "emoji": ":bug: adjust text to resolve",
+                    "scipy": "MAINT: adjust text to resolve",
+                },
+            ],
+        },
+        "1.0.1": {
+            "changelog_sections": {
+                "angular": [],
+                "emoji": [
+                    {"section": "Other", "i_commits": [0]},
+                ],
+                "scipy": [],
+            },
+            "commits": [
+                {
+                    "angular": format_merge_commit_msg_github(
+                        pr_number=25,
+                        branch_name=FIX_BRANCH_1_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_github(
+                        pr_number=25,
+                        branch_name=FIX_BRANCH_1_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_github(
+                        pr_number=25,
+                        branch_name=FIX_BRANCH_1_NAME,
+                    ),
+                },
+            ],
+        },
+        "1.1.0-alpha.1": {
+            "changelog_sections": {
+                "angular": [
+                    {"section": "Features", "i_commits": [0]},
+                ],
+                "emoji": [
+                    {"section": ":sparkles:", "i_commits": [0]},
+                ],
+                "scipy": [
+                    {"section": "Feature", "i_commits": [0]},
+                ],
             },
             "commits": [
                 {
                     "angular": "feat: add some more text",
                     "emoji": ":sparkles: add some more text",
                     "scipy": "ENH: add some more text",
-                }
+                },
             ],
         },
-        "0.2.0": {
+        "1.1.0": {
             "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
+                "angular": [],
+                "emoji": [{"section": "Other", "i_commits": [0]}],
+                "scipy": [],
             },
             "commits": [
                 {
-                    "angular": "feat: add some more text",
-                    "emoji": ":sparkles: add some more text",
-                    "scipy": "ENH: add some more text",
-                }
-            ],
-        },
-        "0.3.0-beta.1": {
-            "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
-            },
-            "commits": [
-                {
-                    "angular": "feat(scope): add some more text",
-                    "emoji": ":sparkles: add scoped text",
-                    "scipy": "ENH(scope): add some more text",
-                }
+                    "angular": format_merge_commit_msg_github(
+                        pr_number=26,
+                        branch_name=FEAT_BRANCH_1_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_github(
+                        pr_number=26,
+                        branch_name=FEAT_BRANCH_1_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_github(
+                        pr_number=26,
+                        branch_name=FEAT_BRANCH_1_NAME,
+                    ),
+                },
             ],
         },
     }
@@ -151,7 +199,13 @@ def build_github_flow_repo_w_feature_release_channel(
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
     create_release_tagged_commit: CreateReleaseFn,
+    create_merge_commit: CreateMergeCommitFn,
 ) -> BuildRepoFn:
+    """
+    Builds a repository with the GitHub Flow branching strategy using merge commits
+    for alpha feature releases and official releases on the default branch.
+    """
+
     def _build_github_flow_repo_w_feature_release_channel(
         dest_dir: Path | str,
         commit_type: CommitConvention = "angular",
@@ -169,15 +223,16 @@ def build_github_flow_repo_w_feature_release_channel(
             extra_configs={
                 # Set the default release branch
                 "tool.semantic_release.branches.main": {
-                    "match": "^(main|master)$",
+                    "match": r"^(main|master)$",
                     "prerelease": False,
                 },
-                # branch "beta-testing" has prerelease suffix of "beta"
-                "tool.semantic_release.branches.beta-testing": {
-                    "match": "beta.*",
+                # branch "feat/" & "fix/" has prerelease suffix of "alpha"
+                "tool.semantic_release.branches.alpha-release": {
+                    "match": r"^(feat|fix)/.+",
                     "prerelease": True,
-                    "prerelease_token": "beta",
+                    "prerelease_token": "alpha",
                 },
+                "tool.semantic_release.allow_zero_version": False,
                 **(extra_configs or {}),
             },
         )
@@ -202,6 +257,8 @@ def build_github_flow_repo_w_feature_release_channel(
                 next_version_def["commits"],
             )
 
+            main_branch_head = git_repo.heads[DEFAULT_BRANCH_NAME]
+
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
                 repo_def,
@@ -220,12 +277,18 @@ def build_github_flow_repo_w_feature_release_channel(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # Make initial feature release (v0.1.0)
+            # Make initial release (v1.0.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
             next_version = next(versions)
             next_version_def = repo_def[next_version]
+
+            # check out fix branch
+            fix_branch_head = git_repo.create_head(
+                FIX_BRANCH_1_NAME, main_branch_head.commit
+            )
+            fix_branch_head.checkout()
 
             # Make a patch level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
@@ -251,12 +314,83 @@ def build_github_flow_repo_w_feature_release_channel(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # Make a patch level release candidate (v0.1.1-rc.1)
+            # Make a patch level release candidate (v1.0.1-alpha.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
             next_version = next(versions)
             next_version_def = repo_def[next_version]
+
+            # Make an additional fix from alpha.1
+            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
+                git_repo,
+                next_version_def["commits"],
+            )
+
+            # write expected Markdown changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_md_file),
+                output_format=ChangelogOutputFormat.MARKDOWN,
+            )
+
+            # write expected RST changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_rst_file),
+                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
+            )
+
+            # Make an additional prerelease (v1.0.1-alpha.2)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
+
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
+
+            # Merge fix branch into main (saving updated commit sha)
+            main_branch_head.checkout()
+            next_version_def["commits"][0] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=fix_branch_head.name,
+                commit_def=next_version_def["commits"][0],
+                fast_forward=False,
+            )
+
+            # write expected Markdown changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_md_file),
+                output_format=ChangelogOutputFormat.MARKDOWN,
+            )
+
+            # write expected RST changelog to this version
+            simulate_default_changelog_creation(
+                repo_def,
+                hvcs=hvcs,
+                max_version=next_version,
+                dest_file=repo_dir.joinpath(changelog_rst_file),
+                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
+            )
+
+            # Make a patch level release (v1.0.1)
+            create_release_tagged_commit(git_repo, next_version, tag_format)
+
+            # Increment version pointer
+            next_version = next(versions)
+            next_version_def = repo_def[next_version]
+
+            # checkout feat branch
+            feat_branch_head = git_repo.create_head(
+                FEAT_BRANCH_1_NAME, main_branch_head.commit
+            )
+            feat_branch_head.checkout()
 
             # Make a minor level commit
             next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
@@ -282,17 +416,20 @@ def build_github_flow_repo_w_feature_release_channel(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # Make a minor level release candidate (v0.2.0-rc.1)
+            # Make a patch level release candidate (v1.1.0-alpha.1)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
             # Increment version pointer
             next_version = next(versions)
             next_version_def = repo_def[next_version]
 
-            # Make a minor level commit
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
+            # Merge feat branch into main
+            main_branch_head.checkout()
+            next_version_def["commits"][0] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=feat_branch_head.name,
+                commit_def=next_version_def["commits"][0],
+                fast_forward=False,
             )
 
             # write expected Markdown changelog to this version
@@ -313,42 +450,7 @@ def build_github_flow_repo_w_feature_release_channel(
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
             )
 
-            # Make a minor level release (v0.2.0)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Checkout beta_testing branch
-            git_repo.create_head("beta_testing")
-            git_repo.heads.beta_testing.checkout()
-
-            # Make a feature level commit
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-            )
-
-            # Make a feature level beta release (v0.3.0-beta.1)
+            # Make a minor level release (v1.1.0)
             create_release_tagged_commit(git_repo, next_version, tag_format)
 
         return repo_dir, hvcs
