@@ -1,6 +1,13 @@
 {#    # Set line width to 1000 to avoid wrapping as GitHub will handle it
 #}{%  set max_line_width = max_line_width | default(1000)
 %}{%  set hanging_indent = hanging_indent | default(2)
+%}{%  set releases = context.history.released.items() | list
 %}{#
-#}{%  include ".components/versioned_changes.md.j2"
+#}{%  if releases | length - 1 > 0
+%}{#    # Not the first release so generate notes normally
+#}{%    include ".components/versioned_changes.md.j2"
+%}{%  else
+%}{#    # On a first release, generate our special message
+#}{%    include ".components/first_release.md.j2"
+%}{%  endif
 %}
