@@ -74,8 +74,7 @@ def get_commits_for_github_flow_repo_w_default_release_channel(
                     {"section": "Bug Fixes", "i_commits": [1]},
                 ],
                 "emoji": [
-                    {"section": ":bug:", "i_commits": [0]},
-                    {"section": "Other", "i_commits": [1]},
+                    {"section": ":bug:", "i_commits": [1]},
                 ],
                 "scipy": [
                     {"section": "Fix", "i_commits": [1]},
@@ -91,7 +90,7 @@ def get_commits_for_github_flow_repo_w_default_release_channel(
                 {"angular": "", "emoji": "", "scipy": ""},
             ],
         },
-        "1.1.1": {
+        "1.1.0": {
             "changelog_sections": {
                 "angular": [
                     {"section": "Features", "i_commits": [3]},
@@ -139,7 +138,7 @@ def get_commits_for_github_flow_repo_w_default_release_channel(
     for i, (version_str, cmt_title_index) in enumerate(
         (
             ("1.0.1", 0),
-            ("1.1.1", 0),
+            ("1.1.0", 0),
         ),
         start=2,
     ):
