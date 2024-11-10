@@ -121,8 +121,11 @@ def test_valid_scipy_parsed_major_commits(
             subject,
             *[body for body in commit_bodies if body],
         ]
+        brkg_prefix = "BREAKING CHANGE: "
         expected_brk_desc = [
-            block.removeprefix("BREAKING CHANGE: ")
+            # TODO: Python 3.8 limitation, change to removeprefix() for 3.9+
+            block[block.startswith(brkg_prefix) and len(brkg_prefix) :]
+            # block.removeprefix("BREAKING CHANGE: ")
             for block in commit_bodies
             if block.startswith("BREAKING CHANGE")
         ]
