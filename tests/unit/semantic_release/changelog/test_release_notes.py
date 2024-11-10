@@ -15,7 +15,7 @@ from importlib_resources import files
 import semantic_release
 from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.cli.changelog_writer import generate_release_notes
-from semantic_release.commit_parser import ParsedCommit
+from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 from semantic_release.version import Version
@@ -92,6 +92,9 @@ def test_default_release_notes_template(
     commit_url = hvcs_client(example_git_https_url).commit_hash_url(
         commit_obj.commit.hexsha
     )
+    if isinstance(commit_obj, ParseError):
+        pytest.fail("Unexpected ParseError")
+
     commit_description = str.join(os.linesep, commit_obj.descriptions)
     expected_content = str.join(
         os.linesep,
@@ -101,7 +104,7 @@ def test_default_release_notes_template(
             "### Fix",
             "",
             # Due to the 100 character limit, hash url will be on the second line
-            f"- {commit_description[0].capitalize()}{commit_description[1:]}",
+            f"- **{commit_obj.scope}**: {commit_description[0].capitalize()}{commit_description[1:]}",
             f"  ([`{commit_obj.commit.hexsha[:7]}`]({commit_url}))",
             "",
         ],
