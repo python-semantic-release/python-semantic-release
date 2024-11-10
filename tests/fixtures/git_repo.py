@@ -77,6 +77,7 @@ if TYPE_CHECKING:
         msg: CommitMsg
         type: str
         desc: str
+        scope: str
         mr: str
         sha: str
 
@@ -267,6 +268,7 @@ def get_commit_def_of_angular_commit(
                 "msg": msg,
                 "type": "unknown",
                 "desc": msg,
+                "scope": "",
                 "mr": "",
                 "sha": NULL_HEX_SHA,
             }
@@ -279,6 +281,7 @@ def get_commit_def_of_angular_commit(
             "msg": msg,
             "type": parsed_result.type,
             "desc": str.join("\n\n", descriptions),
+            "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
             "sha": NULL_HEX_SHA,
         }
@@ -296,6 +299,7 @@ def get_commit_def_of_emoji_commit(
                 "msg": msg,
                 "type": "unknown",
                 "desc": msg,
+                "scope": "",
                 "mr": "",
                 "sha": NULL_HEX_SHA,
             }
@@ -308,6 +312,7 @@ def get_commit_def_of_emoji_commit(
             "msg": msg,
             "type": parsed_result.type,
             "desc": str.join("\n\n", descriptions),
+            "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
             "sha": NULL_HEX_SHA,
         }
@@ -325,6 +330,7 @@ def get_commit_def_of_scipy_commit(
                 "msg": msg,
                 "type": "unknown",
                 "desc": msg,
+                "scope": "",
                 "mr": "",
                 "sha": NULL_HEX_SHA,
             }
@@ -337,6 +343,7 @@ def get_commit_def_of_scipy_commit(
             "msg": msg,
             "type": parsed_result.type,
             "desc": str.join("\n\n", descriptions),
+            "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
             "sha": NULL_HEX_SHA,
         }
@@ -748,8 +755,13 @@ def simulate_default_changelog_creation(  # noqa: C901
                 # has a 100 character limit or otherwise our tests will fail because the
                 # URLs and whitespace don't line up
 
-                subject_line = "- {commit_desc}".format(
-                    commit_desc=descriptions[0].capitalize()
+                subject_line = "- {commit_scope}{commit_desc}".format(
+                    commit_desc=descriptions[0].capitalize(),
+                    commit_scope=(
+                        f"**{version_def['commits'][i]['scope']}**: "
+                        if version_def["commits"][i]["scope"]
+                        else ""
+                    ),
                 )
 
                 mr_link = (
@@ -817,18 +829,43 @@ def simulate_default_changelog_creation(  # noqa: C901
 
             for i in section_def["i_commits"]:
                 descriptions = version_def["commits"][i]["desc"].split("\n\n")
-                commit_cl_desc = (
-                    "* {commit_desc} (`{short_sha}`_)\n".format(
-                        commit_desc=descriptions[0].capitalize(),
-                        short_sha=version_def["commits"][i]["sha"][:7],
-                    )
+
+                # NOTE: We have to be wary of the line length as the default changelog
+                # has a 100 character limit or otherwise our tests will fail because the
+                # URLs and whitespace don't line up
+
+                subject_line = "* {commit_scope}{commit_desc}".format(
+                    commit_desc=descriptions[0].capitalize(),
+                    commit_scope=(
+                        f"**{version_def['commits'][i]['scope']}**: "
+                        if version_def["commits"][i]["scope"]
+                        else ""
+                    ),
+                )
+
+                mr_link = (
+                    ""
                     if not version_def["commits"][i]["mr"]
-                    else "* {commit_desc} (`{mr}`_, `{short_sha}`_)\n".format(
-                        commit_desc=descriptions[0].capitalize(),
+                    else "(`{mr}`_,".format(
                         mr=version_def["commits"][i]["mr"],
-                        short_sha=version_def["commits"][i]["sha"][:7],
                     )
                 )
+
+                sha_link = "`{short_sha}`_)".format(
+                    short_sha=version_def["commits"][i]["sha"][:7],
+                )
+                # Add opening parenthesis if no MR link
+                sha_link = sha_link if mr_link else f"({sha_link}"
+
+                # NOTE: we are assuming that the subject line is always less than 100 characters
+                commit_cl_desc = f"{subject_line} {mr_link}".rstrip()
+                if len(commit_cl_desc) > 100:
+                    commit_cl_desc = f"{subject_line}\n  {mr_link}".rstrip()
+
+                if len(f"{commit_cl_desc} {sha_link}") > 100:
+                    commit_cl_desc = f"{commit_cl_desc}\n  {sha_link}\n"
+                else:
+                    commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
 
                 if len(descriptions) > 1:
                     commit_cl_desc += (
