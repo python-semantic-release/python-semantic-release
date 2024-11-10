@@ -54,6 +54,21 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
+    "changelog_file, insertion_flag",
+    [
+        (
+            # ChangelogOutputFormat.MARKDOWN
+            lazy_fixture(example_changelog_md.__name__),
+            lazy_fixture(default_md_changelog_insertion_flag.__name__),
+        ),
+        (
+            # ChangelogOutputFormat.RESTRUCTURED_TEXT
+            lazy_fixture(example_changelog_rst.__name__),
+            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "repo",
     [
         lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -82,21 +97,6 @@ if TYPE_CHECKING:
                 repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
             ]
         ],
-    ],
-)
-@pytest.mark.parametrize(
-    "changelog_file, insertion_flag",
-    [
-        (
-            # ChangelogOutputFormat.MARKDOWN
-            lazy_fixture(example_changelog_md.__name__),
-            lazy_fixture(default_md_changelog_insertion_flag.__name__),
-        ),
-        (
-            # ChangelogOutputFormat.RESTRUCTURED_TEXT
-            lazy_fixture(example_changelog_rst.__name__),
-            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
-        ),
     ],
 )
 def test_version_updates_changelog_w_new_version(
@@ -176,21 +176,6 @@ def test_version_updates_changelog_w_new_version(
 
 
 @pytest.mark.parametrize(
-    "repo",
-    [
-        lazy_fixture(repo_w_no_tags_angular_commits.__name__),
-        *[
-            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
-            for repo_fixture in [
-                # Must not have a single release/tag
-                # repo_with_no_tags_angular_commits.__name__, # default
-                repo_w_no_tags_emoji_commits.__name__,
-                repo_w_no_tags_scipy_commits.__name__,
-            ]
-        ],
-    ],
-)
-@pytest.mark.parametrize(
     "changelog_format, changelog_file, insertion_flag",
     [
         (
@@ -203,6 +188,21 @@ def test_version_updates_changelog_w_new_version(
             lazy_fixture(example_changelog_rst.__name__),
             lazy_fixture(default_rst_changelog_insertion_flag.__name__),
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "repo",
+    [
+        lazy_fixture(repo_w_no_tags_angular_commits.__name__),
+        *[
+            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            for repo_fixture in [
+                # Must not have a single release/tag
+                # repo_with_no_tags_angular_commits.__name__, # default
+                repo_w_no_tags_emoji_commits.__name__,
+                repo_w_no_tags_scipy_commits.__name__,
+            ]
+        ],
     ],
 )
 def test_version_updates_changelog_wo_prev_releases(
@@ -311,6 +311,13 @@ def test_version_updates_changelog_wo_prev_releases(
 
 
 @pytest.mark.parametrize(
+    "changelog_file",
+    [
+        lazy_fixture(example_changelog_md.__name__),
+        lazy_fixture(example_changelog_rst.__name__),
+    ],
+)
+@pytest.mark.parametrize(
     "repo",
     [
         lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -339,13 +346,6 @@ def test_version_updates_changelog_wo_prev_releases(
                 repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
             ]
         ],
-    ],
-)
-@pytest.mark.parametrize(
-    "changelog_file",
-    [
-        lazy_fixture(example_changelog_md.__name__),
-        lazy_fixture(example_changelog_rst.__name__),
     ],
 )
 def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
@@ -459,6 +459,13 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
 
 
 @pytest.mark.parametrize(
+    "changelog_file",
+    [
+        lazy_fixture(example_changelog_md.__name__),
+        lazy_fixture(example_changelog_rst.__name__),
+    ],
+)
+@pytest.mark.parametrize(
     "repo, commit_type",
     [
         (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
@@ -466,13 +473,6 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
             # Must have a previous release/tag
             repo_w_trunk_only_angular_commits.__name__,
         ]
-    ],
-)
-@pytest.mark.parametrize(
-    "changelog_file",
-    [
-        lazy_fixture(example_changelog_md.__name__),
-        lazy_fixture(example_changelog_rst.__name__),
     ],
 )
 def test_version_updates_changelog_w_new_version_n_filtered_commit(
