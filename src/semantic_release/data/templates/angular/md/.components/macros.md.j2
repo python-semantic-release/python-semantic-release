@@ -1,9 +1,18 @@
 {#
+  MACRO: format a inline link reference in Markdown
+#}{%  macro format_link(link, label)
+%}{{    "[%s](%s)" | format(label, link)
+}}{%  endmacro
+%}
+
+
+{#
   MACRO: commit message links or PR/MR links of commit
 #}{%  macro commit_msg_links(commit)
 %}{%    if commit.error is undefined
-%}{%      set commit_hash_link = "[`%s`](%s)" | format(
-            commit.short_hash, commit.hexsha | commit_hash_url
+%}{%      set commit_hash_link = format_link(
+            commit.hexsha | commit_hash_url,
+            "`%s`" | format(commit.short_hash)
           )
 %}{#
 #}{%      set summary_line = commit.descriptions[0] | safe
@@ -15,7 +24,7 @@
 #}{%      if commit.linked_merge_request != ""
 %}{#        # Add PR references with a link to the PR
 #}{%        set pr_num = commit.linked_merge_request
-%}{%        set pr_link = "[%s](%s)" | format(pr_num, pr_num | pull_request_url)
+%}{%        set pr_link = format_link(pr_num | pull_request_url, pr_num)
 %}{#
    #        TODO: breaking change v10, remove summary line replacers as PSR will do it for us
 #}{%        set summary_line = summary_line | replace("(pull request", "(") | replace("(" ~ pr_num ~ ")", "") | trim
