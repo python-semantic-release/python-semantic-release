@@ -192,26 +192,26 @@ if TYPE_CHECKING:
                 ],
                 repo_w_github_flow_w_feature_release_channel_angular_commits.__name__: [
                     # New build-metadata forces a new release
-                    (["--build-metadata", "build.12345"], "0.3.0-beta.1+build.12345"),
+                    (["--build-metadata", "build.12345"], "1.1.0+build.12345"),
                     # Forced version bump
-                    (["--prerelease"], "0.3.0-beta.2"),
-                    (["--patch"], "0.3.1"),
-                    (["--minor"], "0.4.0"),
-                    (["--major"], "1.0.0"),
+                    (["--prerelease"], "1.1.0-rc.1"),
+                    (["--patch"], "1.1.1"),
+                    (["--minor"], "1.2.0"),
+                    (["--major"], "2.0.0"),
                     # Forced version bump with --build-metadata
                     (
                         ["--patch", "--build-metadata", "build.12345"],
-                        "0.3.1+build.12345",
+                        "1.1.1+build.12345",
                     ),
                     # Forced version bump with --as-prerelease
-                    (["--prerelease", "--as-prerelease"], "0.3.0-beta.2"),
-                    (["--patch", "--as-prerelease"], "0.3.1-beta.1"),
-                    (["--minor", "--as-prerelease"], "0.4.0-beta.1"),
-                    (["--major", "--as-prerelease"], "1.0.0-beta.1"),
+                    (["--prerelease", "--as-prerelease"], "1.1.0-rc.1"),
+                    (["--patch", "--as-prerelease"], "1.1.1-rc.1"),
+                    (["--minor", "--as-prerelease"], "1.2.0-rc.1"),
+                    (["--major", "--as-prerelease"], "2.0.0-rc.1"),
                     # Forced version bump with --as-prerelease and modified --prerelease-token
                     (
-                        ["--patch", "--as-prerelease", "--prerelease-token", "rc"],
-                        "0.3.1-rc.1",
+                        ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
+                        "1.1.1-beta.1",
                     ),
                     # Forced version bump with --as-prerelease and modified --prerelease-token
                     # and --build-metadata
@@ -220,11 +220,11 @@ if TYPE_CHECKING:
                             "--patch",
                             "--as-prerelease",
                             "--prerelease-token",
-                            "rc",
+                            "beta",
                             "--build-metadata",
                             "build.12345",
                         ],
-                        "0.3.1-rc.1+build.12345",
+                        "1.1.1-beta.1+build.12345",
                     ),
                 ],
                 repo_w_git_flow_angular_commits.__name__: [
