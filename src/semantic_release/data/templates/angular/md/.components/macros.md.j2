@@ -45,6 +45,7 @@
 %}{%  endmacro
 %}
 
+
 {#
   MACRO: format commit summary line
 #}{%  macro format_commit_summary_line(commit)
@@ -66,6 +67,44 @@
 #}{{      (commit.commit.message | string).split("\n", maxsplit=1)[0]
 }}{%    endif
 %}{%  endmacro
+%}
+
+
+{#
+  MACRO: format the breaking changes description by:
+  - Capitalizing the description
+  - Adding an optional scope prefix
+#}{%  macro format_breaking_changes_description(commit)
+%}{%    set ns = namespace(full_description="")
+%}{#
+#}{%    if commit.error is undefined
+%}{%      for paragraph in commit.breaking_descriptions
+%}{%        if paragraph | trim | length > 0
+%}{#
+#}{%          set paragraph_text = [
+                paragraph.split(" ", maxsplit=1)[0] | capitalize,
+                paragraph.split(" ", maxsplit=1)[1]
+              ] | join(" ") | trim | safe
+%}{#
+#}{%          set ns.full_description = [
+                ns.full_description,
+                paragraph_text
+              ] | join("\n\n")
+%}{#
+#}{%        endif
+%}{%      endfor
+%}{#
+#}{%      set ns.full_description = ns.full_description | trim
+%}{#
+#}{%      if commit.scope
+%}{%        set ns.full_description = "**%s**: %s" | format(
+              commit.scope, ns.full_description
+            )
+%}{%      endif
+%}{%    endif
+%}{#
+#}{{    ns.full_description
+}}{%  endmacro
 %}
 
 
