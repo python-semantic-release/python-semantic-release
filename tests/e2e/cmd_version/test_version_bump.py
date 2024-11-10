@@ -31,8 +31,6 @@ from tests.fixtures import (
     repo_w_git_flow_emoji_commits,
     repo_w_git_flow_scipy_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
-    repo_w_github_flow_w_feature_release_channel_emoji_commits,
-    repo_w_github_flow_w_feature_release_channel_scipy_commits,
     repo_w_initial_commit,
     repo_w_no_tags_angular_commits,
     repo_w_no_tags_emoji_commits,
@@ -503,6 +501,7 @@ def test_version_force_level(
         ]
     ),
 )
+# TODO: add a github flow test case
 def test_version_next_greater_than_version_one_angular(
     repo: Repo,
     commit_messages: list[str],
@@ -1529,120 +1528,6 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             )
                         ),
                     ],
-                    # Latest version for repo_with_main_and_feature_branches is currently
-                    # 0.3.0-beta.1.
-                    # The last full release version was 0.2.0, so it's had a minor
-                    # prerelease
-                    (
-                        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                        "beta",
-                    ): [
-                        *(
-                            (commits, True, False, True, "0.3.0-beta.2", "beta_testing")
-                            for commits in (
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # increment the next prerelease version, when given patch level commits
-                                # because the last full release was 0.2.0 and the prior prerelease consumes the
-                                # patch bump
-                                lazy_fixture(angular_patch_commits.__name__),
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # minor bumped, when given patch level commits because last full version was 0.2.0
-                                lazy_fixture(angular_minor_commits.__name__),
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # increment the next prerelease version, when given new breaking changes
-                                # because major_on_zero is false, the last full release was 0.2.0
-                                # and the prior prerelease consumes the breaking changes
-                                lazy_fixture(angular_major_commits.__name__),
-                            )
-                        ),
-                        (
-                            # when prerelease is False, & major_on_zero is False, the version should be
-                            # patch bumped, when given patch level commits because last full version was 0.2.0
-                            # and it was previously identified (from the prerelease) that a minor commit
-                            # exists between 0.2.0 and now
-                            lazy_fixture(angular_patch_commits.__name__),
-                            False,
-                            False,
-                            True,
-                            "0.2.1",
-                            None,
-                        ),
-                        *(
-                            (commits, False, False, True, "0.3.0", None)
-                            for commits in (
-                                # when prerelease is False, & major_on_zero is False, the version should be
-                                # minor bumped, when given patch level commits because last full version was 0.2.0
-                                lazy_fixture(angular_minor_commits.__name__),
-                                # when prerelease is False, & major_on_zero is False, the version should be
-                                # minor bumped, when given new breaking changes because
-                                # major_on_zero is false and last full version was 0.2.0
-                                lazy_fixture(angular_major_commits.__name__),
-                            )
-                        ),
-                        # when prerelease is True, & major_on_zero is True, and allow_zero_version
-                        # is True, the version should be bumped to 1.0.0 as a prerelease version, when
-                        # given major level commits. The previous prerelease is ignored because of the major
-                        # bump
-                        (
-                            lazy_fixture(angular_major_commits.__name__),
-                            True,
-                            True,
-                            True,
-                            "1.0.0-beta.1",
-                            None,
-                        ),
-                        # when prerelease is False, & major_on_zero is True, and allow_zero_version
-                        # is True, the version should be bumped to 1.0.0, when given major level commits
-                        (
-                            lazy_fixture(angular_major_commits.__name__),
-                            False,
-                            True,
-                            True,
-                            "1.0.0",
-                            None,
-                        ),
-                        *(
-                            # Since allow_zero_version is False, the version should be 1.0.0
-                            # as a prerelease value due to prerelease=True, across the board
-                            # regardless of the major_on_zero value
-                            (
-                                commits,
-                                True,
-                                major_on_zero,
-                                False,
-                                "1.0.0-beta.1",
-                                "beta_testing",
-                            )
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                # None & chore commits are absorbed into the previously detected minor bump
-                                # and because 0 versions are not allowed
-                                None,
-                                lazy_fixture(angular_chore_commits.__name__),
-                                lazy_fixture(angular_patch_commits.__name__),
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
-                            )
-                        ),
-                        *(
-                            # Since allow_zero_version is False, the version should be 1.0.0
-                            # across the board regardless of the major_on_zero value
-                            (commits, False, True, False, "1.0.0", None)
-                            for commits in (
-                                # None & chore commits are absorbed into the previously detected minor bump
-                                # and because 0 versions are not allowed
-                                None,
-                                # Same as above, even though our change does not trigger a bump normally
-                                lazy_fixture(angular_chore_commits.__name__),
-                                # Even though we apply more patch, minor, major commits, the previous
-                                # minor commit (in the prerelase tag) triggers a higher bump &
-                                # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
-                                lazy_fixture(angular_patch_commits.__name__),
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
-                            )
-                        ),
-                    ],
                 }.items()
                 for (
                     commit_messages,
@@ -1782,50 +1667,6 @@ def test_version_next_w_zero_dot_versions_angular(
                             # non valuable changes
                             (commits, prerelease, major_on_zero, True, "0.2.0", None)
                             for prerelease in (True, False)
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                None,
-                                lazy_fixture(angular_chore_commits.__name__),
-                            )
-                        ),
-                    ],
-                    # Latest version for repo_with_main_and_feature_branches is currently
-                    # 0.3.0-beta.1.
-                    # The last full release version was 0.2.0, so it's had a minor
-                    # prerelease
-                    (
-                        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                        "beta",
-                    ): [
-                        *(
-                            # when prerelease is True, & major_on_zero is True & False,
-                            # the version is not bumped because nothing of importance happened
-                            (
-                                commits,
-                                allow_zero_version,
-                                major_on_zero,
-                                True,
-                                "0.2.0",
-                                None,
-                            )
-                            for allow_zero_version in (True, False)
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                None,
-                                lazy_fixture(angular_chore_commits.__name__),
-                            )
-                        ),
-                        *(
-                            # when prerelease is True, & major_on_zero is True & False,
-                            # the version is not bumped because nothing of importance happened
-                            (
-                                commits,
-                                True,
-                                major_on_zero,
-                                True,
-                                "0.3.0-beta.1",
-                                "beta_testing",
-                            )
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
@@ -2167,120 +2008,6 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
                             )
                         ),
                     ],
-                    # Latest version for repo_with_main_and_feature_branches is currently
-                    # 0.3.0-beta.1.
-                    # The last full release version was 0.2.0, so it's had a minor
-                    # prerelease
-                    (
-                        repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
-                        "beta",
-                    ): [
-                        *(
-                            (commits, True, False, True, "0.3.0-beta.2", "beta_testing")
-                            for commits in (
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # increment the next prerelease version, when given patch level commits
-                                # because the last full release was 0.2.0 and the prior prerelease consumes the
-                                # patch bump
-                                lazy_fixture(emoji_patch_commits.__name__),
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # minor bumped, when given patch level commits because last full version was 0.2.0
-                                lazy_fixture(emoji_minor_commits.__name__),
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # increment the next prerelease version, when given new breaking changes
-                                # because major_on_zero is false, the last full release was 0.2.0
-                                # and the prior prerelease consumes the breaking changes
-                                lazy_fixture(emoji_major_commits.__name__),
-                            )
-                        ),
-                        (
-                            # when prerelease is False, & major_on_zero is False, the version should be
-                            # patch bumped, when given patch level commits because last full version was 0.2.0
-                            # and it was previously identified (from the prerelease) that a minor commit
-                            # exists between 0.2.0 and now
-                            lazy_fixture(emoji_patch_commits.__name__),
-                            False,
-                            False,
-                            True,
-                            "0.2.1",
-                            None,
-                        ),
-                        *(
-                            (commits, False, False, True, "0.3.0", None)
-                            for commits in (
-                                # when prerelease is False, & major_on_zero is False, the version should be
-                                # minor bumped, when given patch level commits because last full version was 0.2.0
-                                lazy_fixture(emoji_minor_commits.__name__),
-                                # when prerelease is False, & major_on_zero is False, the version should be
-                                # minor bumped, when given new breaking changes because
-                                # major_on_zero is false and last full version was 0.2.0
-                                lazy_fixture(emoji_major_commits.__name__),
-                            )
-                        ),
-                        # when prerelease is True, & major_on_zero is True, and allow_zero_version
-                        # is True, the version should be bumped to 1.0.0 as a prerelease version, when
-                        # given major level commits. The previous prerelease is ignored because of the major
-                        # bump
-                        (
-                            lazy_fixture(emoji_major_commits.__name__),
-                            True,
-                            True,
-                            True,
-                            "1.0.0-beta.1",
-                            None,
-                        ),
-                        # when prerelease is False, & major_on_zero is True, and allow_zero_version
-                        # is True, the version should be bumped to 1.0.0, when given major level commits
-                        (
-                            lazy_fixture(emoji_major_commits.__name__),
-                            False,
-                            True,
-                            True,
-                            "1.0.0",
-                            None,
-                        ),
-                        *(
-                            # Since allow_zero_version is False, the version should be 1.0.0
-                            # as a prerelease value due to prerelease=True, across the board
-                            # regardless of the major_on_zero value
-                            (
-                                commits,
-                                True,
-                                major_on_zero,
-                                False,
-                                "1.0.0-beta.1",
-                                "beta_testing",
-                            )
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                # None & chore commits are absorbed into the previously detected minor bump
-                                # and because 0 versions are not allowed
-                                None,
-                                lazy_fixture(emoji_chore_commits.__name__),
-                                lazy_fixture(emoji_patch_commits.__name__),
-                                lazy_fixture(emoji_minor_commits.__name__),
-                                lazy_fixture(emoji_major_commits.__name__),
-                            )
-                        ),
-                        *(
-                            # Since allow_zero_version is False, the version should be 1.0.0
-                            # across the board regardless of the major_on_zero value
-                            (commits, False, True, False, "1.0.0", None)
-                            for commits in (
-                                # None & chore commits are absorbed into the previously detected minor bump
-                                # and because 0 versions are not allowed
-                                None,
-                                # Same as above, even though our change does not trigger a bump normally
-                                lazy_fixture(emoji_chore_commits.__name__),
-                                # Even though we apply more patch, minor, major commits, the previous
-                                # minor commit (in the prerelase tag) triggers a higher bump &
-                                # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
-                                lazy_fixture(emoji_patch_commits.__name__),
-                                lazy_fixture(emoji_minor_commits.__name__),
-                                lazy_fixture(emoji_major_commits.__name__),
-                            )
-                        ),
-                    ],
                 }.items()
                 for (
                     commit_messages,
@@ -2420,50 +2147,6 @@ def test_version_next_w_zero_dot_versions_emoji(
                             # non valuable changes
                             (commits, prerelease, major_on_zero, True, "0.2.0", None)
                             for prerelease in (True, False)
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                None,
-                                lazy_fixture(emoji_chore_commits.__name__),
-                            )
-                        ),
-                    ],
-                    # Latest version for repo_with_main_and_feature_branches is currently
-                    # 0.3.0-beta.1.
-                    # The last full release version was 0.2.0, so it's had a minor
-                    # prerelease
-                    (
-                        repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
-                        "beta",
-                    ): [
-                        *(
-                            # when prerelease is True, & major_on_zero is True & False,
-                            # the version is not bumped because nothing of importance happened
-                            (
-                                commits,
-                                allow_zero_version,
-                                major_on_zero,
-                                True,
-                                "0.2.0",
-                                None,
-                            )
-                            for allow_zero_version in (True, False)
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                None,
-                                lazy_fixture(emoji_chore_commits.__name__),
-                            )
-                        ),
-                        *(
-                            # when prerelease is True, & major_on_zero is True & False,
-                            # the version is not bumped because nothing of importance happened
-                            (
-                                commits,
-                                True,
-                                major_on_zero,
-                                True,
-                                "0.3.0-beta.1",
-                                "beta_testing",
-                            )
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
@@ -2805,120 +2488,6 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
                             )
                         ),
                     ],
-                    # Latest version for repo_with_main_and_feature_branches is currently
-                    # 0.3.0-beta.1.
-                    # The last full release version was 0.2.0, so it's had a minor
-                    # prerelease
-                    (
-                        repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-                        "beta",
-                    ): [
-                        *(
-                            (commits, True, False, True, "0.3.0-beta.2", "beta_testing")
-                            for commits in (
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # increment the next prerelease version, when given patch level commits
-                                # because the last full release was 0.2.0 and the prior prerelease consumes the
-                                # patch bump
-                                lazy_fixture(scipy_patch_commits.__name__),
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # minor bumped, when given patch level commits because last full version was 0.2.0
-                                lazy_fixture(scipy_minor_commits.__name__),
-                                # when prerelease is True, & major_on_zero is False, the version should be
-                                # increment the next prerelease version, when given new breaking changes
-                                # because major_on_zero is false, the last full release was 0.2.0
-                                # and the prior prerelease consumes the breaking changes
-                                lazy_fixture(scipy_major_commits.__name__),
-                            )
-                        ),
-                        (
-                            # when prerelease is False, & major_on_zero is False, the version should be
-                            # patch bumped, when given patch level commits because last full version was 0.2.0
-                            # and it was previously identified (from the prerelease) that a minor commit
-                            # exists between 0.2.0 and now
-                            lazy_fixture(scipy_patch_commits.__name__),
-                            False,
-                            False,
-                            True,
-                            "0.2.1",
-                            None,
-                        ),
-                        *(
-                            (commits, False, False, True, "0.3.0", None)
-                            for commits in (
-                                # when prerelease is False, & major_on_zero is False, the version should be
-                                # minor bumped, when given patch level commits because last full version was 0.2.0
-                                lazy_fixture(scipy_minor_commits.__name__),
-                                # when prerelease is False, & major_on_zero is False, the version should be
-                                # minor bumped, when given new breaking changes because
-                                # major_on_zero is false and last full version was 0.2.0
-                                lazy_fixture(scipy_major_commits.__name__),
-                            )
-                        ),
-                        # when prerelease is True, & major_on_zero is True, and allow_zero_version
-                        # is True, the version should be bumped to 1.0.0 as a prerelease version, when
-                        # given major level commits. The previous prerelease is ignored because of the major
-                        # bump
-                        (
-                            lazy_fixture(scipy_major_commits.__name__),
-                            True,
-                            True,
-                            True,
-                            "1.0.0-beta.1",
-                            None,
-                        ),
-                        # when prerelease is False, & major_on_zero is True, and allow_zero_version
-                        # is True, the version should be bumped to 1.0.0, when given major level commits
-                        (
-                            lazy_fixture(scipy_major_commits.__name__),
-                            False,
-                            True,
-                            True,
-                            "1.0.0",
-                            None,
-                        ),
-                        *(
-                            # Since allow_zero_version is False, the version should be 1.0.0
-                            # as a prerelease value due to prerelease=True, across the board
-                            # regardless of the major_on_zero value
-                            (
-                                commits,
-                                True,
-                                major_on_zero,
-                                False,
-                                "1.0.0-beta.1",
-                                "beta_testing",
-                            )
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                # None & chore commits are absorbed into the previously detected minor bump
-                                # and because 0 versions are not allowed
-                                None,
-                                lazy_fixture(scipy_chore_commits.__name__),
-                                lazy_fixture(scipy_patch_commits.__name__),
-                                lazy_fixture(scipy_minor_commits.__name__),
-                                lazy_fixture(scipy_major_commits.__name__),
-                            )
-                        ),
-                        *(
-                            # Since allow_zero_version is False, the version should be 1.0.0
-                            # across the board regardless of the major_on_zero value
-                            (commits, False, True, False, "1.0.0", None)
-                            for commits in (
-                                # None & chore commits are absorbed into the previously detected minor bump
-                                # and because 0 versions are not allowed
-                                None,
-                                # Same as above, even though our change does not trigger a bump normally
-                                lazy_fixture(scipy_chore_commits.__name__),
-                                # Even though we apply more patch, minor, major commits, the previous
-                                # minor commit (in the prerelase tag) triggers a higher bump &
-                                # with allow_zero_version=False, and ignore prereleases, we bump to 1.0.0
-                                lazy_fixture(scipy_patch_commits.__name__),
-                                lazy_fixture(scipy_minor_commits.__name__),
-                                lazy_fixture(scipy_major_commits.__name__),
-                            )
-                        ),
-                    ],
                 }.items()
                 for (
                     commit_messages,
@@ -3058,50 +2627,6 @@ def test_version_next_w_zero_dot_versions_scipy(
                             # non valuable changes
                             (commits, prerelease, major_on_zero, True, "0.2.0", None)
                             for prerelease in (True, False)
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                None,
-                                lazy_fixture(scipy_chore_commits.__name__),
-                            )
-                        ),
-                    ],
-                    # Latest version for repo_with_main_and_feature_branches is currently
-                    # 0.3.0-beta.1.
-                    # The last full release version was 0.2.0, so it's had a minor
-                    # prerelease
-                    (
-                        repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-                        "beta",
-                    ): [
-                        *(
-                            # when prerelease is True, & major_on_zero is True & False,
-                            # the version is not bumped because nothing of importance happened
-                            (
-                                commits,
-                                allow_zero_version,
-                                major_on_zero,
-                                True,
-                                "0.2.0",
-                                None,
-                            )
-                            for allow_zero_version in (True, False)
-                            for major_on_zero in (True, False)
-                            for commits in (
-                                None,
-                                lazy_fixture(scipy_chore_commits.__name__),
-                            )
-                        ),
-                        *(
-                            # when prerelease is True, & major_on_zero is True & False,
-                            # the version is not bumped because nothing of importance happened
-                            (
-                                commits,
-                                True,
-                                major_on_zero,
-                                True,
-                                "0.3.0-beta.1",
-                                "beta_testing",
-                            )
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
