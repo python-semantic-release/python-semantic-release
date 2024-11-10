@@ -35,7 +35,9 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
+    get_versions_for_trunk_only_repo_w_no_tags,
     get_versions_for_trunk_only_repo_w_prerelease_tags,
+    get_versions_for_trunk_only_repo_w_tags,
     repo_w_git_flow_and_release_channels_angular_commits,
     repo_w_git_flow_and_release_channels_angular_commits_using_tag_format,
     repo_w_git_flow_and_release_channels_emoji_commits,
@@ -86,42 +88,37 @@ if TYPE_CHECKING:
     )
 
 
+@pytest.mark.parametrize("arg0", [None, "--post-to-release-tag"])
 @pytest.mark.parametrize(
-    "repo, tag",
+    "repo, get_version_strings_fn",
     [
-        (lazy_fixture(repo_w_no_tags_angular_commits.__name__), None),
-        *[
-            pytest.param(
-                lazy_fixture(repo_fixture),
-                tag,
-                marks=pytest.mark.comprehensive,
-            )
-            for repo_fixture, tag in (
-                (repo_w_trunk_only_angular_commits.__name__, "v0.1.1"),
-                (
-                    repo_w_trunk_only_n_prereleases_angular_commits.__name__,
-                    "v0.2.0",
-                ),
-                (
-                    repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                    "v0.2.0",
-                ),
-                (repo_w_git_flow_angular_commits.__name__, "v1.0.0"),
-                (
-                    repo_w_git_flow_and_release_channels_angular_commits.__name__,
-                    "v1.1.0",
-                ),
-            )
-        ],
+        (
+            lazy_fixture(repo_fixture),
+            lazy_fixture(get_versions_fn),
+        )
+        for repo_fixture, get_versions_fn in (
+            # Only need to test when it has tags or no tags
+            # DO NOT need to consider all repo types as it doesn't change no-op behavior
+            (
+                repo_w_no_tags_angular_commits.__name__,
+                get_versions_for_trunk_only_repo_w_no_tags.__name__,
+            ),
+            (
+                repo_w_trunk_only_angular_commits.__name__,
+                get_versions_for_trunk_only_repo_w_tags.__name__,
+            ),
+        )
     ],
 )
-@pytest.mark.parametrize("arg0", [None, "--post-to-release-tag"])
 def test_changelog_noop_is_noop(
     repo: Repo,
-    tag: str | None,
+    get_version_strings_fn: GetVersionStringsFn,
     arg0: str | None,
     cli_runner: CliRunner,
 ):
+    if (version_str := get_version_strings_fn()[-1]) == "Unreleased":
+        version_str = None
+
     repo.git.reset("--hard")
 
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure
@@ -140,7 +137,7 @@ def test_changelog_noop_is_noop(
         get_func_qual_name(semantic_release.hvcs.github.build_requests_session),
         return_value=session,
     ), requests_mock.Mocker(session=session) as mocker:
-        args = [arg0, tag] if tag and arg0 else []
+        args = [arg0, f"v{version_str}"] if version_str and arg0 else []
         cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD, *args]
         result = cli_runner.invoke(main, cli_cmd[1:])
 
