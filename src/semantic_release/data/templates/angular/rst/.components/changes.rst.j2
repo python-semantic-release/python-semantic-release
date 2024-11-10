@@ -19,8 +19,8 @@ Fixes
 .. _abcdef0: https://domain.com/owner/repo/commit/abcdef0
 .. _11: https://domain.com/namespace/repo/pull/11
 
-#}{%  set max_line_width = 100
-%}{%  set hanging_indent = 2
+#}{%  set max_line_width = max_line_width | default(100)
+%}{%  set hanging_indent = hanging_indent | default(2)
 %}{#
 #}{%  set post_paragraph_links = []
 %}{#

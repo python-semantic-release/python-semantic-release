@@ -1,1 +1,6 @@
-{% include ".components/versioned_changes.md.j2" %}
+{#    # Set line width to 1000 to avoid wrapping as GitHub will handle it
+#}{%  set max_line_width = max_line_width | default(1000)
+%}{%  set hanging_indent = hanging_indent | default(2)
+%}{#
+#}{%  include ".components/versioned_changes.md.j2"
+%}

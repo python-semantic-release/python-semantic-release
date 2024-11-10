@@ -14,8 +14,8 @@ EXAMPLE:
 - Fix bug ([#11](https://domain.com/namespace/repo/pull/11),
   [`abcdef1`](https://domain.com/namespace/repo/commit/HASH))
 
-#}{%  set max_line_width = 100
-%}{%  set hanging_indent = 2
+#}{%  set max_line_width = max_line_width | default(100)
+%}{%  set hanging_indent = hanging_indent | default(2)
 %}{#
 #}{%  for type_, commits in commit_objects if type_ != "unknown"
 %}{#    PREPROCESS COMMITS (order by description & format description line)
