@@ -112,7 +112,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         )
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
-            r"[\t ]\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
+            r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
         )
 
     @staticmethod
