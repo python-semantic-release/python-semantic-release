@@ -80,11 +80,13 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
                     commit_msgs[index] for index in group_def["i_commits"]
                 ]
 
-            released_commits = set(reduce(
-                lambda acc, val: [*(acc or []), *val],
-                commits_per_group.values(),
-                [],
-            ))
+            released_commits = set(
+                reduce(
+                    lambda acc, val: [*(acc or []), *val],
+                    commits_per_group.values(),
+                    [],
+                )
+            )
 
             commits_per_group["Unknown"] = list(
                 filter(

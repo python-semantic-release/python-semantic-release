@@ -25,7 +25,6 @@ from tests.const import (
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
     MAIN_PROG_NAME,
-    NULL_HEX_SHA,
 )
 from tests.fixtures.example_project import (
     changelog_md_file,
@@ -36,6 +35,7 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
+    get_versions_for_trunk_only_repo_w_prerelease_tags,
     repo_w_git_flow_and_release_channels_angular_commits,
     repo_w_git_flow_and_release_channels_angular_commits_using_tag_format,
     repo_w_git_flow_and_release_channels_emoji_commits,
@@ -55,9 +55,6 @@ from tests.fixtures.repos import (
     repo_w_trunk_only_n_prereleases_emoji_commits,
     repo_w_trunk_only_n_prereleases_scipy_commits,
     repo_w_trunk_only_scipy_commits,
-)
-from tests.fixtures.repos.trunk_based_dev.repo_w_prereleases import (
-    get_versions_for_trunk_only_repo_w_prerelease_tags,
 )
 from tests.util import (
     add_text_to_file,

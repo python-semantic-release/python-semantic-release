@@ -757,18 +757,18 @@ def simulate_default_changelog_creation(  # noqa: C901
                     else "- {commit_desc} ([{mr}]({mr_url}),\n  [`{short_sha}`]({commit_url}))\n".format(
                         commit_desc=descriptions[0].capitalize(),
                         mr=version_def["commits"][i]["mr"],
-                        mr_url=hvcs.pull_request_url(
-                            version_def["commits"][i]["mr"]
-                        ),
+                        mr_url=hvcs.pull_request_url(version_def["commits"][i]["mr"]),
                         short_sha=version_def["commits"][i]["sha"][:7],
                         commit_url=hvcs.commit_hash_url(
                             version_def["commits"][i]["sha"]
-                        )
+                        ),
                     )
                 )
 
                 if len(descriptions) > 1:
-                    commit_cl_desc += "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                    commit_cl_desc += (
+                        "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                    )
 
                 # Add commits to section
                 version_entry.append(commit_cl_desc)
@@ -818,7 +818,9 @@ def simulate_default_changelog_creation(  # noqa: C901
                 )
 
                 if len(descriptions) > 1:
-                    commit_cl_desc += "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                    commit_cl_desc += (
+                        "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                    )
 
                 # Add commits to section
                 version_entry.append(commit_cl_desc)
@@ -827,9 +829,7 @@ def simulate_default_changelog_creation(  # noqa: C901
                 [
                     ".. _{mr}: {mr_url}".format(
                         mr=version_def["commits"][i]["mr"],
-                        mr_url=hvcs.pull_request_url(
-                            version_def["commits"][i]["mr"]
-                        ),
+                        mr_url=hvcs.pull_request_url(version_def["commits"][i]["mr"]),
                     )
                     for i in section_def["i_commits"]
                     if version_def["commits"][i]["mr"]
