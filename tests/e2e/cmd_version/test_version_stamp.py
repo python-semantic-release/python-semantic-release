@@ -14,10 +14,10 @@ from semantic_release.cli.commands.main import main
 
 from tests.const import EXAMPLE_PROJECT_NAME, MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.repos.trunk_based_dev.repo_w_no_tags import (
-    repo_with_no_tags_angular_commits,
+    repo_w_no_tags_angular_commits,
 )
 from tests.fixtures.repos.trunk_based_dev.repo_w_prereleases import (
-    repo_with_single_branch_and_prereleases_angular_commits,
+    repo_w_trunk_only_n_prereleases_angular_commits,
 )
 from tests.util import (
     assert_successful_exit_code,
@@ -48,9 +48,7 @@ VERSION_STAMP_CMD = [
     "repo, expected_new_version",
     [
         (
-            lazy_fixture(
-                repo_with_single_branch_and_prereleases_angular_commits.__name__
-            ),
+            lazy_fixture(repo_w_trunk_only_n_prereleases_angular_commits.__name__),
             "0.3.0",
         )
     ],
@@ -142,7 +140,7 @@ def test_version_only_stamp_version(
 # ============================================================================== #
 
 
-@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
 def test_stamp_version_variables_python(
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
@@ -175,7 +173,7 @@ def test_stamp_version_variables_python(
     assert new_version == version_py_after
 
 
-@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
 def test_stamp_version_variables_yaml(
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
@@ -218,7 +216,7 @@ def test_stamp_version_variables_yaml(
     assert yaml.safe_load(orig_yaml) == resulting_yaml_obj
 
 
-@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
 def test_stamp_version_variables_yaml_cff(
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
@@ -268,7 +266,7 @@ def test_stamp_version_variables_yaml_cff(
     assert yaml.safe_load(orig_yaml) == resulting_yaml_obj
 
 
-@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
 def test_stamp_version_variables_json(
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,

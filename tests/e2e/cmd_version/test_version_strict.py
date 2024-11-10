@@ -10,7 +10,7 @@ from semantic_release.cli.commands.main import main
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.repos import (
     get_versions_for_trunk_only_repo_w_tags,
-    repo_with_single_branch_angular_commits,
+    repo_w_trunk_only_angular_commits,
 )
 from tests.util import assert_exit_code
 
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -77,7 +77,7 @@ def test_version_already_released_when_strict(
 
 
 @pytest.mark.parametrize(
-    "repo", [lazy_fixture(repo_with_single_branch_angular_commits.__name__)]
+    "repo", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
 )
 def test_version_on_nonrelease_branch_when_strict(
     repo: Repo,

@@ -10,7 +10,7 @@ from semantic_release.cli.commands.main import main
 from semantic_release.version.version import Version
 
 from tests.const import EXAMPLE_RELEASE_NOTES_TEMPLATE, MAIN_PROG_NAME, VERSION_SUBCMD
-from tests.fixtures.repos import repo_with_no_tags_angular_commits
+from tests.fixtures.repos import repo_w_no_tags_angular_commits
 from tests.util import assert_successful_exit_code, get_release_history_from_context
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo, next_release_version",
     [
-        (lazy_fixture(repo_with_no_tags_angular_commits.__name__), "0.1.0"),
+        (lazy_fixture(repo_w_no_tags_angular_commits.__name__), "0.1.0"),
     ],
 )
 def test_custom_release_notes_template(

@@ -15,8 +15,8 @@ from tests.const import (
 from tests.fixtures.commit_parsers import angular_minor_commits
 from tests.fixtures.repos import (
     get_versions_for_trunk_only_repo_w_tags,
-    repo_with_no_tags_angular_commits,
-    repo_with_single_branch_angular_commits,
+    repo_w_no_tags_angular_commits,
+    repo_w_trunk_only_angular_commits,
 )
 from tests.util import (
     add_text_to_file,
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     "repo, commits, force_args, next_release_version",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(angular_minor_commits.__name__),
             cli_args,
             next_release_version,
@@ -146,7 +146,7 @@ def test_version_print_next_version(
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -192,7 +192,7 @@ def test_version_print_last_released_prints_version(
     "repo, get_repo_versions, commits",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
             lazy_fixture(angular_minor_commits.__name__),
         )
@@ -243,7 +243,7 @@ def test_version_print_last_released_prints_released_if_commits(
 
 @pytest.mark.parametrize(
     "repo",
-    [lazy_fixture(repo_with_no_tags_angular_commits.__name__)],
+    [lazy_fixture(repo_w_no_tags_angular_commits.__name__)],
 )
 def test_version_print_last_released_prints_nothing_if_no_tags(
     repo: Repo,
@@ -287,7 +287,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -336,7 +336,7 @@ def test_version_print_last_released_on_detached_head(
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -385,7 +385,7 @@ def test_version_print_last_released_on_nonrelease_branch(
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -434,7 +434,7 @@ def test_version_print_last_released_tag_on_detached_head(
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -481,7 +481,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
 @pytest.mark.parametrize(
     "repo",
-    [lazy_fixture(repo_with_single_branch_angular_commits.__name__)],
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_print_next_version_fails_on_detached_head(
     repo: Repo,

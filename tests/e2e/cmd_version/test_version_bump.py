@@ -24,25 +24,25 @@ from tests.fixtures import (
     emoji_major_commits,
     emoji_minor_commits,
     emoji_patch_commits,
+    repo_w_git_flow_and_release_channels_angular_commits,
+    repo_w_git_flow_and_release_channels_emoji_commits,
+    repo_w_git_flow_and_release_channels_scipy_commits,
+    repo_w_git_flow_angular_commits,
+    repo_w_git_flow_emoji_commits,
+    repo_w_git_flow_scipy_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
     repo_w_initial_commit,
-    repo_with_git_flow_and_release_channels_angular_commits,
-    repo_with_git_flow_and_release_channels_emoji_commits,
-    repo_with_git_flow_and_release_channels_scipy_commits,
-    repo_with_git_flow_angular_commits,
-    repo_with_git_flow_emoji_commits,
-    repo_with_git_flow_scipy_commits,
-    repo_with_no_tags_angular_commits,
-    repo_with_no_tags_emoji_commits,
-    repo_with_no_tags_scipy_commits,
-    repo_with_single_branch_and_prereleases_angular_commits,
-    repo_with_single_branch_and_prereleases_emoji_commits,
-    repo_with_single_branch_and_prereleases_scipy_commits,
-    repo_with_single_branch_angular_commits,
-    repo_with_single_branch_emoji_commits,
-    repo_with_single_branch_scipy_commits,
+    repo_w_no_tags_angular_commits,
+    repo_w_no_tags_emoji_commits,
+    repo_w_no_tags_scipy_commits,
+    repo_w_trunk_only_angular_commits,
+    repo_w_trunk_only_emoji_commits,
+    repo_w_trunk_only_n_prereleases_angular_commits,
+    repo_w_trunk_only_n_prereleases_emoji_commits,
+    repo_w_trunk_only_n_prereleases_scipy_commits,
+    repo_w_trunk_only_scipy_commits,
     scipy_chore_commits,
     scipy_major_commits,
     scipy_minor_commits,
@@ -70,7 +70,7 @@ if TYPE_CHECKING:
     [
         *(
             (
-                lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+                lazy_fixture(repo_w_no_tags_angular_commits.__name__),
                 cli_args,
                 next_release_version,
             )
@@ -117,7 +117,7 @@ if TYPE_CHECKING:
                 marks=pytest.mark.comprehensive,
             )
             for repo_fixture_name, values in {
-                repo_with_single_branch_angular_commits.__name__: [
+                repo_w_trunk_only_angular_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "0.1.1+build.12345"),
                     # Forced version bump
@@ -154,7 +154,7 @@ if TYPE_CHECKING:
                         "0.1.2-beta.1+build.12345",
                     ),
                 ],
-                repo_with_single_branch_and_prereleases_angular_commits.__name__: [
+                repo_w_trunk_only_n_prereleases_angular_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "0.2.0+build.12345"),
                     # Forced version bump
@@ -229,7 +229,7 @@ if TYPE_CHECKING:
                         "0.3.1-rc.1+build.12345",
                     ),
                 ],
-                repo_with_git_flow_angular_commits.__name__: [
+                repo_w_git_flow_angular_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.2.0-alpha.2+build.12345"),
                     # Forced version bump
@@ -266,7 +266,7 @@ if TYPE_CHECKING:
                         "1.2.1-beta.1+build.12345",
                     ),
                 ],
-                repo_with_git_flow_and_release_channels_angular_commits.__name__: [
+                repo_w_git_flow_and_release_channels_angular_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.1.0+build.12345"),
                     # Forced version bump
@@ -418,7 +418,7 @@ def test_version_force_level(
             (
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
-                lazy_fixture(repo_with_git_flow_angular_commits.__name__),
+                lazy_fixture(repo_w_git_flow_angular_commits.__name__),
                 lazy_fixture(angular_minor_commits.__name__),
                 False,
                 "alpha",
@@ -440,7 +440,7 @@ def test_version_force_level(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_with_git_flow_angular_commits.__name__,
+                        repo_w_git_flow_angular_commits.__name__,
                         "alpha",
                     ): [
                         (angular_patch_commits.__name__, False, "1.1.2", None),
@@ -467,7 +467,7 @@ def test_version_force_level(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
                         "alpha",
                     ): [
                         (angular_patch_commits.__name__, False, "1.1.1", None),
@@ -590,7 +590,7 @@ def test_version_next_greater_than_version_one_angular(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_with_git_flow_angular_commits.__name__,
+                        repo_w_git_flow_angular_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -611,7 +611,7 @@ def test_version_next_greater_than_version_one_angular(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -707,7 +707,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
             (
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
-                lazy_fixture(repo_with_git_flow_emoji_commits.__name__),
+                lazy_fixture(repo_w_git_flow_emoji_commits.__name__),
                 lazy_fixture(emoji_minor_commits.__name__),
                 False,
                 "alpha",
@@ -729,7 +729,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_with_git_flow_emoji_commits.__name__,
+                        repo_w_git_flow_emoji_commits.__name__,
                         "alpha",
                     ): [
                         (emoji_patch_commits.__name__, False, "1.1.2", None),
@@ -756,7 +756,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
                         "alpha",
                     ): [
                         (emoji_patch_commits.__name__, False, "1.1.1", None),
@@ -879,7 +879,7 @@ def test_version_next_greater_than_version_one_emoji(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_with_git_flow_emoji_commits.__name__,
+                        repo_w_git_flow_emoji_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -900,7 +900,7 @@ def test_version_next_greater_than_version_one_emoji(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_with_git_flow_and_release_channels_emoji_commits.__name__,
+                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -996,7 +996,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
             (
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
-                lazy_fixture(repo_with_git_flow_scipy_commits.__name__),
+                lazy_fixture(repo_w_git_flow_scipy_commits.__name__),
                 lazy_fixture(scipy_minor_commits.__name__),
                 False,
                 "alpha",
@@ -1018,7 +1018,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_with_git_flow_scipy_commits.__name__,
+                        repo_w_git_flow_scipy_commits.__name__,
                         "alpha",
                     ): [
                         (scipy_patch_commits.__name__, False, "1.1.2", None),
@@ -1045,7 +1045,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
                         "alpha",
                     ): [
                         (scipy_patch_commits.__name__, False, "1.1.1", None),
@@ -1168,7 +1168,7 @@ def test_version_next_greater_than_version_one_scipy(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_with_git_flow_scipy_commits.__name__,
+                        repo_w_git_flow_scipy_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -1189,7 +1189,7 @@ def test_version_next_greater_than_version_one_scipy(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_with_git_flow_and_release_channels_scipy_commits.__name__,
+                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -1294,7 +1294,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                 # It's biggest change type is minor, so the next version should be 0.1.0
                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                 # the major level commits are limited to only causing a minor level bump
-                lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+                lazy_fixture(repo_w_no_tags_angular_commits.__name__),
                 lazy_fixture(angular_major_commits.__name__),
                 False,
                 "rc",
@@ -1319,7 +1319,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                     # Latest version for repo_with_no_tags is currently 0.0.0 (default)
                     # It's biggest change type is minor, so the next version should be 0.1.0
                     (
-                        repo_with_no_tags_angular_commits.__name__,
+                        repo_w_no_tags_angular_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1382,7 +1382,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_with_single_branch_angular_commits.__name__,
+                        repo_w_trunk_only_angular_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1436,7 +1436,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                         None,
                     ): [
                         # when allow_zero_version is True,
@@ -1755,7 +1755,7 @@ def test_version_next_w_zero_dot_versions_angular(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_with_single_branch_angular_commits.__name__,
+                        repo_w_trunk_only_angular_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1773,7 +1773,7 @@ def test_version_next_w_zero_dot_versions_angular(
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1932,7 +1932,7 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
                 # It's biggest change type is minor, so the next version should be 0.1.0
                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                 # the major level commits are limited to only causing a minor level bump
-                lazy_fixture(repo_with_no_tags_emoji_commits.__name__),
+                lazy_fixture(repo_w_no_tags_emoji_commits.__name__),
                 lazy_fixture(emoji_major_commits.__name__),
                 False,
                 "rc",
@@ -1957,7 +1957,7 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
                     # Latest version for repo_with_no_tags is currently 0.0.0 (default)
                     # It's biggest change type is minor, so the next version should be 0.1.0
                     (
-                        repo_with_no_tags_emoji_commits.__name__,
+                        repo_w_no_tags_emoji_commits.__name__,
                         None,
                     ): [
                         *(
@@ -2020,7 +2020,7 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_with_single_branch_emoji_commits.__name__,
+                        repo_w_trunk_only_emoji_commits.__name__,
                         None,
                     ): [
                         *(
@@ -2074,7 +2074,7 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
                         None,
                     ): [
                         # when allow_zero_version is True,
@@ -2393,7 +2393,7 @@ def test_version_next_w_zero_dot_versions_emoji(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_with_single_branch_emoji_commits.__name__,
+                        repo_w_trunk_only_emoji_commits.__name__,
                         None,
                     ): [
                         *(
@@ -2411,7 +2411,7 @@ def test_version_next_w_zero_dot_versions_emoji(
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_with_single_branch_and_prereleases_emoji_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
                         None,
                     ): [
                         *(
@@ -2570,7 +2570,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
                 # It's biggest change type is minor, so the next version should be 0.1.0
                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                 # the major level commits are limited to only causing a minor level bump
-                lazy_fixture(repo_with_no_tags_scipy_commits.__name__),
+                lazy_fixture(repo_w_no_tags_scipy_commits.__name__),
                 lazy_fixture(scipy_major_commits.__name__),
                 False,
                 "rc",
@@ -2595,7 +2595,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
                     # Latest version for repo_with_no_tags is currently 0.0.0 (default)
                     # It's biggest change type is minor, so the next version should be 0.1.0
                     (
-                        repo_with_no_tags_scipy_commits.__name__,
+                        repo_w_no_tags_scipy_commits.__name__,
                         None,
                     ): [
                         *(
@@ -2658,7 +2658,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_with_single_branch_scipy_commits.__name__,
+                        repo_w_trunk_only_scipy_commits.__name__,
                         None,
                     ): [
                         *(
@@ -2712,7 +2712,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
                         None,
                     ): [
                         # when allow_zero_version is True,
@@ -3031,7 +3031,7 @@ def test_version_next_w_zero_dot_versions_scipy(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_with_single_branch_scipy_commits.__name__,
+                        repo_w_trunk_only_scipy_commits.__name__,
                         None,
                     ): [
                         *(
@@ -3049,7 +3049,7 @@ def test_version_next_w_zero_dot_versions_scipy(
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_with_single_branch_and_prereleases_scipy_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
                         None,
                     ): [
                         *(

@@ -20,12 +20,12 @@ from tests.fixtures import (
     get_commits_for_trunk_only_repo_w_no_tags,
     get_commits_for_trunk_only_repo_w_prerelease_tags,
     get_commits_for_trunk_only_repo_w_tags,
+    repo_w_git_flow_and_release_channels_angular_commits,
+    repo_w_git_flow_angular_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
-    repo_with_git_flow_and_release_channels_angular_commits,
-    repo_with_git_flow_angular_commits,
-    repo_with_no_tags_angular_commits,
-    repo_with_single_branch_and_prereleases_angular_commits,
-    repo_with_single_branch_angular_commits,
+    repo_w_no_tags_angular_commits,
+    repo_w_trunk_only_angular_commits,
+    repo_w_trunk_only_n_prereleases_angular_commits,
 )
 from tests.util import add_text_to_file
 
@@ -119,7 +119,7 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
     [
         # ANGULAR parser
         (
-            lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+            lazy_fixture(repo_w_no_tags_angular_commits.__name__),
             lazy_fixture(get_commits_for_trunk_only_repo_w_no_tags.__name__),
         ),
         *[
@@ -130,11 +130,11 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
             )
             for repo_fixture_name, get_commits_for_repo_fixture_name in [
                 (
-                    repo_with_single_branch_angular_commits.__name__,
+                    repo_w_trunk_only_angular_commits.__name__,
                     get_commits_for_trunk_only_repo_w_tags.__name__,
                 ),
                 (
-                    repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                    repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                     get_commits_for_trunk_only_repo_w_prerelease_tags.__name__,
                 ),
                 (
@@ -142,11 +142,11 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
                     get_commits_for_github_flow_repo_w_feature_release_channel.__name__,
                 ),
                 (
-                    repo_with_git_flow_angular_commits.__name__,
+                    repo_w_git_flow_angular_commits.__name__,
                     get_commits_for_git_flow_repo_with_2_release_channels.__name__,
                 ),
                 (
-                    repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                    repo_w_git_flow_and_release_channels_angular_commits.__name__,
                     get_commits_for_git_flow_repo_w_3_release_channels.__name__,
                 ),
             ]
@@ -241,18 +241,18 @@ def test_release_history(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_w_no_tags_angular_commits.__name__),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture_name),
                 marks=pytest.mark.comprehensive,
             )
             for repo_fixture_name in [
-                repo_with_single_branch_angular_commits.__name__,
-                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_trunk_only_angular_commits.__name__,
+                repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                 repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                repo_with_git_flow_angular_commits.__name__,
-                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                repo_w_git_flow_angular_commits.__name__,
+                repo_w_git_flow_and_release_channels_angular_commits.__name__,
             ]
         ],
     ],
@@ -293,18 +293,18 @@ def test_release_history_releases(
 @pytest.mark.parametrize(
     "repo",
     [
-        lazy_fixture(repo_with_no_tags_angular_commits.__name__),
+        lazy_fixture(repo_w_no_tags_angular_commits.__name__),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture_name),
                 marks=pytest.mark.comprehensive,
             )
             for repo_fixture_name in [
-                repo_with_single_branch_angular_commits.__name__,
-                repo_with_single_branch_and_prereleases_angular_commits.__name__,
+                repo_w_trunk_only_angular_commits.__name__,
+                repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                 repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                repo_with_git_flow_angular_commits.__name__,
-                repo_with_git_flow_and_release_channels_angular_commits.__name__,
+                repo_w_git_flow_angular_commits.__name__,
+                repo_w_git_flow_and_release_channels_angular_commits.__name__,
             ]
         ],
     ],

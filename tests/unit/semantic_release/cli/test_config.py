@@ -27,7 +27,7 @@ from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
 from semantic_release.errors import ParserLoadError
 
-from tests.fixtures.repos import repo_with_no_tags_angular_commits
+from tests.fixtures.repos import repo_w_no_tags_angular_commits
 from tests.util import (
     CustomParserOpts,
     CustomParserWithNoOpts,
@@ -180,7 +180,7 @@ def test_default_toml_config_valid(example_project_dir: ExProjectDir):
         ({"GIT_COMMIT_AUTHOR": "foo <foo>"}, "foo <foo>"),
     ],
 )
-@pytest.mark.usefixtures(repo_with_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
 def test_commit_author_configurable(
     example_pyproject_toml: Path,
     mock_env: dict[str, str],

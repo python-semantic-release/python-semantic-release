@@ -15,8 +15,8 @@ from tests.const import (
 )
 from tests.fixtures.repos import (
     get_versions_for_trunk_only_repo_w_tags,
-    repo_with_no_tags_angular_commits,
-    repo_with_single_branch_angular_commits,
+    repo_w_no_tags_angular_commits,
+    repo_w_trunk_only_angular_commits,
 )
 from tests.util import assert_successful_exit_code
 
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     "repo, next_release_version",
     # must use a repo that is ready for a release to prevent no release
     # logic from being triggered before the noop logic
-    [(lazy_fixture(repo_with_no_tags_angular_commits.__name__), "0.1.0")],
+    [(lazy_fixture(repo_w_no_tags_angular_commits.__name__), "0.1.0")],
 )
 def test_version_noop_is_noop(
     repo: Repo,
@@ -84,7 +84,7 @@ def test_version_noop_is_noop(
 
 @pytest.mark.parametrize(
     "repo",
-    [lazy_fixture(repo_with_single_branch_angular_commits.__name__)],
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_no_git_verify(
     repo: Repo,
@@ -142,7 +142,7 @@ def test_version_no_git_verify(
 
 
 @pytest.mark.parametrize(
-    "repo", [lazy_fixture(repo_with_single_branch_angular_commits.__name__)]
+    "repo", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
 )
 def test_version_on_nonrelease_branch(
     repo: Repo,
@@ -186,7 +186,7 @@ def test_version_on_nonrelease_branch(
     "repo, get_repo_versions",
     [
         (
-            lazy_fixture(repo_with_single_branch_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
         )
     ],
@@ -238,7 +238,7 @@ def test_version_on_last_release(
 
 
 @pytest.mark.parametrize(
-    "repo", [lazy_fixture(repo_with_no_tags_angular_commits.__name__)]
+    "repo", [lazy_fixture(repo_w_no_tags_angular_commits.__name__)]
 )
 def test_version_only_tag_push(
     repo: Repo,

@@ -9,7 +9,7 @@ from semantic_release.cli.commands.main import main
 from semantic_release.hvcs import Github
 
 from tests.const import MAIN_PROG_NAME, PUBLISH_SUBCMD
-from tests.fixtures.repos import repo_with_single_branch_angular_commits
+from tests.fixtures.repos import repo_w_trunk_only_angular_commits
 from tests.util import assert_exit_code, assert_successful_exit_code
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize("cmd_args", [(), ("--tag", "latest")])
-@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
 def test_publish_latest_uses_latest_tag(
     cli_runner: CliRunner,
     cmd_args: Sequence[str],
@@ -42,7 +42,7 @@ def test_publish_latest_uses_latest_tag(
         mocked_upload_dists.assert_called_once_with(tag=latest_tag, dist_glob="dist/*")
 
 
-@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
 def test_publish_to_tag_uses_tag(
     cli_runner: CliRunner,
     get_versions_for_trunk_only_repo_w_tags: GetVersionStringsFn,
@@ -63,7 +63,7 @@ def test_publish_to_tag_uses_tag(
         )
 
 
-@pytest.mark.usefixtures(repo_with_single_branch_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
 def test_publish_fails_on_nonexistant_tag(cli_runner: CliRunner):
     non_existant_tag = "nonexistant-tag"
 

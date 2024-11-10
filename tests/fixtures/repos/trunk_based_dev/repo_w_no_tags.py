@@ -211,7 +211,7 @@ def cached_repo_with_no_tags_scipy_commits(
 
 
 @pytest.fixture
-def repo_with_no_tags_angular_commits(
+def repo_w_no_tags_angular_commits(
     cached_repo_with_no_tags_angular_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
@@ -224,7 +224,7 @@ def repo_with_no_tags_angular_commits(
 
 
 @pytest.fixture
-def repo_with_no_tags_emoji_commits(
+def repo_w_no_tags_emoji_commits(
     cached_repo_with_no_tags_emoji_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
@@ -237,7 +237,7 @@ def repo_with_no_tags_emoji_commits(
 
 
 @pytest.fixture
-def repo_with_no_tags_scipy_commits(
+def repo_w_no_tags_scipy_commits(
     cached_repo_with_no_tags_scipy_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,

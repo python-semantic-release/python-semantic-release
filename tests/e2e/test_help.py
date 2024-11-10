@@ -86,7 +86,7 @@ def test_help_valid_config(
     help_option: str,
     command: Command,
     cli_runner: CliRunner,
-    repo_with_single_branch_angular_commits: Repo,
+    repo_w_trunk_only_angular_commits: Repo,
 ):
     """
     Test that the help message is displayed when the current directory is a git repository
@@ -134,7 +134,7 @@ def test_help_invalid_config(
     help_option: str,
     command: Command,
     cli_runner: CliRunner,
-    repo_with_single_branch_angular_commits: Repo,
+    repo_w_trunk_only_angular_commits: Repo,
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ):
     """
@@ -187,14 +187,14 @@ def test_help_non_release_branch(
     help_option: str,
     command: Command,
     cli_runner: CliRunner,
-    repo_with_single_branch_angular_commits: Repo,
+    repo_w_trunk_only_angular_commits: Repo,
 ):
     """
     Test that the help message is displayed even when the current branch is not a release branch.
     Documented issue #840
     """
     # Create & checkout a non-release branch
-    repo = repo_with_single_branch_angular_commits
+    repo = repo_w_trunk_only_angular_commits
     non_release_branch = repo.create_head("feature-branch")
     non_release_branch.checkout()
 

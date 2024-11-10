@@ -829,7 +829,7 @@ def cached_repo_w_git_flow_n_3_release_channels_scipy_commits(
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
+def repo_w_git_flow_and_release_channels_angular_commits_using_tag_format(
     cached_repo_w_git_flow_n_3_release_channels_angular_commits_tag_format: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
@@ -845,7 +845,7 @@ def repo_with_git_flow_and_release_channels_angular_commits_using_tag_format(
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_angular_commits(
+def repo_w_git_flow_and_release_channels_angular_commits(
     cached_repo_w_git_flow_n_3_release_channels_angular_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
@@ -861,7 +861,7 @@ def repo_with_git_flow_and_release_channels_angular_commits(
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_emoji_commits(
+def repo_w_git_flow_and_release_channels_emoji_commits(
     cached_repo_w_git_flow_n_3_release_channels_emoji_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
@@ -877,7 +877,7 @@ def repo_with_git_flow_and_release_channels_emoji_commits(
 
 
 @pytest.fixture
-def repo_with_git_flow_and_release_channels_scipy_commits(
+def repo_w_git_flow_and_release_channels_scipy_commits(
     cached_repo_w_git_flow_n_3_release_channels_scipy_commits: Path,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
