@@ -30,8 +30,8 @@ Read more about the setup and configuration in our `getting started guide`_.
 .. _GitHub Action: https://python-semantic-release.readthedocs.io/en/latest/automatic-releases/github-actions.html
 .. _conda-forge: https://anaconda.org/conda-forge/python-semantic-release
 
-.. |Test Status| image:: https://img.shields.io/github/actions/workflow/status/python-semantic-release/python-semantic-release/main.yml?branch=master&label=Test%20Status&logo=github
-   :target: https://github.com/python-semantic-release/python-semantic-release/actions/workflows/main.yml
+.. |Test Status| image:: https://img.shields.io/github/actions/workflow/status/python-semantic-release/python-semantic-release/cicd.yml?branch=master&label=Test%20Status&logo=github
+   :target: https://github.com/python-semantic-release/python-semantic-release/actions/workflows/cicd.yml
    :alt: test-status
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/python-semantic-release?label=PyPI&logo=pypi
    :target: https://pypi.org/project/python-semantic-release/
