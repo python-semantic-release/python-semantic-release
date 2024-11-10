@@ -9,10 +9,10 @@ from semantic_release.cli.commands.main import main
 
 from tests.const import (
     MAIN_PROG_NAME,
-    NULL_HEX_SHA,
     VERSION_SUBCMD,
 )
 from tests.fixtures.commit_parsers import angular_minor_commits
+from tests.fixtures.git_repo import get_commit_def_of_angular_commit
 from tests.fixtures.repos import (
     get_versions_for_trunk_only_repo_w_tags,
     repo_w_no_tags_angular_commits,
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from requests_mock import Mocker
 
     from tests.fixtures.git_repo import (
+        GetCommitDefFn,
         GetVersionStringsFn,
         SimulateChangeCommitsNReturnChangelogEntryFn,
     )
@@ -480,13 +481,19 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
 
 @pytest.mark.parametrize(
-    "repo",
-    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
+    "repo, get_commit_def_fn",
+    [
+        (
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            lazy_fixture(get_commit_def_of_angular_commit.__name__),
+        )
+    ],
 )
 def test_version_print_next_version_fails_on_detached_head(
     repo: Repo,
     cli_runner: CliRunner,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
+    get_commit_def_fn: GetCommitDefFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -500,14 +507,7 @@ def test_version_print_next_version_fails_on_detached_head(
     # Setup: make a commit to ensure we have something to release
     simulate_change_commits_n_rtn_changelog_entry(
         repo,
-        [
-            {
-                "msg": "fix: make a patch fix to codebase",
-                "type": "fix",
-                "desc": "make a patch fix to codebase",
-                "sha": NULL_HEX_SHA,
-            }
-        ],
+        [get_commit_def_fn("fix: make a patch fix to codebase")],
     )
 
     # Setup: take measurement before running the version command

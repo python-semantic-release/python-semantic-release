@@ -39,10 +39,22 @@
 {#
   MACRO: format commit summary line
 #}{%  macro format_commit_summary_line(commit)
-%}{%    if commit.error is undefined
-%}{{      commit_msg_links(commit)
-}}{%    else
-%}{{      (commit.commit.message | string).split("\n", maxsplit=1)[0]
+%}{#    # Check for Parsing Error
+#}{%    if commit.error is undefined
+%}{#
+   #      # Add any message links to the commit summary line
+#}{%      set summary_line = commit_msg_links(commit)
+%}{#
+#}{%      if commit.scope
+%}{%        set summary_line = "**%s**: %s" | format(commit.scope, summary_line)
+%}{%      endif
+%}{#
+   #      # Return the modified summary_line
+#}{{      summary_line
+}}{#
+#}{%    else
+%}{#      # Return the first line of the commit if there was a Parsing Error
+#}{{      (commit.commit.message | string).split("\n", maxsplit=1)[0]
 }}{%    endif
 %}{%  endmacro
 %}
