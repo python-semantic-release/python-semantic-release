@@ -7,7 +7,7 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import EXAMPLE_HVCS_DOMAIN
+from tests.const import DEFAULT_BRANCH_NAME, EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
 from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
@@ -21,9 +21,11 @@ if TYPE_CHECKING:
         BaseRepoVersionDef,
         BuildRepoFn,
         CommitConvention,
+        CreateMergeCommitFn,
         CreateReleaseFn,
         ExProjectGitRepoFn,
         ExtractRepoDefinitionFn,
+        FormatGitMergeCommitMsgFn,
         GetRepoDefinitionFn,
         GetVersionStringsFn,
         RepoDefinition,
@@ -34,9 +36,19 @@ if TYPE_CHECKING:
     )
 
 
+DEV_BRANCH_NAME = "dev"
+FEAT_BRANCH_1_NAME = "feat/feature-1"
+FEAT_BRANCH_2_NAME = "feat/feature-2"
+FEAT_BRANCH_3_NAME = "feat/feature-3"
+FEAT_BRANCH_4_NAME = "feat/feature-4"
+FIX_BRANCH_1_NAME = "fix/patch-1"
+FIX_BRANCH_2_NAME = "fix/patch-2"
+
+
 @pytest.fixture(scope="session")
 def get_commits_for_git_flow_repo_w_3_release_channels(
     extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
+    format_merge_commit_msg_git: FormatGitMergeCommitMsgFn,
 ) -> GetRepoDefinitionFn:
     base_definition: dict[str, BaseRepoVersionDef] = {
         "0.1.0": {
@@ -50,9 +62,9 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
             },
             "commits": [
                 {
-                    "angular": "Initial commit",
-                    "emoji": "Initial commit",
-                    "scipy": "Initial commit",
+                    "angular": INITIAL_COMMIT_MESSAGE,
+                    "emoji": INITIAL_COMMIT_MESSAGE,
+                    "scipy": INITIAL_COMMIT_MESSAGE,
                 },
                 {
                     "angular": "feat: add new feature",
@@ -95,9 +107,18 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
                     "scipy": "API: add revolutionary feature\n\nBREAKING CHANGE: this is a breaking change",
                 },
                 {
-                    "angular": "Merge branch 'feat/feature-1' into 'dev'",
-                    "emoji": "Merge branch 'feat/feature-1' into 'dev'",
-                    "scipy": "Merge branch 'feat/feature-1' into 'dev'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_1_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_1_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_1_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
                 },
             ],
         },
@@ -121,14 +142,32 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
                     "scipy": "ENH: add some more text",
                 },
                 {
-                    "angular": "Merge branch 'feat/feature-2' into 'dev'",
-                    "emoji": "Merge branch 'feat/feature-2' into 'dev'",
-                    "scipy": "Merge branch 'feat/feature-2' into 'dev'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_2_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_2_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_2_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
                 },
                 {
-                    "angular": "Merge branch 'dev' into 'main'",
-                    "emoji": "Merge branch 'dev' into 'main'",
-                    "scipy": "Merge branch 'dev' into 'main'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=DEV_BRANCH_NAME,
+                        tgt_branch_name=DEFAULT_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=DEV_BRANCH_NAME,
+                        tgt_branch_name=DEFAULT_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=DEV_BRANCH_NAME,
+                        tgt_branch_name=DEFAULT_BRANCH_NAME,
+                    ),
                 },
             ],
         },
@@ -175,9 +214,18 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
             },
             "commits": [
                 {
-                    "angular": "Merge branch 'feat/feature-3' into 'dev'",
-                    "emoji": "Merge branch 'feat/feature-3' into 'dev'",
-                    "scipy": "Merge branch 'feat/feature-3' into 'dev'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_3_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_3_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_3_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
                 },
                 {
                     "angular": "fix(dev): correct some text",
@@ -185,9 +233,18 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
                     "scipy": "MAINT(dev): correct some text",
                 },
                 {
-                    "angular": "Merge branch 'fix/patch-1' into 'dev'",
-                    "emoji": "Merge branch 'fix/patch-1' into 'dev'",
-                    "scipy": "Merge branch 'fix/patch-1' into 'dev'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=FIX_BRANCH_1_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=FIX_BRANCH_1_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=FIX_BRANCH_1_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
                 },
             ],
         },
@@ -211,9 +268,18 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
                     "scipy": "ENH(scope): add some more text",
                 },
                 {
-                    "angular": "Merge branch 'feat/feature-4' into 'dev'",
-                    "emoji": "Merge branch 'feat/feature-4' into 'dev'",
-                    "scipy": "Merge branch 'feat/feature-4' into 'dev'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_4_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_4_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=FEAT_BRANCH_4_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
                 },
             ],
         },
@@ -239,14 +305,32 @@ def get_commits_for_git_flow_repo_w_3_release_channels(
                     "scipy": "MAINT(scope): correct some text",
                 },
                 {
-                    "angular": "Merge branch 'fix/patch-2' into 'dev'",
-                    "emoji": "Merge branch 'fix/patch-2' into 'dev'",
-                    "scipy": "Merge branch 'fix/patch-2' into 'dev'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=FIX_BRANCH_2_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=FIX_BRANCH_2_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=FIX_BRANCH_2_NAME,
+                        tgt_branch_name=DEV_BRANCH_NAME,
+                    ),
                 },
                 {
-                    "angular": "Merge branch 'dev' into 'main'",
-                    "emoji": "Merge branch 'dev' into 'main'",
-                    "scipy": "Merge branch 'dev' into 'main'",
+                    "angular": format_merge_commit_msg_git(
+                        branch_name=DEV_BRANCH_NAME,
+                        tgt_branch_name=DEFAULT_BRANCH_NAME,
+                    ),
+                    "emoji": format_merge_commit_msg_git(
+                        branch_name=DEV_BRANCH_NAME,
+                        tgt_branch_name=DEFAULT_BRANCH_NAME,
+                    ),
+                    "scipy": format_merge_commit_msg_git(
+                        branch_name=DEV_BRANCH_NAME,
+                        tgt_branch_name=DEFAULT_BRANCH_NAME,
+                    ),
                 },
             ],
         },
@@ -282,7 +366,14 @@ def build_git_flow_repo_w_3_release_channels(
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
     create_release_tagged_commit: CreateReleaseFn,
+    create_merge_commit: CreateMergeCommitFn,
 ) -> BuildRepoFn:
+    """
+    Builds a git-flow repository with 3 release channels (main, dev, feature)
+
+    Maintains merge commits between branches
+    """
+
     def _build_git_flow_repo_w_3_release_channels(
         dest_dir: Path | str,
         commit_type: CommitConvention = "angular",
@@ -338,7 +429,7 @@ def build_git_flow_repo_w_3_release_channels(
             )
 
             # Grab reference to the main branch
-            main_branch_head = git_repo.heads["main"]
+            main_branch_head = git_repo.heads[DEFAULT_BRANCH_NAME]
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -367,13 +458,13 @@ def build_git_flow_repo_w_3_release_channels(
 
             # Change to a dev branch
             dev_branch_head = git_repo.create_head(
-                "dev", commit=main_branch_head.commit
+                DEV_BRANCH_NAME, commit=main_branch_head.commit
             )
             dev_branch_head.checkout()
 
             # Change to a feature branch
             feat_branch_head = git_repo.create_head(
-                "feat/feature-1", commit=dev_branch_head.commit
+                FEAT_BRANCH_1_NAME, commit=dev_branch_head.commit
             )
             feat_branch_head.checkout()
 
@@ -420,13 +511,13 @@ def build_git_flow_repo_w_3_release_channels(
             # checkout dev branch (in prep for merge)
             dev_branch_head.checkout()
 
-            # Merge feature branch into dev branch
-            git_repo.git.merge(
-                feat_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-1]["msg"],
+            # Merge feature branch into dev branch (saving resulting definition)
+            next_version_def["commits"][-1] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=feat_branch_head.name,
+                commit_def=next_version_def["commits"][-1],
+                fast_forward=False,
             )
-            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -455,7 +546,7 @@ def build_git_flow_repo_w_3_release_channels(
 
             # Switch to a feature branch
             feat_branch_head = git_repo.create_head(
-                "feat/feature-2", commit=dev_branch_head.commit
+                FEAT_BRANCH_2_NAME, commit=dev_branch_head.commit
             )
             feat_branch_head.checkout()
 
@@ -471,24 +562,24 @@ def build_git_flow_repo_w_3_release_channels(
             # checkout dev branch (in prep for merge)
             dev_branch_head.checkout()
 
-            # Merge feature branch into dev branch
-            git_repo.git.merge(
-                feat_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-2]["msg"],
+            # Merge feature branch into dev branch (saving resulting definition)
+            next_version_def["commits"][-2] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=feat_branch_head.name,
+                commit_def=next_version_def["commits"][-2],
+                fast_forward=False,
             )
-            next_version_def["commits"][-2]["sha"] = git_repo.head.commit.hexsha
 
             # checkout main branch (in prep for merge & release)
             main_branch_head.checkout()
 
-            # Merge dev branch into main branch
-            git_repo.git.merge(
-                dev_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-1]["msg"],
+            # Merge dev branch into main branch (saving resulting definition)
+            next_version_def["commits"][-1] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=dev_branch_head.name,
+                commit_def=next_version_def["commits"][-1],
+                fast_forward=False,
             )
-            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -521,7 +612,7 @@ def build_git_flow_repo_w_3_release_channels(
 
             # Switch to a feature branch
             feat_branch_head = git_repo.create_head(
-                "feat/feature-3", commit=dev_branch_head.commit
+                FEAT_BRANCH_3_NAME, commit=dev_branch_head.commit
             )
             feat_branch_head.checkout()
 
@@ -590,17 +681,17 @@ def build_git_flow_repo_w_3_release_channels(
             # checkout dev branch (in prep for merge)
             dev_branch_head.checkout()
 
-            # Merge feature branch into dev branch
-            git_repo.git.merge(
-                feat_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][0]["msg"],
+            # Merge feature branch into dev branch (saving resulting definition)
+            next_version_def["commits"][0] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=feat_branch_head.name,
+                commit_def=next_version_def["commits"][0],
+                fast_forward=False,
             )
-            next_version_def["commits"][0]["sha"] = git_repo.head.commit.hexsha
 
             # Switch to a feature branch
             fix_branch_head = git_repo.create_head(
-                "fix/patch-1", commit=dev_branch_head.commit
+                FIX_BRANCH_1_NAME, commit=dev_branch_head.commit
             )
             fix_branch_head.checkout()
 
@@ -617,13 +708,13 @@ def build_git_flow_repo_w_3_release_channels(
             # checkout dev branch (in prep for merge)
             dev_branch_head.checkout()
 
-            # Merge feature branch into dev branch
-            git_repo.git.merge(
-                fix_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-1]["msg"],
+            # Merge feature branch into dev branch (saving resulting definition)
+            next_version_def["commits"][-1] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=fix_branch_head.name,
+                commit_def=next_version_def["commits"][-1],
+                fast_forward=False,
             )
-            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -652,7 +743,7 @@ def build_git_flow_repo_w_3_release_channels(
 
             # Switch to a feature branch
             feat_branch_head = git_repo.create_head(
-                "feat/feature-4", commit=dev_branch_head.commit
+                FEAT_BRANCH_4_NAME, commit=dev_branch_head.commit
             )
             feat_branch_head.checkout()
 
@@ -668,13 +759,13 @@ def build_git_flow_repo_w_3_release_channels(
             # checkout dev branch (in prep for merge)
             dev_branch_head.checkout()
 
-            # Merge feature branch into dev branch
-            git_repo.git.merge(
-                feat_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-1]["msg"],
+            # Merge feature branch into dev branch (saving resulting definition)
+            next_version_def["commits"][-1] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=feat_branch_head.name,
+                commit_def=next_version_def["commits"][-1],
+                fast_forward=False,
             )
-            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
@@ -703,7 +794,7 @@ def build_git_flow_repo_w_3_release_channels(
 
             # Switch to a fix branch
             fix_branch_head = git_repo.create_head(
-                "fix/patch-2", commit=dev_branch_head.commit
+                FIX_BRANCH_2_NAME, commit=dev_branch_head.commit
             )
             fix_branch_head.checkout()
 
@@ -719,24 +810,24 @@ def build_git_flow_repo_w_3_release_channels(
             # checkout dev branch (in prep for merge)
             dev_branch_head.checkout()
 
-            # Merge feature branch into dev branch
-            git_repo.git.merge(
-                fix_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-2]["msg"],
+            # Merge feature branch into dev branch (saving resulting definition)
+            next_version_def["commits"][-2] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=fix_branch_head.name,
+                commit_def=next_version_def["commits"][-2],
+                fast_forward=False,
             )
-            next_version_def["commits"][-2]["sha"] = git_repo.head.commit.hexsha
 
             # checkout main branch (in prep for merge & release)
             main_branch_head.checkout()
 
-            # Merge dev branch into main branch
-            git_repo.git.merge(
-                dev_branch_head.name,
-                no_ff=True,
-                m=next_version_def["commits"][-1]["msg"],
+            # Merge dev branch into main branch (saving resulting definition)
+            next_version_def["commits"][-1] = create_merge_commit(
+                git_repo=git_repo,
+                branch_name=dev_branch_head.name,
+                commit_def=next_version_def["commits"][-1],
+                fast_forward=False,
             )
-            next_version_def["commits"][-1]["sha"] = git_repo.head.commit.hexsha
 
             # write expected Markdown changelog to this version
             simulate_default_changelog_creation(
