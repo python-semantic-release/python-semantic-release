@@ -743,27 +743,40 @@ def simulate_default_changelog_creation(  # noqa: C901
 
             for i in section_def["i_commits"]:
                 descriptions = version_def["commits"][i]["desc"].split("\n\n")
-                # NOTE: we assume url is always too long for the line so put it on the next line
-                # to meet the autofit 100 character limit
-                commit_cl_desc = (
-                    "- {commit_desc}\n  ([`{short_sha}`]({commit_url}))\n".format(
-                        commit_desc=descriptions[0].capitalize(),
-                        short_sha=version_def["commits"][i]["sha"][:7],
-                        commit_url=hvcs.commit_hash_url(
-                            version_def["commits"][i]["sha"]
-                        ),
-                    )
+
+                # NOTE: We have to be wary of the line length as the default changelog
+                # has a 100 character limit or otherwise our tests will fail because the
+                # URLs and whitespace don't line up
+
+                subject_line = "- {commit_desc}".format(
+                    commit_desc=descriptions[0].capitalize()
+                )
+
+                mr_link = (
+                    ""
                     if not version_def["commits"][i]["mr"]
-                    else "- {commit_desc} ([{mr}]({mr_url}),\n  [`{short_sha}`]({commit_url}))\n".format(
-                        commit_desc=descriptions[0].capitalize(),
+                    else "([{mr}]({mr_url}),".format(
                         mr=version_def["commits"][i]["mr"],
                         mr_url=hvcs.pull_request_url(version_def["commits"][i]["mr"]),
-                        short_sha=version_def["commits"][i]["sha"][:7],
-                        commit_url=hvcs.commit_hash_url(
-                            version_def["commits"][i]["sha"]
-                        ),
                     )
                 )
+
+                sha_link = "[`{short_sha}`]({commit_url}))".format(
+                    short_sha=version_def["commits"][i]["sha"][:7],
+                    commit_url=hvcs.commit_hash_url(version_def["commits"][i]["sha"]),
+                )
+                # Add opening parenthesis if no MR link
+                sha_link = sha_link if mr_link else f"({sha_link}"
+
+                # NOTE: we are assuming that the subject line is always less than 100 characters
+                commit_cl_desc = f"{subject_line} {mr_link}".rstrip()
+                if len(commit_cl_desc) > 100:
+                    commit_cl_desc = f"{subject_line}\n  {mr_link}".rstrip()
+
+                if len(f"{commit_cl_desc} {sha_link}") > 100:
+                    commit_cl_desc = f"{commit_cl_desc}\n  {sha_link}\n"
+                else:
+                    commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
 
                 if len(descriptions) > 1:
                     commit_cl_desc += (
