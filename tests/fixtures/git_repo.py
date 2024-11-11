@@ -146,6 +146,7 @@ if TYPE_CHECKING:
             dest_file: Path | None = None,
             max_version: str | None = None,
             output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
+            mask_initial_release: bool = True,
         ) -> str: ...
 
     class FormatGitSquashCommitMsgFn(Protocol):
@@ -917,12 +918,45 @@ def simulate_default_changelog_creation(  # noqa: C901
         }
         return output_functions[output_format](version, version_def, hvcs)
 
+    def build_initial_version_entry(
+        version: VersionStr,
+        version_def: RepoVersionDef,
+        output_format: ChangelogOutputFormat,
+        hvcs: HvcsBase,
+    ) -> str:
+        if output_format == ChangelogOutputFormat.MARKDOWN:
+            return str.join(
+                "\n",
+                [
+                    f"## v{version} ({TODAY_DATE_STR})",
+                    "",
+                    "- Initial Release",
+                    "",
+                ],
+            )
+        if output_format == ChangelogOutputFormat.RESTRUCTURED_TEXT:
+            title = f"v{version} ({TODAY_DATE_STR})"
+            return str.join(
+                "\n",
+                [
+                    f".. _changelog-v{version}:",
+                    "",
+                    title,
+                    "=" * len(title),
+                    "",
+                    "* Initial Release",
+                    "",
+                ],
+            )
+        raise ValueError(f"Unknown output format: {output_format}")
+
     def _mimic_semantic_release_default_changelog(
         repo_definition: RepoDefinition,
         hvcs: HvcsBase,
         dest_file: Path | None = None,
         max_version: str | None = None,
         output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
+        mask_initial_release: bool = True,
     ) -> str:
         if output_format == ChangelogOutputFormat.MARKDOWN:
             header = dedent(
@@ -970,11 +1004,14 @@ def simulate_default_changelog_creation(  # noqa: C901
             )["repo_def"]
         )
 
-        for version, version_def in repo_def.items():
+        for i, (version, version_def) in enumerate(repo_def.items()):
             # prepend entries to force reverse ordering
-            version_entries.insert(
-                0, build_version_entry(version, version_def, output_format, hvcs)
+            entry = (
+                build_initial_version_entry(version, version_def, output_format, hvcs)
+                if i == 0 and mask_initial_release and version != "Unreleased"
+                else build_version_entry(version, version_def, output_format, hvcs)
             )
+            version_entries.insert(0, entry)
 
         changelog_content = (
             str.join(
