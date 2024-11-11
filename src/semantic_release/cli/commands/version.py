@@ -696,6 +696,7 @@ def version(  # noqa: C901
         runtime.template_dir,
         history=release_history,
         style=runtime.changelog_style,
+        mask_initial_release=runtime.changelog_mask_initial_release,
     )
 
     exception: Exception | None = None

@@ -119,6 +119,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
         runtime.template_dir,
         release_history,
         style=runtime.changelog_style,
+        mask_initial_release=runtime.changelog_mask_initial_release,
     )
 
     try:

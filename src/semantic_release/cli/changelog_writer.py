@@ -178,6 +178,7 @@ def write_changelog_files(
         mode=runtime_ctx.changelog_mode,
         insertion_flag=runtime_ctx.changelog_insertion_flag,
         prev_changelog_file=runtime_ctx.changelog_file,
+        mask_initial_release=runtime_ctx.changelog_mask_initial_release,
     )
 
     user_templates = []
@@ -226,6 +227,7 @@ def generate_release_notes(
     template_dir: Path,
     history: ReleaseHistory,
     style: str,
+    mask_initial_release: bool,
 ) -> str:
     users_tpl_file = template_dir / DEFAULT_RELEASE_NOTES_TPL_FILE
 
@@ -251,6 +253,7 @@ def generate_release_notes(
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         version=release["version"],
         release=release,
+        mask_initial_release=mask_initial_release,
         filters=(*hvcs_client.get_changelog_context_filters(), autofit_text_width),
     ).bind_to_environment(
         # Use a new, non-configurable environment for release notes -
@@ -259,11 +262,9 @@ def generate_release_notes(
     )
 
     # TODO: Remove in v10
-    release_notes_env.globals["context"] = {
+    release_notes_env.globals["context"] = release_notes_env.globals["ctx"] = {
         "history": history,
-    }
-    release_notes_env.globals["ctx"] = {
-        "history": history,
+        "mask_initial_release": mask_initial_release,
     }
 
     return render_release_notes(

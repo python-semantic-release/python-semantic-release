@@ -23,6 +23,7 @@ class ReleaseNotesContext:
     hvcs_type: str
     version: Version
     release: Release
+    mask_initial_release: bool
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
@@ -53,6 +54,7 @@ class ChangelogContext:
     changelog_mode: Literal["update", "init"]
     prev_changelog_file: str
     changelog_insertion_flag: str
+    mask_initial_release: bool
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:
@@ -69,6 +71,7 @@ def make_changelog_context(
     mode: ChangelogMode,
     prev_changelog_file: Path,
     insertion_flag: str,
+    mask_initial_release: bool,
 ) -> ChangelogContext:
     return ChangelogContext(
         repo_name=hvcs_client.repo_name,
@@ -76,6 +79,7 @@ def make_changelog_context(
         history=release_history,
         changelog_mode=mode.value,
         changelog_insertion_flag=insertion_flag,
+        mask_initial_release=mask_initial_release,
         prev_changelog_file=str(prev_changelog_file),
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         filters=(
