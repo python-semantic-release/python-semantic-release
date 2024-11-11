@@ -209,6 +209,7 @@ def build_github_flow_repo_w_default_release_channel(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
+        mask_initial_release: bool = False,
     ) -> tuple[Path, HvcsBase]:
         repo_dir, hvcs = build_configured_base_repo(
             dest_dir,
@@ -216,6 +217,7 @@ def build_github_flow_repo_w_default_release_channel(
             hvcs_client_name=hvcs_client_name,
             hvcs_domain=hvcs_domain,
             tag_format_str=tag_format_str,
+            mask_initial_release=mask_initial_release,
             extra_configs={
                 # Set the default release branch
                 "tool.semantic_release.branches.main": {
@@ -256,6 +258,7 @@ def build_github_flow_repo_w_default_release_channel(
                 max_version=next_version,
                 dest_file=repo_dir.joinpath(changelog_md_file),
                 output_format=ChangelogOutputFormat.MARKDOWN,
+                mask_initial_release=mask_initial_release,
             )
 
             # write expected RST changelog to this version
@@ -265,6 +268,7 @@ def build_github_flow_repo_w_default_release_channel(
                 max_version=next_version,
                 dest_file=repo_dir.joinpath(changelog_rst_file),
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                mask_initial_release=mask_initial_release,
             )
 
             # Make initial release (v1.0.0)
@@ -327,6 +331,7 @@ def build_github_flow_repo_w_default_release_channel(
                 max_version=patch_release_version,
                 dest_file=repo_dir.joinpath(changelog_md_file),
                 output_format=ChangelogOutputFormat.MARKDOWN,
+                mask_initial_release=mask_initial_release,
             )
 
             # write expected RST changelog to this version
@@ -336,6 +341,7 @@ def build_github_flow_repo_w_default_release_channel(
                 max_version=patch_release_version,
                 dest_file=repo_dir.joinpath(changelog_rst_file),
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                mask_initial_release=mask_initial_release,
             )
 
             # Make patch release for fix (v1.0.1)
@@ -355,6 +361,7 @@ def build_github_flow_repo_w_default_release_channel(
                 max_version=minor_release_version,
                 dest_file=repo_dir.joinpath(changelog_md_file),
                 output_format=ChangelogOutputFormat.MARKDOWN,
+                mask_initial_release=mask_initial_release,
             )
 
             # write expected RST changelog to this version
@@ -364,6 +371,7 @@ def build_github_flow_repo_w_default_release_channel(
                 max_version=minor_release_version,
                 dest_file=repo_dir.joinpath(changelog_rst_file),
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                mask_initial_release=mask_initial_release,
             )
 
             # Make minor release for feature (v1.1.1)

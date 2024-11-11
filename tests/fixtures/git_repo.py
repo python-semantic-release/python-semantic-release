@@ -96,6 +96,7 @@ if TYPE_CHECKING:
             hvcs_domain: str = ...,
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
+            mask_initial_release: bool = False,
         ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
@@ -146,7 +147,7 @@ if TYPE_CHECKING:
             dest_file: Path | None = None,
             max_version: str | None = None,
             output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
-            mask_initial_release: bool = True,
+            mask_initial_release: bool = False,
         ) -> str: ...
 
     class FormatGitSquashCommitMsgFn(Protocol):
@@ -645,6 +646,7 @@ def build_configured_base_repo(  # noqa: C901
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
+        mask_initial_release: bool = False,
     ) -> tuple[Path, HvcsBase]:
         if not cached_example_git_project.exists():
             raise RuntimeError("Unable to find cached git project files!")
@@ -705,6 +707,12 @@ def build_configured_base_repo(  # noqa: C901
                     New-Item -ItemType file -Path "{build_result_file}" -Force | Select-Object OriginalPath
                     """
                 ),
+            )
+
+            # Set whether or not the initial release should be masked
+            update_pyproject_toml(
+                "tool.semantic_release.changelog.default_templates.mask_initial_release",
+                mask_initial_release,
             )
 
             # Apply configurations to pyproject.toml
@@ -956,7 +964,8 @@ def simulate_default_changelog_creation(  # noqa: C901
         dest_file: Path | None = None,
         max_version: str | None = None,
         output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
-        mask_initial_release: bool = True,
+        # TODO: Breaking v10, when default is toggled to true, also change this to True
+        mask_initial_release: bool = False,
     ) -> str:
         if output_format == ChangelogOutputFormat.MARKDOWN:
             header = dedent(

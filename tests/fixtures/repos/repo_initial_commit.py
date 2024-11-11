@@ -97,6 +97,7 @@ def build_repo_w_initial_commit(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
+        mask_initial_release: bool = False,
     ) -> tuple[Path, HvcsBase]:
         repo_dir, hvcs = build_configured_base_repo(
             dest_dir,
@@ -105,6 +106,7 @@ def build_repo_w_initial_commit(
             hvcs_domain=hvcs_domain,
             tag_format_str=tag_format_str,
             extra_configs=extra_configs,
+            mask_initial_release=mask_initial_release,
         )
 
         repo_def = get_commits_for_repo_w_initial_commit(commit_type)
@@ -125,6 +127,7 @@ def build_repo_w_initial_commit(
                 hvcs=hvcs,
                 dest_file=repo_dir.joinpath(changelog_md_file),
                 output_format=ChangelogOutputFormat.MARKDOWN,
+                mask_initial_release=mask_initial_release,
             )
 
             # write expected RST changelog
@@ -133,6 +136,7 @@ def build_repo_w_initial_commit(
                 hvcs=hvcs,
                 dest_file=repo_dir.joinpath(changelog_rst_file),
                 output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                mask_initial_release=mask_initial_release,
             )
 
         return repo_dir, hvcs
