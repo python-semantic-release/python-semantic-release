@@ -362,6 +362,36 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 
 ----
 
+.. _config-changelog-default_templates-mask_initial_release:
+
+``mask_initial_release``
+'''''''''''''''''''''''
+
+*Introduced in v9.14.0*
+
+**Type:** ``bool``
+
+This option toggles the behavior of the changelog and release note templates to mask
+the release details specifically for the first release. When set to ``true``, the
+first version release notes will be masked with a generic message as opposed to the
+usual commit details.  When set to ``false``, the release notes will be generated as
+normal.
+
+The reason for this setting is to improve clarity to your audience. It conceptually
+does **NOT** make sense to have a list of changes (i.e. a Changelog) for the first release
+since nothing has been published yet, therefore in the eyes of your consumers what change
+is there to document?
+
+The message details can be found in the ``first_release.md.j2`` and ``first_release.rst.j2``
+templates of the default changelog template directory.
+
+**Default:** ``false``
+
+.. seealso::
+   - :ref:`changelog-templates-default_changelog`
+
+----
+
 .. _config-changelog-default_templates-output_format:
 
 ``output_format``
