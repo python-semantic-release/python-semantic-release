@@ -41,21 +41,23 @@ This Update changelog template uses the following logic:
    #    Any Unreleased Details (uncommon)
 #}{%    include "unreleased_changes.md.j2"
 -%}{#
-#}{%    if releases | length == 1
-%}{#      # First Release detected
-#}{{      "\n"
-}}{%      include "first_release.md.j2"
-%}{{      "\n"
-}}{%    else
+#}{%    if releases | length > 0
 %}{#      # Latest Release Details
-#}{%      for release in new_releases
-%}{#        # Check if the release version is already in the changelog and if not, add it
-#}{%        if "# " ~ release.version.as_semver_tag() ~ " " not in changelog_parts[1]
-%}{{          "\n"
-}}{%-         include "versioned_changes.md.j2"
--%}{{         "\n"
-}}{%        endif
-%}{%      endfor
+#}{%      set release = releases[0]
+%}{#
+#}{%      if releases | length == 1 and ctx.mask_initial_release
+%}{#        # First Release detected
+#}{{        "\n"
+}}{%-       include "first_release.md.j2"
+-%}{{       "\n"
+}}{#
+#}{%      elif "# " ~ release.version.as_semver_tag() ~ " " not in changelog_parts[1]
+%}{#        # The release version is not already in the changelog so we add it
+#}{{        "\n"
+}}{%-       include "versioned_changes.md.j2"
+-%}{{       "\n"
+}}{#
+#}{%      endif
 %}{%    endif
 %}{#
    #    Previous Changelog Footer
