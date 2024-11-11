@@ -63,9 +63,7 @@ class AngularParserOptions(ParserOptions):
     patch_tags: Tuple[str, ...] = ("fix", "perf")
     """Commit-type prefixes that should result in a patch release bump."""
 
-    allowed_tags: Tuple[str, ...] = (
-        *minor_tags,
-        *patch_tags,
+    other_allowed_tags: Tuple[str, ...] = (
         "build",
         "chore",
         "ci",
@@ -73,6 +71,13 @@ class AngularParserOptions(ParserOptions):
         "style",
         "refactor",
         "test",
+    )
+    """Commit-type prefixes that are allowed but do not result in a version bump."""
+
+    allowed_tags: Tuple[str, ...] = (
+        *minor_tags,
+        *patch_tags,
+        *other_allowed_tags,
     )
     """
     All commit-type prefixes that are allowed.
