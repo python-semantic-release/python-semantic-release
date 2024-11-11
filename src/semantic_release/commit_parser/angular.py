@@ -58,7 +58,11 @@ class AngularParserOptions(ParserOptions):
     """Options dataclass for AngularCommitParser"""
 
     minor_tags: Tuple[str, ...] = ("feat",)
+    """Commit-type prefixes that should result in a minor release bump."""
+
     patch_tags: Tuple[str, ...] = ("fix", "perf")
+    """Commit-type prefixes that should result in a patch release bump."""
+
     allowed_tags: Tuple[str, ...] = (
         *minor_tags,
         *patch_tags,
@@ -70,10 +74,23 @@ class AngularParserOptions(ParserOptions):
         "refactor",
         "test",
     )
+    """
+    All commit-type prefixes that are allowed.
+
+    These are used to identify a valid commit message. If a commit message does not start with
+    one of these prefixes, it will not be considered a valid commit message.
+    """
+
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
+    """The minimum bump level to apply to valid commit message."""
+
+    @property
+    def tag_to_level(self) -> dict[str, LevelBump]:
+        """A mapping of commit tags to the level bump they should result in."""
+        return self._tag_to_level
 
     def __post_init__(self) -> None:
-        self.tag_to_level: dict[str, LevelBump] = {
+        self._tag_to_level: dict[str, LevelBump] = {
             str(tag): level
             for tag, level in [
                 # we have to do a type ignore as zip_longest provides a type that is not specific enough
