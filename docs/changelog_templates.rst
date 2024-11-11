@@ -470,6 +470,26 @@ the ``context`` object has the following attributes:
       #}{%  endif
       %}
 
+* ``mask_initial_release (bool)``: a boolean value indicating whether the initial release
+  should be masked with a generic message. This value is passed directly from the
+  :ref:`changelog.default_templates.mask_initial_release <config-changelog-default_templates-mask_initial_release>`
+  configuration setting.
+
+  *Introduced in v9.14.0.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      #}{%  if releases | length == 1 and ctx.mask_initial_release
+      %}{#    # On a first release, generate a generic message
+      #}{%    include ".components/first_release.md.j2"
+      %}{%  else
+      %}{#    # Not the first release
+      #}{%    include ".components/versioned_changes.md.j2"
+      %}{%  endif
+      %}
+
 * ``repo_name (str)``: the name of the current repository parsed from the Git url.
 
   **Example Usage:**
