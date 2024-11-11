@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from functools import reduce
 from itertools import zip_longest
 from re import compile as regexp
 from typing import Tuple
@@ -78,6 +79,19 @@ class EmojiParserOptions(ParserOptions):
         """A mapping of commit tags to the level bump they should result in."""
         return self._tag_to_level
 
+    parse_linked_issues: bool = False
+    """
+    Whether to parse linked issues from the commit message.
+
+    Issue identification is not defined in the Gitmoji specification, so this parser
+    will not attempt to parse issues by default. If enabled, the parser will use the
+    same identification as GitHub, GitLab, and BitBucket use for linking issues, which
+    is to look for a git commit message footer starting with "Closes:", "Fixes:",
+    or "Resolves:" then a space, and then the issue identifier. The line prefix
+    can be singular or plural and it is not case-sensitive but must have a colon and
+    a whitespace separator.
+    """
+
     def __post_init__(self) -> None:
         self._tag_to_level: dict[str, LevelBump] = {
             str(tag): level
@@ -138,9 +152,51 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
         )
 
+        self.issue_selector = regexp(
+            str.join(
+                "",
+                [
+                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
+                    r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
+                ],
+            ),
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+
     @staticmethod
     def get_default_options() -> EmojiParserOptions:
         return EmojiParserOptions()
+
+    def commit_body_components_separator(
+        self, accumulator: dict[str, list[str]], text: str
+    ) -> dict[str, list[str]]:
+        if self.options.parse_linked_issues and (
+            match := self.issue_selector.search(text)
+        ):
+            predicate = regexp(r",? and | *[,;/& ] *").sub(
+                ",", match.group("issue_predicate") or ""
+            )
+            # Almost all issue trackers use a number to reference an issue so
+            # we use a simple regexp to validate the existence of a number which helps filter out
+            # any non-issue references that don't fit our expected format
+            has_number = regexp(r"\d+")
+            new_issue_refs: set[str] = set(
+                filter(
+                    lambda issue_str, validator=has_number: validator.search(issue_str),  # type: ignore[arg-type]
+                    predicate.split(","),
+                )
+            )
+            accumulator["linked_issues"] = sorted(
+                set(accumulator["linked_issues"]).union(new_issue_refs)
+            )
+            # TODO: breaking change v10, removes resolution footers from descriptions
+            # return accumulator
+
+        # Prevent appending duplicate descriptions
+        if text not in accumulator["descriptions"]:
+            accumulator["descriptions"].append(text)
+
+        return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult:
         subject = message.split("\n", maxsplit=1)[0]
@@ -164,7 +220,17 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         )
 
         # All emojis will remain part of the returned description
-        descriptions = tuple(parse_paragraphs(message))
+        body_components: dict[str, list[str]] = reduce(
+            self.commit_body_components_separator,
+            parse_paragraphs(message),
+            {
+                "descriptions": [],
+                "linked_issues": [],
+            },
+        )
+
+        descriptions = tuple(body_components["descriptions"])
+
         return ParsedMessageResult(
             bump=level_bump,
             type=primary_emoji,
@@ -178,6 +244,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             breaking_descriptions=(
                 descriptions[1:] if level_bump is LevelBump.MAJOR else ()
             ),
+            linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
 
