@@ -150,8 +150,7 @@ class ScipyParserOptions(ParserOptions):
     parse_squash_commits: bool = True
     """Toggle flag for whether or not to parse squash commits"""
 
-    # TODO: breaking change v10, change default to True
-    ignore_merge_commits: bool = False
+    ignore_merge_commits: bool = True
     """Toggle flag for whether or not to ignore merge commits"""
 
     @property
