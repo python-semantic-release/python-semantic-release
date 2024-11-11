@@ -89,8 +89,7 @@ class ConventionalCommitParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
     """The minimum bump level to apply to valid commit message."""
 
-    # TODO: breaking change v10, change default to True
-    parse_squash_commits: bool = False
+    parse_squash_commits: bool = True
     """Toggle flag for whether or not to parse squash commits"""
 
     # TODO: breaking change v10, change default to True
