@@ -23,6 +23,7 @@ from semantic_release.commit_parser.token import (
 )
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
+from semantic_release.errors import InvalidParserOptions
 
 if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
@@ -72,16 +73,19 @@ class AngularParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
     def __post_init__(self) -> None:
-        self.tag_to_level: dict[str, LevelBump] = dict(
-            [
+        self.tag_to_level: dict[str, LevelBump] = {
+            str(tag): level
+            for tag, level in [
                 # we have to do a type ignore as zip_longest provides a type that is not specific enough
                 # for our expected output. Due to the empty second array, we know the first is always longest
-                # and that means no values in the first entry of the tuples will ever be a LevelBump.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),  # type: ignore[list-item]
-                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),  # type: ignore[list-item]
-                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),  # type: ignore[list-item]
+                # and that means no values in the first entry of the tuples will ever be a LevelBump. We
+                # apply a str() to make mypy happy although it will never happen.
+                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
+                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
             ]
-        )
+            if "|" not in str(tag)
+        }
 
 
 class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
@@ -95,12 +99,28 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
 
     def __init__(self, options: AngularParserOptions | None = None) -> None:
         super().__init__(options)
-        all_possible_types = str.join("|", self.options.allowed_tags)
+
+        try:
+            commit_type_pattern = regexp(
+                r"(?P<type>%s)" % str.join("|", self.options.allowed_tags)
+            )
+        except re.error as err:
+            raise InvalidParserOptions(
+                str.join(
+                    "\n",
+                    [
+                        f"Invalid options for {self.__class__.__name__}",
+                        "Unable to create regular expression from configured commit-types.",
+                        "Please check the configured commit-types and remove or escape any regular expression characters.",
+                    ],
+                )
+            ) from err
+
         self.re_parser = regexp(
             str.join(
                 "",
                 [
-                    r"(?P<type>%s)" % all_possible_types,
+                    r"^" + commit_type_pattern.pattern,
                     r"(?:\((?P<scope>[^\n]+)\))?",
                     # TODO: remove ! support as it is not part of the angular commit spec (its part of conventional commits spec)
                     r"(?P<break>!)?:\s+",
@@ -110,6 +130,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             ),
             flags=re.DOTALL,
         )
+
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
             r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"

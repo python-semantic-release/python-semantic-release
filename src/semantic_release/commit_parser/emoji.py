@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from itertools import zip_longest
 from re import compile as regexp
 from typing import Tuple
@@ -18,6 +19,7 @@ from semantic_release.commit_parser.token import (
 )
 from semantic_release.commit_parser.util import parse_paragraphs
 from semantic_release.enums import LevelBump
+from semantic_release.errors import InvalidParserOptions
 
 logger = logging.getLogger(__name__)
 
@@ -57,17 +59,20 @@ class EmojiParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
 
     def __post_init__(self) -> None:
-        self.tag_to_level: dict[str, LevelBump] = dict(
-            [
+        self.tag_to_level: dict[str, LevelBump] = {
+            str(tag): level
+            for tag, level in [
                 # we have to do a type ignore as zip_longest provides a type that is not specific enough
                 # for our expected output. Due to the empty second array, we know the first is always longest
-                # and that means no values in the first entry of the tuples will ever be a LevelBump.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),  # type: ignore[list-item]
-                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),  # type: ignore[list-item]
-                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),  # type: ignore[list-item]
-                *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),  # type: ignore[list-item]
+                # and that means no values in the first entry of the tuples will ever be a LevelBump. We
+                # apply a str() to make mypy happy although it will never happen.
+                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
+                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
+                *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),
             ]
-        )
+            if "|" not in str(tag)
+        }
 
 
 class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
@@ -88,15 +93,25 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
 
     def __init__(self, options: EmojiParserOptions | None = None) -> None:
         super().__init__(options)
-        prcedence_order_regex = str.join(
-            "|",
-            [
-                *self.options.major_tags,
-                *self.options.minor_tags,
-                *self.options.patch_tags,
-            ],
-        )
-        self.emoji_selector = regexp(r"(?P<type>%s)" % prcedence_order_regex)
+
+        # Reverse the list of tags to ensure that the highest level tags are matched first
+        emojis_in_precedence_order = list(self.options.tag_to_level.keys())[::-1]
+
+        try:
+            self.emoji_selector = regexp(
+                r"(?P<type>%s)" % str.join("|", emojis_in_precedence_order)
+            )
+        except re.error as err:
+            raise InvalidParserOptions(
+                str.join(
+                    "\n",
+                    [
+                        f"Invalid options for {self.__class__.__name__}",
+                        "Unable to create regular expression from configured commit-types.",
+                        "Please check the configured commit-types and remove or escape any regular expression characters.",
+                    ],
+                )
+            ) from err
 
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
