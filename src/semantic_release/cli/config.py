@@ -123,6 +123,8 @@ class ChangelogEnvironmentConfig(BaseModel):
 class DefaultChangelogTemplatesConfig(BaseModel):
     changelog_file: str = "CHANGELOG.md"
     output_format: ChangelogOutputFormat = ChangelogOutputFormat.NONE
+    # TODO: Breaking Change v10, it will become True
+    mask_initial_release: bool = False
 
     @model_validator(mode="after")
     def interpret_output_format(self) -> Self:
@@ -511,6 +513,7 @@ class RuntimeContext:
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: hvcs.HvcsBase
     changelog_insertion_flag: str
+    changelog_mask_initial_release: bool
     changelog_mode: ChangelogMode
     changelog_file: Path
     changelog_style: str
@@ -795,6 +798,7 @@ class RuntimeContext:
             hvcs_client=hvcs_client,
             changelog_file=changelog_file,
             changelog_mode=raw.changelog.mode,
+            changelog_mask_initial_release=raw.changelog.default_templates.mask_initial_release,
             changelog_insertion_flag=raw.changelog.insertion_flag,
             assets=raw.assets,
             commit_author=commit_author,
