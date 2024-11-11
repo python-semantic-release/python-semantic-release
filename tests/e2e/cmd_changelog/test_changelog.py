@@ -27,6 +27,7 @@ from tests.const import (
     MAIN_PROG_NAME,
 )
 from tests.fixtures.example_project import (
+    change_to_ex_proj_dir,
     changelog_md_file,
     changelog_rst_file,
     default_md_changelog_insertion_flag,
@@ -78,10 +79,12 @@ if TYPE_CHECKING:
 
     from tests.e2e.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import (
+        ExProjectDir,
         UpdatePyprojectTomlFn,
         UseReleaseNotesTemplateFn,
     )
     from tests.fixtures.git_repo import (
+        BuildRepoFn,
         CommitNReturnChangelogEntryFn,
         GetCommitDefFn,
         GetVersionStringsFn,
@@ -220,6 +223,68 @@ def test_changelog_content_regenerated(
     update_pyproject_toml(
         "tool.semantic_release.changelog.default_templates.changelog_file",
         str(changelog_file.name),
+    )
+
+    # Because we are in init mode, the insertion flag is not present in the changelog
+    # we must take it out manually because our repo generation fixture includes it automatically
+    with changelog_file.open(newline=os.linesep) as rfd:
+        # use os.linesep here because the insertion flag is os-specific
+        # but convert the content to universal newlines for comparison
+        expected_changelog_content = (
+            rfd.read().replace(f"{insertion_flag}{os.linesep}", "").replace("\r", "")
+        )
+
+    # Remove the changelog and then check that we can regenerate it
+    os.remove(str(changelog_file.resolve()))
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Check that the changelog file was re-created
+    assert changelog_file.exists()
+
+    actual_content = changelog_file.read_text()
+
+    # Check that the changelog content is the same as before
+    assert expected_changelog_content == actual_content
+
+
+@pytest.mark.parametrize(
+    "changelog_file, insertion_flag",
+    [
+        (
+            # ChangelogOutputFormat.MARKDOWN
+            lazy_fixture(example_changelog_md.__name__),
+            lazy_fixture(default_md_changelog_insertion_flag.__name__),
+        ),
+        (
+            # ChangelogOutputFormat.RESTRUCTURED_TEXT
+            lazy_fixture(example_changelog_rst.__name__),
+            lazy_fixture(default_rst_changelog_insertion_flag.__name__),
+        ),
+    ],
+)
+@pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)
+def test_changelog_content_regenerated_masked_initial_release(
+    build_trunk_only_repo_w_tags: BuildRepoFn,
+    example_project_dir: ExProjectDir,
+    cli_runner: CliRunner,
+    changelog_file: Path,
+    insertion_flag: str,
+):
+    build_trunk_only_repo_w_tags(
+        dest_dir=example_project_dir,
+        mask_initial_release=True,
+        extra_configs={
+            "tool.semantic_release.changelog.default_templates.changelog_file": str(
+                changelog_file.name
+            ),
+            "tool.semantic_release.changelog.mode": ChangelogMode.INIT.value,
+        },
     )
 
     # Because we are in init mode, the insertion flag is not present in the changelog

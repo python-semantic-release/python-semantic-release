@@ -199,6 +199,7 @@ def get_release_history_from_context(runtime_context: RuntimeContext) -> Release
         mode=ChangelogMode.INIT,
         prev_changelog_file=Path("CHANGELOG.md"),
         insertion_flag="",
+        mask_initial_release=runtime_context.changelog_mask_initial_release,
     )
     changelog_context.bind_to_environment(runtime_context.template_environment)
     return release_history

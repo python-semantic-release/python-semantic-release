@@ -212,6 +212,7 @@ def test_changelog_context_bitbucket(
         mode=ChangelogMode.INIT,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -260,6 +261,7 @@ def test_changelog_context_github(
         mode=ChangelogMode.INIT,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -306,6 +308,7 @@ def test_changelog_context_gitea(
         mode=ChangelogMode.INIT,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -355,6 +358,7 @@ def test_changelog_context_gitlab(
         mode=ChangelogMode.INIT,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -404,6 +408,7 @@ def test_changelog_context_read_file(
         mode=ChangelogMode.UPDATE,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -431,6 +436,7 @@ def test_changelog_context_read_file_fails_gracefully(
         mode=ChangelogMode.UPDATE,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -456,6 +462,7 @@ def test_changelog_context_autofit_text_width(
         mode=ChangelogMode.UPDATE,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
@@ -481,6 +488,7 @@ def test_changelog_context_autofit_text_width_w_indent(
         mode=ChangelogMode.UPDATE,
         prev_changelog_file=changelog_md_file,
         insertion_flag="",
+        mask_initial_release=False,
     )
     context.bind_to_environment(env)
 
