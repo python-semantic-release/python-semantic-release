@@ -7,27 +7,23 @@ it follows the following logic:
   4. the first release
 
 #}{#
-   #   Header
-#}{%   include "changelog_header.rst.j2"
+   #    Header
+#}{%    include "changelog_header.rst.j2"
 -%}{#
-   #   Any Unreleased Details (uncommon)
-#}{%   include "unreleased_changes.rst.j2"
+   #    Any Unreleased Details (uncommon)
+#}{%    include "unreleased_changes.rst.j2"
 -%}{#
-    #  Since this is initialization, we are generating all the previous
-    #  release notes per version. The very first release notes is specialized
-#}{%   if releases | length - 1 > 0
-%}{%     for release in releases[:-1]
+    #   Since this is initialization, we are generating all the previous
+    #   release notes per version. The very first release notes is specialized
+#}{%    if releases | length > 0
+%}{%      for release in releases
+%}{{        "\n"
+}}{%        if loop.last and ctx.mask_initial_release
+%}{%-         include "first_release.rst.j2"
+-%}{%       else
+%}{%-         include "versioned_changes.rst.j2"
+-%}{%       endif
 %}{{       "\n"
-}}{%-      include "versioned_changes.rst.j2"
--%}{{      "\n"
-}}{%     endfor
-%}{%   endif
-%}{#
-   #   First Release
-#}{%   if releases | length > 0
-%}{%     set release = releases[-1]
-%}{{     "\n"
-}}{%-    include "first_release.rst.j2"
--%}{{    "\n"
-}}{%   endif
+}}{%      endfor
+%}{%    endif
 %}

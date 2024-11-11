@@ -15,10 +15,6 @@
 %}{#
 #}{%  elif ctx.changelog_mode == "update"
 %}{%    set prev_changelog_file = ctx.prev_changelog_file
-%}{%    set new_releases = []
-%}{%    if releases | length > 0
-%}{%      set new_releases = [releases | first]
-%}{%    endif
 %}{%    include ".components/changelog_update.rst.j2"
 %}{#
 #}{%  endif
