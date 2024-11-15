@@ -67,8 +67,18 @@ class Gitlab(RemoteHvcsBase):
                 path=str(PurePosixPath(domain_url.path or "/")),
             ).url.rstrip("/")
         )
+        private_token, job_token = token, None
+        job_token = os.getenv("CI_JOB_TOKEN")
 
-        self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
+        if job_token:
+            if job_token == private_token or not private_token:
+                # Disable private_token if it's actually the CI_JOB_TOKEN
+                private_token = None
+            else:
+                # Private token should be prioritized over CI_JOB_TOKEN
+                job_token = None
+
+        self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=private_token, job_token=job_token)
         self._api_url = parse_url(self._client.api_url)
 
     @property
