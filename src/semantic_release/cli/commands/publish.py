@@ -10,7 +10,7 @@ from semantic_release.cli.util import noop_report
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.algorithm import tags_and_versions
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.cli.cli_context import CliContextObj
 
 

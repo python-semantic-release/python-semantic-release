@@ -24,7 +24,7 @@ from semantic_release.commit_parser.token import (
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
 
 

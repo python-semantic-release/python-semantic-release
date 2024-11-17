@@ -4,7 +4,7 @@ from functools import reduce
 from re import compile as regexp
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from re import Pattern
     from typing import TypedDict
 

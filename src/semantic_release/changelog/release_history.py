@@ -11,7 +11,7 @@ from semantic_release.commit_parser import ParseError
 from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import tags_and_versions
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from re import Pattern
     from typing import Iterable, Iterator
 

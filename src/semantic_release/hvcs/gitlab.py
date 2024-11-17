@@ -21,7 +21,7 @@ from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.util import suppress_not_found
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
 
     from gitlab.v4.objects import Project as GitLabProject

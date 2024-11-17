@@ -8,7 +8,7 @@ from pathlib import Path
 from re import compile as regexp
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from jinja2 import Environment
 
     from semantic_release.changelog.release_history import Release, ReleaseHistory

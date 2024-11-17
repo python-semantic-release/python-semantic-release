@@ -11,7 +11,7 @@ from urllib3.util.url import Url, parse_url
 
 from semantic_release.hvcs import HvcsBase
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Any
 
 

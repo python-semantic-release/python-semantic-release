@@ -20,7 +20,7 @@ from semantic_release.errors import (
     NotAReleaseBranch,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.cli.config import GlobalCommandLineOptions
 
     class CliContext(click.Context):

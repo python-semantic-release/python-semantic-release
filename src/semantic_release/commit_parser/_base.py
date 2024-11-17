@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from semantic_release.commit_parser.token import ParseResultType
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
 
 

@@ -10,7 +10,7 @@ from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidVersion, MissingMergeBaseError
 from semantic_release.version.version import Version
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from git.objects.blob import Blob
     from git.objects.commit import Commit
     from git.objects.tag import TagObject
