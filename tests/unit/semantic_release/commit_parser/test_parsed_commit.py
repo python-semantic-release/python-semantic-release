@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from semantic_release import LevelBump
 from semantic_release.commit_parser import ParsedCommit
+from semantic_release.version.version import LevelBump
 
 if TYPE_CHECKING:
     from tests.conftest import MakeCommitObjFn

@@ -15,8 +15,6 @@ from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
-from tests.const import TODAY_DATE_STR
-
 if TYPE_CHECKING:
     from semantic_release.changelog.release_history import ReleaseHistory
 
@@ -36,6 +34,7 @@ def test_default_changelog_template(
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
     changelog_md_file: Path,
+    today_date_str: str,
 ):
     artificial_release_history.unreleased = {}  # Wipe out unreleased
     hvcs = hvcs_client(example_git_https_url)
@@ -62,7 +61,7 @@ def test_default_changelog_template(
             "# CHANGELOG",
             "",
             "",
-            f"## v{latest_version} ({TODAY_DATE_STR})",
+            f"## v{latest_version} ({today_date_str})",
             "",
             "### Feature",
             "",
@@ -77,7 +76,7 @@ def test_default_changelog_template(
             f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
             "",
             "",
-            f"## v{first_version} ({TODAY_DATE_STR})",
+            f"## v{first_version} ({today_date_str})",
             "",
             "- Initial Release",
         ],
@@ -105,6 +104,7 @@ def test_default_changelog_template_no_initial_release_mask(
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
     changelog_md_file: Path,
+    today_date_str: str,
 ):
     artificial_release_history.unreleased = {}  # Wipe out unreleased
     hvcs = hvcs_client(example_git_https_url)
@@ -131,7 +131,7 @@ def test_default_changelog_template_no_initial_release_mask(
             "# CHANGELOG",
             "",
             "",
-            f"## v{latest_version} ({TODAY_DATE_STR})",
+            f"## v{latest_version} ({today_date_str})",
             "",
             "### Feature",
             "",
@@ -146,7 +146,7 @@ def test_default_changelog_template_no_initial_release_mask(
             f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
             "",
             "",
-            f"## v{first_version} ({TODAY_DATE_STR})",
+            f"## v{first_version} ({today_date_str})",
             "",
             "### Feature",
             "",
@@ -178,6 +178,7 @@ def test_default_changelog_template_w_unreleased_changes(
     example_git_https_url: str,
     artificial_release_history: ReleaseHistory,
     changelog_md_file: Path,
+    today_date_str: str,
 ):
     hvcs = hvcs_client(example_git_https_url)
 
@@ -211,7 +212,7 @@ def test_default_changelog_template_w_unreleased_changes(
             f"  ([`{feat_commit_obj.commit.hexsha[:7]}`]({feat_commit_url}))",
             "",
             "",
-            f"## v{latest_version} ({TODAY_DATE_STR})",
+            f"## v{latest_version} ({today_date_str})",
             "",
             "### Feature",
             "",
@@ -226,7 +227,7 @@ def test_default_changelog_template_w_unreleased_changes(
             f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
             "",
             "",
-            f"## v{first_version} ({TODAY_DATE_STR})",
+            f"## v{first_version} ({today_date_str})",
             "",
             "- Initial Release",
         ],

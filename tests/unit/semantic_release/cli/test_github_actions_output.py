@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from semantic_release import Version
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
+from semantic_release.version.version import Version
 
 from tests.util import actions_output_to_dict
 

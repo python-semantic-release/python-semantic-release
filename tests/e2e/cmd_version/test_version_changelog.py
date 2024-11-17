@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import pytest
+from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import MAIN_PROG_NAME, TODAY_DATE_STR, VERSION_SUBCMD
+from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.example_project import (
     default_md_changelog_insertion_flag,
     default_rst_changelog_insertion_flag,
@@ -18,6 +20,12 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
+    get_versions_for_git_flow_repo_w_2_release_channels,
+    get_versions_for_git_flow_repo_w_3_release_channels,
+    get_versions_for_github_flow_repo_w_default_release_channel,
+    get_versions_for_github_flow_repo_w_feature_release_channel,
+    get_versions_for_trunk_only_repo_w_prerelease_tags,
+    get_versions_for_trunk_only_repo_w_tags,
     repo_w_git_flow_and_release_channels_angular_commits,
     repo_w_git_flow_and_release_channels_angular_commits_using_tag_format,
     repo_w_git_flow_and_release_channels_emoji_commits,
@@ -49,8 +57,13 @@ if TYPE_CHECKING:
     from click.testing import CliRunner
     from git import Repo
 
+    from tests.conftest import FormatDateStrFn, GetStableDateNowFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
-    from tests.fixtures.git_repo import CommitConvention, GetRepoDefinitionFn
+    from tests.fixtures.git_repo import (
+        CommitConvention,
+        GetRepoDefinitionFn,
+        GetVersionStringsFn,
+    )
 
 
 @pytest.mark.parametrize(
@@ -69,42 +82,121 @@ if TYPE_CHECKING:
     ],
 )
 @pytest.mark.parametrize(
-    "repo",
+    "repo, cache_key, get_version_strings, tag_format",
     [
-        lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+        (
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
+            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
+            "v{version}",
+        ),
         *[
-            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
-            for repo_fixture in [
+            pytest.param(
+                lazy_fixture(repo_fixture),
+                f"psr/repos/{repo_fixture}",
+                lazy_fixture(get_version_strings),
+                "v{version}" if tag_format is None else tag_format,
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture, get_version_strings, tag_format in [
                 # Must have a previous release/tag
-                # repo_with_single_branch_angular_commits.__name__, # default
-                repo_w_trunk_only_emoji_commits.__name__,
-                repo_w_trunk_only_scipy_commits.__name__,
-                repo_w_trunk_only_n_prereleases_angular_commits.__name__,
-                repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
-                repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-                repo_w_git_flow_angular_commits.__name__,
-                repo_w_git_flow_emoji_commits.__name__,
-                repo_w_git_flow_scipy_commits.__name__,
-                repo_w_git_flow_and_release_channels_angular_commits.__name__,
-                repo_w_git_flow_and_release_channels_emoji_commits.__name__,
-                repo_w_git_flow_and_release_channels_scipy_commits.__name__,
-                repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_trunk_only_repo_w_tags.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        # repo_with_single_branch_angular_commits.__name__, # default
+                        repo_w_trunk_only_emoji_commits.__name__,
+                        repo_w_trunk_only_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_trunk_only_repo_w_prerelease_tags.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_github_flow_repo_w_default_release_channel.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
+                        repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_github_flow_repo_w_feature_release_channel.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+                        repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_git_flow_repo_w_2_release_channels.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_git_flow_angular_commits.__name__,
+                        repo_w_git_flow_emoji_commits.__name__,
+                        repo_w_git_flow_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
+                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
+                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
+                        "submod-v{version}",
+                    )
+                    for repo_fixture_name in [
+                        repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+                    ]
+                ],
             ]
         ],
     ],
 )
 def test_version_updates_changelog_w_new_version(
     repo: Repo,
+    get_version_strings: GetVersionStringsFn,
+    tag_format: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
     changelog_file: Path,
     insertion_flag: str,
+    cache: pytest.Cache,
+    cache_key: str,
+    stable_now_date: GetStableDateNowFn,
 ):
     """
     Given a previously released custom modified changelog file,
@@ -112,6 +204,18 @@ def test_version_updates_changelog_w_new_version(
     Then the version is created and the changelog file is updated with new release info
         while maintaining the previously customized content
     """
+    latest_tag = tag_format.format(version=get_version_strings()[-1])
+
+    if not (repo_build_data := cache.get(cache_key, None)):
+        pytest.fail("Repo build date not found in cache")
+
+    repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
+    now_datetime = stable_now_date().replace(
+        year=repo_build_datetime.year,
+        month=repo_build_datetime.month,
+        day=repo_build_datetime.day,
+    )
+
     # Custom text to maintain (must be different from the default)
     custom_text = "---{ls}{ls}Custom footer text{ls}".format(ls=os.linesep)
 
@@ -135,8 +239,7 @@ def test_version_updates_changelog_w_new_version(
     )
 
     # Reverse last release
-    repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
-    repo.git.tag("-d", repo_tags[0])
+    repo.git.tag("-d", latest_tag)
     repo.git.reset("--hard", "HEAD~1")
 
     # Set the project configurations
@@ -162,9 +265,9 @@ def test_version_updates_changelog_w_new_version(
         )
     )
 
-    # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    with freeze_time(now_datetime.astimezone(timezone.utc)):
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Capture the new changelog content (os aware because of expected content)
     with changelog_file.open(newline=os.linesep) as rfd:
@@ -191,11 +294,18 @@ def test_version_updates_changelog_w_new_version(
     ],
 )
 @pytest.mark.parametrize(
-    "repo",
+    "repo, cache_key",
     [
-        lazy_fixture(repo_w_no_tags_angular_commits.__name__),
+        (
+            lazy_fixture(repo_w_no_tags_angular_commits.__name__),
+            f"psr/repos/{repo_w_no_tags_angular_commits.__name__}",
+        ),
         *[
-            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
+            pytest.param(
+                lazy_fixture(repo_fixture),
+                f"psr/repos/{repo_fixture}",
+                marks=pytest.mark.comprehensive,
+            )
             for repo_fixture in [
                 # Must not have a single release/tag
                 # repo_with_no_tags_angular_commits.__name__, # default
@@ -207,17 +317,32 @@ def test_version_updates_changelog_w_new_version(
 )
 def test_version_updates_changelog_wo_prev_releases(
     repo: Repo,
+    cache_key: str,
+    cache: pytest.Cache,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_format: ChangelogOutputFormat,
     changelog_file: Path,
     insertion_flag: str,
+    stable_now_date: GetStableDateNowFn,
+    format_date_str: FormatDateStrFn,
 ):
     """
     Given the repository has no releases and the user has provided a initialized changelog,
     When the version command is run with changelog.mode set to "update",
     Then the version is created and the changelog file is updated with new release info
     """
+    if not (repo_build_data := cache.get(cache_key, None)):
+        pytest.fail("Repo build date not found in cache")
+
+    repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
+    now_datetime = stable_now_date().replace(
+        year=repo_build_datetime.year,
+        month=repo_build_datetime.month,
+        day=repo_build_datetime.day,
+    )
+    repo_build_date_str = format_date_str(now_datetime)
+
     # Custom text to maintain (must be different from the default)
     custom_text = "---{ls}{ls}Custom footer text{ls}".format(ls=os.linesep)
 
@@ -231,11 +356,11 @@ def test_version_updates_changelog_wo_prev_releases(
     )
 
     version = "v0.1.0"
-    rst_version_header = f"{version} ({TODAY_DATE_STR})"
+    rst_version_header = f"{version} ({repo_build_date_str})"
     search_n_replacements = {
         ChangelogOutputFormat.MARKDOWN: (
             "## Unreleased",
-            f"## {version} ({TODAY_DATE_STR})",
+            f"## {version} ({repo_build_date_str})",
         ),
         ChangelogOutputFormat.RESTRUCTURED_TEXT: (
             ".. _changelog-unreleased:{ls}{ls}Unreleased{ls}{underline}".format(
@@ -293,8 +418,9 @@ def test_version_updates_changelog_wo_prev_releases(
         wfd.flush()
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    with freeze_time(now_datetime.astimezone(timezone.utc)):
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -318,41 +444,120 @@ def test_version_updates_changelog_wo_prev_releases(
     ],
 )
 @pytest.mark.parametrize(
-    "repo",
+    "repo, cache_key, get_version_strings, tag_format",
     [
-        lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+        (
+            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
+            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
+            "v{version}",
+        ),
         *[
-            pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
-            for repo_fixture in [
+            pytest.param(
+                lazy_fixture(repo_fixture),
+                f"psr/repos/{repo_fixture}",
+                lazy_fixture(get_version_strings),
+                "v{version}" if tag_format is None else tag_format,
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture, get_version_strings, tag_format in [
                 # Must have a previous release/tag
-                # repo_with_single_branch_angular_commits.__name__, # default
-                repo_w_trunk_only_emoji_commits.__name__,
-                repo_w_trunk_only_scipy_commits.__name__,
-                repo_w_trunk_only_n_prereleases_angular_commits.__name__,
-                repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
-                repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-                repo_w_git_flow_angular_commits.__name__,
-                repo_w_git_flow_emoji_commits.__name__,
-                repo_w_git_flow_scipy_commits.__name__,
-                repo_w_git_flow_and_release_channels_angular_commits.__name__,
-                repo_w_git_flow_and_release_channels_emoji_commits.__name__,
-                repo_w_git_flow_and_release_channels_scipy_commits.__name__,
-                repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_trunk_only_repo_w_tags.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        # repo_with_single_branch_angular_commits.__name__, # default
+                        repo_w_trunk_only_emoji_commits.__name__,
+                        repo_w_trunk_only_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_trunk_only_repo_w_prerelease_tags.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_github_flow_repo_w_default_release_channel.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
+                        repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_github_flow_repo_w_feature_release_channel.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
+                        repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_git_flow_repo_w_2_release_channels.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_git_flow_angular_commits.__name__,
+                        repo_w_git_flow_emoji_commits.__name__,
+                        repo_w_git_flow_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
+                        None,
+                    )
+                    for repo_fixture_name in [
+                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
+                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
+                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+                    ]
+                ],
+                *[
+                    (
+                        repo_fixture_name,
+                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
+                        "submod-v{version}",
+                    )
+                    for repo_fixture_name in [
+                        repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+                    ]
+                ],
             ]
         ],
     ],
 )
 def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     repo: Repo,
+    cache_key: str,
+    get_version_strings: GetVersionStringsFn,
+    tag_format: str,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
+    cache: pytest.Cache,
+    stable_now_date: GetStableDateNowFn,
 ):
     """
     Given that the changelog file does not exist,
@@ -360,12 +565,23 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     Then the version is created and the changelog file is initialized
     with the default content.
     """
+    latest_tag = tag_format.format(version=get_version_strings()[-1])
+
+    if not (repo_build_data := cache.get(cache_key, None)):
+        pytest.fail("Repo build date not found in cache")
+
+    repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
+    now_datetime = stable_now_date().replace(
+        year=repo_build_datetime.year,
+        month=repo_build_datetime.month,
+        day=repo_build_datetime.day,
+    )
+
     # Capture the expected changelog content
     expected_changelog_content = changelog_file.read_text()
 
     # Reverse last release
-    repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
-    repo.git.tag("-d", repo_tags[0])
+    repo.git.tag("-d", latest_tag)
     repo.git.reset("--hard", "HEAD~1")
 
     # Set the project configurations
@@ -381,8 +597,9 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     os.remove(str(changelog_file.resolve()))
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    with freeze_time(now_datetime.astimezone(timezone.utc)):
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -466,9 +683,13 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
     ],
 )
 @pytest.mark.parametrize(
-    "repo, commit_type",
+    "repo, cache_key, commit_type",
     [
-        (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
+        (
+            lazy_fixture(repo_fixture),
+            f"psr/repos/{repo_fixture}",
+            repo_fixture.split("_")[-2],
+        )
         for repo_fixture in [
             # Must have a previous release/tag
             repo_w_trunk_only_angular_commits.__name__,
@@ -477,11 +698,14 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
 )
 def test_version_updates_changelog_w_new_version_n_filtered_commit(
     repo: Repo,
+    cache: pytest.Cache,
+    cache_key: str,
     commit_type: CommitConvention,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
     changelog_file: Path,
     get_commits_for_trunk_only_repo_w_tags: GetRepoDefinitionFn,
+    stable_now_date: GetStableDateNowFn,
 ):
     """
     Given a project that has a version bumping change but also an exclusion pattern for the same change type,
@@ -490,6 +714,15 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
         info anyway.
     """
     repo_definition = get_commits_for_trunk_only_repo_w_tags(commit_type)
+    if not (repo_build_data := cache.get(cache_key, None)):
+        pytest.fail("Repo build date not found in cache")
+
+    repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
+    now_datetime = stable_now_date().replace(
+        year=repo_build_datetime.year,
+        month=repo_build_datetime.month,
+        day=repo_build_datetime.day,
+    )
 
     # expected version bump commit (that should be in changelog)
     expected_bump_message = list(repo_definition.values())[-1]["commits"][-1][
@@ -518,8 +751,9 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     )
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    with freeze_time(now_datetime.astimezone(timezone.utc)):
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Capture the new changelog content (os aware because of expected content)
     actual_content = changelog_file.read_text()
