@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -7,19 +8,23 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
-from tests.const import EXAMPLE_HVCS_DOMAIN
-from tests.util import copy_dir_tree, temporary_working_directory
+import tests.conftest
+import tests.const
+import tests.util
+from tests.const import EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
+from tests.util import temporary_working_directory
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from semantic_release.hvcs import HvcsBase
 
-    from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import ExProjectDir
+    from tests.conftest import GetMd5ForSetOfFilesFn
+    from tests.fixtures.example_project import (
+        ExProjectDir,
+    )
     from tests.fixtures.git_repo import (
         BaseRepoVersionDef,
         BuildRepoFn,
+        BuildRepoOrCopyCacheFn,
         CommitConvention,
         ExProjectGitRepoFn,
         ExtractRepoDefinitionFn,
@@ -31,6 +36,31 @@ if TYPE_CHECKING:
         TomlSerializableTypes,
         VersionStr,
     )
+
+
+@pytest.fixture(scope="session")
+def deps_files_4_repo_w_no_tags(
+    deps_files_4_example_git_project: list[Path],
+) -> list[Path]:
+    return [
+        *deps_files_4_example_git_project,
+        # This file
+        Path(__file__).absolute(),
+        # because of imports
+        Path(tests.const.__file__).absolute(),
+        Path(tests.util.__file__).absolute(),
+        # because of the fixtures
+        Path(tests.conftest.__file__).absolute(),
+    ]
+
+
+@pytest.fixture(scope="session")
+def build_spec_hash_for_repo_w_no_tags(
+    get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
+    deps_files_4_repo_w_no_tags: list[Path],
+) -> str:
+    # Generates a hash of the build spec to set when to invalidate the cache
+    return get_md5_for_set_of_files(deps_files_4_repo_w_no_tags)
 
 
 @pytest.fixture(scope="session")
@@ -59,9 +89,9 @@ def get_commits_for_trunk_only_repo_w_no_tags(
             },
             "commits": [
                 {
-                    "angular": "Initial commit",
-                    "emoji": "Initial commit",
-                    "scipy": "Initial commit",
+                    "angular": INITIAL_COMMIT_MESSAGE,
+                    "emoji": INITIAL_COMMIT_MESSAGE,
+                    "scipy": INITIAL_COMMIT_MESSAGE,
                 },
                 {
                     "angular": "fix: correct some text",
@@ -166,88 +196,71 @@ def build_trunk_only_repo_w_no_tags(
 
 
 # --------------------------------------------------------------------------- #
-# Session-level fixtures to use to set up cached repositories on first use    #
-# --------------------------------------------------------------------------- #
-
-
-@pytest.fixture(scope="session")
-def cached_repo_with_no_tags_angular_commits(
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_with_no_tags_angular_commits.__name__
-    )
-    build_trunk_only_repo_w_no_tags(cached_repo_path, "angular")
-    return teardown_cached_dir(cached_repo_path)
-
-
-@pytest.fixture(scope="session")
-def cached_repo_with_no_tags_emoji_commits(
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_with_no_tags_emoji_commits.__name__
-    )
-    build_trunk_only_repo_w_no_tags(cached_repo_path, "emoji")
-    return teardown_cached_dir(cached_repo_path)
-
-
-@pytest.fixture(scope="session")
-def cached_repo_with_no_tags_scipy_commits(
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_with_no_tags_scipy_commits.__name__
-    )
-    build_trunk_only_repo_w_no_tags(cached_repo_path, "scipy")
-    return teardown_cached_dir(cached_repo_path)
-
-
-# --------------------------------------------------------------------------- #
-# Test-level fixtures to use to set up temporary test directory               #
+# Test-level fixtures that will cache the built directory & set up test case  #
 # --------------------------------------------------------------------------- #
 
 
 @pytest.fixture
 def repo_w_no_tags_angular_commits(
-    cached_repo_with_no_tags_angular_commits: Path,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_trunk_only_repo_w_no_tags: BuildRepoFn,
+    build_spec_hash_for_repo_w_no_tags: str,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_with_no_tags_angular_commits.exists():
-        raise RuntimeError("Unable to find cached repo!")
-    copy_dir_tree(cached_repo_with_no_tags_angular_commits, example_project_dir)
+    def _build_repo(cached_repo_path: Path):
+        build_trunk_only_repo_w_no_tags(cached_repo_path, "angular")
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_no_tags_angular_commits.__name__,
+        build_spec_hash=build_spec_hash_for_repo_w_no_tags,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
+    )
+
     return example_project_git_repo()
 
 
 @pytest.fixture
 def repo_w_no_tags_emoji_commits(
-    cached_repo_with_no_tags_emoji_commits: Path,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_trunk_only_repo_w_no_tags: BuildRepoFn,
+    build_spec_hash_for_repo_w_no_tags: str,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_with_no_tags_emoji_commits.exists():
-        raise RuntimeError("Unable to find cached repo!")
-    copy_dir_tree(cached_repo_with_no_tags_emoji_commits, example_project_dir)
+    def _build_repo(cached_repo_path: Path):
+        build_trunk_only_repo_w_no_tags(cached_repo_path, "emoji")
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_no_tags_emoji_commits.__name__,
+        build_spec_hash=build_spec_hash_for_repo_w_no_tags,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
+    )
+
     return example_project_git_repo()
 
 
 @pytest.fixture
 def repo_w_no_tags_scipy_commits(
-    cached_repo_with_no_tags_scipy_commits: Path,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_trunk_only_repo_w_no_tags: BuildRepoFn,
+    build_spec_hash_for_repo_w_no_tags: str,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_with_no_tags_scipy_commits.exists():
-        raise RuntimeError("Unable to find cached repo!")
-    copy_dir_tree(cached_repo_with_no_tags_scipy_commits, example_project_dir)
+    def _build_repo(cached_repo_path: Path):
+        build_trunk_only_repo_w_no_tags(cached_repo_path, "scipy")
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_no_tags_scipy_commits.__name__,
+        build_spec_hash=build_spec_hash_for_repo_w_no_tags,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
+    )
+
     return example_project_git_repo()

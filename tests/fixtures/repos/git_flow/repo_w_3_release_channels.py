@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -7,19 +8,23 @@ from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
+import tests.conftest
+import tests.const
+import tests.util
 from tests.const import DEFAULT_BRANCH_NAME, EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
-from tests.util import copy_dir_tree, temporary_working_directory
+from tests.util import temporary_working_directory
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from semantic_release.hvcs import HvcsBase
 
-    from tests.conftest import TeardownCachedDirFn
-    from tests.fixtures.example_project import ExProjectDir
+    from tests.conftest import GetMd5ForSetOfFilesFn
+    from tests.fixtures.example_project import (
+        ExProjectDir,
+    )
     from tests.fixtures.git_repo import (
         BaseRepoVersionDef,
         BuildRepoFn,
+        BuildRepoOrCopyCacheFn,
         CommitConvention,
         CreateMergeCommitFn,
         CreateReleaseFn,
@@ -43,6 +48,31 @@ FEAT_BRANCH_3_NAME = "feat/feature-3"
 FEAT_BRANCH_4_NAME = "feat/feature-4"
 FIX_BRANCH_1_NAME = "fix/patch-1"
 FIX_BRANCH_2_NAME = "fix/patch-2"
+
+
+@pytest.fixture(scope="session")
+def deps_files_4_git_flow_repo_w_3_release_channels(
+    deps_files_4_example_git_project: list[Path],
+) -> list[Path]:
+    return [
+        *deps_files_4_example_git_project,
+        # This file
+        Path(__file__).absolute(),
+        # because of imports
+        Path(tests.const.__file__).absolute(),
+        Path(tests.util.__file__).absolute(),
+        # because of the fixtures
+        Path(tests.conftest.__file__).absolute(),
+    ]
+
+
+@pytest.fixture(scope="session")
+def build_spec_hash_for_git_flow_repo_w_3_release_channels(
+    get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
+    deps_files_4_git_flow_repo_w_3_release_channels: list[Path],
+) -> str:
+    # Generates a hash of the build spec to set when to invalidate the cache
+    return get_md5_for_set_of_files(deps_files_4_git_flow_repo_w_3_release_channels)
 
 
 @pytest.fixture(scope="session")
@@ -876,128 +906,97 @@ def build_git_flow_repo_w_3_release_channels(
 
 
 # --------------------------------------------------------------------------- #
-# Session-level fixtures to use to set up cached repositories on first use    #
-# --------------------------------------------------------------------------- #
-
-
-@pytest.fixture(scope="session")
-def cached_repo_w_git_flow_n_3_release_channels_angular_commits_tag_format(
-    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_w_git_flow_n_3_release_channels_angular_commits_tag_format.__name__
-    )
-    build_git_flow_repo_w_3_release_channels(
-        cached_repo_path, "angular", tag_format_str="vpy{version}"
-    )
-    return teardown_cached_dir(cached_repo_path)
-
-
-@pytest.fixture(scope="session")
-def cached_repo_w_git_flow_n_3_release_channels_angular_commits(
-    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_w_git_flow_n_3_release_channels_angular_commits.__name__
-    )
-    build_git_flow_repo_w_3_release_channels(cached_repo_path, "angular")
-    return teardown_cached_dir(cached_repo_path)
-
-
-@pytest.fixture(scope="session")
-def cached_repo_w_git_flow_n_3_release_channels_emoji_commits(
-    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_w_git_flow_n_3_release_channels_emoji_commits.__name__
-    )
-    build_git_flow_repo_w_3_release_channels(cached_repo_path, "emoji")
-    return teardown_cached_dir(cached_repo_path)
-
-
-@pytest.fixture(scope="session")
-def cached_repo_w_git_flow_n_3_release_channels_scipy_commits(
-    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    cached_repo_path = cached_files_dir.joinpath(
-        cached_repo_w_git_flow_n_3_release_channels_scipy_commits.__name__
-    )
-    build_git_flow_repo_w_3_release_channels(cached_repo_path, "scipy")
-    return teardown_cached_dir(cached_repo_path)
-
-
-# --------------------------------------------------------------------------- #
-# Test-level fixtures to use to set up temporary test directory               #
+# Test-level fixtures that will cache the built directory & set up test case  #
 # --------------------------------------------------------------------------- #
 
 
 @pytest.fixture
 def repo_w_git_flow_and_release_channels_angular_commits_using_tag_format(
-    cached_repo_w_git_flow_n_3_release_channels_angular_commits_tag_format: Path,
+    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
+    build_spec_hash_for_git_flow_repo_w_3_release_channels: str,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_w_git_flow_n_3_release_channels_angular_commits_tag_format.exists():
-        raise RuntimeError("Unable to find cached repository!")
-    copy_dir_tree(
-        cached_repo_w_git_flow_n_3_release_channels_angular_commits_tag_format,
-        example_project_dir,
+    def _build_repo(cached_repo_path: Path):
+        build_git_flow_repo_w_3_release_channels(
+            cached_repo_path,
+            "angular",
+            tag_format_str="submod-v{version}",
+        )
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+        build_spec_hash=build_spec_hash_for_git_flow_repo_w_3_release_channels,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
     )
+
     return example_project_git_repo()
 
 
 @pytest.fixture
 def repo_w_git_flow_and_release_channels_angular_commits(
-    cached_repo_w_git_flow_n_3_release_channels_angular_commits: Path,
+    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
+    build_spec_hash_for_git_flow_repo_w_3_release_channels: str,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_w_git_flow_n_3_release_channels_angular_commits.exists():
-        raise RuntimeError("Unable to find cached repository!")
-    copy_dir_tree(
-        cached_repo_w_git_flow_n_3_release_channels_angular_commits,
-        example_project_dir,
+    def _build_repo(cached_repo_path: Path):
+        build_git_flow_repo_w_3_release_channels(cached_repo_path, "angular")
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_git_flow_and_release_channels_angular_commits.__name__,
+        build_spec_hash=build_spec_hash_for_git_flow_repo_w_3_release_channels,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
     )
+
     return example_project_git_repo()
 
 
 @pytest.fixture
 def repo_w_git_flow_and_release_channels_emoji_commits(
-    cached_repo_w_git_flow_n_3_release_channels_emoji_commits: Path,
+    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
+    build_spec_hash_for_git_flow_repo_w_3_release_channels: str,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_w_git_flow_n_3_release_channels_emoji_commits.exists():
-        raise RuntimeError("Unable to find cached repository!")
-    copy_dir_tree(
-        cached_repo_w_git_flow_n_3_release_channels_emoji_commits,
-        example_project_dir,
+    def _build_repo(cached_repo_path: Path):
+        build_git_flow_repo_w_3_release_channels(cached_repo_path, "emoji")
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_git_flow_and_release_channels_emoji_commits.__name__,
+        build_spec_hash=build_spec_hash_for_git_flow_repo_w_3_release_channels,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
     )
+
     return example_project_git_repo()
 
 
 @pytest.fixture
 def repo_w_git_flow_and_release_channels_scipy_commits(
-    cached_repo_w_git_flow_n_3_release_channels_scipy_commits: Path,
+    build_git_flow_repo_w_3_release_channels: BuildRepoFn,
+    build_spec_hash_for_git_flow_repo_w_3_release_channels: str,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> Repo:
-    if not cached_repo_w_git_flow_n_3_release_channels_scipy_commits.exists():
-        raise RuntimeError("Unable to find cached repository!")
-    copy_dir_tree(
-        cached_repo_w_git_flow_n_3_release_channels_scipy_commits,
-        example_project_dir,
+    def _build_repo(cached_repo_path: Path):
+        build_git_flow_repo_w_3_release_channels(cached_repo_path, "scipy")
+
+    build_repo_or_copy_cache(
+        repo_name=repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+        build_spec_hash=build_spec_hash_for_git_flow_repo_w_3_release_channels,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
     )
+
     return example_project_git_repo()
