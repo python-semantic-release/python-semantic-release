@@ -344,7 +344,7 @@ quote-style = "double"
   # Annotations
   "ANN",
   # Using format instead of f-string for readablity
-  "UP032"
+  "UP032",
 ]
 
 

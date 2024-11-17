@@ -224,6 +224,26 @@ jobs:
             --cov-fail-under=70                                    \
             --junit-xml=tests/reports/pytest-results.xml
 
+      - name: Report | Upload Cached Repos on Failure
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.tests.outcome == 'failure' }}
+        with:
+          name: ${{ format('cached-repos-{0}-{1}', matrix.os, matrix.python-version) }}
+          path: .pytest_cache/d/psr-*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Report | Upload Tested Repos on Failure
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.tests.outcome == 'failure' }}
+        with:
+          name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
+          path: /tmp/pytest-of-runner/pytest-current/*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Report | Upload Test Results
         uses: mikepenz/action-junit-report@v4.3.1
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
@@ -298,6 +318,26 @@ jobs:
             `--cov-context=test                                     `
             `--cov-report=term-missing                              `
             `--junit-xml=tests/reports/pytest-results.xml
+
+      - name: Report | Upload Cached Repos on Failure
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.tests.outcome == 'failure' }}
+        with:
+          name: ${{ format('cached-repos-{0}-{1}', matrix.os, matrix.python-version) }}
+          path: .pytest_cache/d/psr-*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Report | Upload Tested Repos on Failure
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.tests.outcome == 'failure' }}
+        with:
+          name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
+          path: /tmp/pytest-of-runner/pytest-current/*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Report | Upload Test Results
         uses: mikepenz/action-junit-report@v4.3.1
