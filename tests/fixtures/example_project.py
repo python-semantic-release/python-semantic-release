@@ -17,6 +17,9 @@ from semantic_release.commit_parser import (
 )
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
+import tests.conftest
+import tests.const
+import tests.util
 from tests.const import (
     EXAMPLE_CHANGELOG_MD_CONTENT,
     EXAMPLE_CHANGELOG_RST_CONTENT,
@@ -35,7 +38,10 @@ if TYPE_CHECKING:
     from semantic_release.commit_parser import CommitParser
     from semantic_release.hvcs import HvcsBase
 
-    from tests.conftest import TeardownCachedDirFn
+    from tests.conftest import (
+        BuildRepoOrCopyCacheFn,
+        GetMd5ForSetOfFilesFn,
+    )
 
     ExProjectDir = Path
 
@@ -59,6 +65,121 @@ if TYPE_CHECKING:
 
     class UseReleaseNotesTemplateFn(Protocol):
         def __call__(self) -> None: ...
+
+
+@pytest.fixture(scope="session")
+def deps_files_4_example_project() -> list[Path]:
+    return [
+        # This file
+        Path(__file__).absolute(),
+        # because of imports
+        Path(tests.const.__file__).absolute(),
+        Path(tests.util.__file__).absolute(),
+        # because of the fixtures
+        Path(tests.conftest.__file__).absolute(),
+    ]
+
+
+@pytest.fixture(scope="session")
+def build_spec_hash_4_example_project(
+    get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
+    deps_files_4_example_project: list[Path],
+) -> str:
+    # Generates a hash of the build spec to set when to invalidate the cache
+    return get_md5_for_set_of_files(deps_files_4_example_project)
+
+
+@pytest.fixture(scope="session")
+def cached_example_project(
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    pyproject_toml_file: Path,
+    setup_cfg_file: Path,
+    setup_py_file: Path,
+    changelog_md_file: Path,
+    changelog_rst_file: Path,
+    build_spec_hash_4_example_project: str,
+) -> Path:
+    """
+    Initializes the example project. DO NOT USE DIRECTLY
+
+    Use the `init_example_project` fixture instead.
+    """
+
+    def _build_project(cached_project_path: Path):
+        # purposefully a relative path
+        example_dir = Path("src", EXAMPLE_PROJECT_NAME)
+        version_py = example_dir / "_version.py"
+        gitignore_contents = dedent(
+            f"""
+            *.pyc
+            /src/**/{version_py.name}
+            """
+        ).lstrip()
+        init_py_contents = dedent(
+            '''
+            """
+            An example package with a very informative docstring
+            """
+            from ._version import __version__
+
+
+            def hello_world() -> None:
+                print("Hello World")
+            '''
+        ).lstrip()
+        version_py_contents = dedent(
+            f"""
+            __version__ = "{EXAMPLE_PROJECT_VERSION}"
+            """
+        ).lstrip()
+
+        for file, contents in [
+            (example_dir / "__init__.py", init_py_contents),
+            (version_py, version_py_contents),
+            (".gitignore", gitignore_contents),
+            (pyproject_toml_file, EXAMPLE_PYPROJECT_TOML_CONTENT),
+            (setup_cfg_file, EXAMPLE_SETUP_CFG_CONTENT),
+            (setup_py_file, EXAMPLE_SETUP_PY_CONTENT),
+            (changelog_md_file, EXAMPLE_CHANGELOG_MD_CONTENT),
+            (changelog_rst_file, EXAMPLE_CHANGELOG_RST_CONTENT),
+        ]:
+            abs_filepath = cached_project_path.joinpath(file).resolve()
+            # make sure the parent directory exists
+            abs_filepath.parent.mkdir(parents=True, exist_ok=True)
+            # write file contents
+            abs_filepath.write_text(contents)
+
+    # End of _build_project()
+
+    return build_repo_or_copy_cache(
+        repo_name=f"project_{EXAMPLE_PROJECT_NAME}",
+        build_spec_hash=build_spec_hash_4_example_project,
+        build_repo_func=_build_project,
+    )
+
+
+@pytest.fixture
+def init_example_project(
+    example_project_dir: ExProjectDir,
+    cached_example_project: Path,
+    change_to_ex_proj_dir: None,
+) -> None:
+    """This fixture initializes the example project in the current test's project directory."""
+    if not cached_example_project.exists():
+        raise RuntimeError(
+            f"Unable to find cached project files for {EXAMPLE_PROJECT_NAME}"
+        )
+
+    # Copy the cached project files into the current test's project directory
+    copy_dir_tree(cached_example_project, example_project_dir)
+
+
+@pytest.fixture
+def example_project_with_release_notes_template(
+    init_example_project: None,
+    use_release_notes_template: UseReleaseNotesTemplateFn,
+) -> None:
+    use_release_notes_template()
 
 
 @pytest.fixture(scope="session")
@@ -133,93 +254,6 @@ def change_to_ex_proj_dir(
         yield
     finally:
         os.chdir(cwd)
-
-
-@pytest.fixture(scope="session")
-def cached_example_project(
-    pyproject_toml_file: Path,
-    setup_cfg_file: Path,
-    setup_py_file: Path,
-    changelog_md_file: Path,
-    changelog_rst_file: Path,
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-) -> Path:
-    """
-    Initializes the example project. DO NOT USE DIRECTLY
-
-    Use the `init_example_project` fixture instead.
-    """
-    cached_project_path = (cached_files_dir / "example_project").resolve()
-    # purposefully a relative path
-    example_dir = Path("src", EXAMPLE_PROJECT_NAME)
-    version_py = example_dir / "_version.py"
-    gitignore_contents = dedent(
-        f"""
-        *.pyc
-        /src/**/{version_py.name}
-        """
-    ).lstrip()
-    init_py_contents = dedent(
-        '''
-        """
-        An example package with a very informative docstring
-        """
-        from ._version import __version__
-
-
-        def hello_world() -> None:
-            print("Hello World")
-        '''
-    ).lstrip()
-    version_py_contents = dedent(
-        f"""
-        __version__ = "{EXAMPLE_PROJECT_VERSION}"
-        """
-    ).lstrip()
-
-    for file, contents in [
-        (example_dir / "__init__.py", init_py_contents),
-        (version_py, version_py_contents),
-        (".gitignore", gitignore_contents),
-        (pyproject_toml_file, EXAMPLE_PYPROJECT_TOML_CONTENT),
-        (setup_cfg_file, EXAMPLE_SETUP_CFG_CONTENT),
-        (setup_py_file, EXAMPLE_SETUP_PY_CONTENT),
-        (changelog_md_file, EXAMPLE_CHANGELOG_MD_CONTENT),
-        (changelog_rst_file, EXAMPLE_CHANGELOG_RST_CONTENT),
-    ]:
-        abs_filepath = cached_project_path.joinpath(file).resolve()
-        # make sure the parent directory exists
-        abs_filepath.parent.mkdir(parents=True, exist_ok=True)
-        # write file contents
-        abs_filepath.write_text(contents)
-
-    # trigger automatic cleanup of cache directory during teardown
-    return teardown_cached_dir(cached_project_path)
-
-
-@pytest.fixture
-def init_example_project(
-    example_project_dir: ExProjectDir,
-    cached_example_project: Path,
-    change_to_ex_proj_dir: None,
-) -> None:
-    """This fixture initializes the example project in the current test's project directory."""
-    if not cached_example_project.exists():
-        raise RuntimeError(
-            f"Unable to find cached project files for {EXAMPLE_PROJECT_NAME}"
-        )
-
-    # Copy the cached project files into the current test's project directory
-    copy_dir_tree(cached_example_project, example_project_dir)
-
-
-@pytest.fixture
-def example_project_with_release_notes_template(
-    init_example_project: None,
-    use_release_notes_template: UseReleaseNotesTemplateFn,
-) -> None:
-    use_release_notes_template()
 
 
 @pytest.fixture

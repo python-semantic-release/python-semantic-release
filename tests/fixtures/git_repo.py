@@ -13,6 +13,9 @@ from git import Actor, Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
+import tests.conftest
+import tests.const
+import tests.util
 from tests.const import (
     COMMIT_MESSAGE,
     DEFAULT_BRANCH_NAME,
@@ -20,7 +23,6 @@ from tests.const import (
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
     NULL_HEX_SHA,
-    TODAY_DATE_STR,
 )
 from tests.util import (
     add_text_to_file,
@@ -37,7 +39,11 @@ if TYPE_CHECKING:
     from semantic_release.commit_parser.scipy import ScipyCommitParser
     from semantic_release.hvcs import HvcsBase
 
-    from tests.conftest import TeardownCachedDirFn
+    from tests.conftest import (
+        BuildRepoOrCopyCacheFn,
+        GetMd5ForSetOfFilesFn,
+        GetStableDateNowFn,
+    )
     from tests.fixtures.example_project import (
         ExProjectDir,
         GetWheelFileFn,
@@ -196,6 +202,80 @@ if TYPE_CHECKING:
             commit_def: CommitDef,
             strategy_option: str = "theirs",
         ) -> CommitDef: ...
+
+
+@pytest.fixture(scope="session")
+def deps_files_4_example_git_project(
+    deps_files_4_example_project: list[Path],
+) -> list[Path]:
+    return [
+        *deps_files_4_example_project,
+        # This file
+        Path(__file__).absolute(),
+        # because of imports
+        Path(tests.const.__file__).absolute(),
+        Path(tests.util.__file__).absolute(),
+        # because of the fixtures
+        Path(tests.conftest.__file__).absolute(),
+    ]
+
+
+@pytest.fixture(scope="session")
+def build_spec_hash_4_example_git_project(
+    get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
+    deps_files_4_example_git_project: list[Path],
+) -> str:
+    # Generates a hash of the build spec to set when to invalidate the cache
+    return get_md5_for_set_of_files(deps_files_4_example_git_project)
+
+
+@pytest.fixture(scope="session")
+def cached_example_git_project(
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_spec_hash_4_example_git_project: str,
+    cached_example_project: Path,
+    example_git_https_url: str,
+    commit_author: Actor,
+) -> Path:
+    """
+    Initializes an example project with git repo. DO NOT USE DIRECTLY.
+
+    Use a `repo_*` fixture instead. This creates a default
+    base repository, all settings can be changed later through from the
+    example_project_git_repo fixture's return object and manual adjustment.
+    """
+
+    def _build_repo(cached_repo_path: Path):
+        if not cached_example_project.exists():
+            raise RuntimeError("Unable to find cached project files")
+
+        # make a copy of the example project as a base
+        copy_dir_tree(cached_example_project, cached_repo_path)
+
+        # initialize git repo (open and close)
+        # NOTE: We don't want to hold the repo object open for the entire test session,
+        # the implementation on Windows holds some file descriptors open until close is called.
+        with Repo.init(cached_repo_path) as repo:
+            # Without this the global config may set it to "master", we want consistency
+            repo.git.branch("-M", DEFAULT_BRANCH_NAME)
+            with repo.config_writer("repository") as config:
+                config.set_value("user", "name", commit_author.name)
+                config.set_value("user", "email", commit_author.email)
+                config.set_value("commit", "gpgsign", False)
+                config.set_value("tag", "gpgsign", False)
+
+            repo.create_remote(name="origin", url=example_git_https_url)
+
+            # make sure all base files are in index to enable initial commit
+            repo.index.add(("*", ".gitignore"))
+
+    # End of _build_repo()
+
+    return build_repo_or_copy_cache(
+        repo_name=cached_example_git_project.__name__.split("_", maxsplit=1)[1],
+        build_spec_hash=build_spec_hash_4_example_git_project,
+        build_repo_func=_build_repo,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -452,19 +532,23 @@ def format_squash_commit_msg_bitbucket() -> FormatBitBucketSquashCommitMsgFn:
 
 
 @pytest.fixture(scope="session")
-def create_merge_commit() -> CreateMergeCommitFn:
+def create_merge_commit(stable_now_date: GetStableDateNowFn) -> CreateMergeCommitFn:
     def _create_merge_commit(
         git_repo: Repo,
         branch_name: str,
         commit_def: CommitDef,
         fast_forward: bool = True,
     ) -> CommitDef:
-        git_repo.git.merge(
-            branch_name,
-            ff=fast_forward,
-            no_ff=bool(not fast_forward),
-            m=commit_def["msg"],
-        )
+        with git_repo.git.custom_environment(
+            GIT_AUTHOR_DATE=stable_now_date().isoformat(timespec="seconds"),
+            GIT_COMMITTER_DATE=stable_now_date().isoformat(timespec="seconds"),
+        ):
+            git_repo.git.merge(
+                branch_name,
+                ff=fast_forward,
+                no_ff=bool(not fast_forward),
+                m=commit_def["msg"],
+            )
 
         sleep(1)  # ensure commit timestamps are unique
 
@@ -479,7 +563,9 @@ def create_merge_commit() -> CreateMergeCommitFn:
 
 
 @pytest.fixture(scope="session")
-def create_squash_merge_commit() -> CreateSquashMergeCommitFn:
+def create_squash_merge_commit(
+    stable_now_date: GetStableDateNowFn,
+) -> CreateSquashMergeCommitFn:
     def _create_squash_merge_commit(
         git_repo: Repo,
         branch_name: str,
@@ -496,6 +582,7 @@ def create_squash_merge_commit() -> CreateSquashMergeCommitFn:
         # commit the squashed changes
         git_repo.git.commit(
             m=commit_def["msg"],
+            date=stable_now_date().isoformat(timespec="seconds"),
         )
 
         sleep(1)  # ensure commit timestamps are unique
@@ -514,6 +601,7 @@ def create_squash_merge_commit() -> CreateSquashMergeCommitFn:
 def create_release_tagged_commit(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     default_tag_format_str: str,
+    stable_now_date: GetStableDateNowFn,
 ) -> CreateReleaseFn:
     def _mimic_semantic_release_commit(
         git_repo: Repo,
@@ -523,14 +611,24 @@ def create_release_tagged_commit(
         # stamp version into pyproject.toml
         update_pyproject_toml("tool.poetry.version", version)
 
+        curr_datetime = stable_now_date()
+
         # commit --all files with version number commit message
-        git_repo.git.commit(a=True, m=COMMIT_MESSAGE.format(version=version))
+        git_repo.git.commit(
+            a=True,
+            m=COMMIT_MESSAGE.format(version=version),
+            date=curr_datetime.isoformat(timespec="seconds"),
+        )
 
-        sleep(1)  # ensure commit timestamps are unique
+        # ensure commit timestamps are unique (adding one second even though a nanosecond has gone by)
+        curr_datetime = curr_datetime.replace(second=(curr_datetime.second + 1) % 60)
 
-        # tag commit with version number
-        tag_str = tag_format.format(version=version)
-        git_repo.git.tag(tag_str, m=tag_str)
+        with git_repo.git.custom_environment(
+            GIT_COMMITTER_DATE=curr_datetime.isoformat(timespec="seconds"),
+        ):
+            # tag commit with version number
+            tag_str = tag_format.format(version=version)
+            git_repo.git.tag(tag_str, m=tag_str)
 
         sleep(1)  # ensure commit timestamps are unique
 
@@ -538,10 +636,17 @@ def create_release_tagged_commit(
 
 
 @pytest.fixture(scope="session")
-def commit_n_rtn_changelog_entry() -> CommitNReturnChangelogEntryFn:
+def commit_n_rtn_changelog_entry(
+    stable_now_date: GetStableDateNowFn,
+) -> CommitNReturnChangelogEntryFn:
     def _commit_n_rtn_changelog_entry(git_repo: Repo, commit: CommitDef) -> CommitDef:
         # make commit with --all files
-        git_repo.git.commit(a=True, m=commit["msg"])
+
+        git_repo.git.commit(
+            a=True,
+            m=commit["msg"],
+            date=stable_now_date().isoformat(timespec="seconds"),
+        )
 
         # Capture the resulting commit message and sha
         return {
@@ -569,52 +674,6 @@ def simulate_change_commits_n_rtn_changelog_entry(
         return changelog_entries
 
     return _simulate_change_commits_n_rtn_changelog_entry
-
-
-@pytest.fixture(scope="session")
-def cached_example_git_project(
-    cached_files_dir: Path,
-    teardown_cached_dir: TeardownCachedDirFn,
-    cached_example_project: Path,
-    example_git_https_url: str,
-    commit_author: Actor,
-) -> Path:
-    """
-    Initializes an example project with git repo. DO NOT USE DIRECTLY.
-
-    Use a `repo_*` fixture instead. This creates a default
-    base repository, all settings can be changed later through from the
-    example_project_git_repo fixture's return object and manual adjustment.
-    """
-    if not cached_example_project.exists():
-        raise RuntimeError("Unable to find cached project files")
-
-    cached_git_proj_path = (cached_files_dir / "example_git_project").resolve()
-
-    # make a copy of the example project as a base
-    copy_dir_tree(cached_example_project, cached_git_proj_path)
-
-    # initialize git repo (open and close)
-    # NOTE: We don't want to hold the repo object open for the entire test session,
-    # the implementation on Windows holds some file descriptors open until close is called.
-    with Repo.init(cached_git_proj_path) as repo:
-        # Without this the global config may set it to "master", we want consistency
-        repo.git.branch("-M", DEFAULT_BRANCH_NAME)
-        with repo.config_writer("repository") as config:
-            config.set_value("user", "name", commit_author.name)
-            config.set_value("user", "email", commit_author.email)
-            config.set_value("commit", "gpgsign", False)
-            config.set_value("tag", "gpgsign", False)
-
-        repo.create_remote(name="origin", url=example_git_https_url)
-
-        # make sure all base files are in index to enable initial commit
-        repo.index.add(("*", ".gitignore"))
-
-        # TODO: initial commit!
-
-    # trigger automatic cleanup of cache directory during teardown
-    return teardown_cached_dir(cached_git_proj_path)
 
 
 @pytest.fixture(scope="session")
@@ -729,6 +788,7 @@ def build_configured_base_repo(  # noqa: C901
 def simulate_default_changelog_creation(  # noqa: C901
     default_md_changelog_insertion_flag: str,
     default_rst_changelog_insertion_flag: str,
+    today_date_str: str,
 ) -> SimulateDefaultChangelogCreationFn:
     def reduce_repo_def(
         acc: BaseAccumulatorVersionReduction, ver_2_def: tuple[str, RepoVersionDef]
@@ -750,7 +810,7 @@ def simulate_default_changelog_creation(  # noqa: C901
         version_entry = [
             f"## {version}\n"
             if version == "Unreleased"
-            else f"## v{version} ({TODAY_DATE_STR})\n"
+            else f"## v{version} ({today_date_str})\n"
         ]
 
         for section_def in version_def["changelog_sections"]:
@@ -824,7 +884,7 @@ def simulate_default_changelog_creation(  # noqa: C901
             (
                 f"{version}"
                 if version == "Unreleased"
-                else f"v{version} ({TODAY_DATE_STR})"
+                else f"v{version} ({today_date_str})"
             ),
         ]
         version_entry.append("=" * len(version_entry[-1]))
@@ -936,14 +996,14 @@ def simulate_default_changelog_creation(  # noqa: C901
             return str.join(
                 "\n",
                 [
-                    f"## v{version} ({TODAY_DATE_STR})",
+                    f"## v{version} ({today_date_str})",
                     "",
                     "- Initial Release",
                     "",
                 ],
             )
         if output_format == ChangelogOutputFormat.RESTRUCTURED_TEXT:
-            title = f"v{version} ({TODAY_DATE_STR})"
+            title = f"v{version} ({today_date_str})"
             return str.join(
                 "\n",
                 [

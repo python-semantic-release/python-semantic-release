@@ -5,6 +5,8 @@ import git
 import semantic_release
 from semantic_release.cli.commands.main import Cli
 
+PROJ_DIR = Path(__file__).parent.parent.absolute().resolve()
+
 A_FULL_VERSION_STRING = "1.11.567"
 A_PRERELEASE_VERSION_STRING = "2.3.4-dev.23"
 A_FULL_VERSION_STRING_WITH_BUILD_METADATA = "4.2.3+build.12345"
