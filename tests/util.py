@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 
 def get_func_qual_name(func: Callable) -> str:
-    return f"{func.__module__}.{func.__qualname__}"
+    return str.join(".", filter(None, [func.__module__, func.__qualname__]))
 
 
 def assert_exit_code(
