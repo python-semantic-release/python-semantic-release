@@ -14,7 +14,7 @@ from semantic_release.cli.changelog_writer import (
 from semantic_release.cli.util import noop_report
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.cli.cli_context import CliContextObj
 
 

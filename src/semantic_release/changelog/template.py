@@ -11,7 +11,7 @@ from jinja2.sandbox import SandboxedEnvironment
 
 from semantic_release.helpers import dynamic_import
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Callable, Iterable, Literal
 
     from jinja2 import Environment

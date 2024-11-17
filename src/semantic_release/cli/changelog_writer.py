@@ -25,7 +25,7 @@ from semantic_release.cli.const import (
 from semantic_release.cli.util import noop_report
 from semantic_release.errors import InternalError
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from jinja2 import Environment
 
     from semantic_release.changelog.context import ChangelogContext

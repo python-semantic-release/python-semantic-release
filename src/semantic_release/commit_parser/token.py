@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, NamedTuple, NoReturn, TypeVar, Union
 
 from semantic_release.errors import CommitParseError
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
 
     from semantic_release.enums import LevelBump

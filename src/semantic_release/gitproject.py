@@ -19,7 +19,7 @@ from semantic_release.errors import (
     GitTagError,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from contextlib import _GeneratorContextManager
     from logging import Logger
     from typing import Sequence

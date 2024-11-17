@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from semantic_release.helpers import parse_git_url
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
 
 
