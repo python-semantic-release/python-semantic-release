@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
-from semantic_release.version import Version
+from semantic_release.version.version import Version
 
 log = logging.getLogger(__name__)
 

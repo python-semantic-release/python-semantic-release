@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import click
 from git import Repo
 
-from semantic_release.changelog import ReleaseHistory
+from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli.changelog_writer import (
     generate_release_notes,
     write_changelog_files,
