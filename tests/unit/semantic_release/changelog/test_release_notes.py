@@ -14,8 +14,6 @@ from semantic_release.cli.changelog_writer import generate_release_notes
 from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
-from tests.const import TODAY_DATE_STR
-
 if TYPE_CHECKING:
     from semantic_release.changelog.release_history import ReleaseHistory
 
@@ -36,6 +34,7 @@ def test_default_release_notes_template(
     hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
     artificial_release_history: ReleaseHistory,
     mask_initial_release: bool,
+    today_date_str: str,
 ):
     """
     Unit test goal: just make sure it renders the release notes template without error.
@@ -60,7 +59,7 @@ def test_default_release_notes_template(
     expected_content = str.join(
         os.linesep,
         [
-            f"## v{version} ({TODAY_DATE_STR})",
+            f"## v{version} ({today_date_str})",
             "",
             "### Feature",
             "",
@@ -104,6 +103,7 @@ def test_default_release_notes_template_first_release_masked(
     example_git_https_url: str,
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     single_release_history: ReleaseHistory,
+    today_date_str: str,
 ):
     """
     Unit test goal: just make sure it renders the release notes template without error.
@@ -117,7 +117,7 @@ def test_default_release_notes_template_first_release_masked(
     expected_content = str.join(
         os.linesep,
         [
-            f"## v{version} ({TODAY_DATE_STR})",
+            f"## v{version} ({today_date_str})",
             "",
             "- Initial Release",
             "",
@@ -141,6 +141,7 @@ def test_default_release_notes_template_first_release_unmasked(
     example_git_https_url: str,
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
     single_release_history: ReleaseHistory,
+    today_date_str: str,
 ):
     """
     Unit test goal: just make sure it renders the release notes template without error.
@@ -160,7 +161,7 @@ def test_default_release_notes_template_first_release_unmasked(
     expected_content = str.join(
         os.linesep,
         [
-            f"## v{version} ({TODAY_DATE_STR})",
+            f"## v{version} ({today_date_str})",
             "",
             "### Feature",
             "",

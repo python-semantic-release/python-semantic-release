@@ -14,8 +14,8 @@ from semantic_release.version.version import Version
 
 from tests.const import ANGULAR_COMMITS_MINOR, COMMIT_MESSAGE
 from tests.fixtures import (
+    get_commits_for_git_flow_repo_w_2_release_channels,
     get_commits_for_git_flow_repo_w_3_release_channels,
-    get_commits_for_git_flow_repo_with_2_release_channels,
     get_commits_for_github_flow_repo_w_feature_release_channel,
     get_commits_for_trunk_only_repo_w_no_tags,
     get_commits_for_trunk_only_repo_w_prerelease_tags,
@@ -145,7 +145,7 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
                 ),
                 (
                     repo_w_git_flow_angular_commits.__name__,
-                    get_commits_for_git_flow_repo_with_2_release_channels.__name__,
+                    get_commits_for_git_flow_repo_w_2_release_channels.__name__,
                 ),
                 (
                     repo_w_git_flow_and_release_channels_angular_commits.__name__,

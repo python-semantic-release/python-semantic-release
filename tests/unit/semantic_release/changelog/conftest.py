@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -15,9 +15,15 @@ from semantic_release.version.version import Version
 if TYPE_CHECKING:
     from git import Actor
 
+    from tests.conftest import GetStableDateNowFn
+
 
 @pytest.fixture
-def artificial_release_history(commit_author: Actor) -> ReleaseHistory:
+def artificial_release_history(
+    commit_author: Actor,
+    stable_now_date: GetStableDateNowFn,
+) -> ReleaseHistory:
+    current_datetime = stable_now_date()
     first_version = Version.parse("1.0.0")
     second_version = first_version.bump(LevelBump.MINOR)
     fix_commit_subject = "fix a problem"
@@ -72,7 +78,7 @@ def artificial_release_history(commit_author: Actor) -> ReleaseHistory:
             second_version: Release(
                 tagger=commit_author,
                 committer=commit_author,
-                tagged_date=datetime.now(),
+                tagged_date=current_datetime,
                 elements=defaultdict(
                     list,
                     [
@@ -85,7 +91,7 @@ def artificial_release_history(commit_author: Actor) -> ReleaseHistory:
             first_version: Release(
                 tagger=commit_author,
                 committer=commit_author,
-                tagged_date=datetime.now(),
+                tagged_date=current_datetime - timedelta(minutes=1),
                 elements=defaultdict(
                     list,
                     [
