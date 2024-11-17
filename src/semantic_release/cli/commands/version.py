@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import click
@@ -563,7 +563,7 @@ def version(  # noqa: C901
 
     rprint(f"[bold green]The next version is: [white]{new_version!s}[/white]! :rocket:")
 
-    commit_date = datetime.now()
+    commit_date = datetime.now(timezone.utc).astimezone()  # Locale-aware timestamp
     try:
         # Create release object for the new version
         # This will be used to generate the changelog prior to the commit and/or tag
