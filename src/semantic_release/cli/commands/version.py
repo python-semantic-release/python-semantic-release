@@ -14,7 +14,7 @@ from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git import Repo
 from requests import HTTPError
 
-from semantic_release.changelog import ReleaseHistory
+from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli.changelog_writer import (
     generate_release_notes,
     write_changelog_files,
@@ -30,12 +30,12 @@ from semantic_release.errors import (
 )
 from semantic_release.gitproject import GitProject
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
-from semantic_release.version import (
-    Version,
-    VersionTranslator,
+from semantic_release.version.algorithm import (
     next_version,
     tags_and_versions,
 )
+from semantic_release.version.translator import VersionTranslator
+from semantic_release.version.version import Version
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path

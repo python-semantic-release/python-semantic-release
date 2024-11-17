@@ -25,9 +25,9 @@ from pydantic import (
 from typing_extensions import Annotated, Self
 from urllib3.util.url import parse_url
 
-from semantic_release import hvcs
-from semantic_release.changelog import environment
+import semantic_release.hvcs as hvcs
 from semantic_release.changelog.context import ChangelogMode
+from semantic_release.changelog.template import environment
 from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.commit_parser import (
@@ -49,12 +49,12 @@ from semantic_release.errors import (
 )
 from semantic_release.helpers import dynamic_import
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
-from semantic_release.version import VersionTranslator
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,
     TomlVersionDeclaration,
     VersionDeclarationABC,
 )
+from semantic_release.version.translator import VersionTranslator
 
 log = logging.getLogger(__name__)
 NonEmptyString = Annotated[str, Field(..., min_length=1)]
