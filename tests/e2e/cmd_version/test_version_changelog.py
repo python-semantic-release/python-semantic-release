@@ -20,6 +20,7 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
+    get_commits_for_trunk_only_repo_w_tags,
     get_versions_for_git_flow_repo_w_2_release_channels,
     get_versions_for_git_flow_repo_w_3_release_channels,
     get_versions_for_github_flow_repo_w_default_release_channel,
@@ -683,16 +684,23 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
     ],
 )
 @pytest.mark.parametrize(
-    "repo, cache_key, commit_type",
+    "repo, cache_key, get_version_strings, commit_type, tag_format, get_commits",
     [
         (
             lazy_fixture(repo_fixture),
             f"psr/repos/{repo_fixture}",
+            lazy_fixture(get_version_strings),
             repo_fixture.split("_")[-2],
+            "v{version}",
+            lazy_fixture(get_commits),
         )
-        for repo_fixture in [
+        for repo_fixture, get_version_strings, get_commits in [
             # Must have a previous release/tag
-            repo_w_trunk_only_angular_commits.__name__,
+            (
+                repo_w_trunk_only_angular_commits.__name__,
+                get_versions_for_trunk_only_repo_w_tags.__name__,
+                get_commits_for_trunk_only_repo_w_tags.__name__,
+            ),
         ]
     ],
 )
@@ -700,11 +708,13 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     repo: Repo,
     cache: pytest.Cache,
     cache_key: str,
+    get_version_strings: GetVersionStringsFn,
+    get_commits: GetRepoDefinitionFn,
     commit_type: CommitConvention,
+    tag_format: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
     changelog_file: Path,
-    get_commits_for_trunk_only_repo_w_tags: GetRepoDefinitionFn,
     stable_now_date: GetStableDateNowFn,
 ):
     """
@@ -713,7 +723,9 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     Then the version is created and the changelog file is updated with the excluded commit
         info anyway.
     """
-    repo_definition = get_commits_for_trunk_only_repo_w_tags(commit_type)
+    latest_tag = tag_format.format(version=get_version_strings()[-1])
+
+    repo_definition = get_commits(commit_type)
     if not (repo_build_data := cache.get(cache_key, None)):
         pytest.fail("Repo build date not found in cache")
 
@@ -725,16 +737,14 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     )
 
     # expected version bump commit (that should be in changelog)
-    expected_bump_message = list(repo_definition.values())[-1]["commits"][-1][
-        "desc"
-    ].capitalize()
+    bumping_commit = list(repo_definition.values())[-1]["commits"][-1]
+    expected_bump_message = bumping_commit["desc"].capitalize()
 
     # Capture the expected changelog content
     expected_changelog_content = changelog_file.read_text()
 
     # Reverse last release
-    repo_tags = repo.git.tag("--list", "--sort=-taggerdate", "v*.*.*").splitlines()
-    repo.git.tag("-d", repo_tags[0])
+    repo.git.tag("-d", latest_tag)
     repo.git.reset("--hard", "HEAD~1")
 
     # Set the project configurations
@@ -747,7 +757,7 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     )
     update_pyproject_toml(
         "tool.semantic_release.changelog.exclude_commit_patterns",
-        ["fix: .*"],
+        [f"{bumping_commit['msg'].split(':', maxsplit=1)[0]}: .*"],
     )
 
     # Act
