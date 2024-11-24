@@ -1,43 +1,48 @@
 from __future__ import annotations
 
+from datetime import timedelta
+from itertools import count
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
 import tests.conftest
 import tests.const
 import tests.util
-from tests.const import DEFAULT_BRANCH_NAME, EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
-from tests.util import temporary_working_directory
+from tests.const import (
+    DEFAULT_BRANCH_NAME,
+    EXAMPLE_HVCS_DOMAIN,
+    INITIAL_COMMIT_MESSAGE,
+    RepoActionStep,
+)
 
 if TYPE_CHECKING:
-    from semantic_release.hvcs import HvcsBase
+    from typing import Sequence
 
-    from tests.conftest import GetMd5ForSetOfFilesFn
-    from tests.fixtures.example_project import (
-        ExProjectDir,
+    from tests.conftest import (
+        GetCachedRepoDataFn,
+        GetMd5ForSetOfFilesFn,
+        GetStableDateNowFn,
     )
+    from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
-        BaseRepoVersionDef,
-        BuildRepoFn,
+        BuildRepoFromDefinitionFn,
         BuildRepoOrCopyCacheFn,
+        BuildSpecificRepoFn,
+        BuiltRepoResult,
         CommitConvention,
-        CreateMergeCommitFn,
-        CreateReleaseFn,
+        ConvertCommitSpecsToCommitDefsFn,
+        ConvertCommitSpecToCommitDefFn,
         ExProjectGitRepoFn,
-        ExtractRepoDefinitionFn,
         FormatGitMergeCommitMsgFn,
         GetRepoDefinitionFn,
-        GetVersionStringsFn,
-        RepoDefinition,
-        SimulateChangeCommitsNReturnChangelogEntryFn,
-        SimulateDefaultChangelogCreationFn,
+        RepoActionGitMerge,
+        RepoActions,
+        RepoActionWriteChangelogsDestFile,
         TomlSerializableTypes,
-        VersionStr,
     )
 
 
@@ -45,6 +50,7 @@ DEV_BRANCH_NAME = "dev"
 FEAT_BRANCH_1_NAME = "feat/feature-1"
 FEAT_BRANCH_2_NAME = "feat/feature-2"
 FEAT_BRANCH_3_NAME = "feat/feature-3"
+FEAT_BRANCH_4_NAME = "feat/feature-4"
 FIX_BRANCH_1_NAME = "fix/patch-1"
 
 
@@ -65,7 +71,7 @@ def deps_files_4_git_flow_repo_w_2_release_channels(
 
 
 @pytest.fixture(scope="session")
-def build_spec_hash_for_git_flow_repo_w_2_release_channels(
+def build_spec_hash_4_git_flow_repo_w_2_release_channels(
     get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
     deps_files_4_git_flow_repo_w_2_release_channels: list[Path],
 ) -> str:
@@ -74,728 +80,729 @@ def build_spec_hash_for_git_flow_repo_w_2_release_channels(
 
 
 @pytest.fixture(scope="session")
-def get_commits_for_git_flow_repo_w_2_release_channels(
-    extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
+def get_repo_definition_4_git_flow_repo_w_2_release_channels(
+    convert_commit_specs_to_commit_defs: ConvertCommitSpecsToCommitDefsFn,
+    convert_commit_spec_to_commit_def: ConvertCommitSpecToCommitDefFn,
     format_merge_commit_msg_git: FormatGitMergeCommitMsgFn,
-) -> GetRepoDefinitionFn:
-    base_definition: dict[str, BaseRepoVersionDef] = {
-        "0.1.0": {
-            "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [1]}],
-                "emoji": [
-                    {"section": ":sparkles:", "i_commits": [1]},
-                    {"section": "Other", "i_commits": [0]},
-                ],
-                "scipy": [{"section": "Feature", "i_commits": [1]}],
-            },
-            "commits": [
-                {
-                    "angular": INITIAL_COMMIT_MESSAGE,
-                    "emoji": INITIAL_COMMIT_MESSAGE,
-                    "scipy": INITIAL_COMMIT_MESSAGE,
-                },
-                {
-                    "angular": "feat: add new feature",
-                    "emoji": ":sparkles: add new feature",
-                    "scipy": "ENH: add new feature",
-                },
-            ],
-        },
-        "0.1.1-alpha.1": {
-            "changelog_sections": {
-                "angular": [{"section": "Bug Fixes", "i_commits": [0]}],
-                "emoji": [{"section": ":bug:", "i_commits": [0]}],
-                "scipy": [{"section": "Fix", "i_commits": [0]}],
-            },
-            "commits": [
-                {
-                    "angular": "fix: correct some text",
-                    "emoji": ":bug: correct some text",
-                    "scipy": "MAINT: correct some text",
-                }
-            ],
-        },
-        "1.0.0-alpha.1": {
-            "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":boom:", "i_commits": [0]}],
-                "scipy": [{"section": "Breaking", "i_commits": [0]}],
-            },
-            "commits": [
-                {
-                    "angular": "feat!: add revolutionary feature\n\nBREAKING CHANGE: this is a breaking change",
-                    "emoji": ":boom: add revolutionary feature\n\nThis change is a breaking change",
-                    "scipy": "API: add revolutionary feature\n\nBREAKING CHANGE: this is a breaking change",
-                }
-            ],
-        },
-        "1.0.0": {
-            "changelog_sections": {
-                "angular": [
-                    {"section": "Features", "i_commits": [0]},
-                ],
-                "emoji": [
-                    {"section": ":sparkles:", "i_commits": [0]},
-                    {"section": "Other", "i_commits": [2, 1]},
-                ],
-                "scipy": [
-                    {"section": "Feature", "i_commits": [0]},
-                ],
-            },
-            "commits": [
-                {
-                    "angular": "feat: add some more text",
-                    "emoji": ":sparkles: add some more text",
-                    "scipy": "ENH: add some more text",
-                },
-                {
-                    "angular": format_merge_commit_msg_git(
-                        branch_name=FEAT_BRANCH_1_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                    "emoji": format_merge_commit_msg_git(
-                        branch_name=FEAT_BRANCH_1_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                    "scipy": format_merge_commit_msg_git(
-                        branch_name=FEAT_BRANCH_1_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                },
-                {
-                    "angular": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                    "emoji": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                    "scipy": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                },
-            ],
-        },
-        "1.1.0": {
-            "changelog_sections": {
-                "angular": [
-                    {"section": "Features", "i_commits": [0]},
-                ],
-                "emoji": [
-                    {"section": ":sparkles:", "i_commits": [0]},
-                    {"section": "Other", "i_commits": [2, 1]},
-                ],
-                "scipy": [
-                    {"section": "Feature", "i_commits": [0]},
-                ],
-            },
-            "commits": [
-                {
-                    "angular": "feat(dev): add some more text",
-                    "emoji": ":sparkles: (dev) add some more text",
-                    "scipy": "ENH(dev): add some more text",
-                },
-                {
-                    "angular": format_merge_commit_msg_git(
-                        branch_name=FEAT_BRANCH_2_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                    "emoji": format_merge_commit_msg_git(
-                        branch_name=FEAT_BRANCH_2_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                    "scipy": format_merge_commit_msg_git(
-                        branch_name=FEAT_BRANCH_2_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                },
-                {
-                    "angular": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                    "emoji": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                    "scipy": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                },
-            ],
-        },
-        "1.1.1": {
-            "changelog_sections": {
-                "angular": [
-                    {"section": "Bug Fixes", "i_commits": [0]},
-                ],
-                "emoji": [
-                    {"section": ":bug:", "i_commits": [0]},
-                    {"section": "Other", "i_commits": [2, 1]},
-                ],
-                "scipy": [
-                    {"section": "Fix", "i_commits": [0]},
-                ],
-            },
-            "commits": [
-                {
-                    "angular": "fix(dev): correct some text",
-                    "emoji": ":bug: correct dev-scoped text",
-                    "scipy": "MAINT(dev): correct some text",
-                },
-                {
-                    "angular": format_merge_commit_msg_git(
-                        branch_name=FIX_BRANCH_1_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                    "emoji": format_merge_commit_msg_git(
-                        branch_name=FIX_BRANCH_1_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                    "scipy": format_merge_commit_msg_git(
-                        branch_name=FIX_BRANCH_1_NAME,
-                        tgt_branch_name=DEV_BRANCH_NAME,
-                    ),
-                },
-                {
-                    "angular": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                    "emoji": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                    "scipy": format_merge_commit_msg_git(
-                        branch_name=DEV_BRANCH_NAME,
-                        tgt_branch_name=DEFAULT_BRANCH_NAME,
-                    ),
-                },
-            ],
-        },
-        "1.2.0-alpha.1": {
-            "changelog_sections": {
-                "angular": [{"section": "Features", "i_commits": [0]}],
-                "emoji": [{"section": ":sparkles:", "i_commits": [0]}],
-                "scipy": [{"section": "Feature", "i_commits": [0]}],
-            },
-            "commits": [
-                {
-                    "angular": "feat(scope): add some more text",
-                    "emoji": ":sparkles: add scoped change",
-                    "scipy": "ENH(scope): add some more text",
-                }
-            ],
-        },
-        "1.2.0-alpha.2": {
-            "changelog_sections": {
-                # ORDER matters here since greater than 1 commit, changelogs sections are alphabetized
-                # But value is ultimately defined by the commits, which means the commits are
-                # referenced by index value
-                "angular": [
-                    {"section": "Bug Fixes", "i_commits": [1]},
-                    {"section": "Features", "i_commits": [0]},
-                ],
-                "emoji": [
-                    {"section": ":bug:", "i_commits": [1]},
-                    {"section": ":sparkles:", "i_commits": [0]},
-                ],
-                "scipy": [
-                    {"section": "Feature", "i_commits": [0]},
-                    {"section": "Fix", "i_commits": [1]},
-                ],
-            },
-            "commits": [
-                {
-                    "angular": "feat(scope): add some more text",
-                    "emoji": ":sparkles: add scoped change",
-                    "scipy": "ENH(scope): add some more text",
-                },
-                {
-                    "angular": "fix(scope): correct some text",
-                    "emoji": ":bug: correct feature-scoped text",
-                    "scipy": "MAINT(scope): correct some text",
-                },
-            ],
-        },
-    }
-
-    def _get_commits_for_git_flow_repo_w_2_release_channels(
-        commit_type: CommitConvention = "angular",
-    ) -> RepoDefinition:
-        return extract_commit_convention_from_base_repo_def(
-            base_definition, commit_type
-        )
-
-    return _get_commits_for_git_flow_repo_w_2_release_channels
-
-
-@pytest.fixture(scope="session")
-def get_versions_for_git_flow_repo_w_2_release_channels(
-    get_commits_for_git_flow_repo_w_2_release_channels: GetRepoDefinitionFn,
-) -> GetVersionStringsFn:
-    def _get_versions_for_git_flow_repo_w_2_release_channels() -> list[VersionStr]:
-        return list(get_commits_for_git_flow_repo_w_2_release_channels().keys())
-
-    return _get_versions_for_git_flow_repo_w_2_release_channels
-
-
-@pytest.fixture(scope="session")
-def build_git_flow_repo_w_2_release_channels(
-    get_commits_for_git_flow_repo_w_2_release_channels: GetRepoDefinitionFn,
-    build_configured_base_repo: BuildRepoFn,
-    default_tag_format_str: str,
     changelog_md_file: Path,
     changelog_rst_file: Path,
-    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
-    simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
-    create_release_tagged_commit: CreateReleaseFn,
-    create_merge_commit: CreateMergeCommitFn,
-) -> BuildRepoFn:
+    stable_now_date: GetStableDateNowFn,
+) -> GetRepoDefinitionFn:
     """
-    This fixture returns a function that when called will build a git repo that
-    uses the git flow branching strategy with 2 release channels
-        1. alpha feature releases
-        2. release candidate releases
+    This fixture returns a function that when called will define the actions needed to
+    build a git repo that uses the git flow branching strategy and git merge commits
+    with 2 release channels
+        1. alpha feature releases (x.x.x-alpha.x)
+        2. official (production) releases (x.x.x)
     """
 
-    def _build_git_flow_repo_w_2_release_channels(
-        dest_dir: Path | str,
-        commit_type: CommitConvention = "angular",
+    def _get_repo_from_defintion(
+        commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = False,
-    ) -> tuple[Path, HvcsBase]:
-        repo_dir, hvcs = build_configured_base_repo(
-            dest_dir,
-            commit_type=commit_type,
-            hvcs_client_name=hvcs_client_name,
-            hvcs_domain=hvcs_domain,
-            tag_format_str=tag_format_str,
-            mask_initial_release=mask_initial_release,
-            extra_configs={
-                # Set the default release branch
-                "tool.semantic_release.branches.main": {
-                    "match": r"^(main|master)$",
-                    "prerelease": False,
-                },
-                # branch "feature" has prerelease suffix of "alpha"
-                "tool.semantic_release.branches.features": {
-                    "match": r"feat/.+",
-                    "prerelease": True,
-                    "prerelease_token": "alpha",
-                },
-                **(extra_configs or {}),
-            },
+    ) -> Sequence[RepoActions]:
+        stable_now_datetime = stable_now_date()
+        commit_timestamp_gen = (
+            (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+            for i in count(step=1)
         )
 
-        # Retrieve/Define project vars that will be used to create the repo below
-        repo_def = get_commits_for_git_flow_repo_w_2_release_channels(commit_type)
-        versions = (key for key in repo_def)
-        next_version = next(versions)
-        next_version_def = repo_def[next_version]
+        # Common static actions or components
+        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+            {
+                "path": changelog_md_file,
+                "format": ChangelogOutputFormat.MARKDOWN,
+            },
+            {
+                "path": changelog_rst_file,
+                "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+            },
+        ]
 
-        # must be after build_configured_base_repo() so we dont set the
-        # default tag format in the pyproject.toml (we want semantic-release to use its defaults)
-        # however we need it to manually create the tags it knows how to parse
-        tag_format = tag_format_str or default_tag_format_str
+        fast_forward_dev_branch_actions: Sequence[RepoActions] = [
+            {
+                "action": RepoActionStep.GIT_CHECKOUT,
+                "details": {"branch": DEV_BRANCH_NAME},
+            },
+            {
+                "action": RepoActionStep.GIT_MERGE,
+                "details": {
+                    "branch_name": DEFAULT_BRANCH_NAME,
+                    "fast_forward": True,
+                },
+            },
+        ]
 
-        # Run Git operations to simulate repo commit & release history
-        with temporary_working_directory(repo_dir), Repo(".") as git_repo:
-            # commit initial files & update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
-            )
-
-            # Grab reference to main branch
-            main_branch_head = git_repo.heads[DEFAULT_BRANCH_NAME]
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Publish initial feature release (v0.1.0) [updates tool.poetry.version]
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Change to a dev branch
-            dev_branch_head = git_repo.create_head(
-                DEV_BRANCH_NAME, commit=main_branch_head.commit
-            )
-            dev_branch_head.checkout()
-
-            # Change to a feature branch
-            feat_branch_head = git_repo.create_head(
-                FEAT_BRANCH_1_NAME, commit=dev_branch_head.commit
-            )
-            feat_branch_head.checkout()
-
-            # Prepare for a prerelease (by adding a change, direct commit to dev branch)
-            # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make a patch level alpha release (v0.1.1-alpha.1)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Prepare for a major feature release
-            # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make a major feature alpha release (v1.0.0-alpha.1)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Prepare for a major feature release
-            # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = [
-                *simulate_change_commits_n_rtn_changelog_entry(
-                    git_repo,
-                    next_version_def["commits"][:-2],
+        merge_dev_into_main: RepoActionGitMerge = {
+            "action": RepoActionStep.GIT_MERGE,
+            "details": {
+                "branch_name": DEV_BRANCH_NAME,
+                "fast_forward": False,
+                "commit_def": convert_commit_spec_to_commit_def(
+                    {
+                        "angular": format_merge_commit_msg_git(
+                            branch_name=DEV_BRANCH_NAME,
+                            tgt_branch_name=DEFAULT_BRANCH_NAME,
+                        ),
+                        "emoji": format_merge_commit_msg_git(
+                            branch_name=DEV_BRANCH_NAME,
+                            tgt_branch_name=DEFAULT_BRANCH_NAME,
+                        ),
+                        "scipy": format_merge_commit_msg_git(
+                            branch_name=DEV_BRANCH_NAME,
+                            tgt_branch_name=DEFAULT_BRANCH_NAME,
+                        ),
+                        "datetime": next(commit_timestamp_gen),
+                        "include_in_changelog": bool(commit_type == "emoji"),
+                    },
+                    commit_type,
                 ),
-                *next_version_def["commits"][-2:],
+            },
+        }
+
+        # Define All the steps required to create the repository
+        repo_construction_steps: list[RepoActions] = []
+
+        repo_construction_steps.append(
+            {
+                "action": RepoActionStep.CONFIGURE,
+                "details": {
+                    "commit_type": commit_type,
+                    "hvcs_client_name": hvcs_client_name,
+                    "hvcs_domain": hvcs_domain,
+                    "tag_format_str": tag_format_str,
+                    "mask_initial_release": mask_initial_release,
+                    "extra_configs": {
+                        # Set the default release branch
+                        "tool.semantic_release.branches.main": {
+                            "match": r"^(main|master)$",
+                            "prerelease": False,
+                        },
+                        # branch "feature" has prerelease suffix of "alpha"
+                        "tool.semantic_release.branches.features": {
+                            "match": r"^feat/.+",
+                            "prerelease": True,
+                            "prerelease_token": "alpha",
+                        },
+                        "tool.semantic_release.allow_zero_version": True,
+                        "tool.semantic_release.major_on_zero": False,
+                        **(extra_configs or {}),
+                    },
+                },
+            }
+        )
+
+        # Make initial release
+        new_version = "0.1.0"
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": [
+                            # only one commit to start the main branch
+                            convert_commit_spec_to_commit_def(
+                                {
+                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "emoji": INITIAL_COMMIT_MESSAGE,
+                                    "scipy": INITIAL_COMMIT_MESSAGE,
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": bool(
+                                        commit_type == "emoji"
+                                    ),
+                                },
+                                commit_type,
+                            ),
+                        ],
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {
+                        "create_branch": {
+                            "name": DEV_BRANCH_NAME,
+                            "start_branch": DEFAULT_BRANCH_NAME,
+                        },
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {
+                        "create_branch": {
+                            "name": FEAT_BRANCH_1_NAME,
+                            "start_branch": DEV_BRANCH_NAME,
+                        },
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "feat: add new feature",
+                                    "emoji": ":sparkles: add new feature",
+                                    "scipy": "ENH: add new feature",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEV_BRANCH_NAME},
+                },
+                {
+                    "action": RepoActionStep.GIT_MERGE,
+                    "details": {
+                        "branch_name": FEAT_BRANCH_1_NAME,
+                        "fast_forward": False,
+                        "commit_def": convert_commit_spec_to_commit_def(
+                            {
+                                "angular": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_1_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "emoji": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_1_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "scipy": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_1_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "datetime": next(commit_timestamp_gen),
+                                "include_in_changelog": bool(commit_type == "emoji"),
+                            },
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEFAULT_BRANCH_NAME},
+                },
+                {
+                    **merge_dev_into_main,
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
             ]
+        )
 
-            # checkout dev branch (in prep for merge)
-            dev_branch_head.checkout()
-
-            # Merge feature branch into dev branch (saving result definition)
-            next_version_def["commits"][-2] = create_merge_commit(
-                git_repo=git_repo,
-                branch_name=feat_branch_head.name,
-                commit_def=next_version_def["commits"][-2],
-                fast_forward=False,
-            )
-
-            # checkout main branch (in prep for merge & release)
-            main_branch_head.checkout()
-
-            # Merge dev branch into main branch (saving result definition)
-            next_version_def["commits"][-1] = create_merge_commit(
-                git_repo=git_repo,
-                branch_name=dev_branch_head.name,
-                commit_def=next_version_def["commits"][-1],
-                fast_forward=False,
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make a major feature release (v1.0.0)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Update & Change to the dev branch
-            dev_branch_head.checkout()
-            git_repo.git.merge(main_branch_head.name, ff=True)
-
-            # Switch to a feature branch
-            feat_branch_head = git_repo.create_head(
-                FEAT_BRANCH_2_NAME, commit=dev_branch_head.commit
-            )
-            feat_branch_head.checkout()
-
-            # Prepare for a minor feature release
-            # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = [
-                *simulate_change_commits_n_rtn_changelog_entry(
-                    git_repo,
-                    next_version_def["commits"][:-2],
-                ),
-                *next_version_def["commits"][-2:],
+        # Add a feature and release it as an alpha release
+        new_version = "0.2.0-alpha.1"
+        repo_construction_steps.extend(
+            [
+                *fast_forward_dev_branch_actions,
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {
+                        "create_branch": {
+                            "name": FEAT_BRANCH_2_NAME,
+                            "start_branch": DEV_BRANCH_NAME,
+                        }
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "feat: add a new feature",
+                                    "emoji": ":sparkles: add a new feature",
+                                    "scipy": "ENH: add a new feature",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
             ]
+        )
 
-            # checkout dev branch (in prep for merge)
-            dev_branch_head.checkout()
-
-            # Merge feature branch into dev branch (saving result definition)
-            next_version_def["commits"][-2] = create_merge_commit(
-                git_repo=git_repo,
-                branch_name=feat_branch_head.name,
-                commit_def=next_version_def["commits"][-2],
-                fast_forward=False,
-            )
-
-            # checkout main branch (in prep for merge & release)
-            main_branch_head.checkout()
-
-            # Merge dev branch into main branch (saving result definition)
-            next_version_def["commits"][-1] = create_merge_commit(
-                git_repo=git_repo,
-                branch_name=dev_branch_head.name,
-                commit_def=next_version_def["commits"][-1],
-                fast_forward=False,
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make a minor feature release (v1.1.0)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Update & Change to the dev branch
-            dev_branch_head.checkout()
-            git_repo.git.merge(main_branch_head.name, ff=True)
-
-            # Switch to a fix branch
-            fix_branch_head = git_repo.create_head(
-                FIX_BRANCH_1_NAME, commit=dev_branch_head.commit
-            )
-            fix_branch_head.checkout()
-
-            # Prepare for a patch level release
-            # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = [
-                *simulate_change_commits_n_rtn_changelog_entry(
-                    git_repo,
-                    next_version_def["commits"][:-2],
-                ),
-                *next_version_def["commits"][-2:],
+        # Add a feature and release it as an alpha release
+        new_version = "1.0.0-alpha.1"
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": str.join(
+                                        "\n\n",
+                                        [
+                                            "feat: add revolutionary feature",
+                                            "BREAKING CHANGE: this is a breaking change",
+                                        ],
+                                    ),
+                                    "emoji": str.join(
+                                        "\n\n",
+                                        [
+                                            ":boom: add revolutionary feature",
+                                            "This change is a breaking change",
+                                        ],
+                                    ),
+                                    "scipy": str.join(
+                                        "\n\n",
+                                        [
+                                            "API: add revolutionary feature",
+                                            "BREAKING CHANGE: this is a breaking change",
+                                        ],
+                                    ),
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
             ]
+        )
 
-            # checkout dev branch (in prep for merge)
-            dev_branch_head.checkout()
+        # Add another feature and officially release
+        new_version = "1.0.0"
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "feat: add some more text",
+                                    "emoji": ":sparkles: add some more text",
+                                    "scipy": "ENH: add some more text",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEV_BRANCH_NAME},
+                },
+                {
+                    "action": RepoActionStep.GIT_MERGE,
+                    "details": {
+                        "branch_name": FEAT_BRANCH_2_NAME,
+                        "fast_forward": False,
+                        "commit_def": convert_commit_spec_to_commit_def(
+                            {
+                                "angular": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_2_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "emoji": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_2_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "scipy": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_2_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "datetime": next(commit_timestamp_gen),
+                                "include_in_changelog": bool(commit_type == "emoji"),
+                            },
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEFAULT_BRANCH_NAME},
+                },
+                {
+                    **merge_dev_into_main,
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
 
-            # Merge feature branch into dev branch (saving result definition)
-            next_version_def["commits"][-2] = create_merge_commit(
-                git_repo=git_repo,
-                branch_name=fix_branch_head.name,
-                commit_def=next_version_def["commits"][-2],
-                fast_forward=False,
+        # Add another feature and officially release (no intermediate alpha release)
+        new_version = "1.1.0"
+        repo_construction_steps.extend(
+            [
+                *fast_forward_dev_branch_actions,
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {
+                        "create_branch": {
+                            "name": FEAT_BRANCH_3_NAME,
+                            "start_branch": DEV_BRANCH_NAME,
+                        }
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "feat(cli): add new config cli command",
+                                    "emoji": ":sparkles: (cli) add new config cli command",
+                                    "scipy": "ENH(cli): add new config cli command",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEV_BRANCH_NAME},
+                },
+                {
+                    "action": RepoActionStep.GIT_MERGE,
+                    "details": {
+                        "branch_name": FEAT_BRANCH_3_NAME,
+                        "fast_forward": False,
+                        "commit_def": convert_commit_spec_to_commit_def(
+                            {
+                                "angular": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_3_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "emoji": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_3_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "scipy": format_merge_commit_msg_git(
+                                    branch_name=FEAT_BRANCH_3_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "datetime": next(commit_timestamp_gen),
+                                "include_in_changelog": bool(commit_type == "emoji"),
+                            },
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEFAULT_BRANCH_NAME},
+                },
+                {
+                    **merge_dev_into_main,
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
+
+        # Make a fix and officially release
+        new_version = "1.1.1"
+        repo_construction_steps.extend(
+            [
+                *fast_forward_dev_branch_actions,
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {
+                        "create_branch": {
+                            "name": FIX_BRANCH_1_NAME,
+                            "start_branch": DEV_BRANCH_NAME,
+                        }
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "fix(config): fixed configuration generation",
+                                    "emoji": ":bug: (config) fixed configuration generation",
+                                    "scipy": "MAINT(config): fixed configuration generation",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEV_BRANCH_NAME},
+                },
+                {
+                    "action": RepoActionStep.GIT_MERGE,
+                    "details": {
+                        "branch_name": FIX_BRANCH_1_NAME,
+                        "fast_forward": False,
+                        "commit_def": convert_commit_spec_to_commit_def(
+                            {
+                                "angular": format_merge_commit_msg_git(
+                                    branch_name=FIX_BRANCH_1_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "emoji": format_merge_commit_msg_git(
+                                    branch_name=FIX_BRANCH_1_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "scipy": format_merge_commit_msg_git(
+                                    branch_name=FIX_BRANCH_1_NAME,
+                                    tgt_branch_name=DEV_BRANCH_NAME,
+                                ),
+                                "datetime": next(commit_timestamp_gen),
+                                "include_in_changelog": bool(commit_type == "emoji"),
+                            },
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEFAULT_BRANCH_NAME},
+                },
+                {
+                    **merge_dev_into_main,
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
+
+        # Introduce a new feature and create a prerelease for it
+        new_version = "1.2.0-alpha.1"
+        repo_construction_steps.extend(
+            [
+                *fast_forward_dev_branch_actions,
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {
+                        "create_branch": {
+                            "name": FEAT_BRANCH_4_NAME,
+                            "start_branch": DEV_BRANCH_NAME,
+                        }
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "feat: add some more text",
+                                    "emoji": ":sparkles: add some more text",
+                                    "scipy": "ENH: add some more text",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
+
+        # Fix the previous alpha & add additional feature and create a subsequent prerelease for it
+        new_version = "1.2.0-alpha.2"
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": "fix(scope): correct some text",
+                                    "emoji": ":bug: (scope) correct some text",
+                                    "scipy": "MAINT(scope): correct some text",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                                {
+                                    "angular": "feat(scope): add some more text",
+                                    "emoji": ":sparkles:(scope) add some more text",
+                                    "scipy": "ENH(scope): add some more text",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": new_version,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitons,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
+
+        return repo_construction_steps
+
+    return _get_repo_from_defintion
+
+
+@pytest.fixture(scope="session")
+def build_git_flow_repo_w_2_release_channels(
+    build_repo_from_definition: BuildRepoFromDefinitionFn,
+    get_repo_definition_4_git_flow_repo_w_2_release_channels: GetRepoDefinitionFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_spec_hash_4_git_flow_repo_w_2_release_channels: str,
+) -> BuildSpecificRepoFn:
+    def _build_specific_repo_type(
+        repo_name: str, commit_type: CommitConvention, dest_dir: Path
+    ) -> Sequence[RepoActions]:
+        def _build_repo(cached_repo_path: Path) -> Sequence[RepoActions]:
+            repo_construction_steps = (
+                get_repo_definition_4_git_flow_repo_w_2_release_channels(
+                    commit_type=commit_type,
+                )
             )
+            return build_repo_from_definition(cached_repo_path, repo_construction_steps)
 
-            # checkout main branch (in prep for merge & release)
-            main_branch_head.checkout()
+        build_repo_or_copy_cache(
+            repo_name=repo_name,
+            build_spec_hash=build_spec_hash_4_git_flow_repo_w_2_release_channels,
+            build_repo_func=_build_repo,
+            dest_dir=dest_dir,
+        )
 
-            # Merge dev branch into main branch (saving result definition)
-            next_version_def["commits"][-1] = create_merge_commit(
-                git_repo=git_repo,
-                branch_name=dev_branch_head.name,
-                commit_def=next_version_def["commits"][-1],
-                fast_forward=False,
-            )
+        if not (cached_repo_data := get_cached_repo_data(proj_dirname=repo_name)):
+            raise ValueError("Failed to retrieve repo data from cache")
 
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
+        return cached_repo_data["build_definition"]
 
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make a patch level release (v1.1.1)
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Update & Change to the dev branch
-            dev_branch_head.checkout()
-            git_repo.git.merge(main_branch_head.name, ff=True)
-
-            # Switch to a feature branch
-            feat_branch_head = git_repo.create_head(
-                FEAT_BRANCH_3_NAME, commit=dev_branch_head.commit
-            )
-            feat_branch_head.checkout()
-
-            # Prepare for an alpha prerelease
-            # modify && commit modification -> update commit msg with sha & url
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make an alpha prerelease (v1.2.0-alpha.1) on the feature branch
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            # Increment version pointer
-            next_version = next(versions)
-            next_version_def = repo_def[next_version]
-
-            # Prepare for a 2nd prerelease with 2 commits
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
-            )
-
-            # write expected Markdown changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # write expected RST changelog to this version
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                max_version=next_version,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
-
-            # Make a 2nd alpha prerelease (v1.2.0-alpha.2) on the feature branch
-            create_release_tagged_commit(git_repo, next_version, tag_format)
-
-            return repo_dir, hvcs
-
-    return _build_git_flow_repo_w_2_release_channels
+    return _build_specific_repo_type
 
 
 # --------------------------------------------------------------------------- #
@@ -804,66 +811,60 @@ def build_git_flow_repo_w_2_release_channels(
 
 
 @pytest.fixture
-def repo_w_git_flow_angular_commits(
-    build_git_flow_repo_w_2_release_channels: BuildRepoFn,
-    build_spec_hash_for_git_flow_repo_w_2_release_channels: str,
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+def repo_w_git_flow_w_alpha_prereleases_n_angular_commits(
+    build_git_flow_repo_w_2_release_channels: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_git_flow_repo_w_2_release_channels(cached_repo_path, "angular")
+) -> BuiltRepoResult:
+    repo_name = repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__
+    commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_git_flow_angular_commits.__name__,
-        build_spec_hash=build_spec_hash_for_git_flow_repo_w_2_release_channels,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_git_flow_repo_w_2_release_channels(
+            repo_name=repo_name,
+            commit_type=commit_type,
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }
 
 
 @pytest.fixture
-def repo_w_git_flow_emoji_commits(
-    build_git_flow_repo_w_2_release_channels: BuildRepoFn,
-    build_spec_hash_for_git_flow_repo_w_2_release_channels: str,
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+def repo_w_git_flow_w_alpha_prereleases_n_emoji_commits(
+    build_git_flow_repo_w_2_release_channels: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_git_flow_repo_w_2_release_channels(cached_repo_path, "emoji")
+) -> BuiltRepoResult:
+    repo_name = repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__
+    commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_git_flow_emoji_commits.__name__,
-        build_spec_hash=build_spec_hash_for_git_flow_repo_w_2_release_channels,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_git_flow_repo_w_2_release_channels(
+            repo_name=repo_name,
+            commit_type=commit_type,
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }
 
 
 @pytest.fixture
-def repo_w_git_flow_scipy_commits(
-    build_git_flow_repo_w_2_release_channels: BuildRepoFn,
-    build_spec_hash_for_git_flow_repo_w_2_release_channels: str,
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+def repo_w_git_flow_w_alpha_prereleases_n_scipy_commits(
+    build_git_flow_repo_w_2_release_channels: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_git_flow_repo_w_2_release_channels(cached_repo_path, "scipy")
+) -> BuiltRepoResult:
+    repo_name = repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__
+    commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_git_flow_scipy_commits.__name__,
-        build_spec_hash=build_spec_hash_for_git_flow_repo_w_2_release_channels,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_git_flow_repo_w_2_release_channels(
+            repo_name=repo_name,
+            commit_type=commit_type,
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }
