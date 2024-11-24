@@ -285,12 +285,17 @@ if TYPE_CHECKING:
 
     class RepoActionGitMerge(TypedDict):
         action: Literal[RepoActionStep.GIT_MERGE]
-        details: RepoActionGitMergeDetails
+        details: RepoActionGitMergeDetails | RepoActionGitFFMergeDetails
 
     class RepoActionGitMergeDetails(DetailsBase):
         branch_name: str
         commit_def: CommitDef
-        fast_forward: bool
+        fast_forward: Literal[False]
+        # strategy_option: str
+
+    class RepoActionGitFFMergeDetails(DetailsBase):
+        branch_name: str
+        fast_forward: Literal[True]
 
     class RepoActionWriteChangelogs(TypedDict):
         action: Literal[RepoActionStep.WRITE_CHANGELOGS]
@@ -1157,18 +1162,29 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             current_commits.append(squash_def["commit_def"])
 
                 elif action == RepoActionStep.GIT_MERGE:
-                    merge_def: RepoActionGitMergeDetails = step_result["details"]  # type: ignore
+                    this_step: RepoActionGitMerge = step_result  # type: ignore[assignment]
 
-                    # Update the commit definition with the repo hash
                     with Repo(repo_dir) as git_repo:
-                        merge_def["commit_def"] = create_merge_commit(
-                            git_repo=git_repo,
-                            branch_name=merge_def["branch_name"],
-                            commit_def=merge_def["commit_def"],
-                            fast_forward=merge_def["fast_forward"],
-                        )
-                        if merge_def["commit_def"]["include_in_changelog"]:
-                            current_commits.append(merge_def["commit_def"])
+                        if this_step["details"]["fast_forward"]:
+                            ff_merge_def: RepoActionGitFFMergeDetails = this_step[  # type: ignore[assignment]
+                                "details"
+                            ]
+                            git_repo.git.merge(ff_merge_def["branch_name"], ff=True)
+
+                        else:
+                            merge_def: RepoActionGitMergeDetails = this_step[  # type: ignore[assignment]
+                                "details"
+                            ]
+
+                            # Update the commit definition with the repo hash
+                            merge_def["commit_def"] = create_merge_commit(
+                                git_repo=git_repo,
+                                branch_name=merge_def["branch_name"],
+                                commit_def=merge_def["commit_def"],
+                                fast_forward=merge_def["fast_forward"],
+                            )
+                            if merge_def["commit_def"]["include_in_changelog"]:
+                                current_commits.append(merge_def["commit_def"])
 
                 else:
                     raise ValueError(f"Unknown action: {action}")
