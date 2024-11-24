@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from datetime import datetime, timedelta, timezone
@@ -21,9 +22,11 @@ from tests.util import copy_dir_tree, remove_dir_tree
 
 if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper
-    from typing import Callable, Generator, Protocol, Sequence, TypedDict
+    from typing import Any, Callable, Generator, Protocol, Sequence, TypedDict
 
     from filelock import AcquireReturnProxy
+
+    from tests.fixtures.git_repo import RepoActions
 
     class MakeCommitObjFn(Protocol):
         def __call__(self, message: str) -> Commit: ...
@@ -62,13 +65,14 @@ if TYPE_CHECKING:
             self,
             repo_name: str,
             build_spec_hash: str,
-            build_repo_func: Callable[[Path], None],
+            build_repo_func: Callable[[Path], Sequence[RepoActions]],
             dest_dir: Path | None = None,
         ) -> Path: ...
 
     class RepoData(TypedDict):
         build_date: str
         build_spec_hash: str
+        build_definition: Sequence[RepoActions]
 
     class GetCachedRepoDataFn(Protocol):
         def __call__(self, proj_dirname: str) -> RepoData | None: ...
@@ -281,9 +285,17 @@ def get_cached_repo_data(request: pytest.FixtureRequest) -> GetCachedRepoDataFn:
 
 @pytest.fixture(scope="session")
 def set_cached_repo_data(request: pytest.FixtureRequest) -> SetCachedRepoDataFn:
+    def magic_serializer(obj: Any) -> Any:
+        if isinstance(obj, Path):
+            return obj.__fspath__()
+        return obj
+
     def _set_cached_repo_data(proj_dirname: str, data: RepoData) -> None:
         cache_key = f"psr/repos/{proj_dirname}"
-        request.config.cache.set(cache_key, data)
+        request.config.cache.set(
+            cache_key,
+            json.loads(json.dumps(data, default=magic_serializer)),
+        )
 
     return _set_cached_repo_data
 
@@ -303,7 +315,7 @@ def build_repo_or_copy_cache(
     def _build_repo_w_cache_checking(
         repo_name: str,
         build_spec_hash: str,
-        build_repo_func: Callable[[Path], None],
+        build_repo_func: Callable[[Path], Sequence[RepoActions]],
         dest_dir: Path | None = None,
     ) -> Path:
         # Blocking mechanism to synchronize xdist workers
@@ -327,14 +339,13 @@ def build_repo_or_copy_cache(
             with log_file_lock, log_file.open(mode="a") as afd:
                 afd.write(f"{stable_now_date().isoformat()}: {build_msg}...\n")
 
-            build_repo_func(cached_repo_path)
-
             # Marks the date when the cached repo was created
             set_cached_repo_data(
                 repo_name,
                 {
                     "build_date": today_date_str,
                     "build_spec_hash": build_spec_hash,
+                    "build_definition": build_repo_func(cached_repo_path),
                 },
             )
 
