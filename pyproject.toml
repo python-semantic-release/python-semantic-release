@@ -1,7 +1,7 @@
 # Ref: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 # and https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [build-system]
-requires = ["setuptools ~= 69.0", "wheel ~= 0.42"]
+requires = ["setuptools ~= 75.6", "wheel ~= 0.42"]
 build-backend = "setuptools.build_meta"
 
 [project]
