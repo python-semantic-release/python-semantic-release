@@ -14,7 +14,6 @@ from tests.const import (
 from tests.fixtures.commit_parsers import angular_minor_commits
 from tests.fixtures.git_repo import get_commit_def_of_angular_commit
 from tests.fixtures.repos import (
-    get_versions_for_trunk_only_repo_w_tags,
     repo_w_no_tags_angular_commits,
     repo_w_trunk_only_angular_commits,
 )
@@ -28,18 +27,18 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
-    from git import Repo
     from requests_mock import Mocker
 
     from tests.fixtures.git_repo import (
+        BuiltRepoResult,
         GetCommitDefFn,
-        GetVersionStringsFn,
+        GetVersionsFromRepoBuildDefFn,
         SimulateChangeCommitsNReturnChangelogEntryFn,
     )
 
 
 @pytest.mark.parametrize(
-    "repo, commits, force_args, next_release_version",
+    "repo_result, commits, force_args, next_release_version",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -87,7 +86,7 @@ if TYPE_CHECKING:
     ],
 )
 def test_version_print_next_version(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commits: list[str],
     force_args: list[str],
     next_release_version: str,
@@ -110,6 +109,8 @@ def test_version_print_next_version(
     However, we do validate that --print & a force option and/or --as-prerelease options
     work together to print the next version correctly but not make a change to the repo.
     """
+    repo = repo_result["repo"]
+
     # Make a commit to ensure we have something to release
     # otherwise the "no release will be made" logic will kick in first
     add_text_to_file(repo, file_in_repo)
@@ -144,22 +145,20 @@ def test_version_print_next_version(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions",
-    [
-        (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
-        )
-    ],
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_print_last_released_prints_version(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
-    latest_release_version = get_repo_versions()[-1]
+    repo = repo_result["repo"]
+    latest_release_version = get_versions_from_repo_build_def(
+        repo_result["definition"]
+    )[-1]
 
     # Setup: take measurement before running the version command
     repo_status_before = repo.git.status(short=True)
@@ -190,25 +189,27 @@ def test_version_print_last_released_prints_version(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions, commits",
+    "repo_result, commits",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
             lazy_fixture(angular_minor_commits.__name__),
         )
     ],
 )
 def test_version_print_last_released_prints_released_if_commits(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commits: list[str],
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     file_in_repo: str,
 ):
-    latest_release_version = get_repo_versions()[-1]
+    repo = repo_result["repo"]
+    latest_release_version = get_versions_from_repo_build_def(
+        repo_result["definition"]
+    )[-1]
 
     # Make a commit so the head is not on the last release
     add_text_to_file(repo, file_in_repo)
@@ -243,16 +244,18 @@ def test_version_print_last_released_prints_released_if_commits(
 
 
 @pytest.mark.parametrize(
-    "repo",
+    "repo_result",
     [lazy_fixture(repo_w_no_tags_angular_commits.__name__)],
 )
 def test_version_print_last_released_prints_nothing_if_no_tags(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     caplog: pytest.LogCaptureFixture,
 ):
+    repo = repo_result["repo"]
+
     # Setup: take measurement before running the version command
     repo_status_before = repo.git.status(short=True)
     head_sha_before = repo.head.commit.hexsha
@@ -285,22 +288,20 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions",
-    [
-        (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
-        )
-    ],
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_print_last_released_on_detached_head(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
-    latest_release_version = get_repo_versions()[-1]
+    repo = repo_result["repo"]
+    latest_release_version = get_versions_from_repo_build_def(
+        repo_result["definition"]
+    )[-1]
 
     # Setup: put the repo in a detached head state
     repo.git.checkout("HEAD", detach=True)
@@ -334,22 +335,20 @@ def test_version_print_last_released_on_detached_head(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions",
-    [
-        (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
-        )
-    ],
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_print_last_released_on_nonrelease_branch(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
-    latest_release_version = get_repo_versions()[-1]
+    repo = repo_result["repo"]
+    latest_release_version = get_versions_from_repo_build_def(
+        repo_result["definition"]
+    )[-1]
 
     # Setup: put the repo on a non-release branch
     repo.create_head("next").checkout()
@@ -383,22 +382,20 @@ def test_version_print_last_released_on_nonrelease_branch(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions",
-    [
-        (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
-        )
-    ],
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_print_last_released_tag_on_detached_head(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
-    latest_release_tag = f"v{get_repo_versions()[-1]}"
+    repo = repo_result["repo"]
+    latest_release_tag = (
+        f"v{get_versions_from_repo_build_def(repo_result['definition'])[-1]}"
+    )
 
     # Setup: put the repo in a detached head state
     repo.git.checkout("HEAD", detach=True)
@@ -432,22 +429,20 @@ def test_version_print_last_released_tag_on_detached_head(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions",
-    [
-        (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
-        )
-    ],
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_print_last_released_tag_on_nonrelease_branch(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
-    last_version_tag = f"v{get_repo_versions()[-1]}"
+    repo = repo_result["repo"]
+    last_release_tag = (
+        f"v{get_versions_from_repo_build_def(repo_result['definition'])[-1]}"
+    )
 
     # Setup: put the repo on a non-release branch
     repo.create_head("next").checkout()
@@ -470,7 +465,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
     assert not result.stderr
-    assert f"{last_version_tag}\n" == result.stdout
+    assert f"{last_release_tag}\n" == result.stdout
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after
@@ -481,7 +476,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
 
 @pytest.mark.parametrize(
-    "repo, get_commit_def_fn",
+    "repo_result, get_commit_def_fn",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -490,13 +485,14 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
     ],
 )
 def test_version_print_next_version_fails_on_detached_head(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_runner: CliRunner,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     get_commit_def_fn: GetCommitDefFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
+    repo = repo_result["repo"]
     expected_error_msg = (
         "Detached HEAD state cannot match any release groups; no release will be made"
     )

@@ -14,7 +14,6 @@ from tests.const import (
     VERSION_SUBCMD,
 )
 from tests.fixtures.repos import (
-    get_versions_for_trunk_only_repo_w_tags,
     repo_w_no_tags_angular_commits,
     repo_w_trunk_only_angular_commits,
 )
@@ -28,24 +27,25 @@ if TYPE_CHECKING:
     from requests_mock import Mocker
 
     from tests.fixtures.example_project import GetWheelFileFn, UpdatePyprojectTomlFn
-    from tests.fixtures.git_repo import GetVersionStringsFn
+    from tests.fixtures.git_repo import BuiltRepoResult, GetVersionsFromRepoBuildDefFn
 
 
 # No-op shouldn't change based on the branching/merging of the repository
 @pytest.mark.parametrize(
-    "repo, next_release_version",
+    "repo_result, next_release_version",
     # must use a repo that is ready for a release to prevent no release
     # logic from being triggered before the noop logic
     [(lazy_fixture(repo_w_no_tags_angular_commits.__name__), "0.1.0")],
 )
 def test_version_noop_is_noop(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     next_release_version: str,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     get_wheel_file: GetWheelFileFn,
 ):
+    repo: Repo = repo_result["repo"]
     build_result_file = get_wheel_file(next_release_version)
 
     # Setup: reset any uncommitted changes (if any)
@@ -83,16 +83,18 @@ def test_version_noop_is_noop(
 
 
 @pytest.mark.parametrize(
-    "repo",
+    "repo_result",
     [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_no_git_verify(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
+    repo = repo_result["repo"]
+
     # setup: set configuration setting
     update_pyproject_toml("tool.semantic_release.no_git_verify", True)
     repo.git.commit(
@@ -142,10 +144,10 @@ def test_version_no_git_verify(
 
 
 @pytest.mark.parametrize(
-    "repo", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
 )
 def test_version_on_nonrelease_branch(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -156,6 +158,8 @@ def test_version_on_nonrelease_branch(
     Then no version release should happen which means no code changes, no build, no commit,
     no tag, no push, and no vcs release creation while returning a successful exit code
     """
+    repo = repo_result["repo"]
+
     branch = repo.create_head("next").checkout()
     expected_error_msg = (
         f"branch '{branch.name}' isn't in any release groups; no release will be made\n"
@@ -183,17 +187,12 @@ def test_version_on_nonrelease_branch(
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_versions",
-    [
-        (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
-        )
-    ],
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
 )
 def test_version_on_last_release(
-    repo: Repo,
-    get_repo_versions: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -205,7 +204,10 @@ def test_version_on_last_release(
     no tag, no push, and no vcs release creation while returning a successful exit code and
     printing the last release version
     """
-    latest_release_version = get_repo_versions()[-1]
+    repo = repo_result["repo"]
+    latest_release_version = get_versions_from_repo_build_def(
+        repo_result["definition"]
+    )[-1]
     expected_error_msg = (
         f"No release will be made, {latest_release_version} has already been released!"
     )
@@ -238,10 +240,10 @@ def test_version_on_last_release(
 
 
 @pytest.mark.parametrize(
-    "repo", [lazy_fixture(repo_w_no_tags_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_no_tags_angular_commits.__name__)]
 )
 def test_version_only_tag_push(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -251,6 +253,8 @@ def test_version_only_tag_push(
     When running the version command with the `--no-commit` and `--tag` flags,
     Then a tag should be created on the current commit, pushed, and a release created.
     """
+    repo = repo_result["repo"]
+
     # Setup
     head_before = repo.head.commit
 

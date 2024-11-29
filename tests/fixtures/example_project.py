@@ -33,7 +33,7 @@ from tests.const import (
 from tests.util import copy_dir_tree
 
 if TYPE_CHECKING:
-    from typing import Any, Protocol
+    from typing import Any, Protocol, Sequence
 
     from semantic_release.commit_parser import CommitParser
     from semantic_release.hvcs import HvcsBase
@@ -42,6 +42,7 @@ if TYPE_CHECKING:
         BuildRepoOrCopyCacheFn,
         GetMd5ForSetOfFilesFn,
     )
+    from tests.fixtures.git_repo import RepoActions
 
     ExProjectDir = Path
 
@@ -105,7 +106,7 @@ def cached_example_project(
     Use the `init_example_project` fixture instead.
     """
 
-    def _build_project(cached_project_path: Path):
+    def _build_project(cached_project_path: Path) -> Sequence[RepoActions]:
         # purposefully a relative path
         example_dir = Path("src", EXAMPLE_PROJECT_NAME)
         version_py = example_dir / "_version.py"
@@ -133,7 +134,7 @@ def cached_example_project(
             """
         ).lstrip()
 
-        for file, contents in [
+        file_2_contents: list[tuple[str | Path, str]] = [
             (example_dir / "__init__.py", init_py_contents),
             (version_py, version_py_contents),
             (".gitignore", gitignore_contents),
@@ -142,12 +143,17 @@ def cached_example_project(
             (setup_py_file, EXAMPLE_SETUP_PY_CONTENT),
             (changelog_md_file, EXAMPLE_CHANGELOG_MD_CONTENT),
             (changelog_rst_file, EXAMPLE_CHANGELOG_RST_CONTENT),
-        ]:
+        ]
+
+        for file, contents in file_2_contents:
             abs_filepath = cached_project_path.joinpath(file).resolve()
             # make sure the parent directory exists
             abs_filepath.parent.mkdir(parents=True, exist_ok=True)
             # write file contents
             abs_filepath.write_text(contents)
+
+        # This is a special build, we don't expose the Repo Actions to the caller
+        return []
 
     # End of _build_project()
 

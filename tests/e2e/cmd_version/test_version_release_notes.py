@@ -17,21 +17,21 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
-    from git import Repo
     from requests_mock import Mocker
 
     from tests.e2e.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import UseReleaseNotesTemplateFn
+    from tests.fixtures.git_repo import BuiltRepoResult
 
 
 @pytest.mark.parametrize(
-    "repo, next_release_version",
+    "repo_result, next_release_version",
     [
         (lazy_fixture(repo_w_no_tags_angular_commits.__name__), "0.1.0"),
     ],
 )
 def test_custom_release_notes_template(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     next_release_version: str,
     cli_runner: CliRunner,
     use_release_notes_template: UseReleaseNotesTemplateFn,
@@ -44,7 +44,7 @@ def test_custom_release_notes_template(
 
     # Setup
     use_release_notes_template()
-    runtime_context = retrieve_runtime_context(repo)
+    runtime_context = retrieve_runtime_context(repo_result["repo"])
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--vcs-release"]

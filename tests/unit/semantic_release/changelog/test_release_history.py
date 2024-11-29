@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from functools import reduce
 from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
@@ -14,14 +13,8 @@ from semantic_release.version.version import Version
 
 from tests.const import ANGULAR_COMMITS_MINOR, COMMIT_MESSAGE
 from tests.fixtures import (
-    get_commits_for_git_flow_repo_w_2_release_channels,
-    get_commits_for_git_flow_repo_w_3_release_channels,
-    get_commits_for_github_flow_repo_w_feature_release_channel,
-    get_commits_for_trunk_only_repo_w_no_tags,
-    get_commits_for_trunk_only_repo_w_prerelease_tags,
-    get_commits_for_trunk_only_repo_w_tags,
-    repo_w_git_flow_and_release_channels_angular_commits,
-    repo_w_git_flow_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_no_tags_angular_commits,
     repo_w_trunk_only_angular_commits,
@@ -32,11 +25,13 @@ from tests.util import add_text_to_file
 if TYPE_CHECKING:
     from typing import Protocol
 
-    from git import Repo
-
     from semantic_release.commit_parser.angular import AngularCommitParser
 
-    from tests.fixtures.git_repo import GetRepoDefinitionFn, RepoDefinition
+    from tests.fixtures.git_repo import (
+        BuiltRepoResult,
+        GetCommitsFromRepoBuildDefFn,
+        RepoDefinition,
+    )
 
     class CreateReleaseHistoryFromRepoDefFn(Protocol):
         def __call__(self, repo_def: RepoDefinition) -> FakeReleaseHistoryElements: ...
@@ -51,6 +46,13 @@ if TYPE_CHECKING:
 # is correct, i.e. the commits are in the right place - the other fields
 # will need special attention of their own later
 class FakeReleaseHistoryElements(NamedTuple):
+    """
+    A fake release history structure that abstracts away the Parser-specific
+    logic and only focuses that the commit messages are in the correct order and place.
+
+    Where generally a ParsedCommit object exists, here we just use the actual `commit.message`.
+    """
+
     unreleased: dict[str, list[str]]
     released: dict[Version, dict[str, list[str]]]
 
@@ -60,40 +62,22 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
     def _create_release_history_from_repo_def(
         repo_def: RepoDefinition,
     ) -> FakeReleaseHistoryElements:
+        # Organize the commits into the expected structure
         unreleased_history = {}
         released_history = {}
-
         for version_str, version_def in repo_def.items():
-            # extract the commit messages
-            commit_msgs = [
-                # TODO: remove the newline when our release history strips whitespace from commit messages
-                commit["msg"].strip() + "\n"
-                for commit in version_def["commits"]
-            ]
-
             commits_per_group: dict[str, list] = {
                 "Unknown": [],
             }
-            for group_def in version_def["changelog_sections"]:
-                group_name = group_def["section"]
-                commits_per_group[group_name] = [
-                    commit_msgs[index] for index in group_def["i_commits"]
-                ]
 
-            released_commits = set(
-                reduce(
-                    lambda acc, val: [*(acc or []), *val],
-                    commits_per_group.values(),
-                    [],
-                )
-            )
+            for commit in version_def["commits"]:
+                if commit["category"] not in commits_per_group:
+                    commits_per_group[commit["category"]] = []
 
-            commits_per_group["Unknown"] = list(
-                filter(
-                    lambda msg, released_set=released_commits: msg not in released_set,
-                    commit_msgs,
+                commits_per_group[commit["category"]].append(
+                    # TODO: remove the newline when our release history strips whitespace from commit messages
+                    commit["msg"].strip() + "\n"
                 )
-            )
 
             if version_str == "Unreleased":
                 unreleased_history = commits_per_group
@@ -117,54 +101,38 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
 
 
 @pytest.mark.parametrize(
-    "repo, get_repo_definition",
+    "repo_result",
     [
         # ANGULAR parser
-        (
-            lazy_fixture(repo_w_no_tags_angular_commits.__name__),
-            lazy_fixture(get_commits_for_trunk_only_repo_w_no_tags.__name__),
-        ),
+        lazy_fixture(repo_w_no_tags_angular_commits.__name__),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture_name),
-                lazy_fixture(get_commits_for_repo_fixture_name),
                 marks=pytest.mark.comprehensive,
             )
-            for repo_fixture_name, get_commits_for_repo_fixture_name in [
-                (
-                    repo_w_trunk_only_angular_commits.__name__,
-                    get_commits_for_trunk_only_repo_w_tags.__name__,
-                ),
-                (
-                    repo_w_trunk_only_n_prereleases_angular_commits.__name__,
-                    get_commits_for_trunk_only_repo_w_prerelease_tags.__name__,
-                ),
-                (
-                    repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                    get_commits_for_github_flow_repo_w_feature_release_channel.__name__,
-                ),
-                (
-                    repo_w_git_flow_angular_commits.__name__,
-                    get_commits_for_git_flow_repo_w_2_release_channels.__name__,
-                ),
-                (
-                    repo_w_git_flow_and_release_channels_angular_commits.__name__,
-                    get_commits_for_git_flow_repo_w_3_release_channels.__name__,
-                ),
+            for repo_fixture_name in [
+                repo_w_trunk_only_angular_commits.__name__,
+                repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                # This is not tested because currently unable to disern the commits that were squashed or not
+                # repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
             ]
         ],
     ],
 )
 @pytest.mark.order("last")
 def test_release_history(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     default_angular_parser: AngularCommitParser,
-    get_repo_definition: GetRepoDefinitionFn,
     file_in_repo: str,
     create_release_history_from_repo_def: CreateReleaseHistoryFromRepoDefFn,
+    get_commits_from_repo_build_def: GetCommitsFromRepoBuildDefFn,
 ):
+    repo = repo_result["repo"]
     expected_release_history = create_release_history_from_repo_def(
-        get_repo_definition("angular")
+        get_commits_from_repo_build_def(repo_result["definition"])
     )
     expected_released_versions = sorted(
         map(str, expected_release_history.released.keys())
@@ -172,9 +140,12 @@ def test_release_history(
 
     translator = VersionTranslator()
     # Nothing has unreleased commits currently
-    _, released = ReleaseHistory.from_git_history(
-        repo, translator, default_angular_parser
+    history = ReleaseHistory.from_git_history(
+        repo,
+        translator,
+        default_angular_parser,  # type: ignore[arg-type]
     )
+    released = history.released
 
     actual_released_versions = sorted(map(str, released.keys()))
     assert expected_released_versions == actual_released_versions
@@ -219,9 +190,13 @@ def test_release_history(
     )
 
     # Now we should have some unreleased commits, and nothing new released
-    new_unreleased, new_released = ReleaseHistory.from_git_history(
-        repo, translator, default_angular_parser
+    new_history = ReleaseHistory.from_git_history(
+        repo,
+        translator,
+        default_angular_parser,  # type: ignore[arg-type]
     )
+    new_unreleased = new_history.unreleased
+    new_released = new_history.released
 
     actual_unreleased_messages = str.join(
         "\n---\n",
@@ -241,7 +216,7 @@ def test_release_history(
 
 
 @pytest.mark.parametrize(
-    "repo",
+    "repo_result",
     [
         lazy_fixture(repo_w_no_tags_angular_commits.__name__),
         *[
@@ -253,22 +228,22 @@ def test_release_history(
                 repo_w_trunk_only_angular_commits.__name__,
                 repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                 repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                repo_w_git_flow_angular_commits.__name__,
-                repo_w_git_flow_and_release_channels_angular_commits.__name__,
+                repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
             ]
         ],
     ],
 )
 @pytest.mark.order("last")
 def test_release_history_releases(
-    repo: Repo, default_angular_parser: AngularCommitParser
+    repo_result: BuiltRepoResult, default_angular_parser: AngularCommitParser
 ):
     new_version = Version.parse("100.10.1")
     actor = Actor("semantic-release", "semantic-release")
     release_history = ReleaseHistory.from_git_history(
-        repo=repo,
+        repo=repo_result["repo"],
         translator=VersionTranslator(),
-        commit_parser=default_angular_parser,
+        commit_parser=default_angular_parser,  # type: ignore[arg-type]
     )
     tagged_date = datetime.now()
     new_rh = release_history.release(
@@ -293,7 +268,7 @@ def test_release_history_releases(
 
 
 @pytest.mark.parametrize(
-    "repo",
+    "repo_result",
     [
         lazy_fixture(repo_w_no_tags_angular_commits.__name__),
         *[
@@ -305,21 +280,22 @@ def test_release_history_releases(
                 repo_w_trunk_only_angular_commits.__name__,
                 repo_w_trunk_only_n_prereleases_angular_commits.__name__,
                 repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
-                repo_w_git_flow_angular_commits.__name__,
-                repo_w_git_flow_and_release_channels_angular_commits.__name__,
+                repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
             ]
         ],
     ],
 )
 @pytest.mark.order("last")
 def test_all_matching_repo_tags_are_released(
-    repo: Repo, default_angular_parser: AngularCommitParser
+    repo_result: BuiltRepoResult, default_angular_parser: AngularCommitParser
 ):
+    repo = repo_result["repo"]
     translator = VersionTranslator()
     release_history = ReleaseHistory.from_git_history(
         repo=repo,
         translator=translator,
-        commit_parser=default_angular_parser,
+        commit_parser=default_angular_parser,  # type: ignore[arg-type]
     )
 
     for tag in repo.tags:

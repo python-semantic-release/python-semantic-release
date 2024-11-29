@@ -4,35 +4,38 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
 import tests.conftest
 import tests.const
 import tests.util
-from tests.const import EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
-from tests.util import temporary_working_directory
+from tests.const import (
+    EXAMPLE_HVCS_DOMAIN,
+    INITIAL_COMMIT_MESSAGE,
+    RepoActionStep,
+)
 
 if TYPE_CHECKING:
-    from semantic_release.hvcs import HvcsBase
+    from typing import Sequence
 
-    from tests.conftest import GetMd5ForSetOfFilesFn
+    from tests.conftest import (
+        GetCachedRepoDataFn,
+        GetMd5ForSetOfFilesFn,
+        GetStableDateNowFn,
+    )
     from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
-        BaseRepoVersionDef,
-        BuildRepoFn,
+        BuildRepoFromDefinitionFn,
         BuildRepoOrCopyCacheFn,
+        BuildSpecificRepoFn,
+        BuiltRepoResult,
         CommitConvention,
+        ConvertCommitSpecsToCommitDefsFn,
         ExProjectGitRepoFn,
-        ExtractRepoDefinitionFn,
         GetRepoDefinitionFn,
-        GetVersionStringsFn,
-        RepoDefinition,
-        SimulateChangeCommitsNReturnChangelogEntryFn,
-        SimulateDefaultChangelogCreationFn,
+        RepoActions,
         TomlSerializableTypes,
-        VersionStr,
     )
 
 
@@ -53,7 +56,7 @@ def deps_files_4_repo_initial_commit(
 
 
 @pytest.fixture(scope="session")
-def build_spec_hash_for_repo_initial_commit(
+def build_spec_hash_4_repo_initial_commit(
     get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
     deps_files_4_repo_initial_commit: list[Path],
 ) -> str:
@@ -62,114 +65,116 @@ def build_spec_hash_for_repo_initial_commit(
 
 
 @pytest.fixture(scope="session")
-def get_commits_for_repo_w_initial_commit(
-    extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
-) -> GetRepoDefinitionFn:
-    base_definition: dict[str, BaseRepoVersionDef] = {
-        "Unreleased": {
-            "changelog_sections": {
-                # ORDER matters here since greater than 1 commit, changelogs sections are alphabetized
-                # But value is ultimately defined by the commits, which means the commits are
-                # referenced by index value
-                #
-                # NOTE: Since Initial commit is not a valid commit type, it is not included in the
-                #       changelog sections, except for the Emoji Parser because it does not fail when
-                #       no emoji is found.
-                "angular": [],
-                "emoji": [{"section": "Other", "i_commits": [0]}],
-                "scipy": [],
-            },
-            "commits": [
-                {
-                    "angular": INITIAL_COMMIT_MESSAGE,
-                    "emoji": INITIAL_COMMIT_MESSAGE,
-                    "scipy": INITIAL_COMMIT_MESSAGE,
-                },
-            ],
-        },
-    }
-
-    def _get_commits_for_repo_w_initial_commit(
-        commit_type: CommitConvention = "angular",
-    ) -> RepoDefinition:
-        return extract_commit_convention_from_base_repo_def(
-            base_definition, commit_type
-        )
-
-    return _get_commits_for_repo_w_initial_commit
-
-
-@pytest.fixture(scope="session")
-def get_versions_repo_w_initial_commit(
-    get_commits_for_repo_w_initial_commit: GetRepoDefinitionFn,
-) -> GetVersionStringsFn:
-    def _get_versions_for_repo_w_initial_commit() -> list[VersionStr]:
-        return list(get_commits_for_repo_w_initial_commit().keys())
-
-    return _get_versions_for_repo_w_initial_commit
-
-
-@pytest.fixture(scope="session")
-def build_repo_w_initial_commit(
-    get_commits_for_repo_w_initial_commit: GetRepoDefinitionFn,
-    build_configured_base_repo: BuildRepoFn,
+def get_repo_definition_4_repo_w_initial_commit(
+    convert_commit_specs_to_commit_defs: ConvertCommitSpecsToCommitDefsFn,
     changelog_md_file: Path,
     changelog_rst_file: Path,
-    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
-    simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
-) -> BuildRepoFn:
-    def _build_repo_w_initial_commit(
-        dest_dir: Path | str,
-        commit_type: CommitConvention = "angular",
+    stable_now_date: GetStableDateNowFn,
+) -> GetRepoDefinitionFn:
+    def _get_repo_from_defintion(
+        commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = False,
-    ) -> tuple[Path, HvcsBase]:
-        repo_dir, hvcs = build_configured_base_repo(
-            dest_dir,
-            commit_type=commit_type,
-            hvcs_client_name=hvcs_client_name,
-            hvcs_domain=hvcs_domain,
-            tag_format_str=tag_format_str,
-            extra_configs=extra_configs,
-            mask_initial_release=mask_initial_release,
+    ) -> Sequence[RepoActions]:
+        repo_construction_steps: list[RepoActions] = []
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.CONFIGURE,
+                    "details": {
+                        "commit_type": commit_type,
+                        "hvcs_client_name": hvcs_client_name,
+                        "hvcs_domain": hvcs_domain,
+                        "tag_format_str": tag_format_str,
+                        "mask_initial_release": mask_initial_release,
+                        "extra_configs": {
+                            # Set the default release branch
+                            "tool.semantic_release.branches.main": {
+                                "match": r"^(main|master)$",
+                                "prerelease": False,
+                            },
+                            **(extra_configs or {}),
+                        },
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "emoji": INITIAL_COMMIT_MESSAGE,
+                                    "scipy": INITIAL_COMMIT_MESSAGE,
+                                    "datetime": stable_now_date().isoformat(
+                                        timespec="seconds"
+                                    ),
+                                    "include_in_changelog": bool(
+                                        commit_type == "emoji"
+                                    ),
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.WRITE_CHANGELOGS,
+                    "details": {
+                        "new_version": "Unreleased",
+                        "dest_files": [
+                            {
+                                "path": changelog_md_file,
+                                "format": ChangelogOutputFormat.MARKDOWN,
+                            },
+                            {
+                                "path": changelog_rst_file,
+                                "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                            },
+                        ],
+                    },
+                },
+            ]
         )
 
-        repo_def = get_commits_for_repo_w_initial_commit(commit_type)
-        versions = (key for key in repo_def)
-        next_version = next(versions)
-        next_version_def = repo_def[next_version]
+        return repo_construction_steps
 
-        with temporary_working_directory(repo_dir), Repo(".") as git_repo:
-            # Run set up commits
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
+    return _get_repo_from_defintion
+
+
+@pytest.fixture(scope="session")
+def build_repo_w_initial_commit(
+    build_repo_from_definition: BuildRepoFromDefinitionFn,
+    get_repo_definition_4_repo_w_initial_commit: GetRepoDefinitionFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_spec_hash_4_repo_initial_commit: str,
+) -> BuildSpecificRepoFn:
+    def _build_specific_repo_type(
+        repo_name: str, commit_type: CommitConvention, dest_dir: Path
+    ) -> Sequence[RepoActions]:
+        def _build_repo(cached_repo_path: Path) -> Sequence[RepoActions]:
+            repo_construction_steps = get_repo_definition_4_repo_w_initial_commit(
+                commit_type=commit_type,
             )
+            return build_repo_from_definition(cached_repo_path, repo_construction_steps)
 
-            # write expected Markdown changelog
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
+        build_repo_or_copy_cache(
+            repo_name=repo_name,
+            build_spec_hash=build_spec_hash_4_repo_initial_commit,
+            build_repo_func=_build_repo,
+            dest_dir=dest_dir,
+        )
 
-            # write expected RST changelog
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
+        if not (cached_repo_data := get_cached_repo_data(proj_dirname=repo_name)):
+            raise ValueError("Failed to retrieve repo data from cache")
 
-        return repo_dir, hvcs
+        return cached_repo_data["build_definition"]
 
-    return _build_repo_w_initial_commit
+    return _build_specific_repo_type
 
 
 # --------------------------------------------------------------------------- #
@@ -179,21 +184,18 @@ def build_repo_w_initial_commit(
 
 @pytest.fixture
 def repo_w_initial_commit(
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
-    build_repo_w_initial_commit: BuildRepoFn,
-    build_spec_hash_for_repo_initial_commit: str,
+    build_repo_w_initial_commit: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_repo_w_initial_commit(cached_repo_path)
+) -> BuiltRepoResult:
+    repo_name = repo_w_initial_commit.__name__
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_initial_commit.__name__,
-        build_spec_hash=build_spec_hash_for_repo_initial_commit,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_repo_w_initial_commit(
+            repo_name=repo_name,
+            commit_type="angular",  # not used but required
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }

@@ -1,40 +1,43 @@
 from __future__ import annotations
 
+from datetime import timedelta
+from itertools import count
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from git import Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
 
 import tests.conftest
 import tests.const
 import tests.util
-from tests.const import EXAMPLE_HVCS_DOMAIN, INITIAL_COMMIT_MESSAGE
-from tests.util import temporary_working_directory
+from tests.const import (
+    EXAMPLE_HVCS_DOMAIN,
+    INITIAL_COMMIT_MESSAGE,
+    RepoActionStep,
+)
 
 if TYPE_CHECKING:
-    from semantic_release.hvcs import HvcsBase
+    from typing import Sequence
 
-    from tests.conftest import GetMd5ForSetOfFilesFn
-    from tests.fixtures.example_project import (
-        ExProjectDir,
+    from tests.conftest import (
+        GetCachedRepoDataFn,
+        GetMd5ForSetOfFilesFn,
+        GetStableDateNowFn,
     )
+    from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
-        BaseRepoVersionDef,
-        BuildRepoFn,
+        BuildRepoFromDefinitionFn,
         BuildRepoOrCopyCacheFn,
+        BuildSpecificRepoFn,
+        BuiltRepoResult,
         CommitConvention,
+        ConvertCommitSpecsToCommitDefsFn,
         ExProjectGitRepoFn,
-        ExtractRepoDefinitionFn,
         GetRepoDefinitionFn,
-        GetVersionStringsFn,
-        RepoDefinition,
-        SimulateChangeCommitsNReturnChangelogEntryFn,
-        SimulateDefaultChangelogCreationFn,
+        RepoActions,
         TomlSerializableTypes,
-        VersionStr,
     )
 
 
@@ -55,7 +58,7 @@ def deps_files_4_repo_w_no_tags(
 
 
 @pytest.fixture(scope="session")
-def build_spec_hash_for_repo_w_no_tags(
+def build_spec_hash_4_repo_w_no_tags(
     get_md5_for_set_of_files: GetMd5ForSetOfFilesFn,
     deps_files_4_repo_w_no_tags: list[Path],
 ) -> str:
@@ -64,135 +67,146 @@ def build_spec_hash_for_repo_w_no_tags(
 
 
 @pytest.fixture(scope="session")
-def get_commits_for_trunk_only_repo_w_no_tags(
-    extract_commit_convention_from_base_repo_def: ExtractRepoDefinitionFn,
-) -> GetRepoDefinitionFn:
-    base_definition: dict[str, BaseRepoVersionDef] = {
-        "Unreleased": {
-            "changelog_sections": {
-                # ORDER matters here since greater than 1 commit, changelogs sections are alphabetized
-                # But value is ultimately defined by the commits, which means the commits are
-                # referenced by index value
-                "angular": [
-                    {"section": "Bug Fixes", "i_commits": [3, 1]},
-                    {"section": "Features", "i_commits": [2]},
-                ],
-                "emoji": [
-                    {"section": ":bug:", "i_commits": [3, 1]},
-                    {"section": ":sparkles:", "i_commits": [2]},
-                    {"section": "Other", "i_commits": [0]},
-                ],
-                "scipy": [
-                    {"section": "Feature", "i_commits": [2]},
-                    {"section": "Fix", "i_commits": [3, 1]},
-                ],
-            },
-            "commits": [
-                {
-                    "angular": INITIAL_COMMIT_MESSAGE,
-                    "emoji": INITIAL_COMMIT_MESSAGE,
-                    "scipy": INITIAL_COMMIT_MESSAGE,
-                },
-                {
-                    "angular": "fix: correct some text",
-                    "emoji": ":bug: correct some text",
-                    "scipy": "MAINT: correct some text",
-                },
-                {
-                    "angular": "feat: add much more text",
-                    "emoji": ":sparkles: add much more text",
-                    "scipy": "ENH: add much more text",
-                },
-                {
-                    "angular": "fix: correct some text",
-                    "emoji": ":bug: correct some text",
-                    "scipy": "MAINT: correct some text",
-                },
-            ],
-        },
-    }
-
-    def _get_commits_for_trunk_only_repo_w_no_tags(
-        commit_type: CommitConvention = "angular",
-    ) -> RepoDefinition:
-        return extract_commit_convention_from_base_repo_def(
-            base_definition, commit_type
-        )
-
-    return _get_commits_for_trunk_only_repo_w_no_tags
-
-
-@pytest.fixture(scope="session")
-def get_versions_for_trunk_only_repo_w_no_tags(
-    get_commits_for_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
-) -> GetVersionStringsFn:
-    def _get_versions_for_trunk_only_repo_w_no_tags() -> list[VersionStr]:
-        return list(get_commits_for_trunk_only_repo_w_no_tags().keys())
-
-    return _get_versions_for_trunk_only_repo_w_no_tags
-
-
-@pytest.fixture(scope="session")
-def build_trunk_only_repo_w_no_tags(
-    get_commits_for_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
-    build_configured_base_repo: BuildRepoFn,
+def get_repo_definition_4_trunk_only_repo_w_no_tags(
+    convert_commit_specs_to_commit_defs: ConvertCommitSpecsToCommitDefsFn,
     changelog_md_file: Path,
     changelog_rst_file: Path,
-    simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
-    simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
-) -> BuildRepoFn:
-    def _build_trunk_only_repo_w_no_tags(
-        dest_dir: Path | str,
-        commit_type: CommitConvention = "angular",
+    stable_now_date: GetStableDateNowFn,
+) -> GetRepoDefinitionFn:
+    """
+    Builds a repository with trunk-only committing (no-branching) strategy without
+    any releases.
+    """
+
+    def _get_repo_from_defintion(
+        commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = False,
-    ) -> tuple[Path, HvcsBase]:
-        repo_dir, hvcs = build_configured_base_repo(
-            dest_dir,
-            commit_type=commit_type,
-            hvcs_client_name=hvcs_client_name,
-            hvcs_domain=hvcs_domain,
-            tag_format_str=tag_format_str,
-            extra_configs=extra_configs,
-            mask_initial_release=mask_initial_release,
+    ) -> Sequence[RepoActions]:
+        stable_now_datetime = stable_now_date()
+        commit_timestamp_gen = (
+            (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+            for i in count(step=1)
         )
 
-        repo_def = get_commits_for_trunk_only_repo_w_no_tags(commit_type)
-        versions = (key for key in repo_def)
-        next_version = next(versions)
-        next_version_def = repo_def[next_version]
+        repo_construction_steps: list[RepoActions] = []
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.CONFIGURE,
+                    "details": {
+                        "commit_type": commit_type,
+                        "hvcs_client_name": hvcs_client_name,
+                        "hvcs_domain": hvcs_domain,
+                        "tag_format_str": tag_format_str,
+                        "mask_initial_release": mask_initial_release,
+                        "extra_configs": {
+                            # Set the default release branch
+                            "tool.semantic_release.branches.main": {
+                                "match": r"^(main|master)$",
+                                "prerelease": False,
+                            },
+                            **(extra_configs or {}),
+                        },
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "emoji": INITIAL_COMMIT_MESSAGE,
+                                    "scipy": INITIAL_COMMIT_MESSAGE,
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": bool(
+                                        commit_type == "emoji"
+                                    ),
+                                },
+                                {
+                                    "angular": "feat: add new feature",
+                                    "emoji": ":sparkles: add new feature",
+                                    "scipy": "ENH: add new feature",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                                {
+                                    "angular": "fix: correct some text",
+                                    "emoji": ":bug: correct some text",
+                                    "scipy": "MAINT: correct some text",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                                {
+                                    "angular": "fix: correct more text",
+                                    "emoji": ":bug: correct more text",
+                                    "scipy": "MAINT: correct more text",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
+                            commit_type,
+                        ),
+                    },
+                },
+                {
+                    "action": RepoActionStep.WRITE_CHANGELOGS,
+                    "details": {
+                        "new_version": "Unreleased",
+                        "dest_files": [
+                            {
+                                "path": changelog_md_file,
+                                "format": ChangelogOutputFormat.MARKDOWN,
+                            },
+                            {
+                                "path": changelog_rst_file,
+                                "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
 
-        with temporary_working_directory(repo_dir), Repo(".") as git_repo:
-            # Run set up commits
-            next_version_def["commits"] = simulate_change_commits_n_rtn_changelog_entry(
-                git_repo,
-                next_version_def["commits"],
+        return repo_construction_steps
+
+    return _get_repo_from_defintion
+
+
+@pytest.fixture(scope="session")
+def build_trunk_only_repo_w_no_tags(
+    build_repo_from_definition: BuildRepoFromDefinitionFn,
+    get_repo_definition_4_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_spec_hash_4_repo_w_no_tags: str,
+) -> BuildSpecificRepoFn:
+    def _build_specific_repo_type(
+        repo_name: str, commit_type: CommitConvention, dest_dir: Path
+    ) -> Sequence[RepoActions]:
+        def _build_repo(cached_repo_path: Path) -> Sequence[RepoActions]:
+            repo_construction_steps = get_repo_definition_4_trunk_only_repo_w_no_tags(
+                commit_type=commit_type,
             )
+            return build_repo_from_definition(cached_repo_path, repo_construction_steps)
 
-            # write expected Markdown changelog
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                dest_file=repo_dir.joinpath(changelog_md_file),
-                output_format=ChangelogOutputFormat.MARKDOWN,
-                mask_initial_release=mask_initial_release,
-            )
+        build_repo_or_copy_cache(
+            repo_name=repo_name,
+            build_spec_hash=build_spec_hash_4_repo_w_no_tags,
+            build_repo_func=_build_repo,
+            dest_dir=dest_dir,
+        )
 
-            # write expected RST changelog
-            simulate_default_changelog_creation(
-                repo_def,
-                hvcs=hvcs,
-                dest_file=repo_dir.joinpath(changelog_rst_file),
-                output_format=ChangelogOutputFormat.RESTRUCTURED_TEXT,
-                mask_initial_release=mask_initial_release,
-            )
+        if not (cached_repo_data := get_cached_repo_data(proj_dirname=repo_name)):
+            raise ValueError("Failed to retrieve repo data from cache")
 
-        return repo_dir, hvcs
+        return cached_repo_data["build_definition"]
 
-    return _build_trunk_only_repo_w_no_tags
+    return _build_specific_repo_type
 
 
 # --------------------------------------------------------------------------- #
@@ -202,65 +216,59 @@ def build_trunk_only_repo_w_no_tags(
 
 @pytest.fixture
 def repo_w_no_tags_angular_commits(
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    build_spec_hash_for_repo_w_no_tags: str,
+    build_trunk_only_repo_w_no_tags: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_trunk_only_repo_w_no_tags(cached_repo_path, "angular")
+) -> BuiltRepoResult:
+    repo_name = repo_w_no_tags_angular_commits.__name__
+    commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_no_tags_angular_commits.__name__,
-        build_spec_hash=build_spec_hash_for_repo_w_no_tags,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_trunk_only_repo_w_no_tags(
+            repo_name=repo_name,
+            commit_type=commit_type,
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }
 
 
 @pytest.fixture
 def repo_w_no_tags_emoji_commits(
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    build_spec_hash_for_repo_w_no_tags: str,
+    build_trunk_only_repo_w_no_tags: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_trunk_only_repo_w_no_tags(cached_repo_path, "emoji")
+) -> BuiltRepoResult:
+    repo_name = repo_w_no_tags_emoji_commits.__name__
+    commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_no_tags_emoji_commits.__name__,
-        build_spec_hash=build_spec_hash_for_repo_w_no_tags,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_trunk_only_repo_w_no_tags(
+            repo_name=repo_name,
+            commit_type=commit_type,
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }
 
 
 @pytest.fixture
 def repo_w_no_tags_scipy_commits(
-    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
-    build_trunk_only_repo_w_no_tags: BuildRepoFn,
-    build_spec_hash_for_repo_w_no_tags: str,
+    build_trunk_only_repo_w_no_tags: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
-) -> Repo:
-    def _build_repo(cached_repo_path: Path):
-        build_trunk_only_repo_w_no_tags(cached_repo_path, "scipy")
+) -> BuiltRepoResult:
+    repo_name = repo_w_no_tags_scipy_commits.__name__
+    commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
-    build_repo_or_copy_cache(
-        repo_name=repo_w_no_tags_scipy_commits.__name__,
-        build_spec_hash=build_spec_hash_for_repo_w_no_tags,
-        build_repo_func=_build_repo,
-        dest_dir=example_project_dir,
-    )
-
-    return example_project_git_repo()
+    return {
+        "definition": build_trunk_only_repo_w_no_tags(
+            repo_name=repo_name,
+            commit_type=commit_type,
+            dest_dir=example_project_dir,
+        ),
+        "repo": example_project_git_repo(),
+    }
