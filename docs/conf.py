@@ -44,7 +44,7 @@ apidoc_module_first = True
 apidoc_extra_args = ["-d", "3"]
 
 
-def setup(app):  # noqa: ARG001,ANN001,ANN201
+def setup(app):  # type: ignore[no-untyped-def]  # noqa: ARG001,ANN001,ANN201
     pass
 
 

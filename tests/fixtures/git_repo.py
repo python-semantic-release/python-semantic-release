@@ -160,7 +160,7 @@ if TYPE_CHECKING:
             self, build_definition: Sequence[RepoActions]
         ) -> RepoDefinition: ...
 
-    RepoDefinition: TypeAlias = dict[VersionStr, RepoVersionDef]
+    RepoDefinition: TypeAlias = dict[VersionStr, RepoVersionDef]  # type: ignore[misc] # mypy is thoroughly confused
     """
     A Type alias to define a repositories versions, commits, and changelog sections
     for a specific commit convention
@@ -622,10 +622,10 @@ def format_squash_commit_msg_github() -> FormatGitHubSquashCommitMsgFn:
         pr_number: int,
         squashed_commits: list[CommitDef | str],
     ) -> str:
-        sq_cmts: list[str] = (  # type: ignore
-            squashed_commits
-            if not isinstance(squashed_commits[0], dict)
-            else [commit["msg"] for commit in squashed_commits]  # type: ignore
+        sq_cmts: list[str] = (
+            squashed_commits  # type: ignore[assignment]
+            if len(squashed_commits) > 1 and not isinstance(squashed_commits[0], dict)
+            else [commit["msg"] for commit in squashed_commits]  # type: ignore[index]
         )
         return (
             str.join(
@@ -1015,9 +1015,9 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
             *acc,
             *(
                 reduce(
-                    expand_repo_construction_steps,
+                    expand_repo_construction_steps,  # type: ignore[arg-type]
                     step["details"]["pre_actions"],
-                    [],  # type: ignore[arg-type]
+                    [],
                 )
                 if "pre_actions" in step["details"]
                 else []
@@ -1025,9 +1025,9 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
             step,
             *(
                 reduce(
-                    expand_repo_construction_steps,
+                    expand_repo_construction_steps,  # type: ignore[arg-type]
                     step["details"]["post_actions"],
-                    [],  # type: ignore[arg-type]
+                    [],
                 )
                 if "post_actions" in step["details"]
                 else []

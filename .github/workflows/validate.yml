@@ -368,7 +368,9 @@ jobs:
       - name: Setup | Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[dev,mypy]
+          pip install -e .[dev,mypy,test]
+        # needs test because we run mypy over the tests as well and without the dependencies
+        # mypy will throw import errors
 
       - name: Lint | Ruff Evaluation
         id: lint
@@ -382,7 +384,7 @@ jobs:
         id: type-check
         if: ${{ always() && steps.lint.outcome != 'skipped' }}
         run: |
-          mypy --ignore-missing-imports src/
+          mypy .
 
       - name: Format-Check | Ruff Evaluation
         id: format-check

@@ -21,7 +21,7 @@ unwordwrap = regexp(r"((?<!-)\n(?![\s*-]))")
 def test_valid_scipy_parsed_chore_commits(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,
-    scipy_chore_commit_parts: list[list[str]],
+    scipy_chore_commit_parts: list[tuple[str, str, list[str]]],
     scipy_chore_commits: list[str],
 ):
     expected_parts = scipy_chore_commit_parts
@@ -34,7 +34,7 @@ def test_valid_scipy_parsed_chore_commits(
             subject,
             *[body.rstrip() for body in commit_bodies if body],
         ]
-        expected_brk_desc = []
+        expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
         result = default_scipy_parser.parse(commit)
@@ -50,7 +50,7 @@ def test_valid_scipy_parsed_chore_commits(
 def test_valid_scipy_parsed_patch_commits(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,
-    scipy_patch_commit_parts: list[list[str]],
+    scipy_patch_commit_parts: list[tuple[str, str, list[str]]],
     scipy_patch_commits: list[str],
 ):
     expected_parts = scipy_patch_commit_parts
@@ -63,7 +63,7 @@ def test_valid_scipy_parsed_patch_commits(
             subject,
             *[body.rstrip() for body in commit_bodies if body],
         ]
-        expected_brk_desc = []
+        expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
         result = default_scipy_parser.parse(commit)
@@ -79,7 +79,7 @@ def test_valid_scipy_parsed_patch_commits(
 def test_valid_scipy_parsed_minor_commits(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,
-    scipy_minor_commit_parts: list[list[str]],
+    scipy_minor_commit_parts: list[tuple[str, str, list[str]]],
     scipy_minor_commits: list[str],
 ):
     expected_parts = scipy_minor_commit_parts
@@ -92,7 +92,7 @@ def test_valid_scipy_parsed_minor_commits(
             subject,
             *[body for body in commit_bodies if body],
         ]
-        expected_brk_desc = []
+        expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
         result = default_scipy_parser.parse(commit)
@@ -108,7 +108,7 @@ def test_valid_scipy_parsed_minor_commits(
 def test_valid_scipy_parsed_major_commits(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,
-    scipy_major_commit_parts: list[list[str]],
+    scipy_major_commit_parts: list[tuple[str, str, list[str]]],
     scipy_major_commits: list[str],
 ):
     expected_parts = scipy_major_commit_parts
