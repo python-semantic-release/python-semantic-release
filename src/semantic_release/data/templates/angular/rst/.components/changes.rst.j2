@@ -65,7 +65,7 @@ Fixes
 }}{{    section_header ~ "\n"
 }}{{    generate_heading_underline(section_header, '-') ~ "\n"
 }}{{
-        "\n%s\n" | format(commit_descriptions | unique | join("\n\n"))
+        "\n%s\n" | format(commit_descriptions | unique | sort | join("\n\n"))
 
 }}{%  endfor
 %}{#

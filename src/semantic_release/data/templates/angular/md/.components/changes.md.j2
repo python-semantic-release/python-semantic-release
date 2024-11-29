@@ -39,6 +39,6 @@ EXAMPLE:
 #}{{    "\n"
 }}{{    "### %s\n" | format(type_ | title)
 }}{{    "\n"
-}}{{    "%s\n" | format(commit_descriptions | unique | join("\n\n"))
+}}{{    "%s\n" | format(commit_descriptions | unique | sort | join("\n\n"))
 }}{%  endfor
 %}
