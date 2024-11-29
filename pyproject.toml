@@ -176,7 +176,6 @@ pretty = true
 error_summary = true
 follow_imports = "normal"
 enable_error_code = ["ignore-without-code"]
-ignore_missing_imports = true   # gitpython is very dynamic
 disallow_untyped_calls = true
 # warn_return_any = true
 strict_optional = true
@@ -192,9 +191,15 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
-allow_untyped_defs = true
-allow_incomplete_defs = true
-allow_untyped_calls = true
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "flatdict"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "shellingham"
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 88
