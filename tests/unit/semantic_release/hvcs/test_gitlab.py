@@ -22,7 +22,6 @@ from tests.const import (
 if TYPE_CHECKING:
     from typing import Generator
 
-gitlab.Gitlab("")  # instantiation necessary to discover gitlab ProjectManager
 
 # Note: there's nothing special about the value of these variables,
 # they're just constants for easier consistency with the faked objects
@@ -30,117 +29,10 @@ A_GOOD_TAG = "v1.2.3"
 A_BAD_TAG = "v2.1.1-rc.1"
 A_LOCKED_TAG = "v0.9.0"
 A_MISSING_TAG = "v1.0.0+missing"
-AN_EXISTING_TAG = "v2.3.4+existing"
 # But note this is the only ref we're making a "fake" commit for, so
 # tests which need to query the remote for "a" ref, the exact sha for
 # which doesn't matter, all use this constant
 REF = "hashashash"
-
-
-class _GitlabProject:
-    def __init__(self, status):
-        self.commits = {REF: self._Commit(status)}
-        self.tags = self._Tags()
-        self.releases = self._Releases()
-
-    class _Commit:
-        def __init__(self, status):
-            self.statuses = self._Statuses(status)
-
-        class _Statuses:
-            def __init__(self, status):
-                if status == "pending":
-                    self.jobs = [
-                        {
-                            "name": "good_job",
-                            "status": "passed",
-                            "allow_failure": False,
-                        },
-                        {
-                            "name": "slow_job",
-                            "status": "pending",
-                            "allow_failure": False,
-                        },
-                    ]
-                elif status == "failure":
-                    self.jobs = [
-                        {
-                            "name": "good_job",
-                            "status": "passed",
-                            "allow_failure": False,
-                        },
-                        {"name": "bad_job", "status": "failed", "allow_failure": False},
-                    ]
-                elif status == "allow_failure":
-                    self.jobs = [
-                        {
-                            "name": "notsobad_job",
-                            "status": "failed",
-                            "allow_failure": True,
-                        },
-                        {
-                            "name": "good_job2",
-                            "status": "passed",
-                            "allow_failure": False,
-                        },
-                    ]
-                elif status == "success":
-                    self.jobs = [
-                        {
-                            "name": "good_job1",
-                            "status": "passed",
-                            "allow_failure": True,
-                        },
-                        {
-                            "name": "good_job2",
-                            "status": "passed",
-                            "allow_failure": False,
-                        },
-                    ]
-
-            def list(self):
-                return self.jobs
-
-    class _Tags:
-        def __init__(self):
-            pass
-
-        def get(self, tag):
-            if tag in (A_GOOD_TAG, AN_EXISTING_TAG):
-                return self._Tag()
-            if tag == A_LOCKED_TAG:
-                return self._Tag(locked=True)
-            raise gitlab.exceptions.GitlabGetError()
-
-        class _Tag:
-            def __init__(self, locked=False):
-                self.locked = locked
-
-            def set_release_description(self, _):
-                if self.locked:
-                    raise gitlab.exceptions.GitlabUpdateError()
-
-    class _Releases:
-        def __init__(self):
-            pass
-
-        def create(self, input_):
-            if (
-                input_["name"]
-                and input_["tag_name"]
-                and input_["tag_name"] in (A_GOOD_TAG, A_LOCKED_TAG)
-            ):
-                return self._Release()
-            raise gitlab.exceptions.GitlabCreateError()
-
-        def update(self, tag, _):
-            if tag == A_MISSING_TAG:
-                raise gitlab.exceptions.GitlabUpdateError()
-            return self._Release()
-
-        class _Release:
-            def __init__(self, locked=False):
-                pass
 
 
 @pytest.fixture
@@ -428,12 +320,10 @@ def test_create_release_fails_with_bad_tag(
 
 
 @pytest.mark.parametrize("tag", (A_GOOD_TAG, A_LOCKED_TAG))
-def test_update_release_succeeds(
-    default_gl_client: Gitlab, default_gl_project: gitlab.v4.objects.Project, tag: str
-):
-    fake_release_obj = gitlab.v4.objects.ProjectReleaseManager(default_gl_project).get(
-        tag, lazy=True
-    )
+def test_update_release_succeeds(default_gl_client: Gitlab, tag: str):
+    fake_release_obj = gitlab.v4.objects.ProjectReleaseManager(
+        default_gl_client._client
+    ).get(tag, lazy=True)
     fake_release_obj._attrs["name"] = tag
 
     with mock.patch.object(

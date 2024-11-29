@@ -70,7 +70,7 @@ def test_bfs_for_latest_version_in_history():
     )
 
     # Verify
-    assert expected_version == actual
+    assert expected_version == (actual or "")
 
 
 @pytest.mark.parametrize(

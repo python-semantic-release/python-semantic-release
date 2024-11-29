@@ -15,7 +15,7 @@ from tests.util import assert_successful_exit_code
 if TYPE_CHECKING:
     from typing import Any
 
-    from tests.command_line.conftest import CliRunner
+    from click.testing import CliRunner
 
 
 @pytest.fixture

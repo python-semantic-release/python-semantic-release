@@ -11,12 +11,11 @@ from pathlib import Path
 from textwrap import indent
 from typing import TYPE_CHECKING, Tuple
 
-from git import Repo
+from git import Git, Repo
 from pydantic.dataclasses import dataclass
 
 from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
-from semantic_release.cli import config as cli_config_module
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseResult
 from semantic_release.enums import LevelBump
@@ -28,10 +27,10 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Iterable, TypeVar
 
     try:
-        from typing import TypeAlias
-    except ImportError:
-        # for python 3.8 and 3.9
+        # Python 3.8 and 3.9 compatibility
         from typing_extensions import TypeAlias
+    except ImportError:
+        from typing import TypeAlias  # type: ignore[attr-defined, no-redef]
 
     from unittest.mock import MagicMock
 
@@ -43,7 +42,7 @@ if TYPE_CHECKING:
 
     _R = TypeVar("_R")
 
-    GitCommandWrapperType: TypeAlias = cli_config_module.Repo.GitCommandWrapperType
+    GitCommandWrapperType: TypeAlias = Git
 
 
 def get_func_qual_name(func: Callable) -> str:
@@ -125,8 +124,8 @@ def remove_dir_tree(directory: Path | str = ".", force: bool = False) -> None:
 
 def dynamic_python_import(file_path: Path, module_name: str):
     spec = importlib.util.spec_from_file_location(module_name, str(file_path))
-    module = importlib.util.module_from_spec(spec)  # type: ignore
-    spec.loader.exec_module(module)  # type: ignore
+    module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    spec.loader.exec_module(module)  # type: ignore[union-attr]
     return module
 
 
@@ -233,7 +232,7 @@ def prepare_mocked_git_command_wrapper_type(
     >>> mocked_push.assert_called_once()
     """
 
-    class MockGitCommandWrapperType(cli_config_module.Repo.GitCommandWrapperType):
+    class MockGitCommandWrapperType(Git):
         def __getattr__(self, name: str) -> Any:
             try:
                 return object.__getattribute__(self, f"mocked_{name}")

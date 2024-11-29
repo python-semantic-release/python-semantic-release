@@ -11,12 +11,12 @@ DOCS_DIR = PROJ_DIR / "docs"
 
 def update_github_actions_example(filepath: Path, new_version: str) -> None:
     psr_regex = RegExp(r"(uses:.*python-semantic-release)@v\d+\.\d+\.\d+")
-    file_content_lines = filepath.read_text().splitlines()
+    file_content_lines: list[str] = filepath.read_text().splitlines()
 
     for regex in [psr_regex]:
         file_content_lines = list(
             map(
-                lambda line, regex=regex: regex.sub(r"\1@v" + new_version, line),
+                lambda line, regex=regex: regex.sub(r"\1@v" + new_version, line),  # type: ignore[misc]
                 file_content_lines,
             )
         )

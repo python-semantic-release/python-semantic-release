@@ -448,9 +448,9 @@ def get_md5_for_set_of_files(
 
 @pytest.fixture(scope="session")
 def clean_os_environment() -> dict[str, str]:
-    return dict(  # type: ignore
+    return dict(
         filter(
-            lambda k_v: k_v[1] is not None,
+            lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
             {
                 "PATH": os.getenv("PATH"),
                 "HOME": os.getenv("HOME"),

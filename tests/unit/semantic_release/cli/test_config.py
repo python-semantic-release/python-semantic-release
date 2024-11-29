@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
-    from tests.fixtures.git_repo import BuildRepoFn
+    from tests.fixtures.git_repo import BuildRepoFn, CommitConvention
 
 
 @pytest.mark.parametrize(
@@ -230,7 +230,7 @@ def test_load_valid_runtime_config(
     ],
 )
 def test_load_valid_runtime_config_w_custom_parser(
-    commit_parser: str,
+    commit_parser: CommitConvention,
     build_configured_base_repo: BuildRepoFn,
     example_project_dir: ExProjectDir,
     example_pyproject_toml: Path,

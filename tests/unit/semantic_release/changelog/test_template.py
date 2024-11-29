@@ -49,9 +49,9 @@ EXAMPLE_TEMPLATE_FORMAT_STR = """
     "subjects", [("dogs", "cats"), ("stocks", "finance", "politics")]
 )
 def test_template_env_configurable(format_map: dict[str, Any], subjects: tuple[str]):
-    template = EXAMPLE_TEMPLATE_FORMAT_STR.format_map(format_map)
+    template_as_str = EXAMPLE_TEMPLATE_FORMAT_STR.format_map(format_map)
     env = environment(**format_map)
-    template = env.from_string(template)
+    template = env.from_string(template_as_str)
 
     title = "important"
     newline = "\n"
