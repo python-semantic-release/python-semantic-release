@@ -28,9 +28,9 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
-    from git import Repo
 
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.fixtures.git_repo import BuiltRepoResult
 
 
 VERSION_STAMP_CMD = [
@@ -45,7 +45,7 @@ VERSION_STAMP_CMD = [
 
 
 @pytest.mark.parametrize(
-    "repo, expected_new_version",
+    "repo_result, expected_new_version",
     [
         (
             lazy_fixture(repo_w_trunk_only_n_prereleases_angular_commits.__name__),
@@ -54,7 +54,7 @@ VERSION_STAMP_CMD = [
     ],
 )
 def test_version_only_stamp_version(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     expected_new_version: str,
     cli_runner: CliRunner,
     mocked_git_push: MagicMock,
@@ -64,6 +64,7 @@ def test_version_only_stamp_version(
     example_changelog_md: Path,
     example_changelog_rst: Path,
 ) -> None:
+    repo = repo_result["repo"]
     version_file = example_project_dir.joinpath(
         "src", EXAMPLE_PROJECT_NAME, "_version.py"
     )
@@ -86,7 +87,7 @@ def test_version_only_stamp_version(
     )
 
     # Modify the pyproject.toml to remove the version so we can compare it later
-    pyproject_toml_before["tool"]["poetry"].pop("version")  # type: ignore[attr-defined]
+    pyproject_toml_before.get("tool", {}).get("poetry", {}).pop("version")
 
     # Act (stamp the version but also create the changelog)
     cli_cmd = [*VERSION_STAMP_CMD, "--minor"]
@@ -104,8 +105,8 @@ def test_version_only_stamp_version(
     pyproject_toml_after = tomlkit.loads(
         example_pyproject_toml.read_text(encoding="utf-8")
     )
-    pyproj_version_after = pyproject_toml_after["tool"]["poetry"].pop(  # type: ignore[attr-defined]
-        "version"
+    pyproj_version_after = (
+        pyproject_toml_after.get("tool", {}).get("poetry", {}).pop("version")
     )
 
     # Load python module for reading the version (ensures the file is valid)

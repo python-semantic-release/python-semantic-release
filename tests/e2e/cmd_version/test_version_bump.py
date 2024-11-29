@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+from itertools import count
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -24,12 +26,12 @@ from tests.fixtures import (
     emoji_major_commits,
     emoji_minor_commits,
     emoji_patch_commits,
-    repo_w_git_flow_and_release_channels_angular_commits,
-    repo_w_git_flow_and_release_channels_emoji_commits,
-    repo_w_git_flow_and_release_channels_scipy_commits,
-    repo_w_git_flow_angular_commits,
-    repo_w_git_flow_emoji_commits,
-    repo_w_git_flow_scipy_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_emoji_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_scipy_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits,
     repo_w_github_flow_w_feature_release_channel_angular_commits,
     repo_w_initial_commit,
     repo_w_no_tags_angular_commits,
@@ -57,14 +59,15 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from click.testing import CliRunner
-    from git import Repo
     from requests_mock import Mocker
 
+    from tests.conftest import GetStableDateNowFn
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.fixtures.git_repo import BuiltRepoResult
 
 
 @pytest.mark.parametrize(
-    "repo, cli_args, next_release_version",
+    "repo_result, cli_args, next_release_version",
     [
         *(
             (
@@ -227,7 +230,7 @@ if TYPE_CHECKING:
                         "1.1.1-beta.1+build.12345",
                     ),
                 ],
-                repo_w_git_flow_angular_commits.__name__: [
+                repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.2.0-alpha.2+build.12345"),
                     # Forced version bump
@@ -264,7 +267,7 @@ if TYPE_CHECKING:
                         "1.2.1-beta.1+build.12345",
                     ),
                 ],
-                repo_w_git_flow_and_release_channels_angular_commits.__name__: [
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.1.0+build.12345"),
                     # Forced version bump
@@ -307,7 +310,7 @@ if TYPE_CHECKING:
     ],
 )
 def test_version_force_level(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
     example_project_dir: ExProjectDir,
@@ -316,6 +319,7 @@ def test_version_force_level(
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
+    repo = repo_result["repo"]
     version_file = example_project_dir.joinpath(
         "src", EXAMPLE_PROJECT_NAME, "_version.py"
     )
@@ -339,7 +343,7 @@ def test_version_force_level(
     )
 
     # Modify the pyproject.toml to remove the version so we can compare it later
-    pyproject_toml_before["tool"]["poetry"].pop("version")  # type: ignore[attr-defined]
+    pyproject_toml_before.get("tool", {}).get("poetry").pop("version")  # type: ignore[attr-defined]
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *cli_args]
@@ -357,8 +361,8 @@ def test_version_force_level(
     pyproject_toml_after = tomlkit.loads(
         example_pyproject_toml.read_text(encoding="utf-8")
     )
-    pyproj_version_after = pyproject_toml_after["tool"]["poetry"].pop(  # type: ignore[attr-defined]
-        "version"
+    pyproj_version_after = (
+        pyproject_toml_after.get("tool", {}).get("poetry", {}).pop("version")
     )
 
     # Load python module for reading the version (ensures the file is valid)
@@ -403,7 +407,7 @@ def test_version_force_level(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -416,7 +420,9 @@ def test_version_force_level(
             (
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
-                lazy_fixture(repo_w_git_flow_angular_commits.__name__),
+                lazy_fixture(
+                    repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__
+                ),
                 lazy_fixture(angular_minor_commits.__name__),
                 False,
                 "alpha",
@@ -438,7 +444,7 @@ def test_version_force_level(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
                         "alpha",
                     ): [
                         (angular_patch_commits.__name__, False, "1.1.2", None),
@@ -452,7 +458,7 @@ def test_version_force_level(
                             angular_minor_commits.__name__,
                             True,
                             "1.2.0-alpha.3",
-                            "feat/feature-3",  # branch
+                            "feat/feature-4",  # branch
                         ),
                         (angular_major_commits.__name__, False, "2.0.0", None),
                         (
@@ -465,7 +471,7 @@ def test_version_force_level(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
                         "alpha",
                     ): [
                         (angular_patch_commits.__name__, False, "1.1.1", None),
@@ -496,14 +502,14 @@ def test_version_force_level(
                     prerelease,
                     expected_new_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ]
     ),
 )
 # TODO: add a github flow test case
 def test_version_next_greater_than_version_one_angular(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -513,15 +519,23 @@ def test_version_next_greater_than_version_one_angular(
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -564,7 +578,7 @@ def test_version_next_greater_than_version_one_angular(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -589,11 +603,11 @@ def test_version_next_greater_than_version_one_angular(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
                         "alpha",
                     ): [
                         *(
-                            (commits, True, "1.2.0-alpha.2", "feat/feature-3")
+                            (commits, True, "1.2.0-alpha.2", "feat/feature-4")
                             for commits in (
                                 None,
                                 angular_chore_commits.__name__,
@@ -610,7 +624,7 @@ def test_version_next_greater_than_version_one_angular(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -628,13 +642,13 @@ def test_version_next_greater_than_version_one_angular(
                     prerelease,
                     expected_new_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ]
     ),
 )
 def test_version_next_greater_than_version_one_no_bump_angular(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -644,15 +658,23 @@ def test_version_next_greater_than_version_one_no_bump_angular(
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -693,7 +715,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -706,7 +728,9 @@ def test_version_next_greater_than_version_one_no_bump_angular(
             (
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
-                lazy_fixture(repo_w_git_flow_emoji_commits.__name__),
+                lazy_fixture(
+                    repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__
+                ),
                 lazy_fixture(emoji_minor_commits.__name__),
                 False,
                 "alpha",
@@ -728,7 +752,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_emoji_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
                         "alpha",
                     ): [
                         (emoji_patch_commits.__name__, False, "1.1.2", None),
@@ -742,7 +766,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
                             emoji_minor_commits.__name__,
                             True,
                             "1.2.0-alpha.3",
-                            "feat/feature-3",  # branch
+                            "feat/feature-4",  # branch
                         ),
                         (emoji_major_commits.__name__, False, "2.0.0", None),
                         (
@@ -755,7 +779,7 @@ def test_version_next_greater_than_version_one_no_bump_angular(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
                         "alpha",
                     ): [
                         (emoji_patch_commits.__name__, False, "1.1.1", None),
@@ -786,13 +810,13 @@ def test_version_next_greater_than_version_one_no_bump_angular(
                     prerelease,
                     expected_new_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ]
     ),
 )
 def test_version_next_greater_than_version_one_emoji(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -802,15 +826,23 @@ def test_version_next_greater_than_version_one_emoji(
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -853,7 +885,7 @@ def test_version_next_greater_than_version_one_emoji(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -878,11 +910,11 @@ def test_version_next_greater_than_version_one_emoji(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_emoji_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
                         "alpha",
                     ): [
                         *(
-                            (commits, True, "1.2.0-alpha.2", "feat/feature-3")
+                            (commits, True, "1.2.0-alpha.2", "feat/feature-4")
                             for commits in (
                                 None,
                                 emoji_chore_commits.__name__,
@@ -899,7 +931,7 @@ def test_version_next_greater_than_version_one_emoji(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -917,13 +949,13 @@ def test_version_next_greater_than_version_one_emoji(
                     prerelease,
                     expected_new_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ]
     ),
 )
 def test_version_next_greater_than_version_one_no_bump_emoji(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -933,15 +965,23 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -982,7 +1022,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -995,7 +1035,9 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
             (
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
-                lazy_fixture(repo_w_git_flow_scipy_commits.__name__),
+                lazy_fixture(
+                    repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__
+                ),
                 lazy_fixture(scipy_minor_commits.__name__),
                 False,
                 "alpha",
@@ -1017,7 +1059,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_scipy_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
                         "alpha",
                     ): [
                         (scipy_patch_commits.__name__, False, "1.1.2", None),
@@ -1031,7 +1073,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
                             scipy_minor_commits.__name__,
                             True,
                             "1.2.0-alpha.3",
-                            "feat/feature-3",  # branch
+                            "feat/feature-4",  # branch
                         ),
                         (scipy_major_commits.__name__, False, "2.0.0", None),
                         (
@@ -1044,7 +1086,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
                         "alpha",
                     ): [
                         (scipy_patch_commits.__name__, False, "1.1.1", None),
@@ -1075,13 +1117,13 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
                     prerelease,
                     expected_new_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ]
     ),
 )
 def test_version_next_greater_than_version_one_scipy(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -1091,15 +1133,23 @@ def test_version_next_greater_than_version_one_scipy(
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1142,7 +1192,7 @@ def test_version_next_greater_than_version_one_scipy(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -1167,11 +1217,11 @@ def test_version_next_greater_than_version_one_scipy(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_scipy_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
                         "alpha",
                     ): [
                         *(
-                            (commits, True, "1.2.0-alpha.2", "feat/feature-3")
+                            (commits, True, "1.2.0-alpha.2", "feat/feature-4")
                             for commits in (
                                 None,
                                 scipy_chore_commits.__name__,
@@ -1188,7 +1238,7 @@ def test_version_next_greater_than_version_one_scipy(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -1206,13 +1256,13 @@ def test_version_next_greater_than_version_one_scipy(
                     prerelease,
                     expected_new_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ]
     ),
 )
 def test_version_next_greater_than_version_one_no_bump_scipy(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -1222,15 +1272,23 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1276,7 +1334,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -1536,13 +1594,13 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                     allow_zero_version,
                     next_release_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_angular(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -1555,7 +1613,10 @@ def test_version_next_w_zero_dot_versions_angular(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -1567,9 +1628,14 @@ def test_version_next_w_zero_dot_versions_angular(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1612,7 +1678,7 @@ def test_version_next_w_zero_dot_versions_angular(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -1682,13 +1748,13 @@ def test_version_next_w_zero_dot_versions_angular(
                     allow_zero_version,
                     next_release_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_no_bump_angular(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -1701,7 +1767,10 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -1713,9 +1782,14 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1756,7 +1830,7 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -2016,13 +2090,13 @@ def test_version_next_w_zero_dot_versions_no_bump_angular(
                     allow_zero_version,
                     next_release_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_emoji(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -2035,7 +2109,10 @@ def test_version_next_w_zero_dot_versions_emoji(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -2047,9 +2124,14 @@ def test_version_next_w_zero_dot_versions_emoji(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2092,7 +2174,7 @@ def test_version_next_w_zero_dot_versions_emoji(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -2162,13 +2244,13 @@ def test_version_next_w_zero_dot_versions_emoji(
                     allow_zero_version,
                     next_release_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_no_bump_emoji(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -2181,7 +2263,10 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -2193,9 +2278,14 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2236,7 +2326,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -2496,13 +2586,13 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
                     allow_zero_version,
                     next_release_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_scipy(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -2515,7 +2605,10 @@ def test_version_next_w_zero_dot_versions_scipy(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -2527,9 +2620,14 @@ def test_version_next_w_zero_dot_versions_scipy(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2572,7 +2670,7 @@ def test_version_next_w_zero_dot_versions_scipy(
     str.join(
         ", ",
         [
-            "repo",
+            "repo_result",
             "commit_messages",
             "prerelease",
             "prerelease_token",
@@ -2642,13 +2740,13 @@ def test_version_next_w_zero_dot_versions_scipy(
                     allow_zero_version,
                     next_release_version,
                     branch_name,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_no_bump_scipy(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
     prerelease_token: str,
@@ -2661,7 +2759,10 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -2673,9 +2774,14 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2716,7 +2822,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     str.join(
         " ,",
         [
-            "repo",
+            "repo_result",
             "commit_parser",
             "commit_messages",
             "prerelease",
@@ -3022,13 +3128,13 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                     major_on_zero,
                     allow_zero_version,
                     next_release_version,
-                ) in values
+                ) in values  # type: ignore[attr-defined]
             ],
         ],
     ),
 )
 def test_version_next_w_zero_dot_versions_minimums(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     commit_parser: str,
     commit_messages: list[str],
     prerelease: bool,
@@ -3042,7 +3148,10 @@ def test_version_next_w_zero_dot_versions_minimums(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    stable_now_date: GetStableDateNowFn,
 ):
+    repo = repo_result["repo"]
+
     # setup: select the branch we desire for the next bump
     if repo.active_branch.name != branch_name:
         repo.heads[branch_name].checkout()
@@ -3055,9 +3164,14 @@ def test_version_next_w_zero_dot_versions_minimums(
     update_pyproject_toml("tool.semantic_release.major_on_zero", major_on_zero)
 
     # setup: apply commits to the repo
+    stable_now_datetime = stable_now_date()
+    commit_timestamp_gen = (
+        (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
+        for i in count(step=1)
+    )
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
-        repo.git.commit(m=commit_message, a=True)
+        repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha

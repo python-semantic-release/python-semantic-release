@@ -7,13 +7,14 @@ from typing import TYPE_CHECKING
 
 import git
 import pytest
+from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release import __version__
 from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures import (
-    repo_w_git_flow_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
     repo_w_no_tags_angular_commits,
 )
 from tests.util import assert_exit_code, assert_successful_exit_code
@@ -22,9 +23,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from click.testing import CliRunner
-    from git import Repo
 
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.fixtures.git_repo import BuiltRepoResult
 
 
 def test_main_prints_version_and_exits(cli_runner: CliRunner):
@@ -43,11 +44,15 @@ def test_main_no_args_prints_help_text(cli_runner: CliRunner):
     assert_successful_exit_code(result, [MAIN_PROG_NAME])
 
 
+@pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)],
+)
 def test_not_a_release_branch_exit_code(
-    repo_w_git_flow_angular_commits: Repo, cli_runner: CliRunner
+    repo_result: BuiltRepoResult, cli_runner: CliRunner
 ):
     # Run anything that doesn't trigger the help text
-    repo_w_git_flow_angular_commits.git.checkout("-b", "branch-does-not-exist")
+    repo_result["repo"].git.checkout("-b", "branch-does-not-exist")
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-commit"]
@@ -57,11 +62,16 @@ def test_not_a_release_branch_exit_code(
     assert_successful_exit_code(result, cli_cmd)
 
 
+@pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)],
+)
 def test_not_a_release_branch_exit_code_with_strict(
-    repo_w_git_flow_angular_commits: Repo, cli_runner: CliRunner
+    repo_result: BuiltRepoResult,
+    cli_runner: CliRunner,
 ):
     # Run anything that doesn't trigger the help text
-    repo_w_git_flow_angular_commits.git.checkout("-b", "branch-does-not-exist")
+    repo_result["repo"].git.checkout("-b", "branch-does-not-exist")
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, "--no-commit"]
@@ -71,15 +81,20 @@ def test_not_a_release_branch_exit_code_with_strict(
     assert_exit_code(2, result, cli_cmd)
 
 
+@pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)],
+)
 def test_not_a_release_branch_detached_head_exit_code(
-    repo_w_git_flow_angular_commits: Repo, cli_runner: CliRunner
+    repo_result: BuiltRepoResult,
+    cli_runner: CliRunner,
 ):
     expected_err_msg = (
         "Detached HEAD state cannot match any release groups; no release will be made"
     )
 
     # cause repo to be in detached head state without file changes
-    repo_w_git_flow_angular_commits.git.checkout("HEAD", "--detach")
+    repo_result["repo"].git.checkout("HEAD", "--detach")
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-commit"]
@@ -114,7 +129,7 @@ def json_file_with_no_configuration_for_psr(tmp_path: Path) -> Path:
     return path
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
 def test_default_config_is_used_when_none_in_toml_config_file(
     cli_runner: CliRunner,
     toml_file_with_no_configuration_for_psr: Path,
@@ -134,7 +149,7 @@ def test_default_config_is_used_when_none_in_toml_config_file(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
 def test_default_config_is_used_when_none_in_json_config_file(
     cli_runner: CliRunner,
     json_file_with_no_configuration_for_psr: Path,
@@ -154,7 +169,7 @@ def test_default_config_is_used_when_none_in_json_config_file(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
 def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
     cli_runner: CliRunner,
 ):

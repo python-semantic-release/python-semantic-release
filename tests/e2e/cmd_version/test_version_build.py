@@ -10,6 +10,7 @@ from unittest import mock
 import pytest
 import shellingham
 import tomlkit
+from flatdict import FlatDict
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.commands.main import main
@@ -20,9 +21,9 @@ from tests.util import assert_successful_exit_code, get_func_qual_name
 
 if TYPE_CHECKING:
     from click.testing import CliRunner
-    from git import Repo
 
     from tests.fixtures.example_project import GetWheelFileFn, UpdatePyprojectTomlFn
+    from tests.fixtures.git_repo import BuiltRepoResult
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix only")
@@ -53,7 +54,7 @@ if TYPE_CHECKING:
     or ["sh"],
 )
 @pytest.mark.parametrize(
-    "repo, cli_args, next_release_version",
+    "repo_result, cli_args, next_release_version",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -63,7 +64,7 @@ if TYPE_CHECKING:
     ],
 )
 def test_version_runs_build_command(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
     cli_runner: CliRunner,
@@ -75,8 +76,11 @@ def test_version_runs_build_command(
 ):
     # Setup
     built_wheel_file = get_wheel_file(next_release_version)
-    pyproject_config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = pyproject_config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
+    pyproject_config = FlatDict(
+        tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")),
+        delimiter=".",
+    )
+    build_command = pyproject_config.get("tool.semantic_release.build_command", "")
     patched_os_environment = {
         "CI": "true",
         "PATH": os.getenv("PATH", ""),
@@ -130,7 +134,7 @@ def test_version_runs_build_command(
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows only")
 @pytest.mark.parametrize("shell", ("powershell", "pwsh", "cmd"))
 @pytest.mark.parametrize(
-    "repo, cli_args, next_release_version",
+    "repo_result, cli_args, next_release_version",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -140,7 +144,7 @@ def test_version_runs_build_command(
     ],
 )
 def test_version_runs_build_command_windows(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
     cli_runner: CliRunner,
@@ -167,8 +171,11 @@ def test_version_runs_build_command_windows(
 
     # Setup
     built_wheel_file = get_wheel_file(next_release_version)
-    pyproject_config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = pyproject_config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
+    pyproject_config = FlatDict(
+        tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")),
+        delimiter=".",
+    )
+    build_command = pyproject_config.get("tool.semantic_release.build_command", "")
     patched_os_environment = {
         "CI": "true",
         "PATH": os.getenv("PATH", ""),
@@ -268,7 +275,7 @@ def test_version_runs_build_command_windows(
 
 
 @pytest.mark.parametrize(
-    "repo, cli_args, next_release_version",
+    "repo_result, cli_args, next_release_version",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
@@ -278,7 +285,7 @@ def test_version_runs_build_command_windows(
     ],
 )
 def test_version_runs_build_command_w_user_env(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
     cli_runner: CliRunner,
@@ -305,8 +312,11 @@ def test_version_runs_build_command_w_user_env(
         "OVERWRITTEN_VAR": "initial",
         "SET_AS_EMPTY_VAR": "not_empty",
     }
-    pyproject_config = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8"))
-    build_command = pyproject_config["tool"]["semantic_release"]["build_command"]  # type: ignore[attr-defined]
+    pyproject_config = FlatDict(
+        tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")),
+        delimiter=".",
+    )
+    build_command = pyproject_config.get("tool.semantic_release.build_command", "")
     update_pyproject_toml(
         "tool.semantic_release.build_command_env",
         [

@@ -20,20 +20,13 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
-    get_commits_for_trunk_only_repo_w_tags,
-    get_versions_for_git_flow_repo_w_2_release_channels,
-    get_versions_for_git_flow_repo_w_3_release_channels,
-    get_versions_for_github_flow_repo_w_default_release_channel,
-    get_versions_for_github_flow_repo_w_feature_release_channel,
-    get_versions_for_trunk_only_repo_w_prerelease_tags,
-    get_versions_for_trunk_only_repo_w_tags,
-    repo_w_git_flow_and_release_channels_angular_commits,
-    repo_w_git_flow_and_release_channels_angular_commits_using_tag_format,
-    repo_w_git_flow_and_release_channels_emoji_commits,
-    repo_w_git_flow_and_release_channels_scipy_commits,
-    repo_w_git_flow_angular_commits,
-    repo_w_git_flow_emoji_commits,
-    repo_w_git_flow_scipy_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_emoji_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_scipy_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits,
     repo_w_github_flow_w_default_release_channel_angular_commits,
     repo_w_github_flow_w_default_release_channel_emoji_commits,
     repo_w_github_flow_w_default_release_channel_scipy_commits,
@@ -56,14 +49,14 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from click.testing import CliRunner
-    from git import Repo
 
     from tests.conftest import FormatDateStrFn, GetStableDateNowFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
+        BuiltRepoResult,
         CommitConvention,
-        GetRepoDefinitionFn,
-        GetVersionStringsFn,
+        GetCommitsFromRepoBuildDefFn,
+        GetVersionsFromRepoBuildDefFn,
     )
 
 
@@ -83,28 +76,25 @@ if TYPE_CHECKING:
     ],
 )
 @pytest.mark.parametrize(
-    "repo, cache_key, get_version_strings, tag_format",
+    "repo_result, cache_key, tag_format",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
             "v{version}",
         ),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture),
                 f"psr/repos/{repo_fixture}",
-                lazy_fixture(get_version_strings),
                 "v{version}" if tag_format is None else tag_format,
                 marks=pytest.mark.comprehensive,
             )
-            for repo_fixture, get_version_strings, tag_format in [
+            for repo_fixture, tag_format in [
                 # Must have a previous release/tag
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_trunk_only_repo_w_tags.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -116,7 +106,6 @@ if TYPE_CHECKING:
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_trunk_only_repo_w_prerelease_tags.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -128,7 +117,6 @@ if TYPE_CHECKING:
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_github_flow_repo_w_default_release_channel.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -140,7 +128,6 @@ if TYPE_CHECKING:
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_github_flow_repo_w_feature_release_channel.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -152,35 +139,32 @@ if TYPE_CHECKING:
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_git_flow_repo_w_2_release_channels.__name__,
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_angular_commits.__name__,
-                        repo_w_git_flow_emoji_commits.__name__,
-                        repo_w_git_flow_scipy_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
                     ]
                 ],
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
-                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
-                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
                     ]
                 ],
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
                         "submod-v{version}",
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format.__name__,
                     ]
                 ],
             ]
@@ -188,8 +172,8 @@ if TYPE_CHECKING:
     ],
 )
 def test_version_updates_changelog_w_new_version(
-    repo: Repo,
-    get_version_strings: GetVersionStringsFn,
+    repo_result: BuiltRepoResult,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     tag_format: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
@@ -205,7 +189,10 @@ def test_version_updates_changelog_w_new_version(
     Then the version is created and the changelog file is updated with new release info
         while maintaining the previously customized content
     """
-    latest_tag = tag_format.format(version=get_version_strings()[-1])
+    repo = repo_result["repo"]
+    latest_tag = tag_format.format(
+        version=get_versions_from_repo_build_def(repo_result["definition"])[-1]
+    )
 
     if not (repo_build_data := cache.get(cache_key, None)):
         pytest.fail("Repo build date not found in cache")
@@ -295,7 +282,7 @@ def test_version_updates_changelog_w_new_version(
     ],
 )
 @pytest.mark.parametrize(
-    "repo, cache_key",
+    "repo_result, cache_key",
     [
         (
             lazy_fixture(repo_w_no_tags_angular_commits.__name__),
@@ -317,7 +304,7 @@ def test_version_updates_changelog_w_new_version(
     ],
 )
 def test_version_updates_changelog_wo_prev_releases(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cache_key: str,
     cache: pytest.Cache,
     cli_runner: CliRunner,
@@ -445,28 +432,25 @@ def test_version_updates_changelog_wo_prev_releases(
     ],
 )
 @pytest.mark.parametrize(
-    "repo, cache_key, get_version_strings, tag_format",
+    "repo_result, cache_key, tag_format",
     [
         (
             lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
             f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
-            lazy_fixture(get_versions_for_trunk_only_repo_w_tags.__name__),
             "v{version}",
         ),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture),
                 f"psr/repos/{repo_fixture}",
-                lazy_fixture(get_version_strings),
                 "v{version}" if tag_format is None else tag_format,
                 marks=pytest.mark.comprehensive,
             )
-            for repo_fixture, get_version_strings, tag_format in [
+            for repo_fixture, tag_format in [
                 # Must have a previous release/tag
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_trunk_only_repo_w_tags.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -478,7 +462,6 @@ def test_version_updates_changelog_wo_prev_releases(
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_trunk_only_repo_w_prerelease_tags.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -490,7 +473,6 @@ def test_version_updates_changelog_wo_prev_releases(
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_github_flow_repo_w_default_release_channel.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -502,7 +484,6 @@ def test_version_updates_changelog_wo_prev_releases(
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_github_flow_repo_w_feature_release_channel.__name__,
                         None,
                     )
                     for repo_fixture_name in [
@@ -514,35 +495,32 @@ def test_version_updates_changelog_wo_prev_releases(
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_git_flow_repo_w_2_release_channels.__name__,
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_angular_commits.__name__,
-                        repo_w_git_flow_emoji_commits.__name__,
-                        repo_w_git_flow_scipy_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
                     ]
                 ],
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_and_release_channels_angular_commits.__name__,
-                        repo_w_git_flow_and_release_channels_emoji_commits.__name__,
-                        repo_w_git_flow_and_release_channels_scipy_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
                     ]
                 ],
                 *[
                     (
                         repo_fixture_name,
-                        get_versions_for_git_flow_repo_w_3_release_channels.__name__,
                         "submod-v{version}",
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_and_release_channels_angular_commits_using_tag_format.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format.__name__,
                     ]
                 ],
             ]
@@ -550,9 +528,9 @@ def test_version_updates_changelog_wo_prev_releases(
     ],
 )
 def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cache_key: str,
-    get_version_strings: GetVersionStringsFn,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     tag_format: str,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
@@ -566,7 +544,10 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     Then the version is created and the changelog file is initialized
     with the default content.
     """
-    latest_tag = tag_format.format(version=get_version_strings()[-1])
+    repo = repo_result["repo"]
+    latest_tag = tag_format.format(
+        version=get_versions_from_repo_build_def(repo_result["definition"])[-1]
+    )
 
     if not (repo_build_data := cache.get(cache_key, None)):
         pytest.fail("Repo build date not found in cache")
@@ -684,38 +665,32 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
     ],
 )
 @pytest.mark.parametrize(
-    "repo, cache_key, get_version_strings, commit_type, tag_format, get_commits",
+    "repo_result, cache_key, commit_type, tag_format",
     [
         (
             lazy_fixture(repo_fixture),
             f"psr/repos/{repo_fixture}",
-            lazy_fixture(get_version_strings),
             repo_fixture.split("_")[-2],
             "v{version}",
-            lazy_fixture(get_commits),
         )
-        for repo_fixture, get_version_strings, get_commits in [
+        for repo_fixture in [
             # Must have a previous release/tag
-            (
-                repo_w_trunk_only_angular_commits.__name__,
-                get_versions_for_trunk_only_repo_w_tags.__name__,
-                get_commits_for_trunk_only_repo_w_tags.__name__,
-            ),
+            repo_w_trunk_only_angular_commits.__name__,
         ]
     ],
 )
 def test_version_updates_changelog_w_new_version_n_filtered_commit(
-    repo: Repo,
+    repo_result: BuiltRepoResult,
     cache: pytest.Cache,
     cache_key: str,
-    get_version_strings: GetVersionStringsFn,
-    get_commits: GetRepoDefinitionFn,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commit_type: CommitConvention,
     tag_format: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     cli_runner: CliRunner,
     changelog_file: Path,
     stable_now_date: GetStableDateNowFn,
+    get_commits_from_repo_build_def: GetCommitsFromRepoBuildDefFn,
 ):
     """
     Given a project that has a version bumping change but also an exclusion pattern for the same change type,
@@ -723,9 +698,11 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     Then the version is created and the changelog file is updated with the excluded commit
         info anyway.
     """
-    latest_tag = tag_format.format(version=get_version_strings()[-1])
+    repo = repo_result["repo"]
+    latest_version = get_versions_from_repo_build_def(repo_result["definition"])[-1]
+    latest_tag = tag_format.format(version=latest_version)
 
-    repo_definition = get_commits(commit_type)
+    repo_definition = get_commits_from_repo_build_def(repo_result["definition"])
     if not (repo_build_data := cache.get(cache_key, None)):
         pytest.fail("Repo build date not found in cache")
 
@@ -737,7 +714,7 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     )
 
     # expected version bump commit (that should be in changelog)
-    bumping_commit = list(repo_definition.values())[-1]["commits"][-1]
+    bumping_commit = repo_definition[latest_version]["commits"][-1]
     expected_bump_message = bumping_commit["desc"].capitalize()
 
     # Capture the expected changelog content
