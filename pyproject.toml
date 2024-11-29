@@ -153,7 +153,7 @@ commands =
 [testenv:mypy]
 deps = .[mypy]
 commands =
-    mypy src/
+    mypy .
 
 [testenv:coverage]
 deps = coverage[toml]
