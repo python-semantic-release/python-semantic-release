@@ -45,15 +45,25 @@ def test_default_changelog_template(
     first_version = list(artificial_release_history.released.keys())[-1]
 
     feat_commit_obj = latest_release["elements"]["feature"][0]
-    fix_commit_obj = latest_release["elements"]["fix"][0]
+    fix_commit_obj_1 = latest_release["elements"]["fix"][0]
+    fix_commit_obj_2 = latest_release["elements"]["fix"][1]
+    fix_commit_obj_3 = latest_release["elements"]["fix"][2]
     assert isinstance(feat_commit_obj, ParsedCommit)
-    assert isinstance(fix_commit_obj, ParsedCommit)
+    assert isinstance(fix_commit_obj_1, ParsedCommit)
+    assert isinstance(fix_commit_obj_2, ParsedCommit)
+    assert isinstance(fix_commit_obj_3, ParsedCommit)
 
     feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
     feat_description = str.join("\n", feat_commit_obj.descriptions)
 
-    fix_commit_url = hvcs.commit_hash_url(fix_commit_obj.commit.hexsha)
-    fix_description = str.join("\n", fix_commit_obj.descriptions)
+    fix_commit_1_url = hvcs.commit_hash_url(fix_commit_obj_1.commit.hexsha)
+    fix_commit_1_description = str.join("\n", fix_commit_obj_1.descriptions)
+
+    fix_commit_2_url = hvcs.commit_hash_url(fix_commit_obj_2.commit.hexsha)
+    fix_commit_2_description = str.join("\n", fix_commit_obj_2.descriptions)
+
+    fix_commit_3_url = hvcs.commit_hash_url(fix_commit_obj_3.commit.hexsha)
+    fix_commit_3_description = str.join("\n", fix_commit_obj_3.descriptions)
 
     expected_changelog = str.join(
         "\n",
@@ -71,9 +81,19 @@ def test_default_changelog_template(
             "",
             "### Fix",
             "",
+            # Commit 2 is first because it has no scope
             # Due to the 100 character limit, hash url will be on the second line
-            f"- **{fix_commit_obj.scope}**: {fix_description.capitalize()}",
-            f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            f"- {fix_commit_2_description.capitalize()}",
+            f"  ([`{fix_commit_obj_2.commit.hexsha[:7]}`]({fix_commit_2_url}))",
+            "",
+            # Commit 3 is second because it starts with an A even though it has the same scope as 1
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- **{fix_commit_obj_3.scope}**: {fix_commit_3_description.capitalize()}",
+            f"  ([`{fix_commit_obj_3.commit.hexsha[:7]}`]({fix_commit_3_url}))",
+            "",
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- **{fix_commit_obj_1.scope}**: {fix_commit_1_description.capitalize()}",
+            f"  ([`{fix_commit_obj_1.commit.hexsha[:7]}`]({fix_commit_1_url}))",
             "",
             "",
             f"## v{first_version} ({today_date_str})",
@@ -115,15 +135,25 @@ def test_default_changelog_template_no_initial_release_mask(
     first_version = list(artificial_release_history.released.keys())[-1]
 
     feat_commit_obj = latest_release["elements"]["feature"][0]
-    fix_commit_obj = latest_release["elements"]["fix"][0]
+    fix_commit_obj_1 = latest_release["elements"]["fix"][0]
+    fix_commit_obj_2 = latest_release["elements"]["fix"][1]
+    fix_commit_obj_3 = latest_release["elements"]["fix"][2]
     assert isinstance(feat_commit_obj, ParsedCommit)
-    assert isinstance(fix_commit_obj, ParsedCommit)
+    assert isinstance(fix_commit_obj_1, ParsedCommit)
+    assert isinstance(fix_commit_obj_2, ParsedCommit)
+    assert isinstance(fix_commit_obj_3, ParsedCommit)
 
     feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
     feat_description = str.join("\n", feat_commit_obj.descriptions)
 
-    fix_commit_url = hvcs.commit_hash_url(fix_commit_obj.commit.hexsha)
-    fix_description = str.join("\n", fix_commit_obj.descriptions)
+    fix_commit_1_url = hvcs.commit_hash_url(fix_commit_obj_1.commit.hexsha)
+    fix_commit_1_description = str.join("\n", fix_commit_obj_1.descriptions)
+
+    fix_commit_2_url = hvcs.commit_hash_url(fix_commit_obj_2.commit.hexsha)
+    fix_commit_2_description = str.join("\n", fix_commit_obj_2.descriptions)
+
+    fix_commit_3_url = hvcs.commit_hash_url(fix_commit_obj_3.commit.hexsha)
+    fix_commit_3_description = str.join("\n", fix_commit_obj_3.descriptions)
 
     expected_changelog = str.join(
         "\n",
@@ -141,9 +171,19 @@ def test_default_changelog_template_no_initial_release_mask(
             "",
             "### Fix",
             "",
+            # Commit 2 is first because it has no scope
             # Due to the 100 character limit, hash url will be on the second line
-            f"- **{fix_commit_obj.scope}**: {fix_description.capitalize()}",
-            f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            f"- {fix_commit_2_description.capitalize()}",
+            f"  ([`{fix_commit_obj_2.commit.hexsha[:7]}`]({fix_commit_2_url}))",
+            "",
+            # Commit 3 is second because it starts with an A even though it has the same scope as 1
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- **{fix_commit_obj_3.scope}**: {fix_commit_3_description.capitalize()}",
+            f"  ([`{fix_commit_obj_3.commit.hexsha[:7]}`]({fix_commit_3_url}))",
+            "",
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- **{fix_commit_obj_1.scope}**: {fix_commit_1_description.capitalize()}",
+            f"  ([`{fix_commit_obj_1.commit.hexsha[:7]}`]({fix_commit_1_url}))",
             "",
             "",
             f"## v{first_version} ({today_date_str})",
@@ -188,15 +228,25 @@ def test_default_changelog_template_w_unreleased_changes(
     first_version = list(artificial_release_history.released.keys())[-1]
 
     feat_commit_obj = latest_release["elements"]["feature"][0]
-    fix_commit_obj = latest_release["elements"]["fix"][0]
+    fix_commit_obj_1 = latest_release["elements"]["fix"][0]
+    fix_commit_obj_2 = latest_release["elements"]["fix"][1]
+    fix_commit_obj_3 = latest_release["elements"]["fix"][2]
     assert isinstance(feat_commit_obj, ParsedCommit)
-    assert isinstance(fix_commit_obj, ParsedCommit)
+    assert isinstance(fix_commit_obj_1, ParsedCommit)
+    assert isinstance(fix_commit_obj_2, ParsedCommit)
+    assert isinstance(fix_commit_obj_3, ParsedCommit)
 
     feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
     feat_description = str.join("\n", feat_commit_obj.descriptions)
 
-    fix_commit_url = hvcs.commit_hash_url(fix_commit_obj.commit.hexsha)
-    fix_description = str.join("\n", fix_commit_obj.descriptions)
+    fix_commit_1_url = hvcs.commit_hash_url(fix_commit_obj_1.commit.hexsha)
+    fix_commit_1_description = str.join("\n", fix_commit_obj_1.descriptions)
+
+    fix_commit_2_url = hvcs.commit_hash_url(fix_commit_obj_2.commit.hexsha)
+    fix_commit_2_description = str.join("\n", fix_commit_obj_2.descriptions)
+
+    fix_commit_3_url = hvcs.commit_hash_url(fix_commit_obj_3.commit.hexsha)
+    fix_commit_3_description = str.join("\n", fix_commit_obj_3.descriptions)
 
     expected_changelog = str.join(
         "\n",
@@ -222,9 +272,19 @@ def test_default_changelog_template_w_unreleased_changes(
             "",
             "### Fix",
             "",
+            # Commit 2 is first because it has no scope
             # Due to the 100 character limit, hash url will be on the second line
-            f"- **{feat_commit_obj.scope}**: {fix_description[0].capitalize()}{fix_description[1:]}",
-            f"  ([`{fix_commit_obj.commit.hexsha[:7]}`]({fix_commit_url}))",
+            f"- {fix_commit_2_description.capitalize()}",
+            f"  ([`{fix_commit_obj_2.commit.hexsha[:7]}`]({fix_commit_2_url}))",
+            "",
+            # Commit 3 is second because it starts with an A even though it has the same scope as 1
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- **{fix_commit_obj_3.scope}**: {fix_commit_3_description.capitalize()}",
+            f"  ([`{fix_commit_obj_3.commit.hexsha[:7]}`]({fix_commit_3_url}))",
+            "",
+            # Due to the 100 character limit, hash url will be on the second line
+            f"- **{fix_commit_obj_1.scope}**: {fix_commit_1_description.capitalize()}",
+            f"  ([`{fix_commit_obj_1.commit.hexsha[:7]}`]({fix_commit_1_url}))",
             "",
             "",
             f"## v{first_version} ({today_date_str})",
