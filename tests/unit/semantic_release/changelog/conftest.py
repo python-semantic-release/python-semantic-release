@@ -132,6 +132,110 @@ def artificial_release_history(
 
 
 @pytest.fixture
+def release_history_w_brk_change(
+    artificial_release_history: ReleaseHistory,
+    stable_now_date: GetStableDateNowFn,
+) -> ReleaseHistory:
+    current_datetime = stable_now_date()
+    latest_version = next(iter(artificial_release_history.released.keys()))
+    next_version = latest_version.bump(LevelBump.MAJOR)
+    brk_commit_subject = "fix a problem"
+    brk_commit_type = "fix"
+    brk_commit_scope = "cli"
+    brk_change_msg = "this is a breaking change"
+
+    brk_commit = Commit(
+        Repo("."),
+        Object.NULL_BIN_SHA,
+        message=str.join(
+            "\n\n",
+            [
+                f"{brk_commit_type}({brk_commit_scope}): {brk_commit_subject}",
+                f"BREAKING CHANGE: {brk_change_msg}",
+            ],
+        ),
+    )
+
+    brk_commit_parsed = ParsedCommit(
+        bump=LevelBump.MAJOR,
+        type=brk_commit_type,
+        scope=brk_commit_scope,
+        descriptions=[brk_commit_subject],
+        breaking_descriptions=[brk_change_msg],
+        commit=brk_commit,
+    )
+
+    return ReleaseHistory(
+        unreleased={},
+        released={
+            next_version: Release(
+                tagger=artificial_release_history.released[latest_version]["tagger"],
+                committer=artificial_release_history.released[latest_version][
+                    "committer"
+                ],
+                tagged_date=current_datetime,
+                elements={"Bug Fixes": [brk_commit_parsed]},
+                version=next_version,
+            ),
+            **artificial_release_history.released,
+        },
+    )
+
+
+@pytest.fixture
+def release_history_w_multiple_brk_changes(
+    release_history_w_brk_change: ReleaseHistory,
+    stable_now_date: GetStableDateNowFn,
+) -> ReleaseHistory:
+    current_datetime = stable_now_date()
+    latest_version = next(iter(release_history_w_brk_change.released.keys()))
+    brk_commit_subject = "adding a revolutionary feature"
+    brk_commit_type = "feat"
+    brk_change_msg = "The feature changes everything in a breaking way"
+
+    brk_commit = Commit(
+        Repo("."),
+        Object.NULL_BIN_SHA,
+        message=str.join(
+            "\n\n",
+            [
+                f"{brk_commit_type}: {brk_commit_subject}",
+                f"BREAKING CHANGE: {brk_change_msg}",
+            ],
+        ),
+    )
+
+    brk_commit_parsed = ParsedCommit(
+        bump=LevelBump.MAJOR,
+        type=brk_commit_type,
+        scope="",  # No scope in this commit
+        descriptions=[brk_commit_subject],
+        breaking_descriptions=[brk_change_msg],
+        commit=brk_commit,
+    )
+
+    return ReleaseHistory(
+        unreleased={},
+        released={
+            **release_history_w_brk_change.released,
+            # Replaces and inserts a new commit of different type with breaking changes
+            latest_version: Release(
+                tagger=release_history_w_brk_change.released[latest_version]["tagger"],
+                committer=release_history_w_brk_change.released[latest_version][
+                    "committer"
+                ],
+                tagged_date=current_datetime,
+                elements={
+                    **release_history_w_brk_change.released[latest_version]["elements"],
+                    "Features": [brk_commit_parsed],
+                },
+                version=latest_version,
+            ),
+        },
+    )
+
+
+@pytest.fixture
 def single_release_history(
     artificial_release_history: ReleaseHistory,
 ) -> ReleaseHistory:
