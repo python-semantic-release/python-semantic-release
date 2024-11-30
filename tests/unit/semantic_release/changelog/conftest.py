@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -45,6 +44,44 @@ def artificial_release_history(
         commit=fix_commit,
     )
 
+    fix_commit_2_subject = "alphabetically first to solve a non-scoped problem"
+    fix_commit_2_type = "fix"
+    fix_commit_2_scope = ""
+
+    fix_commit_2 = Commit(
+        Repo("."),
+        Object.NULL_HEX_SHA[:20].encode("utf-8"),
+        message=f"{fix_commit_2_type}: {fix_commit_2_subject}",
+    )
+
+    fix_commit_2_parsed = ParsedCommit(
+        bump=LevelBump.PATCH,
+        type="fix",
+        scope=fix_commit_2_scope,
+        descriptions=[fix_commit_2_subject],
+        breaking_descriptions=[],
+        commit=fix_commit_2,
+    )
+
+    fix_commit_3_subject = "alphabetically first to solve a scoped problem"
+    fix_commit_3_type = "fix"
+    fix_commit_3_scope = "cli"
+
+    fix_commit_3 = Commit(
+        Repo("."),
+        Object.NULL_HEX_SHA[:20].encode("utf-8"),
+        message=f"{fix_commit_3_type}({fix_commit_3_scope}): {fix_commit_3_subject}",
+    )
+
+    fix_commit_3_parsed = ParsedCommit(
+        bump=LevelBump.PATCH,
+        type="fix",
+        scope=fix_commit_3_scope,
+        descriptions=[fix_commit_3_subject],
+        breaking_descriptions=[],
+        commit=fix_commit_3,
+    )
+
     feat_commit_subject = "add a new feature"
     feat_commit_type = "feat"
     feat_commit_scope = "cli"
@@ -65,42 +102,29 @@ def artificial_release_history(
     )
 
     return ReleaseHistory(
-        unreleased=defaultdict(
-            list,
-            [
-                (
-                    "feature",
-                    [feat_commit_parsed],
-                )
-            ],
-        ),
+        unreleased={"feature": [feat_commit_parsed]},
         released={
             second_version: Release(
                 tagger=commit_author,
                 committer=commit_author,
                 tagged_date=current_datetime,
-                elements=defaultdict(
-                    list,
-                    [
-                        ("feature", [feat_commit_parsed]),
-                        ("fix", [fix_commit_parsed]),
+                elements={
+                    # Purposefully inserted out of order, should be dictsorted in templates
+                    "fix": [
+                        # Purposefully inserted out of alphabetical order, should be sorted in templates
+                        fix_commit_parsed,
+                        fix_commit_2_parsed,  # has no scope
+                        fix_commit_3_parsed,  # has same scope as 1
                     ],
-                ),
+                    "feature": [feat_commit_parsed],
+                },
                 version=second_version,
             ),
             first_version: Release(
                 tagger=commit_author,
                 committer=commit_author,
                 tagged_date=current_datetime - timedelta(minutes=1),
-                elements=defaultdict(
-                    list,
-                    [
-                        (
-                            "feature",
-                            [feat_commit_parsed],
-                        )
-                    ],
-                ),
+                elements={"feature": [feat_commit_parsed]},
                 version=first_version,
             ),
         },
