@@ -98,6 +98,7 @@ if TYPE_CHECKING:
         type: str
         category: str
         desc: str
+        brking_desc: str
         scope: str
         mr: str
         sha: str
@@ -473,6 +474,7 @@ def get_commit_def_of_angular_commit(
                 "type": "unknown",
                 "category": "Unknown",
                 "desc": msg,
+                "brking_desc": "",
                 "scope": "",
                 "mr": "",
                 "sha": NULL_HEX_SHA,
@@ -488,6 +490,7 @@ def get_commit_def_of_angular_commit(
             "type": parsed_result.type,
             "category": parsed_result.category,
             "desc": str.join("\n\n", descriptions),
+            "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
             "sha": NULL_HEX_SHA,
@@ -508,6 +511,7 @@ def get_commit_def_of_emoji_commit(
                 "type": "unknown",
                 "category": "Other",
                 "desc": msg,
+                "brking_desc": "",
                 "scope": "",
                 "mr": "",
                 "sha": NULL_HEX_SHA,
@@ -523,6 +527,7 @@ def get_commit_def_of_emoji_commit(
             "type": parsed_result.type,
             "category": parsed_result.category,
             "desc": str.join("\n\n", descriptions),
+            "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
             "sha": NULL_HEX_SHA,
@@ -543,6 +548,7 @@ def get_commit_def_of_scipy_commit(
                 "type": "unknown",
                 "category": "Unknown",
                 "desc": msg,
+                "brking_desc": "",
                 "scope": "",
                 "mr": "",
                 "sha": NULL_HEX_SHA,
@@ -558,6 +564,7 @@ def get_commit_def_of_scipy_commit(
             "type": parsed_result.type,
             "category": parsed_result.category,
             "desc": str.join("\n\n", descriptions),
+            "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
             "sha": NULL_HEX_SHA,
@@ -1279,6 +1286,8 @@ def simulate_default_changelog_creation(  # noqa: C901
             {commit["category"] for commit in version_def["commits"]}
         )
 
+        brking_descriptions = []
+
         for section in changelog_sections:
             # Create Markdown section heading
             section_title = section.title() if not section.startswith(":") else section
@@ -1298,6 +1307,17 @@ def simulate_default_changelog_creation(  # noqa: C901
             # format each commit
             for commit_def in commits:
                 descriptions = commit_def["desc"].split("\n\n")
+                if commit_def["brking_desc"]:
+                    brking_descriptions.append(
+                        "- {commit_scope}{brk_desc}".format(
+                            commit_scope=(
+                                f"**{commit_def['scope']}**: "
+                                if commit_def["scope"]
+                                else ""
+                            ),
+                            brk_desc=commit_def["brking_desc"].capitalize(),
+                        )
+                    )
 
                 # NOTE: We have to be wary of the line length as the default changelog
                 # has a 100 character limit or otherwise our tests will fail because the
@@ -1346,6 +1366,11 @@ def simulate_default_changelog_creation(  # noqa: C901
 
             version_entry.extend(sorted(section_bullets))
 
+        # Add breaking changes to the end of the version entry
+        if brking_descriptions:
+            version_entry.append("### BREAKING CHANGES\n")
+            version_entry.extend([*sorted(brking_descriptions), ""])
+
         return str.join("\n", version_entry)
 
     def build_version_entry_restructured_text(
@@ -1373,7 +1398,9 @@ def simulate_default_changelog_creation(  # noqa: C901
             {commit["category"] for commit in version_def["commits"]}
         )
 
+        brking_descriptions = []
         urls = []
+
         for section in changelog_sections:
             # Create RestructuredText section heading
             section_title = section.title() if not section.startswith(":") else section
@@ -1394,6 +1421,17 @@ def simulate_default_changelog_creation(  # noqa: C901
 
             for commit_def in commits:
                 descriptions = commit_def["desc"].split("\n\n")
+                if commit_def["brking_desc"]:
+                    brking_descriptions.append(
+                        "* {commit_scope}{brk_desc}".format(
+                            commit_scope=(
+                                f"**{commit_def['scope']}**: "
+                                if commit_def["scope"]
+                                else ""
+                            ),
+                            brk_desc=commit_def["brking_desc"].capitalize(),
+                        )
+                    )
 
                 # NOTE: We have to be wary of the line length as the default changelog
                 # has a 100 character limit or otherwise our tests will fail because the
@@ -1459,6 +1497,12 @@ def simulate_default_changelog_creation(  # noqa: C901
                     ],
                 ]
             )
+
+        # Add breaking changes to the end of the version entry
+        if brking_descriptions:
+            version_entry.append("BREAKING CHANGES")
+            version_entry.append("-" * len(version_entry[-1]) + "\n")
+            version_entry.extend([*sorted(brking_descriptions), ""])
 
         # Add commit URLs to the end of the version entry
         version_entry.extend(sorted(set(urls)))
