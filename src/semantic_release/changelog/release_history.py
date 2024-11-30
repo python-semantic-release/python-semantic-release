@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, TypedDict
 from git.objects.tag import TagObject
 
 from semantic_release.commit_parser import ParseError
+from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import tags_and_versions
 
@@ -133,6 +134,23 @@ class ReleaseHistory:
                     "Excluding commit [%s] %s",
                     commit.hexsha[:8],
                     commit_message.replace("\n", " ")[:50],
+                )
+                continue
+
+            if (
+                isinstance(parse_result, ParsedCommit)
+                and not parse_result.include_in_changelog
+            ):
+                log.info(
+                    str.join(
+                        " ",
+                        [
+                            "Excluding commit %s (%s) because parser determined",
+                            "it should not included in the changelog",
+                        ],
+                    ),
+                    commit.hexsha[:8],
+                    commit_message.replace("\n", " ")[:20],
                 )
                 continue
 

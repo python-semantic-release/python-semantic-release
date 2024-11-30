@@ -17,7 +17,13 @@ from pydantic.dataclasses import dataclass
 from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.token import ParsedCommit, ParseResult
+from semantic_release.commit_parser.angular import AngularCommitParser
+from semantic_release.commit_parser.token import (
+    ParsedCommit,
+    ParsedMessageResult,
+    ParseError,
+    ParseResult,
+)
 from semantic_release.enums import LevelBump
 
 from tests.const import SUCCESS_EXIT_CODE
@@ -38,7 +44,6 @@ if TYPE_CHECKING:
     from git import Commit
 
     from semantic_release.cli.config import RuntimeContext
-    from semantic_release.commit_parser.token import ParseError
 
     _R = TypeVar("_R")
 
@@ -277,3 +282,21 @@ class CustomParserWithOpts(CommitParser[ParseResult, CustomParserOpts]):
 
 class IncompleteCustomParser(CommitParser):
     pass
+
+
+class CustomAngularParserWithIgnorePatterns(AngularCommitParser):
+    def parse(self, commit: Commit) -> ParsedCommit | ParseError:
+        if not (parse_msg_result := super().parse_message(str(commit.message))):
+            return ParseError(commit, "Unable to parse commit")
+
+        return ParsedCommit.from_parsed_message_result(
+            commit,
+            ParsedMessageResult(
+                **{
+                    **parse_msg_result._asdict(),
+                    "include_in_changelog": bool(
+                        not str(commit.message).startswith("chore")
+                    ),
+                }
+            ),
+        )
