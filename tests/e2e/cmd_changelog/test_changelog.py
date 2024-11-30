@@ -1024,7 +1024,14 @@ def test_changelog_release_tag_not_in_history(
 
 
 @pytest.mark.usefixtures(repo_w_trunk_only_n_prereleases_angular_commits.__name__)
-@pytest.mark.parametrize("args", [("--post-to-release-tag", "v0.1.0")])
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("--post-to-release-tag", "v0.1.0"),  #      first release
+        ("--post-to-release-tag", "v0.1.1-rc.1"),  # second release
+        ("--post-to-release-tag", "v0.2.0"),  #      latest release
+    ],
+)
 def test_changelog_post_to_release(args: list[str], cli_runner: CliRunner):
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're
     # made

@@ -1,7 +1,36 @@
-{#    # Set line width to 1000 to avoid wrapping as GitHub will handle it
+{#  EXAMPLE:
+
+### Features
+
+- Add new feature ([#10](https://domain.com/namespace/repo/pull/10),
+  [`abcdef0`](https://domain.com/namespace/repo/commit/HASH))
+
+- **scope**: Add new feature
+  ([`abcdef0`](https://domain.com/namespace/repo/commit/HASH))
+
+### Bug Fixes
+
+- Fix bug (#11, [`abcdef1`](https://domain.com/namespace/repo/commit/HASH))
+
+---
+
+**Detailed Changes**: [vX.X.X...vX.X.X](https://domain.com/namespace/repo/compare/vX.X.X...vX.X.X)
+
+#}{#  # Set line width to 1000 to avoid wrapping as GitHub will handle it
 #}{%  set max_line_width = max_line_width | default(1000)
 %}{%  set hanging_indent = hanging_indent | default(2)
-%}{%  set releases = context.history.released.items() | list
+%}{%  set releases = context.history.released.values() | list
+%}{%  set curr_release_index = releases.index(release)
+%}{%  set prev_release_index = curr_release_index + 1
+%}{#
+#}{%  if 'compare_url' is filter and prev_release_index < releases | length
+%}{%    set prev_version_tag = releases[prev_release_index].version.as_tag()
+%}{%    set new_version_tag = release.version.as_tag()
+%}{%    set version_compare_url = prev_version_tag | compare_url(new_version_tag)
+%}{%    set detailed_changes_link = '[{}...{}]({})'.format(
+          prev_version_tag, new_version_tag, version_compare_url
+        )
+%}{%  endif
 %}{#
 #}{%  if releases | length == 1 and mask_initial_release
 %}{#    # On a first release, generate our special message
@@ -9,5 +38,12 @@
 %}{%  else
 %}{#    # Not the first release so generate notes normally
 #}{%    include ".components/versioned_changes.md.j2"
+-%}{#
+#}{%    if detailed_changes_link is defined
+%}{{      "\n"
+}}{{      "---\n"
+}}{{      "\n"
+}}{{      "**Detailed Changes**: %s" | format(detailed_changes_link)
+}}{%    endif
 %}{%  endif
 %}
