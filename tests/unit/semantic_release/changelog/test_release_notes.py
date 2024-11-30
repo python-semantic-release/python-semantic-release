@@ -149,6 +149,218 @@ def test_default_release_notes_template(
     assert expected_content == actual_content
 
 
+@pytest.mark.parametrize("mask_initial_release", [True, False])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
+def test_default_release_notes_template_w_a_brk_description(
+    example_git_https_url: str,
+    hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
+    release_history_w_brk_change: ReleaseHistory,
+    mask_initial_release: bool,
+    today_date_str: str,
+):
+    """
+    Unit test goal: just make sure it renders the release notes template without error.
+
+    Scenarios are better suited for all the variations (commit types).
+    """
+    released_versions = iter(release_history_w_brk_change.released.keys())
+    version = next(released_versions)
+    prev_version = next(released_versions)
+    hvcs = hvcs_client(example_git_https_url)
+    release = release_history_w_brk_change.released[version]
+
+    brk_fix_commit_obj = next(iter(release["elements"].values()))[0]
+    assert isinstance(brk_fix_commit_obj, ParsedCommit)
+
+    brk_fix_commit_url = hvcs.commit_hash_url(brk_fix_commit_obj.commit.hexsha)
+    brk_fix_description = str.join("\n", brk_fix_commit_obj.descriptions)
+    brk_fix_brking_description = str.join(
+        "\n", brk_fix_commit_obj.breaking_descriptions
+    )
+
+    expected_content = str.join(
+        os.linesep,
+        [
+            f"## v{version} ({today_date_str})",
+            "",
+            "### Bug Fixes",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{brk_fix_commit_obj.scope}**: "
+                    if brk_fix_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=brk_fix_description.capitalize(),
+                short_hash=brk_fix_commit_obj.commit.hexsha[:7],
+                url=brk_fix_commit_url,
+            ),
+            "",
+            "### BREAKING CHANGES",
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{brk_fix_commit_obj.scope}**: "
+                    if brk_fix_commit_obj.scope
+                    else ""
+                ),
+                change_desc=brk_fix_brking_description.capitalize(),
+            ),
+            "",
+        ],
+    )
+
+    if not isinstance(hvcs, Gitea):
+        expected_content += str.join(
+            os.linesep,
+            [
+                "",
+                "---",
+                "",
+                "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                    prev_version=prev_version.as_tag(),
+                    new_version=version.as_tag(),
+                    version_compare_url=hvcs.compare_url(
+                        prev_version.as_tag(), version.as_tag()
+                    ),
+                ),
+                "",
+            ],
+        )
+
+    actual_content = generate_release_notes(
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release=release,
+        template_dir=Path(""),
+        history=release_history_w_brk_change,
+        style="angular",
+        mask_initial_release=mask_initial_release,
+    )
+
+    assert expected_content == actual_content
+
+
+@pytest.mark.parametrize("mask_initial_release", [True, False])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
+def test_default_release_notes_template_w_multiple_brk_changes(
+    example_git_https_url: str,
+    hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
+    release_history_w_multiple_brk_changes: ReleaseHistory,
+    mask_initial_release: bool,
+    today_date_str: str,
+):
+    """
+    Unit test goal: just make sure it renders the release notes template without error.
+
+    Scenarios are better suited for all the variations (commit types).
+    """
+    released_versions = iter(release_history_w_multiple_brk_changes.released.keys())
+    version = next(released_versions)
+    prev_version = next(released_versions)
+    hvcs = hvcs_client(example_git_https_url)
+    release = release_history_w_multiple_brk_changes.released[version]
+
+    brk_fix_commit_obj = release["elements"]["Bug Fixes"][0]
+    brk_feat_commit_obj = release["elements"]["Features"][0]
+    assert isinstance(brk_fix_commit_obj, ParsedCommit)
+    assert isinstance(brk_feat_commit_obj, ParsedCommit)
+
+    brk_fix_commit_url = hvcs.commit_hash_url(brk_fix_commit_obj.commit.hexsha)
+    brk_fix_description = str.join("\n", brk_fix_commit_obj.descriptions)
+    brk_fix_brking_description = str.join(
+        "\n", brk_fix_commit_obj.breaking_descriptions
+    )
+
+    brk_feat_commit_url = hvcs.commit_hash_url(brk_feat_commit_obj.commit.hexsha)
+    brk_feat_description = str.join("\n", brk_feat_commit_obj.descriptions)
+    brk_feat_brking_description = str.join(
+        "\n", brk_feat_commit_obj.breaking_descriptions
+    )
+
+    expected_content = str.join(
+        os.linesep,
+        [
+            f"## v{version} ({today_date_str})",
+            "",
+            "### Bug Fixes",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{brk_fix_commit_obj.scope}**: "
+                    if brk_fix_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=brk_fix_description.capitalize(),
+                short_hash=brk_fix_commit_obj.commit.hexsha[:7],
+                url=brk_fix_commit_url,
+            ),
+            "",
+            "### Features",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{brk_feat_commit_obj.scope}**: "
+                    if brk_feat_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=brk_feat_description.capitalize(),
+                short_hash=brk_feat_commit_obj.commit.hexsha[:7],
+                url=brk_feat_commit_url,
+            ),
+            "",
+            "### BREAKING CHANGES",
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{brk_feat_commit_obj.scope}**: "
+                    if brk_feat_commit_obj.scope
+                    else ""
+                ),
+                change_desc=brk_feat_brking_description.capitalize(),
+            ),
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{brk_fix_commit_obj.scope}**: "
+                    if brk_fix_commit_obj.scope
+                    else ""
+                ),
+                change_desc=brk_fix_brking_description.capitalize(),
+            ),
+            "",
+        ],
+    )
+
+    if not isinstance(hvcs, Gitea):
+        expected_content += str.join(
+            os.linesep,
+            [
+                "",
+                "---",
+                "",
+                "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                    prev_version=prev_version.as_tag(),
+                    new_version=version.as_tag(),
+                    version_compare_url=hvcs.compare_url(
+                        prev_version.as_tag(), version.as_tag()
+                    ),
+                ),
+                "",
+            ],
+        )
+
+    actual_content = generate_release_notes(
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release=release,
+        template_dir=Path(""),
+        history=release_history_w_multiple_brk_changes,
+        style="angular",
+        mask_initial_release=mask_initial_release,
+    )
+
+    assert expected_content == actual_content
+
+
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_release_notes_template_first_release_masked(
     example_git_https_url: str,
