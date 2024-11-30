@@ -41,7 +41,9 @@ def test_default_release_notes_template(
 
     Scenarios are better suited for all the variations (commit types).
     """
-    version = next(iter(artificial_release_history.released.keys()))
+    released_versions = iter(artificial_release_history.released.keys())
+    version = next(released_versions)
+    prev_version = next(released_versions)
     hvcs = hvcs_client(example_git_https_url)
     release = artificial_release_history.released[version]
 
@@ -85,6 +87,24 @@ def test_default_release_notes_template(
             "",
         ],
     )
+
+    if not isinstance(hvcs, Gitea):
+        expected_content += str.join(
+            os.linesep,
+            [
+                "",
+                "---",
+                "",
+                "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                    prev_version=prev_version.as_tag(),
+                    new_version=version.as_tag(),
+                    version_compare_url=hvcs.compare_url(
+                        prev_version.as_tag(), version.as_tag()
+                    ),
+                ),
+                "",
+            ],
+        )
 
     actual_content = generate_release_notes(
         hvcs_client=hvcs_client(remote_url=example_git_https_url),
