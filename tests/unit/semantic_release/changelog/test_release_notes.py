@@ -48,15 +48,25 @@ def test_default_release_notes_template(
     release = artificial_release_history.released[version]
 
     feat_commit_obj = release["elements"]["feature"][0]
-    fix_commit_obj = release["elements"]["fix"][0]
+    fix_commit_obj_1 = release["elements"]["fix"][0]
+    fix_commit_obj_2 = release["elements"]["fix"][1]
+    fix_commit_obj_3 = release["elements"]["fix"][2]
     assert isinstance(feat_commit_obj, ParsedCommit)
-    assert isinstance(fix_commit_obj, ParsedCommit)
+    assert isinstance(fix_commit_obj_1, ParsedCommit)
+    assert isinstance(fix_commit_obj_2, ParsedCommit)
+    assert isinstance(fix_commit_obj_3, ParsedCommit)
 
     feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
     feat_description = str.join("\n", feat_commit_obj.descriptions)
 
-    fix_commit_url = hvcs.commit_hash_url(fix_commit_obj.commit.hexsha)
-    fix_description = str.join("\n", fix_commit_obj.descriptions)
+    fix_commit_1_url = hvcs.commit_hash_url(fix_commit_obj_1.commit.hexsha)
+    fix_commit_1_description = str.join("\n", fix_commit_obj_1.descriptions)
+
+    fix_commit_2_url = hvcs.commit_hash_url(fix_commit_obj_2.commit.hexsha)
+    fix_commit_2_description = str.join("\n", fix_commit_obj_2.descriptions)
+
+    fix_commit_3_url = hvcs.commit_hash_url(fix_commit_obj_3.commit.hexsha)
+    fix_commit_3_description = str.join("\n", fix_commit_obj_3.descriptions)
 
     expected_content = str.join(
         os.linesep,
@@ -76,13 +86,34 @@ def test_default_release_notes_template(
             "",
             "### Fix",
             "",
+            # Commit 2 is first because it has no scope
             "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
                 commit_scope=(
-                    f"**{fix_commit_obj.scope}**: " if fix_commit_obj.scope else ""
+                    f"**{fix_commit_obj_2.scope}**: " if fix_commit_obj_2.scope else ""
                 ),
-                commit_desc=fix_description.capitalize(),
-                short_hash=fix_commit_obj.commit.hexsha[:7],
-                url=fix_commit_url,
+                commit_desc=fix_commit_2_description.capitalize(),
+                short_hash=fix_commit_obj_2.commit.hexsha[:7],
+                url=fix_commit_2_url,
+            ),
+            "",
+            # Commit 3 is second because it starts with an A even though it has the same scope as 1
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{fix_commit_obj_3.scope}**: " if fix_commit_obj_3.scope else ""
+                ),
+                commit_desc=fix_commit_3_description.capitalize(),
+                short_hash=fix_commit_obj_3.commit.hexsha[:7],
+                url=fix_commit_3_url,
+            ),
+            "",
+            # Commit 1 is last
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{fix_commit_obj_1.scope}**: " if fix_commit_obj_1.scope else ""
+                ),
+                commit_desc=fix_commit_1_description.capitalize(),
+                short_hash=fix_commit_obj_1.commit.hexsha[:7],
+                url=fix_commit_1_url,
             ),
             "",
         ],
