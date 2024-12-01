@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from re import compile as regexp
+from re import MULTILINE, compile as regexp
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -28,6 +28,13 @@ trim_line_endings: RegexReplaceDef = {
     "pattern": regexp(r"[\r\t\f\v ]*\r?\n"),
     "repl": "\n",  # remove the optional whitespace & remove windows newlines
 }
+spread_out_git_footers: RegexReplaceDef = {
+    # Match a git footer line, and add an extra newline after it
+    # only be flexible enough for a double space indent (otherwise its probably on purpose)
+    #   - found collision with dependabot's yaml in a commit message with a git footer (its unusal but possible)
+    "pattern": regexp(r"^ {0,2}([\w-]*: .+)$\n?(?!\n)", MULTILINE),
+    "repl": r"\1\n\n",
+}
 
 
 def parse_paragraphs(text: str) -> list[str]:
@@ -38,12 +45,14 @@ def parse_paragraphs(text: str) -> list[str]:
     To handle Windows line endings, carriage returns '\r' are removed before
     separating into paragraphs.
 
+    It will attempt to detect Git footers and they will not be condensed.
+
     :param text: The text string to be divided.
     :return: A list of condensed paragraphs, as strings.
     """
     adjusted_text = reduce(
         lambda txt, adj: adj["pattern"].sub(adj["repl"], txt),
-        [trim_line_endings, un_word_wrap_hyphen],
+        [trim_line_endings, un_word_wrap_hyphen, spread_out_git_footers],
         text,
     )
 
@@ -52,7 +61,7 @@ def parse_paragraphs(text: str) -> list[str]:
             None,
             [
                 un_word_wrap["pattern"].sub(un_word_wrap["repl"], paragraph).strip()
-                for paragraph in adjusted_text.split("\n\n")
+                for paragraph in adjusted_text.strip().split("\n\n")
             ],
         )
     )
