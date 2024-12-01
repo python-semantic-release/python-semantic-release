@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.abspath(".."))
 
 import semantic_release  # noqa: E402
 
+author_name = "Python Semantic Release Team"
+
 # -- General configuration ------------------------------------------------
 
 extensions = [
@@ -22,7 +24,7 @@ templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
 project = "python-semantic-release"
-copyright = "2020, Rolf Erik Lekang"  # noqa: A001
+copyright = f"2024, {author_name}"  # noqa: A001
 
 version = semantic_release.__version__
 release = semantic_release.__version__
@@ -54,7 +56,7 @@ latex_documents = [
         "index",
         "python-semantic-release.tex",
         "python-semantic-release Documentation",
-        "Rolf Erik Lekang",
+        author_name,
         "manual",
     ),
 ]
@@ -66,7 +68,7 @@ man_pages = [
         "index",
         "python-semantic-release",
         "python-semantic-release Documentation",
-        ["Rolf Erik Lekang"],
+        [author_name],
         1,
     )
 ]
@@ -78,7 +80,7 @@ texinfo_documents = [
         "index",
         "python-semantic-release",
         "python-semantic-release Documentation",
-        "Rolf Erik Lekang",
+        author_name,
         "python-semantic-release",
         "One line description of project.",
         "Miscellaneous",
@@ -90,7 +92,7 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = "python-semantic-release"
-epub_author = "Rolf Erik Lekang"
-epub_publisher = "Rolf Erik Lekang"
-epub_copyright = "2020, Rolf Erik Lekang"
+epub_author = author_name
+epub_publisher = author_name
+epub_copyright = copyright
 epub_exclude_files = ["search.html"]
