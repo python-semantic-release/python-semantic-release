@@ -59,7 +59,7 @@ Documentation Contents
    commands
    Strict Mode <strict_mode>
    configuration
-   commit-parsing
+   commit_parsing
    Changelog Templates <changelog_templates>
    Multibranch Releases <multibranch_releases>
    automatic-releases/index

@@ -544,7 +544,7 @@ replaced with a single set of recognised commit parser options, ``allowed_tags``
 these is up to the specific parsers in use. You can read more detail about using
 commit parser options in :ref:`commit_parser_options <config-commit_parser_options>`,
 and if you need to parse multiple commit styles for a single project it's recommended
-that you create a parser following :ref:`commit-parser-writing-your-own-parser` that
+that you create a parser following :ref:`commit_parser-custom_parser` that
 is tailored to the specific needs of your project.
 
 .. _breaking-version-variable-rename:
@@ -625,4 +625,4 @@ It is still possible to implement custom commit parsers, but the interface for d
 so has been modified with stronger support for Python type annotations and broader
 input provided to the parser to enable capturing more information from each commit,
 such as the commit's date and author, if desired. A full guide to implementing a
-custom commit parser can be found at :ref:`commit-parser-writing-your-own-parser`.
+custom commit parser can be found at :ref:`commit_parser-custom_parser`.

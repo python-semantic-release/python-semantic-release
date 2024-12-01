@@ -557,7 +557,7 @@ author, you are free to customize how these are presented in the rendered templa
 
 .. note::
    If you are using a custom commit parser following the guide at
-   :ref:`commit-parser-writing-your-own-parser`, your custom implementations of
+   :ref:`commit_parser-custom_parser`, your custom implementations of
    :py:class:`ParseResult <semantic_release.commit_parser.token.ParseResult>`,
    :py:class:`ParseError <semantic_release.commit_parser.token.ParseError>`
    and :py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>`
@@ -601,8 +601,8 @@ Each ``Release`` object also has the following attributes:
 * ``tagged_date: datetime``: The date and time at which the release was tagged.
 
 .. seealso::
-   * :ref:`commit-parser-builtin`
-   * :ref:`Commit Parser Tokens <commit-parser-tokens>`
+   * :ref:`commit_parser-builtin`
+   * :ref:`Commit Parser Tokens <commit_parser-tokens>`
    * `git.Actor <https://gitpython.readthedocs.io/en/stable/reference.html#git.objects.util.Actor>`_
    * `datetime.strftime Format Codes <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes>`_
 
