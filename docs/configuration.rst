@@ -365,7 +365,7 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 .. _config-changelog-default_templates-mask_initial_release:
 
 ``mask_initial_release``
-'''''''''''''''''''''''
+''''''''''''''''''''''''
 
 *Introduced in v9.14.0*
 
