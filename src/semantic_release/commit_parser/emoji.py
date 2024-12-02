@@ -18,7 +18,7 @@ from semantic_release.commit_parser.token import (
     ParsedMessageResult,
     ParseResult,
 )
-from semantic_release.commit_parser.util import parse_paragraphs
+from semantic_release.commit_parser.util import sort_numerically, parse_paragraphs
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
 
@@ -186,7 +186,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
                     predicate.split(","),
                 )
             )
-            accumulator["linked_issues"] = sorted(
+            accumulator["linked_issues"] = sort_numerically(
                 set(accumulator["linked_issues"]).union(new_issue_refs)
             )
             # TODO: breaking change v10, removes resolution footers from descriptions
