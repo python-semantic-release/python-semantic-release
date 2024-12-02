@@ -6,28 +6,34 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from re import Pattern
-    from typing import TypedDict
+    from typing import Sequence, TypedDict
 
     class RegexReplaceDef(TypedDict):
         pattern: Pattern
         repl: str
 
 
+number_pattern = regexp(r"(\d+)")
+
 breaking_re = regexp(r"BREAKING[ -]CHANGE:\s?(.*)")
+
 un_word_wrap: RegexReplaceDef = {
     # Match a line ending where the next line is not indented, or a bullet
     "pattern": regexp(r"((?<!-)\n(?![\s*-]))"),
     "repl": r" ",  # Replace with a space
 }
+
 un_word_wrap_hyphen: RegexReplaceDef = {
     "pattern": regexp(r"((?<=\w)-\n(?=\w))"),
     "repl": r"-",  # Replace with single hyphen
 }
+
 trim_line_endings: RegexReplaceDef = {
     # Match line endings with optional whitespace
     "pattern": regexp(r"[\r\t\f\v ]*\r?\n"),
     "repl": "\n",  # remove the optional whitespace & remove windows newlines
 }
+
 spread_out_git_footers: RegexReplaceDef = {
     # Match a git footer line, and add an extra newline after it
     # only be flexible enough for a double space indent (otherwise its probably on purpose)
@@ -65,3 +71,7 @@ def parse_paragraphs(text: str) -> list[str]:
             ],
         )
     )
+
+
+def sort_numerically(iterable: Sequence[str] | set[str]) -> list[str]:
+    return sorted(iterable, key=lambda x: int((number_pattern.search(x) or [-1])[0]))
