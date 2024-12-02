@@ -728,9 +728,9 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix(config): fix config option",
-                                    "emoji": ":bug: (config) fix config option",
-                                    "scipy": "BUG: config: fix config option",
+                                    "conventional": "fix(config): fix config option\n\nImplements: #123\n",
+                                    "emoji": ":bug: (config) fix config option\n\nImplements: #123\n",
+                                    "scipy": "BUG: config: fix config option\n\nImplements: #123\n",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },

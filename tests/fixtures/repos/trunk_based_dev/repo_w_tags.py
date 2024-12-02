@@ -191,9 +191,9 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix: correct some text",
-                                    "emoji": ":bug: correct some text",
-                                    "scipy": "MAINT: correct some text",
+                                    "conventional": "fix: correct some text\n\nResolves: #123\n",
+                                    "emoji": ":bug: correct some text\n\nResolves: #123\n",
+                                    "scipy": "MAINT: correct some text\n\nResolves: #123\n",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
