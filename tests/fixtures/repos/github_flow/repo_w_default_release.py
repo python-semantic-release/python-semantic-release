@@ -194,9 +194,9 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
 
         fix_branch_1_commits: Sequence[CommitSpec] = [
             {
-                "conventional": "fix(cli): add missing text",
-                "emoji": ":bug: add missing text",
-                "scipy": "MAINT: add missing text",
+                "conventional": "fix(cli): add missing text\n\nResolves: #123\n",
+                "emoji": ":bug: add missing text\n\nResolves: #123\n",
+                "scipy": "MAINT: add missing text\n\nResolves: #123\n",
                 "datetime": next(commit_timestamp_gen),
             },
         ]

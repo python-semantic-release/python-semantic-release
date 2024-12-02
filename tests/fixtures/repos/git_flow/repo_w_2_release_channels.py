@@ -603,9 +603,9 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix(config): fixed configuration generation",
-                                    "emoji": ":bug: (config) fixed configuration generation",
-                                    "scipy": "MAINT:config: fixed configuration generation",
+                                    "conventional": "fix(config): fixed configuration generation\n\nCloses: #123",
+                                    "emoji": ":bug: (config) fixed configuration generation\n\nCloses: #123",
+                                    "scipy": "MAINT:config: fixed configuration generation\n\nCloses: #123",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },

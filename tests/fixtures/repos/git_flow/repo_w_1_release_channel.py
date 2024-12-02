@@ -517,9 +517,9 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix: correct a bug",
-                                    "emoji": ":bug: correct a bug",
-                                    "scipy": "BUG: correct a bug",
+                                    "conventional": "fix: correct a bug\n\nCloses: #123\n",
+                                    "emoji": ":bug: correct a bug\n\nCloses: #123\n",
+                                    "scipy": "BUG: correct a bug\n\nCloses: #123\n",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },

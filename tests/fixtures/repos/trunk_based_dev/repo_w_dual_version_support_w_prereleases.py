@@ -315,9 +315,9 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix: correct critical bug",
-                                    "emoji": ":bug: correct critical bug",
-                                    "scipy": "MAINT: correct critical bug",
+                                    "conventional": "fix: correct critical bug\n\nResolves: #123\n",
+                                    "emoji": ":bug: correct critical bug\n\nResolves: #123\n",
+                                    "scipy": "MAINT: correct critical bug\n\nResolves: #123\n",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },

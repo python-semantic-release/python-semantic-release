@@ -412,9 +412,9 @@ def get_repo_definition_4_git_flow_repo_w_4_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix(cli): fix config cli command",
-                                    "emoji": ":bug: (cli) fix config cli command",
-                                    "scipy": "BUG:cli: fix config cli command",
+                                    "conventional": "fix(cli): fix config cli command\n\nCloses: #123\n",
+                                    "emoji": ":bug: (cli) fix config cli command\n\nCloses: #123\n",
+                                    "scipy": "BUG:cli: fix config cli command\n\nCloses: #123\n",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
