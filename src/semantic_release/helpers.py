@@ -1,15 +1,70 @@
+from __future__ import annotations
+
 import importlib.util
 import logging
 import os
 import re
 import string
 import sys
-from functools import lru_cache, wraps
+from functools import lru_cache, reduce, wraps
 from pathlib import Path, PurePosixPath
-from typing import Any, Callable, NamedTuple, TypeVar
+from re import compile as regexp
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Iterable
+
+
 log = logging.getLogger(__name__)
+
+number_pattern = regexp(r"(?P<prefix>\S*?)(?P<number>\d[\d,]*)")
+
+
+def get_number_from_str(string: str, default: int = -1) -> int:
+    return (
+        int(match.group("number"))
+        if (match := number_pattern.search(string))
+        else default
+    )
+
+
+def sort_numerically(iterable: Iterable[str], reverse: bool = False) -> list[str]:
+    # Alphabetically sort prefixes first, then sort by number
+    alphabetized_list = sorted(iterable)
+
+    # Extract prefixes in order to group items by prefix
+    unmatched_items = []
+    prefixes: dict[str, list[str]] = {}
+    for item in alphabetized_list:
+        if not (match := number_pattern.search(item)):
+            unmatched_items.append(item)
+            continue
+
+        prefix = prefix if (prefix := match.group("prefix")) else ""
+
+        if prefix not in prefixes:
+            prefixes[prefix] = []
+
+        prefixes[prefix].append(item)
+
+    # Sort prefixes and items by number mixing in unmatched items as alphabetized with other prefixes
+    return reduce(
+        lambda acc, next_item: acc + next_item,
+        [
+            (
+                sorted(
+                    prefixes[prefix],
+                    key=lambda x: get_number_from_str(x, default=-1),
+                    reverse=reverse,
+                )
+                if prefix in prefixes
+                else [prefix]
+            )
+            for prefix in sorted([*prefixes.keys(), *unmatched_items])
+        ],
+        [],
+    )
 
 
 def format_arg(value: Any) -> str:

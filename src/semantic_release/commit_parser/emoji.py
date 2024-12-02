@@ -18,9 +18,10 @@ from semantic_release.commit_parser.token import (
     ParsedMessageResult,
     ParseResult,
 )
-from semantic_release.commit_parser.util import parse_paragraphs, sort_numerically
+from semantic_release.commit_parser.util import parse_paragraphs
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.helpers import sort_numerically
 
 logger = logging.getLogger(__name__)
 
