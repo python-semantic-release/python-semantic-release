@@ -23,6 +23,7 @@ from semantic_release.commit_parser.token import (
 )
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
+from semantic_release.errors import InvalidParserOptions
 
 if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
@@ -57,10 +58,12 @@ class AngularParserOptions(ParserOptions):
     """Options dataclass for AngularCommitParser"""
 
     minor_tags: Tuple[str, ...] = ("feat",)
+    """Commit-type prefixes that should result in a minor release bump."""
+
     patch_tags: Tuple[str, ...] = ("fix", "perf")
-    allowed_tags: Tuple[str, ...] = (
-        *minor_tags,
-        *patch_tags,
+    """Commit-type prefixes that should result in a patch release bump."""
+
+    other_allowed_tags: Tuple[str, ...] = (
         "build",
         "chore",
         "ci",
@@ -69,19 +72,42 @@ class AngularParserOptions(ParserOptions):
         "refactor",
         "test",
     )
+    """Commit-type prefixes that are allowed but do not result in a version bump."""
+
+    allowed_tags: Tuple[str, ...] = (
+        *minor_tags,
+        *patch_tags,
+        *other_allowed_tags,
+    )
+    """
+    All commit-type prefixes that are allowed.
+
+    These are used to identify a valid commit message. If a commit message does not start with
+    one of these prefixes, it will not be considered a valid commit message.
+    """
+
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
+    """The minimum bump level to apply to valid commit message."""
+
+    @property
+    def tag_to_level(self) -> dict[str, LevelBump]:
+        """A mapping of commit tags to the level bump they should result in."""
+        return self._tag_to_level
 
     def __post_init__(self) -> None:
-        self.tag_to_level: dict[str, LevelBump] = dict(
-            [
+        self._tag_to_level: dict[str, LevelBump] = {
+            str(tag): level
+            for tag, level in [
                 # we have to do a type ignore as zip_longest provides a type that is not specific enough
                 # for our expected output. Due to the empty second array, we know the first is always longest
-                # and that means no values in the first entry of the tuples will ever be a LevelBump.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),  # type: ignore[list-item]
-                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),  # type: ignore[list-item]
-                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),  # type: ignore[list-item]
+                # and that means no values in the first entry of the tuples will ever be a LevelBump. We
+                # apply a str() to make mypy happy although it will never happen.
+                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
+                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
             ]
-        )
+            if "|" not in str(tag)
+        }
 
 
 class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
@@ -95,12 +121,28 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
 
     def __init__(self, options: AngularParserOptions | None = None) -> None:
         super().__init__(options)
-        all_possible_types = str.join("|", self.options.allowed_tags)
+
+        try:
+            commit_type_pattern = regexp(
+                r"(?P<type>%s)" % str.join("|", self.options.allowed_tags)
+            )
+        except re.error as err:
+            raise InvalidParserOptions(
+                str.join(
+                    "\n",
+                    [
+                        f"Invalid options for {self.__class__.__name__}",
+                        "Unable to create regular expression from configured commit-types.",
+                        "Please check the configured commit-types and remove or escape any regular expression characters.",
+                    ],
+                )
+            ) from err
+
         self.re_parser = regexp(
             str.join(
                 "",
                 [
-                    r"(?P<type>%s)" % all_possible_types,
+                    r"^" + commit_type_pattern.pattern,
                     r"(?:\((?P<scope>[^\n]+)\))?",
                     # TODO: remove ! support as it is not part of the angular commit spec (its part of conventional commits spec)
                     r"(?P<break>!)?:\s+",
@@ -110,9 +152,20 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             ),
             flags=re.DOTALL,
         )
+
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
             r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
+        )
+        self.issue_selector = regexp(
+            str.join(
+                "",
+                [
+                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
+                    r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
+                ],
+            ),
+            flags=re.MULTILINE | re.IGNORECASE,
         )
 
     @staticmethod
@@ -127,7 +180,31 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             # TODO: breaking change v10, removes breaking change footers from descriptions
             # return accumulator
 
-        accumulator["descriptions"].append(text)
+        elif match := self.issue_selector.search(text):
+            # if match := self.issue_selector.search(text):
+            predicate = regexp(r",? and | *[,;/& ] *").sub(
+                ",", match.group("issue_predicate") or ""
+            )
+            # Almost all issue trackers use a number to reference an issue so
+            # we use a simple regexp to validate the existence of a number which helps filter out
+            # any non-issue references that don't fit our expected format
+            has_number = regexp(r"\d+")
+            new_issue_refs: set[str] = set(
+                filter(
+                    lambda issue_str, validator=has_number: validator.search(issue_str),  # type: ignore[arg-type]
+                    predicate.split(","),
+                )
+            )
+            accumulator["linked_issues"] = sorted(
+                set(accumulator["linked_issues"]).union(new_issue_refs)
+            )
+            # TODO: breaking change v10, removes resolution footers from descriptions
+            # return accumulator
+
+        # Prevent appending duplicate descriptions
+        if text not in accumulator["descriptions"]:
+            accumulator["descriptions"].append(text)
+
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult | None:
@@ -157,6 +234,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             {
                 "breaking_descriptions": [],
                 "descriptions": [],
+                "linked_issues": [],
             },
         )
 
@@ -176,6 +254,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             scope=parsed_scope,
             descriptions=tuple(body_components["descriptions"]),
             breaking_descriptions=tuple(body_components["breaking_descriptions"]),
+            linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
 

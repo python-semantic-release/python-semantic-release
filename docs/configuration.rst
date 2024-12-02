@@ -365,7 +365,7 @@ this setting is not used. See :ref:`config-changelog-template_dir` for more info
 .. _config-changelog-default_templates-mask_initial_release:
 
 ``mask_initial_release``
-'''''''''''''''''''''''
+''''''''''''''''''''''''
 
 *Introduced in v9.14.0*
 
@@ -790,10 +790,10 @@ Specify which commit parser Python Semantic Release should use to parse the comm
 within the Git repository.
 
 Built-in parsers:
-    * ``angular`` - :ref:`AngularCommitParser <commit-parser-angular>`
-    * ``emoji`` - :ref:`EmojiCommitParser <commit-parser-emoji>`
-    * ``scipy`` - :ref:`ScipyCommitParser <commit-parser-scipy>`
-    * ``tag`` - :ref:`TagCommitParser <commit-parser-tag>` *(deprecated in v9.12.0)*
+    * ``angular`` - :ref:`AngularCommitParser <commit_parser-builtin-angular>`
+    * ``emoji`` - :ref:`EmojiCommitParser <commit_parser-builtin-emoji>`
+    * ``scipy`` - :ref:`ScipyCommitParser <commit_parser-builtin-scipy>`
+    * ``tag`` - :ref:`TagCommitParser <commit_parser-builtin-tag>` *(deprecated in v9.12.0)*
 
 You can set any of the built-in parsers by their keyword but you can also specify
 your own commit parser in ``module:attr`` form.

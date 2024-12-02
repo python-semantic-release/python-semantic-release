@@ -557,7 +557,7 @@ author, you are free to customize how these are presented in the rendered templa
 
 .. note::
    If you are using a custom commit parser following the guide at
-   :ref:`commit-parser-writing-your-own-parser`, your custom implementations of
+   :ref:`commit_parser-custom_parser`, your custom implementations of
    :py:class:`ParseResult <semantic_release.commit_parser.token.ParseResult>`,
    :py:class:`ParseError <semantic_release.commit_parser.token.ParseError>`
    and :py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>`
@@ -569,7 +569,7 @@ are of type :py:class:`Version <semantic_release.version.version.Version>`. You 
 use the ``as_tag()`` method to render these as the Git tag that they correspond to
 inside your template.
 
-A :py:class:`Release <semantic_release.changelog.release_history.Release>`object
+A :py:class:`Release <semantic_release.changelog.release_history.Release>` object
 has an ``elements`` attribute, which has the same structure as the ``unreleased``
 attribute of a
 :py:class:`ReleaseHistory <semantic_release.changelog.release_history.ReleaseHistory>`;
@@ -592,7 +592,8 @@ type, it's recommended to use Jinja's
 `dictsort <https://jinja.palletsprojects.com/en/3.1.x/templates/#jinja-filters.dictsort>`_
 filter.
 
-Each ``Release`` object also has the following attributes:
+Each :py:class:`Release <semantic_release.changelog.release_history.Release>`
+object also has the following attributes:
 
 * ``tagger: git.Actor``: The tagger who tagged the release.
 
@@ -601,8 +602,8 @@ Each ``Release`` object also has the following attributes:
 * ``tagged_date: datetime``: The date and time at which the release was tagged.
 
 .. seealso::
-   * :ref:`commit-parser-builtin`
-   * :ref:`Commit Parser Tokens <commit-parser-tokens>`
+   * :ref:`commit_parser-builtin`
+   * :ref:`Commit Parser Tokens <commit_parser-tokens>`
    * `git.Actor <https://gitpython.readthedocs.io/en/stable/reference.html#git.objects.util.Actor>`_
    * `datetime.strftime Format Codes <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes>`_
 
@@ -631,6 +632,8 @@ The filters provided vary based on the VCS configured and available features:
   .. code:: jinja
 
       {{ "This is a long string that needs to be wrapped to a specific width" | autofit_text_width(40, 4) }}
+
+  **Markdown Output:**
 
   .. code:: markdown
 
@@ -669,6 +672,8 @@ The filters provided vary based on the VCS configured and available features:
       {{ "example/repo.git" | create_server_url }}
       {{ "example/repo" | create_server_url(None, "results=1", "section-header") }}
 
+  **Markdown Output:**
+
   .. code:: markdown
 
       https://example.com/example/repo.git
@@ -690,6 +695,8 @@ The filters provided vary based on the VCS configured and available features:
       {{ "releases/tags/v1.0.0" | create_repo_url }}
       {{ "issues" | create_repo_url("q=is%3Aissue+is%3Aclosed") }}
 
+  **Markdown Output:**
+
   .. code:: markdown
 
       https://example.com/example/repo/releases/tags/v1.0.0
@@ -705,6 +712,8 @@ The filters provided vary based on the VCS configured and available features:
   .. code:: jinja
 
       {{ commit.hexsha | commit_hash_url }}
+
+  **Markdown Output:**
 
   .. code:: markdown
 
@@ -722,13 +731,15 @@ The filters provided vary based on the VCS configured and available features:
 
       {{ "v1.0.0" | compare_url("v1.1.0") }}
 
+  **Markdown Output:**
+
   .. code:: markdown
 
       https://example.com/example/repo/compare/v1.0.0...v1.1.0
 
 * ``issue_url (Callable[[IssueNumStr | IssueNumInt], UrlStr])``: given an issue
   number, return a URL to the issue on the remote vcs. In v9.12.2, this filter
-  was updated to handle a string that has leading prefix symbols (ex. ``#29``)
+  was updated to handle a string that has leading prefix symbols (ex. ``#32``)
   and will strip the prefix before generating the URL.
 
   *Introduced in v9.6.0, Modified in v9.12.2.*
@@ -737,11 +748,19 @@ The filters provided vary based on the VCS configured and available features:
 
   .. code:: jinja
 
-      {{ "29" | issue_url }}
+      {# Add Links to issues annotated in the commit message
+       # NOTE: commit.linked_issues is only available in v9.15.0 or greater
+       #
+      #}{% for issue_ref in commit.linked_issues
+      %}{{     "- [%s](%s)" | format(issue_ref, issue_ref | issue_url)
+      }}{% endfor
+      %}
+
+  **Markdown Output:**
 
   .. code:: markdown
 
-      https://example.com/example/repo/issues/29
+      - [#32](https://example.com/example/repo/issues/32)
 
 * ``merge_request_url (Callable[[MergeReqStr | MergeReqInt], UrlStr])``: given a
   merge request number, return a URL to the merge request in the remote. This is
@@ -764,6 +783,8 @@ The filters provided vary based on the VCS configured and available features:
       }}
       {# commit.linked_merge_request is only available in v9.13.0 or greater #}
 
+  **Markdown Output:**
+
   .. code:: markdown
 
       [#29](https://example.com/example/repo/-/merge_requests/29)
@@ -781,13 +802,16 @@ The filters provided vary based on the VCS configured and available features:
 
   .. code:: jinja
 
-      {{
+      {# Create a link to the merge request associated with the commit
+       # NOTE: commit.linked_merge_request is only available in v9.13.0 or greater
+      #}{{
           "[%s](%s)" | format(
             commit.linked_merge_request,
             commit.linked_merge_request | pull_request_url
           )
       }}
-      {# commit.linked_merge_request is only available in v9.13.0 or greater #}
+
+  **Markdown Output:**
 
   .. code:: markdown
 

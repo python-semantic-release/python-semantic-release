@@ -102,8 +102,14 @@ class ScipyParserOptions(AngularParserOptions):
     """
 
     major_tags: Tuple[str, ...] = ("API",)
+    """Commit-type prefixes that should result in a major release bump."""
+
     minor_tags: Tuple[str, ...] = ("DEP", "DEV", "ENH", "REV", "FEAT")
+    """Commit-type prefixes that should result in a minor release bump."""
+
     patch_tags: Tuple[str, ...] = ("BLD", "BUG", "MAINT")
+    """Commit-type prefixes that should result in a patch release bump."""
+
     allowed_tags: Tuple[str, ...] = (
         *major_tags,
         *minor_tags,
@@ -115,15 +121,23 @@ class ScipyParserOptions(AngularParserOptions):
         "REL",
         "TEST",
     )
+    """
+    All commit-type prefixes that are allowed.
+
+    These are used to identify a valid commit message. If a commit message does not start with
+    one of these prefixes, it will not be considered a valid commit message.
+    """
+
     # TODO: breaking v10, make consistent with AngularParserOptions
     default_level_bump: LevelBump = LevelBump.NO_RELEASE
+    """The minimum bump level to apply to valid commit message."""
 
     def __post_init__(self) -> None:
         # TODO: breaking v10, remove as the name is now consistent
         self.default_bump_level = self.default_level_bump
         super().__post_init__()
         for tag in self.major_tags:
-            self.tag_to_level[tag] = LevelBump.MAJOR
+            self._tag_to_level[tag] = LevelBump.MAJOR
 
 
 class ScipyCommitParser(AngularCommitParser):

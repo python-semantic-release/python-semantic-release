@@ -16,6 +16,10 @@ class InvalidConfiguration(SemanticReleaseBaseError):
     """Raised when configuration is deemed invalid"""
 
 
+class InvalidParserOptions(InvalidConfiguration):
+    """Raised when the parser options are invalid"""
+
+
 class MissingGitRemote(SemanticReleaseBaseError):
     """Raised when repository is missing the configured remote origin or upstream"""
 

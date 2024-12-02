@@ -71,7 +71,7 @@ outlines each supported input and its purpose.
 .. _gh_actions-psr-inputs-build:
 
 ``build``
-""""""""
+"""""""""
 
 **Type:** ``Literal["true", "false"]``
 
@@ -438,7 +438,7 @@ and any actions that were taken.
 .. _gh_actions-psr-outputs-is_prerelease:
 
 ``is_prerelease``
-""""""""""""""""
+"""""""""""""""""
 
 **Type:** ``Literal["true", "false"]``
 

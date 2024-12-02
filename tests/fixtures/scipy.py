@@ -202,7 +202,7 @@ def scipy_nonbrking_commit_bodies() -> list[list[str]]:
 
             ---
             updated-dependencies:
-            - dependency-name: package
+              - dependency-name: package
                 dependency-type: direct:development
                 update-type: version-update:semver-major
             """

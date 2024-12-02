@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import re
+from functools import reduce
 from itertools import zip_longest
 from re import compile as regexp
 from typing import Tuple
@@ -18,13 +20,18 @@ from semantic_release.commit_parser.token import (
 )
 from semantic_release.commit_parser.util import parse_paragraphs
 from semantic_release.enums import LevelBump
+from semantic_release.errors import InvalidParserOptions
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class EmojiParserOptions(ParserOptions):
+    """Options dataclass for EmojiCommitParser"""
+
     major_tags: Tuple[str, ...] = (":boom:",)
+    """Commit-type prefixes that should result in a major release bump."""
+
     minor_tags: Tuple[str, ...] = (
         ":sparkles:",
         ":children_crossing:",
@@ -33,6 +40,8 @@ class EmojiParserOptions(ParserOptions):
         ":egg:",
         ":chart_with_upwards_trend:",
     )
+    """Commit-type prefixes that should result in a minor release bump."""
+
     patch_tags: Tuple[str, ...] = (
         ":ambulance:",
         ":lock:",
@@ -49,25 +58,55 @@ class EmojiParserOptions(ParserOptions):
         ":robot:",
         ":green_apple:",
     )
+    """Commit-type prefixes that should result in a patch release bump."""
+
+    other_allowed_tags: Tuple[str, ...] = ()
+    """Commit-type prefixes that are allowed but do not result in a version bump."""
+
     allowed_tags: Tuple[str, ...] = (
         *major_tags,
         *minor_tags,
         *patch_tags,
+        *other_allowed_tags,
     )
+    """All commit-type prefixes that are allowed."""
+
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
+    """The minimum bump level to apply to valid commit message."""
+
+    @property
+    def tag_to_level(self) -> dict[str, LevelBump]:
+        """A mapping of commit tags to the level bump they should result in."""
+        return self._tag_to_level
+
+    parse_linked_issues: bool = False
+    """
+    Whether to parse linked issues from the commit message.
+
+    Issue identification is not defined in the Gitmoji specification, so this parser
+    will not attempt to parse issues by default. If enabled, the parser will use the
+    same identification as GitHub, GitLab, and BitBucket use for linking issues, which
+    is to look for a git commit message footer starting with "Closes:", "Fixes:",
+    or "Resolves:" then a space, and then the issue identifier. The line prefix
+    can be singular or plural and it is not case-sensitive but must have a colon and
+    a whitespace separator.
+    """
 
     def __post_init__(self) -> None:
-        self.tag_to_level: dict[str, LevelBump] = dict(
-            [
+        self._tag_to_level: dict[str, LevelBump] = {
+            str(tag): level
+            for tag, level in [
                 # we have to do a type ignore as zip_longest provides a type that is not specific enough
                 # for our expected output. Due to the empty second array, we know the first is always longest
-                # and that means no values in the first entry of the tuples will ever be a LevelBump.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),  # type: ignore[list-item]
-                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),  # type: ignore[list-item]
-                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),  # type: ignore[list-item]
-                *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),  # type: ignore[list-item]
+                # and that means no values in the first entry of the tuples will ever be a LevelBump. We
+                # apply a str() to make mypy happy although it will never happen.
+                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
+                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
+                *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),
             ]
-        )
+            if "|" not in str(tag)
+        }
 
 
 class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
@@ -88,24 +127,76 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
 
     def __init__(self, options: EmojiParserOptions | None = None) -> None:
         super().__init__(options)
-        prcedence_order_regex = str.join(
-            "|",
-            [
-                *self.options.major_tags,
-                *self.options.minor_tags,
-                *self.options.patch_tags,
-            ],
-        )
-        self.emoji_selector = regexp(r"(?P<type>%s)" % prcedence_order_regex)
+
+        # Reverse the list of tags to ensure that the highest level tags are matched first
+        emojis_in_precedence_order = list(self.options.tag_to_level.keys())[::-1]
+
+        try:
+            self.emoji_selector = regexp(
+                r"(?P<type>%s)" % str.join("|", emojis_in_precedence_order)
+            )
+        except re.error as err:
+            raise InvalidParserOptions(
+                str.join(
+                    "\n",
+                    [
+                        f"Invalid options for {self.__class__.__name__}",
+                        "Unable to create regular expression from configured commit-types.",
+                        "Please check the configured commit-types and remove or escape any regular expression characters.",
+                    ],
+                )
+            ) from err
 
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
             r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
         )
 
+        self.issue_selector = regexp(
+            str.join(
+                "",
+                [
+                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
+                    r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
+                ],
+            ),
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+
     @staticmethod
     def get_default_options() -> EmojiParserOptions:
         return EmojiParserOptions()
+
+    def commit_body_components_separator(
+        self, accumulator: dict[str, list[str]], text: str
+    ) -> dict[str, list[str]]:
+        if self.options.parse_linked_issues and (
+            match := self.issue_selector.search(text)
+        ):
+            predicate = regexp(r",? and | *[,;/& ] *").sub(
+                ",", match.group("issue_predicate") or ""
+            )
+            # Almost all issue trackers use a number to reference an issue so
+            # we use a simple regexp to validate the existence of a number which helps filter out
+            # any non-issue references that don't fit our expected format
+            has_number = regexp(r"\d+")
+            new_issue_refs: set[str] = set(
+                filter(
+                    lambda issue_str, validator=has_number: validator.search(issue_str),  # type: ignore[arg-type]
+                    predicate.split(","),
+                )
+            )
+            accumulator["linked_issues"] = sorted(
+                set(accumulator["linked_issues"]).union(new_issue_refs)
+            )
+            # TODO: breaking change v10, removes resolution footers from descriptions
+            # return accumulator
+
+        # Prevent appending duplicate descriptions
+        if text not in accumulator["descriptions"]:
+            accumulator["descriptions"].append(text)
+
+        return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult:
         subject = message.split("\n", maxsplit=1)[0]
@@ -129,7 +220,17 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         )
 
         # All emojis will remain part of the returned description
-        descriptions = tuple(parse_paragraphs(message))
+        body_components: dict[str, list[str]] = reduce(
+            self.commit_body_components_separator,
+            parse_paragraphs(message),
+            {
+                "descriptions": [],
+                "linked_issues": [],
+            },
+        )
+
+        descriptions = tuple(body_components["descriptions"])
+
         return ParsedMessageResult(
             bump=level_bump,
             type=primary_emoji,
@@ -143,6 +244,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             breaking_descriptions=(
                 descriptions[1:] if level_bump is LevelBump.MAJOR else ()
             ),
+            linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
 
