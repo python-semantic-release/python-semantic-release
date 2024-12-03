@@ -21,7 +21,11 @@ from semantic_release.commit_parser.token import (
     ParseError,
     ParseResult,
 )
-from semantic_release.commit_parser.util import breaking_re, sort_numerically, parse_paragraphs
+from semantic_release.commit_parser.util import (
+    breaking_re,
+    parse_paragraphs,
+    sort_numerically,
+)
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
 
