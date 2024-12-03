@@ -216,9 +216,9 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "fix: correct some text",
-                                    "emoji": ":bug: correct some text",
-                                    "scipy": "MAINT: correct some text",
+                                    "angular": "fix: correct some text\n\nResolves: #123",
+                                    "emoji": ":bug: correct some text\n\nResolves: #123",
+                                    "scipy": "MAINT: correct some text\n\nResolves: #123",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
