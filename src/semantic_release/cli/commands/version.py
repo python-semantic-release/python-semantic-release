@@ -73,17 +73,17 @@ def is_forced_prerelease(
     )
 
 
-def last_released(repo_dir: Path, tag_format: str) -> tuple[Tag, Version] | None:
+def last_released(repo_dir: Path, tag_format: str, version_compat: str) -> tuple[Tag, Version] | None:
     with Repo(str(repo_dir)) as git_repo:
         ts_and_vs = tags_and_versions(
-            git_repo.tags, VersionTranslator(tag_format=tag_format)
+            git_repo.tags, VersionTranslator(tag_format=tag_format, version_compat=version_compat)
         )
 
     return ts_and_vs[0] if ts_and_vs else None
 
 
 def version_from_forced_level(
-    repo_dir: Path, forced_level_bump: LevelBump, translator: VersionTranslator
+    repo_dir: Path, forced_level_bump: LevelBump, translator: VersionTranslator,
 ) -> Version:
     with Repo(str(repo_dir)) as git_repo:
         ts_and_vs = tags_and_versions(git_repo.tags, translator)
@@ -312,6 +312,12 @@ def build_distributions(
     help="Force the next version to use this prerelease token, if it is a prerelease",
 )
 @click.option(
+    "--version-compat",
+    "version_compat",
+    default=None,
+    help="Choose a versioning scheme to use",
+)
+@click.option(
     "--major",
     "force_level",
     flag_value="major",
@@ -387,6 +393,7 @@ def version(  # noqa: C901
     print_last_released_tag: bool,
     as_prerelease: bool,
     prerelease_token: str | None,
+    version_compat: str,
     commit_changes: bool,
     create_tag: bool,
     update_changelog: bool,
@@ -424,7 +431,7 @@ def version(  # noqa: C901
     if print_last_released or print_last_released_tag:
         # TODO: get tag format a better way
         if not (
-            last_release := last_released(config.repo_dir, tag_format=config.tag_format)
+            last_release := last_released(config.repo_dir, tag_format=config.tag_format, version_compat=version_compat)
         ):
             log.warning("No release tags found.")
             return
@@ -457,6 +464,10 @@ def version(  # noqa: C901
     if prerelease_token:
         log.info("Forcing use of %s as the prerelease token", prerelease_token)
         translator.prerelease_token = prerelease_token
+
+    if version_compat:
+        translator.version_compat = version_compat
+    log.info("Using %s as the version compatibility scheme", translator.version_compat)
 
     # Only push if we're committing changes
     if push_changes and not commit_changes and not create_tag:

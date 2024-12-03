@@ -165,7 +165,7 @@ commands =
 [testenv:ruff]
 deps = .[dev]
 commands =
-    ruff check . --statistics --output-format=text
+    ruff check . --statistics --output-format=full
 """
 
 [tool.mypy]

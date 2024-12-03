@@ -375,6 +375,7 @@ def next_version(
         0,
         prerelease_token=translator.prerelease_token,
         tag_format=translator.tag_format,
+        version_compat=translator.version_compat,
     )
 
     # We only include pre-releases here if doing a prerelease.
@@ -447,6 +448,7 @@ def next_version(
                 0,
                 prerelease_token=translator.prerelease_token,
                 tag_format=translator.tag_format,
+                version_compat=translator.version_compat,
             )
         ),
         level_bump=level_bump,
