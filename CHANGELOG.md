@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v9.15.1 (2024-12-03)
+
+### Bug Fixes
+
+- **changelog-md**: Fix commit sort of breaking descriptions section
+  ([`75b342e`](https://github.com/python-semantic-release/python-semantic-release/commit/75b342e6259412cb82d8b7663e5ee4536d14f407))
+
+- **parser-angular**: Ensure issues are sorted by numeric value rather than text sorted
+  ([`3858add`](https://github.com/python-semantic-release/python-semantic-release/commit/3858add582fe758dc2ae967d0cd051d43418ecd0))
+
+- **parser-emoji**: Ensure issues are sorted by numeric value rather than text sorted
+  ([`7b8d2d9`](https://github.com/python-semantic-release/python-semantic-release/commit/7b8d2d92e135ab46d1be477073ccccc8c576f121))
+
+
 ## v9.15.0 (2024-12-02)
 
 ### Bug Fixes
