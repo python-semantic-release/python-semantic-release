@@ -267,7 +267,12 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 (
                     f"{footer_prefix}: #555, #444, #333",
                     ["#333", "#444", "#555"],
-                ),  # TODO: force ordering?
+                ),
+                # More than 2 issues (force numerical sort)
+                (
+                    f"{footer_prefix}: #555, #3333, #444",
+                    ["#444", "#555", "#3333"],
+                ),
                 # Single issue listed multiple times
                 (f"{footer_prefix}: #555, #555", ["#555"]),
                 # Multiple footers with the same issue
@@ -388,7 +393,12 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 (
                     f"{footer_prefix}: ABC-555, ABC-444, ABC-333",
                     ["ABC-333", "ABC-444", "ABC-555"],
-                ),  # TODO: force ordering?
+                ),
+                # More than 2 issues (force numerical sort)
+                (
+                    f"{footer_prefix}: ABC-555, ABC-3333, ABC-444",
+                    ["ABC-444", "ABC-555", "ABC-3333"],
+                ),
                 # Single issue listed multiple times
                 (f"{footer_prefix}: ABC-555, ABC-555", ["ABC-555"]),
                 # Multiple footers with the same issue
