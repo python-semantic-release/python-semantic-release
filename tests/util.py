@@ -151,9 +151,14 @@ def shortuid(length: int = 8) -> str:
 
 
 def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
-    with open(f"{repo.working_tree_dir}/{filename}", "a+") as f:
-        f.write(text or f"default text {shortuid(12)}")
-        f.write(os.linesep)
+    """Makes a deterministic file change for testing"""
+    tgt_file = Path(repo.working_tree_dir or ".") / filename
+    tgt_file.parent.mkdir(parents=True, exist_ok=True)
+    file_contents = tgt_file.read_text() if tgt_file.exists() else ""
+    line_number = len(file_contents.splitlines())
+
+    file_contents += f"{line_number}  {text or 'default text'}{os.linesep}"
+    tgt_file.write_text(file_contents, encoding="utf-8")
 
     repo.index.add(filename)
 
