@@ -46,7 +46,6 @@ if TYPE_CHECKING:
     )
 
 
-@pytest.mark.skip("Currently failing due to git flow releasing bug")
 @pytest.mark.parametrize(
     "repo_fixture_name",
     [
