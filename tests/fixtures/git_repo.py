@@ -364,6 +364,11 @@ if TYPE_CHECKING:
     class GetGitRepo4DirFn(Protocol):
         def __call__(self, directory: Path | str) -> Repo: ...
 
+    class SplitRepoActionsByReleaseTagsFn(Protocol):
+        def __call__(
+            self, repo_definition: Sequence[RepoActions], tag_format_str: str
+        ) -> dict[str, list[RepoActions]]: ...
+
 
 @pytest.fixture(scope="session")
 def deps_files_4_example_git_project(
@@ -1263,6 +1268,58 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
         return repo_def
 
     return _get_commits
+
+
+@pytest.fixture(scope="session")
+def split_repo_actions_by_release_tags(
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
+) -> SplitRepoActionsByReleaseTagsFn:
+    def _split_repo_actions_by_release_tags(
+        repo_definition: Sequence[RepoActions],
+        tag_format_str: str,
+    ) -> dict[str, list[RepoActions]]:
+        releasetags_2_steps: dict[str, list[RepoActions]] = {
+            "": [],
+        }
+
+        # Create generator for next release tags
+        next_release_tag_gen = (
+            tag_format_str.format(version=version)
+            for version in get_versions_from_repo_build_def(repo_definition)
+        )
+
+        # initialize the first release tag
+        curr_release_tag = next(next_release_tag_gen)
+        releasetags_2_steps[curr_release_tag] = []
+
+        # Loop through all actions and split them by release tags
+        for step in repo_definition:
+            if step["action"] == RepoActionStep.CONFIGURE:
+                releasetags_2_steps[""].append(step)
+                continue
+
+            if step["action"] == RepoActionStep.WRITE_CHANGELOGS:
+                continue
+
+            releasetags_2_steps[curr_release_tag].append(step)
+
+            if step["action"] == RepoActionStep.RELEASE:
+                try:
+                    curr_release_tag = next(next_release_tag_gen)
+                    releasetags_2_steps[curr_release_tag] = []
+                except StopIteration:
+                    curr_release_tag = "Unreleased"
+                    releasetags_2_steps[curr_release_tag] = []
+
+        if (
+            "Unreleased" in releasetags_2_steps
+            and not releasetags_2_steps["Unreleased"]
+        ):
+            del releasetags_2_steps["Unreleased"]
+
+        return releasetags_2_steps
+
+    return _split_repo_actions_by_release_tags
 
 
 @pytest.fixture(scope="session")
