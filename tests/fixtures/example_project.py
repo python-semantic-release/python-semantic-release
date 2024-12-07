@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 import tomlkit
 
+# NOTE: use backport with newer API
+from importlib_resources import files
+
 import semantic_release
 from semantic_release.commit_parser import (
     AngularCommitParser,
@@ -30,13 +33,14 @@ from tests.const import (
     EXAMPLE_SETUP_CFG_CONTENT,
     EXAMPLE_SETUP_PY_CONTENT,
 )
-from tests.util import copy_dir_tree
+from tests.util import copy_dir_tree, temporary_working_directory
 
 if TYPE_CHECKING:
     from typing import Any, Protocol, Sequence
 
     from semantic_release.commit_parser import CommitParser
     from semantic_release.hvcs import HvcsBase
+    from semantic_release.version.version import Version
 
     from tests.conftest import (
         BuildRepoOrCopyCacheFn,
@@ -67,6 +71,9 @@ if TYPE_CHECKING:
     class UseReleaseNotesTemplateFn(Protocol):
         def __call__(self) -> None: ...
 
+    class UpdateVersionPyFileFn(Protocol):
+        def __call__(self, version: Version | str) -> None: ...
+
 
 @pytest.fixture(scope="session")
 def deps_files_4_example_project() -> list[Path]:
@@ -93,12 +100,14 @@ def build_spec_hash_4_example_project(
 @pytest.fixture(scope="session")
 def cached_example_project(
     build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    version_py_file: Path,
     pyproject_toml_file: Path,
     setup_cfg_file: Path,
     setup_py_file: Path,
     changelog_md_file: Path,
     changelog_rst_file: Path,
     build_spec_hash_4_example_project: str,
+    update_version_py_file: UpdateVersionPyFileFn,
 ) -> Path:
     """
     Initializes the example project. DO NOT USE DIRECTLY
@@ -108,12 +117,11 @@ def cached_example_project(
 
     def _build_project(cached_project_path: Path) -> Sequence[RepoActions]:
         # purposefully a relative path
-        example_dir = Path("src", EXAMPLE_PROJECT_NAME)
-        version_py = example_dir / "_version.py"
+        example_dir = version_py_file.parent
         gitignore_contents = dedent(
             f"""
             *.pyc
-            /src/**/{version_py.name}
+            /src/**/{version_py_file.name}
             """
         ).lstrip()
         init_py_contents = dedent(
@@ -128,15 +136,12 @@ def cached_example_project(
                 print("Hello World")
             '''
         ).lstrip()
-        version_py_contents = dedent(
-            f"""
-            __version__ = "{EXAMPLE_PROJECT_VERSION}"
-            """
-        ).lstrip()
+
+        with temporary_working_directory(cached_project_path):
+            update_version_py_file(EXAMPLE_PROJECT_VERSION)
 
         file_2_contents: list[tuple[str | Path, str]] = [
             (example_dir / "__init__.py", init_py_contents),
-            (version_py, version_py_contents),
             (".gitignore", gitignore_contents),
             (pyproject_toml_file, EXAMPLE_PYPROJECT_TOML_CONTENT),
             (setup_cfg_file, EXAMPLE_SETUP_CFG_CONTENT),
@@ -189,6 +194,11 @@ def example_project_with_release_notes_template(
 
 
 @pytest.fixture(scope="session")
+def version_py_file() -> Path:
+    return Path("src", EXAMPLE_PROJECT_NAME, "_version.py")
+
+
+@pytest.fixture(scope="session")
 def pyproject_toml_file() -> Path:
     return Path("pyproject.toml")
 
@@ -231,6 +241,30 @@ def default_md_changelog_insertion_flag() -> str:
 @pytest.fixture(scope="session")
 def default_rst_changelog_insertion_flag() -> str:
     return f"..{os.linesep}    version list"
+
+
+@pytest.fixture(scope="session")
+def default_changelog_md_template() -> Path:
+    """Retrieve the semantic-release default changelog template file"""
+    return Path(
+        str(
+            files(semantic_release.__name__).joinpath(
+                Path("data", "templates", "angular", "md", "CHANGELOG.md.j2")
+            )
+        )
+    ).resolve()
+
+
+@pytest.fixture(scope="session")
+def default_changelog_rst_template() -> Path:
+    """Retrieve the semantic-release default changelog template file"""
+    return Path(
+        str(
+            files(semantic_release.__name__).joinpath(
+                Path("data", "templates", "angular", "rst", "CHANGELOG.rst.j2")
+            )
+        )
+    ).resolve()
 
 
 @pytest.fixture(scope="session")
@@ -344,6 +378,22 @@ def example_project_template_dir(
     changelog_template_dir: Path,
 ) -> Path:
     return example_project_dir / changelog_template_dir
+
+
+@pytest.fixture(scope="session")
+def update_version_py_file(version_py_file: Path) -> UpdateVersionPyFileFn:
+    def _update_version_py_file(version: Version | str) -> None:
+        cwd_version_py = version_py_file.resolve()
+        cwd_version_py.parent.mkdir(parents=True, exist_ok=True)
+        cwd_version_py.write_text(
+            dedent(
+                f"""\
+                __version__ = "{version}"
+                """
+            )
+        )
+
+    return _update_version_py_file
 
 
 @pytest.fixture(scope="session")

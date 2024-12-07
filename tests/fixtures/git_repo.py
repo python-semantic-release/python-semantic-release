@@ -29,12 +29,13 @@ from tests.const import (
 from tests.util import (
     add_text_to_file,
     copy_dir_tree,
-    shortuid,
     temporary_working_directory,
 )
 
 if TYPE_CHECKING:
     from typing import Generator, Literal, Protocol, Sequence, TypedDict, Union
+
+    from tests.fixtures.example_project import UpdateVersionPyFileFn
 
     try:
         # Python 3.8 and 3.9 compatibility
@@ -360,6 +361,9 @@ if TYPE_CHECKING:
         RepoActionGitMerge,
     ]
 
+    class GetGitRepo4DirFn(Protocol):
+        def __call__(self, directory: Path | str) -> Repo: ...
+
 
 @pytest.fixture(scope="session")
 def deps_files_4_example_git_project(
@@ -450,7 +454,7 @@ def default_tag_format_str() -> str:
 
 @pytest.fixture(scope="session")
 def file_in_repo():
-    return f"file-{shortuid()}.txt"
+    return "file.txt"
 
 
 @pytest.fixture(scope="session")
@@ -758,6 +762,7 @@ def create_squash_merge_commit(
 @pytest.fixture(scope="session")
 def create_release_tagged_commit(
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    update_version_py_file: UpdateVersionPyFileFn,
     default_tag_format_str: str,
     stable_now_date: GetStableDateNowFn,
 ) -> CreateReleaseFn:
@@ -774,6 +779,9 @@ def create_release_tagged_commit(
 
         if curr_dt == commit_dt:
             sleep(1)  # ensure commit timestamps are unique
+
+        # stamp version into version file
+        update_version_py_file(version)
 
         # stamp version into pyproject.toml
         update_pyproject_toml("tool.poetry.version", version)
@@ -1637,22 +1645,31 @@ def simulate_default_changelog_creation(  # noqa: C901
 
 
 @pytest.fixture
-def example_project_git_repo(
-    example_project_dir: ExProjectDir,
-) -> Generator[ExProjectGitRepoFn, None, None]:
+def git_repo_for_directory() -> Generator[GetGitRepo4DirFn, None, None]:
     repos: list[Repo] = []
 
     # Must be a callable function to ensure files exist before repo is opened
-    def _example_project_git_repo() -> Repo:
-        if not example_project_dir.exists():
-            raise RuntimeError("Unable to find example git project!")
+    def _git_repo_4_dir(directory: Path | str) -> Repo:
+        if not Path(directory).exists():
+            raise RuntimeError("Unable to find git project!")
 
-        repo = Repo(example_project_dir)
+        repo = Repo(directory)
         repos.append(repo)
         return repo
 
     try:
-        yield _example_project_git_repo
+        yield _git_repo_4_dir
     finally:
         for repo in repos:
             repo.close()
+
+
+@pytest.fixture
+def example_project_git_repo(
+    example_project_dir: ExProjectDir,
+    git_repo_for_directory: GetGitRepo4DirFn,
+) -> ExProjectGitRepoFn:
+    def _example_project_git_repo() -> Repo:
+        return git_repo_for_directory(example_project_dir)
+
+    return _example_project_git_repo
