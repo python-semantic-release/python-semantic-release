@@ -34,7 +34,15 @@ def main() -> None:
                 ),
                 file=sys.stderr,
             )
+
         print(f"::ERROR:: {err}", file=sys.stderr)
+
+        if not globals.debug:
+            print(
+                "Run semantic-release in very verbose mode (-vv) to see the full traceback.",
+                file=sys.stderr,
+            )
+
         sys.exit(1)
 
 
