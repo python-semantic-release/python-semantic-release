@@ -44,11 +44,17 @@ class VersionTranslator:
         self,
         tag_format: str = "v{version}",
         prerelease_token: str = "rc",  # noqa: S107
+        rolling_tags: bool = False,
     ) -> None:
         check_tag_format(tag_format)
         self.tag_format = tag_format
         self.prerelease_token = prerelease_token
+        self.rolling_tags = rolling_tags
         self.from_tag_re = self._invert_tag_format_to_re(self.tag_format)
+        self.rolling_tag_re = re.compile(
+            tag_format.replace(r"{version}", r"[0-9]+(\.(0|[1-9][0-9]*))?$"),
+            flags=re.VERBOSE,
+        )
 
     def from_string(self, version_str: str) -> Version:
         """
@@ -71,6 +77,10 @@ class VersionTranslator:
         tag_match = self.from_tag_re.match(tag)
         if not tag_match:
             return None
+        if self.rolling_tags:
+            rolling_tag_match = self.rolling_tag_re.match(tag)
+            if rolling_tag_match:
+                return None
         raw_version_str = tag_match.group("version")
         return self.from_string(raw_version_str)
 
