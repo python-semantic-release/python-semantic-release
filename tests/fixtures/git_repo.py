@@ -936,15 +936,19 @@ def build_configured_base_repo(  # noqa: C901
             update_pyproject_toml(
                 # NOTE: must work in both bash and Powershell
                 "tool.semantic_release.build_command",
+                # NOTE: we are trying to ensure a few non-file-path characters are removed, but this is not
+                #       the equivalent of a cononcial version translator, so it may not work in all cases
                 dedent(
                     f"""\
                     mkdir -p "{build_result_file.parent}"
-                    touch "{build_result_file}"
+                    WHEEL_FILE="$(printf '%s' "{build_result_file}" | sed 's/+/./g')"
+                    touch "$WHEEL_FILE"
                     """
                     if sys.platform != "win32"
                     else f"""\
                     mkdir {build_result_file.parent} > $null
-                    New-Item -ItemType file -Path "{build_result_file}" -Force | Select-Object OriginalPath
+                    $WHEEL_FILE = "{build_result_file}".Replace('+', '.')
+                    New-Item -ItemType file -Path "$WHEEL_FILE" -Force | Select-Object OriginalPath
                     """
                 ),
             )
