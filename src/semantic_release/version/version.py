@@ -206,6 +206,12 @@ class Version:
     def as_tag(self) -> str:
         return self.tag_format.format(version=str(self))
 
+    def as_major_tag(self) -> str:
+        return self.tag_format.format(version=f"{self.major}")
+
+    def as_minor_tag(self) -> str:
+        return self.tag_format.format(version=f"{self.major}.{self.minor}")
+
     def as_semver_tag(self) -> str:
         return f"v{self!s}"
 
