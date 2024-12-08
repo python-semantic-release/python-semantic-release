@@ -363,6 +363,7 @@ class RawConfig(BaseModel):
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
     tag_format: str = "v{version}"
+    rolling_tags: bool = False
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
     version_variables: Optional[Tuple[str, ...]] = None
@@ -779,7 +780,9 @@ class RuntimeContext:
 
         # version_translator
         version_translator = VersionTranslator(
-            tag_format=raw.tag_format, prerelease_token=branch_config.prerelease_token
+            tag_format=raw.tag_format,
+            prerelease_token=branch_config.prerelease_token,
+            rolling_tags=raw.rolling_tags,
         )
 
         build_cmd_env = {}

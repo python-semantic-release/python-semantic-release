@@ -74,10 +74,13 @@ def is_forced_prerelease(
     )
 
 
-def last_released(repo_dir: Path, tag_format: str) -> tuple[Tag, Version] | None:
+def last_released(
+    repo_dir: Path, tag_format: str, rolling_tags: bool = False
+) -> tuple[Tag, Version] | None:
     with Repo(str(repo_dir)) as git_repo:
         ts_and_vs = tags_and_versions(
-            git_repo.tags, VersionTranslator(tag_format=tag_format)
+            git_repo.tags,
+            VersionTranslator(tag_format=tag_format, rolling_tags=rolling_tags),
         )
 
     return ts_and_vs[0] if ts_and_vs else None
@@ -436,7 +439,11 @@ def version(  # noqa: C901
     if print_last_released or print_last_released_tag:
         # TODO: get tag format a better way
         if not (
-            last_release := last_released(config.repo_dir, tag_format=config.tag_format)
+            last_release := last_released(
+                config.repo_dir,
+                tag_format=config.tag_format,
+                rolling_tags=config.rolling_tags,
+            )
         ):
             log.warning("No release tags found.")
             return
@@ -457,6 +464,7 @@ def version(  # noqa: C901
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
+    rolling_tags = config.rolling_tags
     gha_output = VersionGitHubActionsOutput(released=False)
 
     forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
@@ -688,6 +696,24 @@ def version(  # noqa: C901
                 tag=new_version.as_tag(),
                 noop=opts.noop,
             )
+            # Update rolling tags
+            if rolling_tags:
+                for rolling_tag in (
+                    new_version.as_major_tag(),
+                    new_version.as_minor_tag(),
+                ):
+                    project.git_tag(
+                        tag_name=rolling_tag,
+                        message=f"{rolling_tag} is {new_version.as_tag()}",
+                        noop=opts.noop,
+                        force=True,
+                    )
+                    project.git_push_tag(
+                        remote_url=remote_url,
+                        tag=rolling_tag,
+                        noop=opts.noop,
+                        force=True,
+                    )
 
     # Update GitHub Actions output value now that release has occurred
     gha_output.released = True
