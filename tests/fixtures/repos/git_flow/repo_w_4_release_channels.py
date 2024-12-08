@@ -612,7 +612,8 @@ def get_repo_definition_4_git_flow_repo_w_4_release_channels(
         )
 
         # Add a new feature (another developer was working on) and create a release for it
-        new_version = f"1.1.0-rev.1+{FEAT_BRANCH_2_NAME}"
+        # Based on Semver standard, Build metadata is restricted to [A-Za-z0-9-] so we replace the '/' with a '-'
+        new_version = f"""1.1.0-rev.1+{FEAT_BRANCH_2_NAME.replace("/", '-')}"""
         repo_construction_steps.extend(
             [
                 *fast_forward_dev_branch_actions,
