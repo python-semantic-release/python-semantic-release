@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import logging
 from queue import Queue
 from typing import TYPE_CHECKING, Iterable
@@ -11,6 +12,8 @@ from semantic_release.errors import InvalidVersion, MissingMergeBaseError
 from semantic_release.version.version import Version
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing import Sequence
+
     from git.objects.blob import Blob
     from git.objects.commit import Commit
     from git.objects.tag import TagObject
@@ -24,6 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
         ParserOptions,
     )
     from semantic_release.version.translator import VersionTranslator
+
 
 log = logging.getLogger(__name__)
 
@@ -131,6 +135,84 @@ def _bfs_for_latest_version_in_history(
         log.info("no version tags found in this branch's history")
 
     return latest_version
+
+
+def _traverse_graph_4_commits_since_release(
+    head_commit: Commit,
+    latest_release_tag_str: str,
+) -> Sequence[Commit]:
+    """
+    Run a breadth-first search through the given `merge_base`'s parents,
+    looking for the most recent version corresponding to a commit in the
+    `merge_base`'s parents' history. If no commits in the history correspond
+    to a released version, return None
+    """
+
+    # Step 3. Latest full release version within the history of the current branch
+    # Breadth-first search the merge-base and its parent commits for one which matches
+    # the tag of the latest full release tag in history
+    def bfs(start_commit: Commit, stop_nodes: set[Commit]) -> Sequence[Commit]:
+        # Derived from Geeks for Geeks
+        # https://www.geeksforgeeks.org/python-program-for-breadth-first-search-or-bfs-for-a-graph/?ref=lbp
+
+        # Create a queue for BFS
+        q: Queue[Commit] = Queue()
+
+        # Create a set to store visited graph nodes (commit objects in this case)
+        visited: set[Commit] = set()
+
+        # Initialize the result
+        commits: list[Commit] = []
+
+        if start_commit in stop_nodes:
+            log.debug("start commit %s is a stop node", start_commit.hexsha[:7])
+            return commits
+
+        # Add the source node in the queue to start the search
+        q.put(start_commit)
+
+        # Traverse the git history capturing each commit found before it reaches a stop node
+        while not q.empty():
+            if (node := q.get()) in visited:
+                continue
+
+            visited.add(node)
+            commits.append(node)
+
+            # Add all parent commits to the queue if they haven't been visited (read parents in reverse order)
+            # as the left side is generally the merged into branch
+            for parent in node.parents[::-1]:
+                if parent in visited:
+                    log.debug("parent commit %s already visited", node.hexsha[:7])
+                    continue
+
+                if parent in stop_nodes:
+                    log.debug("parent commit %s is a stop node", node.hexsha[:7])
+                    continue
+
+                log.debug("queuing parent commit %s", parent.hexsha[:7])
+                q.put(parent)
+
+        return commits
+
+    # Run a Breadth First Search to find all the commits since the last release
+    commits_since_last_release = bfs(
+        start_commit=head_commit,
+        stop_nodes=set(
+            head_commit.repo.iter_commits(latest_release_tag_str)
+            if latest_release_tag_str
+            else []
+        ),
+    )
+
+    log_msg = (
+        f"Found {len(commits_since_last_release)} commits since the last release!"
+        if len(commits_since_last_release) > 0
+        else "No commits found since the last release!"
+    )
+    log.info(log_msg)
+
+    return commits_since_last_release
 
 
 def _increment_version(
@@ -309,22 +391,19 @@ def next_version(
 
     # Conditional log message to inform what was chosen as the comparison point
     # to find the merge base of the current branch with the latest full release
-    log_msg = (
-        str.join(
-            ", ",
+    log_msg = str.join(
+        ", ",
+        (
             [
                 "No full releases have been made yet",
                 f"the default version to use is {latest_full_release_version}",
-            ],
-        )
-        if latest_full_release_tag is None
-        else str.join(
-            ", ",
-            [
+            ]
+            if latest_full_release_tag is None
+            else [
                 f"The last full release was {latest_full_release_version}",
-                f"tagged as {latest_full_release_tag!r}",
-            ],
-        )
+                f"tagged as {latest_full_release_tag.path}",
+            ]
+        ),
     )
 
     log.info(log_msg)
@@ -366,15 +445,17 @@ def next_version(
         latest_full_version_in_history,
     )
 
-    commits_since_last_full_release = (
-        repo.iter_commits()
-        if latest_full_version_in_history is None
-        else repo.iter_commits(f"{latest_full_version_in_history.as_tag()}...")
+    commits_since_last_full_release = _traverse_graph_4_commits_since_release(
+        head_commit=repo.active_branch.commit,
+        latest_release_tag_str=(
+            latest_full_release_version.as_tag()
+            if latest_full_release_tag is not None
+            else ""
+        ),
     )
 
     # Step 4. Parse each commit since the last release and find any tags that have
     # been added since then.
-    parsed_levels: set[LevelBump] = set()
     latest_version = latest_full_version_in_history or Version(
         0,
         0,
@@ -382,6 +463,24 @@ def next_version(
         prerelease_token=translator.prerelease_token,
         tag_format=translator.tag_format,
     )
+
+    if prerelease:
+        with contextlib.suppress(StopIteration):
+            latest_version = next(
+                filter(
+                    lambda version: all(
+                        [
+                            version.finalize_version() >= latest_full_release_version,
+                            version.prerelease_token == translator.prerelease_token,
+                        ]
+                    ),
+                    [
+                        version
+                        for _, version in all_git_tags_as_versions
+                        if version.is_prerelease
+                    ],
+                )
+            )
 
     # We only include pre-releases here if doing a prerelease.
     # If it's not a prerelease, we need to include commits back
@@ -397,44 +496,14 @@ def next_version(
     # for a particular branch pattern changes w.r.t. prerelease=True/False,
     # the new kind of version will be produced from the commits already
     # included in a prerelease since the last full release on the branch
-    tag_sha_2_version_lookup = {
-        tag.commit.hexsha: (tag, version)
-        for tag, version in all_git_tags_as_versions
-        if (
-            (prerelease and version.prerelease_token == translator.prerelease_token)
-            or not version.is_prerelease
+
+    parsed_levels: set[LevelBump] = {
+        parsed_result.bump  # type: ignore[union-attr] # too complex for type checkers
+        for parsed_result in filter(
+            lambda parsed_result: isinstance(parsed_result, ParsedCommit),
+            map(commit_parser.parse, commits_since_last_full_release),
         )
     }
-
-    # N.B. these should be sorted so long as we iterate the commits in reverse order
-    for commit in commits_since_last_full_release:
-        parse_result = commit_parser.parse(commit)
-        if isinstance(parse_result, ParsedCommit):
-            log.debug(
-                "adding %s to the levels identified in commits_since_last_full_release",
-                parse_result.bump,
-            )
-            parsed_levels.add(parse_result.bump)
-
-        log.debug("checking if commit %s matches any tags", commit.hexsha)
-        t_v = tag_sha_2_version_lookup.get(commit.hexsha, None)
-
-        if t_v is None:
-            # If we haven't found the latest prerelease on the branch,
-            # keep the loop going to look for it
-            log.debug("no tags correspond to commit %s", commit.hexsha)
-            continue
-
-        # Unpack the tuple
-        tag, latest_version = t_v
-        log.debug(
-            "tag %r (%s) matches commit %s. the latest version is %s",
-            tag.name,
-            tag.commit.hexsha,
-            commit.hexsha,
-            latest_version,
-        )
-        break
 
     log.debug(
         "parsed the following distinct levels from the commits since the last release: "
