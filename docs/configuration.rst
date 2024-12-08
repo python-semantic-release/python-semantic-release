@@ -1156,6 +1156,25 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 
 ----
 
+.. _config-rolling_tags:
+
+``rolling_tags``
+""""""""""""""
+
+**Type:** ``bool``
+
+Specify if rolling tags should be handled when creating a new version. If set to
+``true``, a major and a major.minor rolling tag will be created/updated, using the format
+specified in :ref:`tag_format`
+
+For example, with tag format ``v{version}`` and ``rolling_tags`` set to ``true``, when
+creating version ``1.2.3``, the tags ``v1`` and ``v1.2`` will be created/updated and point
+to the same commit as the ``v1.2.3`` tag.
+
+**Default:** ``false``
+
+----
+
 .. _config-tag_format:
 
 ``tag_format``
