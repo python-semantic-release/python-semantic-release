@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
+from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -48,7 +49,9 @@ class GitProject:
         return self._logger
 
     def _get_custom_environment(
-        self, repo: Repo
+        self,
+        repo: Repo,
+        custom_vars: dict[str, str] | None = None,
     ) -> nullcontext[None] | _GeneratorContextManager[None]:
         """
         git.custom_environment is a context manager but
@@ -56,15 +59,26 @@ class GitProject:
         we need to throw it away and re-create it in
         order to use it again
         """
+        author_vars = (
+            {
+                "GIT_AUTHOR_NAME": self._commit_author.name,
+                "GIT_AUTHOR_EMAIL": self._commit_author.email,
+                "GIT_COMMITTER_NAME": self._commit_author.name,
+                "GIT_COMMITTER_EMAIL": self._commit_author.email,
+            }
+            if self._commit_author
+            else {}
+        )
+
+        custom_env_vars = {
+            **author_vars,
+            **(custom_vars or {}),
+        }
+
         return (
             nullcontext()
-            if not self._commit_author
-            else repo.git.custom_environment(
-                GIT_AUTHOR_NAME=self._commit_author.name,
-                GIT_AUTHOR_EMAIL=self._commit_author.email,
-                GIT_COMMITTER_NAME=self._commit_author.name,
-                GIT_COMMITTER_EMAIL=self._commit_author.email,
-            )
+            if not custom_env_vars
+            else repo.git.custom_environment(**custom_env_vars)
         )
 
     def is_dirty(self) -> bool:
@@ -182,19 +196,32 @@ class GitProject:
                     self.logger.exception(str(err))
                     raise GitCommitError("Failed to commit changes") from err
 
-    def git_tag(self, tag_name: str, message: str, noop: bool = False) -> None:
+    def git_tag(
+        self, tag_name: str, message: str, isotimestamp: str, noop: bool = False
+    ) -> None:
+        try:
+            datetime.fromisoformat(isotimestamp)
+        except ValueError as err:
+            raise ValueError("Invalid timestamp format") from err
+
         if noop:
-            command = (
-                f"""\
-                GIT_AUTHOR_NAME={self._commit_author.name} \\
-                GIT_AUTHOR_EMAIL={self._commit_author.email} \\
-                GIT_COMMITTER_NAME={self._commit_author.name} \\
-                GIT_COMMITTER_EMAIL={self._commit_author.email} \\
-                """
-                if self._commit_author
-                else ""
+            command = str.join(
+                " ",
+                [
+                    f"GIT_COMMITTER_DATE={isotimestamp}",
+                    *(
+                        [
+                            f"GIT_AUTHOR_NAME={self._commit_author.name}",
+                            f"GIT_AUTHOR_EMAIL={self._commit_author.email}",
+                            f"GIT_COMMITTER_NAME={self._commit_author.name}",
+                            f"GIT_COMMITTER_EMAIL={self._commit_author.email}",
+                        ]
+                        if self._commit_author
+                        else [""]
+                    ),
+                    f"git tag -a {tag_name} -m '{message}'",
+                ],
             )
-            command += f"git tag -a {tag_name} -m '{message}'"
 
             noop_report(
                 indented(
@@ -206,7 +233,10 @@ class GitProject:
             )
             return
 
-        with Repo(str(self.project_root)) as repo, self._get_custom_environment(repo):
+        with Repo(str(self.project_root)) as repo, self._get_custom_environment(
+            repo,
+            {"GIT_COMMITTER_DATE": isotimestamp},
+        ):
             try:
                 repo.git.tag("-a", tag_name, m=message)
             except GitCommandError as err:

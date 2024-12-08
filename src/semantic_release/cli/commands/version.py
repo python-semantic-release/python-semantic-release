@@ -653,6 +653,7 @@ def version(  # noqa: C901
         project.git_tag(
             tag_name=new_version.as_tag(),
             message=new_version.as_tag(),
+            isotimestamp=commit_date.isoformat(),
             noop=opts.noop,
         )
 
