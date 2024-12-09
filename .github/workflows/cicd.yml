@@ -26,14 +26,14 @@ jobs:
 
       - name: Evaluate | Check common file types for changes
         id: core-changed-files
-        uses: tj-actions/changed-files@v45.0.4
+        uses: tj-actions/changed-files@v45.0.5
         with:
           base_sha: ${{ github.event.push.before }}
           files_yaml_from_source_file: .github/changed-files-spec.yml
 
       - name: Evaluate | Check specific file types for changes
         id: ci-changed-files
-        uses: tj-actions/changed-files@v45.0.4
+        uses: tj-actions/changed-files@v45.0.5
         with:
           base_sha: ${{ github.event.push.before }}
           files_yaml: |
@@ -125,7 +125,7 @@ jobs:
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@v9.15.0
+        uses: python-semantic-release/publish-action@v9.15.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
