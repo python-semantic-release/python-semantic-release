@@ -396,13 +396,20 @@ def next_version(
 
     # N.B. these should be sorted so long as we iterate the commits in reverse order
     for commit in commits_since_last_full_release:
-        parse_result = commit_parser.parse(commit)
-        if isinstance(parse_result, ParsedCommit):
-            log.debug(
-                "adding %s to the levels identified in commits_since_last_full_release",
-                parse_result.bump,
-            )
-            parsed_levels.add(parse_result.bump)
+        # returns a ParseResult or list of ParseResult objects,
+        # it is usually one, but we split a commit if a squashed merge is detected
+        parse_results = commit_parser.parse(commit)
+        if not isinstance(parse_results, (list, tuple)):
+            parse_results = [parse_results]
+
+        # iterate through parsed commits to find the highest level bump
+        for parsed_commit in parse_results:
+            if isinstance(parsed_commit, ParsedCommit):
+                log.debug(
+                    "adding %s to the levels identified in commits_since_last_full_release",
+                    parsed_commit.bump,
+                )
+                parsed_levels.add(parsed_commit.bump)
 
         log.debug("checking if commit %s matches any tags", commit.hexsha)
         t_v = tag_sha_2_version_lookup.get(commit.hexsha, None)
