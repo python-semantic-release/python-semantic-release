@@ -29,12 +29,13 @@ from tests.const import (
 from tests.util import (
     add_text_to_file,
     copy_dir_tree,
-    shortuid,
     temporary_working_directory,
 )
 
 if TYPE_CHECKING:
     from typing import Generator, Literal, Protocol, Sequence, TypedDict, Union
+
+    from tests.fixtures.example_project import UpdateVersionPyFileFn
 
     try:
         # Python 3.8 and 3.9 compatibility
@@ -360,6 +361,14 @@ if TYPE_CHECKING:
         RepoActionGitMerge,
     ]
 
+    class GetGitRepo4DirFn(Protocol):
+        def __call__(self, directory: Path | str) -> Repo: ...
+
+    class SplitRepoActionsByReleaseTagsFn(Protocol):
+        def __call__(
+            self, repo_definition: Sequence[RepoActions], tag_format_str: str
+        ) -> dict[str, list[RepoActions]]: ...
+
 
 @pytest.fixture(scope="session")
 def deps_files_4_example_git_project(
@@ -450,7 +459,7 @@ def default_tag_format_str() -> str:
 
 @pytest.fixture(scope="session")
 def file_in_repo():
-    return f"file-{shortuid()}.txt"
+    return "file.txt"
 
 
 @pytest.fixture(scope="session")
@@ -758,6 +767,7 @@ def create_squash_merge_commit(
 @pytest.fixture(scope="session")
 def create_release_tagged_commit(
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    update_version_py_file: UpdateVersionPyFileFn,
     default_tag_format_str: str,
     stable_now_date: GetStableDateNowFn,
 ) -> CreateReleaseFn:
@@ -774,6 +784,9 @@ def create_release_tagged_commit(
 
         if curr_dt == commit_dt:
             sleep(1)  # ensure commit timestamps are unique
+
+        # stamp version into version file
+        update_version_py_file(version)
 
         # stamp version into pyproject.toml
         update_pyproject_toml("tool.poetry.version", version)
@@ -928,15 +941,19 @@ def build_configured_base_repo(  # noqa: C901
             update_pyproject_toml(
                 # NOTE: must work in both bash and Powershell
                 "tool.semantic_release.build_command",
+                # NOTE: we are trying to ensure a few non-file-path characters are removed, but this is not
+                #       the equivalent of a cononcial version translator, so it may not work in all cases
                 dedent(
                     f"""\
                     mkdir -p "{build_result_file.parent}"
-                    touch "{build_result_file}"
+                    WHEEL_FILE="$(printf '%s' "{build_result_file}" | sed 's/+/./g')"
+                    touch "$WHEEL_FILE"
                     """
                     if sys.platform != "win32"
                     else f"""\
                     mkdir {build_result_file.parent} > $null
-                    New-Item -ItemType file -Path "{build_result_file}" -Force | Select-Object OriginalPath
+                    $WHEEL_FILE = "{build_result_file}".Replace('+', '.')
+                    New-Item -ItemType file -Path "$WHEEL_FILE" -Force | Select-Object OriginalPath
                     """
                 ),
             )
@@ -1251,6 +1268,58 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
         return repo_def
 
     return _get_commits
+
+
+@pytest.fixture(scope="session")
+def split_repo_actions_by_release_tags(
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
+) -> SplitRepoActionsByReleaseTagsFn:
+    def _split_repo_actions_by_release_tags(
+        repo_definition: Sequence[RepoActions],
+        tag_format_str: str,
+    ) -> dict[str, list[RepoActions]]:
+        releasetags_2_steps: dict[str, list[RepoActions]] = {
+            "": [],
+        }
+
+        # Create generator for next release tags
+        next_release_tag_gen = (
+            tag_format_str.format(version=version)
+            for version in get_versions_from_repo_build_def(repo_definition)
+        )
+
+        # initialize the first release tag
+        curr_release_tag = next(next_release_tag_gen)
+        releasetags_2_steps[curr_release_tag] = []
+
+        # Loop through all actions and split them by release tags
+        for step in repo_definition:
+            if step["action"] == RepoActionStep.CONFIGURE:
+                releasetags_2_steps[""].append(step)
+                continue
+
+            if step["action"] == RepoActionStep.WRITE_CHANGELOGS:
+                continue
+
+            releasetags_2_steps[curr_release_tag].append(step)
+
+            if step["action"] == RepoActionStep.RELEASE:
+                try:
+                    curr_release_tag = next(next_release_tag_gen)
+                    releasetags_2_steps[curr_release_tag] = []
+                except StopIteration:
+                    curr_release_tag = "Unreleased"
+                    releasetags_2_steps[curr_release_tag] = []
+
+        if (
+            "Unreleased" in releasetags_2_steps
+            and not releasetags_2_steps["Unreleased"]
+        ):
+            del releasetags_2_steps["Unreleased"]
+
+        return releasetags_2_steps
+
+    return _split_repo_actions_by_release_tags
 
 
 @pytest.fixture(scope="session")
@@ -1637,22 +1706,31 @@ def simulate_default_changelog_creation(  # noqa: C901
 
 
 @pytest.fixture
-def example_project_git_repo(
-    example_project_dir: ExProjectDir,
-) -> Generator[ExProjectGitRepoFn, None, None]:
+def git_repo_for_directory() -> Generator[GetGitRepo4DirFn, None, None]:
     repos: list[Repo] = []
 
     # Must be a callable function to ensure files exist before repo is opened
-    def _example_project_git_repo() -> Repo:
-        if not example_project_dir.exists():
-            raise RuntimeError("Unable to find example git project!")
+    def _git_repo_4_dir(directory: Path | str) -> Repo:
+        if not Path(directory).exists():
+            raise RuntimeError("Unable to find git project!")
 
-        repo = Repo(example_project_dir)
+        repo = Repo(directory)
         repos.append(repo)
         return repo
 
     try:
-        yield _example_project_git_repo
+        yield _git_repo_4_dir
     finally:
         for repo in repos:
             repo.close()
+
+
+@pytest.fixture
+def example_project_git_repo(
+    example_project_dir: ExProjectDir,
+    git_repo_for_directory: GetGitRepo4DirFn,
+) -> ExProjectGitRepoFn:
+    def _example_project_git_repo() -> Repo:
+        return git_repo_for_directory(example_project_dir)
+
+    return _example_project_git_repo
