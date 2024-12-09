@@ -124,9 +124,9 @@ def recursive_render(
             # is used for inserting into a current changelog. When using stream rendering
             # of the same file, it always came back empty
             log.debug("rendering %s to %s", src_file_path, output_file_path)
-            rendered_file = environment.get_template(src_file_path).render()
+            rendered_file = environment.get_template(src_file_path).render().rstrip()
             with open(output_file_path, "w", encoding="utf-8") as output_file:
-                output_file.write(rendered_file)
+                output_file.write(f"{rendered_file}\n")
 
             rendered_paths.append(output_file_path)
         else:
