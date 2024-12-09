@@ -182,7 +182,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                             "prerelease": False,
                         },
                         "tool.semantic_release.allow_zero_version": True,
-                        "tool.semantic_release.major_on_zero": False,
+                        "tool.semantic_release.major_on_zero": True,
                         **(extra_configs or {}),
                     },
                 },
