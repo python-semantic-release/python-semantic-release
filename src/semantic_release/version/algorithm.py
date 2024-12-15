@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import suppress
-from queue import LifoQueue, Queue
+from queue import LifoQueue
 from typing import TYPE_CHECKING, Iterable
 
 from semantic_release.commit_parser import ParsedCommit
@@ -13,10 +13,7 @@ from semantic_release.errors import InternalError, InvalidVersion
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Sequence
 
-    from git.objects.blob import Blob
     from git.objects.commit import Commit
-    from git.objects.tag import TagObject
-    from git.objects.tree import Tree
     from git.refs.tag import Tag
     from git.repo.base import Repo
 
@@ -63,80 +60,6 @@ def tags_and_versions(
     return sorted(ts_and_vs, reverse=True, key=lambda v: v[1])
 
 
-def _bfs_for_latest_version_in_history(
-    merge_base: Commit | TagObject | Blob | Tree,
-    full_release_tags_and_versions: list[tuple[Tag, Version]],
-) -> Version | None:
-    """
-    Run a breadth-first search through the given `merge_base`'s parents,
-    looking for the most recent version corresponding to a commit in the
-    `merge_base`'s parents' history. If no commits in the history correspond
-    to a released version, return None
-    """
-    tag_sha_2_version_lookup = {
-        tag.commit.hexsha: version for tag, version in full_release_tags_and_versions
-    }
-
-    # Step 3. Latest full release version within the history of the current branch
-    # Breadth-first search the merge-base and its parent commits for one which matches
-    # the tag of the latest full release tag in history
-    def bfs(start_commit: Commit | TagObject | Blob | Tree) -> Version | None:
-        # Derived from Geeks for Geeks
-        # https://www.geeksforgeeks.org/python-program-for-breadth-first-search-or-bfs-for-a-graph/?ref=lbp
-
-        # Create a queue for BFS
-        q: Queue[Commit | TagObject | Blob | Tree] = Queue()
-
-        # Create a set to store visited graph nodes (commit objects in this case)
-        visited: set[Commit | TagObject | Blob | Tree] = set()
-
-        # Add the source node in the queue & mark as visited to start the search
-        q.put(start_commit)
-        visited.add(start_commit)
-
-        # Initialize the result to None
-        result = None
-
-        # Traverse the git history until it finds a version tag if one exists
-        while not q.empty():
-            node = q.get()
-            visited.add(node)
-
-            logger.debug("checking if commit %s matches any tags", node.hexsha)
-            version = tag_sha_2_version_lookup.get(node.hexsha, None)
-
-            if version is not None:
-                logger.info(
-                    "found latest version in branch history: %r (%s)",
-                    str(version),
-                    node.hexsha[:7],
-                )
-                result = version
-                break
-
-            logger.debug("commit %s doesn't match any tags", node.hexsha)
-
-            # Add all parent commits to the queue if they haven't been visited
-            for parent in node.parents:
-                if parent in visited:
-                    logger.debug("parent commit %s already visited", node.hexsha)
-                    continue
-
-                logger.debug("queuing parent commit %s", parent.hexsha)
-                q.put(parent)
-
-        return result
-
-    # Run a Breadth First Search to find the latest version in the history
-    latest_version = bfs(merge_base)
-    if latest_version is not None:
-        logger.info("the latest version in this branch's history is %s", latest_version)
-    else:
-        logger.info("no version tags found in this branch's history")
-
-    return latest_version
-
-
 def _traverse_graph_for_commits(
     head_commit: Commit,
     latest_release_tag_str: str = "",
@@ -168,53 +91,6 @@ def _traverse_graph_for_commits(
             for parent in node.parents:
                 logger.debug("queuing parent commit %s", parent.hexsha[:7])
                 stack.put(parent)
-
-        return commits
-
-    # Step 3. Latest full release version within the history of the current branch
-    # Breadth-first search the merge-base and its parent commits for one which matches
-    # the tag of the latest full release tag in history
-    def bfs(start_commit: Commit, stop_nodes: set[Commit]) -> Sequence[Commit]:
-        # Derived from Geeks for Geeks
-        # https://www.geeksforgeeks.org/python-program-for-breadth-first-search-or-bfs-for-a-graph/?ref=lbp
-
-        # Create a queue for BFS
-        q: Queue[Commit] = Queue()
-
-        # Create a set to store visited graph nodes (commit objects in this case)
-        visited: set[Commit] = set()
-
-        # Initialize the result
-        commits: list[Commit] = []
-
-        if start_commit in stop_nodes:
-            logger.debug("start commit %s is a stop node", start_commit.hexsha[:7])
-            return commits
-
-        # Add the source node in the queue to start the search
-        q.put(start_commit)
-
-        # Traverse the git history capturing each commit found before it reaches a stop node
-        while not q.empty():
-            if (node := q.get()) in visited:
-                continue
-
-            visited.add(node)
-            commits.append(node)
-
-            # Add all parent commits to the queue if they haven't been visited (read parents in reverse order)
-            # as the left side is generally the merged into branch
-            for parent in node.parents[::-1]:
-                if parent in visited:
-                    logger.debug("parent commit %s already visited", node.hexsha[:7])
-                    continue
-
-                if parent in stop_nodes:
-                    logger.debug("parent commit %s is a stop node", node.hexsha[:7])
-                    continue
-
-                logger.debug("queuing parent commit %s", parent.hexsha[:7])
-                q.put(parent)
 
         return commits
 
