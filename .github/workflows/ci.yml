@@ -9,6 +9,11 @@ on:
 # default token permissions = none
 permissions: {}
 
+# If a new push is made to the branch, cancel the previous run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
 
   commitlint:
