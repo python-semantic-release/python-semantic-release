@@ -1,32 +1,42 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from unittest import mock
+
 import pytest
 from git import Commit, Repo, TagReference
 
 from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import (
-    _bfs_for_latest_version_in_history,
     _increment_version,
+    _traverse_graph_for_commits,
     tags_and_versions,
 )
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
+from tests.fixtures.repos import repo_w_initial_commit
 
-def test_bfs_for_latest_version_in_history():
+if TYPE_CHECKING:
+    from typing import Sequence
+
+
+@pytest.mark.usefixtures(repo_w_initial_commit.__name__)
+def test_traverse_graph_for_commits():
     # Setup fake git graph
     """
-    * merge commit 6 (start)
+    * merge commit 6 (start) [3636363]
     |\
-    | * commit 5
-    | * commit 4
+    | * commit 5 [3535353]
+    | * commit 4 [3434343]
     |/
-    * commit 3
-    * commit 2
-    * commit 1
-    * v1.0.0
+    * commit 3 [3333333]
+    * commit 2 [3232323]
+    * commit 1 [3131313]
+    * v1.0.0 [3030303]
     """
     repo = Repo()
-    expected_version = Version.parse("1.0.0")
-    v1_commit = Commit(repo, binsha=b"0" * 20)
+    v1_commit = Commit(repo, binsha=b"0" * 20, parents=[])
 
     class TagReferenceOverride(TagReference):
         commit = v1_commit  # mocking the commit property
@@ -61,16 +71,36 @@ def test_bfs_for_latest_version_in_history():
         ],
     )
 
+    commit_1 = trunk.parents[0].parents[0]
+    commit_2 = trunk.parents[0]
+    commit_3 = trunk
+    commit_4 = start_commit.parents[1].parents[0]
+    commit_5 = start_commit.parents[1]
+    commit_6 = start_commit
+
+    expected_commit_order = [
+        commit_6.hexsha,
+        commit_5.hexsha,
+        commit_4.hexsha,
+        commit_3.hexsha,
+        commit_2.hexsha,
+        commit_1.hexsha,
+    ]
+
     # Execute
-    actual = _bfs_for_latest_version_in_history(
-        start_commit,
-        [
-            (v1_tag, expected_version),
-        ],
-    )
+    with mock.patch.object(
+        repo, repo.iter_commits.__name__, return_value=iter([v1_commit])
+    ):
+        actual_commit_order = [
+            commit.hexsha
+            for commit in _traverse_graph_for_commits(
+                head_commit=start_commit,
+                latest_release_tag_str=v1_tag.name,
+            )
+        ]
 
     # Verify
-    assert expected_version == (actual or "")
+    assert expected_commit_order == actual_commit_order
 
 
 @pytest.mark.parametrize(
@@ -114,7 +144,7 @@ def test_bfs_for_latest_version_in_history():
         ),
     ],
 )
-def test_sorted_repo_tags_and_versions(tags, sorted_tags):
+def test_sorted_repo_tags_and_versions(tags: list[str], sorted_tags: list[str]):
     repo = Repo()
     translator = VersionTranslator()
     tagrefs = [repo.tag(tag) for tag in tags]
@@ -178,7 +208,9 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
     ],
 )
 def test_tags_and_versions_ignores_invalid_tags_as_versions(
-    tag_format, invalid_tags, valid_tags
+    tag_format: str,
+    invalid_tags: Sequence[str],
+    valid_tags: Sequence[str],
 ):
     repo = Repo()
     translator = VersionTranslator(tag_format=tag_format)
