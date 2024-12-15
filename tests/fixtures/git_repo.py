@@ -13,6 +13,7 @@ import pytest
 from git import Actor, Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
+from semantic_release.version.version import Version
 
 import tests.conftest
 import tests.const
@@ -85,8 +86,7 @@ if TYPE_CHECKING:
         commits: list[CommitDef]
 
     class BaseAccumulatorVersionReduction(TypedDict):
-        limit_value: str
-        limit_found: bool
+        version_limit: Version
         repo_def: RepoDefinition
 
     class ChangelogTypeHeadingDef(TypedDict):
@@ -305,6 +305,7 @@ if TYPE_CHECKING:
 
     class RepoActionWriteChangelogsDetails(DetailsBase):
         new_version: str
+        max_version: NotRequired[str]
         dest_files: Sequence[RepoActionWriteChangelogsDestFile]
 
     class RepoActionWriteChangelogsDestFile(TypedDict):
@@ -1138,6 +1139,7 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             dest_file=repo_dir.joinpath(changelog_file_def["path"]),
                             output_format=changelog_file_def["format"],
                             mask_initial_release=mask_initial_release,
+                            max_version=w_chlgs_def.get("max_version", None),
                         )
 
                 elif action == RepoActionStep.RELEASE:
@@ -1311,12 +1313,22 @@ def split_repo_actions_by_release_tags(
                     curr_release_tag = "Unreleased"
                     releasetags_2_steps[curr_release_tag] = []
 
+        # Run filter on any non-action steps of Unreleased
+        releasetags_2_steps["Unreleased"] = list(
+            filter(
+                lambda step: step["action"] != RepoActionStep.GIT_CHECKOUT,
+                releasetags_2_steps["Unreleased"],
+            )
+        )
+
+        # Remove Unreleased if there are no steps in an Unreleased section
         if (
             "Unreleased" in releasetags_2_steps
             and not releasetags_2_steps["Unreleased"]
         ):
             del releasetags_2_steps["Unreleased"]
 
+        # Return all actions split up by release tags
         return releasetags_2_steps
 
     return _split_repo_actions_by_release_tags
@@ -1331,13 +1343,11 @@ def simulate_default_changelog_creation(  # noqa: C901
     def reduce_repo_def(
         acc: BaseAccumulatorVersionReduction, ver_2_def: tuple[str, RepoVersionDef]
     ) -> BaseAccumulatorVersionReduction:
-        if acc["limit_found"]:
-            return acc
+        version_str, version_def = ver_2_def
 
-        if ver_2_def[0] == acc["limit_value"]:
-            acc["limit_found"] = True
+        if Version.parse(version_str) <= acc["version_limit"]:
+            acc["repo_def"][version_str] = version_def
 
-        acc["repo_def"][ver_2_def[0]] = ver_2_def[1]
         return acc
 
     def build_version_entry_markdown(
@@ -1673,8 +1683,7 @@ def simulate_default_changelog_creation(  # noqa: C901
                 reduce_repo_def,  # type: ignore[arg-type]
                 repo_definition.items(),
                 {
-                    "limit_value": max_version,
-                    "limit_found": False,
+                    "version_limit": Version.parse(max_version),
                     "repo_def": {},
                 },
             )["repo_def"]
