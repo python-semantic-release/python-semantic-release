@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Iterable
 
 from semantic_release.commit_parser import ParsedCommit
 from semantic_release.const import DEFAULT_VERSION
-from semantic_release.enums import LevelBump
+from semantic_release.enums import LevelBump, SemanticReleaseLogLevels
 from semantic_release.errors import InvalidVersion, MissingMergeBaseError
 from semantic_release.version.version import Version
 
@@ -158,7 +158,13 @@ def _increment_version(
     is in this branch's history.
     """
     local_vars = list(locals().items())
-    log.debug("_increment_version: %s", ", ".join(f"{k} = {v}" for k, v in local_vars))
+    log.log(
+        SemanticReleaseLogLevels.SILLY,
+        "_increment_version: %s",
+        str.join(", ", [f"{k} = {v}" for k, v in local_vars]),
+    )
+
+    # Handle variations where the latest version is 0.x.x
     if latest_version.major == 0:
         if not allow_zero_version:
             # Set up default version to be 1.0.0 if currently 0.x.x which means a commented
