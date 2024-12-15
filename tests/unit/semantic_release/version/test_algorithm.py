@@ -1,32 +1,42 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from unittest import mock
+
 import pytest
 from git import Commit, Repo, TagReference
 
 from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import (
-    _bfs_for_latest_version_in_history,
     _increment_version,
+    _traverse_graph_for_commits,
     tags_and_versions,
 )
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
+from tests.fixtures.repos import repo_w_initial_commit
 
-def test_bfs_for_latest_version_in_history():
+if TYPE_CHECKING:
+    from typing import Sequence
+
+
+@pytest.mark.usefixtures(repo_w_initial_commit.__name__)
+def test_traverse_graph_for_commits():
     # Setup fake git graph
     """
-    * merge commit 6 (start)
+    * merge commit 6 (start) [3636363]
     |\
-    | * commit 5
-    | * commit 4
+    | * commit 5 [3535353]
+    | * commit 4 [3434343]
     |/
-    * commit 3
-    * commit 2
-    * commit 1
-    * v1.0.0
+    * commit 3 [3333333]
+    * commit 2 [3232323]
+    * commit 1 [3131313]
+    * v1.0.0 [3030303]
     """
     repo = Repo()
-    expected_version = Version.parse("1.0.0")
-    v1_commit = Commit(repo, binsha=b"0" * 20)
+    v1_commit = Commit(repo, binsha=b"0" * 20, parents=[])
 
     class TagReferenceOverride(TagReference):
         commit = v1_commit  # mocking the commit property
@@ -61,16 +71,36 @@ def test_bfs_for_latest_version_in_history():
         ],
     )
 
+    commit_1 = trunk.parents[0].parents[0]
+    commit_2 = trunk.parents[0]
+    commit_3 = trunk
+    commit_4 = start_commit.parents[1].parents[0]
+    commit_5 = start_commit.parents[1]
+    commit_6 = start_commit
+
+    expected_commit_order = [
+        commit_6.hexsha,
+        commit_5.hexsha,
+        commit_4.hexsha,
+        commit_3.hexsha,
+        commit_2.hexsha,
+        commit_1.hexsha,
+    ]
+
     # Execute
-    actual = _bfs_for_latest_version_in_history(
-        start_commit,
-        [
-            (v1_tag, expected_version),
-        ],
-    )
+    with mock.patch.object(
+        repo, repo.iter_commits.__name__, return_value=iter([v1_commit])
+    ):
+        actual_commit_order = [
+            commit.hexsha
+            for commit in _traverse_graph_for_commits(
+                head_commit=start_commit,
+                latest_release_tag_str=v1_tag.name,
+            )
+        ]
 
     # Verify
-    assert expected_version == (actual or "")
+    assert expected_commit_order == actual_commit_order
 
 
 @pytest.mark.parametrize(
@@ -114,7 +144,7 @@ def test_bfs_for_latest_version_in_history():
         ),
     ],
 )
-def test_sorted_repo_tags_and_versions(tags, sorted_tags):
+def test_sorted_repo_tags_and_versions(tags: list[str], sorted_tags: list[str]):
     repo = Repo()
     translator = VersionTranslator()
     tagrefs = [repo.tag(tag) for tag in tags]
@@ -178,7 +208,9 @@ def test_sorted_repo_tags_and_versions(tags, sorted_tags):
     ],
 )
 def test_tags_and_versions_ignores_invalid_tags_as_versions(
-    tag_format, invalid_tags, valid_tags
+    tag_format: str,
+    invalid_tags: Sequence[str],
+    valid_tags: Sequence[str],
 ):
     repo = Repo()
     translator = VersionTranslator(tag_format=tag_format)
@@ -188,197 +220,81 @@ def test_tags_and_versions_ignores_invalid_tags_as_versions(
 
 
 @pytest.mark.parametrize(
-    "latest_version, latest_full_version, latest_full_version_in_history, level_bump, "
-    "prerelease, prerelease_token, expected_version",
+    str.join(
+        ", ",
+        [
+            "latest_version",
+            "latest_full_version",
+            "level_bump",
+            "prerelease",
+            "prerelease_token",
+            "expected_version",
+        ],
+    ),
     [
         # NOTE: level_bump != LevelBump.NO_RELEASE, we return early in the
         # algorithm to discount this case
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.PRERELEASE_REVISION,
-            False,
-            "rc",
-            "1.0.0-rc.1",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.PRERELEASE_REVISION,
-            True,
-            "rc",
-            "1.0.0-rc.1",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.PATCH,
-            False,
-            "rc",
-            "1.0.1",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.PATCH,
-            True,
-            "rc",
-            "1.0.1-rc.1",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.MINOR,
-            False,
-            "rc",
-            "1.1.0",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.MINOR,
-            True,
-            "rc",
-            "1.1.0-rc.1",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.MAJOR,
-            False,
-            "rc",
-            "2.0.0",
-        ),
-        (
-            "1.0.0",
-            "1.0.0",
-            "1.0.0",
-            LevelBump.MAJOR,
-            True,
-            "rc",
-            "2.0.0-rc.1",
-        ),
-        (
-            "1.2.4-rc.1",
-            "1.2.0",
-            "1.2.3",
-            LevelBump.PATCH,
-            False,
-            "rc",
-            "1.2.4",
-        ),
-        (
-            "1.2.4-rc.1",
-            "1.2.0",
-            "1.2.3",
-            LevelBump.PATCH,
-            True,
-            "rc",
-            "1.2.4-rc.2",
-        ),
-        (
-            "1.2.4-rc.1",
-            "1.2.0",
-            "1.2.3",
-            LevelBump.MINOR,
-            False,
-            "rc",
-            "1.3.0",
-        ),
-        (
-            "1.2.4-rc.1",
-            "1.2.0",
-            "1.2.3",
-            LevelBump.MINOR,
-            True,
-            "rc",
-            "1.3.0-rc.1",
-        ),
-        (
-            "1.2.4-rc.1",
-            "1.2.0",
-            "1.2.3",
-            LevelBump.MAJOR,
-            False,
-            "rc",
-            "2.0.0",
-        ),
-        (
-            "1.2.4-rc.1",
-            "1.2.0",
-            "1.2.3",
-            LevelBump.MAJOR,
-            True,
-            "rc",
-            "2.0.0-rc.1",
-        ),
-        (
-            "2.0.0-rc.1",
-            "1.22.0",
-            "1.19.3",
-            LevelBump.PATCH,
-            False,
-            "rc",
-            "2.0.0",
-        ),
-        (
-            "2.0.0-rc.1",
-            "1.22.0",
-            "1.19.3",
-            LevelBump.PATCH,
-            True,
-            "rc",
-            "2.0.0-rc.2",
-        ),
-        (
-            "2.0.0-rc.1",
-            "1.22.0",
-            "1.19.3",
-            LevelBump.MINOR,
-            False,
-            "rc",
-            "2.0.0",
-        ),
-        (
-            "2.0.0-rc.1",
-            "1.22.0",
-            "1.19.3",
-            LevelBump.MINOR,
-            True,
-            "rc",
-            "2.0.0-rc.2",
-        ),
-        (
-            "2.0.0-rc.1",
-            "1.22.0",
-            "1.19.3",
-            LevelBump.MAJOR,
-            False,
-            "rc",
-            "2.0.0",
-        ),
-        (
-            "2.0.0-rc.1",
-            "1.22.0",
-            "1.19.3",
-            LevelBump.MAJOR,
-            True,
-            "rc",
-            "2.0.0-rc.2",
-        ),
+        *[
+            (
+                "1.0.0",
+                "1.0.0",
+                bump_level,
+                prerelease,
+                "rc",
+                expected_version,
+            )
+            for bump_level, prerelease, expected_version in [
+                (LevelBump.PRERELEASE_REVISION, False, "1.0.0-rc.1"),
+                (LevelBump.PRERELEASE_REVISION, True, "1.0.0-rc.1"),
+                (LevelBump.PATCH, False, "1.0.1"),
+                (LevelBump.PATCH, True, "1.0.1-rc.1"),
+                (LevelBump.MINOR, False, "1.1.0"),
+                (LevelBump.MINOR, True, "1.1.0-rc.1"),
+                (LevelBump.MAJOR, False, "2.0.0"),
+                (LevelBump.MAJOR, True, "2.0.0-rc.1"),
+            ]
+        ],
+        *[
+            (
+                "1.2.4-rc.1",
+                "1.2.3",
+                bump_level,
+                prerelease,
+                "rc",
+                expected_version,
+            )
+            for bump_level, prerelease, expected_version in [
+                (LevelBump.PATCH, False, "1.2.4"),
+                (LevelBump.PATCH, True, "1.2.4-rc.2"),
+                (LevelBump.MINOR, False, "1.3.0"),
+                (LevelBump.MINOR, True, "1.3.0-rc.1"),
+                (LevelBump.MAJOR, False, "2.0.0"),
+                (LevelBump.MAJOR, True, "2.0.0-rc.1"),
+            ]
+        ],
+        *[
+            (
+                "2.0.0-rc.1",
+                "1.22.0",
+                bump_level,
+                prerelease,
+                "rc",
+                expected_version,
+            )
+            for bump_level, prerelease, expected_version in [
+                (LevelBump.PATCH, False, "2.0.0"),
+                (LevelBump.PATCH, True, "2.0.0-rc.2"),
+                (LevelBump.MINOR, False, "2.0.0"),
+                (LevelBump.MINOR, True, "2.0.0-rc.2"),
+                (LevelBump.MAJOR, False, "2.0.0"),
+                (LevelBump.MAJOR, True, "2.0.0-rc.2"),
+            ]
+        ],
     ],
 )
 def test_increment_version_no_major_on_zero(
     latest_version: str,
     latest_full_version: str,
-    latest_full_version_in_history: str,
     level_bump: LevelBump,
     prerelease: bool,
     prerelease_token: str,
@@ -387,7 +303,6 @@ def test_increment_version_no_major_on_zero(
     actual = _increment_version(
         latest_version=Version.parse(latest_version),
         latest_full_version=Version.parse(latest_full_version),
-        latest_full_version_in_history=Version.parse(latest_full_version_in_history),
         level_bump=level_bump,
         prerelease=prerelease,
         prerelease_token=prerelease_token,
