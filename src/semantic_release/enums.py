@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from enum import IntEnum, unique
 
 
@@ -37,3 +38,32 @@ class LevelBump(IntEnum):
         >>> LevelBump.from_string("minor") == LevelBump.MINOR
         """
         return cls[val.upper().replace("-", "_")]
+
+
+class SemanticReleaseLogLevels(IntEnum):
+    """IntEnum representing the log levels used by semantic-release."""
+
+    FATAL = logging.FATAL
+    CRITICAL = logging.CRITICAL
+    ERROR = logging.ERROR
+    WARNING = logging.WARNING
+    INFO = logging.INFO
+    DEBUG = logging.DEBUG
+    SILLY = 5
+
+    def __str__(self) -> str:
+        """
+        Return the level name rather than 'SemanticReleaseLogLevels.<level>'
+        E.g.
+        >>> str(SemanticReleaseLogLevels.DEBUG)
+        'DEBUG'
+        >>> str(SemanticReleaseLogLevels.CRITICAL)
+        'CRITICAL'
+        """
+        return self.name.upper()
+
+
+logging.addLevelName(
+    SemanticReleaseLogLevels.SILLY,
+    str(SemanticReleaseLogLevels.SILLY),
+)
