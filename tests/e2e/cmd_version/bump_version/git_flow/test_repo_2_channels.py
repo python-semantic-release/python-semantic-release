@@ -49,8 +49,13 @@ if TYPE_CHECKING:
     "repo_fixture_name",
     [
         repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
-        repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
-        repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
+        *[
+            pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
+            for repo_fixture_name in [
+                repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
+                repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
+            ]
+        ],
     ],
 )
 def test_gitflow_repo_rebuild_2_channels(

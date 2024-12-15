@@ -49,8 +49,13 @@ if TYPE_CHECKING:
     "repo_fixture_name",
     [
         repo_w_trunk_only_n_prereleases_angular_commits.__name__,
-        repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
-        repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
+        *[
+            pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
+            for repo_fixture_name in [
+                repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
+                repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
+            ]
+        ],
     ],
 )
 def test_trunk_repo_rebuild_w_prereleases(
