@@ -360,9 +360,12 @@ class RawConfig(BaseModel):
         try:
             # Check for repository & walk up parent directories
             with Repo(str(dir_path), search_parent_directories=True) as git_repo:
-                found_path = Path(
-                    git_repo.working_tree_dir or git_repo.working_dir
-                ).absolute()
+                found_path = (
+                    Path(git_repo.working_tree_dir or git_repo.working_dir)
+                    .expanduser()
+                    .absolute()
+                )
+
         except InvalidGitRepositoryError as err:
             raise InvalidGitRepositoryError("No valid git repository found!") from err
 
@@ -370,7 +373,8 @@ class RawConfig(BaseModel):
             logging.warning(
                 "Found .git/ in higher parent directory rather than provided in configuration."
             )
-        return found_path
+
+        return found_path.resolve()
 
     @field_validator("commit_parser", mode="after")
     @classmethod
