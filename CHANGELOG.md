@@ -1,6 +1,97 @@
 # CHANGELOG
 
 
+## v9.15.2 (2024-12-16)
+
+### Bug Fixes
+
+- **changelog**: Ensures user rendered files are trimmed to end with a single newline
+  ([#1118](https://github.com/python-semantic-release/python-semantic-release/pull/1118),
+  [`6dfbbb0`](https://github.com/python-semantic-release/python-semantic-release/commit/6dfbbb0371aef6b125cbcbf89b80dc343ed97360))
+
+- **cli**: Add error message of how to gather full error output
+  ([#1116](https://github.com/python-semantic-release/python-semantic-release/pull/1116),
+  [`ba85532`](https://github.com/python-semantic-release/python-semantic-release/commit/ba85532ddd6fcf1a2205f7ce0b88ea5be76cb621))
+
+- **cmd-version**: Enable maintenance prereleases
+  ([#864](https://github.com/python-semantic-release/python-semantic-release/pull/864),
+  [`b88108e`](https://github.com/python-semantic-release/python-semantic-release/commit/b88108e189e1894e36ae4fdf8ad8a382b5c8c90a))
+
+* test(fixtures): improve changelog generator to filter by max version
+
+* test(fixtures): add repo fixture of a trunk only repo w/ dual version support
+
+* test(fixtures): add repo fixture of a trunk only repo w/ dual version support & prereleases
+
+* test(cmd-version): add rebuild repo tests for new dual version support repos
+
+* test(version-determination): adjust unit tests of increment_version logic
+
+This clarifies repeated function calls and pytest parameter names included the unclear assert diff.
+  Adds additional tests to check bad states for failures and refactored to match new function
+  signature.
+
+* fix(version-bump): increment based on current commit's history only
+
+Refactor duplicate logging messages and flow to process out odd cases in a fail fast methodology.
+  This removes the reliance on any last full release that is not within the history of the current
+  branch.
+
+Resolves: #861
+
+- **cmd-version**: Fix handling of multiple prerelease token variants & git flow merges
+  ([#1120](https://github.com/python-semantic-release/python-semantic-release/pull/1120),
+  [`8784b9a`](https://github.com/python-semantic-release/python-semantic-release/commit/8784b9ad4bc59384f855b5af8f1b8fb294397595))
+
+* refactor: define a custom logging level of silly
+
+* fix(version): remove some excessive log msgs from debug to silly level
+
+* test(fixtures): refactor builder functions for version file updates
+
+* test(fixtures): adjust build command to handle versions w/ build metadata
+
+* test(fixtures): fix gitflow repo that included an invalid build metadata string
+
+* test(fixtures): fix major_on_zero setting in repos to match expected behavior
+
+* test(cmd-version): add test cases to run an example repo rebuild w/ psr
+
+* test(cmd-version): enable git flow repo rebuild w/ psr test cases
+
+* fix(cmd-version): handle multiple prerelease token variants properly
+
+In the case where there are alpha and beta releases, we must only consider the previous beta release
+  even if alpha releases exist due to merging into beta release only branches which have no changes
+  considerable changes from alphas but must be marked otherwise.
+
+Resolves: #789
+
+* fix(cmd-version): fix version determination algorithm to capture commits across merged branches
+
+* perf(cmd-version): refactor version determination algorithm for accuracy & speed
+
+* test(algorithm): refactor test to match new function signature
+
+* style(algorithm): drop unused functions & imports
+
+* test(algorithm): adapt test case for new DFS commit traversal implementation
+
+- **cmd-version**: Forces tag timestamp to be same time as release commit
+  ([#1117](https://github.com/python-semantic-release/python-semantic-release/pull/1117),
+  [`7898b11`](https://github.com/python-semantic-release/python-semantic-release/commit/7898b1185fc1ad10e96bf3f5e48d9473b45d2b51))
+
+- **config**: Ensure default config loads on network mounted windows environments
+  ([#1124](https://github.com/python-semantic-release/python-semantic-release/pull/1124),
+  [`a64cbc9`](https://github.com/python-semantic-release/python-semantic-release/commit/a64cbc96c110e32f1ec5d1a7b61e950472491b87))
+
+Resolves: #1123
+
+* test(cmd-generate-config): added noop version execution to validate config at runtime
+
+ref: #1123
+
+
 ## v9.15.1 (2024-12-03)
 
 ### Bug Fixes
