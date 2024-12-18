@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from re import compile as regexp
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 import pytest
 
@@ -39,8 +39,10 @@ def test_valid_scipy_parsed_chore_commits(
         expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
+        assert isinstance(parsed_results, Iterable)
 
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.NO_RELEASE is result.bump
         assert expected_type == result.type
@@ -68,8 +70,10 @@ def test_valid_scipy_parsed_patch_commits(
         expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
+        assert isinstance(parsed_results, Iterable)
 
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.PATCH is result.bump
         assert expected_type == result.type
@@ -97,8 +101,10 @@ def test_valid_scipy_parsed_minor_commits(
         expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
+        assert isinstance(parsed_results, Iterable)
 
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.MINOR is result.bump
         assert expected_type == result.type
@@ -133,8 +139,12 @@ def test_valid_scipy_parsed_major_commits(
         ]
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
 
+        assert isinstance(parsed_results, Iterable)
+        assert len(parsed_results) == 1
+
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.MAJOR is result.bump
         assert expected_type == result.type
@@ -180,7 +190,12 @@ def test_parser_return_linked_merge_request_from_commit_message(
     merge_request_number: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_scipy_parser.parse(make_commit_obj(message))
+    parsed_results = default_scipy_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert merge_request_number == result.linked_merge_request
     assert subject == result.descriptions[0]
@@ -465,6 +480,11 @@ def test_parser_return_linked_issues_from_commit_message(
     linked_issues: Sequence[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_scipy_parser.parse(make_commit_obj(message))
+    parsed_results = default_scipy_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert tuple(linked_issues) == result.linked_issues
