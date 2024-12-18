@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 import pytest
 
@@ -78,8 +78,10 @@ def test_default_emoji_parser(
     make_commit_obj: MakeCommitObjFn,
 ):
     commit = make_commit_obj(commit_message)
-    result = default_emoji_parser.parse(commit)
+    parsed_results = default_emoji_parser.parse(commit)
+    assert isinstance(parsed_results, Iterable)
 
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert bump is result.bump
     assert type_ == result.type
@@ -124,7 +126,10 @@ def test_parser_return_linked_merge_request_from_commit_message(
     merge_request_number: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_emoji_parser.parse(make_commit_obj(message))
+    parsed_results = default_emoji_parser.parse(make_commit_obj(message))
+    assert isinstance(parsed_results, Iterable)
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert merge_request_number == result.linked_merge_request
     assert subject == result.descriptions[0]
@@ -413,8 +418,11 @@ def test_parser_return_linked_issues_from_commit_message(
     default_emoji_parser.options.parse_linked_issues = True
 
     # Action
-    result = default_emoji_parser.parse(make_commit_obj(message))
+    parsed_results = default_emoji_parser.parse(make_commit_obj(message))
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
 
     # Evaluate (expected -> actual)
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert tuple(linked_issues) == result.linked_issues
