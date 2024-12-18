@@ -891,4 +891,6 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
     assert expected_changelog_content == actual_content
-    assert expected_bump_message in actual_content
+
+    for msg_part in expected_bump_message.split("\n\n"):
+        assert msg_part.capitalize() in actual_content
