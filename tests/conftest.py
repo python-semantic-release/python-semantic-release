@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Protocol, Sequence, TypedDict
 
     from filelock import AcquireReturnProxy
+    from git import Actor
 
     from tests.fixtures.git_repo import RepoActions
 
@@ -382,9 +383,20 @@ def teardown_cached_dir() -> Generator[TeardownCachedDirFn, None, None]:
 
 
 @pytest.fixture(scope="session")
-def make_commit_obj() -> MakeCommitObjFn:
+def make_commit_obj(
+    commit_author: Actor, stable_now_date: GetStableDateNowFn
+) -> MakeCommitObjFn:
     def _make_commit(message: str) -> Commit:
-        return Commit(repo=Repo(), binsha=Commit.NULL_BIN_SHA, message=message)
+        commit_timestamp = round(stable_now_date().timestamp())
+        return Commit(
+            repo=Repo(),
+            binsha=Commit.NULL_BIN_SHA,
+            message=message,
+            author=commit_author,
+            authored_date=commit_timestamp,
+            committer=commit_author,
+            committed_date=commit_timestamp,
+        )
 
     return _make_commit
 

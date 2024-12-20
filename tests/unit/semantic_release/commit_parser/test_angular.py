@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from textwrap import dedent
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 import pytest
 
@@ -17,16 +18,81 @@ if TYPE_CHECKING:
     from tests.conftest import MakeCommitObjFn
 
 
+@pytest.mark.parametrize(
+    "commit_message", ["", "feat(parser\n): Add new parser pattern"]
+)
 def test_parser_raises_unknown_message_style(
-    default_angular_parser: AngularCommitParser, make_commit_obj: MakeCommitObjFn
+    default_angular_parser: AngularCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+    commit_message: str,
 ):
-    assert isinstance(default_angular_parser.parse(make_commit_obj("")), ParseError)
-    assert isinstance(
-        default_angular_parser.parse(
-            make_commit_obj("feat(parser\n): Add new parser pattern")
+    parsed_results = default_angular_parser.parse(make_commit_obj(commit_message))
+    assert isinstance(parsed_results, Iterable)
+    for result in parsed_results:
+        assert isinstance(result, ParseError)
+
+
+@pytest.mark.parametrize(
+    "commit_message, expected_mr_number",
+    [
+        (
+            # Single commit squashed via BitBucket PR resolution
+            dedent(
+                """\
+                Merged in feat/my-awesome-stuff  (pull request #10)
+
+                feat: implemented searching gizmos by keyword
+
+                This is a long description of the changes that were made in this commit.
+                """
+            ),
+            "#10",
         ),
-        ParseError,
+        (
+            # Multiple commits squashed via BitBucket PR resolution
+            dedent(
+                """\
+                Merged in feat/my-awesome-stuff  (pull request #10)
+
+                feat: implemented searching gizmos by keyword
+
+                This is a long description of the changes that were made in this commit.
+
+                feat(parser): Add new parser pattern
+                """
+            ),
+            "#10",
+        ),
+    ],
+)
+def test_parser_squashed_commit_bitbucket_squash_style(
+    default_angular_parser: AngularCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+    commit_message: str,
+    expected_mr_number: str,
+):
+    # Setup: Enable squash commit parsing
+    parser = AngularCommitParser(
+        options=AngularParserOptions(
+            **{
+                **default_angular_parser.options.__dict__,
+                "parse_squash_commits": True,
+            }
+        )
     )
+
+    # Build the commit object and parse it
+    the_commit = make_commit_obj(commit_message)
+    parsed_results = parser.parse(the_commit)
+
+    # Validate the results
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) > 1
+    assert isinstance(parsed_results[0], ParseError)
+
+    for parsed_commit in parsed_results[1:]:
+        assert isinstance(parsed_commit, ParsedCommit)
+        assert expected_mr_number == parsed_commit.linked_merge_request
 
 
 @pytest.mark.parametrize(
@@ -46,8 +112,8 @@ def test_parser_raises_unknown_message_style(
         ("feat(parser): Add emoji parser", LevelBump.MINOR),
         ("fix(parser): Fix regex in angular parser", LevelBump.PATCH),
         ("test(parser): Add a test for angular parser", LevelBump.NO_RELEASE),
-        ("feat(parser)!: Edit dat parsing stuff", LevelBump.MAJOR),
-        ("fix!: Edit dat parsing stuff again", LevelBump.MAJOR),
+        ("feat(parser)!: Edit data parsing stuff", LevelBump.MAJOR),
+        ("fix!: Edit data parsing stuff again", LevelBump.MAJOR),
         ("fix: superfix", LevelBump.PATCH),
     ],
 )
@@ -57,7 +123,12 @@ def test_parser_returns_correct_bump_level(
     bump: LevelBump,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit_obj(commit_message))
+    parsed_results = default_angular_parser.parse(make_commit_obj(commit_message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert result.bump is bump
 
@@ -80,7 +151,12 @@ def test_parser_return_type_from_commit_message(
     type_: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert result.type == type_
 
@@ -105,7 +181,12 @@ def test_parser_return_scope_from_commit_message(
     scope: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert result.scope == scope
 
@@ -139,7 +220,12 @@ def test_parser_return_subject_from_commit_message(
     descriptions: list[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert result.descriptions == descriptions
 
@@ -181,7 +267,12 @@ def test_parser_return_linked_merge_request_from_commit_message(
     merge_request_number: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert merge_request_number == result.linked_merge_request
     assert subject == result.descriptions[0]
@@ -466,7 +557,12 @@ def test_parser_return_linked_issues_from_commit_message(
     linked_issues: Sequence[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert tuple(linked_issues) == result.linked_issues
 
@@ -476,53 +572,86 @@ def test_parser_return_linked_issues_from_commit_message(
 ##############################
 def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
     options = AngularParserOptions(default_bump_level=LevelBump.MINOR)
-    parser = AngularCommitParser(options)
-    result = parser.parse(
+    parsed_results = AngularCommitParser(options).parse(
         make_commit_obj("test(parser): Add a test for angular parser")
     )
+
+    assert isinstance(parsed_results, Iterable)
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert result.bump is LevelBump.MINOR
 
 
-def test_parser_custom_allowed_types(make_commit_obj: MakeCommitObjFn):
-    options = AngularParserOptions(
-        allowed_tags=(
-            "custom",
-            "build",
-            "chore",
-            "ci",
-            "docs",
-            "fix",
-            "perf",
-            "style",
-            "refactor",
-            "test",
+def test_parser_custom_allowed_types(
+    default_angular_parser: AngularCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+):
+    new_tag = "custom"
+    custom_allowed_tags = [*default_angular_parser.options.allowed_tags, new_tag]
+    parser = AngularCommitParser(
+        options=AngularParserOptions(
+            allowed_tags=tuple(custom_allowed_tags),
         )
     )
-    parser = AngularCommitParser(options)
 
-    res1 = parser.parse(make_commit_obj("custom: ..."))
-    assert isinstance(res1, ParsedCommit)
-    assert res1.bump is LevelBump.NO_RELEASE
+    for commit_type, commit_msg in [
+        (new_tag, f"{new_tag}: ..."),  # no scope
+        (new_tag, f"{new_tag}(parser): ..."),  # with scope
+        ("chores", "chore(parser): ..."),  # existing, non-release tag
+    ]:
+        parsed_results = parser.parse(make_commit_obj(commit_msg))
+        assert isinstance(parsed_results, Iterable)
 
-    res2 = parser.parse(make_commit_obj("custom(parser): ..."))
-    assert isinstance(res2, ParsedCommit)
-    assert res2.type == "custom"
+        result = next(iter(parsed_results))
+        assert isinstance(result, ParsedCommit)
+        assert result.type == commit_type
+        assert result.bump is LevelBump.NO_RELEASE
 
-    assert isinstance(parser.parse(make_commit_obj("feat(parser): ...")), ParseError)
+
+def test_parser_custom_allowed_types_ignores_non_types(
+    default_angular_parser: AngularCommitParser, make_commit_obj: MakeCommitObjFn
+):
+    banned_tag = "feat"
+    custom_allowed_tags = [*default_angular_parser.options.allowed_tags]
+    custom_allowed_tags.remove(banned_tag)
+
+    parser = AngularCommitParser(
+        options=AngularParserOptions(
+            allowed_tags=tuple(custom_allowed_tags),
+        )
+    )
+
+    parsed_results = parser.parse(make_commit_obj(f"{banned_tag}(parser): ..."))
+    assert isinstance(parsed_results, Iterable)
+
+    result = next(iter(parsed_results))
+    assert isinstance(result, ParseError)
 
 
 def test_parser_custom_minor_tags(make_commit_obj: MakeCommitObjFn):
-    options = AngularParserOptions(minor_tags=("docs",))
-    parser = AngularCommitParser(options)
-    res = parser.parse(make_commit_obj("docs: write some docs"))
-    assert isinstance(res, ParsedCommit)
-    assert res.bump is LevelBump.MINOR
+    custom_minor_tag = "docs"
+    parser = AngularCommitParser(
+        options=AngularParserOptions(minor_tags=(custom_minor_tag,))
+    )
+
+    parsed_results = parser.parse(make_commit_obj(f"{custom_minor_tag}: ..."))
+    assert isinstance(parsed_results, Iterable)
+
+    result = next(iter(parsed_results))
+    assert isinstance(result, ParsedCommit)
+    assert result.bump is LevelBump.MINOR
 
 
 def test_parser_custom_patch_tags(make_commit_obj: MakeCommitObjFn):
-    options = AngularParserOptions(patch_tags=("test",))
-    parser = AngularCommitParser(options)
-    res = parser.parse(make_commit_obj("test(this): added a test"))
-    assert isinstance(res, ParsedCommit)
-    assert res.bump is LevelBump.PATCH
+    custom_patch_tag = "test"
+    parser = AngularCommitParser(
+        options=AngularParserOptions(patch_tags=(custom_patch_tag,))
+    )
+
+    parsed_results = parser.parse(make_commit_obj(f"{custom_patch_tag}: ..."))
+    assert isinstance(parsed_results, Iterable)
+
+    result = next(iter(parsed_results))
+    assert isinstance(result, ParsedCommit)
+    assert result.bump is LevelBump.PATCH

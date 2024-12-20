@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import suppress
+from functools import reduce
 from queue import LifoQueue
 from typing import TYPE_CHECKING, Iterable
 
@@ -346,11 +347,25 @@ def next_version(
     )
 
     # Step 5. Parse the commits to determine the bump level that should be applied
-    parsed_levels: set[LevelBump] = {
+    parsed_levels: set[LevelBump] = {  # type: ignore[var-annotated]  # too complex for type checkers
         parsed_result.bump  # type: ignore[union-attr] # too complex for type checkers
         for parsed_result in filter(
-            lambda parsed_result: isinstance(parsed_result, ParsedCommit),
-            map(commit_parser.parse, commits_since_last_release),
+            # Filter out any non-ParsedCommit results (i.e. ParseErrors)
+            lambda parsed_result: isinstance(parsed_result, ParsedCommit),  # type: ignore[arg-type]
+            reduce(
+                # Accumulate all parsed results into a single list
+                lambda accumulated_results, parsed_results: [
+                    *accumulated_results,
+                    *(
+                        parsed_results
+                        if isinstance(parsed_results, Iterable)
+                        else [parsed_results]  # type: ignore[list-item]
+                    ),
+                ],
+                # apply the parser to each commit in the history (could return multiple results per commit)
+                map(commit_parser.parse, commits_since_last_release),
+                [],
+            ),
         )
     }
 
