@@ -192,6 +192,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             ),
             flags=re.MULTILINE | re.IGNORECASE,
         )
+        self.notice_selector = regexp(r'^NOTICE: (?P<notice>.+)$')
         self.filters = {
             "typo-extra-spaces": (regexp(r"(\S)  +(\S)"), r"\1 \2"),
             "git-header-commit": (
@@ -239,6 +240,11 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         if match := breaking_re.match(text):
             accumulator["breaking_descriptions"].append(match.group(1) or "")
             # TODO: breaking change v10, removes breaking change footers from descriptions
+            # return accumulator
+
+        elif (match := self.notice_selector.match(text)) and (notice := match.group("notice")):
+            accumulator["notices"].append(notice)
+            # TODO: breaking change v10, removes notice footers from descriptions
             # return accumulator
 
         elif match := self.issue_selector.search(text):
@@ -295,6 +301,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             {
                 "breaking_descriptions": [],
                 "descriptions": [],
+                "notices": [],
                 "linked_issues": [],
             },
         )
@@ -315,6 +322,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             scope=parsed_scope,
             descriptions=tuple(body_components["descriptions"]),
             breaking_descriptions=tuple(body_components["breaking_descriptions"]),
+            release_notices=tuple(body_components["notices"]),
             linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
