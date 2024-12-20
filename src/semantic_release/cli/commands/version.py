@@ -699,13 +699,31 @@ def version(  # noqa: C901
         log.info("Remote does not support releases. Skipping release creation...")
         return
 
+    license_cfg = runtime.project_metadata.get(
+        "license-expression",
+        runtime.project_metadata.get(
+            "license",
+            "",
+        ),
+    )
+
+    if not isinstance(license_cfg, (str, dict)) or license_cfg is None:
+        license_cfg = ""
+
+    license_name = (
+        license_cfg.get("text", "")
+        if isinstance(license_cfg, dict)
+        else license_cfg or ""
+    )
+
     release_notes = generate_release_notes(
         hvcs_client,
-        release_history.released[new_version],
-        runtime.template_dir,
+        release=release_history.released[new_version],
+        template_dir=runtime.template_dir,
         history=release_history,
         style=runtime.changelog_style,
         mask_initial_release=runtime.changelog_mask_initial_release,
+        license_name=license_name,
     )
 
     exception: Exception | None = None
