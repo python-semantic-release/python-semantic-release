@@ -46,16 +46,8 @@ EXAMPLE:
 #}{%    set commit_descriptions = []
 %}{#
 #}{%    for commit in ns.commits
-%}{#      # Update the first line with reference links and if commit description
-          # has more than one line, add the rest of the lines
-          # NOTE: This is specifically to make sure to not hide contents
-          # of squash commits (until parse support is added)
+%}{#      # Add reference links to the commit summary line
 #}{%      set description = "- %s" | format(format_commit_summary_line(commit))
-%}{%      if commit.descriptions | length > 1
-%}{%        set description = "%s\n\n%s" | format(
-              description, commit.descriptions[1:] | join("\n\n")
-            )
-%}{%      endif
 %}{%      set description = description | autofit_text_width(max_line_width, hanging_indent)
 %}{%      set _ = commit_descriptions.append(description)
 %}{%    endfor
