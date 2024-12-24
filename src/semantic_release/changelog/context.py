@@ -4,10 +4,13 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from re import compile as regexp
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
+from urllib3.util import Url
+
+from semantic_release.const import PYPI_WEB_DOMAIN
 from semantic_release.helpers import sort_numerically
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -86,12 +89,24 @@ def make_changelog_context(
         hvcs_type=hvcs_client.__class__.__name__.lower(),
         filters=(
             *hvcs_client.get_changelog_context_filters(),
+            create_pypi_url,
             read_file,
             convert_md_to_rst,
             autofit_text_width,
             sort_numerically,
         ),
     )
+
+
+def create_pypi_url(package_name: str, version: str = "") -> str:
+    project_name = package_name.strip("/").strip()
+    if not project_name:
+        raise ValueError("package_name must not be empty!")
+    return Url(
+        scheme="https",
+        host=PYPI_WEB_DOMAIN,
+        path=str(PurePosixPath("project", project_name, version.strip("/").strip())),
+    ).url.rstrip("/")
 
 
 def read_file(filepath: str) -> str:
