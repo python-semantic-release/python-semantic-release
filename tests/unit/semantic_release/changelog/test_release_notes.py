@@ -32,10 +32,12 @@ def release_notes_template() -> str:
 
 
 @pytest.mark.parametrize("mask_initial_release", [True, False])
+@pytest.mark.parametrize("license_name", ["", "MIT"])
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_release_notes_template(
     example_git_https_url: str,
     hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
+    license_name: str,
     artificial_release_history: ReleaseHistory,
     mask_initial_release: bool,
     today_date_str: str,
@@ -76,7 +78,15 @@ def test_default_release_notes_template(
         os.linesep,
         [
             f"## v{version} ({today_date_str})",
-            "",
+            *(
+                [""]
+                if not license_name
+                else [
+                    "",
+                    f"_This release is published under the {license_name} License._",
+                    "",
+                ]
+            ),
             "### Feature",
             "",
             "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
@@ -148,6 +158,7 @@ def test_default_release_notes_template(
         history=artificial_release_history,
         style="angular",
         mask_initial_release=mask_initial_release,
+        license_name=license_name,
     )
 
     assert expected_content == actual_content
@@ -365,10 +376,12 @@ def test_default_release_notes_template_w_multiple_brk_changes(
     assert expected_content == actual_content
 
 
+@pytest.mark.parametrize("license_name", ["", "MIT"])
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_release_notes_template_first_release_masked(
     example_git_https_url: str,
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
+    license_name: str,
     single_release_history: ReleaseHistory,
     today_date_str: str,
 ):
@@ -385,7 +398,15 @@ def test_default_release_notes_template_first_release_masked(
         os.linesep,
         [
             f"## v{version} ({today_date_str})",
-            "",
+            *(
+                [""]
+                if not license_name
+                else [
+                    "",
+                    f"_This release is published under the {license_name} License._",
+                    "",
+                ]
+            ),
             "- Initial Release",
             "",
         ],
@@ -398,15 +419,18 @@ def test_default_release_notes_template_first_release_masked(
         history=single_release_history,
         style="angular",
         mask_initial_release=True,
+        license_name=license_name,
     )
 
     assert expected_content == actual_content
 
 
+@pytest.mark.parametrize("license_name", ["", "MIT"])
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_release_notes_template_first_release_unmasked(
     example_git_https_url: str,
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
+    license_name: str,
     single_release_history: ReleaseHistory,
     today_date_str: str,
 ):
@@ -429,7 +453,15 @@ def test_default_release_notes_template_first_release_unmasked(
         os.linesep,
         [
             f"## v{version} ({today_date_str})",
-            "",
+            *(
+                [""]
+                if not license_name
+                else [
+                    "",
+                    f"_This release is published under the {license_name} License._",
+                    "",
+                ]
+            ),
             "### Feature",
             "",
             "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
@@ -451,6 +483,7 @@ def test_default_release_notes_template_first_release_unmasked(
         history=single_release_history,
         style="angular",
         mask_initial_release=False,
+        license_name=license_name,
     )
 
     assert expected_content == actual_content
