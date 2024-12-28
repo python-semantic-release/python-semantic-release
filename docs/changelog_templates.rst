@@ -286,10 +286,16 @@ The default template provided by PSR will respect the
 will also add a comparison link to the previous release if one exists without
 customization.
 
+As of ``${NEW_RELEASE_TAG}``, the default release notes will also include a statement to
+declare which license the project was released under. PSR determines which license
+to declare based on the value of ``project.license-expression`` in the ``pyproject.toml``
+file as defined in the `PEP 639`_ specification.
+
 .. seealso::
     - To personalize your release notes, see the
       :ref:`changelog-templates-custom_release_notes` section.
 
+.. _PEP 639: https://peps.python.org/pep-0639/
 
 .. _changelog-templates-template-rendering:
 
