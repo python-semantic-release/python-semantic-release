@@ -516,12 +516,8 @@ def version(  # noqa: C901
     gha_output.version = new_version
     ctx.call_on_close(gha_output.write_if_possible)
 
-    # Make string variant of version && Translate to tag if necessary
-    version_to_print = (
-        str(new_version)
-        if not print_only_tag
-        else translator.str_to_tag(str(new_version))
-    )
+    # Make string variant of version or appropriate tag as necessary
+    version_to_print = str(new_version) if not print_only_tag else new_version.as_tag()
 
     # Print the new version so that command-line output capture will work
     click.echo(version_to_print)
