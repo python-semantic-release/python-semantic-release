@@ -334,19 +334,40 @@ where appropriate to assist with static type-checking.
 
 The :ref:`commit_parser <config-commit_parser>` option, if set to a string which
 does not match one of Python Semantic Release's built-in commit parsers, will be
-used to attempt to dynamically import a custom commit parser class. As such you will
-need to ensure that your custom commit parser is import-able from the environment in
-which you are running Python Semantic Release. The string should be structured in the
-standard ``module:attr`` format; for example, to import the class ``MyCommitParser``
-from the file ``custom_parser.py`` at the root of your repository, you should specify
-``"commit_parser=custom_parser:MyCommitParser"`` in your configuration, and run the
-``semantic-release`` command line interface from the root of your repository. Equally
-you can ensure that the module containing your parser class is installed in the same
-virtual environment as semantic-release. If you can run
-``python -c "from $MODULE import $CLASS"`` successfully, specifying
-``commit_parser="$MODULE:$CLASS"`` is sufficient. You may need to set the
-``PYTHONPATH`` environment variable to the directory containing the module with
-your commit parser.
+used to attempt to dynamically import a custom commit parser class.
+
+In order to use your custom parser, you must provide how to import the module and class
+via the configuration option. There are two ways to provide the import string:
+
+1.  **File Path & Class**: The format is ``"path/to/module_file.py:ClassName"``. This
+    is the easiest way to provide a custom parser. This method allows you to store your
+    custom parser directly in the repository with no additional installation steps. PSR
+    will locate the file, load the module, and instantiate the class. Relative paths are
+    recommended and it should be provided relative to the current working directory. This
+    import variant is available in v9.16.0 and later.
+
+2.  **Module Path & Class**: The format is ``"package.module_name:ClassName"``. This
+    method allows you to store your custom parser in a package that is installed in the
+    same environment as PSR. This method is useful if you want to share your custom parser
+    across multiple repositories. To share it across multiple repositories generally you will
+    need to publish the parser as its own separate package and then ``pip install`` it into
+    the current virtual environment. You can also keep it in the same repository as your
+    project as long as it is in the current directory of the virtual environment and is
+    locatable by the Python import system. You may need to set the ``PYTHONPATH`` environment
+    variable if you have a more complex directory structure.  This import variant is available
+    in v8.0.0 and later.
+
+    To test that your custom parser is importable, you can run the following command in the
+    directory where PSR will be executed:
+
+    .. code-block:: bash
+
+        python -c "from package.module_name import ClassName"
+
+    .. note::
+      Remember this is basic python import rules so the package name is optional and generally
+      packages are defined by a directory with ``__init__.py`` files.
+
 
 .. _commit_parser-tokens:
 
