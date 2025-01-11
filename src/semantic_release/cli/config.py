@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass, is_dataclass
 from enum import Enum
@@ -249,8 +248,8 @@ class BranchConfig(BaseModel):
             return ".*"
 
         try:
-            re.compile(match)
-        except re.error as err:
+            regexp(match)
+        except RegExpError as err:
             raise ValueError(f"Invalid regex {match!r}") from err
         return match
 
@@ -534,7 +533,7 @@ class RuntimeContext:
     assets: List[str]
     commit_author: Actor
     commit_message: str
-    changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
+    changelog_excluded_commit_patterns: Tuple[Pattern[str], ...]
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: hvcs.HvcsBase
     changelog_insertion_flag: str
@@ -566,7 +565,7 @@ class RuntimeContext:
         choices: Dict[str, BranchConfig], active_branch: str
     ) -> BranchConfig:
         for group, options in choices.items():
-            if re.match(options.match, active_branch):
+            if regexp(options.match).match(active_branch):
                 log.info(
                     "Using group %r options, as %r matches %r",
                     group,
