@@ -164,6 +164,20 @@ class ChangelogConfig(BaseModel):
     insertion_flag: str = ""
     template_dir: str = "templates"
 
+    @field_validator("exclude_commit_patterns", mode="after")
+    @classmethod
+    def validate_match(cls, patterns: Tuple[str, ...]) -> Tuple[str, ...]:
+        curr_index = 0
+        try:
+            for i, pattern in enumerate(patterns):
+                curr_index = i
+                regexp(pattern)
+        except RegExpError as err:
+            raise ValueError(
+                f"exclude_commit_patterns[{curr_index}]: Invalid regular expression"
+            ) from err
+        return patterns
+
     @field_validator("changelog_file", mode="after")
     @classmethod
     def changelog_file_deprecation_warning(cls, val: str) -> str:
