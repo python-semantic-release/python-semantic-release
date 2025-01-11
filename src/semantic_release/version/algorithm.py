@@ -270,6 +270,7 @@ def next_version(
         translator.str_to_tag(DEFAULT_VERSION)
     )
     if default_initial_version is None:
+        # This should never happen, but if it does, it's a bug
         raise InternalError(
             "Translator was unable to parse the embedded default version"
         )

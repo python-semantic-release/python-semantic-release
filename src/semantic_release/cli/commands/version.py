@@ -26,6 +26,7 @@ from semantic_release.enums import LevelBump
 from semantic_release.errors import (
     BuildDistributionsError,
     GitCommitEmptyIndexError,
+    InternalError,
     UnexpectedResponse,
 )
 from semantic_release.gitproject import GitProject
@@ -35,7 +36,6 @@ from semantic_release.version.algorithm import (
     tags_and_versions,
 )
 from semantic_release.version.translator import VersionTranslator
-from semantic_release.version.version import Version
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
@@ -45,6 +45,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from semantic_release.cli.cli_context import CliContextObj
     from semantic_release.version.declaration import VersionDeclarationABC
+    from semantic_release.version.version import Version
 
 
 log = logging.getLogger(__name__)
@@ -90,7 +91,18 @@ def version_from_forced_level(
 
     # If we have no tags, return the default version
     if not ts_and_vs:
-        return Version.parse(DEFAULT_VERSION).bump(forced_level_bump)
+        # Since the translator is configured by the user, we can't guarantee that it will
+        # be able to parse the default version. So we first cast it to a tag using the default
+        # value and the users configured tag format, then parse it back to a version object
+        default_initial_version = translator.from_tag(
+            translator.str_to_tag(DEFAULT_VERSION)
+        )
+        if default_initial_version is None:
+            # This should never happen, but if it does, it's a bug
+            raise InternalError(
+                "Translator was unable to parse the embedded default version"
+            )
+        return default_initial_version.bump(forced_level_bump)
 
     _, latest_version = ts_and_vs[0]
     if forced_level_bump is not LevelBump.PRERELEASE_REVISION:
