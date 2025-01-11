@@ -334,7 +334,7 @@ jobs:
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
-          path: /tmp/pytest-of-runner/pytest-current/*
+          path: ~/AppData/Local/Temp/pytest-of-runneradmin/pytest-current/*
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
