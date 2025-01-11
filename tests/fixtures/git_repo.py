@@ -34,7 +34,7 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
-    from typing import Generator, Literal, Protocol, Sequence, TypedDict, Union
+    from typing import Any, Generator, Literal, Protocol, Sequence, TypedDict, Union
 
     from tests.fixtures.example_project import UpdateVersionPyFileFn
 
@@ -369,6 +369,11 @@ if TYPE_CHECKING:
         def __call__(
             self, repo_definition: Sequence[RepoActions], tag_format_str: str
         ) -> dict[str, list[RepoActions]]: ...
+
+    class GetCfgValueFromDefFn(Protocol):
+        def __call__(
+            self, build_definition: Sequence[RepoActions], key: str
+        ) -> Any: ...
 
 
 @pytest.fixture(scope="session")
@@ -1083,7 +1088,11 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                 action = step["action"]
 
                 if action == RepoActionStep.CONFIGURE:
-                    cfg_def: RepoActionConfigureDetails = step["details"]  # type: ignore[assignment]
+                    cfg_def: RepoActionConfigureDetails = step_result["details"]  # type: ignore[assignment]
+
+                    # Make sure the resulting build definition is complete with the default
+                    tag_format_str = cfg_def["tag_format_str"] or default_tag_format_str
+                    cfg_def["tag_format_str"] = tag_format_str
 
                     _, hvcs = build_configured_base_repo(  # type: ignore[assignment] # TODO: fix the type error
                         dest_dir,
@@ -1101,7 +1110,6 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                     )
                     # Save configuration details for later steps
                     mask_initial_release = cfg_def["mask_initial_release"]
-                    tag_format_str = cfg_def["tag_format_str"] or default_tag_format_str
 
                 elif action == RepoActionStep.MAKE_COMMITS:
                     mk_cmts_def: RepoActionMakeCommitsDetails = step_result["details"]  # type: ignore[assignment]
@@ -1220,6 +1228,25 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
         return completed_repo_steps
 
     return _build_repo_from_definition
+
+
+@pytest.fixture(scope="session")
+def get_cfg_value_from_def() -> GetCfgValueFromDefFn:
+    def _get_cfg_value_from_def(
+        build_definition: Sequence[RepoActions], key: str
+    ) -> Any:
+        configure_steps = [
+            step
+            for step in build_definition
+            if step["action"] == RepoActionStep.CONFIGURE
+        ]
+        for step in configure_steps[::-1]:
+            if key in step["details"]:
+                return step["details"][key]  # type: ignore[literal-required]
+
+        raise ValueError(f"Unable to find configuration key: {key}")
+
+    return _get_cfg_value_from_def
 
 
 @pytest.fixture(scope="session")
