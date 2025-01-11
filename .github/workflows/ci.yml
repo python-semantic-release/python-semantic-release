@@ -41,13 +41,13 @@ jobs:
 
       - name: Evaluate | Check common file types for changes
         id: core-changed-files
-        uses: tj-actions/changed-files@v45.0.5
+        uses: tj-actions/changed-files@v45.0.6
         with:
           files_yaml_from_source_file: .github/changed-files-spec.yml
 
       - name: Evaluate | Check specific file types for changes
         id: ci-changed-files
-        uses: tj-actions/changed-files@v45.0.5
+        uses: tj-actions/changed-files@v45.0.6
         with:
           files_yaml: |
             ci:
