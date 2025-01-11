@@ -6,7 +6,14 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, is_dataclass
 from enum import Enum
+from functools import reduce
 from pathlib import Path
+from re import (
+    Pattern,
+    compile as regexp,
+    error as RegExpError,  # noqa: N812
+    escape as regex_escape,
+)
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from git import Actor, InvalidGitRepositoryError
@@ -639,12 +646,21 @@ class RuntimeContext:
 
         # We always exclude PSR's own release commits from the Changelog
         # when parsing commits
-        _psr_release_commit_re = re.compile(
-            raw.commit_message.replace(r"{version}", r"(?P<version>.*)")
+        psr_release_commit_regex = regexp(
+            reduce(
+                lambda regex_str, pattern: str(regex_str).replace(*pattern),
+                (
+                    # replace the version holder with a regex pattern to match various versions
+                    (regex_escape("{version}"), r"(?P<version>\d+\.\d+\.\d+\S*)"),
+                    # TODO: add any other placeholders here
+                ),
+                # We use re.escape to ensure that the commit message is treated as a literal
+                regex_escape(raw.commit_message),
+            )
         )
         changelog_excluded_commit_patterns = (
-            _psr_release_commit_re,
-            *(re.compile(pattern) for pattern in raw.changelog.exclude_commit_patterns),
+            psr_release_commit_regex,
+            *(regexp(pattern) for pattern in raw.changelog.exclude_commit_patterns),
         )
 
         _commit_author_str = cls.resolve_from_env(raw.commit_author) or ""
