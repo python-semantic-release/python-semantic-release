@@ -19,6 +19,9 @@ from tests.fixtures.repos import (
     repo_w_trunk_only_angular_commits,
     repo_w_trunk_only_angular_commits_using_tag_format,
 )
+from tests.fixtures.repos.trunk_based_dev.repo_w_no_tags import (
+    repo_w_no_tags_angular_commits_using_tag_format,
+)
 from tests.util import (
     add_text_to_file,
     assert_exit_code,
@@ -149,52 +152,107 @@ def test_version_print_next_version(
 @pytest.mark.parametrize(
     "repo_result, commits, force_args, next_release_version",
     [
-        (
-            lazy_fixture(repo_fixture_name),
-            lazy_fixture(angular_minor_commits.__name__),
-            cli_args,
-            next_release_version,
-        )
-        for repo_fixture_name in (
-            repo_w_trunk_only_angular_commits.__name__,
-            repo_w_trunk_only_angular_commits_using_tag_format.__name__,
-        )
-        for cli_args, next_release_version in (
-            # Dynamic version bump determination (based on commits)
-            ([], "0.2.0"),
-            # Dynamic version bump determination (based on commits) with build metadata
-            (["--build-metadata", "build.12345"], "0.2.0+build.12345"),
-            # Forced version bump
-            (["--prerelease"], "0.1.1-rc.1"),
-            (["--patch"], "0.1.2"),
-            (["--minor"], "0.2.0"),
-            (["--major"], "1.0.0"),
-            # Forced version bump with --build-metadata
-            (["--patch", "--build-metadata", "build.12345"], "0.1.2+build.12345"),
-            # Forced version bump with --as-prerelease
-            (["--prerelease", "--as-prerelease"], "0.1.1-rc.1"),
-            (["--patch", "--as-prerelease"], "0.1.2-rc.1"),
-            (["--minor", "--as-prerelease"], "0.2.0-rc.1"),
-            (["--major", "--as-prerelease"], "1.0.0-rc.1"),
-            # Forced version bump with --as-prerelease and modified --prerelease-token
-            (
-                ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
-                "0.1.2-beta.1",
-            ),
-            # Forced version bump with --as-prerelease and modified --prerelease-token
-            # and --build-metadata
-            (
-                [
-                    "--patch",
-                    "--as-prerelease",
-                    "--prerelease-token",
-                    "beta",
-                    "--build-metadata",
-                    "build.12345",
-                ],
-                "0.1.2-beta.1+build.12345",
-            ),
-        )
+        *[
+            pytest.param(
+                lazy_fixture(repo_fixture_name),
+                lazy_fixture(angular_minor_commits.__name__),
+                cli_args,
+                next_release_version,
+                marks=marks if marks else [],
+            )
+            for repo_fixture_name, marks in (
+                (repo_w_trunk_only_angular_commits.__name__, None),
+                (
+                    repo_w_trunk_only_angular_commits_using_tag_format.__name__,
+                    pytest.mark.comprehensive,
+                ),
+            )
+            for cli_args, next_release_version in (
+                # Dynamic version bump determination (based on commits)
+                ([], "0.2.0"),
+                # Dynamic version bump determination (based on commits) with build metadata
+                (["--build-metadata", "build.12345"], "0.2.0+build.12345"),
+                # Forced version bump
+                (["--prerelease"], "0.1.1-rc.1"),
+                (["--patch"], "0.1.2"),
+                (["--minor"], "0.2.0"),
+                (["--major"], "1.0.0"),
+                # Forced version bump with --build-metadata
+                (["--patch", "--build-metadata", "build.12345"], "0.1.2+build.12345"),
+                # Forced version bump with --as-prerelease
+                (["--prerelease", "--as-prerelease"], "0.1.1-rc.1"),
+                (["--patch", "--as-prerelease"], "0.1.2-rc.1"),
+                (["--minor", "--as-prerelease"], "0.2.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
+                # Forced version bump with --as-prerelease and modified --prerelease-token
+                (
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
+                    "0.1.2-beta.1",
+                ),
+                # Forced version bump with --as-prerelease and modified --prerelease-token
+                # and --build-metadata
+                (
+                    [
+                        "--patch",
+                        "--as-prerelease",
+                        "--prerelease-token",
+                        "beta",
+                        "--build-metadata",
+                        "build.12345",
+                    ],
+                    "0.1.2-beta.1+build.12345",
+                ),
+            )
+        ],
+        *[
+            pytest.param(
+                lazy_fixture(repo_fixture_name),
+                [],
+                cli_args,
+                next_release_version,
+                marks=pytest.mark.comprehensive,
+            )
+            for repo_fixture_name in (
+                repo_w_no_tags_angular_commits.__name__,
+                repo_w_no_tags_angular_commits_using_tag_format.__name__,
+            )
+            for cli_args, next_release_version in (
+                # Dynamic version bump determination (based on commits)
+                ([], "0.1.0"),
+                # Dynamic version bump determination (based on commits) with build metadata
+                (["--build-metadata", "build.12345"], "0.1.0+build.12345"),
+                # Forced version bump
+                (["--prerelease"], "0.0.0-rc.1"),
+                (["--patch"], "0.0.1"),
+                (["--minor"], "0.1.0"),
+                (["--major"], "1.0.0"),
+                # Forced version bump with --build-metadata
+                (["--patch", "--build-metadata", "build.12345"], "0.0.1+build.12345"),
+                # Forced version bump with --as-prerelease
+                (["--prerelease", "--as-prerelease"], "0.0.0-rc.1"),
+                (["--patch", "--as-prerelease"], "0.0.1-rc.1"),
+                (["--minor", "--as-prerelease"], "0.1.0-rc.1"),
+                (["--major", "--as-prerelease"], "1.0.0-rc.1"),
+                # Forced version bump with --as-prerelease and modified --prerelease-token
+                (
+                    ["--patch", "--as-prerelease", "--prerelease-token", "beta"],
+                    "0.0.1-beta.1",
+                ),
+                # Forced version bump with --as-prerelease and modified --prerelease-token
+                # and --build-metadata
+                (
+                    [
+                        "--patch",
+                        "--as-prerelease",
+                        "--prerelease-token",
+                        "beta",
+                        "--build-metadata",
+                        "build.12345",
+                    ],
+                    "0.0.1-beta.1+build.12345",
+                ),
+            )
+        ],
     ],
 )
 def test_version_print_tag_prints_next_tag(
@@ -227,10 +285,11 @@ def test_version_print_tag_prints_next_tag(
     tag_format_str: str = get_cfg_value_from_def(repo_def, "tag_format_str")  # type: ignore[assignment]
     next_release_tag = tag_format_str.format(version=next_release_version)
 
-    # Make a commit to ensure we have something to release
-    # otherwise the "no release will be made" logic will kick in first
-    add_text_to_file(repo, file_in_repo)
-    repo.git.commit(m=commits[-1], a=True)
+    if len(commits) > 1:
+        # Make a commit to ensure we have something to release
+        # otherwise the "no release will be made" logic will kick in first
+        add_text_to_file(repo, file_in_repo)
+        repo.git.commit(m=commits[-1], a=True)
 
     # Setup: take measurement before running the version command
     repo_status_before = repo.git.status(short=True)
