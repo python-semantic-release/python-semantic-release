@@ -1,9 +1,11 @@
-import importlib
+import importlib.util
 import logging
+import os
 import re
 import string
+import sys
 from functools import lru_cache, wraps
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
@@ -69,8 +71,43 @@ def dynamic_import(import_path: str) -> Any:
     """
     log.debug("Trying to import %s", import_path)
     module_name, attr = import_path.split(":", maxsplit=1)
-    module = importlib.import_module(module_name)
-    return getattr(module, attr)
+
+    # Check if the module is a file path, if it can be resolved and exists on disk then import as a file
+    module_filepath = Path(module_name).resolve()
+    if module_filepath.exists():
+        module_path = (
+            module_filepath.stem
+            if Path(module_name).is_absolute()
+            else str(Path(module_name).with_suffix("")).replace(os.sep, ".")
+        )
+
+        if module_path not in sys.modules:
+            spec = importlib.util.spec_from_file_location(
+                module_path, str(module_filepath)
+            )
+            if spec is None:
+                raise ImportError(f"Could not import {module_filepath}")
+
+            module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+            sys.modules.update({spec.name: module})
+            spec.loader.exec_module(module)  # type: ignore[union-attr]
+
+        return getattr(sys.modules[module_path], attr)
+
+    # Otherwise, import as a module
+    try:
+        module = importlib.import_module(module_name)
+        return getattr(module, attr)
+    except TypeError as err:
+        raise ImportError(
+            str.join(
+                "\n",
+                [
+                    str(err.args[0]),
+                    "Verify the import format matches 'module:attribute' or 'path/to/module:attribute'",
+                ],
+            )
+        ) from err
 
 
 class ParsedGitUrl(NamedTuple):

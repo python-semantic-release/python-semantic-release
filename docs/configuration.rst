@@ -796,7 +796,7 @@ Built-in parsers:
     * ``tag`` - :ref:`TagCommitParser <commit_parser-builtin-tag>` *(deprecated in v9.12.0)*
 
 You can set any of the built-in parsers by their keyword but you can also specify
-your own commit parser in ``module:attr`` form.
+your own commit parser in ``path/to/module_file.py:Class`` or ``module:Class`` form.
 
 For more information see :ref:`commit-parsing`.
 
