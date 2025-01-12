@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from re import compile as regexp
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -304,6 +305,58 @@ def test_branch_config_with_invalid_regex(invalid_regex: str):
     with pytest.raises(ValidationError):
         BranchConfig(
             match=invalid_regex,
+        )
+
+
+@pytest.mark.parametrize(
+    "valid_patterns",
+    [
+        # Single entry
+        [r"chore(?:\([^)]*?\))?: .+"],
+        # Multiple entries
+        [r"^\d+\.\d+\.\d+", r"Initial [Cc]ommit.*"],
+    ],
+)
+def test_changelog_config_with_valid_exclude_commit_patterns(valid_patterns: list[str]):
+    assert ChangelogConfig.model_validate(
+        {
+            "exclude_commit_patterns": valid_patterns,
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_patterns, index_of_invalid_pattern",
+    [
+        # Single entry, single incorrect
+        (["*abc"], 0),
+        # Two entries, second incorrect
+        ([".*", "[a-z"], 1),
+        # Two entries, first incorrect
+        (["(.+", ".*"], 0),
+    ],
+)
+def test_changelog_config_with_invalid_exclude_commit_patterns(
+    invalid_patterns: list[str],
+    index_of_invalid_pattern: int,
+):
+    with pytest.raises(
+        ValidationError,
+        match=regexp(
+            str.join(
+                "",
+                [
+                    r".*\bexclude_commit_patterns\[",
+                    str(index_of_invalid_pattern),
+                    r"\]: Invalid regular expression",
+                ],
+            ),
+        ),
+    ):
+        ChangelogConfig.model_validate(
+            {
+                "exclude_commit_patterns": invalid_patterns,
+            }
         )
 
 

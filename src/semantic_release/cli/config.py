@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass, is_dataclass
 from enum import Enum
+from functools import reduce
 from pathlib import Path
+from re import (
+    Pattern,
+    compile as regexp,
+    error as RegExpError,  # noqa: N812
+    escape as regex_escape,
+)
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from git import Actor, InvalidGitRepositoryError
@@ -157,6 +163,20 @@ class ChangelogConfig(BaseModel):
     insertion_flag: str = ""
     template_dir: str = "templates"
 
+    @field_validator("exclude_commit_patterns", mode="after")
+    @classmethod
+    def validate_match(cls, patterns: Tuple[str, ...]) -> Tuple[str, ...]:
+        curr_index = 0
+        try:
+            for i, pattern in enumerate(patterns):
+                curr_index = i
+                regexp(pattern)
+        except RegExpError as err:
+            raise ValueError(
+                f"exclude_commit_patterns[{curr_index}]: Invalid regular expression"
+            ) from err
+        return patterns
+
     @field_validator("changelog_file", mode="after")
     @classmethod
     def changelog_file_deprecation_warning(cls, val: str) -> str:
@@ -228,8 +248,8 @@ class BranchConfig(BaseModel):
             return ".*"
 
         try:
-            re.compile(match)
-        except re.error as err:
+            regexp(match)
+        except RegExpError as err:
             raise ValueError(f"Invalid regex {match!r}") from err
         return match
 
@@ -513,7 +533,7 @@ class RuntimeContext:
     assets: List[str]
     commit_author: Actor
     commit_message: str
-    changelog_excluded_commit_patterns: Tuple[re.Pattern[str], ...]
+    changelog_excluded_commit_patterns: Tuple[Pattern[str], ...]
     version_declarations: Tuple[VersionDeclarationABC, ...]
     hvcs_client: hvcs.HvcsBase
     changelog_insertion_flag: str
@@ -545,7 +565,7 @@ class RuntimeContext:
         choices: Dict[str, BranchConfig], active_branch: str
     ) -> BranchConfig:
         for group, options in choices.items():
-            if re.match(options.match, active_branch):
+            if regexp(options.match).match(active_branch):
                 log.info(
                     "Using group %r options, as %r matches %r",
                     group,
@@ -639,12 +659,21 @@ class RuntimeContext:
 
         # We always exclude PSR's own release commits from the Changelog
         # when parsing commits
-        _psr_release_commit_re = re.compile(
-            raw.commit_message.replace(r"{version}", r"(?P<version>.*)")
+        psr_release_commit_regex = regexp(
+            reduce(
+                lambda regex_str, pattern: str(regex_str).replace(*pattern),
+                (
+                    # replace the version holder with a regex pattern to match various versions
+                    (regex_escape("{version}"), r"(?P<version>\d+\.\d+\.\d+\S*)"),
+                    # TODO: add any other placeholders here
+                ),
+                # We use re.escape to ensure that the commit message is treated as a literal
+                regex_escape(raw.commit_message),
+            )
         )
         changelog_excluded_commit_patterns = (
-            _psr_release_commit_re,
-            *(re.compile(pattern) for pattern in raw.changelog.exclude_commit_patterns),
+            psr_release_commit_regex,
+            *(regexp(pattern) for pattern in raw.changelog.exclude_commit_patterns),
         )
 
         _commit_author_str = cls.resolve_from_env(raw.commit_author) or ""
