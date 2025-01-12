@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+import shutil
+import sys
+from pathlib import Path
 from re import compile as regexp
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -37,7 +40,6 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import Any
 
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
@@ -226,8 +228,12 @@ def test_load_valid_runtime_config(
 @pytest.mark.parametrize(
     "commit_parser",
     [
+        # Module:Class string
         f"{CustomParserWithNoOpts.__module__}:{CustomParserWithNoOpts.__name__}",
         f"{CustomParserWithOpts.__module__}:{CustomParserWithOpts.__name__}",
+        # File path module:Class string
+        f"{CustomParserWithNoOpts.__module__.replace('.', '/')}.py:{CustomParserWithNoOpts.__name__}",
+        f"{CustomParserWithOpts.__module__.replace('.', '/')}.py:{CustomParserWithOpts.__name__}",
     ],
 )
 def test_load_valid_runtime_config_w_custom_parser(
@@ -236,17 +242,32 @@ def test_load_valid_runtime_config_w_custom_parser(
     example_project_dir: ExProjectDir,
     example_pyproject_toml: Path,
     change_to_ex_proj_dir: None,
+    request: pytest.FixtureRequest,
 ):
+    fake_sys_modules = {**sys.modules}
+
+    if ".py" in commit_parser:
+        module_filepath = Path(commit_parser.split(":")[0])
+        module_filepath.parent.mkdir(parents=True, exist_ok=True)
+        module_filepath.parent.joinpath("__init__.py").touch()
+        shutil.copy(
+            src=str(request.config.rootpath / module_filepath),
+            dst=str(module_filepath),
+        )
+        fake_sys_modules.pop(
+            str(Path(module_filepath).with_suffix("")).replace(os.sep, ".")
+        )
+
     build_configured_base_repo(
         example_project_dir,
         commit_type=commit_parser,
     )
 
-    runtime_ctx = RuntimeContext.from_raw_config(
-        RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
-        global_cli_options=GlobalCommandLineOptions(),
-    )
-    assert runtime_ctx
+    with mock.patch.dict(sys.modules, fake_sys_modules, clear=True):
+        assert RuntimeContext.from_raw_config(
+            RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
+            global_cli_options=GlobalCommandLineOptions(),
+        )
 
 
 @pytest.mark.parametrize(
@@ -258,6 +279,12 @@ def test_load_valid_runtime_config_w_custom_parser(
         f"{CustomParserWithOpts.__module__}:MissingCustomParser",
         # Incomplete class implementation
         f"{IncompleteCustomParser.__module__}:{IncompleteCustomParser.__name__}",
+        # Non-existant module file
+        "tests/missing_module.py:CustomParser",
+        # Non-existant class in module file
+        f"{CustomParserWithOpts.__module__.replace('.', '/')}.py:MissingCustomParser",
+        # Incomplete class implementation in module file
+        f"{IncompleteCustomParser.__module__.replace('.', '/')}.py:{IncompleteCustomParser.__name__}",
     ],
 )
 def test_load_invalid_custom_parser(
