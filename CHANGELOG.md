@@ -1,6 +1,27 @@
 # CHANGELOG
 
 
+## v9.16.1 (2025-01-12)
+
+### Bug Fixes
+
+- **parser-custom**: Handle relative parent directory paths to module file better
+  ([#1142](https://github.com/python-semantic-release/python-semantic-release/pull/1142),
+  [`c4056fc`](https://github.com/python-semantic-release/python-semantic-release/commit/c4056fc2e1fb3bddb78728793716ac6fb8522b1a))
+
+The dynamic import originally would just replace "/" with "." to make the import module name more
+  pythonic, however this would be problematic in monorepos which would use
+  "../../misc/commit_parser.py" to locate the parser and so the resulting `sys.modules` entry would
+  have numerous periods (.) as a prefix. This removes that possibility. Still always an issue if the
+  imported module name matches an existing module but the likelihood is low.
+
+### Documentation
+
+- **github-actions**: Update PSR versions in github workflow examples
+  ([#1140](https://github.com/python-semantic-release/python-semantic-release/pull/1140),
+  [`9bdd626`](https://github.com/python-semantic-release/python-semantic-release/commit/9bdd626bf8f8359d35725cebe803931063260cac))
+
+
 ## v9.16.0 (2025-01-12)
 
 ### Bug Fixes
