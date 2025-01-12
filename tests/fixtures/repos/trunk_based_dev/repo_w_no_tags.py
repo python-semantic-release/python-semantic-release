@@ -142,9 +142,9 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                                     "include_in_changelog": True,
                                 },
                                 {
-                                    "angular": "fix: correct more text",
-                                    "emoji": ":bug: correct more text",
-                                    "scipy": "MAINT: correct more text",
+                                    "angular": "fix: correct more text\n\nCloses: #123",
+                                    "emoji": ":bug: correct more text\n\nCloses: #123",
+                                    "scipy": "MAINT: correct more text\n\nCloses: #123",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
