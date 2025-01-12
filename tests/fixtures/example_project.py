@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from importlib import import_module
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Generator
@@ -60,7 +59,7 @@ if TYPE_CHECKING:
         def __call__(self, setting: str, value: Any) -> None: ...
 
     class UseCustomParserFn(Protocol):
-        def __call__(self, module_import_str: str) -> type[CommitParser]: ...
+        def __call__(self, module_import_str: str) -> None: ...
 
     class UseHvcsFn(Protocol):
         def __call__(self, domain: str | None = None) -> type[HvcsBase]: ...
@@ -497,17 +496,8 @@ def use_custom_parser(
 ) -> UseCustomParserFn:
     """Modify the configuration file to use a user defined string parser."""
 
-    def _use_custom_parser(module_import_str: str) -> type[CommitParser]:
-        # validate this is importable before writing to parser
-        module_name, attr = module_import_str.split(":", maxsplit=1)
-        try:
-            module = import_module(module_name)
-            custom_class = getattr(module, attr)
-        except (ModuleNotFoundError, AttributeError) as err:
-            raise ValueError("Custom parser object not found!") from err
-
+    def _use_custom_parser(module_import_str: str) -> None:
         update_pyproject_toml(pyproject_toml_config_option_parser, module_import_str)
-        return custom_class
 
     return _use_custom_parser
 
