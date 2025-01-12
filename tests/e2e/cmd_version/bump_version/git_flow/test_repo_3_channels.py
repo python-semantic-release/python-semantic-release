@@ -28,11 +28,8 @@ if TYPE_CHECKING:
     from click.testing import CliRunner
     from requests_mock import Mocker
 
-    from tests.e2e.cmd_version.bump_version.conftest import (
-        GetSanitizedMdChangelogContentFn,
-        GetSanitizedRstChangelogContentFn,
-        InitMirrorRepo4RebuildFn,
-    )
+    from tests.e2e.cmd_version.bump_version.conftest import InitMirrorRepo4RebuildFn
+    from tests.e2e.conftest import GetSanitizedChangelogContentFn
     from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
         BuildRepoFromDefinitionFn,
@@ -73,8 +70,8 @@ def test_gitflow_repo_rebuild_3_channels(
     post_mocker: Mocker,
     default_tag_format_str: str,
     version_py_file: Path,
-    get_sanitized_md_changelog_content: GetSanitizedMdChangelogContentFn,
-    get_sanitized_rst_changelog_content: GetSanitizedRstChangelogContentFn,
+    get_sanitized_md_changelog_content: GetSanitizedChangelogContentFn,
+    get_sanitized_rst_changelog_content: GetSanitizedChangelogContentFn,
 ):
     # build target repo into a temporary directory
     target_repo_dir = example_project_dir / repo_fixture_name

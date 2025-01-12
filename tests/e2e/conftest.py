@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from re import IGNORECASE, compile as regexp
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
@@ -20,6 +21,7 @@ from semantic_release.cli.util import load_raw_config_file
 from tests.util import prepare_mocked_git_command_wrapper_type
 
 if TYPE_CHECKING:
+    from re import Pattern
     from typing import Protocol
 
     from git.repo import Repo
@@ -27,6 +29,13 @@ if TYPE_CHECKING:
     from requests_mock.mocker import Mocker
 
     from tests.fixtures.example_project import ExProjectDir
+
+    class GetSanitizedChangelogContentFn(Protocol):
+        def __call__(
+            self,
+            repo_dir: Path,
+            remove_insertion_flag: bool = True,
+        ) -> str: ...
 
     class ReadConfigFileFn(Protocol):
         """Read the raw config file from `config_path`."""
@@ -105,3 +114,78 @@ def retrieve_runtime_context(
             os.chdir(cwd)
 
     return _retrieve_runtime_context
+
+
+@pytest.fixture(scope="session")
+def long_hash_pattern() -> Pattern:
+    return regexp(r"\b([0-9a-f]{40})\b", IGNORECASE)
+
+
+@pytest.fixture(scope="session")
+def short_hash_pattern() -> Pattern:
+    return regexp(r"\b([0-9a-f]{7})\b", IGNORECASE)
+
+
+@pytest.fixture(scope="session")
+def get_sanitized_rst_changelog_content(
+    changelog_rst_file: Path,
+    default_rst_changelog_insertion_flag: str,
+    long_hash_pattern: Pattern,
+    short_hash_pattern: Pattern,
+) -> GetSanitizedChangelogContentFn:
+    rst_short_hash_link_pattern = regexp(r"(_[0-9a-f]{7})\b", IGNORECASE)
+
+    def _get_sanitized_rst_changelog_content(
+        repo_dir: Path,
+        remove_insertion_flag: bool = True,
+    ) -> str:
+        # TODO: v10 change -- default turns to update so this is not needed
+        # Because we are in init mode, the insertion flag is not present in the changelog
+        # we must take it out manually because our repo generation fixture includes it automatically
+        with (repo_dir / changelog_rst_file).open(newline=os.linesep) as rfd:
+            # use os.linesep here because the insertion flag is os-specific
+            # but convert the content to universal newlines for comparison
+            changelog_content = (
+                rfd.read().replace(
+                    f"{default_rst_changelog_insertion_flag}{os.linesep}", ""
+                )
+                if remove_insertion_flag
+                else rfd.read()
+            ).replace("\r", "")
+
+        changelog_content = long_hash_pattern.sub("0" * 40, changelog_content)
+        changelog_content = short_hash_pattern.sub("0" * 7, changelog_content)
+        return rst_short_hash_link_pattern.sub(f'_{"0" * 7}', changelog_content)
+
+    return _get_sanitized_rst_changelog_content
+
+
+@pytest.fixture(scope="session")
+def get_sanitized_md_changelog_content(
+    changelog_md_file: Path,
+    default_md_changelog_insertion_flag: str,
+    long_hash_pattern: Pattern,
+    short_hash_pattern: Pattern,
+) -> GetSanitizedChangelogContentFn:
+    def _get_sanitized_md_changelog_content(
+        repo_dir: Path,
+        remove_insertion_flag: bool = True,
+    ) -> str:
+        # TODO: v10 change -- default turns to update so this is not needed
+        # Because we are in init mode, the insertion flag is not present in the changelog
+        # we must take it out manually because our repo generation fixture includes it automatically
+        with (repo_dir / changelog_md_file).open(newline=os.linesep) as rfd:
+            # use os.linesep here because the insertion flag is os-specific
+            # but convert the content to universal newlines for comparison
+            changelog_content = (
+                rfd.read().replace(
+                    f"{default_md_changelog_insertion_flag}{os.linesep}", ""
+                )
+                if remove_insertion_flag
+                else rfd.read()
+            ).replace("\r", "")
+
+        changelog_content = long_hash_pattern.sub("0" * 40, changelog_content)
+        return short_hash_pattern.sub("0" * 7, changelog_content)
+
+    return _get_sanitized_md_changelog_content
