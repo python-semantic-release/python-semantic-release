@@ -67,9 +67,6 @@ jobs:
     needs: eval-changes
     with:
       python-versions-linux: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
-      # Since the test suite takes ~4 minutes to complete on windows, and windows is billed higher
-      # we are only going to run it on the oldest version of python we support. The older version
-      # will be the most likely area to fail as newer minor versions maintain compatibility.
       python-versions-windows: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
       files-changed: ${{ needs.eval-changes.outputs.any-file-changes }}
       build-files-changed: ${{ needs.eval-changes.outputs.build-changes }}
@@ -115,6 +112,22 @@ jobs:
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
           path: dist
+
+      - name: Evaluate | Determine Next Version
+        id: version
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          root_options: "-v --noop"
+
+      - name: Release | Bump Version in Docs
+        if: steps.version.outputs.released == 'true' && steps.version.outputs.is_prerelease == 'false'
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+          NEW_RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          python -m scripts.bump_version_in_docs
+          git add docs/*
 
       - name: Release | Python Semantic Release
         id: release
