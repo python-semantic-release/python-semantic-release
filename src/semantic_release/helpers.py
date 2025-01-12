@@ -69,7 +69,6 @@ def dynamic_import(import_path: str) -> Any:
     Dynamically import an object from a conventionally formatted "module:attribute"
     string
     """
-    log.debug("Trying to import %s", import_path)
     module_name, attr = import_path.split(":", maxsplit=1)
 
     # Check if the module is a file path, if it can be resolved and exists on disk then import as a file
@@ -78,10 +77,11 @@ def dynamic_import(import_path: str) -> Any:
         module_path = (
             module_filepath.stem
             if Path(module_name).is_absolute()
-            else str(Path(module_name).with_suffix("")).replace(os.sep, ".")
+            else str(Path(module_name).with_suffix("")).replace(os.sep, ".").lstrip(".")
         )
 
         if module_path not in sys.modules:
+            log.debug("Loading '%s' from file '%s'", module_path, module_filepath)
             spec = importlib.util.spec_from_file_location(
                 module_path, str(module_filepath)
             )
@@ -96,7 +96,9 @@ def dynamic_import(import_path: str) -> Any:
 
     # Otherwise, import as a module
     try:
+        log.debug("Importing module '%s'", module_name)
         module = importlib.import_module(module_name)
+        log.debug("Loading '%s' from module '%s'", attr, module_name)
         return getattr(module, attr)
     except TypeError as err:
         raise ImportError(
