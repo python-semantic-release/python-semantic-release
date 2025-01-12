@@ -1,6 +1,67 @@
 # CHANGELOG
 
 
+## v9.16.0 (2025-01-12)
+
+### Bug Fixes
+
+- **changelog**: Fixes PSR release commit exclusions for customized commit messages
+  ([#1139](https://github.com/python-semantic-release/python-semantic-release/pull/1139),
+  [`f9a2078`](https://github.com/python-semantic-release/python-semantic-release/commit/f9a20787437d0f26074fe2121bf0a29576a96df0))
+
+* fix(config-changelog): validate `changelog.exclude_commit_patterns` on config load
+
+* test(fixtures): relocate sanitize changelog functions
+
+* test(cmd-version): add test to validate that custom release messages are ignored in changelog
+
+* test(config): add `changelog.exclude_commit_patterns` validation check
+
+* style(config): refactor import names of `re` module
+
+- **cmd-version**: Fix `--print-tag` result to match configured tag format
+  ([#1134](https://github.com/python-semantic-release/python-semantic-release/pull/1134),
+  [`a990aa7`](https://github.com/python-semantic-release/python-semantic-release/commit/a990aa7ab0a9d52d295c04d54d20e9c9f2db2ca5))
+
+* test(fixtures): add new trunk repo that has a different tag format
+
+* test(fixtures): add helper to extract config settings from repo action definition
+
+* test(cmd-version): expand testing of `--print-tag` & `--print-last-released-tag`
+
+PSR did not have enough testing to demonstrate testing of the tag generation when the tag format was
+  configured differently than normal. This commit adds a significant portion of testing to exercise
+  the print tag functionality which must match the configured tag format.
+
+- **cmd-version**: Fix tag format on default version when force bump for initial release
+  ([#1138](https://github.com/python-semantic-release/python-semantic-release/pull/1138),
+  [`007fd00`](https://github.com/python-semantic-release/python-semantic-release/commit/007fd00a3945ed211ece4baab0b79ad93dc018f5))
+
+Resolves: #1137
+
+* test(fixtures): add new unreleased trunk repo with a different tag format
+
+* test(cmd-version): ensure forced bump version on initial release follows tag format
+
+ref: #1137
+
+### Features
+
+- **config**: Expand dynamic parser import to handle a filepath to module
+  ([#1135](https://github.com/python-semantic-release/python-semantic-release/pull/1135),
+  [`0418fd8`](https://github.com/python-semantic-release/python-semantic-release/commit/0418fd8d27aac14925aafa50912e751e3aeff2f7))
+
+* test(fixtures): remove import checking/loading of custom parser in `use_custom_parser`
+
+* test(config): extend import parser unit tests to evaluate file paths to modules
+
+* docs(commit-parsing): add the new custom parser import spec description for direct path imports
+
+Resolves: #687
+
+* docs(configuration): adjust `commit_parser` option definition for direct path imports
+
+
 ## v9.15.2 (2024-12-16)
 
 ### Bug Fixes
