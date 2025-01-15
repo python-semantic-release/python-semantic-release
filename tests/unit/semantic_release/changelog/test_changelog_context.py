@@ -497,3 +497,91 @@ def test_changelog_context_autofit_text_width_w_indent(
 
     # Evaluate
     assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_sort_numerically(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog_tpl = dedent(
+        """\
+        {{ [
+                ".. _#5: link",
+                ".. _PR#3: link",
+                ".. _PR#10: link",
+                ".. _#100: link"
+            ] | sort_numerically | join("\\n")
+        }}
+        """
+    )
+
+    expected_changelog = dedent(
+        """\
+        .. _#5: link
+        .. _#100: link
+        .. _PR#3: link
+        .. _PR#10: link
+        """
+    )
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+        mask_initial_release=False,
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_sort_numerically_reverse(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog_tpl = dedent(
+        """\
+        {{ [
+                ".. _#5: link",
+                ".. _PR#3: link",
+                ".. _PR#10: link",
+                ".. _#100: link"
+            ] | sort_numerically(reverse=True) | join("\\n")
+        }}
+        """
+    )
+
+    expected_changelog = dedent(
+        """\
+        .. _#100: link
+        .. _#5: link
+        .. _PR#10: link
+        .. _PR#3: link
+        """
+    )
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+        mask_initial_release=False,
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
