@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import pytest
@@ -16,6 +17,8 @@ from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
 if TYPE_CHECKING:
     from semantic_release.changelog.release_history import ReleaseHistory
+
+    from tests.fixtures.example_project import ExProjectDir
 
 
 @pytest.fixture(scope="module")
@@ -444,6 +447,100 @@ def test_default_release_notes_template_first_release_unmasked(
         hvcs_client=hvcs,
         release=release,
         template_dir=Path(""),
+        history=single_release_history,
+        style="angular",
+        mask_initial_release=False,
+    )
+
+    assert expected_content == actual_content
+
+
+def test_release_notes_context_sort_numerically_filter(
+    example_git_https_url: str,
+    single_release_history: ReleaseHistory,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+):
+    version = list(single_release_history.released.keys())[-1]
+    release = single_release_history.released[version]
+
+    example_project_dir.joinpath(".release_notes.md.j2").write_text(
+        dedent(
+            """\
+            {{ [
+                    ".. _#5: link",
+                    ".. _PR#3: link",
+                    ".. _PR#10: link",
+                    ".. _#100: link"
+                ] | sort_numerically | join("\\n")
+            }}
+            """
+        )
+    )
+
+    expected_content = str.join(
+        os.linesep,
+        dedent(
+            """\
+            .. _#5: link
+            .. _#100: link
+            .. _PR#3: link
+            .. _PR#10: link
+            """
+        ).split("\n"),
+    )
+
+    actual_content = generate_release_notes(
+        hvcs_client=Github(remote_url=example_git_https_url),
+        release=release,
+        template_dir=example_project_dir,
+        history=single_release_history,
+        style="angular",
+        mask_initial_release=False,
+    )
+
+    assert expected_content == actual_content
+
+
+def test_release_notes_context_sort_numerically_filter_reversed(
+    example_git_https_url: str,
+    single_release_history: ReleaseHistory,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+):
+    version = list(single_release_history.released.keys())[-1]
+    release = single_release_history.released[version]
+
+    example_project_dir.joinpath(".release_notes.md.j2").write_text(
+        dedent(
+            """\
+            {{ [
+                    ".. _#5: link",
+                    ".. _PR#3: link",
+                    ".. _PR#10: link",
+                    ".. _#100: link"
+                ] | sort_numerically(reverse=True) | join("\\n")
+            }}
+            """
+        )
+    )
+
+    expected_content = str.join(
+        os.linesep,
+        dedent(
+            """\
+            .. _#100: link
+            .. _#5: link
+            .. _PR#10: link
+            .. _PR#3: link
+            """
+        ).split("\n"),
+    )
+
+    actual_content = generate_release_notes(
+        hvcs_client=Github(remote_url=example_git_https_url),
+        release=release,
+        template_dir=example_project_dir,
         history=single_release_history,
         style="angular",
         mask_initial_release=False,
