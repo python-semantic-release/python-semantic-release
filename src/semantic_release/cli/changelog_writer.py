@@ -24,6 +24,7 @@ from semantic_release.cli.const import (
 )
 from semantic_release.cli.util import noop_report
 from semantic_release.errors import InternalError
+from semantic_release.helpers import sort_numerically
 
 if TYPE_CHECKING:  # pragma: no cover
     from jinja2 import Environment
@@ -254,7 +255,11 @@ def generate_release_notes(
         version=release["version"],
         release=release,
         mask_initial_release=mask_initial_release,
-        filters=(*hvcs_client.get_changelog_context_filters(), autofit_text_width),
+        filters=(
+            *hvcs_client.get_changelog_context_filters(),
+            autofit_text_width,
+            sort_numerically,
+        ),
     ).bind_to_environment(
         # Use a new, non-configurable environment for release notes -
         # not user-configurable at the moment

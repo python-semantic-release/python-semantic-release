@@ -4,16 +4,19 @@ from functools import reduce
 from re import MULTILINE, compile as regexp
 from typing import TYPE_CHECKING
 
+# TODO: remove in v10
+from semantic_release.helpers import (
+    sort_numerically,  # noqa: F401 # TODO: maintained for compatibility
+)
+
 if TYPE_CHECKING:  # pragma: no cover
     from re import Pattern
-    from typing import Sequence, TypedDict
+    from typing import TypedDict
 
     class RegexReplaceDef(TypedDict):
         pattern: Pattern
         repl: str
 
-
-number_pattern = regexp(r"(\d+)")
 
 breaking_re = regexp(r"BREAKING[ -]CHANGE:\s?(.*)")
 
@@ -71,7 +74,3 @@ def parse_paragraphs(text: str) -> list[str]:
             ],
         )
     )
-
-
-def sort_numerically(iterable: Sequence[str] | set[str]) -> list[str]:
-    return sorted(iterable, key=lambda x: int((number_pattern.search(x) or [-1])[0]))

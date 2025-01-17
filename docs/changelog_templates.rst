@@ -831,6 +831,31 @@ The filters provided vary based on the VCS configured and available features:
       {% set prev_changelog_contents = prev_changelog_file | read_file | safe %}
 
 
+* ``sort_numerically (Callable[[Iterable[str], bool], list[str]])``: given a
+  sequence of strings with possibly some non-number characters as a prefix or suffix,
+  sort the strings as if they were just numbers from lowest to highest. This filter
+  is useful when you want to sort issue numbers or other strings that have a numeric
+  component in them but cannot be cast to a number directly to sort them. If you want
+  to sort the strings in reverse order, you can pass a boolean value of ``True`` as the
+  second argument.
+
+  *Introduced in v9.16.0.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{ ["#222", "#1023", "#444"] | sort_numerically }}
+      {{ ["#222", "#1023", "#444"] | sort_numerically(True) }}
+
+  **Markdown Output:**
+
+  .. code:: markdown
+
+        ['#222', '#444', '#1023']
+        ['#1023', '#444', '#222']
+
+
 Availability of the documented filters can be found in the table below:
 
 ======================  =========  =====  ======  ======
@@ -846,6 +871,7 @@ issue_url                  ❌       ✅      ✅      ✅
 merge_request_url          ❌       ❌      ❌      ✅
 pull_request_url           ✅       ✅      ✅      ✅
 read_file                  ✅       ✅      ✅      ✅
+sort_numerically           ✅       ✅      ✅      ✅
 ======================  =========  =====  ======  ======
 
 .. seealso::

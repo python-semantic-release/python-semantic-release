@@ -8,6 +8,8 @@ from pathlib import Path
 from re import compile as regexp
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
+from semantic_release.helpers import sort_numerically
+
 if TYPE_CHECKING:  # pragma: no cover
     from jinja2 import Environment
 
@@ -87,6 +89,7 @@ def make_changelog_context(
             read_file,
             convert_md_to_rst,
             autofit_text_width,
+            sort_numerically,
         ),
     )
 

@@ -21,13 +21,10 @@ from semantic_release.commit_parser.token import (
     ParseError,
     ParseResult,
 )
-from semantic_release.commit_parser.util import (
-    breaking_re,
-    parse_paragraphs,
-    sort_numerically,
-)
+from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.helpers import sort_numerically
 
 if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
