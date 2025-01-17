@@ -89,7 +89,6 @@ def _traverse_graph_for_commits(
             # Add all parent commits to the stack from left to right so that the rightmost is popped first
             # as the left side is generally the merged into branch
             for parent in node.parents:
-                logger.debug("queuing parent commit %s", parent.hexsha[:7])
                 stack.put(parent)
 
         return commits
