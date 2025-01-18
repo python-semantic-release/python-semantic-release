@@ -39,6 +39,7 @@ from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.commit_parser import (
     AngularCommitParser,
     CommitParser,
+    ConventionalCommitMonorepoParser,
     ConventionalCommitParser,
     EmojiCommitParser,
     ParseResult,
@@ -71,9 +72,10 @@ class HvcsClient(str, Enum):
     GITEA = "gitea"
 
 
-_known_commit_parsers: Dict[str, type[CommitParser]] = {
-    "conventional": ConventionalCommitParser,
+_known_commit_parsers: dict[str, type[CommitParser[Any, Any]]] = {
     "angular": AngularCommitParser,
+    "conventional": ConventionalCommitParser,
+    "conventional-monorepo": ConventionalCommitMonorepoParser,
     "emoji": EmojiCommitParser,
     "scipy": ScipyCommitParser,
     "tag": TagCommitParser,
