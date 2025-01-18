@@ -27,7 +27,7 @@ class MaskingFilter(logging.Filter):
 
     def add_mask_for(self, data: str, name: str = "redacted") -> MaskingFilter:
         if data and data not in self._UNWANTED:
-            log.debug("Adding redact pattern %r to _redact_patterns", name)
+            log.debug("Adding redact pattern '%r' to redact_patterns", name)
             self._redact_patterns[name].add(data)
         return self
 

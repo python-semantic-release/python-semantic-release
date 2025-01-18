@@ -54,7 +54,6 @@ def environment(
         autoescape_value = dynamic_import(autoescape)
     else:
         autoescape_value = autoescape
-    log.debug("%s", locals())
 
     return ComplexDirectorySandboxedEnvironment(
         block_start_string=block_start_string,
