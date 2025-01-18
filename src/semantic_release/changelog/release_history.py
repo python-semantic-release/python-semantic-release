@@ -131,9 +131,9 @@ class ReleaseHistory:
             # commits included, the true reason for a version bump would be missing.
             if has_exclusion_match and commit_level_bump == LevelBump.NO_RELEASE:
                 log.info(
-                    "Excluding commit [%s] %s",
-                    commit.hexsha[:8],
-                    commit_message.replace("\n", " ")[:50],
+                    "Excluding commit[%s] %s",
+                    parse_result.short_hash,
+                    commit_message.split("\n", maxsplit=1)[0][:40],
                 )
                 continue
 
@@ -145,29 +145,29 @@ class ReleaseHistory:
                     str.join(
                         " ",
                         [
-                            "Excluding commit %s (%s) because parser determined",
+                            "Excluding commit[%s] (%s) because parser determined",
                             "it should not included in the changelog",
                         ],
                     ),
-                    commit.hexsha[:8],
+                    parse_result.short_hash,
                     commit_message.replace("\n", " ")[:20],
                 )
                 continue
 
             if the_version is None:
                 log.info(
-                    "[Unreleased] adding '%s' commit(%s) to list",
-                    commit.hexsha[:8],
+                    "[Unreleased] adding commit[%s] to unreleased '%s'",
+                    parse_result.short_hash,
                     commit_type,
                 )
                 unreleased[commit_type].append(parse_result)
                 continue
 
             log.info(
-                "[%s] adding '%s' commit(%s) to release",
+                "[%s] adding commit[%s] to release '%s'",
                 the_version,
+                parse_result.short_hash,
                 commit_type,
-                commit.hexsha[:8],
             )
 
             released[the_version]["elements"][commit_type].append(parse_result)

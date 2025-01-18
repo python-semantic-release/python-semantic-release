@@ -65,7 +65,7 @@ def is_forced_prerelease(
     log.debug(
         "%s: %s",
         is_forced_prerelease.__name__,
-        ", ".join(f"{k} = {v}" for k, v in local_vars),
+        str.join(", ", iter(f"{k} = {v}" for k, v in local_vars)),
     )
     return (
         as_prerelease
