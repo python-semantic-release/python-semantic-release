@@ -133,7 +133,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         emojis_in_precedence_order = list(self.options.tag_to_level.keys())[::-1]
 
         try:
-            self.emoji_selector = regexp(
+            highest_emoji_pattern = regexp(
                 r"(?P<type>%s)" % str.join("|", emojis_in_precedence_order)
             )
         except re.error as err:
@@ -147,6 +147,16 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
                     ],
                 )
             ) from err
+
+        self.emoji_selector = regexp(
+            str.join(
+                "",
+                [
+                    f"^{highest_emoji_pattern.pattern}",
+                    r"(?:\((?P<scope>[^\n]+)\))?",
+                ]
+            )
+        )
 
         # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
         self.mr_selector = regexp(
@@ -210,11 +220,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             # subject = self.mr_selector.sub("", subject).strip()
 
         # Search for emoji of the highest importance in the subject
-        primary_emoji = (
-            match.group("type")
-            if (match := self.emoji_selector.search(subject))
-            else "Other"
-        )
+        match = self.emoji_selector.search(subject)
+        primary_emoji = match.group("type") if match else "Other"
+        parsed_scope = (match.group("scope") if match else None) or ""
 
         level_bump = self.options.tag_to_level.get(
             primary_emoji, self.options.default_bump_level
@@ -236,7 +244,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             bump=level_bump,
             type=primary_emoji,
             category=primary_emoji,
-            scope="",  # TODO: add scope support
+            scope=parsed_scope,
             # TODO: breaking change v10, removes breaking change footers from descriptions
             # descriptions=(
             #     descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions
