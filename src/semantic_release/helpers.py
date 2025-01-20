@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:  # pragma: no cover
+    from re import Pattern
     from typing import Iterable
 
 
@@ -81,6 +82,15 @@ def sort_numerically(
         ],
         [],
     )
+
+
+def text_reducer(text: str, filter_pair: tuple[Pattern[str], str]) -> str:
+    """Reduce function to apply mulitple filters to a string"""
+    if not text:  # abort if the paragraph is empty
+        return text
+
+    filter_pattern, replacement = filter_pair
+    return filter_pattern.sub(replacement, text)
 
 
 def format_arg(value: Any) -> str:
