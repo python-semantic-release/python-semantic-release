@@ -28,4 +28,6 @@ RUN \
 
 ENV PSR_DOCKER_GITHUB_ACTION=true
 
+ENV PYTHONDONTWRITEBYTECODE=1
+
 ENTRYPOINT ["/bin/bash", "-l", "/psr/action.sh"]
