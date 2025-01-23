@@ -135,6 +135,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
                             "prerelease": False,
                         },
                         "tool.semantic_release.allow_zero_version": False,
+                        "tool.semantic_release.commit_parser_options.parse_squash_commits": True,
                         **(extra_configs or {}),
                     },
                 },
@@ -244,7 +245,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
             },
             {
                 "angular": "docs(cli): add cli documentation",
-                "emoji": ":books: add cli documentation",
+                "emoji": ":memo: add cli documentation",
                 "scipy": "DOC: add cli documentation",
                 "datetime": next(commit_timestamp_gen),
             },
