@@ -13,6 +13,12 @@ import pytest
 from git import Actor, Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
+from semantic_release.commit_parser.angular import (
+    AngularCommitParser,
+    AngularParserOptions,
+)
+from semantic_release.commit_parser.emoji import EmojiCommitParser, EmojiParserOptions
+from semantic_release.commit_parser.scipy import ScipyCommitParser, ScipyParserOptions
 from semantic_release.version.version import Version
 
 import tests.conftest
@@ -46,9 +52,6 @@ if TYPE_CHECKING:
 
     from typing_extensions import NotRequired
 
-    from semantic_release.commit_parser.angular import AngularCommitParser
-    from semantic_release.commit_parser.emoji import EmojiCommitParser
-    from semantic_release.commit_parser.scipy import ScipyCommitParser
     from semantic_release.hvcs import HvcsBase
     from semantic_release.hvcs.bitbucket import Bitbucket
     from semantic_release.hvcs.gitea import Gitea
@@ -374,6 +377,9 @@ if TYPE_CHECKING:
         def __call__(
             self, build_definition: Sequence[RepoActions], key: str
         ) -> Any: ...
+
+    class SeparateSquashedCommitDefFn(Protocol):
+        def __call__(self, squashed_commit_def: CommitDef) -> list[CommitDef]: ...
 
 
 @pytest.fixture(scope="session")
@@ -981,6 +987,94 @@ def build_configured_base_repo(  # noqa: C901
 
 
 @pytest.fixture(scope="session")
+def separate_squashed_commit_def(
+    default_angular_parser: AngularCommitParser,
+    default_emoji_parser: EmojiCommitParser,
+    default_scipy_parser: ScipyCommitParser,
+) -> SeparateSquashedCommitDefFn:
+    message_parsers: dict[
+        CommitConvention, AngularCommitParser | EmojiCommitParser | ScipyCommitParser
+    ] = {
+        "angular": AngularCommitParser(
+            options=AngularParserOptions(
+                **{
+                    **default_angular_parser.options.__dict__,
+                    "parse_squash_commits": True,
+                }
+            )
+        ),
+        "emoji": EmojiCommitParser(
+            options=EmojiParserOptions(
+                **{
+                    **default_emoji_parser.options.__dict__,
+                    "parse_squash_commits": True,
+                }
+            )
+        ),
+        "scipy": ScipyCommitParser(
+            options=ScipyParserOptions(
+                **{
+                    **default_scipy_parser.options.__dict__,
+                    "parse_squash_commits": True,
+                }
+            )
+        ),
+    }
+
+    def _separate_squashed_commit_def(
+        squashed_commit_def: CommitDef,
+    ) -> list[CommitDef]:
+        commit_type: CommitConvention = "angular"
+        for parser_name, parser in message_parsers.items():
+            if squashed_commit_def["type"] in parser.options.allowed_tags:
+                commit_type = parser_name
+
+        parser = message_parsers[commit_type]
+        if not hasattr(parser, "unsquash_commit_message"):
+            return [squashed_commit_def]
+
+        unsquashed_messages = parser.unsquash_commit_message(
+            message=squashed_commit_def["msg"]
+        )
+
+        return [
+            {
+                "msg": squashed_message,
+                "type": parsed_result.type,
+                "category": parsed_result.category,
+                "desc": str.join(
+                    "\n\n",
+                    (
+                        [
+                            # Strip out any MR references (since v9 doesn't) to prep for changelog generatro
+                            # TODO: remove in v10, as the parser will remove the MR reference
+                            str.join(
+                                "(", parsed_result.descriptions[0].split("(")[:-1]
+                            ).strip(),
+                            *parsed_result.descriptions[1:],
+                        ]
+                        if parsed_result.linked_merge_request
+                        else [*parsed_result.descriptions]
+                    ),
+                ),
+                "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
+                "scope": parsed_result.scope,
+                "mr": parsed_result.linked_merge_request or squashed_commit_def["mr"],
+                "sha": squashed_commit_def["sha"],
+                "include_in_changelog": True,
+                "datetime": squashed_commit_def.get("datetime", ""),
+            }
+            for parsed_result, squashed_message in iter(
+                (parser.parse_message(squashed_msg), squashed_msg)
+                for squashed_msg in unsquashed_messages
+            )
+            if parsed_result is not None
+        ]
+
+    return _separate_squashed_commit_def
+
+
+@pytest.fixture(scope="session")
 def convert_commit_spec_to_commit_def(
     get_commit_def_of_angular_commit: GetCommitDefFn,
     get_commit_def_of_emoji_commit: GetCommitDefFn,
@@ -1037,6 +1131,7 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
     create_merge_commit: CreateMergeCommitFn,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
+    separate_squashed_commit_def: SeparateSquashedCommitDefFn,
 ) -> BuildRepoFromDefinitionFn:
     def expand_repo_construction_steps(
         acc: Sequence[RepoActions], step: RepoActions
@@ -1193,7 +1288,11 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             strategy_option=squash_def["strategy_option"],
                         )
                         if squash_def["commit_def"]["include_in_changelog"]:
-                            current_commits.append(squash_def["commit_def"])
+                            current_commits.extend(
+                                separate_squashed_commit_def(
+                                    squashed_commit_def=squash_def["commit_def"],
+                                )
+                            )
 
                 elif action == RepoActionStep.GIT_MERGE:
                     this_step: RepoActionGitMerge = step_result  # type: ignore[assignment]
@@ -1468,7 +1567,8 @@ def simulate_default_changelog_creation(  # noqa: C901
                     )
 
                 # Add commits to section
-                section_bullets.append(commit_cl_desc)
+                if commit_cl_desc not in section_bullets:
+                    section_bullets.append(commit_cl_desc)
 
             version_entry.extend(sorted(section_bullets))
 
@@ -1580,7 +1680,8 @@ def simulate_default_changelog_creation(  # noqa: C901
                     )
 
                 # Add commits to section
-                section_bullets.append(commit_cl_desc)
+                if commit_cl_desc not in section_bullets:
+                    section_bullets.append(commit_cl_desc)
 
             version_entry.extend(sorted(section_bullets))
 
