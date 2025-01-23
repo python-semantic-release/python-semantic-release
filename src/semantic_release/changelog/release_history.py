@@ -9,6 +9,7 @@ from git.objects.tag import TagObject
 
 from semantic_release.commit_parser import ParseError
 from semantic_release.commit_parser.token import ParsedCommit
+from semantic_release.commit_parser.util import force_str
 from semantic_release.enums import LevelBump
 from semantic_release.version.algorithm import tags_and_versions
 
@@ -117,7 +118,7 @@ class ReleaseHistory:
 
             # iterate through parsed commits to add to changelog definition
             for parsed_result in parse_results:
-                commit_message = str(parsed_result.commit.message)
+                commit_message = force_str(parsed_result.commit.message)
                 commit_type = (
                     "unknown"
                     if isinstance(parsed_result, ParseError)
