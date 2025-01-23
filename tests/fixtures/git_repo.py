@@ -211,6 +211,16 @@ if TYPE_CHECKING:
     class FormatGitHubMergeCommitMsgFn(Protocol):
         def __call__(self, pr_number: int, branch_name: str) -> str: ...
 
+    class FormatGitLabMergeCommitMsgFn(Protocol):
+        def __call__(
+            self,
+            mr_title: str,
+            mr_number: int,
+            source_branch: str,
+            target_branch: str,
+            closed_issues: list[str],
+        ) -> str: ...
+
     class CreateMergeCommitFn(Protocol):
         def __call__(
             self,
@@ -609,6 +619,48 @@ def format_merge_commit_msg_github() -> FormatGitHubMergeCommitMsgFn:
         return f"Merge pull request #{pr_number} from '{branch_name}'"
 
     return _format_merge_commit_msg_git
+
+
+@pytest.fixture(scope="session")
+def format_merge_commit_msg_gitlab() -> FormatGitLabMergeCommitMsgFn:
+    def _format_merge_commit_msg(
+        mr_title: str,
+        mr_number: int,
+        source_branch: str,
+        target_branch: str,
+        closed_issues: list[str],
+    ) -> str:
+        """REF: https://docs.gitlab.com/17.8/ee/user/project/merge_requests/commit_templates.html"""
+        reference = f"{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}!{mr_number}"
+        issue_statement = (
+            ""
+            if not closed_issues
+            else str.join(
+                " ",
+                [
+                    "Closes",
+                    str.join(
+                        " and ", [str.join(", ", closed_issues[:-1]), closed_issues[-1]]
+                    )
+                    if len(closed_issues) > 1
+                    else closed_issues[0],
+                ],
+            )
+        )
+        return str.join(
+            "\n\n",
+            filter(
+                None,
+                [
+                    f"Merge branch '{source_branch}' into '{target_branch}'",
+                    f"{mr_title}",
+                    f"{issue_statement}",
+                    f"See merge request {reference}",
+                ],
+            ),
+        )
+
+    return _format_merge_commit_msg
 
 
 @pytest.fixture(scope="session")
