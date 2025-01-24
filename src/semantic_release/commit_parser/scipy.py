@@ -74,21 +74,21 @@ def _logged_parse_error(commit: Commit, error: str) -> ParseError:
 
 tag_to_section = {
     "API": "breaking",
-    "BENCH": "None",
+    "BENCH": "none",
     "BLD": "fix",
     "BUG": "fix",
     "DEP": "breaking",
-    "DEV": "None",
+    "DEV": "none",
     "DOC": "documentation",
     "ENH": "feature",
     "MAINT": "fix",
-    "REV": "Other",
-    "STY": "None",
-    "TST": "None",
-    "REL": "None",
+    "REV": "other",
+    "STY": "none",
+    "TST": "none",
+    "REL": "none",
     # strictly speaking not part of the standard
     "FEAT": "feature",
-    "TEST": "None",
+    "TEST": "none",
 }
 
 
