@@ -30,7 +30,7 @@ class HvcsBase(metaclass=ABCMeta):
     """
 
     def __init__(self, remote_url: str, *args: Any, **kwargs: Any) -> None:
-        self._remote_url = remote_url
+        self._remote_url = remote_url if parse_git_url(remote_url) else ""
         self._name: str | None = None
         self._owner: str | None = None
 
