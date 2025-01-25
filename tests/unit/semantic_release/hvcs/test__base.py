@@ -57,9 +57,6 @@ def test_get_repository_name(remote_url, owner):
         "git@gitlab.com/somewhere",
     ],
 )
-def test_hvcs_parse_error(bad_url):
-    client = ArbitraryHvcs(bad_url)
+def test_hvcs_parse_error(bad_url: str):
     with pytest.raises(ValueError):
-        _ = client.repo_name
-    with pytest.raises(ValueError):
-        _ = client.owner
+        ArbitraryHvcs(bad_url)

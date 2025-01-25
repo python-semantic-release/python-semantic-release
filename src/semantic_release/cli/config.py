@@ -602,7 +602,12 @@ class RuntimeContext:
         # Retrieve details from repository
         with Repo(str(raw.repo_dir)) as git_repo:
             try:
-                remote_url = raw.remote.url or git_repo.remote(raw.remote.name).url
+                # Get the remote url by calling out to `git remote get-url`. This returns
+                # the expanded url, taking into account any insteadOf directives
+                # in the git configuration.
+                remote_url = raw.remote.url or git_repo.git.remote(
+                    "get-url", raw.remote.name
+                )
                 active_branch = git_repo.active_branch.name
             except ValueError as err:
                 raise MissingGitRemote(
