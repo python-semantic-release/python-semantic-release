@@ -108,13 +108,13 @@ logic in relation to how PSR's core features:
   message. If no issue numbers are found, the parser will return an empty tuple. *Feature
   available in v9.15.0+.*
 
-**Limitations:**
+- **Squash Commit Evaluation**: This parser implements PSR's
+  :ref:`commit_parser-builtin-squash_commit_evaluation` to identify and extract each commit
+  message as a separate commit message within a single squashed commit. You can toggle this
+  feature on/off via the :ref:`config-commit_parser_options` setting. *Feature available in
+  v9.17.0+.*
 
-- Squash commits are not currently supported. This means that the level bump for a squash
-  commit is only determined by the subject line of the squash commit. Our default changelog
-  template currently writes out the entire commit message body in the changelog in order to
-  provide the full detail of the changes. Track the implementation of this feature with
-  the issues `#733`_, `#1085`_, and `PR#1112`_.
+**Limitations**:
 
 - Commits with the ``revert`` type are not currently supported. Track the implementation
   of this feature in the issue `#402`_.
@@ -178,6 +178,12 @@ how PSR's core features:
   is disabled by default since it is not a part of the `Gitmoji Specification`_ but can be
   enabled by setting the configuration option ``commit_parser_options.parse_linked_issues``
   to ``true``. *Feature available in v9.15.0+.*
+
+- **Squash Commit Evaluation**: This parser implements PSR's
+  :ref:`commit_parser-builtin-squash_commit_evaluation` to identify and extract each commit
+  message as a separate commit message within a single squashed commit. You can toggle this
+  feature on/off via the :ref:`config-commit_parser_options` setting. *Feature available in
+  v9.17.0+.*
 
 If no commit parser options are provided via the configuration, the parser will use PSR's
 built-in :py:class:`defaults <semantic_release.commit_parser.emoji.EmojiParserOptions>`.
@@ -301,6 +307,72 @@ return an empty tuple.
 - `GitLab: Default Closing Patterns <https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#default-closing-pattern>`_
 
 .. _Git Trailer format: https://git-scm.com/docs/git-interpret-trailers
+
+----
+
+.. _commit_parser-builtin-squash_commit_evaluation:
+
+Common Squash Commit Evaluation
+"""""""""""""""""""""""""""""""
+
+*Introduced in v9.17.0*
+
+All of the PSR built-in parsers implement common squash commit evaluation logic to identify
+and extract individual commit messages from a single squashed commit. The parsers will
+look for common squash commit delimiters and multiple matches of the commit message
+format to identify each individual commit message that was squashed. The parsers will
+return a list containing each commit message as a separate commit object. Squashed commits
+will be evaluated individually for both the level bump and changelog generation. If no
+squash commits are found, a list with the single commit object will be returned.
+
+Currently, PSR has been tested against GitHub, BitBucket, and official ``git`` squash
+merge commmit messages. GitLab does not have a default template for squash commit messages
+but can be customized per project or server. If you are using GitLab, you will need to
+ensure that the squash commit message format is similar to the example below.
+
+**Example**:
+
+*The following example will extract three separate commit messages from a single GitHub
+formatted squash commit message of conventional commit style:*
+
+.. code-block:: text
+
+    feat(config): add new config option (#123)
+
+    * refactor(config): change the implementation of config loading
+
+    * docs(configuration): defined new config option for the project
+
+When parsed with the default angular parser with squash commits toggled on, the version
+bump will be determined by the highest level bump of the three commits (in this case, a
+minor bump because of the feature commit) and the release notes would look similar to
+the following:
+
+.. code-block:: markdown
+
+    ## Features
+
+    - **config**: add new config option (#123)
+
+    ## Documentation
+
+    - **configuration**: defined new config option for the project (#123)
+
+    ## Refactoring
+
+    - **config**: change the implementation of config loading (#123)
+
+Merge request numbers and commit hash values will be the same across all extracted
+commits. Additionally, any :ref:`config-changelog-exclude_commit_patterns` will be
+applied individually to each extracted commit so if you are have an exclusion match
+for ignoring ``refactor`` commits, the second commit in the example above would be
+excluded from the changelog.
+
+.. important::
+  When squash commit evaluation is enabled, if you squashed a higher level bump commit
+  into the body of a lower level bump commit, the higher level bump commit will be
+  evaluated as the level bump for the entire squashed commit. This includes breaking
+  change descriptions.
 
 ----
 
@@ -429,27 +501,22 @@ available.
 .. _catching exceptions in Python is slower: https://docs.python.org/3/faq/design.html#how-fast-are-exceptions
 .. _namedtuple: https://docs.python.org/3/library/typing.html#typing.NamedTuple
 
-.. _commit-parsing-parser-options:
+.. _commit_parser-parser-options:
 
 Parser Options
 """"""""""""""
 
-To provide options to the commit parser which is configured in the :ref:`configuration file
-<configuration>`, Python Semantic Release includes a
-:py:class:`ParserOptions <semantic_release.commit_parser._base.ParserOptions>`
-class. Each parser built into Python Semantic Release has a corresponding "options" class, which
-subclasses :py:class:`ParserOptions <semantic_release.commit_parser._base.ParserOptions>`.
-
-The configuration in :ref:`commit_parser_options <config-commit_parser_options>` is passed to the
-"options" class which is specified by the configured :ref:`commit_parser <config-commit_parser>` -
-more information on how this is specified is below.
+When writing your own parser, you should accompany the parser with an "options" class
+which accepts the appropriate keyword arguments. This class' ``__init__`` method should
+store the values that are needed for parsing appropriately. Python Semantic Release will
+pass any configuration options from the configuration file's
+:ref:`commit_parser_options <config-commit_parser_options>`, into your custom parser options
+class. To ensure that the configuration options are passed correctly, the options class
+should inherit from the
+:py:class:`ParserOptions <semantic_release.commit_parser._base.ParserOptions>` class.
 
 The "options" class is used to validate the options which are configured in the repository,
 and to provide default values for these options where appropriate.
-
-If you are writing your own parser, you should accompany it with an "options" class
-which accepts the appropriate keyword arguments. This class' ``__init__`` method should
-store the values that are needed for parsing appropriately.
 
 .. _commit-parsing-commit-parsers:
 

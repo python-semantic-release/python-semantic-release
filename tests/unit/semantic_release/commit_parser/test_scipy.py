@@ -1,23 +1,40 @@
 from __future__ import annotations
 
 from re import compile as regexp
-from typing import TYPE_CHECKING, Sequence
+from textwrap import dedent
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 import pytest
 
-from semantic_release.commit_parser.scipy import tag_to_section
-from semantic_release.commit_parser.token import ParsedCommit
+from semantic_release.commit_parser.scipy import (
+    ScipyCommitParser,
+    ScipyParserOptions,
+    tag_to_section,
+)
+from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
 
 from tests.const import SUPPORTED_ISSUE_CLOSURE_PREFIXES
 
 if TYPE_CHECKING:
-    from semantic_release.commit_parser.scipy import ScipyCommitParser
-
     from tests.conftest import MakeCommitObjFn
 
 
 unwordwrap = regexp(r"((?<!-)\n(?![\s*-]))")
+
+
+@pytest.mark.parametrize(
+    "commit_message", ["", "feat(parser\n): Add new parser pattern"]
+)
+def test_parser_raises_unknown_message_style(
+    default_scipy_parser: ScipyCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+    commit_message: str,
+):
+    parsed_results = default_scipy_parser.parse(make_commit_obj(commit_message))
+    assert isinstance(parsed_results, Iterable)
+    for result in parsed_results:
+        assert isinstance(result, ParseError)
 
 
 def test_valid_scipy_parsed_chore_commits(
@@ -39,14 +56,16 @@ def test_valid_scipy_parsed_chore_commits(
         expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
+        assert isinstance(parsed_results, Iterable)
 
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.NO_RELEASE is result.bump
         assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
-        assert result.scope is None
+        assert not result.scope
 
 
 def test_valid_scipy_parsed_patch_commits(
@@ -68,14 +87,16 @@ def test_valid_scipy_parsed_patch_commits(
         expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
+        assert isinstance(parsed_results, Iterable)
 
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.PATCH is result.bump
         assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
-        assert result.scope is None
+        assert not result.scope
 
 
 def test_valid_scipy_parsed_minor_commits(
@@ -97,14 +118,16 @@ def test_valid_scipy_parsed_minor_commits(
         expected_brk_desc: list[str] = []
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
+        assert isinstance(parsed_results, Iterable)
 
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.MINOR is result.bump
         assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
-        assert result.scope is None
+        assert not result.scope
 
 
 def test_valid_scipy_parsed_major_commits(
@@ -133,14 +156,18 @@ def test_valid_scipy_parsed_major_commits(
         ]
 
         commit = make_commit_obj(full_commit_msg)
-        result = default_scipy_parser.parse(commit)
+        parsed_results = default_scipy_parser.parse(commit)
 
+        assert isinstance(parsed_results, Iterable)
+        assert len(parsed_results) == 1
+
+        result = next(iter(parsed_results))
         assert isinstance(result, ParsedCommit)
         assert LevelBump.MAJOR is result.bump
         assert expected_type == result.type
         assert expected_descriptions == result.descriptions
         assert expected_brk_desc == result.breaking_descriptions
-        assert result.scope is None
+        assert not result.scope
 
 
 @pytest.mark.parametrize(
@@ -180,10 +207,539 @@ def test_parser_return_linked_merge_request_from_commit_message(
     merge_request_number: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_scipy_parser.parse(make_commit_obj(message))
+    parsed_results = default_scipy_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert merge_request_number == result.linked_merge_request
     assert subject == result.descriptions[0]
+
+
+@pytest.mark.parametrize(
+    "commit_message, expected_commit_details",
+    [
+        pytest.param(
+            commit_message,
+            expected_commit_details,
+            id=test_id,
+        )
+        for test_id, commit_message, expected_commit_details in [
+            (
+                "Single commit squashed via BitBucket PR resolution",
+                dedent(
+                    """\
+                    Merged in feat/my-awesome-stuff  (pull request #10)
+
+                    BUG(release-config): some commit subject
+
+                    An additional description
+
+                    Second paragraph with multiple lines
+                    that will be condensed
+
+                    Resolves: #12
+                    Signed-off-by: author <author@not-an-email.com>
+                    """
+                ),
+                [
+                    None,
+                    {
+                        "bump": LevelBump.PATCH,
+                        "type": "fix",
+                        "scope": "release-config",
+                        "descriptions": [
+                            "some commit subject",
+                            "An additional description",
+                            "Second paragraph with multiple lines that will be condensed",
+                            "Resolves: #12",
+                            "Signed-off-by: author <author@not-an-email.com>",
+                        ],
+                        "linked_issues": ("#12",),
+                        "linked_merge_request": "#10",
+                    },
+                ],
+            ),
+            (
+                "Multiple commits squashed via BitBucket PR resolution",
+                dedent(
+                    """\
+                    Merged in feat/my-awesome-stuff  (pull request #10)
+
+                    BUG(release-config): some commit subject
+
+                    An additional description
+
+                    Second paragraph with multiple lines
+                    that will be condensed
+
+                    Resolves: #12
+                    Signed-off-by: author <author@not-an-email.com>
+
+                    ENH: implemented searching gizmos by keyword
+
+                    DOC(parser): add new parser pattern
+
+                    MAINT(cli)!: changed option name
+
+                    BREAKING CHANGE: A breaking change description
+
+                    Closes: #555
+
+                    invalid non-conventional formatted commit
+                    """
+                ),
+                [
+                    None,
+                    {
+                        "bump": LevelBump.PATCH,
+                        "type": "fix",
+                        "scope": "release-config",
+                        "descriptions": [
+                            "some commit subject",
+                            "An additional description",
+                            "Second paragraph with multiple lines that will be condensed",
+                            "Resolves: #12",
+                            "Signed-off-by: author <author@not-an-email.com>",
+                        ],
+                        "linked_issues": ("#12",),
+                        "linked_merge_request": "#10",
+                    },
+                    {
+                        "bump": LevelBump.MINOR,
+                        "type": "feature",
+                        "descriptions": ["implemented searching gizmos by keyword"],
+                        "linked_merge_request": "#10",
+                    },
+                    {
+                        "bump": LevelBump.NO_RELEASE,
+                        "type": "documentation",
+                        "scope": "parser",
+                        "descriptions": [
+                            "add new parser pattern",
+                        ],
+                        "linked_merge_request": "#10",
+                    },
+                    {
+                        "bump": LevelBump.MAJOR,
+                        "type": "fix",
+                        "scope": "cli",
+                        "descriptions": [
+                            "changed option name",
+                            "BREAKING CHANGE: A breaking change description",
+                            "Closes: #555",
+                            # This is a bit unusual but its because there is no identifier that will
+                            # identify this as a separate commit so it gets included in the previous commit
+                            "invalid non-conventional formatted commit",
+                        ],
+                        "breaking_descriptions": [
+                            "A breaking change description",
+                        ],
+                        "linked_issues": ("#555",),
+                        "linked_merge_request": "#10",
+                    },
+                ],
+            ),
+        ]
+    ],
+)
+def test_parser_squashed_commit_bitbucket_squash_style(
+    default_scipy_parser: ScipyCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+    commit_message: str,
+    expected_commit_details: Sequence[dict | None],
+):
+    # Setup: Enable squash commit parsing
+    parser = ScipyCommitParser(
+        options=ScipyParserOptions(
+            **{
+                **default_scipy_parser.options.__dict__,
+                "parse_squash_commits": True,
+            }
+        )
+    )
+
+    # Build the commit object and parse it
+    the_commit = make_commit_obj(commit_message)
+    parsed_results = parser.parse(the_commit)
+
+    # Validate the results
+    assert isinstance(parsed_results, Iterable)
+    assert (
+        len(expected_commit_details) == len(parsed_results)
+    ), f"Expected {len(expected_commit_details)} parsed results, but got {len(parsed_results)}"
+
+    for result, expected in zip(parsed_results, expected_commit_details):
+        if expected is None:
+            assert isinstance(result, ParseError)
+            continue
+
+        assert isinstance(result, ParsedCommit)
+        # Required
+        assert expected["bump"] == result.bump
+        assert expected["type"] == result.type
+        # Optional
+        assert expected.get("scope", "") == result.scope
+        # TODO: v10 change to tuples
+        assert expected.get("descriptions", []) == result.descriptions
+        assert expected.get("breaking_descriptions", []) == result.breaking_descriptions
+        assert expected.get("linked_issues", ()) == result.linked_issues
+        assert expected.get("linked_merge_request", "") == result.linked_merge_request
+
+
+@pytest.mark.parametrize(
+    "commit_message, expected_commit_details",
+    [
+        pytest.param(
+            commit_message,
+            expected_commit_details,
+            id=test_id,
+        )
+        for test_id, commit_message, expected_commit_details in [
+            (
+                "Single commit squashed via manual Git squash merge",
+                dedent(
+                    """\
+                    Squashed commit of the following:
+
+                    commit 63ec09b9e844e616dcaa7bae35a0b66671b59fbb
+                    Author: author <author@not-an-email.com>
+                    Date:   Sun Jan 19 12:05:23 2025 +0000
+
+                        BUG(release-config): some commit subject
+
+                        An additional description
+
+                        Second paragraph with multiple lines
+                        that will be condensed
+
+                        Resolves: #12
+                        Signed-off-by: author <author@not-an-email.com>
+
+                    """
+                ),
+                [
+                    {
+                        "bump": LevelBump.PATCH,
+                        "type": "fix",
+                        "scope": "release-config",
+                        "descriptions": [
+                            "some commit subject",
+                            "An additional description",
+                            "Second paragraph with multiple lines that will be condensed",
+                            "Resolves: #12",
+                            "Signed-off-by: author <author@not-an-email.com>",
+                        ],
+                        "linked_issues": ("#12",),
+                    }
+                ],
+            ),
+            (
+                "Multiple commits squashed via manual Git squash merge",
+                dedent(
+                    """\
+                    Squashed commit of the following:
+
+                    commit 63ec09b9e844e616dcaa7bae35a0b66671b59fbb
+                    Author: author <author@not-an-email.com>
+                    Date:   Sun Jan 19 12:05:23 2025 +0000
+
+                        BUG(release-config): some commit subject
+
+                        An additional description
+
+                        Second paragraph with multiple lines
+                        that will be condensed
+
+                        Resolves: #12
+                        Signed-off-by: author <author@not-an-email.com>
+
+                    commit 1f34769bf8352131ad6f4879b8c47becf3c7aa69
+                    Author: author <author@not-an-email.com>
+                    Date:   Sat Jan 18 10:13:53 2025 +0000
+
+                        ENH: implemented searching gizmos by keyword
+
+                    commit b2334a64a11ef745a17a2a4034f651e08e8c45a6
+                    Author: author <author@not-an-email.com>
+                    Date:   Sat Jan 18 10:13:53 2025 +0000
+
+                        DOC(parser): add new parser pattern
+
+                    commit 5f0292fb5a88c3a46e4a02bec35b85f5228e8e51
+                    Author: author <author@not-an-email.com>
+                    Date:   Sat Jan 18 10:13:53 2025 +0000
+
+                        MAINT(cli): changed option name
+
+                        BREAKING CHANGE: A breaking change description
+
+                        Closes: #555
+
+                    commit 2f314e7924be161cfbf220d3b6e2a6189a3b5609
+                    Author: author <author@not-an-email.com>
+                    Date:   Sat Jan 18 10:13:53 2025 +0000
+
+                        invalid non-conventional formatted commit
+                    """
+                ),
+                [
+                    {
+                        "bump": LevelBump.PATCH,
+                        "type": "fix",
+                        "scope": "release-config",
+                        "descriptions": [
+                            "some commit subject",
+                            "An additional description",
+                            "Second paragraph with multiple lines that will be condensed",
+                            "Resolves: #12",
+                            "Signed-off-by: author <author@not-an-email.com>",
+                        ],
+                        "linked_issues": ("#12",),
+                    },
+                    {
+                        "bump": LevelBump.MINOR,
+                        "type": "feature",
+                        "descriptions": ["implemented searching gizmos by keyword"],
+                    },
+                    {
+                        "bump": LevelBump.NO_RELEASE,
+                        "type": "documentation",
+                        "scope": "parser",
+                        "descriptions": [
+                            "add new parser pattern",
+                        ],
+                    },
+                    {
+                        "bump": LevelBump.MAJOR,
+                        "type": "fix",
+                        "scope": "cli",
+                        "descriptions": [
+                            "changed option name",
+                            "BREAKING CHANGE: A breaking change description",
+                            "Closes: #555",
+                        ],
+                        "breaking_descriptions": [
+                            "A breaking change description",
+                        ],
+                        "linked_issues": ("#555",),
+                    },
+                    None,
+                ],
+            ),
+        ]
+    ],
+)
+def test_parser_squashed_commit_git_squash_style(
+    default_scipy_parser: ScipyCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+    commit_message: str,
+    expected_commit_details: Sequence[dict | None],
+):
+    # Setup: Enable squash commit parsing
+    parser = ScipyCommitParser(
+        options=ScipyParserOptions(
+            **{
+                **default_scipy_parser.options.__dict__,
+                "parse_squash_commits": True,
+            }
+        )
+    )
+
+    # Build the commit object and parse it
+    the_commit = make_commit_obj(commit_message)
+    parsed_results = parser.parse(the_commit)
+
+    # Validate the results
+    assert isinstance(parsed_results, Iterable)
+    assert (
+        len(expected_commit_details) == len(parsed_results)
+    ), f"Expected {len(expected_commit_details)} parsed results, but got {len(parsed_results)}"
+
+    for result, expected in zip(parsed_results, expected_commit_details):
+        if expected is None:
+            assert isinstance(result, ParseError)
+            continue
+
+        assert isinstance(result, ParsedCommit)
+        # Required
+        assert expected["bump"] == result.bump
+        assert expected["type"] == result.type
+        # Optional
+        assert expected.get("scope", "") == result.scope
+        # TODO: v10 change to tuples
+        assert expected.get("descriptions", []) == result.descriptions
+        assert expected.get("breaking_descriptions", []) == result.breaking_descriptions
+        assert expected.get("linked_issues", ()) == result.linked_issues
+        assert expected.get("linked_merge_request", "") == result.linked_merge_request
+
+
+@pytest.mark.parametrize(
+    "commit_message, expected_commit_details",
+    [
+        pytest.param(
+            commit_message,
+            expected_commit_details,
+            id=test_id,
+        )
+        for test_id, commit_message, expected_commit_details in [
+            (
+                "Single commit squashed via GitHub PR resolution",
+                dedent(
+                    """\
+                    BUG(release-config): some commit subject (#10)
+
+                    An additional description
+
+                    Second paragraph with multiple lines
+                    that will be condensed
+
+                    Resolves: #12
+                    Signed-off-by: author <author@not-an-email.com>
+                    """
+                ),
+                [
+                    {
+                        "bump": LevelBump.PATCH,
+                        "type": "fix",
+                        "scope": "release-config",
+                        "descriptions": [
+                            "some commit subject (#10)",
+                            "An additional description",
+                            "Second paragraph with multiple lines that will be condensed",
+                            "Resolves: #12",
+                            "Signed-off-by: author <author@not-an-email.com>",
+                        ],
+                        "linked_issues": ("#12",),
+                        "linked_merge_request": "#10",
+                    },
+                ],
+            ),
+            (
+                "Multiple commits squashed via GitHub PR resolution",
+                dedent(
+                    """\
+                    BUG(release-config): some commit subject (#10)
+
+                    An additional description
+
+                    Second paragraph with multiple lines
+                    that will be condensed
+
+                    Resolves: #12
+                    Signed-off-by: author <author@not-an-email.com>
+
+                    * ENH: implemented searching gizmos by keyword
+
+                    * DOC(parser): add new parser pattern
+
+                    * MAINT(cli)!: changed option name
+
+                    BREAKING CHANGE: A breaking change description
+
+                    Closes: #555
+
+                    * invalid non-conventional formatted commit
+                    """
+                ),
+                [
+                    {
+                        "bump": LevelBump.PATCH,
+                        "type": "fix",
+                        "scope": "release-config",
+                        "descriptions": [
+                            # TODO: v10 removal of PR number from subject
+                            "some commit subject (#10)",
+                            "An additional description",
+                            "Second paragraph with multiple lines that will be condensed",
+                            "Resolves: #12",
+                            "Signed-off-by: author <author@not-an-email.com>",
+                        ],
+                        "linked_issues": ("#12",),
+                        "linked_merge_request": "#10",
+                    },
+                    {
+                        "bump": LevelBump.MINOR,
+                        "type": "feature",
+                        "descriptions": ["implemented searching gizmos by keyword"],
+                        "linked_merge_request": "#10",
+                    },
+                    {
+                        "bump": LevelBump.NO_RELEASE,
+                        "type": "documentation",
+                        "scope": "parser",
+                        "descriptions": [
+                            "add new parser pattern",
+                        ],
+                        "linked_merge_request": "#10",
+                    },
+                    {
+                        "bump": LevelBump.MAJOR,
+                        "type": "fix",
+                        "scope": "cli",
+                        "descriptions": [
+                            "changed option name",
+                            "BREAKING CHANGE: A breaking change description",
+                            "Closes: #555",
+                            # This is a bit unusual but its because there is no identifier that will
+                            # identify this as a separate commit so it gets included in the previous commit
+                            "* invalid non-conventional formatted commit",
+                        ],
+                        "breaking_descriptions": [
+                            "A breaking change description",
+                        ],
+                        "linked_issues": ("#555",),
+                        "linked_merge_request": "#10",
+                    },
+                ],
+            ),
+        ]
+    ],
+)
+def test_parser_squashed_commit_github_squash_style(
+    default_scipy_parser: ScipyCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+    commit_message: str,
+    expected_commit_details: Sequence[dict | None],
+):
+    # Setup: Enable squash commit parsing
+    parser = ScipyCommitParser(
+        options=ScipyParserOptions(
+            **{
+                **default_scipy_parser.options.__dict__,
+                "parse_squash_commits": True,
+            }
+        )
+    )
+
+    # Build the commit object and parse it
+    the_commit = make_commit_obj(commit_message)
+    parsed_results = parser.parse(the_commit)
+
+    # Validate the results
+    assert isinstance(parsed_results, Iterable)
+    assert (
+        len(expected_commit_details) == len(parsed_results)
+    ), f"Expected {len(expected_commit_details)} parsed results, but got {len(parsed_results)}"
+
+    for result, expected in zip(parsed_results, expected_commit_details):
+        if expected is None:
+            assert isinstance(result, ParseError)
+            continue
+
+        assert isinstance(result, ParsedCommit)
+        # Required
+        assert expected["bump"] == result.bump
+        assert expected["type"] == result.type
+        # Optional
+        assert expected.get("scope", "") == result.scope
+        # TODO: v10 change to tuples
+        assert expected.get("descriptions", []) == result.descriptions
+        assert expected.get("breaking_descriptions", []) == result.breaking_descriptions
+        assert expected.get("linked_issues", ()) == result.linked_issues
+        assert expected.get("linked_merge_request", "") == result.linked_merge_request
 
 
 @pytest.mark.parametrize(
@@ -465,6 +1021,11 @@ def test_parser_return_linked_issues_from_commit_message(
     linked_issues: Sequence[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    result = default_scipy_parser.parse(make_commit_obj(message))
+    parsed_results = default_scipy_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert tuple(linked_issues) == result.linked_issues

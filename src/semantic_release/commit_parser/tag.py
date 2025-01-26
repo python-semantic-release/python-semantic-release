@@ -1,5 +1,7 @@
 """Legacy commit parser from Python Semantic Release 1.0"""
 
+from __future__ import annotations
+
 import logging
 import re
 
@@ -41,7 +43,7 @@ class TagCommitParser(CommitParser[ParseResult, TagParserOptions]):
     def get_default_options() -> TagParserOptions:
         return TagParserOptions()
 
-    def parse(self, commit: Commit) -> ParseResult:
+    def parse(self, commit: Commit) -> ParseResult | list[ParseResult]:
         message = str(commit.message)
 
         # Attempt to parse the commit message with a regular expression

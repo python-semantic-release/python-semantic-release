@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import suppress
+from copy import deepcopy
 from functools import reduce
 from re import MULTILINE, compile as regexp
 from typing import TYPE_CHECKING
@@ -11,7 +13,9 @@ from semantic_release.helpers import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from re import Pattern
-    from typing import TypedDict
+    from typing import Any, TypedDict
+
+    from git import Commit
 
     class RegexReplaceDef(TypedDict):
         pattern: Pattern
@@ -74,3 +78,44 @@ def parse_paragraphs(text: str) -> list[str]:
             ],
         )
     )
+
+
+def force_str(msg: str | bytes | bytearray | memoryview) -> str:
+    # This shouldn't be a thing but typing is being weird around what
+    # git.commit.message returns and the memoryview type won't go away
+    message = msg.tobytes() if isinstance(msg, memoryview) else msg
+    return (
+        message.decode("utf-8")
+        if isinstance(message, (bytes, bytearray))
+        else str(message)
+    )
+
+
+def deep_copy_commit(commit: Commit) -> dict[str, Any]:
+    keys = [
+        "repo",
+        "binsha",
+        "author",
+        "authored_date",
+        "committer",
+        "committed_date",
+        "message",
+        "tree",
+        "parents",
+        "encoding",
+        "gpgsig",
+        "author_tz_offset",
+        "committer_tz_offset",
+    ]
+    kwargs = {}
+    for key in keys:
+        with suppress(ValueError):
+            if hasattr(commit, key) and (value := getattr(commit, key)) is not None:
+                if key in ["parents", "repo", "tree"]:
+                    # These tend to have circular references so don't deepcopy them
+                    kwargs[key] = value
+                    continue
+
+                kwargs[key] = deepcopy(value)
+
+    return kwargs
