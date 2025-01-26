@@ -1,6 +1,102 @@
 # CHANGELOG
 
 
+## v9.17.0 (2025-01-26)
+
+### Bug Fixes
+
+- **github-action**: Disable writing python bytecode in action execution
+  ([#1152](https://github.com/python-semantic-release/python-semantic-release/pull/1152),
+  [`315ae21`](https://github.com/python-semantic-release/python-semantic-release/commit/315ae2176e211b00b13374560d81e127a3065d1a))
+
+File permission issues can occur when using the github-action and dynamically loading files from the
+  repository. When importing, python generally will create bytecode files and write to disk as the
+  current user. Because the default user in the github action is root, those files are written as
+  root which means when it returns to the rest of the workflow, those files cannot be modified or
+  deleted. With this change, we disable writing of bytecode files which prevents any failures that
+  may result after the python-semantic-release action is executed.
+
+### Features
+
+- **changelog**: Add `sort_numerically` filter function to template environment
+  ([#1146](https://github.com/python-semantic-release/python-semantic-release/pull/1146),
+  [`7792388`](https://github.com/python-semantic-release/python-semantic-release/commit/77923885c585171e8888aacde989837ecbabf3fc))
+
+* test(helpers): add unit tests for various prefixed number lists
+
+* test(changelog-context): add unit tests to validate use of `sort_numerically` filter
+
+* test(release-notes-context): add unit tests to validate use of `sort_numerically` filter
+
+* refactor(util): relocate `sort_numerically` function to top level
+
+* docs(changelog-templates): add description for new `sort_numerically` filter function
+
+- **config**: Extend support of remote urls aliased using git `insteadOf` configurations
+  ([#1151](https://github.com/python-semantic-release/python-semantic-release/pull/1151),
+  [`4045037`](https://github.com/python-semantic-release/python-semantic-release/commit/40450375c7951dafddb09bef8001db7180d95f3a))
+
+Resolves: #1150
+
+* refactor(hvcs): add validation of git urls upon vcs client initialization
+
+* test(hvcs): refactor unit test to catch validation error immediately of bad git url
+
+* test(config): add test case of a git `insteadOf` aliased origin
+
+- **parsers**: Parse squashed commits individually
+  ([#1112](https://github.com/python-semantic-release/python-semantic-release/pull/1112),
+  [`cf785ca`](https://github.com/python-semantic-release/python-semantic-release/commit/cf785ca79a49eb4ee95c148e0ae6a19e230e915c))
+
+* test(parser-angular): update unit tests for parser return value compatibility
+
+* test(parser-scipy): update unit tests for parser return value compatibility
+
+* test(parser-emoji): update unit tests for parser return value compatibility
+
+* feat(version): parse squashed commits individually
+
+adds the functionality to separately parse each commit message within a squashed merge commit to
+  detect combined commit types that could change the version bump
+
+* feat(changelog): parse squashed commits individually
+
+adds functionality to separately parse each commit message within a squashed merge commit which
+  decouples the commits into their respective type categories in the changelog.
+
+* refactor(helpers): centralize utility for applying multiple text substitutions
+
+* feat(parser-angular): upgrade angular parser to parse squashed commits individually
+
+Resolves: #1085
+
+* feat(parser-angular): apply PR/MR numbers to all parsed commits from a squash merge
+
+* feat(parser-emoji): add functionality to interpret scopes from gitmoji commit messages
+
+* feat(parser-emoji): upgrade emoji parser to parse squashed commits individually
+
+* test(fixtures): adjust parser for squashed commit definitions
+
+* test(fixtures): change config of github flow repo to parse squash commits
+
+* test(fixtures): add fixture to create gitlab formatted merge commit
+
+* refactor(parser-scipy): standardize all category spelling applied to commits
+
+* docs(commit-parsing): add description for squash commit evaluation option of default parsers
+
+* docs(configuration): update the `commit_parser_options` setting description
+
+### Performance Improvements
+
+- **logging**: Remove irrelevant debug logging statements
+  ([#1147](https://github.com/python-semantic-release/python-semantic-release/pull/1147),
+  [`f1ef4ec`](https://github.com/python-semantic-release/python-semantic-release/commit/f1ef4ecf5f22684a870b958f87d1ca2650e612db))
+
+* refactor: adjust logging output
+
+
 ## v9.16.1 (2025-01-12)
 
 ### Bug Fixes
