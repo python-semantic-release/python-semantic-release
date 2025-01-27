@@ -1,0 +1,71 @@
+{#
+This Update changelog template uses the following logic:
+
+  1. Read previous changelog file (ex. project_root/CHANGELOG.md)
+  2. Split on insertion flag (ex. <!-- version list -->)
+  3. Print top half of previous changelog
+  3. New Changes (unreleased commits & newly released)
+  4. Print bottom half of previous changelog
+
+  Note: if a previous file was not found, it does not write anything at the bottom
+        but render does NOT fail
+
+#}{%  set prev_changelog_contents = prev_changelog_file | read_file | safe
+%}{%  set changelog_parts = prev_changelog_contents.split(insertion_flag, maxsplit=1)
+%}{#
+#}{%  if changelog_parts | length < 2
+%}{#    # insertion flag was not found, check if the file was empty or did not exist
+#}{%    if prev_changelog_contents | length > 0
+%}{#      # File has content but no insertion flag, therefore, file will not be updated
+#}{{      changelog_parts[0]
+}}{%    else
+%}{#      # File was empty or did not exist, therefore, it will be created from scratch
+#}{%      include "changelog_init.rst.j2"
+%}{%    endif
+%}{%  else
+%}{#
+   #    Previous Changelog Header
+   #      - Depending if there is header content, then it will separate the insertion flag
+   #        with a newline from header content, otherwise it will just print the insertion flag
+#}{%    set prev_changelog_top = changelog_parts[0] | trim
+%}{%    if prev_changelog_top | length > 0
+%}{{
+          "%s\n\n%s\n" | format(prev_changelog_top, insertion_flag | trim)
+
+}}{%    else
+%}{{
+          "%s\n" | format(insertion_flag | trim)
+
+}}{%    endif
+%}{#
+   #    Any Unreleased Details (uncommon)
+#}{%    include "unreleased_changes.rst.j2"
+-%}{#
+#}{%    if releases | length > 0
+%}{#      # Latest Release Details
+#}{%      set release = releases[0]
+%}{#
+#}{%      if releases | length == 1 and ctx.mask_initial_release
+%}{#        # First Release detected
+#}{{        "\n"
+}}{%-       include "first_release.rst.j2"
+-%}{{       "\n"
+}}{#
+#}{%      elif release.version.as_semver_tag() ~ " (" not in changelog_parts[1]
+%}{#        # The release version is not already in the changelog so we add it
+#}{{        "\n"
+}}{%-       include "versioned_changes.rst.j2"
+-%}{{       "\n"
+}}{#
+#}{%      endif
+%}{%    endif
+%}{#
+   #    Previous Changelog Footer
+   #      - skips printing footer if empty, which happens when the insertion_flag
+   #        was at the end of the file (ignoring whitespace)
+#}{%    set previous_changelog_bottom = changelog_parts[1] | trim
+%}{%    if previous_changelog_bottom | length > 0
+%}{{      "\n%s\n" | format(previous_changelog_bottom)
+}}{%    endif
+%}{%  endif
+%}

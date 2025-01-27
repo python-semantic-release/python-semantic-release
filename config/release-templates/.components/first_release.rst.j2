@@ -1,0 +1,22 @@
+{% from "macros.rst.j2" import generate_heading_underline
+%}{#
+
+.. _changelog-vX.X.X:
+
+vX.X.X (YYYY-MMM-DD)
+====================
+
+* Initial Release
+
+#}{%  set version_header = "%s (%s)" | format(
+        release.version.as_semver_tag(),
+        release.tagged_date.strftime("%Y-%m-%d")
+      )
+%}
+
+{{- ".. _changelog-%s:" | format(release.version.as_semver_tag()) }}
+
+{{ version_header }}
+{{ generate_heading_underline(version_header, "=") }}
+
+* Initial Release

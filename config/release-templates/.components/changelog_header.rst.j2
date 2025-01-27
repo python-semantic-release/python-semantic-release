@@ -1,0 +1,10 @@
+.. _changelog:
+
+{%    if ctx.changelog_mode == "update"
+%}{#    # Modified insertion flag to insert a changelog header directly
+        # which convienently puts the insertion flag incognito when reading raw RST
+#}{{
+        insertion_flag ~ "\n"
+
+}}{%  endif
+%}

@@ -1,0 +1,39 @@
+{#
+This changelog template initializes a full changelog for the project,
+it follows the following logic:
+  1. Header
+  2. Any Unreleased Details (uncommon)
+  3. all previous releases except the very first release
+  4. the first release
+
+#}{#
+   #    # Header
+#}{%    include "changelog_header.rst.j2"
+-%}{#
+    #   # Any Unreleased Details (uncommon)
+#}{%    include "unreleased_changes.rst.j2"
+-%}{#
+    #   # Since this is initialization, we are generating all the previous
+    #   # release notes per version. The very first release notes is specialized.
+    #   # We also have non-conformative commits, so insert manual write-ups.
+#}{%    if releases | length > 0
+%}{%      for release in releases
+%}{%        if loop.last
+%}{{          "\n"
+}}{%          include "first_release.rst.j2"
+-%}{{         "\n"
+}}{#
+#}{%        elif release.version == "1.0.0"
+%}{#          # Append 0.1.1 through 1.0.0 non-generated changelog only once
+#}{{          "\n"
+}}{%          include "changelog_1.0.0.rst.j2"
+-%}{{         "\n\n"
+}}{#
+#}{%        elif release.version > "1.0.0"
+%}{{          "\n"
+}}{%          include "versioned_changes.rst.j2"
+-%}{{         "\n"
+}}{%        endif
+%}{%      endfor
+%}{%    endif
+%}

@@ -399,6 +399,7 @@ ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 [tool.semantic_release]
 logging_use_named_masks = true
 commit_parser = "angular"
+commit_parser_options = { parse_squash_commits = true }
 build_command = """
     python -m pip install -e .[build]
     python -m build .
@@ -408,6 +409,7 @@ version_variables = ["src/semantic_release/__init__.py:__version__"]
 version_toml = ["pyproject.toml:project.version"]
 
 [tool.semantic_release.changelog]
+# default_templates = { changelog_file = "CHANGELOG.rst" }
 exclude_commit_patterns = [
   '''chore(?:\([^)]*?\))?: .+''',
   '''ci(?:\([^)]*?\))?: .+''',
@@ -420,6 +422,9 @@ exclude_commit_patterns = [
   # Old semantic-release version commits
   '''^\d+\.\d+\.\d+''',
 ]
+insertion_flag = "=========\nCHANGELOG\n========="
+mode = "update"
+template_dir = "config/release-templates"
 
 [tool.semantic_release.branches.main]
 match = "(main|master)"
