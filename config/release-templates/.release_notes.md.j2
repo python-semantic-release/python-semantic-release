@@ -103,14 +103,8 @@
 {{
   "- %s" | format(
     format_link(
-      [
-        "https://github.com",
-        repo_name,
-        repo_name,
-        "releases/tag",
-        release.version.as_tag(),
-      ] | join("/"),
-      "GitHub Release Assets",
+      release.version.as_tag() | create_release_url,
+      "{vcs_name} Release Assets" | format_w_official_vcs_name,
     )
   )
 }}
