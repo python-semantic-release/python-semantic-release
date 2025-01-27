@@ -1,7 +1,8 @@
 {%    from 'macros.md.j2' import apply_alphabetical_ordering_by_brk_descriptions
 %}{%  from 'macros.md.j2' import apply_alphabetical_ordering_by_descriptions
+%}{%  from 'macros.md.j2' import apply_alphabetical_ordering_by_release_notices
 %}{%  from 'macros.md.j2' import emoji_map, format_breaking_changes_description
-%}{%  from 'macros.md.j2' import format_commit_summary_line
+%}{%  from 'macros.md.j2' import format_commit_summary_line, format_release_notice
 %}{%  from 'macros.md.j2' import section_heading_order, section_heading_translations
 %}{#
 EXAMPLE:
@@ -27,6 +28,14 @@ EXAMPLE:
 - **scope**: this breaking change has a scope to identify the part of the code that
   this breaking change applies to for better context.
 
+### 💡 ADDITIONAL RELEASE INFORMATION
+
+- This is a release note that provides additional information about the release
+  that is not a breaking change or a feature/bug fix.
+
+- **scope**: this release note has a scope to identify the part of the code that
+  this release note applies to for better context.
+
 #}{%  set max_line_width = max_line_width | default(100)
 %}{%  set hanging_indent = hanging_indent | default(2)
 %}{#
@@ -51,14 +60,19 @@ EXAMPLE:
 }}{{    "%s\n" | format(commit_descriptions | unique | join("\n\n"))
 }}{%  endfor
 %}{#
-   #  # Determine if any commits have a breaking change description
+   #  # Determine if any commits have a breaking change or release notice
    #  # commit_objects is a dictionary of strings to a list of commits { "features", [ParsedCommit(), ...] }
 #}{%  set breaking_commits = []
+%}{%  set notice_commits = []
 %}{%  for commits in commit_objects.values()
 %}{%    set valid_commits = commits | rejectattr("error", "defined")
 %}{#    # Filter out breaking change commits that have no breaking descriptions
 #}{%    set _ = breaking_commits.extend(
           valid_commits | selectattr("breaking_descriptions.0")
+        )
+%}{#    # Filter out ParsedCommits commits that have no release notices
+#}{%    set _ = notice_commits.extend(
+          valid_commits | selectattr("release_notices.0")
         )
 %}{%  endfor
 %}{#
@@ -83,6 +97,30 @@ EXAMPLE:
 }}{{    "### %s BREAKING CHANGES\n" | format(emoji_map["breaking"])
 }}{{
         "\n%s\n" | format(brking_descriptions | unique | join("\n\n"))
+}}{#
+#}{%  endif
+%}{#
+#}{%  if notice_commits | length > 0
+%}{#    PREPROCESS COMMITS
+#}{%    set notice_ns = namespace(commits=notice_commits)
+%}{%    set _ = apply_alphabetical_ordering_by_release_notices(notice_ns)
+%}{#
+#}{%    set release_notices = []
+%}{#
+#}{%    for commit in notice_ns.commits
+%}{%      set full_description = "- %s" | format(
+            format_release_notice(commit).split("\n\n") | join("\n\n- ")
+          )
+%}{%      set _ = release_notices.append(
+            full_description | autofit_text_width(max_line_width, hanging_indent)
+          )
+%}{%    endfor
+%}{#
+   #    # PRINT RELEASE NOTICE INFORMATION (header & descriptions)
+#}{{    "\n"
+}}{{    "### %s ADDITIONAL RELEASE INFORMATION\n" | format(emoji_map["release_note"])
+}}{{
+        "\n%s\n" | format(release_notices | unique | join("\n\n"))
 }}{#
 #}{%  endif
 %}
