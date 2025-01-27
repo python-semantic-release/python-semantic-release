@@ -399,7 +399,7 @@ ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 [tool.semantic_release]
 logging_use_named_masks = true
 commit_parser = "angular"
-commit_parser_options = { parse_squash_commits = true }
+commit_parser_options = { parse_squash_commits = true, ignore_merge_commits = true }
 build_command = """
     python -m pip install -e .[build]
     python -m build .
