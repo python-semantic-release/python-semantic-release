@@ -647,3 +647,46 @@ def test_release_notes_context_release_url_filter(
         )
 
     assert expected_content == actual_content
+
+
+@pytest.mark.parametrize("hvcs_client_class", [Github, Gitlab, Gitea, Bitbucket])
+def test_release_notes_context_format_w_official_name_filter(
+    example_git_https_url: str,
+    hvcs_client_class: type[Github | Gitlab | Gitea],
+    single_release_history: ReleaseHistory,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+):
+    version = list(single_release_history.released.keys())[-1]
+    release = single_release_history.released[version]
+
+    example_project_dir.joinpath(".release_notes.md.j2").write_text(
+        dedent(
+            """\
+            {{ "%s" | format_w_official_vcs_name }}
+            {{ "{}" | format_w_official_vcs_name }}
+            {{ "{vcs_name}" | format_w_official_vcs_name }}
+            """
+        )
+    )
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        hvcs_client = hvcs_client_class(remote_url=example_git_https_url)
+        expected_content = dedent(
+            f"""\
+            {hvcs_client.OFFICIAL_NAME}
+            {hvcs_client.OFFICIAL_NAME}
+            {hvcs_client.OFFICIAL_NAME}
+            """
+        )
+
+        actual_content = generate_release_notes(
+            hvcs_client=hvcs_client,
+            release=release,
+            template_dir=example_project_dir,
+            history=single_release_history,
+            style="angular",
+            mask_initial_release=False,
+        )
+
+    assert expected_content == actual_content
