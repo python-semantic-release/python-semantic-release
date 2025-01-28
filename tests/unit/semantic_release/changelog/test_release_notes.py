@@ -547,3 +547,57 @@ def test_release_notes_context_sort_numerically_filter_reversed(
     )
 
     assert expected_content == actual_content
+
+
+def test_release_notes_context_pypi_url_filter(
+    example_git_https_url: str,
+    single_release_history: ReleaseHistory,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+):
+    version = list(single_release_history.released.keys())[-1]
+    release = single_release_history.released[version]
+
+    example_project_dir.joinpath(".release_notes.md.j2").write_text(
+        """{{ "example-package" | create_pypi_url }}"""
+    )
+
+    expected_content = f"https://pypi.org/project/example-package{os.linesep}"
+
+    actual_content = generate_release_notes(
+        hvcs_client=Github(remote_url=example_git_https_url),
+        release=release,
+        template_dir=example_project_dir,
+        history=single_release_history,
+        style="angular",
+        mask_initial_release=False,
+    )
+
+    assert expected_content == actual_content
+
+
+def test_release_notes_context_pypi_url_filter_tagged(
+    example_git_https_url: str,
+    single_release_history: ReleaseHistory,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+):
+    version = list(single_release_history.released.keys())[-1]
+    release = single_release_history.released[version]
+
+    example_project_dir.joinpath(".release_notes.md.j2").write_text(
+        """{{ "example-package" | create_pypi_url(release.version | string) }}"""
+    )
+
+    expected_content = f"https://pypi.org/project/example-package/{version}{os.linesep}"
+
+    actual_content = generate_release_notes(
+        hvcs_client=Github(remote_url=example_git_https_url),
+        release=release,
+        template_dir=example_project_dir,
+        history=single_release_history,
+        style="angular",
+        mask_initial_release=False,
+    )
+
+    assert expected_content == actual_content
