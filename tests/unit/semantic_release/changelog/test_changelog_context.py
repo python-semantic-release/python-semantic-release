@@ -707,3 +707,46 @@ def test_changelog_context_release_url_filter(
 
     # Evaluate
     assert expected_changelog == actual_changelog
+
+
+@pytest.mark.parametrize("hvcs_client_class", [Github, Gitlab, Gitea, Bitbucket])
+def test_changelog_context_format_w_official_name_filter(
+    example_git_https_url: str,
+    hvcs_client_class: type[Github | Gitlab | Gitea],
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog_tpl = dedent(
+        """\
+        {{ "%s" | format_w_official_vcs_name }}
+        {{ "{}" | format_w_official_vcs_name }}
+        {{ "{vcs_name}" | format_w_official_vcs_name }}
+        """
+    )
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        hvcs_client = hvcs_client_class(remote_url=example_git_https_url)
+        expected_changelog = dedent(
+            f"""\
+            {hvcs_client.OFFICIAL_NAME}
+            {hvcs_client.OFFICIAL_NAME}
+            {hvcs_client.OFFICIAL_NAME}
+            """
+        )
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=hvcs_client,
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+        mask_initial_release=False,
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
