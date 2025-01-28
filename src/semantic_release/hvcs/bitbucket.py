@@ -45,6 +45,7 @@ class Bitbucket(RemoteHvcsBase):
     `server.domain/rest/api/1.0` based on the documentation in April 2024.
     """
 
+    OFFICIAL_NAME = "Bitbucket"
     DEFAULT_DOMAIN = "bitbucket.org"
     DEFAULT_API_SUBDOMAIN_PREFIX = "api"
     DEFAULT_API_PATH_CLOUD = "/2.0"
@@ -216,6 +217,19 @@ class Bitbucket(RemoteHvcsBase):
 
         return ""
 
+    @staticmethod
+    def format_w_official_vcs_name(format_str: str) -> str:
+        if "%s" in format_str:
+            return format_str % Bitbucket.OFFICIAL_NAME
+
+        if "{}" in format_str:
+            return format_str.format(Bitbucket.OFFICIAL_NAME)
+
+        if "{vcs_name}" in format_str:
+            return format_str.format(vcs_name=Bitbucket.OFFICIAL_NAME)
+
+        return format_str
+
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (
             self.create_server_url,
@@ -223,6 +237,7 @@ class Bitbucket(RemoteHvcsBase):
             self.commit_hash_url,
             self.compare_url,
             self.pull_request_url,
+            self.format_w_official_vcs_name,
         )
 
     def upload_dists(self, tag: str, dist_glob: str) -> int:

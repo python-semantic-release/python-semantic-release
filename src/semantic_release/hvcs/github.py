@@ -73,6 +73,7 @@ class Github(RemoteHvcsBase):
     `server.domain/api/v3` based on the documentation in April 2024.
     """
 
+    OFFICIAL_NAME = "GitHub"
     DEFAULT_DOMAIN = "github.com"
     DEFAULT_API_SUBDOMAIN_PREFIX = "api"
     DEFAULT_API_DOMAIN = f"{DEFAULT_API_SUBDOMAIN_PREFIX}.{DEFAULT_DOMAIN}"
@@ -531,6 +532,24 @@ class Github(RemoteHvcsBase):
 
         return ""
 
+    def create_release_url(self, tag: str = "") -> str:
+        tag_str = tag.strip()
+        tag_path = f"tag/{tag_str}" if tag_str else ""
+        return self.create_repo_url(repo_path=f"releases/{tag_path}")
+
+    @staticmethod
+    def format_w_official_vcs_name(format_str: str) -> str:
+        if "%s" in format_str:
+            return format_str % Github.OFFICIAL_NAME
+
+        if "{}" in format_str:
+            return format_str.format(Github.OFFICIAL_NAME)
+
+        if "{vcs_name}" in format_str:
+            return format_str.format(vcs_name=Github.OFFICIAL_NAME)
+
+        return format_str
+
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (
             self.create_server_url,
@@ -539,6 +558,8 @@ class Github(RemoteHvcsBase):
             self.compare_url,
             self.issue_url,
             self.pull_request_url,
+            self.create_release_url,
+            self.format_w_official_vcs_name,
         )
 
 

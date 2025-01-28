@@ -41,6 +41,7 @@ class Gitlab(RemoteHvcsBase):
     # purposefully not CI_JOB_TOKEN as it is not a personal access token,
     # It is missing the permission to push to the repository, but has all others (releases, packages, etc.)
 
+    OFFICIAL_NAME = "GitLab"
     DEFAULT_DOMAIN = "gitlab.com"
 
     def __init__(
@@ -276,6 +277,23 @@ class Gitlab(RemoteHvcsBase):
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         return super().upload_dists(tag, dist_glob)
 
+    def create_release_url(self, tag: str = "") -> str:
+        tag_str = tag.strip()
+        return self.create_repo_url(repo_path=f"/-/releases/{tag_str}")
+
+    @staticmethod
+    def format_w_official_vcs_name(format_str: str) -> str:
+        if "%s" in format_str:
+            return format_str % Gitlab.OFFICIAL_NAME
+
+        if "{}" in format_str:
+            return format_str.format(Gitlab.OFFICIAL_NAME)
+
+        if "{vcs_name}" in format_str:
+            return format_str.format(vcs_name=Gitlab.OFFICIAL_NAME)
+
+        return format_str
+
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (
             self.create_server_url,
@@ -285,6 +303,8 @@ class Gitlab(RemoteHvcsBase):
             self.issue_url,
             self.merge_request_url,
             self.pull_request_url,
+            self.create_release_url,
+            self.format_w_official_vcs_name,
         )
 
 
