@@ -679,6 +679,24 @@ The filters provided vary based on the VCS configured and available features:
       https://pypi.org/project/example-package
       https://pypi.org/project/example-package/1.0.0
 
+* ``create_release_url (Callable[[TagStr], UrlStr])``: given a tag, return a URL to the release
+  page on the remote vcs. This filter is useful when you want to link to the release page on the
+  remote vcs.
+
+  *Introduced in ${NEW_RELEASE_TAG}.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{ "v1.0.0" | create_release_url }}
+
+  **Markdown Output:**
+
+  .. code:: markdown
+
+      https://example.com/example/repo/releases/tag/v1.0.0
+
 * ``create_server_url (Callable[[PathStr, AuthStr | None, QueryStr | None, FragmentStr | None], UrlStr])``:
   when given a path, prepend the configured vcs server host and url scheme.  Optionally you
   can provide, a auth string, a query string or a url fragment to be normalized into the
@@ -838,6 +856,29 @@ The filters provided vary based on the VCS configured and available features:
 
       [#29](https://example.com/example/repo/pull/29)
 
+* ``format_w_official_vcs_name (Callable[[str], str])``: given a format string, insert
+  the official VCS type name into the string and return. This filter is useful when you want to
+  display the proper name of the VCS type in a changelog or release notes. The filter supports
+  three different replace formats: ``%s``, ``{}``, and ``{vcs_name}``.
+
+  *Introduced in ${NEW_RELEASE_TAG}.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{ "%s Releases" | format_w_official_vcs_name }}
+      {{ "{} Releases" | format_w_official_vcs_name }}
+      {{ "{vcs_name} Releases" | format_w_official_vcs_name }}
+
+  **Markdown Output:**
+
+  .. code:: markdown
+
+      GitHub Releases
+      GitHub Releases
+      GitHub Releases
+
 * ``read_file (Callable[[str], str])``: given a file path, read the file and
   return the contents as a string. This function was added specifically to
   enable the changelog update feature where it would load the existing changelog
@@ -879,21 +920,24 @@ The filters provided vary based on the VCS configured and available features:
 
 Availability of the documented filters can be found in the table below:
 
-======================  =========  =====  ======  ======
-**filter - hvcs_type**  bitbucket  gitea  github  gitlab
-======================  =========  =====  ======  ======
-autofit_text_width         ✅       ✅      ✅      ✅
-convert_md_to_rst          ✅       ✅      ✅      ✅
-create_server_url          ✅       ✅      ✅      ✅
-create_repo_url            ✅       ✅      ✅      ✅
-commit_hash_url            ✅       ✅      ✅      ✅
-compare_url                ✅       ❌      ✅      ✅
-issue_url                  ❌       ✅      ✅      ✅
-merge_request_url          ❌       ❌      ❌      ✅
-pull_request_url           ✅       ✅      ✅      ✅
-read_file                  ✅       ✅      ✅      ✅
-sort_numerically           ✅       ✅      ✅      ✅
-======================  =========  =====  ======  ======
+==========================  =========  =====  ======  ======
+**filter - hvcs_type**      bitbucket  gitea  github  gitlab
+==========================  =========  =====  ======  ======
+autofit_text_width             ✅       ✅      ✅      ✅
+convert_md_to_rst              ✅       ✅      ✅      ✅
+create_pypi_url                ✅       ✅      ✅      ✅
+create_server_url              ✅       ✅      ✅      ✅
+create_release_url             ❌       ✅      ✅      ✅
+create_repo_url                ✅       ✅      ✅      ✅
+commit_hash_url                ✅       ✅      ✅      ✅
+compare_url                    ✅       ❌      ✅      ✅
+format_w_official_vcs_name     ✅       ✅      ✅      ✅
+issue_url                      ❌       ✅      ✅      ✅
+merge_request_url              ❌       ❌      ❌      ✅
+pull_request_url               ✅       ✅      ✅      ✅
+read_file                      ✅       ✅      ✅      ✅
+sort_numerically               ✅       ✅      ✅      ✅
+==========================  =========  =====  ======  ======
 
 .. seealso::
    * `Filters <https://jinja.palletsprojects.com/en/3.1.x/templates/#filters>`_
