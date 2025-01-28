@@ -94,11 +94,7 @@
 {{
   "- %s" | format(
     format_link(
-      [
-        "https://pypi.org/project",
-        repo_name,
-        release.version | string,
-      ] | join("/"),
+      repo_name | create_pypi_url(release.version | string),
       "PyPi Registry",
     )
   )

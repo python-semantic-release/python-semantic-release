@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import re
 
+PYPI_WEB_DOMAIN = "pypi.org"
+
 # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
 SEMVER_REGEX = re.compile(
     r"""

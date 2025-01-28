@@ -658,6 +658,27 @@ The filters provided vary based on the VCS configured and available features:
           )
       }}
 
+* ``create_pypi_url(package_name: str, version: str = "")``: given a package name and an optional
+  version, return a URL to the PyPI page for the package. If a version is provided, the URL will
+  point to the specific version page. If no version is provided, the URL will point to the package
+  page.
+
+  *Introduced in ${NEW_RELEASE_TAG}.*
+
+  **Example Usage:**
+
+  .. code:: jinja
+
+      {{ "example-package" | create_pypi_url }}
+      {{ "example-package" | create_pypi_url("1.0.0") }}
+
+  **Markdown Output:**
+
+  .. code:: markdown
+
+      https://pypi.org/project/example-package
+      https://pypi.org/project/example-package/1.0.0
+
 * ``create_server_url (Callable[[PathStr, AuthStr | None, QueryStr | None, FragmentStr | None], UrlStr])``:
   when given a path, prepend the configured vcs server host and url scheme.  Optionally you
   can provide, a auth string, a query string or a url fragment to be normalized into the

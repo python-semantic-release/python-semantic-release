@@ -13,6 +13,7 @@ import semantic_release
 from semantic_release.changelog.context import (
     ReleaseNotesContext,
     autofit_text_width,
+    create_pypi_url,
     make_changelog_context,
 )
 from semantic_release.changelog.template import environment, recursive_render
@@ -257,6 +258,7 @@ def generate_release_notes(
         mask_initial_release=mask_initial_release,
         filters=(
             *hvcs_client.get_changelog_context_filters(),
+            create_pypi_url,
             autofit_text_width,
             sort_numerically,
         ),
