@@ -585,3 +585,77 @@ def test_changelog_context_sort_numerically_reverse(
 
     # Evaluate
     assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_pypi_url_filter(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog_tpl = dedent(
+        """\
+        {{ "example-package" | create_pypi_url }}
+        """
+    )
+
+    expected_changelog = dedent(
+        """\
+        https://pypi.org/project/example-package
+        """
+    )
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+        mask_initial_release=False,
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
+
+
+def test_changelog_context_pypi_url_filter_tagged(
+    example_git_https_url: str,
+    artificial_release_history: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    version = "1.0.0"
+    changelog_tpl = dedent(
+        """\
+        {%    set release = context.history.released.values() | first
+        %}{{
+              "example-package" | create_pypi_url(release.version | string)
+        }}
+        """
+    )
+
+    expected_changelog = dedent(
+        f"""\
+        https://pypi.org/project/example-package/{version}
+        """
+    )
+
+    env = environment(trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
+    context = make_changelog_context(
+        hvcs_client=Gitlab(example_git_https_url),
+        release_history=artificial_release_history,
+        mode=ChangelogMode.UPDATE,
+        prev_changelog_file=changelog_md_file,
+        insertion_flag="",
+        mask_initial_release=False,
+    )
+    context.bind_to_environment(env)
+
+    # Create changelog from template with environment
+    actual_changelog = env.from_string(changelog_tpl).render()
+
+    # Evaluate
+    assert expected_changelog == actual_changelog
