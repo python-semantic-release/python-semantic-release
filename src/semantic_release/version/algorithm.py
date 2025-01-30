@@ -7,9 +7,11 @@ from queue import LifoQueue
 from typing import TYPE_CHECKING, Iterable
 
 from semantic_release.commit_parser import ParsedCommit
+from semantic_release.commit_parser.token import ParseError
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump, SemanticReleaseLogLevels
 from semantic_release.errors import InternalError, InvalidVersion
+from semantic_release.helpers import validate_types_in_sequence
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Sequence
@@ -95,7 +97,7 @@ def _traverse_graph_for_commits(
         return commits
 
     # Run a Depth First Search to find all the commits since the last release
-    commits_since_last_release = dfs(
+    return dfs(
         start_commit=head_commit,
         stop_nodes=set(
             head_commit.repo.iter_commits(latest_release_tag_str)
@@ -103,15 +105,6 @@ def _traverse_graph_for_commits(
             else []
         ),
     )
-
-    log_msg = (
-        f"Found {len(commits_since_last_release)} commits since the last release!"
-        if len(commits_since_last_release) > 0
-        else "No commits found since the last release!"
-    )
-    logger.info(log_msg)
-
-    return commits_since_last_release
 
 
 def _increment_version(
@@ -346,26 +339,54 @@ def next_version(
         ),
     )
 
-    # Step 5. Parse the commits to determine the bump level that should be applied
-    parsed_levels: set[LevelBump] = {  # type: ignore[var-annotated]  # too complex for type checkers
+    logger.info(
+        f"Found {len(commits_since_last_release)} commits since the last release!"
+        if len(commits_since_last_release) > 0
+        else "No commits found since the last release!"
+    )
+
+    # Step 5. apply the parser to each commit in the history (could return multiple results per commit)
+    parsed_results = list(map(commit_parser.parse, commits_since_last_release))
+
+    # Step 5A. Validation type check for the parser results (important because of possible custom parsers)
+    for parsed_result in parsed_results:
+        if not any(
+            (
+                isinstance(parsed_result, (ParseError, ParsedCommit)),
+                type(parsed_result) == list
+                and validate_types_in_sequence(
+                    parsed_result, (ParseError, ParsedCommit)
+                ),
+                type(parsed_result) == tuple
+                and validate_types_in_sequence(
+                    parsed_result, (ParseError, ParsedCommit)
+                ),
+            )
+        ):
+            raise TypeError("Unexpected type returned from commit_parser.parse")
+
+    # Step 5B. Accumulate all parsed results into a single list accounting for possible multiple results per commit
+    consolidated_results: list[ParseResult] = reduce(
+        lambda accumulated_results, p_results: [
+            *accumulated_results,
+            *(
+                # Cast to list if not already a list
+                p_results
+                if isinstance(p_results, list) or type(p_results) == tuple
+                else [p_results]
+            ),
+        ],
+        parsed_results,
+        [],
+    )
+
+    # Step 5C. Parse the commits to determine the bump level that should be applied
+    parsed_levels: set[LevelBump] = {
         parsed_result.bump  # type: ignore[union-attr] # too complex for type checkers
         for parsed_result in filter(
             # Filter out any non-ParsedCommit results (i.e. ParseErrors)
-            lambda parsed_result: isinstance(parsed_result, ParsedCommit),  # type: ignore[arg-type]
-            reduce(
-                # Accumulate all parsed results into a single list
-                lambda accumulated_results, parsed_results: [
-                    *accumulated_results,
-                    *(
-                        parsed_results
-                        if isinstance(parsed_results, Iterable)
-                        else [parsed_results]  # type: ignore[list-item]
-                    ),
-                ],
-                # apply the parser to each commit in the history (could return multiple results per commit)
-                map(commit_parser.parse, commits_since_last_release),
-                [],
-            ),
+            lambda parsed_result: isinstance(parsed_result, ParsedCommit),
+            consolidated_results,
         )
     }
 
