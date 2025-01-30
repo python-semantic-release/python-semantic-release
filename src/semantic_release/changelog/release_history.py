@@ -11,6 +11,7 @@ from semantic_release.commit_parser import ParseError
 from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.commit_parser.util import force_str
 from semantic_release.enums import LevelBump
+from semantic_release.helpers import validate_types_in_sequence
 from semantic_release.version.algorithm import tags_and_versions
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -111,13 +112,35 @@ class ReleaseHistory:
             # returns a ParseResult or list of ParseResult objects,
             # it is usually one, but we split a commit if a squashed merge is detected
             parse_results = commit_parser.parse(commit)
-            if not isinstance(parse_results, list):
-                parse_results = [parse_results]
 
-            is_squash_commit = bool(len(parse_results) > 1)
+            if not any(
+                (
+                    isinstance(parse_results, (ParseError, ParsedCommit)),
+                    (
+                        (
+                            isinstance(parse_results, list)
+                            or type(parse_results) == tuple
+                        )
+                        and validate_types_in_sequence(
+                            parse_results, (ParseError, ParsedCommit)
+                        )
+                    ),
+                )
+            ):
+                raise TypeError("Unexpected type returned from commit_parser.parse")
+
+            results: list[ParseResult] = [
+                *(
+                    [parse_results]
+                    if isinstance(parse_results, (ParseError, ParsedCommit))
+                    else parse_results
+                ),
+            ]
+
+            is_squash_commit = bool(len(results) > 1)
 
             # iterate through parsed commits to add to changelog definition
-            for parsed_result in parse_results:
+            for parsed_result in results:
                 commit_message = force_str(parsed_result.commit.message)
                 commit_type = (
                     "unknown"
