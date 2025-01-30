@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple, NoReturn, TypeVar, Union
 
+from semantic_release.commit_parser.util import force_str
 from semantic_release.errors import CommitParseError
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -109,9 +110,7 @@ class ParsedCommit(NamedTuple):
 
         If the message is of type ``bytes`` then it will be decoded to a ``UTF-8`` string.
         """
-        m = self.commit.message
-        message_str = m.decode("utf-8") if isinstance(m, bytes) else m
-        return message_str.replace("\r", "")
+        return force_str(self.commit.message).replace("\r", "")
 
     @property
     def hexsha(self) -> str:
@@ -170,9 +169,7 @@ class ParseError(NamedTuple):
 
         If the message is of type ``bytes`` then it will be decoded to a ``UTF-8`` string.
         """
-        m = self.commit.message
-        message_str = m.decode("utf-8") if isinstance(m, bytes) else m
-        return message_str.replace("\r", "")
+        return force_str(self.commit.message).replace("\r", "")
 
     @property
     def hexsha(self) -> str:
