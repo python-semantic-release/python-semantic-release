@@ -1129,3 +1129,31 @@ def test_parser_custom_patch_tags(make_commit_obj: MakeCommitObjFn):
     result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
     assert result.bump is LevelBump.PATCH
+
+
+def test_parser_ignore_merge_commit(
+    default_angular_parser: AngularCommitParser,
+    make_commit_obj: MakeCommitObjFn,
+):
+    # Setup: Enable parsing of linked issues
+    parser = AngularCommitParser(
+        options=AngularParserOptions(
+            **{
+                **default_angular_parser.options.__dict__,
+                "ignore_merge_commits": True,
+            }
+        )
+    )
+
+    base_commit = make_commit_obj("Merge branch 'fix/fix-feature' into 'main'")
+    incomming_commit = make_commit_obj("feat: add a new feature")
+
+    # Setup: Create a merge commit
+    merge_commit = make_commit_obj("Merge branch 'feat/add-new-feature' into 'main'")
+    merge_commit.parents = [base_commit, incomming_commit]
+
+    # Action
+    parsed_result = parser.parse(merge_commit)
+
+    assert isinstance(parsed_result, ParseError)
+    assert "Ignoring merge commit" in parsed_result.error
