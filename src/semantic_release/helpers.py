@@ -9,7 +9,7 @@ import sys
 from functools import lru_cache, reduce, wraps
 from pathlib import Path, PurePosixPath
 from re import IGNORECASE, compile as regexp
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Sequence, TypeVar
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -91,6 +91,13 @@ def text_reducer(text: str, filter_pair: tuple[Pattern[str], str]) -> str:
 
     filter_pattern, replacement = filter_pair
     return filter_pattern.sub(replacement, text)
+
+
+def validate_types_in_sequence(
+    sequence: Sequence, types: type | tuple[type, ...]
+) -> bool:
+    """Validate that all elements in a sequence are of a specific type"""
+    return all(isinstance(item, types) for item in sequence)
 
 
 def format_arg(value: Any) -> str:
