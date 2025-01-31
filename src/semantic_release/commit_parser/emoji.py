@@ -17,6 +17,7 @@ from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import (
     ParsedCommit,
     ParsedMessageResult,
+    ParseError,
     ParseResult,
 )
 from semantic_release.commit_parser.util import (
@@ -96,6 +97,10 @@ class EmojiParserOptions(ParserOptions):
     # TODO: breaking change v10, change default to True
     parse_squash_commits: bool = False
     """Toggle flag for whether or not to parse squash commits"""
+
+    # TODO: breaking change v10, change default to True
+    ignore_merge_commits: bool = False
+    """Toggle flag for whether or not to ignore merge commits"""
 
     @property
     def tag_to_level(self) -> dict[str, LevelBump]:
@@ -304,6 +309,10 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             linked_merge_request=linked_merge_request,
         )
 
+    @staticmethod
+    def is_merge_commit(commit: Commit) -> bool:
+        return len(commit.parents) > 1
+
     def parse_commit(self, commit: Commit) -> ParseResult:
         return ParsedCommit.from_parsed_message_result(
             commit, self.parse_message(force_str(commit.message))
@@ -317,6 +326,11 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         multiple commits, each of which will be parsed separately. Single commits
         will be returned as a list of a single ParseResult.
         """
+        if self.options.ignore_merge_commits and self.is_merge_commit(commit):
+            err_msg = "Ignoring merge commit: %s" % commit.hexsha[:8]
+            logger.debug(err_msg)
+            return ParseError(commit, err_msg)
+
         separate_commits: list[Commit] = (
             self.unsquash_commit(commit)
             if self.options.parse_squash_commits
