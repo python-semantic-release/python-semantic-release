@@ -78,13 +78,14 @@ BREAKING CHANGES
 }}{%    endfor
 %}{#
    #    # PRINT SECTION (Header & Commits)
-#}{{    "\n"
-}}{{    section_header ~ "\n"
-}}{{    generate_heading_underline(section_header, '-') ~ "\n"
-}}{{
-        "\n%s\n" | format(commit_descriptions | unique | join("\n\n"))
-
-}}{%  endfor
+#}{%    if commit_descriptions | length > 0
+%}{{      "\n"
+}}{{      section_header ~ "\n"
+}}{{      generate_heading_underline(section_header, '-')
+}}{{      "\n"
+}}{{      "\n%s\n" | format(commit_descriptions | unique | join("\n\n"))
+}}{%    endif
+%}{%  endfor
 %}{#
       # Determine if there are any breaking change commits by filtering the list by breaking descriptions
       # commit_objects is a list of tuples [("Features", [ParsedCommit(), ...]), ("Bug Fixes", [ParsedCommit(), ...])]
