@@ -52,6 +52,12 @@ class ReleaseHistory:
             for tag, version in all_git_tags_and_versions
         }
 
+        ignore_merge_commits = bool(
+            hasattr(commit_parser, "options")
+            and hasattr(commit_parser.options, "ignore_merge_commits")
+            and getattr(commit_parser.options, "ignore_merge_commits")  # noqa: B009
+        )
+
         # Strategy:
         # Loop through commits in history, parsing as we go.
         # Add these commits to `unreleased` as a key-value mapping
@@ -158,6 +164,10 @@ class ReleaseHistory:
                     if isinstance(parsed_result, ParseError)
                     else parsed_result.bump
                 )
+
+                if ignore_merge_commits and parsed_result.is_merge_commit():
+                    log.info("Excluding merge commit[%s]", parsed_result.short_hash)
+                    continue
 
                 # Skip excluded commits except for any commit causing a version bump
                 # Reasoning: if a commit causes a version bump, and no other commits
