@@ -1041,6 +1041,88 @@ def test_parser_return_linked_issues_from_commit_message(
     assert tuple(linked_issues) == result.linked_issues
 
 
+@pytest.mark.parametrize(
+    "message, notices",
+    [
+        pytest.param(
+            message,
+            notices,
+            id=test_id,
+        )
+        for test_id, message, notices in [
+            (
+                "single notice",
+                dedent(
+                    """\
+                    fix(parser): fix regex in angular parser
+
+                    NOTICE: This is a notice
+                    """
+                ),
+                ["This is a notice"],
+            ),
+            (
+                "multiline notice",
+                dedent(
+                    """\
+                    fix(parser): fix regex in angular parser
+
+                    NOTICE: This is a notice that is longer than
+                    other notices
+                    """
+                ),
+                ["This is a notice that is longer than other notices"],
+            ),
+            (
+                "multiple notices",
+                dedent(
+                    """\
+                    fix(parser): fix regex in angular parser
+
+                    NOTICE: This is a notice
+
+                    NOTICE: This is a second notice
+                    """
+                ),
+                ["This is a notice", "This is a second notice"],
+            ),
+            (
+                "notice with other footer",
+                dedent(
+                    """\
+                    fix(parser): fix regex in angular parser
+
+                    BREAKING CHANGE: This is a breaking change
+
+                    NOTICE: This is a notice
+                    """
+                ),
+                ["This is a notice"],
+            ),
+        ]
+    ],
+)
+def test_parser_return_release_notices_from_commit_message(
+    default_angular_parser: AngularCommitParser,
+    message: str,
+    notices: Sequence[str],
+    make_commit_obj: MakeCommitObjFn,
+):
+    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
+    assert isinstance(result, ParsedCommit)
+    assert tuple(notices) == result.release_notices
+
+    # TODO: v10, remove this
+    # full_description = str.join("\n\n", result.descriptions)
+    # full_notice = str.join("\n\n", result.release_notices)
+    # assert full_notice not in full_description
+
+
 ##############################
 # test custom parser options #
 ##############################
