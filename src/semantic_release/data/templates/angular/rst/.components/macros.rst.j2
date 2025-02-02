@@ -136,6 +136,44 @@
 
 
 {#
+  MACRO: format the release notice by:
+  - Capitalizing the description
+  - Adding an optional scope prefix
+#}{%  macro format_release_notice(commit)
+%}{%    set ns = namespace(full_description="")
+%}{#
+#}{%    if commit.error is undefined
+%}{%      for paragraph in commit.release_notices
+%}{%        if paragraph | trim | length > 0
+%}{#
+#}{%          set paragraph_text = [
+                paragraph.split(" ", maxsplit=1)[0] | capitalize,
+                paragraph.split(" ", maxsplit=1)[1]
+              ] | join(" ") | trim | safe
+%}{#
+#}{%          set ns.full_description = [
+                ns.full_description,
+                paragraph_text
+              ] | join("\n\n")
+%}{#
+#}{%        endif
+%}{%      endfor
+%}{#
+#}{%      set ns.full_description = ns.full_description | trim
+%}{#
+#}{%      if commit.scope
+%}{%        set ns.full_description = "**%s**: %s" | format(
+              commit.scope, ns.full_description
+            )
+%}{%      endif
+%}{%    endif
+%}{#
+#}{{    ns.full_description
+}}{%  endmacro
+%}
+
+
+{#
   MACRO: apply smart ordering of commits objects based on alphabetized summaries and then scopes
   - Commits are sorted based on the commit type and the commit message
   - Commits are grouped by the commit type
@@ -182,6 +220,34 @@
 %}{#
    #    # grab all commits with a scope and sort alphabetically by the scope and then the first line of the commit message
 #}{%    for commit in filtered_commits | selectattr("scope") | sort(attribute='scope,breaking_descriptions.0')
+%}{{      ordered_commits.append(commit) | default("", true)
+}}{%    endfor
+%}{#
+   #    # Return the ordered commits
+#}{%    set ns.commits = ordered_commits
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: apply smart ordering of commits objects based on alphabetized release notices and then scopes
+  - Commits are sorted based on the commit type and the commit message
+  - Commits are grouped by the commit type
+  - parameter: ns (namespace) object with a commits list
+  - returns None but modifies the ns.commits list in place
+#}{%  macro apply_alphabetical_ordering_by_release_notices(ns)
+%}{%    set ordered_commits = []
+%}{#
+   #    # Eliminate any ParseError commits from input set
+#}{%    set filtered_commits = ns.commits | rejectattr("error", "defined") | list
+%}{#
+   #    # grab all commits with no scope and sort alphabetically by the first line of the commit message
+#}{%    for commit in filtered_commits | rejectattr("scope") | sort(attribute='release_notices.0')
+%}{{      ordered_commits.append(commit) | default("", true)
+}}{%     endfor
+%}{#
+   #    # grab all commits with a scope and sort alphabetically by the scope and then the first line of the commit message
+#}{%    for commit in filtered_commits | selectattr("scope") | sort(attribute='scope,release_notices.0')
 %}{{      ordered_commits.append(commit) | default("", true)
 }}{%    endfor
 %}{#

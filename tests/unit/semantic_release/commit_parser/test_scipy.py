@@ -1031,6 +1031,88 @@ def test_parser_return_linked_issues_from_commit_message(
     assert tuple(linked_issues) == result.linked_issues
 
 
+@pytest.mark.parametrize(
+    "message, notices",
+    [
+        pytest.param(
+            message,
+            notices,
+            id=test_id,
+        )
+        for test_id, message, notices in [
+            (
+                "single notice",
+                dedent(
+                    """\
+                    BUG(parser): fix regex in angular parser
+
+                    NOTICE: This is a notice
+                    """
+                ),
+                ["This is a notice"],
+            ),
+            (
+                "multiline notice",
+                dedent(
+                    """\
+                    BUG(parser): fix regex in angular parser
+
+                    NOTICE: This is a notice that is longer than
+                    other notices
+                    """
+                ),
+                ["This is a notice that is longer than other notices"],
+            ),
+            (
+                "multiple notices",
+                dedent(
+                    """\
+                    BUG(parser): fix regex in angular parser
+
+                    NOTICE: This is a notice
+
+                    NOTICE: This is a second notice
+                    """
+                ),
+                ["This is a notice", "This is a second notice"],
+            ),
+            (
+                "notice with other footer",
+                dedent(
+                    """\
+                    BUG(parser): fix regex in angular parser
+
+                    BREAKING CHANGE: This is a breaking change
+
+                    NOTICE: This is a notice
+                    """
+                ),
+                ["This is a notice"],
+            ),
+        ]
+    ],
+)
+def test_parser_return_release_notices_from_commit_message(
+    default_scipy_parser: ScipyCommitParser,
+    message: str,
+    notices: Sequence[str],
+    make_commit_obj: MakeCommitObjFn,
+):
+    parsed_results = default_scipy_parser.parse(make_commit_obj(message))
+
+    assert isinstance(parsed_results, Iterable)
+    assert len(parsed_results) == 1
+
+    result = next(iter(parsed_results))
+    assert isinstance(result, ParsedCommit)
+    assert tuple(notices) == result.release_notices
+
+    # TODO: v10, remove this
+    # full_description = str.join("\n\n", result.descriptions)
+    # full_notice = str.join("\n\n", result.release_notices)
+    # assert full_notice not in full_description
+
+
 def test_parser_ignore_merge_commit(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,

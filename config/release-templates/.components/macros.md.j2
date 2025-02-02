@@ -148,6 +148,41 @@
 
 
 {#
+  MACRO: format the release notice by:
+  - Capitalizing the description
+  - Adding an optional scope prefix
+#}{%  macro format_release_notice(commit)
+%}{%    set ns = namespace(full_description="")
+%}{#
+#}{%    if commit.error is undefined
+%}{%      for paragraph in commit.release_notices
+%}{%        if paragraph | trim | length > 0
+%}{#
+#}{%          set paragraph_text = capitalize_first_letter_only(paragraph) | trim | safe
+%}{#
+#}{%          set ns.full_description = [
+                ns.full_description,
+                paragraph_text
+              ] | join("\n\n")
+%}{#
+#}{%        endif
+%}{%      endfor
+%}{#
+#}{%      set ns.full_description = ns.full_description | trim
+%}{#
+#}{%      if commit.scope
+%}{%        set ns.full_description = "**%s**: %s" | format(
+              commit.scope, ns.full_description
+            )
+%}{%      endif
+%}{%    endif
+%}{#
+#}{{    ns.full_description
+}}{%  endmacro
+%}
+
+
+{#
    MACRO: order commits alphabetically by scope and attribute
    - Commits are sorted based on scope and then the attribute alphabetically
    - Commits without scope are placed first and sorted alphabetically by the attribute
@@ -196,5 +231,17 @@
   - returns None but modifies the ns.commits list in place
 #}{%  macro apply_alphabetical_ordering_by_brk_descriptions(ns)
 %}{%    set _ = order_commits_alphabetically_by_scope_and_attr(ns, 'breaking_descriptions.0')
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: apply smart ordering of commits objects based on alphabetized release notices and then scopes
+  - Commits are sorted based on the commit type and the commit message
+  - Commits are grouped by the commit type
+  - parameter: ns (namespace) object with a commits list
+  - returns None but modifies the ns.commits list in place
+#}{%  macro apply_alphabetical_ordering_by_release_notices(ns)
+%}{%    set _ = order_commits_alphabetically_by_scope_and_attr(ns, 'release_notices.0')
 %}{%  endmacro
 %}

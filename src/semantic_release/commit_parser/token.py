@@ -28,6 +28,7 @@ class ParsedMessageResult(NamedTuple):
     scope: str
     descriptions: tuple[str, ...]
     breaking_descriptions: tuple[str, ...] = ()
+    release_notices: tuple[str, ...] = ()
     linked_issues: tuple[str, ...] = ()
     linked_merge_request: str = ""
     include_in_changelog: bool = True
@@ -74,6 +75,14 @@ class ParsedCommit(NamedTuple):
 
     commit: Commit
     """The original commit object (a class defined by GitPython) that was parsed"""
+
+    release_notices: tuple[str, ...] = ()
+    """
+    A tuple of release notices, which are additional information about the changes that affect the user.
+
+    An example would be a paragraph which begins with the text ``NOTICE:`` in the commit message but
+    the parser generally strips the prefix and includes the rest of the paragraph in this list.
+    """
 
     linked_issues: tuple[str, ...] = ()
     """
@@ -147,6 +156,7 @@ class ParsedCommit(NamedTuple):
             descriptions=list(parsed_message_result.descriptions),
             breaking_descriptions=list(parsed_message_result.breaking_descriptions),
             commit=commit,
+            release_notices=parsed_message_result.release_notices,
             linked_issues=parsed_message_result.linked_issues,
             linked_merge_request=parsed_message_result.linked_merge_request,
             include_in_changelog=parsed_message_result.include_in_changelog,

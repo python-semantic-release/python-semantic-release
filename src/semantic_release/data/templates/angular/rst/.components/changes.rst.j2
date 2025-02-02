@@ -1,8 +1,9 @@
 {%   from 'macros.rst.j2' import apply_alphabetical_ordering_by_brk_descriptions
 %}{% from 'macros.rst.j2' import apply_alphabetical_ordering_by_descriptions
+%}{% from 'macros.rst.j2' import apply_alphabetical_ordering_by_release_notices
 %}{% from 'macros.rst.j2' import extract_pr_link_reference, format_breaking_changes_description
 %}{% from 'macros.rst.j2' import format_commit_summary_line, format_link_reference
-%}{% from 'macros.rst.j2' import generate_heading_underline
+%}{% from 'macros.rst.j2' import format_release_notice, generate_heading_underline
 %}{#
 
 Features
@@ -27,10 +28,19 @@ BREAKING CHANGES
 * **scope**: this breaking change has a scope to identify the part of the code that
   this breaking change applies to for better context.
 
-.. _10: https://domain.com/namespace/repo/pull/10
+ADDITIONAL RELEASE INFORMATION
+------------------------------
+
+* This is a release note that provides additional information about the release
+  that is not a breaking change or a feature/bug fix.
+
+* **scope**: this release note has a scope to identify the part of the code that
+  this release note applies to for better context.
+
+.. _#10: https://domain.com/namespace/repo/pull/10
+.. _#11: https://domain.com/namespace/repo/pull/11
 .. _8a7B8ec: https://domain.com/owner/repo/commit/8a7b8ec
 .. _abcdef0: https://domain.com/owner/repo/commit/abcdef0
-.. _11: https://domain.com/namespace/repo/pull/11
 
 #}{%  set max_line_width = max_line_width | default(100)
 %}{%  set hanging_indent = hanging_indent | default(2)
@@ -118,6 +128,40 @@ BREAKING CHANGES
 }}{{    '----------------\n'
 }}{{
         "\n%s\n" | format(brking_descriptions | unique | join("\n\n"))
+}}{#
+#}{%  endif
+%}{#
+      # Determine if there are any commits with release notice information by filtering the list by release_notices
+      # commit_objects is a list of tuples [("Features", [ParsedCommit(), ...]), ("Bug Fixes", [ParsedCommit(), ...])]
+      # HOW: Filter out commits that have no release notices
+      #  1. Re-map the list to only the list of commits from the list of tuples
+      #  2. Peel off the outer list to get a list of ParsedCommit objects
+      #  3. Filter the list of ParsedCommits to only those with a release notice
+#}{%  set notice_commits = commit_objects | map(attribute="1.0")
+%}{%  set notice_commits = notice_commits | rejectattr("error", "defined") | selectattr("release_notices.0") | list
+%}{#
+#}{%  if notice_commits | length > 0
+%}{#    PREPROCESS COMMITS
+#}{%    set notice_ns = namespace(commits=notice_commits)
+%}{{    apply_alphabetical_ordering_by_release_notices(notice_ns) | default("", true)
+}}{#
+#}{%    set release_notices = []
+%}{#
+#}{%    for commit in notice_ns.commits
+%}{%      set full_description = "* %s" | format(
+            format_release_notice(commit).split("\n\n") | join("\n\n* ")
+          )
+%}{{      release_notices.append(
+            full_description | convert_md_to_rst | autofit_text_width(max_line_width, hanging_indent)
+          ) | default("", true)
+}}{%    endfor
+%}{#
+   #    # PRINT RELEASE NOTICE INFORMATION (header & descriptions)
+#}{{    "\n"
+}}{{    "ADDITIONAL RELEASE INFORMATION\n"
+}}{{    "------------------------------\n"
+}}{{
+        "\n%s\n" | format(release_notices | unique | join("\n\n"))
 }}{#
 #}{%  endif
 %}{#

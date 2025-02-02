@@ -188,6 +188,8 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             flags=re.MULTILINE | re.IGNORECASE,
         )
 
+        self.notice_selector = regexp(r"^NOTICE: (?P<notice>.+)$")
+
         self.filters = {
             "typo-extra-spaces": (regexp(r"(\S)  +(\S)"), r"\1 \2"),
             "git-header-commit": (
@@ -233,7 +235,14 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     def commit_body_components_separator(
         self, accumulator: dict[str, list[str]], text: str
     ) -> dict[str, list[str]]:
-        if self.options.parse_linked_issues and (
+        if (match := self.notice_selector.match(text)) and (
+            notice := match.group("notice")
+        ):
+            accumulator["notices"].append(notice)
+            # TODO: breaking change v10, removes notice footers from descriptions
+            # return accumulator
+
+        elif self.options.parse_linked_issues and (
             match := self.issue_selector.search(text)
         ):
             predicate = regexp(r",? and | *[,;/& ] *").sub(
@@ -249,11 +258,12 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
                     predicate.split(","),
                 )
             )
-            accumulator["linked_issues"] = sort_numerically(
-                set(accumulator["linked_issues"]).union(new_issue_refs)
-            )
-            # TODO: breaking change v10, removes resolution footers from descriptions
-            # return accumulator
+            if new_issue_refs:
+                accumulator["linked_issues"] = sort_numerically(
+                    set(accumulator["linked_issues"]).union(new_issue_refs)
+                )
+                # TODO: breaking change v10, removes resolution footers from descriptions
+                # return accumulator
 
         # Prevent appending duplicate descriptions
         if text not in accumulator["descriptions"]:
@@ -286,6 +296,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             parse_paragraphs(message),
             {
                 "descriptions": [],
+                "notices": [],
                 "linked_issues": [],
             },
         )
@@ -305,6 +316,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             breaking_descriptions=(
                 descriptions[1:] if level_bump is LevelBump.MAJOR else ()
             ),
+            release_notices=tuple(body_components["notices"]),
             linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
@@ -424,7 +436,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             [],
         )
 
-        return separate_commit_msgs
+        return list(filter(None, separate_commit_msgs))
 
     def _find_squashed_commits_in_str(self, message: str) -> list[str]:
         separate_commit_msgs: list[str] = []
@@ -459,8 +471,4 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
 
             current_msg = clean_paragraph
 
-        # Store the last commit message (if its not empty)
-        if current_msg:
-            separate_commit_msgs.append(current_msg)
-
-        return separate_commit_msgs
+        return [*separate_commit_msgs, current_msg]

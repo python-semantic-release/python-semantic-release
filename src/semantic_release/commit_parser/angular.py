@@ -192,6 +192,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             ),
             flags=re.MULTILINE | re.IGNORECASE,
         )
+        self.notice_selector = regexp(r"^NOTICE: (?P<notice>.+)$")
         self.filters = {
             "typo-extra-spaces": (regexp(r"(\S)  +(\S)"), r"\1 \2"),
             "git-header-commit": (
@@ -236,9 +237,16 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     def commit_body_components_separator(
         self, accumulator: dict[str, list[str]], text: str
     ) -> dict[str, list[str]]:
-        if match := breaking_re.match(text):
-            accumulator["breaking_descriptions"].append(match.group(1) or "")
+        if (match := breaking_re.match(text)) and (brk_desc := match.group(1)):
+            accumulator["breaking_descriptions"].append(brk_desc)
             # TODO: breaking change v10, removes breaking change footers from descriptions
+            # return accumulator
+
+        elif (match := self.notice_selector.match(text)) and (
+            notice := match.group("notice")
+        ):
+            accumulator["notices"].append(notice)
+            # TODO: breaking change v10, removes notice footers from descriptions
             # return accumulator
 
         elif match := self.issue_selector.search(text):
@@ -256,11 +264,12 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
                     predicate.split(","),
                 )
             )
-            accumulator["linked_issues"] = sort_numerically(
-                set(accumulator["linked_issues"]).union(new_issue_refs)
-            )
-            # TODO: breaking change v10, removes resolution footers from descriptions
-            # return accumulator
+            if new_issue_refs:
+                accumulator["linked_issues"] = sort_numerically(
+                    set(accumulator["linked_issues"]).union(new_issue_refs)
+                )
+                # TODO: breaking change v10, removes resolution footers from descriptions
+                # return accumulator
 
         # Prevent appending duplicate descriptions
         if text not in accumulator["descriptions"]:
@@ -295,6 +304,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             {
                 "breaking_descriptions": [],
                 "descriptions": [],
+                "notices": [],
                 "linked_issues": [],
             },
         )
@@ -315,6 +325,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             scope=parsed_scope,
             descriptions=tuple(body_components["descriptions"]),
             breaking_descriptions=tuple(body_components["breaking_descriptions"]),
+            release_notices=tuple(body_components["notices"]),
             linked_issues=tuple(body_components["linked_issues"]),
             linked_merge_request=linked_merge_request,
         )
@@ -455,7 +466,7 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
             [],
         )
 
-        return separate_commit_msgs
+        return list(filter(None, separate_commit_msgs))
 
     def _find_squashed_commits_in_str(self, message: str) -> list[str]:
         separate_commit_msgs: list[str] = []
@@ -490,8 +501,4 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
 
             current_msg = clean_paragraph
 
-        # Store the last commit message (if its not empty)
-        if current_msg:
-            separate_commit_msgs.append(current_msg)
-
-        return separate_commit_msgs
+        return [*separate_commit_msgs, current_msg]
