@@ -572,22 +572,25 @@ def test_parser_squashed_commit_github_squash_style(
 @pytest.mark.parametrize(
     "commit_message, bump",
     [
-        ("feat(parsers): Add new parser pattern\n\nBREAKING CHANGE: ", LevelBump.MAJOR),
-        ("feat(parsers)!: Add new parser pattern", LevelBump.MAJOR),
         (
-            "feat(parsers): Add new parser pattern\n\nNew pattern is awesome\n\n"
-            "BREAKING CHANGE: \n",
+            "feat(parsers): add new parser pattern\n\nBREAKING CHANGE: change",
+            LevelBump.MAJOR,
+        ),
+        ("feat(parsers)!: add new parser pattern", LevelBump.MAJOR),
+        (
+            "feat(parsers): add new parser pattern\n\nNew pattern is awesome\n\n"
+            "BREAKING CHANGE: change \n",
             LevelBump.MAJOR,
         ),
         (
-            "feat(parsers): Add new parser pattern\n\nBREAKING-CHANGE: change !",
+            "feat(parsers): add new parser pattern\n\nBREAKING-CHANGE: change !",
             LevelBump.MAJOR,
         ),
-        ("feat(parser): Add emoji parser", LevelBump.MINOR),
-        ("fix(parser): Fix regex in angular parser", LevelBump.PATCH),
-        ("test(parser): Add a test for angular parser", LevelBump.NO_RELEASE),
-        ("feat(parser)!: Edit data parsing stuff", LevelBump.MAJOR),
-        ("fix!: Edit data parsing stuff again", LevelBump.MAJOR),
+        ("feat(parser): add emoji parser", LevelBump.MINOR),
+        ("fix(parser): fix regex in angular parser", LevelBump.PATCH),
+        ("test(parser): add a test for angular parser", LevelBump.NO_RELEASE),
+        ("feat(parser)!: edit data parsing stuff", LevelBump.MAJOR),
+        ("fix!: edit data parsing stuff again", LevelBump.MAJOR),
         ("fix: superfix", LevelBump.PATCH),
     ],
 )
@@ -675,15 +678,15 @@ _footer = "Closes: #400"
 @pytest.mark.parametrize(
     "message, descriptions",
     [
-        ("feat(parser): Add emoji parser", ["Add emoji parser"]),
-        ("fix(parser): Fix regex in angular parser", ["Fix regex in angular parser"]),
+        ("feat(parser): add emoji parser", ["add emoji parser"]),
+        ("fix(parser): fix regex in angular parser", ["fix regex in angular parser"]),
         (
-            "test(parser): Add a test for angular parser",
-            ["Add a test for angular parser"],
+            "test(parser): add a test for angular parser",
+            ["add a test for angular parser"],
         ),
         (
-            f"fix(tox): Fix env \n\n{_long_text}\n\n{_footer}",
-            ["Fix env ", _long_text, _footer],
+            f"fix(tox): fix env \n\n{_long_text}\n\n{_footer}",
+            ["fix env ", _long_text, _footer],
         ),
         ("fix: superfix", ["superfix"]),
     ],
@@ -1129,7 +1132,7 @@ def test_parser_return_release_notices_from_commit_message(
 def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
     options = AngularParserOptions(default_bump_level=LevelBump.MINOR)
     parsed_results = AngularCommitParser(options).parse(
-        make_commit_obj("test(parser): Add a test for angular parser")
+        make_commit_obj("test(parser): add a test for angular parser")
     )
 
     assert isinstance(parsed_results, Iterable)
