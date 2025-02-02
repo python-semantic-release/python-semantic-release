@@ -690,3 +690,326 @@ def test_release_notes_context_format_w_official_name_filter(
         )
 
     assert expected_content == actual_content
+
+
+@pytest.mark.parametrize("mask_initial_release", [True, False])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
+def test_default_release_notes_template_w_a_notice(
+    example_git_https_url: str,
+    hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
+    release_history_w_a_notice: ReleaseHistory,
+    mask_initial_release: bool,
+    today_date_str: str,
+):
+    """
+    Unit test goal: just make sure it renders the release notes template without error.
+
+    Scenarios are better suited for all the variations (commit types).
+    """
+    released_versions = iter(release_history_w_a_notice.released.keys())
+    version = next(released_versions)
+    prev_version = next(released_versions)
+    hvcs = hvcs_client(example_git_https_url)
+    release = release_history_w_a_notice.released[version]
+
+    notice_commit_obj = next(iter(release["elements"].values()))[0]
+    assert isinstance(notice_commit_obj, ParsedCommit)
+
+    notice_commit_url = hvcs.commit_hash_url(notice_commit_obj.commit.hexsha)
+    notice_commit_description = str.join("\n", notice_commit_obj.descriptions)
+    notice_description = str.join("\n", notice_commit_obj.release_notices)
+
+    expected_content = str.join(
+        os.linesep,
+        [
+            f"## v{version} ({today_date_str})",
+            "",
+            "### Refactoring",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{notice_commit_obj.scope}**: "
+                    if notice_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=notice_commit_description.capitalize().rstrip(),
+                short_hash=notice_commit_obj.commit.hexsha[:7],
+                url=notice_commit_url,
+            ),
+            "",
+            "### ADDITIONAL RELEASE INFORMATION",
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{notice_commit_obj.scope}**: "
+                    if notice_commit_obj.scope
+                    else ""
+                ),
+                change_desc=notice_description.capitalize().rstrip(),
+            ),
+            "",
+        ],
+    )
+
+    if not isinstance(hvcs, Gitea):
+        expected_content += str.join(
+            os.linesep,
+            [
+                "",
+                "---",
+                "",
+                "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                    prev_version=prev_version.as_tag(),
+                    new_version=version.as_tag(),
+                    version_compare_url=hvcs.compare_url(
+                        prev_version.as_tag(), version.as_tag()
+                    ),
+                ),
+                "",
+            ],
+        )
+
+    actual_content = generate_release_notes(
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release=release,
+        template_dir=Path(""),
+        history=release_history_w_a_notice,
+        style="angular",
+        mask_initial_release=mask_initial_release,
+    )
+
+    assert expected_content == actual_content
+
+
+@pytest.mark.parametrize("mask_initial_release", [True, False])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
+def test_default_release_notes_template_w_a_notice_n_brk_change(
+    example_git_https_url: str,
+    hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
+    release_history_w_notice_n_brk_change: ReleaseHistory,
+    mask_initial_release: bool,
+    today_date_str: str,
+):
+    """
+    Unit test goal: just make sure it renders the release notes template without error.
+
+    Scenarios are better suited for all the variations (commit types).
+    """
+    released_versions = iter(release_history_w_notice_n_brk_change.released.keys())
+    version = next(released_versions)
+    prev_version = next(released_versions)
+    hvcs = hvcs_client(example_git_https_url)
+    release = release_history_w_notice_n_brk_change.released[version]
+
+    brk_fix_commit_obj = release["elements"]["Bug Fixes"][0]
+    notice_commit_obj = release["elements"]["Refactoring"][0]
+    assert isinstance(brk_fix_commit_obj, ParsedCommit)
+    assert isinstance(notice_commit_obj, ParsedCommit)
+
+    brk_fix_commit_url = hvcs.commit_hash_url(brk_fix_commit_obj.commit.hexsha)
+    brk_fix_description = str.join("\n", brk_fix_commit_obj.descriptions)
+    brk_fix_brking_description = str.join(
+        "\n", brk_fix_commit_obj.breaking_descriptions
+    )
+
+    notice_commit_url = hvcs.commit_hash_url(notice_commit_obj.commit.hexsha)
+    notice_commit_description = str.join("\n", notice_commit_obj.descriptions)
+    notice_description = str.join("\n", notice_commit_obj.release_notices)
+
+    expected_content = str.join(
+        os.linesep,
+        [
+            f"## v{version} ({today_date_str})",
+            "",
+            "### Bug Fixes",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{brk_fix_commit_obj.scope}**: "
+                    if brk_fix_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=brk_fix_description.capitalize().rstrip(),
+                short_hash=brk_fix_commit_obj.commit.hexsha[:7],
+                url=brk_fix_commit_url,
+            ),
+            "",
+            "### Refactoring",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{notice_commit_obj.scope}**: "
+                    if notice_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=notice_commit_description.capitalize().rstrip(),
+                short_hash=notice_commit_obj.commit.hexsha[:7],
+                url=notice_commit_url,
+            ),
+            "",
+            "### BREAKING CHANGES",
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{brk_fix_commit_obj.scope}**: "
+                    if brk_fix_commit_obj.scope
+                    else ""
+                ),
+                change_desc=brk_fix_brking_description.capitalize().rstrip(),
+            ),
+            "",
+            "### ADDITIONAL RELEASE INFORMATION",
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{notice_commit_obj.scope}**: "
+                    if notice_commit_obj.scope
+                    else ""
+                ),
+                change_desc=notice_description.capitalize().rstrip(),
+            ),
+            "",
+        ],
+    )
+
+    if not isinstance(hvcs, Gitea):
+        expected_content += str.join(
+            os.linesep,
+            [
+                "",
+                "---",
+                "",
+                "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                    prev_version=prev_version.as_tag(),
+                    new_version=version.as_tag(),
+                    version_compare_url=hvcs.compare_url(
+                        prev_version.as_tag(), version.as_tag()
+                    ),
+                ),
+                "",
+            ],
+        )
+
+    actual_content = generate_release_notes(
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release=release,
+        template_dir=Path(""),
+        history=release_history_w_notice_n_brk_change,
+        style="angular",
+        mask_initial_release=mask_initial_release,
+    )
+
+    assert expected_content == actual_content
+
+
+@pytest.mark.parametrize("mask_initial_release", [True, False])
+@pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
+def test_default_release_notes_template_w_multiple_notices(
+    example_git_https_url: str,
+    hvcs_client: type[Github | Gitlab | Gitea | Bitbucket],
+    release_history_w_multiple_notices: ReleaseHistory,
+    mask_initial_release: bool,
+    today_date_str: str,
+):
+    """
+    Unit test goal: just make sure it renders the release notes template without error.
+
+    Scenarios are better suited for all the variations (commit types).
+    """
+    released_versions = iter(release_history_w_multiple_notices.released.keys())
+    version = next(released_versions)
+    prev_version = next(released_versions)
+    hvcs = hvcs_client(example_git_https_url)
+    release = release_history_w_multiple_notices.released[version]
+
+    feat_commit_obj = release["elements"]["Features"][0]
+    refactor_commit_obj = release["elements"]["Refactoring"][0]
+    assert isinstance(refactor_commit_obj, ParsedCommit)
+    assert isinstance(feat_commit_obj, ParsedCommit)
+
+    refactor_commit_url = hvcs.commit_hash_url(refactor_commit_obj.commit.hexsha)
+    refactor_commit_desc = str.join("\n", refactor_commit_obj.descriptions)
+    refactor_commit_notice_desc = str.join("\n", refactor_commit_obj.release_notices)
+
+    feat_commit_url = hvcs.commit_hash_url(feat_commit_obj.commit.hexsha)
+    feat_description = str.join("\n", feat_commit_obj.descriptions)
+    feat_commit_notice_desc = str.join("\n", feat_commit_obj.release_notices)
+
+    expected_content = str.join(
+        os.linesep,
+        [
+            f"## v{version} ({today_date_str})",
+            "",
+            "### Features",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{feat_commit_obj.scope}**: " if feat_commit_obj.scope else ""
+                ),
+                commit_desc=feat_description.capitalize().rstrip(),
+                short_hash=feat_commit_obj.commit.hexsha[:7],
+                url=feat_commit_url,
+            ),
+            "",
+            "### Refactoring",
+            "",
+            "- {commit_scope}{commit_desc} ([`{short_hash}`]({url}))".format(
+                commit_scope=(
+                    f"**{refactor_commit_obj.scope}**: "
+                    if refactor_commit_obj.scope
+                    else ""
+                ),
+                commit_desc=refactor_commit_desc.capitalize().rstrip(),
+                short_hash=refactor_commit_obj.commit.hexsha[:7],
+                url=refactor_commit_url,
+            ),
+            "",
+            "### ADDITIONAL RELEASE INFORMATION",
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{refactor_commit_obj.scope}**: "
+                    if refactor_commit_obj.scope
+                    else ""
+                ),
+                change_desc=refactor_commit_notice_desc.capitalize().rstrip(),
+            ),
+            "",
+            "- {commit_scope}{change_desc}".format(
+                commit_scope=(
+                    f"**{feat_commit_obj.scope}**: " if feat_commit_obj.scope else ""
+                ),
+                change_desc=feat_commit_notice_desc.capitalize().rstrip(),
+            ),
+            "",
+        ],
+    )
+
+    if not isinstance(hvcs, Gitea):
+        expected_content += str.join(
+            os.linesep,
+            [
+                "",
+                "---",
+                "",
+                "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                    prev_version=prev_version.as_tag(),
+                    new_version=version.as_tag(),
+                    version_compare_url=hvcs.compare_url(
+                        prev_version.as_tag(), version.as_tag()
+                    ),
+                ),
+                "",
+            ],
+        )
+
+    actual_content = generate_release_notes(
+        hvcs_client=hvcs_client(remote_url=example_git_https_url),
+        release=release,
+        template_dir=Path(""),
+        history=release_history_w_multiple_notices,
+        style="angular",
+        mask_initial_release=mask_initial_release,
+    )
+
+    assert expected_content == actual_content

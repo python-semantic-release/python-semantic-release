@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import pytest
@@ -244,5 +245,182 @@ def single_release_history(
         unreleased={},
         released={
             version: artificial_release_history.released[version],
+        },
+    )
+
+
+@pytest.fixture
+def release_history_w_a_notice(
+    artificial_release_history: ReleaseHistory,
+    stable_now_date: GetStableDateNowFn,
+) -> ReleaseHistory:
+    current_datetime = stable_now_date()
+    latest_version = next(iter(artificial_release_history.released.keys()))
+    next_version = latest_version.bump(LevelBump.PATCH)
+    notice_commit_subject = "deprecate a type"
+    notice_commit_type = "refactor"
+    notice_commit_scope = "cli"
+    release_notice = dedent(
+        """\
+        This is a multline release notice that is made
+        up of two lines.
+        """
+    )
+
+    notice_commit = Commit(
+        Repo("."),
+        Object.NULL_BIN_SHA,
+        message=str.join(
+            "\n\n",
+            [
+                f"{notice_commit_type}({notice_commit_scope}): {notice_commit_subject}",
+                f"NOTICE: {release_notice}",
+            ],
+        ),
+    )
+
+    notice_commit_parsed = ParsedCommit(
+        bump=LevelBump.NO_RELEASE,
+        type=notice_commit_type,
+        scope=notice_commit_scope,
+        descriptions=[notice_commit_subject],
+        breaking_descriptions=[],
+        release_notices=(release_notice.replace("\n", " ").strip(),),
+        commit=notice_commit,
+    )
+
+    return ReleaseHistory(
+        unreleased={},
+        released={
+            next_version: Release(
+                tagger=artificial_release_history.released[latest_version]["tagger"],
+                committer=artificial_release_history.released[latest_version][
+                    "committer"
+                ],
+                tagged_date=current_datetime,
+                elements={"Refactoring": [notice_commit_parsed]},
+                version=next_version,
+            ),
+            **artificial_release_history.released,
+        },
+    )
+
+
+@pytest.fixture
+def release_history_w_notice_n_brk_change(
+    artificial_release_history: ReleaseHistory,
+    release_history_w_a_notice: ReleaseHistory,
+    stable_now_date: GetStableDateNowFn,
+) -> ReleaseHistory:
+    current_datetime = stable_now_date()
+    latest_version = next(iter(artificial_release_history.released.keys()))
+    next_version = latest_version.bump(LevelBump.MAJOR)
+    brk_commit_subject = "fix a problem"
+    brk_commit_type = "fix"
+    brk_commit_scope = "cli"
+    brk_change_msg = "this is a breaking change"
+
+    brk_commit = Commit(
+        Repo("."),
+        Object.NULL_BIN_SHA,
+        message=str.join(
+            "\n\n",
+            [
+                f"{brk_commit_type}({brk_commit_scope}): {brk_commit_subject}",
+                f"BREAKING CHANGE: {brk_change_msg}",
+            ],
+        ),
+    )
+
+    brk_commit_parsed = ParsedCommit(
+        bump=LevelBump.MAJOR,
+        type=brk_commit_type,
+        scope=brk_commit_scope,
+        descriptions=[brk_commit_subject],
+        breaking_descriptions=[brk_change_msg],
+        commit=brk_commit,
+    )
+
+    last_notice_release = next(iter(release_history_w_a_notice.released.keys()))
+
+    return ReleaseHistory(
+        unreleased={},
+        released={
+            next_version: Release(
+                tagger=artificial_release_history.released[latest_version]["tagger"],
+                committer=artificial_release_history.released[latest_version][
+                    "committer"
+                ],
+                tagged_date=current_datetime,
+                elements={
+                    "Bug Fixes": [brk_commit_parsed],
+                    **release_history_w_a_notice.released[last_notice_release][
+                        "elements"
+                    ],
+                },
+                version=next_version,
+            ),
+            **artificial_release_history.released,
+        },
+    )
+
+
+@pytest.fixture
+def release_history_w_multiple_notices(
+    release_history_w_a_notice: ReleaseHistory,
+    stable_now_date: GetStableDateNowFn,
+) -> ReleaseHistory:
+    current_datetime = stable_now_date()
+    latest_version = next(iter(release_history_w_a_notice.released.keys()))
+
+    notice_commit_subject = "add a configurable feature"
+    notice_commit_type = "feat"
+    notice_commit_scope = "cli-config"
+    release_notice = dedent(
+        """\
+        This is a multline release notice that is its own
+        paragraph to detail the configurable feature.
+        """
+    )
+
+    notice_commit = Commit(
+        Repo("."),
+        Object.NULL_BIN_SHA,
+        message=str.join(
+            "\n\n",
+            [
+                f"{notice_commit_type}({notice_commit_scope}): {notice_commit_subject}",
+                f"NOTICE: {release_notice}",
+            ],
+        ),
+    )
+
+    notice_commit_parsed = ParsedCommit(
+        bump=LevelBump.MINOR,
+        type=notice_commit_type,
+        scope=notice_commit_scope,
+        descriptions=[notice_commit_subject],
+        breaking_descriptions=[],
+        release_notices=(release_notice.replace("\n", " ").strip(),),
+        commit=notice_commit,
+    )
+
+    return ReleaseHistory(
+        unreleased={},
+        released={
+            **release_history_w_a_notice.released,
+            # Replaces and inserts a new commit of different type with breaking changes
+            latest_version: Release(
+                tagger=release_history_w_a_notice.released[latest_version]["tagger"],
+                committer=release_history_w_a_notice.released[latest_version][
+                    "committer"
+                ],
+                tagged_date=current_datetime,
+                elements={
+                    "Features": [notice_commit_parsed],
+                    **release_history_w_a_notice.released[latest_version]["elements"],
+                },
+                version=latest_version,
+            ),
         },
     )
