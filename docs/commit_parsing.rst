@@ -114,6 +114,12 @@ logic in relation to how PSR's core features:
   feature on/off via the :ref:`config-commit_parser_options` setting. *Feature available in
   v9.17.0+.*
 
+- **Release Notice Footer Detection**: This parser implements PSR's
+  :ref:`commit_parser-builtin-release_notice_footer_detection`, which is a custom extension
+  to traditional `Angular Commit Style Guidelines`_ to use the ``NOTICE`` keyword as a git
+  footer to document additional release information that is not considered a breaking change.
+  *Feature available in ${NEW_RELEASE_TAG}+.*
+
 **Limitations**:
 
 - Commits with the ``revert`` type are not currently supported. Track the implementation
@@ -184,6 +190,11 @@ how PSR's core features:
   message as a separate commit message within a single squashed commit. You can toggle this
   feature on/off via the :ref:`config-commit_parser_options` setting. *Feature available in
   v9.17.0+.*
+
+- **Release Notice Footer Detection**: This parser implements PSR's
+  :ref:`commit_parser-builtin-release_notice_footer_detection`, which is a custom extension
+  that uses the ``NOTICE`` keyword as a git footer to document additional release information
+  that is not considered a breaking change. *Feature available in ${NEW_RELEASE_TAG}+.*
 
 If no commit parser options are provided via the configuration, the parser will use PSR's
 built-in :py:class:`defaults <semantic_release.commit_parser.emoji.EmojiParserOptions>`.
@@ -307,6 +318,33 @@ return an empty tuple.
 - `GitLab: Default Closing Patterns <https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#default-closing-pattern>`_
 
 .. _Git Trailer format: https://git-scm.com/docs/git-interpret-trailers
+
+----
+
+.. _commit_parser-builtin-release_notice_footer_detection:
+
+Common Release Notice Footer Detection
+""""""""""""""""""""""""""""""""""""""
+
+*Introduced in ${NEW_RELEASE_TAG}**
+
+All of the PSR built-in parsers implement common release notice footer detection logic
+to identify and extract a ``NOTICE`` git trailer that documents any additional release
+information the developer wants to provide to the software consumer. The idea extends
+from the concept of the ``BREAKING CHANGE:`` git trailer to document any breaking change
+descriptions but the ``NOTICE`` trailer is intended to document any information that is
+below the threshold of a breaking change while still important for the software consumer
+to be aware of. Common uses would be to provide deprecation warnings or more detailed
+change usage information for that release. Parsers will collapse single newlines after
+the ``NOTICE`` trailer into a single line paragraph. Commits may have more than one
+``NOTICE`` trailer in a single commit message. Each
+:py:class:`ParsedCommit <semantic_release.commit_parser.token.ParsedCommit>` will have
+a ``release_notices`` attribute that is a tuple of string paragraphs to identify each
+release notice.
+
+In the default changelog and release notes template, these release notices will be
+formatted into their own section called **ADDITIONAL RELEASE INFORMATION**. Each will
+include any commit scope defined and each release notice in alphabetical order.
 
 ----
 
