@@ -246,6 +246,11 @@ Configuration Examples
           '''Merged? .*''',
         ]
 
+If identified or supported by the parser, the default changelog templates will include
+a separate section of breaking changes and additional release information. Refer to the
+:ref:`commit parsing <commit-parsing>` section to see how to write commit messages that
+will be properly parsed and displayed in these sections.
+
 
 .. _changelog-templates-default_release_notes:
 
@@ -260,11 +265,26 @@ default built-in template out-of-the-box for generating release notes.
 
 The difference between the changelog and release notes is that the release notes
 only contain the changes for the current release. Due to the modularity of the
-PSR templates, the format is identical to an individual version of the default
-changelog.
+PSR templates, the format is similar to an individual version of the default
+changelog but may include other version specific information.
 
 At this time, the default template for version release notes is only available
 in Markdown format for all VCS types.
+
+If you want to review what the default release notes look like you can use the
+following command to print the release notes to the console (remove any configuration
+for defining a custom template directory):
+
+.. code:: console
+
+    # Create a current tag
+    git tag v1.0.0
+    semantic-release --noop changelog --post-to-release-tag v1.0.0
+
+The default template provided by PSR will respect the
+:ref:`<config-changelog-default_templates-mask_initial_release>` setting and
+will also add a comparison link to the previous release if one exists without
+customization.
 
 .. seealso::
     - To personalize your release notes, see the
