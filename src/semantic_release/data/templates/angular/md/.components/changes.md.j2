@@ -41,8 +41,8 @@ EXAMPLE:
 #}{%  for type_, commits in commit_objects if type_ != "unknown"
 %}{#    PREPROCESS COMMITS (order by description & format description line)
 #}{%    set ns = namespace(commits=commits)
-%}{{    apply_alphabetical_ordering_by_descriptions(ns) | default("", true)
-}}{#
+%}{%    set _ = apply_alphabetical_ordering_by_descriptions(ns)
+%}{#
 #}{%    set commit_descriptions = []
 %}{#
 #}{%    for commit in ns.commits
@@ -57,8 +57,8 @@ EXAMPLE:
             )
 %}{%      endif
 %}{%      set description = description | autofit_text_width(max_line_width, hanging_indent)
-%}{{      commit_descriptions.append(description) | default("", true)
-}}{%    endfor
+%}{%      set _ = commit_descriptions.append(description)
+%}{%    endfor
 %}{#
    #    # PRINT SECTION (header & commits)
 #}{%    if commit_descriptions | length > 0
@@ -81,18 +81,18 @@ EXAMPLE:
 #}{%  if breaking_commits | length > 0
 %}{#    PREPROCESS COMMITS
 #}{%    set brk_ns = namespace(commits=breaking_commits)
-%}{{    apply_alphabetical_ordering_by_brk_descriptions(brk_ns) | default("", true)
-}}{#
+%}{%    set _ = apply_alphabetical_ordering_by_brk_descriptions(brk_ns)
+%}{#
 #}{%    set brking_descriptions = []
 %}{#
 #}{%    for commit in brk_ns.commits
 %}{%      set full_description = "- %s" | format(
             format_breaking_changes_description(commit).split("\n\n") | join("\n\n- ")
           )
-%}{{      brking_descriptions.append(
+%}{%      set _ = brking_descriptions.append(
             full_description | autofit_text_width(max_line_width, hanging_indent)
-          ) | default("", true)
-}}{%    endfor
+          )
+%}{%    endfor
 %}{#
    #    # PRINT BREAKING CHANGE DESCRIPTIONS (header & descriptions)
 #}{{    "\n"
@@ -114,18 +114,18 @@ EXAMPLE:
 #}{%  if notice_commits | length > 0
 %}{#    PREPROCESS COMMITS
 #}{%    set notice_ns = namespace(commits=notice_commits)
-%}{{    apply_alphabetical_ordering_by_release_notices(notice_ns) | default("", true)
-}}{#
+%}{%    set _ = apply_alphabetical_ordering_by_release_notices(notice_ns)
+%}{#
 #}{%    set release_notices = []
 %}{#
 #}{%    for commit in notice_ns.commits
 %}{%      set full_description = "- %s" | format(
             format_release_notice(commit).split("\n\n") | join("\n\n- ")
           )
-%}{{      release_notices.append(
+%}{%      set _ = release_notices.append(
             full_description | autofit_text_width(max_line_width, hanging_indent)
-          ) | default("", true)
-}}{%    endfor
+          )
+%}{%    endfor
 %}{#
    #    # PRINT RELEASE NOTICE INFORMATION (header & descriptions)
 #}{{    "\n"
