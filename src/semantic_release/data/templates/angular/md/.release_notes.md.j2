@@ -1,5 +1,9 @@
 {#  EXAMPLE:
 
+## v1.0.0 (2020-01-01)
+
+_This release is published under the MIT License._
+
 ### Features
 
 - Add new feature ([#10](https://domain.com/namespace/repo/pull/10), [`abcdef0`](https://domain.com/namespace/repo/commit/HASH))
@@ -29,27 +33,26 @@
 #}{#  # Set line width to 1000 to avoid wrapping as GitHub will handle it
 #}{%  set max_line_width = max_line_width | default(1000)
 %}{%  set hanging_indent = hanging_indent | default(2)
+%}{%  set license_name = license_name | default("", True)
 %}{%  set releases = context.history.released.values() | list
 %}{%  set curr_release_index = releases.index(release)
-%}{%  set prev_release_index = curr_release_index + 1
 %}{#
-#}{%  if 'compare_url' is filter and prev_release_index < releases | length
-%}{%    set prev_version_tag = releases[prev_release_index].version.as_tag()
-%}{%    set new_version_tag = release.version.as_tag()
-%}{%    set version_compare_url = prev_version_tag | compare_url(new_version_tag)
-%}{%    set detailed_changes_link = '[{}...{}]({})'.format(
-          prev_version_tag, new_version_tag, version_compare_url
-        )
-%}{%  endif
-%}{#
-#}{%  if releases | length == 1 and mask_initial_release
+#}{%  if mask_initial_release and curr_release_index == releases | length - 1
 %}{#    # On a first release, generate our special message
 #}{%    include ".components/first_release.md.j2"
 %}{%  else
 %}{#    # Not the first release so generate notes normally
 #}{%    include ".components/versioned_changes.md.j2"
 -%}{#
-#}{%    if detailed_changes_link is defined
+#}{%    set prev_release_index = curr_release_index + 1
+%}{#
+#}{%    if 'compare_url' is filter and prev_release_index < releases | length
+%}{%      set prev_version_tag = releases[prev_release_index].version.as_tag()
+%}{%      set new_version_tag = release.version.as_tag()
+%}{%      set version_compare_url = prev_version_tag | compare_url(new_version_tag)
+%}{%      set detailed_changes_link = '[{}...{}]({})'.format(
+            prev_version_tag, new_version_tag, version_compare_url
+          )
 %}{{      "\n"
 }}{{      "---\n"
 }}{{      "\n"

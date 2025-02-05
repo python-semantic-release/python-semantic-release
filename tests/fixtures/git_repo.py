@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -8,6 +9,7 @@ from pathlib import Path
 from textwrap import dedent
 from time import sleep
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 from git import Actor, Repo
@@ -19,6 +21,10 @@ from semantic_release.commit_parser.angular import (
 )
 from semantic_release.commit_parser.emoji import EmojiCommitParser, EmojiParserOptions
 from semantic_release.commit_parser.scipy import ScipyCommitParser, ScipyParserOptions
+from semantic_release.hvcs.bitbucket import Bitbucket
+from semantic_release.hvcs.gitea import Gitea
+from semantic_release.hvcs.github import Github
+from semantic_release.hvcs.gitlab import Gitlab
 from semantic_release.version.version import Version
 
 import tests.conftest
@@ -53,10 +59,6 @@ if TYPE_CHECKING:
     from typing_extensions import NotRequired
 
     from semantic_release.hvcs import HvcsBase
-    from semantic_release.hvcs.bitbucket import Bitbucket
-    from semantic_release.hvcs.gitea import Gitea
-    from semantic_release.hvcs.github import Github
-    from semantic_release.hvcs.gitlab import Gitlab
 
     from tests.conftest import (
         BuildRepoOrCopyCacheFn,
@@ -162,7 +164,9 @@ if TYPE_CHECKING:
 
     class GetCommitsFromRepoBuildDefFn(Protocol):
         def __call__(
-            self, build_definition: Sequence[RepoActions]
+            self,
+            build_definition: Sequence[RepoActions],
+            filter_4_changelog: bool = False,
         ) -> RepoDefinition: ...
 
     RepoDefinition: TypeAlias = dict[VersionStr, RepoVersionDef]  # type: ignore[misc] # mypy is thoroughly confused
@@ -390,6 +394,23 @@ if TYPE_CHECKING:
 
     class SeparateSquashedCommitDefFn(Protocol):
         def __call__(self, squashed_commit_def: CommitDef) -> list[CommitDef]: ...
+
+    class GenerateDefaultReleaseNotesFromDefFn(Protocol):
+        def __call__(
+            self,
+            version_actions: Sequence[RepoActions],
+            hvcs: Github | Gitlab | Gitea | Bitbucket,
+            previous_version: Version | None = None,
+            license_name: str = "",
+            dest_file: Path | None = None,
+            mask_initial_release: bool = False,
+        ) -> str: ...
+
+    class GetHvcsClientFromRepoDefFn(Protocol):
+        def __call__(
+            self,
+            repo_def: Sequence[RepoActions],
+        ) -> Github | Gitlab | Gitea | Bitbucket: ...
 
 
 @pytest.fixture(scope="session")
@@ -927,6 +948,34 @@ def simulate_change_commits_n_rtn_changelog_entry(
 
 
 @pytest.fixture(scope="session")
+def get_hvcs_client_from_repo_def(
+    example_git_https_url: str,
+    get_cfg_value_from_def: GetCfgValueFromDefFn,
+) -> GetHvcsClientFromRepoDefFn:
+    hvcs_client_classes = {
+        Bitbucket.__name__.lower(): Bitbucket,
+        Github.__name__.lower(): Github,
+        Gitea.__name__.lower(): Gitea,
+        Gitlab.__name__.lower(): Gitlab,
+    }
+
+    def _get_hvcs_client_from_repo_def(
+        repo_def: Sequence[RepoActions],
+    ) -> Github | Gitlab | Gitea | Bitbucket:
+        hvcs_type = get_cfg_value_from_def(repo_def, "hvcs_client_name")
+        hvcs_client_class = hvcs_client_classes[hvcs_type]
+
+        # Prevent the HVCS client from using the environment variables
+        with mock.patch.dict(os.environ, {}, clear=True):
+            return hvcs_client_class(
+                example_git_https_url,
+                hvcs_domain=get_cfg_value_from_def(repo_def, "hvcs_domain"),
+            )
+
+    return _get_hvcs_client_from_repo_def
+
+
+@pytest.fixture(scope="session")
 def build_configured_base_repo(  # noqa: C901
     cached_example_git_project: Path,
     use_github_hvcs: UseHvcsFn,
@@ -1258,6 +1307,9 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                     # Save configuration details for later steps
                     mask_initial_release = cfg_def["mask_initial_release"]
 
+                    # Make sure the resulting build definition is complete with the default
+                    cfg_def["tag_format_str"] = tag_format_str
+
                 elif action == RepoActionStep.MAKE_COMMITS:
                     mk_cmts_def: RepoActionMakeCommitsDetails = step_result["details"]  # type: ignore[assignment]
 
@@ -1432,9 +1484,19 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
                     )
                 commits.extend(commits_made)
 
-            elif build_step["action"] == RepoActionStep.GIT_MERGE:
+            elif any(
+                (
+                    build_step["action"] == RepoActionStep.GIT_SQUASH,
+                    build_step["action"] == RepoActionStep.GIT_MERGE,
+                )
+            ):
                 if "commit_def" in build_step["details"]:
-                    commits.append(build_step["details"]["commit_def"])  # type: ignore[typeddict-item]
+                    commit_def = build_step["details"]["commit_def"]  # type: ignore[typeddict-item]
+
+                    if filter_4_changelog and not commit_def["include_in_changelog"]:
+                        continue
+
+                    commits.append(commit_def)
 
             elif build_step["action"] == RepoActionStep.RELEASE:
                 version = build_step["details"]["version"]
@@ -1892,6 +1954,202 @@ def simulate_default_changelog_creation(  # noqa: C901
         return changelog_content
 
     return _mimic_semantic_release_default_changelog
+
+
+@pytest.fixture(scope="session")
+def generate_default_release_notes_from_def(  # noqa: C901
+    today_date_str: str,
+    get_commits_from_repo_build_def: GetCommitsFromRepoBuildDefFn,
+) -> GenerateDefaultReleaseNotesFromDefFn:
+    def build_version_entry_markdown(
+        version: VersionStr,
+        version_def: RepoVersionDef,
+        hvcs: Github | Gitlab | Gitea | Bitbucket,
+        license_name: str,
+    ) -> str:
+        version_entry = [
+            f"## v{version} ({today_date_str})",
+            *(
+                [""]
+                if not license_name
+                else [
+                    "",
+                    f"_This release is published under the {license_name} License._",
+                    "",
+                ]
+            ),
+        ]
+
+        changelog_sections = sorted(
+            {commit["category"] for commit in version_def["commits"]}
+        )
+
+        brking_descriptions = []
+
+        for section in changelog_sections:
+            # Create Markdown section heading
+            section_title = section.title() if not section.startswith(":") else section
+            version_entry.append(f"### {section_title}\n")
+
+            commits: list[CommitDef] = list(
+                filter(
+                    lambda commit, section=section: (  # type: ignore[arg-type]
+                        commit["category"] == section
+                    ),
+                    version_def["commits"],
+                )
+            )
+
+            section_bullets = []
+
+            # format each commit
+            for commit_def in commits:
+                descriptions = commit_def["desc"].split("\n\n")
+                if commit_def["brking_desc"]:
+                    brking_descriptions.append(
+                        "- {commit_scope}{brk_desc}".format(
+                            commit_scope=(
+                                f"**{commit_def['scope']}**: "
+                                if commit_def["scope"]
+                                else ""
+                            ),
+                            brk_desc=commit_def["brking_desc"].capitalize(),
+                        )
+                    )
+
+                # NOTE: During release notes, we make the line length very large as the VCS
+                # will handle the line wrapping for us so here we don't have to worry about it
+                max_line_length = 1000
+
+                subject_line = "- {commit_scope}{commit_desc}".format(
+                    commit_desc=descriptions[0].capitalize(),
+                    commit_scope=(
+                        f"**{commit_def['scope']}**: " if commit_def["scope"] else ""
+                    ),
+                )
+
+                mr_link = (
+                    ""
+                    if not commit_def["mr"]
+                    else "([{mr}]({mr_url}),".format(
+                        mr=commit_def["mr"],
+                        mr_url=hvcs.pull_request_url(commit_def["mr"]),
+                    )
+                )
+
+                sha_link = "[`{short_sha}`]({commit_url}))".format(
+                    short_sha=commit_def["sha"][:7],
+                    commit_url=hvcs.commit_hash_url(commit_def["sha"]),
+                )
+                # Add opening parenthesis if no MR link
+                sha_link = sha_link if mr_link else f"({sha_link}"
+
+                commit_cl_desc = f"{subject_line} {mr_link}".rstrip()
+                if len(commit_cl_desc) > max_line_length:
+                    commit_cl_desc = f"{subject_line}\n  {mr_link}".rstrip()
+
+                if len(f"{commit_cl_desc} {sha_link}") > max_line_length:
+                    commit_cl_desc = f"{commit_cl_desc}\n  {sha_link}\n"
+                else:
+                    commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
+
+                # NOTE: remove this when we no longer are writing the whole commit msg (squash commits enabled)
+                # if len(descriptions) > 1:
+                #     commit_cl_desc += (
+                #         "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                #     )
+
+                # Add commits to section
+                section_bullets.append(commit_cl_desc)
+
+            version_entry.extend(sorted(section_bullets))
+
+        # Add breaking changes to the end of the version entry
+        if brking_descriptions:
+            version_entry.append("### BREAKING CHANGES\n")
+            version_entry.extend([*sorted(brking_descriptions), ""])
+
+        return str.join("\n", version_entry)
+
+    def build_initial_version_entry_markdown(
+        version: VersionStr,
+        license_name: str = "",
+    ) -> str:
+        return str.join(
+            "\n",
+            [
+                f"## v{version} ({today_date_str})",
+                *(
+                    [""]
+                    if not license_name
+                    else [
+                        "",
+                        f"_This release is published under the {license_name} License._",
+                        "",
+                    ]
+                ),
+                "- Initial Release",
+                "",
+            ],
+        )
+
+    def _generate_default_release_notes(
+        version_actions: Sequence[RepoActions],
+        hvcs: Github | Gitlab | Gitea | Bitbucket,
+        previous_version: Version | None = None,
+        license_name: str = "",
+        dest_file: Path | None = None,
+        # TODO: Breaking v10, when default is toggled to true, also change this to True
+        mask_initial_release: bool = False,
+    ) -> str:
+        limited_repo_def: RepoDefinition = get_commits_from_repo_build_def(
+            build_definition=version_actions,
+            filter_4_changelog=True,
+        )
+        version: Version = Version.parse(next(iter(limited_repo_def.keys())))
+        version_def: RepoVersionDef = limited_repo_def[str(version)]
+
+        release_notes_content = (
+            str.join(
+                "\n" * 2,
+                [
+                    (
+                        build_initial_version_entry_markdown(str(version), license_name)
+                        if mask_initial_release and not previous_version
+                        else build_version_entry_markdown(
+                            str(version), version_def, hvcs, license_name
+                        )
+                    ).rstrip(),
+                    *(
+                        [
+                            "---",
+                            "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                                prev_version=previous_version.as_tag(),
+                                new_version=version.as_tag(),
+                                version_compare_url=hvcs.compare_url(
+                                    previous_version.as_tag(), version.as_tag()
+                                ),
+                            ),
+                        ]
+                        if previous_version and not isinstance(hvcs, Gitea)
+                        else []
+                    ),
+                ],
+            ).rstrip()
+            + "\n"
+        )
+
+        if dest_file is not None:
+            # Converts universal newlines to the OS-specific upon write
+            dest_file.write_text(release_notes_content)
+
+        # match the line endings of the current OS
+        return (
+            str.join(os.linesep, release_notes_content.splitlines(keepends=False))
+            + os.linesep
+        )
+
+    return _generate_default_release_notes
 
 
 @pytest.fixture

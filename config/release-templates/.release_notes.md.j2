@@ -3,6 +3,8 @@
 
 ## v1.0.0 (2020-01-01)
 
+_This release is published under the MIT License._
+
 ### ✨ Features
 
 - Add new feature ([PR#10](https://domain.com/namespace/repo/pull/10), [`abcdef0`](https://domain.com/namespace/repo/commit/HASH))
@@ -43,6 +45,7 @@
 #}{#  # Set line width to 1000 to avoid wrapping as GitHub will handle it
 #}{%  set max_line_width = max_line_width | default(1000)
 %}{%  set hanging_indent = hanging_indent | default(2)
+%}{%  set license_name = license_name | default("", True)
 %}{%  set releases = context.history.released.values() | list
 %}{%  set curr_release_index = releases.index(release)
 %}{#

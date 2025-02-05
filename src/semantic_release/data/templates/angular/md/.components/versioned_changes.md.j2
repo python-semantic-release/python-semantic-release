@@ -1,14 +1,20 @@
-{#
+{#  EXAMPLE:
 
 ## vX.X.X (YYYY-MMM-DD)
 
+_This release is published under the MIT License._            # Release Notes Only
+
+{{ change_sections }}
+
 #}{{
-
-      "## %s (%s)\n" | format(
-        release.version.as_semver_tag(),
-        release.tagged_date.strftime("%Y-%m-%d")
-      )
-
-}}{%  set commit_objects = release["elements"] | dictsort
+"## %s (%s)\n" | format(
+  release.version.as_semver_tag(),
+  release.tagged_date.strftime("%Y-%m-%d")
+)
+}}{%  if license_name is defined and license_name
+%}{{    "\n_This release is published under the %s License._\n" | format(license_name)
+}}{%  endif
+%}{#
+#}{%  set commit_objects = release["elements"] | dictsort
 %}{%  include "changes.md.j2"
 -%}
