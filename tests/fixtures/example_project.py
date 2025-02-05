@@ -414,7 +414,11 @@ def update_pyproject_toml(pyproject_toml_file: Path) -> UpdatePyprojectTomlFn:
             if pointer.get(part, None) is None:
                 pointer.add(part, tomlkit.table())
             pointer = pointer.get(part, {})
-        pointer.update(new_setting)
+
+        if value is None:
+            pointer.pop(new_setting_key)
+        else:
+            pointer.update(new_setting)
 
         with open(cwd_pyproject_toml, "w") as wfd:
             tomlkit.dump(pyproject_toml, wfd)
