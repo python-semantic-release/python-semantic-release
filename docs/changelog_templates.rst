@@ -286,7 +286,7 @@ The default template provided by PSR will respect the
 will also add a comparison link to the previous release if one exists without
 customization.
 
-As of ``v9.18.0``, the default release notes will also include a statement to
+As of ``${NEW_RELEASE_TAG}``, the default release notes will also include a statement to
 declare which license the project was released under. PSR determines which license
 to declare based on the value of ``project.license-expression`` in the ``pyproject.toml``
 file as defined in the `PEP 639`_ specification.
@@ -689,7 +689,7 @@ The filters provided vary based on the VCS configured and available features:
   point to the specific version page. If no version is provided, the URL will point to the package
   page.
 
-  *Introduced in v9.18.0.*
+  *Introduced in ${NEW_RELEASE_TAG}.*
 
   **Example Usage:**
 
@@ -709,7 +709,7 @@ The filters provided vary based on the VCS configured and available features:
   page on the remote vcs. This filter is useful when you want to link to the release page on the
   remote vcs.
 
-  *Introduced in v9.18.0.*
+  *Introduced in ${NEW_RELEASE_TAG}.*
 
   **Example Usage:**
 
@@ -887,7 +887,7 @@ The filters provided vary based on the VCS configured and available features:
   display the proper name of the VCS type in a changelog or release notes. The filter supports
   three different replace formats: ``%s``, ``{}``, and ``{vcs_name}``.
 
-  *Introduced in v9.18.0.*
+  *Introduced in ${NEW_RELEASE_TAG}.*
 
   **Example Usage:**
 

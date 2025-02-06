@@ -118,7 +118,7 @@ logic in relation to how PSR's core features:
   :ref:`commit_parser-builtin-release_notice_footer_detection`, which is a custom extension
   to traditional `Angular Commit Style Guidelines`_ to use the ``NOTICE`` keyword as a git
   footer to document additional release information that is not considered a breaking change.
-  *Feature available in v9.18.0+.*
+  *Feature available in ${NEW_RELEASE_TAG}+.*
 
 **Limitations**:
 
@@ -194,7 +194,7 @@ how PSR's core features:
 - **Release Notice Footer Detection**: This parser implements PSR's
   :ref:`commit_parser-builtin-release_notice_footer_detection`, which is a custom extension
   that uses the ``NOTICE`` keyword as a git footer to document additional release information
-  that is not considered a breaking change. *Feature available in v9.18.0+.*
+  that is not considered a breaking change. *Feature available in ${NEW_RELEASE_TAG}+.*
 
 If no commit parser options are provided via the configuration, the parser will use PSR's
 built-in :py:class:`defaults <semantic_release.commit_parser.emoji.EmojiParserOptions>`.
@@ -326,7 +326,7 @@ return an empty tuple.
 Common Release Notice Footer Detection
 """"""""""""""""""""""""""""""""""""""
 
-*Introduced in v9.18.0**
+*Introduced in ${NEW_RELEASE_TAG}**
 
 All of the PSR built-in parsers implement common release notice footer detection logic
 to identify and extract a ``NOTICE`` git trailer that documents any additional release
