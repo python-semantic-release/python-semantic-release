@@ -71,7 +71,7 @@ _This release is published under the MIT License._
 %}{%      for linked_issues in issue_resolving_commits | map(attribute="linked_issues")
 %}{%        set _ = issue_numbers.extend(linked_issues)
 %}{%      endfor
-%}{%      for issue_num in issue_numbers | unique | sort
+%}{%      for issue_num in issue_numbers | unique | sort_numerically
 %}{{
             "\n- %s: _Title_\n" | format(format_link(issue_num | issue_url, issue_num))
 }}{#
