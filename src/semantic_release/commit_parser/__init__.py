@@ -6,6 +6,10 @@ from semantic_release.commit_parser.angular import (
     AngularCommitParser,
     AngularParserOptions,
 )
+from semantic_release.commit_parser.conventional import (
+    ConventionalCommitParser,
+    ConventionalCommitParserOptions,
+)
 from semantic_release.commit_parser.emoji import (
     EmojiCommitParser,
     EmojiParserOptions,
