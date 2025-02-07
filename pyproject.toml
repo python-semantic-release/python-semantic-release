@@ -436,6 +436,11 @@ match = "^(feat|fix|perf)/.+"
 prerelease = true
 prerelease_token = "alpha"
 
+[tool.semantic_release.branches.dev]
+match = ".+"
+prerelease = true
+prerelease_token = "dev"
+
 [tool.semantic_release.remote]
 type = "github"
 token = { env = "GH_TOKEN" }
