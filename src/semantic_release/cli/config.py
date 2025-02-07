@@ -54,7 +54,6 @@ from semantic_release.errors import (
     ParserLoadError,
 )
 from semantic_release.helpers import dynamic_import
-from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.declaration import (
     PatternVersionDeclaration,
     TomlVersionDeclaration,
@@ -287,15 +286,18 @@ class RemoteConfig(BaseModel):
 
     def _get_default_token(self) -> str | None:
         hvcs_client_class = _known_hvcs[self.type]
-        default_hvcs_instance = hvcs_client_class("git@example.com:owner/project.git")
-        if not isinstance(default_hvcs_instance, RemoteHvcsBase):
-            return None
 
-        default_token_name = default_hvcs_instance.DEFAULT_ENV_TOKEN_NAME
-        if not default_token_name:
-            return None
+        default_token_name = (
+            getattr(hvcs_client_class, "DEFAULT_ENV_TOKEN_NAME")  # noqa: B009
+            if hasattr(hvcs_client_class, "DEFAULT_ENV_TOKEN_NAME")
+            else ""
+        )
 
-        return EnvConfigVar(env=default_token_name).getvalue()
+        return (
+            EnvConfigVar(env=default_token_name).getvalue()
+            if default_token_name
+            else None
+        )
 
     @model_validator(mode="after")
     def check_url_scheme(self) -> Self:
