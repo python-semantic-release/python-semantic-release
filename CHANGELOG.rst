@@ -4,6 +4,23 @@
 CHANGELOG
 =========
 
+.. _changelog-v9.18.1:
+
+v9.18.1 (2025-02-08)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **config**: Refactors default token resolution to prevent pre-mature insecure URL error, closes
+  `#1074`_, `#1169`_ (`PR#1173`_, `37db258`_)
+
+.. _#1074: https://github.com/python-semantic-release/python-semantic-release/issues/1074
+.. _#1169: https://github.com/python-semantic-release/python-semantic-release/issues/1169
+.. _37db258: https://github.com/python-semantic-release/python-semantic-release/commit/37db2581620ad02e66716a4b3b365aa28abe65f8
+.. _PR#1173: https://github.com/python-semantic-release/python-semantic-release/pull/1173
+
+
 .. _changelog-v9.18.0:
 
 v9.18.0 (2025-02-06)
