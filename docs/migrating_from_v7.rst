@@ -8,7 +8,7 @@ The internals have been changed significantly to better support highly-requested
 features and to streamline the maintenance of the project.
 
 As a result, certain things have been removed, reimplemented differently, or now
-exhibit different behaviour to earlier versions of Python Semantic Release. This
+exhibit different behavior to earlier versions of Python Semantic Release. This
 page is a guide to help projects to ``pip install python-semantic-release>=8.0.0`` with
 fewer surprises.
 
@@ -19,12 +19,12 @@ Python Semantic Release GitHub Action
 
 .. _breaking-removed-artefact-upload:
 
-GitHub Action no longer publishes artefacts to PyPI or GitHub Releases
+GitHub Action no longer publishes artifacts to PyPI or GitHub Releases
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Python Semantic Release no longer uploads distributions to PyPI - see
 :ref:`breaking-commands-repurposed-version-and-publish`. If you are
-using Python Semantic Release to publish release notes and artefacts to
+using Python Semantic Release to publish release notes and artifacts to
 GitHub releases, there is a new GitHub Action `upload-to-gh-release`_
 which will perform this action for you.
 
@@ -143,7 +143,7 @@ Repurposing of ``version`` and ``publish`` commands
 """""""""""""""""""""""""""""""""""""""""""""""""""
 Python Semantic Release's primary purpose is to enable automation of correct semantic
 versioning for software projects. Over the years, this automation has been extended to
-include other actions such as building/publishing the project and its artefacts to
+include other actions such as building/publishing the project and its artifacts to
 artefact repositories, creating releases in remote version control systems, and writing
 changelogs.
 
@@ -152,9 +152,9 @@ performing every piece of automation provided. This has been changed - the ``ver
 command now handles determining the next version, applying the changes to the project
 metadata according to the configuration, writing a changelog, and committing/pushing
 changes to the remote Git repository. It also handles creating a release in the remote
-VCS. It does *not* publish software artefacts to remote repositories such as PyPI;
+VCS. It does *not* publish software artifacts to remote repositories such as PyPI;
 the rationale behind this decision is simply that under the hood, Python Semantic Release
-used `twine`_ to upload artefacts to package indexes such as PyPI, and it's recommended
+used `twine`_ to upload artifacts to package indexes such as PyPI, and it's recommended
 to use twine directly via the command-line. From the twine
 `documentation <https://twine.readthedocs.io/en/stable/contributing.html#architectural-overview>`_:
 
@@ -162,7 +162,7 @@ to use twine directly via the command-line. From the twine
 
 As a result Python Semantic Release no longer depends on twine internals.
 
-The ``publish`` command now handles publishing software artefacts to releases in the
+The ``publish`` command now handles publishing software artifacts to releases in the
 remote version control system.
 
 .. _twine: https://twine.readthedocs.io/en/stable
@@ -477,17 +477,17 @@ tag ``v1.1.4``, you should run::
 
     semantic-release changelog --post-to-release-tag v1.1.4
 
-.. _breaking-changelog-customisation:
+.. _breaking-changelog-customization:
 
-Changelog customisation
+Changelog customization
 """""""""""""""""""""""
 
-A number of options relevant to customising the changelog have been removed. This is
+A number of options relevant to customizing the changelog have been removed. This is
 because Python Semantic Release now supports authoring a completely custom `Jinja`_
 template with the contents of your changelog.
 Historically, the number of options added to Python Semantic Release in order to
-allow this customisation has grown significantly; it now uses templates in order to
-fully open up customising the changelog's appearance.
+allow this customization has grown significantly; it now uses templates in order to
+fully open up customizing the changelog's appearance.
 
 .. _Jinja: https://jinja.palletsprojects.com/en/3.1.x/
 
@@ -499,7 +499,7 @@ Configuration
 
 The configuration structure has been completely reworked, so you should read
 :ref:`configuration` carefully during the process of upgrading to v8+. However,
-some common pitfalls and potential sources of confusion are summarised here.
+some common pitfalls and potential sources of confusion are summarized here.
 
 .. _breaking-configuration-setup-cfg-unsupported:
 
@@ -520,7 +520,7 @@ needs.
 .. warning::
 
    If you don't already have a ``pyproject.toml`` configuration file, ``pip`` can
-   change its behaviour once you add one, as a result of `PEP-517`_. If you find
+   change its behavior once you add one, as a result of `PEP-517`_. If you find
    that this breaks your packaging, you can add your Python Semantic Release
    configuration to a separate file such as ``semantic-release.toml``, and use
    the :ref:`--config <cmd-main-option-config>` option to reference this alternative
@@ -539,7 +539,7 @@ Commit parser options
 
 Options such as ``major_emoji``, ``parser_angular_patch_types`` or
 ``parser_angular_default_level_bump`` have been removed. Instead, these have been
-replaced with a single set of recognised commit parser options, ``allowed_tags``,
+replaced with a single set of recognized commit parser options, ``allowed_tags``,
 ``major_tags``, ``minor_tags``, and ``patch_tags``, though the interpretation of
 these is up to the specific parsers in use. You can read more detail about using
 commit parser options in :ref:`commit_parser_options <config-commit_parser_options>`,

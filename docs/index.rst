@@ -140,15 +140,16 @@ Setting up commit parsing
 -------------------------
 
 We rely on commit messages to detect when a version bump is needed.
-By default, Python Semantic Release uses the
-`Angular style <https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits>`_.
-You can find out more about this in :ref:`commit-parsing`.
+By default, Python Semantic Release uses the `Conventional Commits Specification`_
+to parse commit messages. You can find out more about this in :ref:`commit-parsing`.
 
 .. seealso::
    - :ref:`config-branches` - Adding configuration for releases from multiple branches.
    - :ref:`commit_parser <config-commit_parser>` - use a different parser for commit messages.
      For example, Python Semantic Release also ships with emoji and scipy-style parsers.
    - :ref:`remote.type <config-remote-type>` - specify the type of your remote VCS.
+
+.. _Conventional Commits Specification: https://www.conventionalcommits.org/en/v1.0.0
 
 Setting up the changelog
 ------------------------
