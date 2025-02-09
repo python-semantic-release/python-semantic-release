@@ -36,31 +36,31 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
-    repo_w_git_flow_angular_commits,
+    repo_w_git_flow_conventional_commits,
     repo_w_git_flow_emoji_commits,
     repo_w_git_flow_scipy_commits,
-    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
     repo_w_git_flow_w_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_alpha_prereleases_n_scipy_commits,
-    repo_w_git_flow_w_beta_alpha_rev_prereleases_n_angular_commits,
+    repo_w_git_flow_w_beta_alpha_rev_prereleases_n_conventional_commits,
     repo_w_git_flow_w_beta_alpha_rev_prereleases_n_emoji_commits,
     repo_w_git_flow_w_beta_alpha_rev_prereleases_n_scipy_commits,
-    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits,
-    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits,
-    repo_w_github_flow_w_default_release_channel_angular_commits,
+    repo_w_github_flow_w_default_release_channel_conventional_commits,
     repo_w_github_flow_w_default_release_channel_emoji_commits,
     repo_w_github_flow_w_default_release_channel_scipy_commits,
-    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_conventional_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
-    repo_w_no_tags_angular_commits,
+    repo_w_no_tags_conventional_commits,
     repo_w_no_tags_emoji_commits,
     repo_w_no_tags_scipy_commits,
-    repo_w_trunk_only_angular_commits,
+    repo_w_trunk_only_conventional_commits,
     repo_w_trunk_only_emoji_commits,
-    repo_w_trunk_only_n_prereleases_angular_commits,
+    repo_w_trunk_only_n_prereleases_conventional_commits,
     repo_w_trunk_only_n_prereleases_emoji_commits,
     repo_w_trunk_only_n_prereleases_scipy_commits,
     repo_w_trunk_only_scipy_commits,
@@ -98,7 +98,7 @@ if TYPE_CHECKING:
     )
 
     class Commit2Section(TypedDict):
-        angular: Commit2SectionCommit
+        conventional: Commit2SectionCommit
         emoji: Commit2SectionCommit
         scipy: Commit2SectionCommit
 
@@ -115,8 +115,8 @@ if TYPE_CHECKING:
         for repo_fixture in (
             # Only need to test when it has tags or no tags
             # DO NOT need to consider all repo types as it doesn't change no-op behavior
-            repo_w_no_tags_angular_commits.__name__,
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_no_tags_conventional_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
         )
     ],
 )
@@ -184,8 +184,8 @@ def test_changelog_noop_is_noop(
             lazy_fixture(repo_fixture)
             for repo_fixture in [
                 # All commit types and one without a release
-                repo_w_no_tags_angular_commits.__name__,
-                repo_w_trunk_only_angular_commits.__name__,
+                repo_w_no_tags_conventional_commits.__name__,
+                repo_w_trunk_only_conventional_commits.__name__,
                 repo_w_trunk_only_emoji_commits.__name__,
                 repo_w_trunk_only_scipy_commits.__name__,
             ]
@@ -193,34 +193,34 @@ def test_changelog_noop_is_noop(
         *[
             pytest.param(lazy_fixture(repo_fixture), marks=pytest.mark.comprehensive)
             for repo_fixture in [
-                # repo_w_no_tags_angular_commits.__name__,
+                # repo_w_no_tags_conventional_commits.__name__,
                 repo_w_no_tags_emoji_commits.__name__,
                 repo_w_no_tags_scipy_commits.__name__,
-                # repo_w_trunk_only_angular_commits.__name__,
+                # repo_w_trunk_only_conventional_commits.__name__,
                 # repo_w_trunk_only_emoji_commits.__name__,
                 # repo_w_trunk_only_scipy_commits.__name__,
-                repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                repo_w_trunk_only_n_prereleases_conventional_commits.__name__,
                 repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
                 repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
-                repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_default_release_channel_conventional_commits.__name__,
                 repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
                 repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_conventional_commits.__name__,
                 repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
                 repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
-                repo_w_git_flow_angular_commits.__name__,
+                repo_w_git_flow_conventional_commits.__name__,
                 repo_w_git_flow_emoji_commits.__name__,
                 repo_w_git_flow_scipy_commits.__name__,
-                repo_w_git_flow_w_beta_alpha_rev_prereleases_n_angular_commits.__name__,
+                repo_w_git_flow_w_beta_alpha_rev_prereleases_n_conventional_commits.__name__,
                 repo_w_git_flow_w_beta_alpha_rev_prereleases_n_emoji_commits.__name__,
                 repo_w_git_flow_w_beta_alpha_rev_prereleases_n_scipy_commits.__name__,
-                repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__,
                 repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
                 repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
-                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
                 repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
                 repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
-                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format.__name__,
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format.__name__,
             ]
         ],
     ],
@@ -294,7 +294,7 @@ def test_changelog_content_regenerated_masked_initial_release(
     insertion_flag: str,
 ):
     build_definition = get_repo_definition_4_trunk_only_repo_w_tags(
-        commit_type="angular",
+        commit_type="conventional",
         mask_initial_release=True,
         extra_configs={
             "tool.semantic_release.changelog.default_templates.changelog_file": str(
@@ -345,7 +345,7 @@ def test_changelog_content_regenerated_masked_initial_release(
     [
         lazy_fixture(repo_fixture)
         for repo_fixture in [
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
             repo_w_trunk_only_emoji_commits.__name__,
             repo_w_trunk_only_scipy_commits.__name__,
         ]
@@ -402,10 +402,10 @@ def test_changelog_update_mode_unchanged(
     [
         lazy_fixture(repo_fixture)
         for repo_fixture in [
-            repo_w_no_tags_angular_commits.__name__,
+            repo_w_no_tags_conventional_commits.__name__,
             repo_w_no_tags_emoji_commits.__name__,
             repo_w_no_tags_scipy_commits.__name__,
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
             repo_w_trunk_only_emoji_commits.__name__,
             repo_w_trunk_only_scipy_commits.__name__,
         ]
@@ -473,7 +473,7 @@ def test_changelog_update_mode_no_prev_changelog(
     [
         lazy_fixture(repo_fixture)
         for repo_fixture in [
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
             repo_w_trunk_only_emoji_commits.__name__,
             repo_w_trunk_only_scipy_commits.__name__,
         ]
@@ -547,7 +547,7 @@ def test_changelog_update_mode_no_flag(
         lazy_fixture(repo_fixture)
         for repo_fixture in [
             # MUST HAVE at least 2 tags!
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
             repo_w_trunk_only_emoji_commits.__name__,
             repo_w_trunk_only_scipy_commits.__name__,
         ]
@@ -649,7 +649,7 @@ def test_changelog_update_mode_no_header(
         lazy_fixture(repo_fixture)
         for repo_fixture in [
             # MUST HAVE at least 2 tags!
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
             repo_w_trunk_only_emoji_commits.__name__,
             repo_w_trunk_only_scipy_commits.__name__,
         ]
@@ -753,7 +753,7 @@ def test_changelog_update_mode_no_footer(
         lazy_fixture(repo_fixture)
         for repo_fixture in [
             # Must not have a single release/tag
-            repo_w_no_tags_angular_commits.__name__,
+            repo_w_no_tags_conventional_commits.__name__,
             repo_w_no_tags_emoji_commits.__name__,
             repo_w_no_tags_scipy_commits.__name__,
         ]
@@ -852,7 +852,7 @@ def test_changelog_update_mode_no_releases(
     [
         (lazy_fixture(repo_fixture), repo_fixture.split("_")[-2])
         for repo_fixture in [
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
             repo_w_trunk_only_emoji_commits.__name__,
             repo_w_trunk_only_scipy_commits.__name__,
         ]
@@ -869,7 +869,7 @@ def test_changelog_update_mode_unreleased_n_released(
     commit_n_rtn_changelog_entry: CommitNReturnChangelogEntryFn,
     changelog_file: Path,
     insertion_flag: str,
-    get_commit_def_of_angular_commit: GetCommitDefFn,
+    get_commit_def_of_conventional_commit: GetCommitDefFn,
     get_commit_def_of_emoji_commit: GetCommitDefFn,
     get_commit_def_of_scipy_commit: GetCommitDefFn,
 ):
@@ -890,8 +890,8 @@ def test_changelog_update_mode_unreleased_n_released(
     )
 
     commit_n_section: Commit2Section = {
-        "angular": {
-            "commit": get_commit_def_of_angular_commit(
+        "conventional": {
+            "commit": get_commit_def_of_conventional_commit(
                 "perf: improve the performance of the application"
             ),
             "section": "Performance Improvements",
@@ -1009,7 +1009,7 @@ def test_changelog_update_mode_unreleased_n_released(
 
 
 # Just need to test that it works for "a" project, not all
-@pytest.mark.usefixtures(repo_w_trunk_only_n_prereleases_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_n_prereleases_conventional_commits.__name__)
 @pytest.mark.parametrize(
     "args", [("--post-to-release-tag", "v1.99.91910000000000000000000000000")]
 )
@@ -1026,7 +1026,7 @@ def test_changelog_release_tag_not_in_history(
     assert "not in release history" in result.stderr.lower()
 
 
-@pytest.mark.usefixtures(repo_w_trunk_only_n_prereleases_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_n_prereleases_conventional_commits.__name__)
 @pytest.mark.parametrize(
     "args",
     [
@@ -1119,7 +1119,7 @@ def test_changelog_post_to_release(args: list[str], cli_runner: CliRunner):
 
 @pytest.mark.parametrize(
     "repo_result",
-    [lazy_fixture(repo_w_trunk_only_n_prereleases_angular_commits.__name__)],
+    [lazy_fixture(repo_w_trunk_only_n_prereleases_conventional_commits.__name__)],
 )
 def test_custom_release_notes_template(
     repo_result: BuiltRepoResult,
@@ -1168,7 +1168,7 @@ def test_custom_release_notes_template(
     assert expected_release_notes == actual_notes
 
 
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_changelog_default_on_empty_template_dir(
     example_changelog_md: Path,
     changelog_template_dir: Path,
@@ -1199,7 +1199,7 @@ def test_changelog_default_on_empty_template_dir(
     assert example_changelog_md.exists()
 
 
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_changelog_default_on_incorrect_config_template_file(
     example_changelog_md: Path,
     changelog_template_dir: Path,
@@ -1232,7 +1232,7 @@ def test_changelog_default_on_incorrect_config_template_file(
 
 
 @pytest.mark.parametrize("bad_changelog_file_str", ("/etc/passwd", "../../.ssh/id_rsa"))
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_changelog_prevent_malicious_path_traversal_file(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     bad_changelog_file_str: str,
@@ -1257,7 +1257,7 @@ def test_changelog_prevent_malicious_path_traversal_file(
 
 
 @pytest.mark.parametrize("template_dir_path", ("~/.ssh", "../../.ssh"))
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_changelog_prevent_external_path_traversal_dir(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     template_dir_path: str,

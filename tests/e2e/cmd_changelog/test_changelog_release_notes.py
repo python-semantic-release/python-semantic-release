@@ -11,9 +11,9 @@ from semantic_release.version.version import Version
 
 from tests.const import CHANGELOG_SUBCMD, EXAMPLE_PROJECT_LICENSE, MAIN_PROG_NAME
 from tests.fixtures.repos import (
-    repo_w_github_flow_w_default_release_channel_angular_commits,
-    repo_w_github_flow_w_feature_release_channel_angular_commits,
-    repo_w_trunk_only_angular_commits,
+    repo_w_github_flow_w_default_release_channel_conventional_commits,
+    repo_w_github_flow_w_feature_release_channel_conventional_commits,
+    repo_w_trunk_only_conventional_commits,
     repo_w_trunk_only_emoji_commits,
     repo_w_trunk_only_scipy_commits,
 )
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     [
         lazy_fixture(repo_fixture_name)
         for repo_fixture_name in [
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
         ]
     ],
 )
@@ -95,11 +95,11 @@ def test_changelog_latest_release_notes(
     "repo_result, mask_initial_release",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             True,
         ),
         pytest.param(
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             False,
             marks=pytest.mark.comprehensive,
         ),
@@ -111,7 +111,7 @@ def test_changelog_latest_release_notes(
             )
             for mask_initial_release in [True, False]
             for repo_fixture_name in [
-                repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_default_release_channel_conventional_commits.__name__,
             ]
         ],
     ],
@@ -175,14 +175,14 @@ def test_changelog_previous_release_notes(
     "repo_result, cache_key, mask_initial_release, license_name",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
+            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
             True,
             "BSD-3-Clause",
         ),
         pytest.param(
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
+            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
             False,
             "BSD-3-Clause",
             marks=pytest.mark.comprehensive,
@@ -201,7 +201,7 @@ def test_changelog_previous_release_notes(
                 repo_w_trunk_only_scipy_commits.__name__,
                 # Add more repos here if needed
                 # github_flow had issues as its hard to generate the release notes from squash commits
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                repo_w_github_flow_w_feature_release_channel_conventional_commits.__name__,
             ]
         ],
     ],

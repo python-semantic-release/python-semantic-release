@@ -10,7 +10,7 @@ from semantic_release.cli.commands.main import main
 from semantic_release.hvcs import Github
 
 from tests.const import MAIN_PROG_NAME, PUBLISH_SUBCMD
-from tests.fixtures.repos import repo_w_trunk_only_angular_commits
+from tests.fixtures.repos import repo_w_trunk_only_conventional_commits
 from tests.util import assert_exit_code, assert_successful_exit_code
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize("cmd_args", [(), ("--tag", "latest")])
 @pytest.mark.parametrize(
-    "repo_result", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)]
 )
 def test_publish_latest_uses_latest_tag(
     repo_result: BuiltRepoResult,
@@ -49,7 +49,7 @@ def test_publish_latest_uses_latest_tag(
 
 
 @pytest.mark.parametrize(
-    "repo_result", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)]
 )
 def test_publish_to_tag_uses_tag(
     repo_result: BuiltRepoResult,
@@ -73,7 +73,7 @@ def test_publish_to_tag_uses_tag(
         )
 
 
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_publish_fails_on_nonexistant_tag(cli_runner: CliRunner):
     non_existant_tag = "nonexistant-tag"
 

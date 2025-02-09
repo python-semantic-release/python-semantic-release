@@ -15,7 +15,7 @@ from tests.const import (
     VERSION_SUBCMD,
 )
 from tests.fixtures.repos.trunk_based_dev import (
-    repo_w_trunk_only_dual_version_spt_angular_commits,
+    repo_w_trunk_only_dual_version_spt_conventional_commits,
     repo_w_trunk_only_dual_version_spt_emoji_commits,
     repo_w_trunk_only_dual_version_spt_scipy_commits,
 )
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_fixture_name",
     [
-        repo_w_trunk_only_dual_version_spt_angular_commits.__name__,
+        repo_w_trunk_only_dual_version_spt_conventional_commits.__name__,
         *[
             pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
             for repo_fixture_name in [

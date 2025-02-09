@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Iterable, Sequence
 
 import pytest
 
-from semantic_release.commit_parser.angular import (
-    AngularCommitParser,
-    AngularParserOptions,
+from semantic_release.commit_parser.conventional import (
+    ConventionalCommitParser,
+    ConventionalCommitParserOptions,
 )
 from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
@@ -34,11 +34,11 @@ if TYPE_CHECKING:
     "commit_message", ["", "feat(parser\n): Add new parser pattern"]
 )
 def test_parser_raises_unknown_message_style(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     make_commit_obj: MakeCommitObjFn,
     commit_message: str,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(commit_message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(commit_message))
     assert isinstance(parsed_results, Iterable)
     for result in parsed_results:
         assert isinstance(result, ParseError)
@@ -172,16 +172,16 @@ def test_parser_raises_unknown_message_style(
     ],
 )
 def test_parser_squashed_commit_bitbucket_squash_style(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     make_commit_obj: MakeCommitObjFn,
     commit_message: str,
     expected_commit_details: Sequence[dict | None],
 ):
     # Setup: Enable squash commit parsing
-    parser = AngularCommitParser(
-        options=AngularParserOptions(
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(
             **{
-                **default_angular_parser.options.__dict__,
+                **default_conventional_parser.options.__dict__,
                 "parse_squash_commits": True,
             }
         )
@@ -359,16 +359,16 @@ def test_parser_squashed_commit_bitbucket_squash_style(
     ],
 )
 def test_parser_squashed_commit_git_squash_style(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     make_commit_obj: MakeCommitObjFn,
     commit_message: str,
     expected_commit_details: Sequence[dict | None],
 ):
     # Setup: Enable squash commit parsing
-    parser = AngularCommitParser(
-        options=AngularParserOptions(
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(
             **{
-                **default_angular_parser.options.__dict__,
+                **default_conventional_parser.options.__dict__,
                 "parse_squash_commits": True,
             }
         )
@@ -526,16 +526,16 @@ def test_parser_squashed_commit_git_squash_style(
     ],
 )
 def test_parser_squashed_commit_github_squash_style(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     make_commit_obj: MakeCommitObjFn,
     commit_message: str,
     expected_commit_details: Sequence[dict | None],
 ):
     # Setup: Enable squash commit parsing
-    parser = AngularCommitParser(
-        options=AngularParserOptions(
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(
             **{
-                **default_angular_parser.options.__dict__,
+                **default_conventional_parser.options.__dict__,
                 "parse_squash_commits": True,
             }
         )
@@ -587,20 +587,20 @@ def test_parser_squashed_commit_github_squash_style(
             LevelBump.MAJOR,
         ),
         ("feat(parser): add emoji parser", LevelBump.MINOR),
-        ("fix(parser): fix regex in angular parser", LevelBump.PATCH),
-        ("test(parser): add a test for angular parser", LevelBump.NO_RELEASE),
+        ("fix(parser): fix regex in conventional parser", LevelBump.PATCH),
+        ("test(parser): add a test for conventional parser", LevelBump.NO_RELEASE),
         ("feat(parser)!: edit data parsing stuff", LevelBump.MAJOR),
         ("fix!: edit data parsing stuff again", LevelBump.MAJOR),
         ("fix: superfix", LevelBump.PATCH),
     ],
 )
 def test_parser_returns_correct_bump_level(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     commit_message: str,
     bump: LevelBump,
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(commit_message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(commit_message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -623,12 +623,12 @@ def test_parser_returns_correct_bump_level(
     ],
 )
 def test_parser_return_type_from_commit_message(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     message: str,
     type_: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -653,12 +653,12 @@ def test_parser_return_type_from_commit_message(
     ],
 )
 def test_parser_return_scope_from_commit_message(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     message: str,
     scope: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -679,10 +679,13 @@ _footer = "Closes: #400"
     "message, descriptions",
     [
         ("feat(parser): add emoji parser", ["add emoji parser"]),
-        ("fix(parser): fix regex in angular parser", ["fix regex in angular parser"]),
         (
-            "test(parser): add a test for angular parser",
-            ["add a test for angular parser"],
+            "fix(parser): fix regex in conventional parser",
+            ["fix regex in conventional parser"],
+        ),
+        (
+            "test(parser): add a test for conventional parser",
+            ["add a test for conventional parser"],
         ),
         (
             f"fix(tox): fix env \n\n{_long_text}\n\n{_footer}",
@@ -692,12 +695,12 @@ _footer = "Closes: #400"
     ],
 )
 def test_parser_return_subject_from_commit_message(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     message: str,
     descriptions: list[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -719,8 +722,8 @@ def test_parser_return_subject_from_commit_message(
         ),
         # GitLab style
         (
-            "fix(parser): fix regex in angular parser (!456)",
-            "fix regex in angular parser (!456)",
+            "fix(parser): fix regex in conventional parser (!456)",
+            "fix regex in conventional parser (!456)",
             "!456",
         ),
         # BitBucket style
@@ -738,13 +741,13 @@ def test_parser_return_subject_from_commit_message(
     ],
 )
 def test_parser_return_linked_merge_request_from_commit_message(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     message: str,
     subject: str,
     merge_request_number: str,
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -1029,12 +1032,12 @@ def test_parser_return_linked_merge_request_from_commit_message(
     ],
 )
 def test_parser_return_linked_issues_from_commit_message(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     message: str,
     linked_issues: Sequence[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -1057,7 +1060,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "single notice",
                 dedent(
                     """\
-                    fix(parser): fix regex in angular parser
+                    fix(parser): fix regex in conventional parser
 
                     NOTICE: This is a notice
                     """
@@ -1068,7 +1071,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiline notice",
                 dedent(
                     """\
-                    fix(parser): fix regex in angular parser
+                    fix(parser): fix regex in conventional parser
 
                     NOTICE: This is a notice that is longer than
                     other notices
@@ -1080,7 +1083,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiple notices",
                 dedent(
                     """\
-                    fix(parser): fix regex in angular parser
+                    fix(parser): fix regex in conventional parser
 
                     NOTICE: This is a notice
 
@@ -1093,7 +1096,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "notice with other footer",
                 dedent(
                     """\
-                    fix(parser): fix regex in angular parser
+                    fix(parser): fix regex in conventional parser
 
                     BREAKING CHANGE: This is a breaking change
 
@@ -1106,12 +1109,12 @@ def test_parser_return_linked_issues_from_commit_message(
     ],
 )
 def test_parser_return_release_notices_from_commit_message(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     message: str,
     notices: Sequence[str],
     make_commit_obj: MakeCommitObjFn,
 ):
-    parsed_results = default_angular_parser.parse(make_commit_obj(message))
+    parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
     assert len(parsed_results) == 1
@@ -1130,9 +1133,9 @@ def test_parser_return_release_notices_from_commit_message(
 # test custom parser options #
 ##############################
 def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
-    options = AngularParserOptions(default_bump_level=LevelBump.MINOR)
-    parsed_results = AngularCommitParser(options).parse(
-        make_commit_obj("test(parser): add a test for angular parser")
+    options = ConventionalCommitParserOptions(default_bump_level=LevelBump.MINOR)
+    parsed_results = ConventionalCommitParser(options).parse(
+        make_commit_obj("test(parser): add a test for conventional parser")
     )
 
     assert isinstance(parsed_results, Iterable)
@@ -1143,13 +1146,13 @@ def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
 
 
 def test_parser_custom_allowed_types(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     make_commit_obj: MakeCommitObjFn,
 ):
     new_tag = "custom"
-    custom_allowed_tags = [*default_angular_parser.options.allowed_tags, new_tag]
-    parser = AngularCommitParser(
-        options=AngularParserOptions(
+    custom_allowed_tags = [*default_conventional_parser.options.allowed_tags, new_tag]
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(
             allowed_tags=tuple(custom_allowed_tags),
         )
     )
@@ -1169,14 +1172,15 @@ def test_parser_custom_allowed_types(
 
 
 def test_parser_custom_allowed_types_ignores_non_types(
-    default_angular_parser: AngularCommitParser, make_commit_obj: MakeCommitObjFn
+    default_conventional_parser: ConventionalCommitParser,
+    make_commit_obj: MakeCommitObjFn,
 ):
     banned_tag = "feat"
-    custom_allowed_tags = [*default_angular_parser.options.allowed_tags]
+    custom_allowed_tags = [*default_conventional_parser.options.allowed_tags]
     custom_allowed_tags.remove(banned_tag)
 
-    parser = AngularCommitParser(
-        options=AngularParserOptions(
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(
             allowed_tags=tuple(custom_allowed_tags),
         )
     )
@@ -1190,8 +1194,8 @@ def test_parser_custom_allowed_types_ignores_non_types(
 
 def test_parser_custom_minor_tags(make_commit_obj: MakeCommitObjFn):
     custom_minor_tag = "docs"
-    parser = AngularCommitParser(
-        options=AngularParserOptions(minor_tags=(custom_minor_tag,))
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(minor_tags=(custom_minor_tag,))
     )
 
     parsed_results = parser.parse(make_commit_obj(f"{custom_minor_tag}: ..."))
@@ -1204,8 +1208,8 @@ def test_parser_custom_minor_tags(make_commit_obj: MakeCommitObjFn):
 
 def test_parser_custom_patch_tags(make_commit_obj: MakeCommitObjFn):
     custom_patch_tag = "test"
-    parser = AngularCommitParser(
-        options=AngularParserOptions(patch_tags=(custom_patch_tag,))
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(patch_tags=(custom_patch_tag,))
     )
 
     parsed_results = parser.parse(make_commit_obj(f"{custom_patch_tag}: ..."))
@@ -1217,14 +1221,14 @@ def test_parser_custom_patch_tags(make_commit_obj: MakeCommitObjFn):
 
 
 def test_parser_ignore_merge_commit(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     make_commit_obj: MakeCommitObjFn,
 ):
     # Setup: Enable parsing of linked issues
-    parser = AngularCommitParser(
-        options=AngularParserOptions(
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(
             **{
-                **default_angular_parser.options.__dict__,
+                **default_conventional_parser.options.__dict__,
                 "ignore_merge_commits": True,
             }
         )

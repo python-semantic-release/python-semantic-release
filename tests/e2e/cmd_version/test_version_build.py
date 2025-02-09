@@ -16,7 +16,7 @@ from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
-from tests.fixtures.repos import repo_w_trunk_only_angular_commits
+from tests.fixtures.repos import repo_w_trunk_only_conventional_commits
 from tests.util import assert_successful_exit_code, get_func_qual_name
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     "repo_result, cli_args, next_release_version",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             ["--patch"],
             "0.1.2",
         )
@@ -137,7 +137,7 @@ def test_version_runs_build_command(
     "repo_result, cli_args, next_release_version",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             ["--patch"],
             "0.1.2",
         )
@@ -278,7 +278,7 @@ def test_version_runs_build_command_windows(
     "repo_result, cli_args, next_release_version",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             ["--patch"],
             "0.1.2",
         )
@@ -382,7 +382,7 @@ def test_version_runs_build_command_w_user_env(
         )
 
 
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_version_skips_build_command_with_skip_build(
     cli_runner: CliRunner,
     mocked_git_push: mock.MagicMock,

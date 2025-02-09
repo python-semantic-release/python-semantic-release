@@ -23,7 +23,7 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos.git_flow import (
-    repo_w_git_flow_angular_commits,
+    repo_w_git_flow_conventional_commits,
     repo_w_git_flow_scipy_commits,
 )
 from tests.util import assert_successful_exit_code
@@ -62,7 +62,7 @@ if TYPE_CHECKING:
             marks=pytest.mark.comprehensive,
         )
         for repo_fixture_name in [
-            repo_w_git_flow_angular_commits.__name__,
+            repo_w_git_flow_conventional_commits.__name__,
             repo_w_git_flow_scipy_commits.__name__,
         ]
     ],

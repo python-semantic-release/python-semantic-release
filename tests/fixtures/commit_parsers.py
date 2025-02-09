@@ -1,17 +1,17 @@
 import pytest
 
 from semantic_release.commit_parser import (
-    AngularCommitParser,
-    AngularParserOptions,
+    ConventionalCommitParser,
+    ConventionalCommitParserOptions,
     EmojiCommitParser,
     EmojiParserOptions,
 )
 
 from tests.const import (
-    ANGULAR_COMMITS_CHORE,
-    ANGULAR_COMMITS_MAJOR,
-    ANGULAR_COMMITS_MINOR,
-    ANGULAR_COMMITS_PATCH,
+    CONVENTIONAL_COMMITS_CHORE,
+    CONVENTIONAL_COMMITS_MAJOR,
+    CONVENTIONAL_COMMITS_MINOR,
+    CONVENTIONAL_COMMITS_PATCH,
     EMOJI_COMMITS_CHORE,
     EMOJI_COMMITS_MAJOR,
     EMOJI_COMMITS_MINOR,
@@ -22,15 +22,15 @@ from tests.const import (
 
 
 @pytest.fixture(scope="session")
-def default_angular_parser() -> AngularCommitParser:
-    return AngularCommitParser()
+def default_conventional_parser() -> ConventionalCommitParser:
+    return ConventionalCommitParser()
 
 
 @pytest.fixture(scope="session")
-def default_angular_parser_options(
-    default_angular_parser: AngularCommitParser,
-) -> AngularParserOptions:
-    return default_angular_parser.get_default_options()
+def default_conventional_parser_options(
+    default_conventional_parser: ConventionalCommitParser,
+) -> ConventionalCommitParserOptions:
+    return default_conventional_parser.get_default_options()
 
 
 @pytest.fixture(scope="session")
@@ -46,23 +46,23 @@ def default_emoji_parser_options(
 
 
 @pytest.fixture(scope="session")
-def angular_major_commits():
-    return ANGULAR_COMMITS_MAJOR
+def conventional_major_commits():
+    return CONVENTIONAL_COMMITS_MAJOR
 
 
 @pytest.fixture(scope="session")
-def angular_minor_commits():
-    return ANGULAR_COMMITS_MINOR
+def conventional_minor_commits():
+    return CONVENTIONAL_COMMITS_MINOR
 
 
 @pytest.fixture(scope="session")
-def angular_patch_commits():
-    return ANGULAR_COMMITS_PATCH
+def conventional_patch_commits():
+    return CONVENTIONAL_COMMITS_PATCH
 
 
 @pytest.fixture(scope="session")
-def angular_chore_commits():
-    return ANGULAR_COMMITS_CHORE
+def conventional_chore_commits():
+    return CONVENTIONAL_COMMITS_CHORE
 
 
 @pytest.fixture(scope="session")

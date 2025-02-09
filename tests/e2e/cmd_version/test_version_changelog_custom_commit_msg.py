@@ -25,7 +25,7 @@ from tests.fixtures.example_project import (
     changelog_rst_file,
 )
 from tests.fixtures.repos import (
-    repo_w_trunk_only_angular_commits,
+    repo_w_trunk_only_conventional_commits,
 )
 from tests.util import (
     assert_successful_exit_code,
@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     )
 
     class Commit2Section(TypedDict):
-        angular: Commit2SectionCommit
+        conventional: Commit2SectionCommit
         emoji: Commit2SectionCommit
         scipy: Commit2SectionCommit
 
@@ -97,12 +97,12 @@ if TYPE_CHECKING:
             *[
                 (
                     # Repos: Must have at least 2 releases
-                    repo_w_trunk_only_angular_commits.__name__,
+                    repo_w_trunk_only_conventional_commits.__name__,
                     commit_msg,
                 )
                 for commit_msg in [
                     dedent(
-                        # Angular compliant prefix with skip-ci idicator
+                        # Conventional compliant prefix with skip-ci idicator
                         """\
                         chore(release): v{version} [skip ci]
 

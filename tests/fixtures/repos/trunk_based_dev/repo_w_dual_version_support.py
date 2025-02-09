@@ -149,7 +149,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
                                     "datetime": next(commit_timestamp_gen),
@@ -158,7 +158,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
                                     ),
                                 },
                                 {
-                                    "angular": "feat: add new feature",
+                                    "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
                                     "datetime": next(commit_timestamp_gen),
@@ -198,7 +198,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "fix: correct some text",
+                                    "conventional": "fix: correct some text",
                                     "emoji": ":bug: correct some text",
                                     "scipy": "MAINT: correct some text",
                                     "datetime": next(commit_timestamp_gen),
@@ -251,7 +251,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": str.join(
+                                    "conventional": str.join(
                                         "\n\n",
                                         [
                                             "feat: add revolutionary feature",
@@ -313,7 +313,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "fix: correct critical bug",
+                                    "conventional": "fix: correct critical bug",
                                     "emoji": ":bug: correct critical bug",
                                     "scipy": "MAINT: correct critical bug",
                                     "datetime": next(commit_timestamp_gen),
@@ -401,13 +401,13 @@ def build_trunk_only_repo_w_dual_version_support(
 
 
 @pytest.fixture
-def repo_w_trunk_only_dual_version_spt_angular_commits(
+def repo_w_trunk_only_dual_version_spt_conventional_commits(
     build_trunk_only_repo_w_dual_version_support: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    repo_name = repo_w_trunk_only_dual_version_spt_angular_commits.__name__
+    repo_name = repo_w_trunk_only_dual_version_spt_conventional_commits.__name__
     commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
     return {

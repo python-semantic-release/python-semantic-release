@@ -10,7 +10,7 @@ from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import RawConfig
 
 from tests.const import GENERATE_CONFIG_SUBCMD, MAIN_PROG_NAME, VERSION_SUBCMD
-from tests.fixtures.repos import repo_w_no_tags_angular_commits
+from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ def raw_config_dict() -> dict[str, Any]:
 
 
 @pytest.mark.parametrize("args", [(), ("--format", "toml"), ("--format", "TOML")])
-@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_generate_config_toml(
     cli_runner: CliRunner,
     args: tuple[str],
@@ -70,7 +70,7 @@ def test_generate_config_toml(
 
 
 @pytest.mark.parametrize("args", [("--format", "json"), ("--format", "JSON")])
-@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_generate_config_json(
     cli_runner: CliRunner,
     args: tuple[str],
@@ -111,7 +111,7 @@ def test_generate_config_json(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_generate_config_pyproject_toml(
     cli_runner: CliRunner,
     raw_config_dict: dict[str, Any],

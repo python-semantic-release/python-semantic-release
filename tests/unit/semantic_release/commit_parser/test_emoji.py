@@ -448,7 +448,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "single notice",
                 dedent(
                     """\
-                    :bug:(parser): fix regex in angular parser
+                    :bug:(parser): fix regex in emoji parser
 
                     NOTICE: This is a notice
                     """
@@ -459,7 +459,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiline notice",
                 dedent(
                     """\
-                    :bug:(parser): fix regex in angular parser
+                    :bug:(parser): fix regex in emoji parser
 
                     NOTICE: This is a notice that is longer than
                     other notices
@@ -471,7 +471,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiple notices",
                 dedent(
                     """\
-                    :bug:(parser): fix regex in angular parser
+                    :bug:(parser): fix regex in emoji parser
 
                     NOTICE: This is a notice
 
@@ -484,7 +484,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "notice with other footer",
                 dedent(
                     """\
-                    :bug:(parser): fix regex in angular parser
+                    :bug:(parser): fix regex in emoji parser
 
                     BREAKING CHANGE: This is a breaking change
 

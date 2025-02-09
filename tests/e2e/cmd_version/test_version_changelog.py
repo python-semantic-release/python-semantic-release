@@ -20,25 +20,25 @@ from tests.fixtures.example_project import (
     example_changelog_rst,
 )
 from tests.fixtures.repos import (
-    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
     repo_w_git_flow_w_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_alpha_prereleases_n_scipy_commits,
-    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits,
-    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits,
-    repo_w_github_flow_w_default_release_channel_angular_commits,
+    repo_w_github_flow_w_default_release_channel_conventional_commits,
     repo_w_github_flow_w_default_release_channel_emoji_commits,
     repo_w_github_flow_w_default_release_channel_scipy_commits,
-    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_conventional_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
-    repo_w_no_tags_angular_commits,
+    repo_w_no_tags_conventional_commits,
     repo_w_no_tags_emoji_commits,
     repo_w_no_tags_scipy_commits,
-    repo_w_trunk_only_angular_commits,
+    repo_w_trunk_only_conventional_commits,
     repo_w_trunk_only_emoji_commits,
-    repo_w_trunk_only_n_prereleases_angular_commits,
+    repo_w_trunk_only_n_prereleases_conventional_commits,
     repo_w_trunk_only_n_prereleases_emoji_commits,
     repo_w_trunk_only_n_prereleases_scipy_commits,
     repo_w_trunk_only_scipy_commits,
@@ -79,8 +79,8 @@ if TYPE_CHECKING:
     "repo_result, cache_key, tag_format",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
+            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
             "v{version}",
         ),
         *[
@@ -98,7 +98,7 @@ if TYPE_CHECKING:
                         None,
                     )
                     for repo_fixture_name in [
-                        # repo_with_single_branch_angular_commits.__name__, # default
+                        # repo_with_single_branch_conventional_commits.__name__, # default
                         repo_w_trunk_only_emoji_commits.__name__,
                         repo_w_trunk_only_scipy_commits.__name__,
                     ]
@@ -109,7 +109,7 @@ if TYPE_CHECKING:
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_conventional_commits.__name__,
                         repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
                         repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
                     ]
@@ -120,7 +120,7 @@ if TYPE_CHECKING:
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_default_release_channel_conventional_commits.__name__,
                         repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
                         repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
                     ]
@@ -131,7 +131,7 @@ if TYPE_CHECKING:
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_feature_release_channel_conventional_commits.__name__,
                         repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
                         repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
                     ]
@@ -142,7 +142,7 @@ if TYPE_CHECKING:
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__,
                         repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
                         repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
                     ]
@@ -153,7 +153,7 @@ if TYPE_CHECKING:
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
                         repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
                         repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
                     ]
@@ -164,7 +164,7 @@ if TYPE_CHECKING:
                         "submod-v{version}",
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format.__name__,
                     ]
                 ],
             ]
@@ -285,8 +285,8 @@ def test_version_updates_changelog_w_new_version(
     "repo_result, cache_key",
     [
         (
-            lazy_fixture(repo_w_no_tags_angular_commits.__name__),
-            f"psr/repos/{repo_w_no_tags_angular_commits.__name__}",
+            lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
+            f"psr/repos/{repo_w_no_tags_conventional_commits.__name__}",
         ),
         *[
             pytest.param(
@@ -296,7 +296,7 @@ def test_version_updates_changelog_w_new_version(
             )
             for repo_fixture in [
                 # Must not have a single release/tag
-                # repo_with_no_tags_angular_commits.__name__, # default
+                # repo_with_no_tags_conventional_commits.__name__, # default
                 repo_w_no_tags_emoji_commits.__name__,
                 repo_w_no_tags_scipy_commits.__name__,
             ]
@@ -435,8 +435,8 @@ def test_version_updates_changelog_wo_prev_releases(
     "repo_result, cache_key, tag_format",
     [
         (
-            lazy_fixture(repo_w_trunk_only_angular_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_angular_commits.__name__}",
+            lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
+            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
             "v{version}",
         ),
         *[
@@ -454,7 +454,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         None,
                     )
                     for repo_fixture_name in [
-                        # repo_with_single_branch_angular_commits.__name__, # default
+                        # repo_with_single_branch_conventional_commits.__name__, # default
                         repo_w_trunk_only_emoji_commits.__name__,
                         repo_w_trunk_only_scipy_commits.__name__,
                     ]
@@ -465,7 +465,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_conventional_commits.__name__,
                         repo_w_trunk_only_n_prereleases_emoji_commits.__name__,
                         repo_w_trunk_only_n_prereleases_scipy_commits.__name__,
                     ]
@@ -476,7 +476,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_github_flow_w_default_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_default_release_channel_conventional_commits.__name__,
                         repo_w_github_flow_w_default_release_channel_emoji_commits.__name__,
                         repo_w_github_flow_w_default_release_channel_scipy_commits.__name__,
                     ]
@@ -487,7 +487,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+                        repo_w_github_flow_w_feature_release_channel_conventional_commits.__name__,
                         repo_w_github_flow_w_feature_release_channel_emoji_commits.__name__,
                         repo_w_github_flow_w_feature_release_channel_scipy_commits.__name__,
                     ]
@@ -498,7 +498,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__,
                         repo_w_git_flow_w_alpha_prereleases_n_emoji_commits.__name__,
                         repo_w_git_flow_w_alpha_prereleases_n_scipy_commits.__name__,
                     ]
@@ -509,7 +509,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         None,
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
                         repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
                         repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
                     ]
@@ -520,7 +520,7 @@ def test_version_updates_changelog_wo_prev_releases(
                         "submod-v{version}",
                     )
                     for repo_fixture_name in [
-                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits_using_tag_format.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format.__name__,
                     ]
                 ],
             ]
@@ -608,7 +608,7 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
         ),
     ],
 )
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_version_maintains_changelog_in_update_mode_w_no_flag(
     changelog_file: Path,
     cli_runner: CliRunner,
@@ -675,7 +675,7 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
         )
         for repo_fixture in [
             # Must have a previous release/tag
-            repo_w_trunk_only_angular_commits.__name__,
+            repo_w_trunk_only_conventional_commits.__name__,
         ]
     ],
 )

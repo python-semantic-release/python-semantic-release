@@ -25,7 +25,7 @@ from semantic_release.cli.config import (
     _known_hvcs,
 )
 from semantic_release.cli.util import load_raw_config_file
-from semantic_release.commit_parser.angular import AngularParserOptions
+from semantic_release.commit_parser.conventional import ConventionalCommitParserOptions
 from semantic_release.commit_parser.emoji import EmojiParserOptions
 from semantic_release.commit_parser.scipy import ScipyParserOptions
 from semantic_release.commit_parser.tag import TagParserOptions
@@ -33,7 +33,7 @@ from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
 from semantic_release.errors import ParserLoadError
 
-from tests.fixtures.repos import repo_w_no_tags_angular_commits
+from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import (
     CustomParserOpts,
     CustomParserWithNoOpts,
@@ -110,9 +110,9 @@ def test_invalid_hvcs_type(remote_config: dict[str, Any]):
     [
         (
             None,
-            RootModel(AngularParserOptions()).model_dump(),
-        ),  # default not provided -> means angular
-        ("angular", RootModel(AngularParserOptions()).model_dump()),
+            RootModel(ConventionalCommitParserOptions()).model_dump(),
+        ),  # default not provided -> means conventional
+        ("conventional", RootModel(ConventionalCommitParserOptions()).model_dump()),
         ("emoji", RootModel(EmojiParserOptions()).model_dump()),
         ("scipy", RootModel(ScipyParserOptions()).model_dump()),
         ("tag", RootModel(TagParserOptions()).model_dump()),
@@ -142,7 +142,7 @@ def test_load_user_defined_parser_opts():
     }
     raw_config = RawConfig.model_validate(
         {
-            "commit_parser": "angular",
+            "commit_parser": "conventional",
             "commit_parser_options": user_defined_opts,
         }
     )
@@ -185,7 +185,7 @@ def test_default_toml_config_valid(example_project_dir: ExProjectDir):
         ({"GIT_COMMIT_AUTHOR": "foo <foo>"}, "foo <foo>"),
     ],
 )
-@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_commit_author_configurable(
     example_pyproject_toml: Path,
     mock_env: dict[str, str],

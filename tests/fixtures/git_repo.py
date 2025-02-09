@@ -15,9 +15,9 @@ import pytest
 from git import Actor, Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
-from semantic_release.commit_parser.angular import (
-    AngularCommitParser,
-    AngularParserOptions,
+from semantic_release.commit_parser.conventional import (
+    ConventionalCommitParser,
+    ConventionalCommitParserOptions,
 )
 from semantic_release.commit_parser.emoji import EmojiCommitParser, EmojiParserOptions
 from semantic_release.commit_parser.scipy import ScipyCommitParser, ScipyParserOptions
@@ -74,7 +74,7 @@ if TYPE_CHECKING:
         UseParserFn,
     )
 
-    CommitConvention = Literal["angular", "emoji", "scipy"]
+    CommitConvention = Literal["conventional", "emoji", "scipy"]
     VersionStr = str
     CommitMsg = str
     DatetimeISOStr = str
@@ -244,7 +244,7 @@ if TYPE_CHECKING:
         ) -> CommitDef: ...
 
     class CommitSpec(TypedDict):
-        angular: str
+        conventional: str
         emoji: str
         scipy: str
         datetime: NotRequired[DatetimeISOStr]
@@ -516,11 +516,11 @@ def example_git_https_url():
 
 
 @pytest.fixture(scope="session")
-def get_commit_def_of_angular_commit(
-    default_angular_parser: AngularCommitParser,
+def get_commit_def_of_conventional_commit(
+    default_conventional_parser: ConventionalCommitParser,
 ) -> GetCommitDefFn:
-    def _get_commit_def_of_angular_commit(msg: str) -> CommitDef:
-        if not (parsed_result := default_angular_parser.parse_message(msg)):
+    def _get_commit_def_of_conventional_commit(msg: str) -> CommitDef:
+        if not (parsed_result := default_conventional_parser.parse_message(msg)):
             return {
                 "msg": msg,
                 "type": "unknown",
@@ -549,7 +549,7 @@ def get_commit_def_of_angular_commit(
             "include_in_changelog": True,
         }
 
-    return _get_commit_def_of_angular_commit
+    return _get_commit_def_of_conventional_commit
 
 
 @pytest.fixture(scope="session")
@@ -982,7 +982,7 @@ def build_configured_base_repo(  # noqa: C901
     use_gitlab_hvcs: UseHvcsFn,
     use_gitea_hvcs: UseHvcsFn,
     use_bitbucket_hvcs: UseHvcsFn,
-    use_angular_parser: UseParserFn,
+    use_conventional_parser: UseParserFn,
     use_emoji_parser: UseParserFn,
     use_scipy_parser: UseParserFn,
     use_custom_parser: UseCustomParserFn,
@@ -999,7 +999,7 @@ def build_configured_base_repo(  # noqa: C901
 
     def _build_configured_base_repo(  # noqa: C901
         dest_dir: Path | str,
-        commit_type: str = "angular",
+        commit_type: str = "conventional",
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
@@ -1015,8 +1015,8 @@ def build_configured_base_repo(  # noqa: C901
         # Make sure we are in the dest directory
         with temporary_working_directory(dest_dir):
             # Set parser configuration
-            if commit_type == "angular":
-                use_angular_parser()
+            if commit_type == "conventional":
+                use_conventional_parser()
             elif commit_type == "emoji":
                 use_emoji_parser()
             elif commit_type == "scipy":
@@ -1089,17 +1089,18 @@ def build_configured_base_repo(  # noqa: C901
 
 @pytest.fixture(scope="session")
 def separate_squashed_commit_def(
-    default_angular_parser: AngularCommitParser,
+    default_conventional_parser: ConventionalCommitParser,
     default_emoji_parser: EmojiCommitParser,
     default_scipy_parser: ScipyCommitParser,
 ) -> SeparateSquashedCommitDefFn:
     message_parsers: dict[
-        CommitConvention, AngularCommitParser | EmojiCommitParser | ScipyCommitParser
+        CommitConvention,
+        ConventionalCommitParser | EmojiCommitParser | ScipyCommitParser,
     ] = {
-        "angular": AngularCommitParser(
-            options=AngularParserOptions(
+        "conventional": ConventionalCommitParser(
+            options=ConventionalCommitParserOptions(
                 **{
-                    **default_angular_parser.options.__dict__,
+                    **default_conventional_parser.options.__dict__,
                     "parse_squash_commits": True,
                 }
             )
@@ -1125,7 +1126,7 @@ def separate_squashed_commit_def(
     def _separate_squashed_commit_def(
         squashed_commit_def: CommitDef,
     ) -> list[CommitDef]:
-        commit_type: CommitConvention = "angular"
+        commit_type: CommitConvention = "conventional"
         for parser_name, parser in message_parsers.items():
             if squashed_commit_def["type"] in parser.options.allowed_tags:
                 commit_type = parser_name
@@ -1177,13 +1178,13 @@ def separate_squashed_commit_def(
 
 @pytest.fixture(scope="session")
 def convert_commit_spec_to_commit_def(
-    get_commit_def_of_angular_commit: GetCommitDefFn,
+    get_commit_def_of_conventional_commit: GetCommitDefFn,
     get_commit_def_of_emoji_commit: GetCommitDefFn,
     get_commit_def_of_scipy_commit: GetCommitDefFn,
     stable_now_date: datetime,
 ) -> ConvertCommitSpecToCommitDefFn:
     message_parsers: dict[CommitConvention, GetCommitDefFn] = {
-        "angular": get_commit_def_of_angular_commit,
+        "conventional": get_commit_def_of_conventional_commit,
         "emoji": get_commit_def_of_emoji_commit,
         "scipy": get_commit_def_of_scipy_commit,
     }

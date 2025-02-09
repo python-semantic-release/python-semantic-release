@@ -143,7 +143,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                 "fast_forward": False,
                 "commit_def": convert_commit_spec_to_commit_def(
                     {
-                        "angular": format_merge_commit_msg_git(
+                        "conventional": format_merge_commit_msg_git(
                             branch_name=DEV_BRANCH_NAME,
                             tgt_branch_name=DEFAULT_BRANCH_NAME,
                         ),
@@ -200,7 +200,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                             # only one commit to start the main branch
                             convert_commit_spec_to_commit_def(
                                 {
-                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
                                     "datetime": next(commit_timestamp_gen),
@@ -237,7 +237,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "feat: add new feature",
+                                    "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
                                     "datetime": next(commit_timestamp_gen),
@@ -259,7 +259,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "fast_forward": False,
                         "commit_def": convert_commit_spec_to_commit_def(
                             {
-                                "angular": format_merge_commit_msg_git(
+                                "conventional": format_merge_commit_msg_git(
                                     branch_name=FEAT_BRANCH_1_NAME,
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
@@ -324,7 +324,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "feat: add a new feature",
+                                    "conventional": "feat: add a new feature",
                                     "emoji": ":sparkles: add a new feature",
                                     "scipy": "ENH: add a new feature",
                                     "datetime": next(commit_timestamp_gen),
@@ -346,7 +346,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "fast_forward": False,
                         "commit_def": convert_commit_spec_to_commit_def(
                             {
-                                "angular": format_merge_commit_msg_git(
+                                "conventional": format_merge_commit_msg_git(
                                     branch_name=FEAT_BRANCH_2_NAME,
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
@@ -411,7 +411,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": str.join(
+                                    "conventional": str.join(
                                         "\n\n",
                                         [
                                             "feat: add revolutionary feature",
@@ -451,7 +451,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "fast_forward": False,
                         "commit_def": convert_commit_spec_to_commit_def(
                             {
-                                "angular": format_merge_commit_msg_git(
+                                "conventional": format_merge_commit_msg_git(
                                     branch_name=FEAT_BRANCH_3_NAME,
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
@@ -516,7 +516,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "fix: correct a bug",
+                                    "conventional": "fix: correct a bug",
                                     "emoji": ":bug: correct a bug",
                                     "scipy": "BUG: correct a bug",
                                     "datetime": next(commit_timestamp_gen),
@@ -538,7 +538,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "fast_forward": False,
                         "commit_def": convert_commit_spec_to_commit_def(
                             {
-                                "angular": format_merge_commit_msg_git(
+                                "conventional": format_merge_commit_msg_git(
                                     branch_name=FIX_BRANCH_1_NAME,
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
@@ -603,7 +603,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "fix: correct another bug",
+                                    "conventional": "fix: correct another bug",
                                     "emoji": ":bug: correct another bug",
                                     "scipy": "BUG: correct another bug",
                                     "datetime": next(commit_timestamp_gen),
@@ -625,7 +625,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "fast_forward": False,
                         "commit_def": convert_commit_spec_to_commit_def(
                             {
-                                "angular": format_merge_commit_msg_git(
+                                "conventional": format_merge_commit_msg_git(
                                     branch_name=FIX_BRANCH_2_NAME,
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
@@ -659,7 +659,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "feat(cli): add new config cli command",
+                                    "conventional": "feat(cli): add new config cli command",
                                     "emoji": ":sparkles: (cli) add new config cli command",
                                     "scipy": "ENH(cli): add new config cli command",
                                     "datetime": next(commit_timestamp_gen),
@@ -681,7 +681,7 @@ def get_repo_definition_4_git_flow_repo_w_1_release_channels(
                         "fast_forward": False,
                         "commit_def": convert_commit_spec_to_commit_def(
                             {
-                                "angular": format_merge_commit_msg_git(
+                                "conventional": format_merge_commit_msg_git(
                                     branch_name=FEAT_BRANCH_4_NAME,
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
@@ -771,13 +771,13 @@ def build_git_flow_repo_w_1_release_channels(
 
 
 @pytest.fixture
-def repo_w_git_flow_angular_commits(
+def repo_w_git_flow_conventional_commits(
     build_git_flow_repo_w_1_release_channels: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    repo_name = repo_w_git_flow_angular_commits.__name__
+    repo_name = repo_w_git_flow_conventional_commits.__name__
     commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
     return {

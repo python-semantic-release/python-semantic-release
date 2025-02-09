@@ -14,8 +14,8 @@ from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures import (
-    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
-    repo_w_no_tags_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
+    repo_w_no_tags_conventional_commits,
 )
 from tests.util import assert_exit_code, assert_successful_exit_code
 
@@ -46,7 +46,7 @@ def test_main_no_args_prints_help_text(cli_runner: CliRunner):
 
 @pytest.mark.parametrize(
     "repo_result",
-    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)],
+    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__)],
 )
 def test_not_a_release_branch_exit_code(
     repo_result: BuiltRepoResult, cli_runner: CliRunner
@@ -64,7 +64,7 @@ def test_not_a_release_branch_exit_code(
 
 @pytest.mark.parametrize(
     "repo_result",
-    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)],
+    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__)],
 )
 def test_not_a_release_branch_exit_code_with_strict(
     repo_result: BuiltRepoResult,
@@ -83,7 +83,7 @@ def test_not_a_release_branch_exit_code_with_strict(
 
 @pytest.mark.parametrize(
     "repo_result",
-    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)],
+    [lazy_fixture(repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__)],
 )
 def test_not_a_release_branch_detached_head_exit_code(
     repo_result: BuiltRepoResult,
@@ -129,7 +129,9 @@ def json_file_with_no_configuration_for_psr(tmp_path: Path) -> Path:
     return path
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
+@pytest.mark.usefixtures(
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__
+)
 def test_default_config_is_used_when_none_in_toml_config_file(
     cli_runner: CliRunner,
     toml_file_with_no_configuration_for_psr: Path,
@@ -149,7 +151,9 @@ def test_default_config_is_used_when_none_in_toml_config_file(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
+@pytest.mark.usefixtures(
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__
+)
 def test_default_config_is_used_when_none_in_json_config_file(
     cli_runner: CliRunner,
     json_file_with_no_configuration_for_psr: Path,
@@ -169,7 +173,9 @@ def test_default_config_is_used_when_none_in_json_config_file(
     assert_successful_exit_code(result, cli_cmd)
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
+@pytest.mark.usefixtures(
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__
+)
 def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
     cli_runner: CliRunner,
 ):
@@ -189,7 +195,7 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
     assert "does not exist" in result.stderr
 
 
-@pytest.mark.usefixtures(repo_w_no_tags_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_errors_when_config_file_invalid_configuration(
     cli_runner: CliRunner, update_pyproject_toml: UpdatePyprojectTomlFn
 ):
