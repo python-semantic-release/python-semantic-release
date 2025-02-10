@@ -790,8 +790,8 @@ Specify which commit parser Python Semantic Release should use to parse the comm
 within the Git repository.
 
 Built-in parsers:
-    * ``angular`` - :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in ${NEW_RELEASE_TAG})*
-    * ``conventional`` - :ref:`ConventionalCommitParser <commit_parser-builtin-conventional>` *(available in ${NEW_RELEASE_TAG}+)*
+    * ``angular`` - :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in v9.19.0)*
+    * ``conventional`` - :ref:`ConventionalCommitParser <commit_parser-builtin-conventional>` *(available in v9.19.0+)*
     * ``emoji`` - :ref:`EmojiCommitParser <commit_parser-builtin-emoji>`
     * ``scipy`` - :ref:`ScipyCommitParser <commit_parser-builtin-scipy>`
     * ``tag`` - :ref:`TagCommitParser <commit_parser-builtin-tag>` *(deprecated in v9.12.0)*

@@ -4,6 +4,33 @@
 CHANGELOG
 =========
 
+.. _changelog-v9.19.0:
+
+v9.19.0 (2025-02-10)
+====================
+
+✨ Features
+-----------
+
+* **parser-conventional**: Add official ``conventional-commits`` parser (`PR#1177`_, `27ddf84`_)
+
+📖 Documentation
+----------------
+
+* Update references to Angular parser to Conventional Commit Parser (`PR#1177`_, `27ddf84`_)
+
+💡 ADDITIONAL RELEASE INFORMATION
+---------------------------------
+
+* **parser-conventional**: The 'angular' commit parser has been renamed to 'conventional' to match
+  the official conventional-commits standard for which the 'angular' parser has evolved into. Please
+  update your configurations to specify 'conventional' as the 'commit_parser' value in place of
+  'angular'. The 'angular' type will be removed in v11.
+
+.. _27ddf84: https://github.com/python-semantic-release/python-semantic-release/commit/27ddf840f8c812361c60bac9cf0b110d401f33d6
+.. _PR#1177: https://github.com/python-semantic-release/python-semantic-release/pull/1177
+
+
 .. _changelog-v9.18.1:
 
 v9.18.1 (2025-02-08)
