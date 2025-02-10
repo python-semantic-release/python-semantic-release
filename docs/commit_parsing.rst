@@ -49,7 +49,7 @@ Built-in Commit Parsers
 The following parsers are built in to Python Semantic Release:
 
 - :ref:`ConventionalCommitParser <commit_parser-builtin-conventional>`
-- :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in ${NEW_RELEASE_TAG})*
+- :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in v9.19.0)*
 - :ref:`EmojiCommitParser <commit_parser-builtin-emoji>`
 - :ref:`ScipyCommitParser <commit_parser-builtin-scipy>`
 - :ref:`TagCommitParser <commit_parser-builtin-tag>` *(deprecated in v9.12.0)*
@@ -61,7 +61,7 @@ The following parsers are built in to Python Semantic Release:
 Conventional Commits Parser
 """""""""""""""""""""""""""
 
-*Introduced in ${NEW_RELEASE_TAG}*
+*Introduced in v9.19.0*
 
 A parser that is designed to parse commits formatted according to the
 `Conventional Commits Specification`_.  The parser is implemented with the following
@@ -140,7 +140,7 @@ Angular Commit Parser
 """""""""""""""""""""
 
 .. warning::
-  This parser was deprecated in ``${NEW_RELEASE_TAG}``. It will be removed in a future release.
+  This parser was deprecated in ``v9.19.0``. It will be removed in a future release.
   This parser is being replaced by the :ref:`commit_parser-builtin-conventional`.
 
 A parser that is designed to parse commits formatted according to the
