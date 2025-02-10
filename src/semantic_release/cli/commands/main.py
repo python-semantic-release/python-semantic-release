@@ -116,10 +116,10 @@ def main(
         SemanticReleaseLogLevels.SILLY,
     ]
 
-    log_level = log_levels[verbosity]
+    globals.log_level = log_levels[verbosity]
 
     logging.basicConfig(
-        level=log_level,
+        level=globals.log_level,
         format=FORMAT,
         datefmt="[%X]",
         handlers=[
@@ -130,10 +130,7 @@ def main(
     )
 
     logger = logging.getLogger(__name__)
-    logger.debug("logging level set to: %s", logging.getLevelName(log_level))
-
-    if log_level <= logging.DEBUG:
-        globals.debug = True
+    logger.debug("logging level set to: %s", logging.getLevelName(globals.log_level))
 
     if noop:
         rprint(
