@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "python-semantic-release"
-version = "9.19.0"
+version = "9.18.1"
 description = "Automatic Semantic Versioning for Python projects"
 requires-python = ">=3.8"
 license = { text = "MIT" }
@@ -398,7 +398,7 @@ ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 
 [tool.semantic_release]
 logging_use_named_masks = true
-commit_parser = "conventional"
+commit_parser = "angular"
 commit_parser_options = { parse_squash_commits = true, ignore_merge_commits = true }
 build_command = """
     python -m pip install -e .[build]
