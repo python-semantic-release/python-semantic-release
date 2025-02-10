@@ -139,7 +139,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
                                     "datetime": next(commit_timestamp_gen),
@@ -148,7 +148,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                                     ),
                                 },
                                 {
-                                    "angular": "feat: add new feature",
+                                    "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
                                     "datetime": next(commit_timestamp_gen),
@@ -188,7 +188,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "fix: correct some text",
+                                    "conventional": "fix: correct some text",
                                     "emoji": ":bug: correct some text",
                                     "scipy": "MAINT: correct some text",
                                     "datetime": next(commit_timestamp_gen),
@@ -228,7 +228,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "feat: add some more text",
+                                    "conventional": "feat: add some more text",
                                     "emoji": ":sparkles: add some more text",
                                     "scipy": "ENH: add some more text",
                                     "datetime": next(commit_timestamp_gen),
@@ -268,7 +268,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": "feat(cli): add cli command",
+                                    "conventional": "feat(cli): add cli command",
                                     "emoji": ":sparkles:(cli) add cli command",
                                     "scipy": "ENH(cli): add cli command",
                                     "datetime": next(commit_timestamp_gen),
@@ -343,13 +343,13 @@ def build_trunk_only_repo_w_prerelease_tags(
 
 
 @pytest.fixture
-def repo_w_trunk_only_n_prereleases_angular_commits(
+def repo_w_trunk_only_n_prereleases_conventional_commits(
     build_trunk_only_repo_w_prerelease_tags: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    repo_name = repo_w_trunk_only_n_prereleases_angular_commits.__name__
+    repo_name = repo_w_trunk_only_n_prereleases_conventional_commits.__name__
     commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
     return {

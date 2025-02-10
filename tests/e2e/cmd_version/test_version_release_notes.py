@@ -15,7 +15,7 @@ from tests.const import (
     VERSION_SUBCMD,
     RepoActionStep,
 )
-from tests.fixtures.repos import repo_w_no_tags_angular_commits
+from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.fixtures.repos.trunk_based_dev.repo_w_no_tags import (
     repo_w_no_tags_emoji_commits,
     repo_w_no_tags_scipy_commits,
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_result, next_release_version",
     [
-        (lazy_fixture(repo_w_no_tags_angular_commits.__name__), "0.1.0"),
+        (lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "0.1.0"),
     ],
 )
 def test_custom_release_notes_template(
@@ -113,7 +113,7 @@ def test_custom_release_notes_template(
             "project.license.text",  # deprecated
         ]
         for repo_fixture_name in [
-            repo_w_no_tags_angular_commits.__name__,
+            repo_w_no_tags_conventional_commits.__name__,
             repo_w_no_tags_emoji_commits.__name__,
             repo_w_no_tags_scipy_commits.__name__,
         ]

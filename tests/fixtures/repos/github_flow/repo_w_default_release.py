@@ -152,7 +152,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
                                     "datetime": next(commit_timestamp_gen),
@@ -161,7 +161,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
                                     ),
                                 },
                                 {
-                                    "angular": "feat: add new feature",
+                                    "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
                                     "datetime": next(commit_timestamp_gen),
@@ -193,7 +193,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
 
         fix_branch_1_commits: Sequence[CommitSpec] = [
             {
-                "angular": "fix(cli): add missing text",
+                "conventional": "fix(cli): add missing text",
                 "emoji": ":bug: add missing text",
                 "scipy": "MAINT: add missing text",
                 "datetime": next(commit_timestamp_gen),
@@ -232,19 +232,19 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
         # simulate separate work by another person at same time as the fix branch
         feat_branch_1_commits: Sequence[CommitSpec] = [
             {
-                "angular": "feat(cli): add cli interface",
+                "conventional": "feat(cli): add cli interface",
                 "emoji": ":sparkles: add cli interface",
                 "scipy": "ENH: add cli interface",
                 "datetime": next(commit_timestamp_gen),
             },
             {
-                "angular": "test(cli): add cli tests",
+                "conventional": "test(cli): add cli tests",
                 "emoji": ":checkmark: add cli tests",
                 "scipy": "TST: add cli tests",
                 "datetime": next(commit_timestamp_gen),
             },
             {
-                "angular": "docs(cli): add cli documentation",
+                "conventional": "docs(cli): add cli documentation",
                 "emoji": ":memo: add cli documentation",
                 "scipy": "DOC: add cli documentation",
                 "datetime": next(commit_timestamp_gen),
@@ -282,7 +282,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
 
         new_version = "1.0.1"
 
-        all_commit_types: list[CommitConvention] = ["angular", "emoji", "scipy"]
+        all_commit_types: list[CommitConvention] = ["conventional", "emoji", "scipy"]
         fix_branch_pr_number = next(pr_num_gen)
         fix_branch_squash_commit_spec: CommitSpec = {
             **{  # type: ignore[typeddict-item]
@@ -431,13 +431,15 @@ def build_repo_w_github_flow_w_default_release_channel(
 
 
 @pytest.fixture
-def repo_w_github_flow_w_default_release_channel_angular_commits(
+def repo_w_github_flow_w_default_release_channel_conventional_commits(
     build_repo_w_github_flow_w_default_release_channel: BuildSpecificRepoFn,
     example_project_git_repo: ExProjectGitRepoFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    repo_name = repo_w_github_flow_w_default_release_channel_angular_commits.__name__
+    repo_name = (
+        repo_w_github_flow_w_default_release_channel_conventional_commits.__name__
+    )
     commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
     return {

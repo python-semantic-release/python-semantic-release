@@ -14,7 +14,7 @@ from tests.const import (
     VERSION_SUBCMD,
 )
 from tests.fixtures.repos.github_flow import (
-    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_conventional_commits,
     repo_w_github_flow_w_feature_release_channel_emoji_commits,
     repo_w_github_flow_w_feature_release_channel_scipy_commits,
 )
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_fixture_name",
     [
-        repo_w_github_flow_w_feature_release_channel_angular_commits.__name__,
+        repo_w_github_flow_w_feature_release_channel_conventional_commits.__name__,
         *[
             pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
             for repo_fixture_name in [

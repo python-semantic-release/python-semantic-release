@@ -12,34 +12,34 @@ import tomlkit
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.commands.main import main
-from semantic_release.commit_parser.angular import AngularCommitParser
+from semantic_release.commit_parser.conventional import ConventionalCommitParser
 from semantic_release.commit_parser.emoji import EmojiCommitParser
 from semantic_release.commit_parser.scipy import ScipyCommitParser
 
 from tests.const import EXAMPLE_PROJECT_NAME, MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures import (
-    angular_chore_commits,
-    angular_major_commits,
-    angular_minor_commits,
-    angular_patch_commits,
+    conventional_chore_commits,
+    conventional_major_commits,
+    conventional_minor_commits,
+    conventional_patch_commits,
     emoji_chore_commits,
     emoji_major_commits,
     emoji_minor_commits,
     emoji_patch_commits,
-    repo_w_git_flow_w_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
     repo_w_git_flow_w_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_alpha_prereleases_n_scipy_commits,
-    repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits,
+    repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits,
-    repo_w_github_flow_w_feature_release_channel_angular_commits,
+    repo_w_github_flow_w_feature_release_channel_conventional_commits,
     repo_w_initial_commit,
-    repo_w_no_tags_angular_commits,
+    repo_w_no_tags_conventional_commits,
     repo_w_no_tags_emoji_commits,
     repo_w_no_tags_scipy_commits,
-    repo_w_trunk_only_angular_commits,
+    repo_w_trunk_only_conventional_commits,
     repo_w_trunk_only_emoji_commits,
-    repo_w_trunk_only_n_prereleases_angular_commits,
+    repo_w_trunk_only_n_prereleases_conventional_commits,
     repo_w_trunk_only_n_prereleases_emoji_commits,
     repo_w_trunk_only_n_prereleases_scipy_commits,
     repo_w_trunk_only_scipy_commits,
@@ -71,7 +71,7 @@ if TYPE_CHECKING:
     [
         *(
             (
-                lazy_fixture(repo_w_no_tags_angular_commits.__name__),
+                lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
                 cli_args,
                 next_release_version,
             )
@@ -118,7 +118,7 @@ if TYPE_CHECKING:
                 marks=pytest.mark.comprehensive,
             )
             for repo_fixture_name, values in {
-                repo_w_trunk_only_angular_commits.__name__: [
+                repo_w_trunk_only_conventional_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "0.1.1+build.12345"),
                     # Forced version bump
@@ -155,7 +155,7 @@ if TYPE_CHECKING:
                         "0.1.2-beta.1+build.12345",
                     ),
                 ],
-                repo_w_trunk_only_n_prereleases_angular_commits.__name__: [
+                repo_w_trunk_only_n_prereleases_conventional_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "0.2.0+build.12345"),
                     # Forced version bump
@@ -193,7 +193,7 @@ if TYPE_CHECKING:
                         "0.2.1-beta.1+build.12345",
                     ),
                 ],
-                repo_w_github_flow_w_feature_release_channel_angular_commits.__name__: [
+                repo_w_github_flow_w_feature_release_channel_conventional_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.1.0+build.12345"),
                     # Forced version bump
@@ -230,7 +230,7 @@ if TYPE_CHECKING:
                         "1.1.1-beta.1+build.12345",
                     ),
                 ],
-                repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__: [
+                repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.2.0-alpha.2+build.12345"),
                     # Forced version bump
@@ -267,7 +267,7 @@ if TYPE_CHECKING:
                         "1.2.1-beta.1+build.12345",
                     ),
                 ],
-                repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__: [
+                repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__: [
                     # New build-metadata forces a new release
                     (["--build-metadata", "build.12345"], "1.1.0+build.12345"),
                     # Forced version bump
@@ -421,9 +421,9 @@ def test_version_force_level(
                 # Default case should be a minor bump since last full release was 1.1.1
                 # last tag is a prerelease 1.2.0-rc.2
                 lazy_fixture(
-                    repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__
+                    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__
                 ),
-                lazy_fixture(angular_minor_commits.__name__),
+                lazy_fixture(conventional_minor_commits.__name__),
                 False,
                 "alpha",
                 "1.2.0",
@@ -444,25 +444,25 @@ def test_version_force_level(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__,
                         "alpha",
                     ): [
-                        (angular_patch_commits.__name__, False, "1.1.2", None),
+                        (conventional_patch_commits.__name__, False, "1.1.2", None),
                         (
-                            angular_patch_commits.__name__,
+                            conventional_patch_commits.__name__,
                             True,
                             "1.1.2-alpha.1",
                             None,
                         ),
                         (
-                            angular_minor_commits.__name__,
+                            conventional_minor_commits.__name__,
                             True,
                             "1.2.0-alpha.3",
                             "feat/feature-4",  # branch
                         ),
-                        (angular_major_commits.__name__, False, "2.0.0", None),
+                        (conventional_major_commits.__name__, False, "2.0.0", None),
                         (
-                            angular_major_commits.__name__,
+                            conventional_major_commits.__name__,
                             True,
                             "2.0.0-alpha.1",
                             None,
@@ -471,26 +471,26 @@ def test_version_force_level(
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
                         "alpha",
                     ): [
-                        (angular_patch_commits.__name__, False, "1.1.1", None),
+                        (conventional_patch_commits.__name__, False, "1.1.1", None),
                         (
-                            angular_patch_commits.__name__,
+                            conventional_patch_commits.__name__,
                             True,
                             "1.1.1-alpha.1",
                             None,
                         ),
-                        (angular_minor_commits.__name__, False, "1.2.0", None),
+                        (conventional_minor_commits.__name__, False, "1.2.0", None),
                         (
-                            angular_minor_commits.__name__,
+                            conventional_minor_commits.__name__,
                             True,
                             "1.2.0-alpha.1",
                             None,
                         ),
-                        (angular_major_commits.__name__, False, "2.0.0", None),
+                        (conventional_major_commits.__name__, False, "2.0.0", None),
                         (
-                            angular_major_commits.__name__,
+                            conventional_major_commits.__name__,
                             True,
                             "2.0.0-alpha.1",
                             None,
@@ -508,7 +508,7 @@ def test_version_force_level(
     ),
 )
 # TODO: add a github flow test case
-def test_version_next_greater_than_version_one_angular(
+def test_version_next_greater_than_version_one_conventional(
     repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
@@ -603,28 +603,28 @@ def test_version_next_greater_than_version_one_angular(
                     # The last full release version was 1.1.1, so it's had a minor
                     # prerelease
                     (
-                        repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__,
                         "alpha",
                     ): [
                         *(
                             (commits, True, "1.2.0-alpha.2", "feat/feature-4")
                             for commits in (
                                 None,
-                                angular_chore_commits.__name__,
+                                conventional_chore_commits.__name__,
                             )
                         ),
                         *(
                             (commits, False, "1.1.1", None)
                             for commits in (
                                 None,
-                                angular_chore_commits.__name__,
+                                conventional_chore_commits.__name__,
                             )
                         ),
                     ],
                     # Latest version for repo_with_git_flow_and_release_channels is
                     # currently 1.1.0
                     (
-                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_angular_commits.__name__,
+                        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
                         "alpha",
                     ): [
                         *(
@@ -632,7 +632,7 @@ def test_version_next_greater_than_version_one_angular(
                             for prerelease in (True, False)
                             for commits in (
                                 None,
-                                angular_chore_commits.__name__,
+                                conventional_chore_commits.__name__,
                             )
                         ),
                     ],
@@ -647,7 +647,7 @@ def test_version_next_greater_than_version_one_angular(
         ]
     ),
 )
-def test_version_next_greater_than_version_one_no_bump_angular(
+def test_version_next_greater_than_version_one_no_bump_conventional(
     repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
@@ -1351,8 +1351,8 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                 # It's biggest change type is minor, so the next version should be 0.1.0
                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                 # the major level commits are limited to only causing a minor level bump
-                lazy_fixture(repo_w_no_tags_angular_commits.__name__),
-                lazy_fixture(angular_major_commits.__name__),
+                lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
+                lazy_fixture(conventional_major_commits.__name__),
                 False,
                 "rc",
                 False,
@@ -1376,7 +1376,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                     # Latest version for repo_with_no_tags is currently 0.0.0 (default)
                     # It's biggest change type is minor, so the next version should be 0.1.0
                     (
-                        repo_w_no_tags_angular_commits.__name__,
+                        repo_w_no_tags_conventional_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1389,21 +1389,21 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                                 # will be a minor change and thus the version will be bumped to 0.1.0
                                 None,
                                 # Non version bumping commits are absorbed into the previously detected minor bump
-                                lazy_fixture(angular_chore_commits.__name__),
+                                lazy_fixture(conventional_chore_commits.__name__),
                                 # Patch commits are absorbed into the previously detected minor bump
-                                lazy_fixture(angular_patch_commits.__name__),
+                                lazy_fixture(conventional_patch_commits.__name__),
                                 # Minor level commits are absorbed into the previously detected minor bump
-                                lazy_fixture(angular_minor_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
                                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                                 # the major level commits are limited to only causing a minor level bump
-                                # lazy_fixture(angular_major_commits.__name__), # used as default
+                                # lazy_fixture(conventional_major_commits.__name__), # used as default
                             )
                         ),
                         # when prerelease is False, & major_on_zero is False, & allow_zero_version is True,
                         # the version should only be minor bumped when provided major commits because
                         # of the major_on_zero value
                         (
-                            lazy_fixture(angular_major_commits.__name__),
+                            lazy_fixture(conventional_major_commits.__name__),
                             False,
                             False,
                             True,
@@ -1414,7 +1414,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                         # the version should be major bumped when provided major commits because
                         # of the major_on_zero value
                         (
-                            lazy_fixture(angular_major_commits.__name__),
+                            lazy_fixture(conventional_major_commits.__name__),
                             False,
                             True,
                             True,
@@ -1429,17 +1429,17 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
-                                lazy_fixture(angular_chore_commits.__name__),
-                                lazy_fixture(angular_patch_commits.__name__),
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_chore_commits.__name__),
+                                lazy_fixture(conventional_patch_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                     ],
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_w_trunk_only_angular_commits.__name__,
+                        repo_w_trunk_only_conventional_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1447,7 +1447,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             # the version is patch bumped because of the patch level commits
                             # regardless of the major_on_zero value
                             (
-                                lazy_fixture(angular_patch_commits.__name__),
+                                lazy_fixture(conventional_patch_commits.__name__),
                                 False,
                                 major_on_zero,
                                 True,
@@ -1461,15 +1461,15 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             # the version is minor bumped because of the major_on_zero value=False
                             (commits, False, False, True, "0.2.0", None)
                             for commits in (
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                         # when prerelease must be False, and allow_zero_version is True,
                         # but the major_on_zero is True, then when a major level commit is given,
                         # the version should be bumped to the next major version
                         (
-                            lazy_fixture(angular_major_commits.__name__),
+                            lazy_fixture(conventional_major_commits.__name__),
                             False,
                             True,
                             True,
@@ -1483,24 +1483,24 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
-                                lazy_fixture(angular_chore_commits.__name__),
-                                lazy_fixture(angular_patch_commits.__name__),
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_chore_commits.__name__),
+                                lazy_fixture(conventional_patch_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                     ],
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_conventional_commits.__name__,
                         None,
                     ): [
                         # when allow_zero_version is True,
                         # prerelease is False, & major_on_zero is False, the version should be
                         # patch bumped as a prerelease version, when given patch level commits
                         (
-                            lazy_fixture(angular_patch_commits.__name__),
+                            lazy_fixture(conventional_patch_commits.__name__),
                             True,
                             False,
                             True,
@@ -1511,7 +1511,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                         # prerelease is False, & major_on_zero is False, the version should be
                         # patch bumped, when given patch level commits
                         (
-                            lazy_fixture(angular_patch_commits.__name__),
+                            lazy_fixture(conventional_patch_commits.__name__),
                             False,
                             False,
                             True,
@@ -1524,8 +1524,8 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             # minor bumped as a prerelease version, when given commits of a minor or major level
                             (commits, True, False, True, "0.3.0-rc.1", None)
                             for commits in (
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                         *(
@@ -1534,15 +1534,15 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             # minor or major level because major_on_zero = False
                             (commits, False, False, True, "0.3.0", None)
                             for commits in (
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                         # when prerelease is True, & major_on_zero is True, and allow_zero_version
                         # is True, the version should be bumped to 1.0.0 as a prerelease version, when
                         # given major level commits
                         (
-                            lazy_fixture(angular_major_commits.__name__),
+                            lazy_fixture(conventional_major_commits.__name__),
                             True,
                             True,
                             True,
@@ -1552,7 +1552,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                         # when prerelease is False, & major_on_zero is True, and allow_zero_version
                         # is True, the version should be bumped to 1.0.0, when given major level commits
                         (
-                            lazy_fixture(angular_major_commits.__name__),
+                            lazy_fixture(conventional_major_commits.__name__),
                             False,
                             True,
                             True,
@@ -1567,10 +1567,10 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
-                                lazy_fixture(angular_chore_commits.__name__),
-                                lazy_fixture(angular_patch_commits.__name__),
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_chore_commits.__name__),
+                                lazy_fixture(conventional_patch_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                         *(
@@ -1580,9 +1580,9 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
                             (commits, False, major_on_zero, False, "1.0.0", None)
                             for major_on_zero in (True, False)
                             for commits in (
-                                lazy_fixture(angular_patch_commits.__name__),
-                                lazy_fixture(angular_minor_commits.__name__),
-                                lazy_fixture(angular_major_commits.__name__),
+                                lazy_fixture(conventional_patch_commits.__name__),
+                                lazy_fixture(conventional_minor_commits.__name__),
+                                lazy_fixture(conventional_major_commits.__name__),
                             )
                         ),
                     ],
@@ -1599,7 +1599,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
         ],
     ),
 )
-def test_version_next_w_zero_dot_versions_angular(
+def test_version_next_w_zero_dot_versions_conventional(
     repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
@@ -1706,7 +1706,7 @@ def test_version_next_w_zero_dot_versions_angular(
                     # Latest version for repo_with_single_branch is currently 0.1.1
                     # Note repo_with_single_branch isn't modelled with prereleases
                     (
-                        repo_w_trunk_only_angular_commits.__name__,
+                        repo_w_trunk_only_conventional_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1717,14 +1717,14 @@ def test_version_next_w_zero_dot_versions_angular(
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
-                                lazy_fixture(angular_chore_commits.__name__),
+                                lazy_fixture(conventional_chore_commits.__name__),
                             )
                         ),
                     ],
                     # Latest version for repo_with_single_branch_and_prereleases is
                     # currently 0.2.0
                     (
-                        repo_w_trunk_only_n_prereleases_angular_commits.__name__,
+                        repo_w_trunk_only_n_prereleases_conventional_commits.__name__,
                         None,
                     ): [
                         *(
@@ -1736,7 +1736,7 @@ def test_version_next_w_zero_dot_versions_angular(
                             for major_on_zero in (True, False)
                             for commits in (
                                 None,
-                                lazy_fixture(angular_chore_commits.__name__),
+                                lazy_fixture(conventional_chore_commits.__name__),
                             )
                         ),
                     ],
@@ -1753,7 +1753,7 @@ def test_version_next_w_zero_dot_versions_angular(
         ],
     ),
 )
-def test_version_next_w_zero_dot_versions_no_bump_angular(
+def test_version_next_w_zero_dot_versions_no_bump_conventional(
     repo_result: BuiltRepoResult,
     commit_messages: list[str],
     prerelease: bool,
@@ -2839,7 +2839,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                 # Latest version for repo_w_initial_commit is currently 0.0.0
                 # with no changes made it should be 0.0.0
                 lazy_fixture(repo_w_initial_commit.__name__),
-                AngularCommitParser.__name__.replace("CommitParser", "").lower(),
+                ConventionalCommitParser.__name__.replace("CommitParser", "").lower(),
                 None,
                 False,
                 "rc",
@@ -2874,11 +2874,11 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                             for major_on_zero in (True, False)
                             for commits, parser in (
                                 # No commits added, so base is just initial commit at 0.0.0
-                                (None, AngularCommitParser.__name__),
+                                (None, ConventionalCommitParser.__name__),
                                 # Chore like commits also don't trigger a version bump so it stays 0.0.0
                                 (
-                                    lazy_fixture(angular_chore_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_chore_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_chore_commits.__name__),
@@ -2898,8 +2898,8 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                                 # a patch bump as a prerelease version, because of the patch level commits
                                 # major_on_zero is irrelevant here as we are only applying patch commits
                                 (
-                                    lazy_fixture(angular_patch_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_patch_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_patch_commits.__name__),
@@ -2919,8 +2919,8 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                                 # a patch bump because of the patch commits added
                                 # major_on_zero is irrelevant here as we are only applying patch commits
                                 (
-                                    lazy_fixture(angular_patch_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_patch_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_patch_commits.__name__),
@@ -2938,8 +2938,8 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                                 # when prerelease is False, & major_on_zero is False, the version should be
                                 # a minor bump because of the minor commits added
                                 (
-                                    lazy_fixture(angular_minor_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_minor_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_minor_commits.__name__),
@@ -2952,8 +2952,8 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                                 # the major level commits are limited to only causing a minor level bump
                                 (
-                                    lazy_fixture(angular_major_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_major_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_major_commits.__name__),
@@ -2973,8 +2973,8 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                                 # the version should be a minor bump of 0.0.0
                                 # because of the minor commits added and zero version is allowed
                                 (
-                                    lazy_fixture(angular_minor_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_minor_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_minor_commits.__name__),
@@ -2987,8 +2987,8 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                                 # Given the major_on_zero is False and the version is starting at 0.0.0,
                                 # the major level commits are limited to only causing a minor level bump
                                 (
-                                    lazy_fixture(angular_major_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_major_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_major_commits.__name__),
@@ -3009,22 +3009,22 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                             for major_on_zero in (True, False)
                             for commits, parser in (
                                 # parser doesn't matter here as long as it detects a NO_RELEASE on Initial Commit
-                                (None, AngularCommitParser.__name__),
+                                (None, ConventionalCommitParser.__name__),
                                 (
-                                    lazy_fixture(angular_chore_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_chore_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
-                                    lazy_fixture(angular_patch_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_patch_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
-                                    lazy_fixture(angular_minor_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_minor_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
-                                    lazy_fixture(angular_major_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_major_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_chore_commits.__name__),
@@ -3068,22 +3068,22 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
                             (commits, parser, False, major_on_zero, False, "1.0.0")
                             for major_on_zero in (True, False)
                             for commits, parser in (
-                                (None, AngularCommitParser.__name__),
+                                (None, ConventionalCommitParser.__name__),
                                 (
-                                    lazy_fixture(angular_chore_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_chore_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
-                                    lazy_fixture(angular_patch_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_patch_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
-                                    lazy_fixture(angular_minor_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_minor_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
-                                    lazy_fixture(angular_major_commits.__name__),
-                                    AngularCommitParser.__name__,
+                                    lazy_fixture(conventional_major_commits.__name__),
+                                    ConventionalCommitParser.__name__,
                                 ),
                                 (
                                     lazy_fixture(emoji_chore_commits.__name__),

@@ -8,7 +8,7 @@ from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
-from tests.fixtures.repos import repo_w_trunk_only_angular_commits
+from tests.fixtures.repos import repo_w_trunk_only_conventional_commits
 from tests.util import assert_exit_code
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize(
     "repo_result",
-    [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)],
+    [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)],
 )
 def test_version_already_released_when_strict(
     repo_result: BuiltRepoResult,
@@ -71,7 +71,7 @@ def test_version_already_released_when_strict(
 
 
 @pytest.mark.parametrize(
-    "repo_result", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)]
 )
 def test_version_on_nonrelease_branch_when_strict(
     repo_result: BuiltRepoResult,

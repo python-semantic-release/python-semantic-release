@@ -39,6 +39,7 @@ from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.commit_parser import (
     AngularCommitParser,
     CommitParser,
+    ConventionalCommitParser,
     EmojiCommitParser,
     ParseResult,
     ParserOptions,
@@ -73,6 +74,7 @@ class HvcsClient(str, Enum):
 
 
 _known_commit_parsers: Dict[str, type[CommitParser]] = {
+    "conventional": ConventionalCommitParser,
     "angular": AngularCommitParser,
     "emoji": EmojiCommitParser,
     "scipy": ScipyCommitParser,
@@ -355,7 +357,7 @@ class RawConfig(BaseModel):
         env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR
     )
     commit_message: str = COMMIT_MESSAGE
-    commit_parser: NonEmptyString = "angular"
+    commit_parser: NonEmptyString = "conventional"
     # It's up to the parser_options() method to validate these
     commit_parser_options: Dict[str, Any] = {}
     logging_use_named_masks: bool = False
@@ -409,6 +411,22 @@ class RawConfig(BaseModel):
                         "The legacy 'tag' parser is deprecated and will be removed in v11.",
                         "Recommend swapping to our emoji parser (higher-compatibility)",
                         "or switch to another supported parser.",
+                    ],
+                )
+            )
+        return val
+
+    @field_validator("commit_parser", mode="after")
+    @classmethod
+    def angular_commit_parser_deprecation_warning(cls, val: str) -> str:
+        if val == "angular":
+            log.warning(
+                str.join(
+                    " ",
+                    [
+                        "The 'angular' parser is deprecated and will be removed in v11.",
+                        "The Angular parser is being renamed to the conventional commit parser,",
+                        "which is selected by switching the 'commit_parser' value to 'conventional'.",
                     ],
                 )
             )
@@ -863,6 +881,7 @@ class RuntimeContext:
             changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
             # TODO: change when we have other styles per parser
             # changelog_style=changelog_style,
+            # TODO: Breaking Change v10, change to conventional
             changelog_style="angular",
             changelog_output_format=raw.changelog.default_templates.output_format,
             prerelease=branch_config.prerelease,

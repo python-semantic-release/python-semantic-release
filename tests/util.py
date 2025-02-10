@@ -17,7 +17,7 @@ from pydantic.dataclasses import dataclass
 from semantic_release.changelog.context import ChangelogMode, make_changelog_context
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.commit_parser._base import CommitParser, ParserOptions
-from semantic_release.commit_parser.angular import AngularCommitParser
+from semantic_release.commit_parser.conventional import ConventionalCommitParser
 from semantic_release.commit_parser.token import (
     ParsedCommit,
     ParsedMessageResult,
@@ -289,7 +289,7 @@ class IncompleteCustomParser(CommitParser):
     pass
 
 
-class CustomAngularParserWithIgnorePatterns(AngularCommitParser):
+class CustomConventionalParserWithIgnorePatterns(ConventionalCommitParser):
     def parse(self, commit: Commit) -> ParsedCommit | ParseError:
         if not (parse_msg_result := super().parse_message(str(commit.message))):
             return ParseError(commit, "Unable to parse commit")

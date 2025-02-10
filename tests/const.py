@@ -63,19 +63,19 @@ SUPPORTED_ISSUE_CLOSURE_PREFIXES = [
     "Implementing",
 ]
 
-ANGULAR_COMMITS_CHORE = ("ci: added a commit lint job\n",)
+CONVENTIONAL_COMMITS_CHORE = ("ci: added a commit lint job\n",)
 # Different in-scope commits that produce a certain release type
-ANGULAR_COMMITS_PATCH = (
-    *ANGULAR_COMMITS_CHORE,
+CONVENTIONAL_COMMITS_PATCH = (
+    *CONVENTIONAL_COMMITS_CHORE,
     "fix: fixed voltage in the flux capacitor\n",
 )
-ANGULAR_COMMITS_MINOR = (
-    *ANGULAR_COMMITS_PATCH,
+CONVENTIONAL_COMMITS_MINOR = (
+    *CONVENTIONAL_COMMITS_PATCH,
     "feat: last minute rush order\n",
 )
 # Take previous commits and insert a breaking change
-ANGULAR_COMMITS_MAJOR = (
-    *ANGULAR_COMMITS_MINOR,
+CONVENTIONAL_COMMITS_MAJOR = (
+    *CONVENTIONAL_COMMITS_MINOR,
     "fix!: big change\n\nBREAKING CHANGE: reworked something for previous feature\n",
 )
 

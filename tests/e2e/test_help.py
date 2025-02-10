@@ -12,7 +12,7 @@ from semantic_release.cli.commands.publish import publish
 from semantic_release.cli.commands.version import version
 
 from tests.const import MAIN_PROG_NAME, SUCCESS_EXIT_CODE
-from tests.fixtures.repos import repo_w_trunk_only_angular_commits
+from tests.fixtures.repos import repo_w_trunk_only_conventional_commits
 from tests.util import assert_exit_code
 
 if TYPE_CHECKING:
@@ -85,7 +85,7 @@ def test_help_no_repo(
     (main, changelog, generate_config, publish, version),
     ids=lambda cmd: cmd.name,
 )
-@pytest.mark.usefixtures(repo_w_trunk_only_angular_commits.__name__)
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_help_valid_config(
     help_option: str,
     command: Command,
@@ -137,7 +137,7 @@ def test_help_invalid_config(
     help_option: str,
     command: Command,
     cli_runner: CliRunner,
-    repo_w_trunk_only_angular_commits: Repo,
+    repo_w_trunk_only_conventional_commits: Repo,
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ):
     """
@@ -187,7 +187,7 @@ def test_help_invalid_config(
     ids=lambda cmd: cmd.name,
 )
 @pytest.mark.parametrize(
-    "repo_result", [lazy_fixture(repo_w_trunk_only_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)]
 )
 def test_help_non_release_branch(
     help_option: str,

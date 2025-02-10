@@ -71,8 +71,8 @@ A common and *highly-recommended* configuration option is the
 :ref:`changelog.exclude_commit_patterns <config-changelog-exclude_commit_patterns>`
 setting which allows the user to define regular expressions that will exclude commits
 from the changelog output. This is useful to filter out change messages that are not
-relevant to your external consumers (ex. ``ci`` and ``test`` in the angular commit
-convention) and only include the important changes that impact the consumer of your
+relevant to your external consumers (ex. ``ci`` and ``test`` in the conventional commit
+standard) and only include the important changes that impact the consumer of your
 software.
 
 Another important configuration option is the :ref:`changelog.mode <config-changelog-mode>`
@@ -228,7 +228,7 @@ Configuration Examples
           }
         }
 
-3.  Goal: Configure an initializing reStructuredText changelog with filtered angular
+3.  Goal: Configure an initializing reStructuredText changelog with filtered conventional
     commits patterns and merge commits within a custom config file ``releaserc.toml``.
 
     .. code:: toml
@@ -282,7 +282,7 @@ for defining a custom template directory):
     semantic-release --noop changelog --post-to-release-tag v1.0.0
 
 The default template provided by PSR will respect the
-:ref:`<config-changelog-default_templates-mask_initial_release>` setting and
+:ref:`config-changelog-default_templates-mask_initial_release` setting and
 will also add a comparison link to the previous release if one exists without
 customization.
 

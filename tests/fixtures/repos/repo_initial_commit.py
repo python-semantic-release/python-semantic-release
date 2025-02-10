@@ -106,7 +106,7 @@ def get_repo_definition_4_repo_w_initial_commit(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "angular": INITIAL_COMMIT_MESSAGE,
+                                    "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
                                     "datetime": stable_now_date().isoformat(
@@ -194,7 +194,7 @@ def repo_w_initial_commit(
     return {
         "definition": build_repo_w_initial_commit(
             repo_name=repo_name,
-            commit_type="angular",  # not used but required
+            commit_type="conventional",  # not used but required
             dest_dir=example_project_dir,
         ),
         "repo": example_project_git_repo(),

@@ -33,7 +33,7 @@ to handle your specific commit message style.
   features are added beyond the scope of the original commit message style guidelines.
 
   Other tools may not follow the same conventions as PSR's guideline extensions, so
-  if you plan to use any similar programs in tadem with PSR, you should be aware of the
+  if you plan to use any similar programs in tandem with PSR, you should be aware of the
   differences in feature support and fall back to the official format guidelines if
   necessary.
 
@@ -48,10 +48,89 @@ Built-in Commit Parsers
 
 The following parsers are built in to Python Semantic Release:
 
-- :ref:`AngularCommitParser <commit_parser-builtin-angular>`
+- :ref:`ConventionalCommitParser <commit_parser-builtin-conventional>`
+- :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in ${NEW_RELEASE_TAG})*
 - :ref:`EmojiCommitParser <commit_parser-builtin-emoji>`
 - :ref:`ScipyCommitParser <commit_parser-builtin-scipy>`
 - :ref:`TagCommitParser <commit_parser-builtin-tag>` *(deprecated in v9.12.0)*
+
+----
+
+.. _commit_parser-builtin-conventional:
+
+Conventional Commits Parser
+"""""""""""""""""""""""""""
+
+*Introduced in ${NEW_RELEASE_TAG}*
+
+A parser that is designed to parse commits formatted according to the
+`Conventional Commits Specification`_.  The parser is implemented with the following
+logic in relation to how PSR's core features:
+
+- **Version Bump Determination**: This parser extracts the commit type from the subject
+  line of the commit (the first line of a commit message). This type is matched against
+  the configuration mapping to determine the level bump for the specific commit. If the
+  commit type is not found in the configuration mapping, the commit is considered a
+  non-parsable commit and will return it as a ParseError object and ultimately a commit
+  of type ``"unknown"``. The configuration mapping contains lists of commit types that
+  correspond to the level bump for each commit type. Some commit types are still valid
+  do not trigger a level bump, such as ``"chore"`` or ``"docs"``. You can also configure
+  the default level bump
+  :ref:`commit_parser_options.default_level_bump <config-commit_parser_options>` if desired.
+  To trigger a major release, the commit message body must contain a paragraph that begins
+  with ``BREAKING CHANGE:``. This will override the level bump determined by the commit type.
+
+- **Changelog Generation**: PSR will group commits in the changelog by the commit type used
+  in the commit message. The commit type shorthand is converted to a more human-friendly
+  section heading and then used as the version section title of the changelog and release
+  notes. Under the section title, the parsed commit descriptions are listed out in full. If
+  the commit includes an optional scope, then the scope is prefixed on to the first line of
+  the commit description. If a commit has any breaking change prefixed paragraphs in the
+  commit message body, those paragraphs are separated out into a "Breaking Changes" section
+  in the changelog (Breaking Changes section is available from the default changelog in
+  v9.15.0). Each breaking change paragraph is listed in a bulleted list format across the
+  entire version. A single commit is allowed to have more than one breaking change
+  prefixed paragraph (as opposed to the `Conventional Commits Specification`_). Commits
+  with an optional scope and a breaking change will have the scope prefixed on to the
+  breaking change paragraph. Parsing errors will return a ParseError object and ultimately
+  a commit of type ``"unknown"``. Unknown commits are consolidated into an "Unknown" section
+  in the changelog by the default template. To remove unwanted commits from the changelog
+  that normally are placed in the "unknown" section, consider the use of the configuration
+  option :ref:`changelog.exclude_commit_patterns <config-changelog-exclude_commit_patterns>`
+  to ignore those commit styles.
+
+- **Pull/Merge Request Identifier Detection**: This parser implements PSR's
+  :ref:`commit_parser-builtin-linked_merge_request_detection` to identify and extract
+  pull/merge request numbers. The parser will return a string value if a pull/merge
+  request number is found in the commit message. If no pull/merge request number is
+  found, the parser will return an empty string.
+
+- **Linked Issue Identifier Detection**: This parser implements PSR's
+  :ref:`commit_parser-builtin-issue_number_detection` to identify and extract issue numbers.
+  The parser will return a tuple of issue numbers as strings if any are found in the commit
+  message. If no issue numbers are found, the parser will return an empty tuple.
+
+- **Squash Commit Evaluation**: This parser implements PSR's
+  :ref:`commit_parser-builtin-squash_commit_evaluation` to identify and extract each commit
+  message as a separate commit message within a single squashed commit. You can toggle this
+  feature on/off via the :ref:`config-commit_parser_options` setting.
+
+- **Release Notice Footer Detection**: This parser implements PSR's
+  :ref:`commit_parser-builtin-release_notice_footer_detection`, which is a custom extension
+  to traditional `Conventional Commits Specification`_ to use the ``NOTICE`` keyword as a git
+  footer to document additional release information that is not considered a breaking change.
+
+**Limitations**:
+
+- Commits with the ``revert`` type are not currently supported. Track the implementation
+  of this feature in the issue `#402`_.
+
+If no commit parser options are provided via the configuration, the parser will use PSR's
+built-in
+:py:class:`defaults <semantic_release.commit_parser.conventional.ConventionalCommitParserOptions>`.
+
+.. _#402: https://github.com/python-semantic-release/python-semantic-release/issues/402
+.. _Conventional Commits Specification: https://www.conventionalcommits.org/en/v1.0.0
 
 ----
 
@@ -60,15 +139,19 @@ The following parsers are built in to Python Semantic Release:
 Angular Commit Parser
 """""""""""""""""""""
 
+.. warning::
+  This parser was deprecated in ``${NEW_RELEASE_TAG}``. It will be removed in a future release.
+  This parser is being replaced by the :ref:`commit_parser-builtin-conventional`.
+
 A parser that is designed to parse commits formatted according to the
 `Angular Commit Style Guidelines`_.  The parser is implemented with the following
 logic in relation to how PSR's core features:
 
 - **Version Bump Determination**: This parser extracts the commit type from the subject
-  line of the commit (the first line of a commit messsage). This type is matched against
+  line of the commit (the first line of a commit message). This type is matched against
   the configuration mapping to determine the level bump for the specific commit. If the
   commit type is not found in the configuration mapping, the commit is considered a
-  non-conformative commit and will return it as a ParseError object and ultimately a commit
+  non-parsable commit and will return it as a ParseError object and ultimately a commit
   of type ``"unknown"``. The configuration mapping contains lists of commit types that
   correspond to the level bump for each commit type. Some commit types are still valid
   do not trigger a level bump, such as ``"chore"`` or ``"docs"``. You can also configure
@@ -129,10 +212,7 @@ If no commit parser options are provided via the configuration, the parser will 
 built-in :py:class:`defaults <semantic_release.commit_parser.angular.AngularParserOptions>`.
 
 .. _#402: https://github.com/python-semantic-release/python-semantic-release/issues/402
-.. _#733: https://github.com/python-semantic-release/python-semantic-release/issues/733
-.. _#1085: https://github.com/python-semantic-release/python-semantic-release/issues/1085
 .. _Angular Commit Style Guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
-.. _PR#1112: https://github.com/python-semantic-release/python-semantic-release/pull/1112
 
 ----
 
@@ -151,7 +231,7 @@ commit messages. The parser is implemented with the following logic in relation 
 how PSR's core features:
 
 - **Version Bump Determination**: This parser only looks for emojis in the subject
-  line of the commit (the first line of a commit messsage). If more than one emoji is
+  line of the commit (the first line of a commit message). If more than one emoji is
   found, the emoji configured with the highest priority is selected for the change impact
   for the specific commit. The emoji with the highest priority is the one configured in the
   ``major`` configuration option, followed by the ``minor``, and ``patch`` in descending
@@ -209,7 +289,7 @@ Scipy Commit Parser
 """""""""""""""""""
 
 A parser that is designed to parse commits formatted according to the
-`Scipy Commit Style Guidlines`_. This is essentially a variation of the `Angular Commit Style
+`Scipy Commit Style Guidelines`_. This is essentially a variation of the `Angular Commit Style
 Guidelines`_ with all different commit types. Because of this small variance, this parser
 only extends our :ref:`commit_parser-builtin-angular` parser with pre-defined scipy commit types
 in the default Scipy Parser Options and all other features are inherited.
@@ -217,7 +297,7 @@ in the default Scipy Parser Options and all other features are inherited.
 If no commit parser options are provided via the configuration, the parser will use PSR's
 built-in :py:class:`defaults <semantic_release.commit_parser.scipy.ScipyParserOptions>`.
 
-.. _Scipy Commit Style Guidlines: https://scipy.github.io/devdocs/dev/contributor/development_workflow.html#writing-the-commit-message
+.. _Scipy Commit Style Guidelines: https://scipy.github.io/devdocs/dev/contributor/development_workflow.html#writing-the-commit-message
 
 ----
 
@@ -246,7 +326,7 @@ Common Linked Merge Request Detection
 
 All of the PSR built-in parsers implement common pull/merge request identifier detection
 logic to extract pull/merge request numbers from the commit message regardless of the
-VCS platform. The parsers evaluate the subject line for a paranthesis-enclosed number
+VCS platform. The parsers evaluate the subject line for a parenthesis-enclosed number
 at the end of the line. PSR's parsers will return a string value if a pull/merge request
 number is found in the commit message. If no pull/merge request number is found, the
 parsers will return an empty string.
@@ -291,7 +371,7 @@ for your VCS. PSR supports the following case-insensitive prefixes and their con
 - implement (implements, implementing, implemented)
 
 PSR also allows for a more flexible approach to identifying more than one issue number without
-the need of extra git trailors (although PSR does support multiple git trailors). PSR support
+the need of extra git trailers (although PSR does support multiple git trailers). PSR support
 various list formats which can be used to identify more than one issue in a list. This format
 will not necessarily work on your VCS. PSR currently support the following list formats:
 
@@ -364,7 +444,7 @@ will be evaluated individually for both the level bump and changelog generation.
 squash commits are found, a list with the single commit object will be returned.
 
 Currently, PSR has been tested against GitHub, BitBucket, and official ``git`` squash
-merge commmit messages. GitLab does not have a default template for squash commit messages
+merge commit messages. GitLab does not have a default template for squash commit messages
 but can be customized per project or server. If you are using GitLab, you will need to
 ensure that the squash commit message format is similar to the example below.
 
@@ -381,10 +461,10 @@ formatted squash commit message of conventional commit style:*
 
     * docs(configuration): defined new config option for the project
 
-When parsed with the default angular parser with squash commits toggled on, the version
-bump will be determined by the highest level bump of the three commits (in this case, a
-minor bump because of the feature commit) and the release notes would look similar to
-the following:
+When parsed with the default conventional-commit parser with squash commits toggled on,
+the version bump will be determined by the highest level bump of the three commits (in
+this case, a minor bump because of the feature commit) and the release notes would look
+similar to the following:
 
 .. code-block:: markdown
 
@@ -582,7 +662,8 @@ A subclass must implement the following:
   :py:class:`ParseResult <semantic_release.commit_parser.token.ParseResult>`, or a
   subclass of this.
 
-By default, the constructor for :py:class:`CommitParser <semantic_release.commit_parser._base.CommitParser>`
+By default, the constructor for
+:py:class:`CommitParser <semantic_release.commit_parser._base.CommitParser>`
 will set the ``options`` parameter on the ``options`` attribute of the parser, so there
 is no need to override this in order to access ``self.options`` during the ``parse``
 method. However, if you have any parsing logic that needs to be done only once, it may
@@ -610,5 +691,4 @@ Therefore, a custom commit parser could be implemented via:
         def parse(self, commit: git.objects.commit.Commit) -> semantic_release.ParseResult:
             ...
 
-.. _angular commit guidelines: https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
 .. _gitpython-commit-object: https://gitpython.readthedocs.io/en/stable/reference.html#module-git.objects.commit

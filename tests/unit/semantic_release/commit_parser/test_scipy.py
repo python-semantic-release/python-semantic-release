@@ -1044,7 +1044,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "single notice",
                 dedent(
                     """\
-                    BUG(parser): fix regex in angular parser
+                    BUG(parser): fix regex in scipy parser
 
                     NOTICE: This is a notice
                     """
@@ -1055,7 +1055,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiline notice",
                 dedent(
                     """\
-                    BUG(parser): fix regex in angular parser
+                    BUG(parser): fix regex in scipy parser
 
                     NOTICE: This is a notice that is longer than
                     other notices
@@ -1067,7 +1067,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiple notices",
                 dedent(
                     """\
-                    BUG(parser): fix regex in angular parser
+                    BUG(parser): fix regex in scipy parser
 
                     NOTICE: This is a notice
 
@@ -1080,7 +1080,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "notice with other footer",
                 dedent(
                     """\
-                    BUG(parser): fix regex in angular parser
+                    BUG(parser): fix regex in scipy parser
 
                     BREAKING CHANGE: This is a breaking change
 

@@ -10,9 +10,9 @@ from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.commands.main import main
 
 from tests.const import CHANGELOG_SUBCMD, MAIN_PROG_NAME
-from tests.fixtures.repos import repo_w_no_tags_angular_commits
+from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import (
-    CustomAngularParserWithIgnorePatterns,
+    CustomConventionalParserWithIgnorePatterns,
     assert_successful_exit_code,
 )
 
@@ -26,14 +26,14 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    "repo_result", [lazy_fixture(repo_w_no_tags_angular_commits.__name__)]
+    "repo_result", [lazy_fixture(repo_w_no_tags_conventional_commits.__name__)]
 )
 def test_changelog_custom_parser_remove_from_changelog(
     repo_result: BuiltRepoResult,
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     use_custom_parser: UseCustomParserFn,
-    get_commit_def_of_angular_commit: GetCommitDefFn,
+    get_commit_def_of_conventional_commit: GetCommitDefFn,
     changelog_md_file: Path,
     default_md_changelog_insertion_flag: str,
 ):
@@ -42,7 +42,7 @@ def test_changelog_custom_parser_remove_from_changelog(
     When provided a commit message that matches the ignore syntax
     Then the commit message is not included in the resulting changelog
     """
-    ignored_commit_def = get_commit_def_of_angular_commit(
+    ignored_commit_def = get_commit_def_of_conventional_commit(
         "chore: do not include me in the changelog"
     )
 
@@ -62,7 +62,7 @@ def test_changelog_custom_parser_remove_from_changelog(
         "tool.semantic_release.changelog.mode", ChangelogMode.INIT.value
     )
     use_custom_parser(
-        f"{CustomAngularParserWithIgnorePatterns.__module__}:{CustomAngularParserWithIgnorePatterns.__name__}"
+        f"{CustomConventionalParserWithIgnorePatterns.__module__}:{CustomConventionalParserWithIgnorePatterns.__name__}"
     )
 
     # Setup: add the commit to be ignored

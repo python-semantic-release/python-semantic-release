@@ -7,7 +7,9 @@ import pytest
 from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
-from tests.fixtures.repos import repo_w_git_flow_w_alpha_prereleases_n_angular_commits
+from tests.fixtures.repos import (
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
+)
 from tests.util import actions_output_to_dict, assert_successful_exit_code
 
 if TYPE_CHECKING:
@@ -16,7 +18,9 @@ if TYPE_CHECKING:
     from click.testing import CliRunner
 
 
-@pytest.mark.usefixtures(repo_w_git_flow_w_alpha_prereleases_n_angular_commits.__name__)
+@pytest.mark.usefixtures(
+    repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__
+)
 def test_version_writes_github_actions_output(
     cli_runner: CliRunner,
     monkeypatch: pytest.MonkeyPatch,
