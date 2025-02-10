@@ -103,7 +103,7 @@
 #}{%  set breaking_commits = []
 %}{%  set notice_commits = []
 %}{%  for commits in commit_objects.values()
-%}{%    set valid_commits = commits | rejectattr("error", "defined")
+%}{%    set valid_commits = commits | rejectattr("error", "defined") | list
 %}{#    # Filter out breaking change commits that have no breaking descriptions
 #}{%    set _ = breaking_commits.extend(
           valid_commits | selectattr("breaking_descriptions.0")
