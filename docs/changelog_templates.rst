@@ -49,7 +49,7 @@ PSR provides two default changelog output formats:
 Both formats are kept in sync with one another to display the equivalent information
 in the respective format. The default changelog template is located in the
 ``data/templates/`` directory within the PSR package. The templates are written in
-modular style (ie. multiple files) and during the render proccess are ultimately
+modular style (ie. multiple files) and during the render process are ultimately
 combined together to render the final changelog output. The rendering start point
 is the ``CHANGELOG.{FORMAT_EXT}.j2`` underneath the respective format directory.
 
@@ -144,7 +144,7 @@ newly created changelog file.
 
 .. tip::
     We have accomplished changelog updating through the use of the `Jinja`_ templating
-    and addtional context filters and context variables. This is notable because
+    and additional context filters and context variables. This is notable because
     in the case that you want to customize your changelog template, you now can use the
     same logic to enable changelog updates of your custom template!
 
@@ -1220,7 +1220,7 @@ __ https://github.com/python-semantic-release/python-semantic-release/tree/maste
     maintain any content that should be included before the new release information.
     See ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 
-5.  **Print your insertion flag.** This is impartive to ensure that the resulting
+5.  **Print your insertion flag.** This is imperative to ensure that the resulting
     changelog can be updated in the future. See
     ``data/templates/*/md/.components/changelog_update.md.j2`` for reference.
 

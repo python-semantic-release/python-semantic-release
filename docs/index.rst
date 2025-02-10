@@ -219,7 +219,7 @@ and changelogs. The user has three options to push changes to the repository:
    - :ref:`Changelog <config-changelog>` - customize your project's changelog.
    - :ref:`changelog-templates-custom_release_notes` - customize the published release notes
    - :ref:`upload_to_vcs_release <config-publish-upload_to_vcs_release>` -
-     enable/disable uploading artefacts to VCS releases
+     enable/disable uploading artifacts to VCS releases
    - :ref:`version --vcs-release/--no-vcs-release <cmd-version-option-vcs-release>` - enable/disable VCS release
      creation.
    - `upload-to-gh-release`_, a GitHub Action for running ``semantic-release publish``

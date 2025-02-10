@@ -10,7 +10,8 @@ Troubleshooting
 .. _troubleshooting-verbosity:
 
 Increasing Verbosity
-====================
+--------------------
+
 If you are having trouble with Python Semantic Release or would like to see additional
 information about the actions that it is taking, you can use the top-level
 :ref:`cmd-main-option-verbosity` option. This can be supplied multiple times to increase
@@ -24,11 +25,9 @@ For example::
 
     semantic-release -vv version --print
 
-
 .. note::
    The :ref:`cmd-main-option-verbosity` option must be supplied to the top-level
    ``semantic-release`` command, before the name of any sub-command.
-
 
 .. warning::
    The volume of logs when using ``DEBUG`` verbosity may be significantly increased,

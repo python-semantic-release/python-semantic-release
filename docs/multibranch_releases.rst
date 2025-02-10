@@ -45,12 +45,12 @@ a situation may occur in the following scenario:
 Suppose that Python Semantic Release has been configured to use the same
 prerelease token ``"alpha"`` for all ``feature-*`` branches, and the default tag
 format ``"v{version}"``. In this case, running a pre-release from branch ``feature-1``
-will recognise that since the last release, ``1.1.0``, a **feature** has been
+will recognize that since the last release, ``1.1.0``, a **feature** has been
 introduced and therefore the next tag to be applied to ``feature-1`` will be
 ``v1.2.0-alpha.1``.
 
 However, suppose we then try to run a release against ``feature-2``. This will also
-recognise that a **feature** has been introduced against the last released version of
+recognize that a **feature** has been introduced against the last released version of
 ``v1.1.0`` and therefore will try to create the tag ``v1.2.0-alpha.1``, leading to an
 error as this tag was already created against ``feature-1``.
 
@@ -91,7 +91,7 @@ Each release group is configured as a nested mapping under the
 ``tool.semantic_release.branches`` key in ``pyproject.toml``, or the equivalent
 structure in other formats. the mapping requires a single key that is used as a
 name for the release group, which can help to identify it in log messages but has
-no effect on the behaviour of the release. For example, Python Semantic Release has
+no effect on the behavior of the release. For example, Python Semantic Release has
 only one release group by default with the name ``main``.
 
 Inside each release group, the following key-value pairs can be set:

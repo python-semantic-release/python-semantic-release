@@ -272,8 +272,8 @@ the flag.
 This can be useful when making a single prerelease on a branch that would typically release
 normal versions.
 
-If not specified in :ref:`cmd-version-option-prerelease-token`, the prerelease token is idenitified using the
-:ref:`Multibranch Release Configuration <multibranch-releases-configuring>`
+If not specified in :ref:`cmd-version-option-prerelease-token`, the prerelease token is identified
+using the :ref:`Multibranch Release Configuration <multibranch-releases-configuring>`
 
 See the examples alongside :ref:`cmd-version-option-force-level` for how to use this flag.
 
@@ -282,8 +282,9 @@ See the examples alongside :ref:`cmd-version-option-force-level` for how to use 
 ``--prerelease-token [VALUE]``
 ******************************
 
-Force the next version to use the value as the prerelease token. This overrides the configured value if one is
-present. If not used during a release producing a prerelease version, this option has no effect.
+Force the next version to use the value as the prerelease token. This overrides the configured
+value if one is present. If not used during a release producing a prerelease version, this
+option has no effect.
 
 .. _cmd-version-option-build-metadata:
 
