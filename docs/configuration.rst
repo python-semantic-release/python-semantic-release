@@ -88,9 +88,12 @@ environment variable is:
     default = "default value"
 
 In this structure:
+
   * ``env`` represents the environment variable that Python Semantic Release will search for
+
   * ``default_env`` is a fallback environment variable to read in case the variable specified
     by ``env`` is not set. This is optional - if not specified then no fallback will be used.
+
   * ``default`` is a default value to use in case the environment variable specified by ``env``
     is not set. This is optional - if ``default`` is not specified then the environment variable
     specified by ``env`` is considered required.
@@ -105,7 +108,7 @@ configuration setting. If there are type mis-matches, PSR will throw validation 
 If a setting is not provided, than PSR will fill in the value with the default value.
 
 Python Semantic Release expects a root level key to start the configuration definition. Make
-sure to use the correct root key dependending on the configuration format you are using.
+sure to use the correct root key depending on the configuration format you are using.
 
 .. note:: If you are using ``pyproject.toml``, this heading should include the ``tool`` prefix
           as specified within PEP 517, resulting in ``[tool.semantic_release]``.
@@ -405,7 +408,7 @@ This setting is used to specify the output format the default changelog template
 will use when rendering the changelog. PSR supports both Markdown (``md``) and
 reStructuredText (``rst``) formats.
 
-This setting will take presendence over the file extension of the
+This setting will take precedence over the file extension of the
 :ref:`config-changelog-default_templates-changelog_file` setting. If this setting is
 omitted, the file extension of the :ref:`config-changelog-default_templates-changelog_file`
 setting will be used to determine the output format. If the file extension is not recognized,
@@ -695,10 +698,6 @@ A string that will be used to identify where the new version should be inserted 
 changelog file (as defined by :ref:`config-changelog-changelog_file`) when the changelog mode
 is set to ``update``.
 
-When the changelog mode is set to ``init``, this string will be included as part of the
-header of the changelog file to initialize the changelog with a format that will be condusive
-for future version insertions.
-
 If you modify this value in your config, you will need to manually update any saved changelog
 file to match the new insertion flag if you use the ``update`` mode.  In ``init`` mode, the
 changelog file will be overwritten as normal.
@@ -965,7 +964,7 @@ calls rather than the primary domain (ex. ``api.github.com``).
 
 **Most on-premise HVCS installations will NOT use this setting!** Whether or not
 this value is used depends on the HVCS configured (and your server administration)
-in the :ref:`remote.type <config-remote-type>` setting and used in tadem with the
+in the :ref:`remote.type <config-remote-type>` setting and used in tandem with the
 :ref:`remote.domain <config-remote-domain>` setting.
 
 When using a custom :ref:`remote.domain <config-remote-domain>` and a HVCS
@@ -1058,7 +1057,7 @@ used for the connection. If the protocol scheme is provided in the field value, 
 match this setting or it will throw an error.
 
 The purpose of this flag is to prevent any typos in provided ``domain`` and ``api_domain``
-values that accidently specify an insecure connection but allow users to toggle the protection
+values that accidentally specify an insecure connection but allow users to toggle the protection
 scheme off when desired.
 
 **Default:** ``false``

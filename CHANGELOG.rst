@@ -99,7 +99,7 @@ v9.18.0 (2025-02-06)
 * **vcs-github**: Add ``create_release_url`` & ``format_w_official_vcs_name`` filter functions
   (`PR#1161`_, `f853cf0`_)
 
-* **vcs-gitlab**: Add ``create_release_url`` & ``format_w_official_vcs_name`` filter functiions
+* **vcs-gitlab**: Add ``create_release_url`` & ``format_w_official_vcs_name`` filter functions
   (`PR#1161`_, `f853cf0`_)
 
 🪲 Bug Fixes
@@ -491,7 +491,7 @@ v9.14.0 (2024-11-11)
 🪲 Bug Fixes
 ------------
 
-* **release-notes**: Override default wordwrap to non-wrap for in default template (`99ab99b`_)
+* **release-notes**: Override default word-wrap to non-wrap for in default template (`99ab99b`_)
 
 📖 Documentation
 ----------------
@@ -548,7 +548,7 @@ v9.13.0 (2024-11-10)
 * **parser-angular**: Drop the ``breaking`` category but still maintain a major level bump
   (`f1ffa54`_)
 
-* **parsers**: Improve reliability of text unwordwrap of descriptions (`436374b`_)
+* **parsers**: Improve reliability of descriptions after reverse word-wrap (`436374b`_)
 
 ⚡ Performance Improvements
 ---------------------------
@@ -871,7 +871,7 @@ v9.9.0 (2024-09-28)
 📖 Documentation
 ----------------
 
-* **automatic-releases**: Drop extrenous github push configuration (`PR#1011`_, `2135c68`_)
+* **automatic-releases**: Drop extraneous github push configuration (`PR#1011`_, `2135c68`_)
 
 * **github-actions**: Add configuration & description of publish action (`PR#1011`_, `2135c68`_)
 
@@ -1066,7 +1066,7 @@ v9.8.4 (2024-07-04)
 🪲 Bug Fixes
 ------------
 
-* **changelog-cmd**: Remove usage strings when error occured, closes `#810`_ (`348a51d`_)
+* **changelog-cmd**: Remove usage strings when error occurred, closes `#810`_ (`348a51d`_)
 
 * **changelog-cmd**: Render default changelog when user template directory exist but is empty
   (`bded8de`_)
@@ -1077,7 +1077,7 @@ v9.8.4 (2024-07-04)
 
 * **publish-cmd**: Prevent error when provided tag does not exist locally (`16afbbb`_)
 
-* **publish-cmd**: Remove usage strings when error occured, closes `#810`_ (`afbb187`_)
+* **publish-cmd**: Remove usage strings when error occurred, closes `#810`_ (`afbb187`_)
 
 * **version-cmd**: Remove usage strings when error occurred, closes `#810`_ (`a7c17c7`_)
 
@@ -1192,7 +1192,7 @@ v9.7.3 (2024-05-15)
 🪲 Bug Fixes
 ------------
 
-* Enabled ``prelease-token`` parameter in github action (`PR#929`_, `1bb26b0`_)
+* Enabled ``prerelease-token`` parameter in github action (`PR#929`_, `1bb26b0`_)
 
 .. _1bb26b0: https://github.com/python-semantic-release/python-semantic-release/commit/1bb26b0762d94efd97c06a3f1b6b10fb76901f6d
 .. _PR#929: https://github.com/python-semantic-release/python-semantic-release/pull/929
@@ -1705,7 +1705,7 @@ v8.7.1 (2024-01-03)
 📖 Documentation
 ----------------
 
-* Add note on default envvar behaviour (`PR#780`_, `0b07cae`_)
+* Add note on default envvar behavior (`PR#780`_, `0b07cae`_)
 
 * **configuration**: Change defaults definition of token default to table (`PR#786`_, `df1df0d`_)
 
@@ -2034,7 +2034,7 @@ v8.0.3 (2023-07-21)
 🪲 Bug Fixes
 ------------
 
-* Skip unparseable versions when calculating next version (`PR#649`_, `88f25ea`_)
+* Skip non-parsable versions when calculating next version (`PR#649`_, `88f25ea`_)
 
 .. _88f25ea: https://github.com/python-semantic-release/python-semantic-release/commit/88f25eae62589cdf53dbc3dfcb167a3ae6cba2d3
 .. _PR#649: https://github.com/python-semantic-release/python-semantic-release/pull/649
@@ -2105,7 +2105,7 @@ v8.0.0 (2023-07-16)
 
 * Make it easier to access commit messages in ParsedCommits (`PR#619`_, `ec30564`_)
 
-* Remove publication of dists to artifact repository (`PR#619`_, `ec30564`_)
+* Remove publication of ``dists/`` to artifact repository (`PR#619`_, `ec30564`_)
 
 * Rename 'upload' configuration section to 'publish' (`PR#619`_, `ec30564`_)
 
@@ -2138,7 +2138,7 @@ v8.0.0 (2023-07-16)
 
 * Only call Github Action output callback once defaults are set (`PR#619`_, `ec30564`_)
 
-* Remove commit amending behaviour (`PR#619`_, `ec30564`_)
+* Remove commit amending behavior (`PR#619`_, `ec30564`_)
 
 * Resolve branch checkout logic in GHA (`PR#619`_, `ec30564`_)
 
@@ -2405,7 +2405,7 @@ v7.33.0 (2023-01-15)
 📖 Documentation
 ----------------
 
-* Update documentaton (`5cbdad2`_)
+* Update documentation (`5cbdad2`_)
 
 .. _#521: https://github.com/python-semantic-release/python-semantic-release/issues/521
 .. _#533: https://github.com/python-semantic-release/python-semantic-release/issues/533
@@ -2478,7 +2478,7 @@ v7.32.0 (2022-09-25)
 📖 Documentation
 ----------------
 
-* Correct documented default behaviour for ``commit_version_number`` (`PR#497`_, `ffae2dc`_)
+* Correct documented default behavior for ``commit_version_number`` (`PR#497`_, `ffae2dc`_)
 
 .. _#498: https://github.com/python-semantic-release/python-semantic-release/issues/498
 .. _988437d: https://github.com/python-semantic-release/python-semantic-release/commit/988437d21e40d3e3b1c95ed66b535bdd523210de
@@ -2796,7 +2796,7 @@ v7.27.1 (2022-04-03)
 🪲 Bug Fixes
 ------------
 
-* **prerelase**: Pass prerelease option to get_current_version (`PR#432`_, `aabab0b`_)
+* **prerelease**: Pass prerelease option to get_current_version (`PR#432`_, `aabab0b`_)
 
 .. _aabab0b: https://github.com/python-semantic-release/python-semantic-release/commit/aabab0b7ce647d25e0c78ae6566f1132ece9fcb9
 .. _PR#432: https://github.com/python-semantic-release/python-semantic-release/pull/432
@@ -4079,7 +4079,7 @@ v5.0.0 (2020-03-22)
 📖 Documentation
 ----------------
 
-* **pypi**: Update docstings in pypi.py (`6502d44`_)
+* **pypi**: Update docstrings in pypi.py (`6502d44`_)
 
 💥 BREAKING CHANGES
 -------------------
@@ -5237,7 +5237,7 @@ v2.1.0 (2015-08-20)
 ✨ Features
 -----------
 
-* **cli**: Add the possibility to repost the changelog (`4d028e2`_)
+* **cli**: Add the possibility to re-post the changelog (`4d028e2`_)
 
 🪲 Bug Fixes
 ------------
@@ -5292,7 +5292,7 @@ v2.0.0 (2015-08-19)
 💥 BREAKING CHANGES
 -------------------
 
-* **history**: The default parser is now angular. Thus, the default behaviour of the commit log
+* **history**: The default parser is now angular. Thus, the default behavior of the commit log
   evaluator will change. From now on it will use the angular commit message spec to determine the
   new version.
 
