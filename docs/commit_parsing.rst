@@ -423,7 +423,7 @@ a ``release_notices`` attribute that is a tuple of string paragraphs to identify
 release notice.
 
 In the default changelog and release notes template, these release notices will be
-formatted into their own section called **ADDITIONAL RELEASE INFORMATION**. Each will
+formatted into their own section called **Additional Release Information**. Each will
 include any commit scope defined and each release notice in alphabetical order.
 
 ----
