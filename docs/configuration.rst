@@ -1340,14 +1340,22 @@ to substitute the version number in the file. The replacement algorithm is **ONL
 pattern match and replace. It will **NOT** evaluate the code nor will PSR understand
 any internal object structures (ie. ``file:object.version`` will not work).
 
-.. important::
-    The Regular Expression expects a version value to exist in the file to be replaced.
-    It cannot be an empty string or a non-semver compliant string. If this is the very
-    first time you are using PSR, we recommend you set the version to ``0.0.0``.
+The regular expression generated from the ``version_variables`` definition will:
 
-    This may become more flexible in the future with resolution of issue `#941`_.
+1. Look for the specified ``variable`` name in the ``file``. The variable name can be
+   enclosed by single (``'``) or double (``"``) quotation marks but they must match.
 
-.. _#941: https://github.com/python-semantic-release/python-semantic-release/issues/941
+2. The variable name defined by ``variable`` and the version must be separated by
+   an operand symbol (``=``, ``:``, ``:=``, or ``@``). Whitespace is optional around
+   the symbol.
+
+3. The value of the variable must match a `SemVer`_ regular expression and can be
+   enclosed by single (``'``) or double (``"``) quotation marks but they must match. However,
+   the enclosing quotes of the value do not have to match the quotes surrounding the variable
+   name.
+
+4. If the format type is set to ``tf`` then the variable value must have the matching prefix
+   and suffix of the :ref:`config-tag_format` setting around the `SemVer`_ version number.
 
 Given the pattern matching nature of this feature, the Regular Expression is able to
 support most file formats because of the similarity of variable declaration across
@@ -1359,6 +1367,47 @@ regardless of file extension because it looks for a matching pattern string.
     This will also work for TOML but we recommend using :ref:`config-version_toml` for
     TOML files as it actually will interpret the TOML file and replace the version
     number before writing the file back to disk.
+
+This is a comprehensive list (but not all variations) of examples where the following versions
+will be matched and replaced by the new version:
+
+.. code-block::
+
+    # Common variable declaration formats
+    version='1.2.3'
+    version = "1.2.3"
+    release = "v1.2.3"     # if tag_format is set
+
+    # YAML
+    version: 1.2.3
+
+    # JSON
+    "version": "1.2.3"
+
+    # NPM & GitHub Actions YAML
+    version@1.2.3
+    version@v1.2.3        # if tag_format is set
+
+    # Walrus Operator
+    version := "1.2.3"
+
+    # Excessive whitespace
+    version        =    '1.2.3'
+
+    # Mixed Quotes
+    "version" = '1.2.3'
+
+    # Custom Tag Format with tag_format set (monorepos)
+    __release__ = "module-v1.2.3"
+
+.. important::
+    The Regular Expression expects a version value to exist in the file to be replaced.
+    It cannot be an empty string or a non-semver compliant string. If this is the very
+    first time you are using PSR, we recommend you set the version to ``0.0.0``.
+
+    This may become more flexible in the future with resolution of issue `#941`_.
+
+.. _#941: https://github.com/python-semantic-release/python-semantic-release/issues/941
 
 .. warning::
     If the file (ex. JSON) you are replacing has two of the same variable name in it,
