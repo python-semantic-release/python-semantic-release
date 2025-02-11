@@ -211,7 +211,7 @@ def test_default_release_notes_template_w_a_brk_description(
                 url=brk_fix_commit_url,
             ),
             "",
-            "### BREAKING CHANGES",
+            "### Breaking Changes",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -323,7 +323,7 @@ def test_default_release_notes_template_w_multiple_brk_changes(
                 url=brk_feat_commit_url,
             ),
             "",
-            "### BREAKING CHANGES",
+            "### Breaking Changes",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -770,7 +770,7 @@ def test_default_release_notes_template_w_a_notice(
                 url=notice_commit_url,
             ),
             "",
-            "### ADDITIONAL RELEASE INFORMATION",
+            "### Additional Release Information",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -880,7 +880,7 @@ def test_default_release_notes_template_w_a_notice_n_brk_change(
                 url=notice_commit_url,
             ),
             "",
-            "### BREAKING CHANGES",
+            "### Breaking Changes",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -891,7 +891,7 @@ def test_default_release_notes_template_w_a_notice_n_brk_change(
                 change_desc=brk_fix_brking_description.capitalize().rstrip(),
             ),
             "",
-            "### ADDITIONAL RELEASE INFORMATION",
+            "### Additional Release Information",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -997,7 +997,7 @@ def test_default_release_notes_template_w_multiple_notices(
                 url=refactor_commit_url,
             ),
             "",
-            "### ADDITIONAL RELEASE INFORMATION",
+            "### Additional Release Information",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
