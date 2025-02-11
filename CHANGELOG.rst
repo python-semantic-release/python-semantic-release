@@ -4,6 +4,45 @@
 CHANGELOG
 =========
 
+.. _changelog-v9.19.1:
+
+v9.19.1 (2025-02-11)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **changelog**: Standardize heading format for across all version sections (`PR#1182`_, `81f9e80`_)
+
+* **changelog-md**: Standardize heading format for extra release information (`PR#1182`_,
+  `81f9e80`_)
+
+* **changelog-rst**: Standardize heading format for extra release information (`PR#1182`_,
+  `81f9e80`_)
+
+* **config**: Handle invalid ``commit_parser`` type gracefully (`PR#1180`_, `903c8ba`_)
+
+* **release-notes**: Standardize heading format for extra release information (`PR#1182`_,
+  `81f9e80`_)
+
+📖 Documentation
+----------------
+
+* Fix spelling errors & inaccurate descriptions (`55d4a05`_)
+
+* **automatic-releases**: Declutter the table of contents for automatic release guides (`e8343ee`_)
+
+* **commit-parsing**: Update reference to section name of additional release info (`PR#1182`_,
+  `81f9e80`_)
+
+.. _55d4a05: https://github.com/python-semantic-release/python-semantic-release/commit/55d4a05ff56321cf9874f8f302fbe7e5163ad4f7
+.. _81f9e80: https://github.com/python-semantic-release/python-semantic-release/commit/81f9e80c3df185ef5e553e024b903ce153e14304
+.. _903c8ba: https://github.com/python-semantic-release/python-semantic-release/commit/903c8ba68d797f7cd9e5025c9a3a3ad471c805ae
+.. _e8343ee: https://github.com/python-semantic-release/python-semantic-release/commit/e8343eeb38d3b4e18953ac0f97538df396d22b76
+.. _PR#1180: https://github.com/python-semantic-release/python-semantic-release/pull/1180
+.. _PR#1182: https://github.com/python-semantic-release/python-semantic-release/pull/1182
+
+
 .. _changelog-v9.19.0:
 
 v9.19.0 (2025-02-10)
