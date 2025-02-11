@@ -1156,6 +1156,25 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 
 ----
 
+.. _config-add_partial_tags:
+
+``add_partial``
+""""""""""""""
+
+**Type:** ``bool``
+
+Specify if partial version tags should be handled when creating a new version. If set to
+``true``, a major and a major.minor tag will be created or updated, using the format
+specified in :ref:`tag_format`.
+
+For example, with tag format ``v{version}`` and ``add_partial_tags`` set to ``true``, when
+creating version ``1.2.3``, the tags ``v1`` and ``v1.2`` will be created or updated and
+will point to the same commit as the ``v1.2.3`` tag.
+
+**Default:** ``false``
+
+----
+
 .. _config-tag_format:
 
 ``tag_format``
