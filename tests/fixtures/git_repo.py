@@ -1689,7 +1689,7 @@ def simulate_default_changelog_creation(  # noqa: C901
 
         # Add breaking changes to the end of the version entry
         if brking_descriptions:
-            version_entry.append("### BREAKING CHANGES\n")
+            version_entry.append("### Breaking Changes\n")
             version_entry.extend([*sorted(brking_descriptions), ""])
 
         return str.join("\n", version_entry)
@@ -1822,7 +1822,7 @@ def simulate_default_changelog_creation(  # noqa: C901
 
         # Add breaking changes to the end of the version entry
         if brking_descriptions:
-            version_entry.append("BREAKING CHANGES")
+            version_entry.append("Breaking Changes")
             version_entry.append("-" * len(version_entry[-1]) + "\n")
             version_entry.extend([*sorted(brking_descriptions), ""])
 
@@ -2067,7 +2067,7 @@ def generate_default_release_notes_from_def(  # noqa: C901
 
         # Add breaking changes to the end of the version entry
         if brking_descriptions:
-            version_entry.append("### BREAKING CHANGES\n")
+            version_entry.append("### Breaking Changes\n")
             version_entry.extend([*sorted(brking_descriptions), ""])
 
         return str.join("\n", version_entry)

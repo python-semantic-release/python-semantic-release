@@ -20,7 +20,7 @@
 
 * Fix bug (`#11`_, `8a7b8ec`_)
 
-💥 BREAKING CHANGES
+💥 Breaking Changes
 -------------------
 
 * With the change _____, the change causes ___ effect. Ultimately, this section
@@ -30,7 +30,7 @@
 * **scope**: this breaking change has a scope to identify the part of the code that
   this breaking change applies to for better context.
 
-💡 ADDITIONAL RELEASE INFORMATION
+💡 Additional Release Information
 ---------------------------------
 
 * This is a release note that provides additional information about the release
@@ -132,7 +132,7 @@
 %}{#
    #    # PRINT BREAKING CHANGE DESCRIPTIONS (header & descriptions)
 #}{{    "\n"
-}}{{    "%s BREAKING CHANGES\n" | format(emoji_map["breaking"])
+}}{{    "%s Breaking Changes\n" | format(emoji_map["breaking"])
 }}{{    '-------------------\n'
 }}{{
         "\n%s\n" | format(brking_descriptions | unique | join("\n\n"))
@@ -157,7 +157,7 @@
 %}{#
    #    # PRINT RELEASE NOTICE INFORMATION (header & descriptions)
 #}{{    "\n"
-}}{{    "%s ADDITIONAL RELEASE INFORMATION\n" | format(emoji_map["release_note"])
+}}{{    "%s Additional Release Information\n" | format(emoji_map["release_note"])
 }}{{    "---------------------------------\n"
 }}{{
         "\n%s\n" | format(release_notices | unique | join("\n\n"))

@@ -180,7 +180,7 @@ def test_default_changelog_template_w_a_brk_change(
             f"- **{brk_fix_commit_obj.scope}**: {brk_fix_description.capitalize()}",
             f"  ([`{brk_fix_commit_obj.commit.hexsha[:7]}`]({brk_fix_commit_url}))",
             "",
-            "### BREAKING CHANGES",
+            "### Breaking Changes",
             "",
             # Currently does not consider the 100 character limit because the current
             # descriptions are short enough to fit in one line
@@ -317,7 +317,7 @@ def test_default_changelog_template_w_multiple_brk_changes(
             f"- {brk_feat_description.capitalize()}",
             f"  ([`{brk_feat_commit_obj.commit.hexsha[:7]}`]({brk_feat_commit_url}))",
             "",
-            "### BREAKING CHANGES",
+            "### Breaking Changes",
             "",
             # Currently does not consider the 100 character limit because the current
             # descriptions are short enough to fit in one line
@@ -638,7 +638,7 @@ def test_default_changelog_template_w_a_notice(
             f"- **{notice_commit_obj.scope}**: {notice_commit_description.capitalize().rstrip()}",
             f"  ([`{notice_commit_obj.commit.hexsha[:7]}`]({notice_commit_url}))",
             "",
-            "### ADDITIONAL RELEASE INFORMATION",
+            "### Additional Release Information",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -787,7 +787,7 @@ def test_default_changelog_template_w_a_notice_n_brk_change(
             ),
             f"  ([`{notice_commit_obj.commit.hexsha[:7]}`]({notice_commit_url}))",
             "",
-            "### BREAKING CHANGES",
+            "### Breaking Changes",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -798,7 +798,7 @@ def test_default_changelog_template_w_a_notice_n_brk_change(
                 change_desc=brk_fix_brking_description.capitalize().rstrip(),
             ),
             "",
-            "### ADDITIONAL RELEASE INFORMATION",
+            "### Additional Release Information",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
@@ -947,7 +947,7 @@ def test_default_changelog_template_w_multiple_notices(
             ),
             f"  ([`{refactor_notice_commit_obj.commit.hexsha[:7]}`]({refactor_commit_url}))",
             "",
-            "### ADDITIONAL RELEASE INFORMATION",
+            "### Additional Release Information",
             "",
             "- {commit_scope}{change_desc}".format(
                 commit_scope=(
