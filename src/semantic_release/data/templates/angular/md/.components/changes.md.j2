@@ -18,7 +18,7 @@ EXAMPLE:
 - Fix bug ([#11](https://domain.com/namespace/repo/pull/11),
   [`abcdef1`](https://domain.com/namespace/repo/commit/HASH))
 
-### BREAKING CHANGES
+### Breaking Changes
 
 - With the change _____, the change causes ___ effect. Ultimately, this section
   it is a more detailed description of the breaking change. With an optional
@@ -27,7 +27,7 @@ EXAMPLE:
 - **scope**: this breaking change has a scope to identify the part of the code that
   this breaking change applies to for better context.
 
-### ADDITIONAL RELEASE INFORMATION
+### Additional Release Information
 
 - This is a release note that provides additional information about the release
   that is not a breaking change or a feature/bug fix.
@@ -96,7 +96,7 @@ EXAMPLE:
 %}{#
    #    # PRINT BREAKING CHANGE DESCRIPTIONS (header & descriptions)
 #}{{    "\n"
-}}{{    "### BREAKING CHANGES\n"
+}}{{    "### Breaking Changes\n"
 }}{{
         "\n%s\n" | format(brking_descriptions | unique | join("\n\n"))
 }}{#
@@ -129,7 +129,7 @@ EXAMPLE:
 %}{#
    #    # PRINT RELEASE NOTICE INFORMATION (header & descriptions)
 #}{{    "\n"
-}}{{    "### ADDITIONAL RELEASE INFORMATION\n"
+}}{{    "### Additional Release Information\n"
 }}{{
         "\n%s\n" | format(release_notices | unique | join("\n\n"))
 }}{#
