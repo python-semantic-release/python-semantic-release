@@ -14,8 +14,6 @@ from semantic_release.version.declarations.pattern import PatternVersionDeclarat
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import Any
-
     from semantic_release.version.version import Version
 
 
@@ -66,13 +64,8 @@ class VersionDeclarationABC(ABC):
             self._content = self.path.read_text()
         return self._content
 
-    # mypy doesn't like properties?
-    @content.setter  # type: ignore[attr-defined]
-    def _(self, _: Any) -> None:
-        raise AttributeError("'content' cannot be set directly")
-
-    @content.deleter  # type: ignore[attr-defined]
-    def _(self) -> None:
+    @content.deleter
+    def content(self) -> None:
         log.debug("resetting instance-stored source file contents")
         self._content = None
 
