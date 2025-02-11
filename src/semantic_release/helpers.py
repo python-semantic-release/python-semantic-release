@@ -157,6 +157,12 @@ def dynamic_import(import_path: str) -> Any:
     Dynamically import an object from a conventionally formatted "module:attribute"
     string
     """
+    if ":" not in import_path:
+        raise ValueError(
+            f"Invalid import path {import_path!r}, must use 'module:Class' format"
+        )
+
+    # Split the import path into module and attribute
     module_name, attr = import_path.split(":", maxsplit=1)
 
     # Check if the module is a file path, if it can be resolved and exists on disk then import as a file

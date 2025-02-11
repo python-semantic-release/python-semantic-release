@@ -8,6 +8,7 @@ from traceback import format_exception
 
 from semantic_release import globals
 from semantic_release.cli.commands.main import main as cli_main
+from semantic_release.enums import SemanticReleaseLogLevels
 
 
 def main() -> None:
@@ -18,7 +19,7 @@ def main() -> None:
         print("\n-- User Abort! --", file=sys.stderr)
         sys.exit(127)
     except Exception as err:  # noqa: BLE001, graceful error handling across application
-        if globals.debug:
+        if globals.log_level <= SemanticReleaseLogLevels.DEBUG:
             print(f"{err.__class__.__name__}: {err}\n", file=sys.stderr)
             etype, value, traceback = sys.exc_info()
             print(
@@ -35,9 +36,12 @@ def main() -> None:
                 file=sys.stderr,
             )
 
-        print(f"::ERROR:: {err}", file=sys.stderr)
+        print(
+            str.join("\n", [f"::ERROR:: {line}" for line in str(err).splitlines()]),
+            file=sys.stderr,
+        )
 
-        if not globals.debug:
+        if globals.log_level > SemanticReleaseLogLevels.DEBUG:
             print(
                 "Run semantic-release in very verbose mode (-vv) to see the full traceback.",
                 file=sys.stderr,

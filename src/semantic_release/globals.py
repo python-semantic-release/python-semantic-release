@@ -2,5 +2,7 @@
 
 from __future__ import annotations
 
-debug: bool = False
-"""bool: Enable debug level logging and runtime actions."""
+from semantic_release.enums import SemanticReleaseLogLevels
+
+log_level: SemanticReleaseLogLevels = SemanticReleaseLogLevels.WARNING
+"""int: Logging level for semantic-release"""

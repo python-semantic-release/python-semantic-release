@@ -665,6 +665,17 @@ class RuntimeContext:
                 if raw.commit_parser in _known_commit_parsers
                 else dynamic_import(raw.commit_parser)
             )
+        except ValueError as err:
+            raise ParserLoadError(
+                str.join(
+                    "\n",
+                    [
+                        f"Unrecognized commit parser value: {raw.commit_parser!r}.",
+                        str(err),
+                        "Unable to load the given parser! Check your configuration!",
+                    ],
+                )
+            ) from err
         except ModuleNotFoundError as err:
             raise ParserLoadError(
                 str.join(
