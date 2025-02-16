@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
+from datetime import timezone
 from typing import TYPE_CHECKING
 
 import pytest
+from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.commands.main import main
@@ -134,13 +136,14 @@ def test_default_release_notes_license_statement(
     new_version = "0.1.0"
 
     # Setup
+    now_datetime = stable_now_date()
     repo_def = list(repo_result["definition"])
     repo_def.append(
         {
             "action": RepoActionStep.RELEASE,
             "details": {
                 "version": new_version,
-                "datetime": stable_now_date().isoformat(timespec="seconds"),
+                "datetime": now_datetime.isoformat(timespec="seconds"),
             },
         }
     )
@@ -159,8 +162,9 @@ def test_default_release_notes_license_statement(
     )
 
     # Act
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-changelog", "--vcs-release"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    with freeze_time(now_datetime.astimezone(timezone.utc)):
+        cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-changelog", "--vcs-release"]
+        result = cli_runner.invoke(main, cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
