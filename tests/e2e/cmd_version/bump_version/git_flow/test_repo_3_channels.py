@@ -46,15 +46,13 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_fixture_name",
     [
-        repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
-        *[
-            pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
-            for repo_fixture_name in [
-                repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format.__name__,
-                repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
-                repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
-            ]
-        ],
+        pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
+        for repo_fixture_name in [
+            repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits.__name__,
+            repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format.__name__,
+            repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits.__name__,
+            repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits.__name__,
+        ]
     ],
 )
 def test_gitflow_repo_rebuild_3_channels(

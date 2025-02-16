@@ -45,14 +45,12 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_fixture_name",
     [
-        repo_w_git_flow_conventional_commits.__name__,
-        *[
-            pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
-            for repo_fixture_name in [
-                repo_w_git_flow_emoji_commits.__name__,
-                repo_w_git_flow_scipy_commits.__name__,
-            ]
-        ],
+        pytest.param(repo_fixture_name, marks=pytest.mark.comprehensive)
+        for repo_fixture_name in [
+            repo_w_git_flow_conventional_commits.__name__,
+            repo_w_git_flow_emoji_commits.__name__,
+            repo_w_git_flow_scipy_commits.__name__,
+        ]
     ],
 )
 def test_gitflow_repo_rebuild_1_channel(
