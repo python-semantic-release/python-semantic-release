@@ -374,6 +374,78 @@ def test_stamp_version_variables_json(
 
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_stamp_version_variables_yaml_github_actions(
+    cli_runner: CliRunner,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_tag_format_str: str,
+) -> None:
+    """
+    Given a yaml file with github actions 'uses:' directives which use @vX.Y.Z version declarations,
+    When a version is stamped and configured to stamp the version using the tag format,
+    Then the file is updated with the new version in the tag format
+
+    Based on https://github.com/python-semantic-release/python-semantic-release/issues/1156
+    """
+    orig_version = "0.0.0"
+    new_version = "0.1.0"
+    target_file = Path("combined.yml")
+    action1_yaml_filepath = "my-org/my-actions/.github/workflows/action1.yml"
+    action2_yaml_filepath = "my-org/my-actions/.github/workflows/action2.yml"
+    orig_yaml = dedent(
+        f"""\
+        ---
+        on:
+          workflow_call:
+
+        jobs:
+          action1:
+            uses: {action1_yaml_filepath}@{default_tag_format_str.format(version=orig_version)}
+          action2:
+            uses: {action2_yaml_filepath}@{default_tag_format_str.format(version=orig_version)}
+        """
+    )
+    expected_action1_value = (
+        f"{action1_yaml_filepath}@{default_tag_format_str.format(version=new_version)}"
+    )
+    expected_action2_value = (
+        f"{action2_yaml_filepath}@{default_tag_format_str.format(version=new_version)}"
+    )
+
+    # Setup: Write initial text in file
+    target_file.write_text(orig_yaml)
+
+    # Setup: Set configuration to modify the yaml file
+    update_pyproject_toml(
+        "tool.semantic_release.version_variables",
+        [
+            f"{target_file}:{action1_yaml_filepath}:{VersionStampType.TAG_FORMAT.value}",
+            f"{target_file}:{action2_yaml_filepath}:{VersionStampType.TAG_FORMAT.value}",
+        ],
+    )
+
+    # Act
+    cli_cmd = VERSION_STAMP_CMD
+    result = cli_runner.invoke(main, cli_cmd[1:])
+
+    # Check the result
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Read content
+    resulting_yaml_obj = yaml.safe_load(target_file.read_text())
+
+    # Check the version was updated
+    assert expected_action1_value == resulting_yaml_obj["jobs"]["action1"]["uses"]
+    assert expected_action2_value == resulting_yaml_obj["jobs"]["action2"]["uses"]
+
+    # Check the rest of the content is the same (by setting the version & comparing)
+    original_yaml_obj = yaml.safe_load(orig_yaml)
+    original_yaml_obj["jobs"]["action1"]["uses"] = expected_action1_value
+    original_yaml_obj["jobs"]["action2"]["uses"] = expected_action2_value
+
+    assert original_yaml_obj == resulting_yaml_obj
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_yaml_kustomization_container_spec(
     cli_runner: CliRunner,
     update_pyproject_toml: UpdatePyprojectTomlFn,
