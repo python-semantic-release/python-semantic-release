@@ -93,6 +93,24 @@ def test_pattern_declaration_is_version_replacer():
                 f'''__version__ = "module-v{next_version}"''',
             ),
             (
+                # Based on https://github.com/python-semantic-release/python-semantic-release/issues/1156
+                "Using default tag format for github actions uses-directive",
+                f"{test_file}:repo/action-name:{VersionStampType.TAG_FORMAT.value}",
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses @ symbol separator without quotes or spaces
+                """  uses: repo/action-name@v1.0.0""",
+                f"""  uses: repo/action-name@v{next_version}""",
+            ),
+            (
+                # Based on https://github.com/python-semantic-release/python-semantic-release/issues/1156
+                "Using custom tag format for github actions uses-directive",
+                f"{test_file}:repo/action-name:{VersionStampType.TAG_FORMAT.value}",
+                "module-v{version}",
+                # Uses @ symbol separator without quotes or spaces
+                """  uses: repo/action-name@module-v1.0.0""",
+                f"""  uses: repo/action-name@module-v{next_version}""",
+            ),
+            (
                 # Based on https://github.com/python-semantic-release/python-semantic-release/issues/846
                 "Using default tag format for multi-line yaml",
                 f"{test_file}:newTag:{VersionStampType.TAG_FORMAT.value}",
@@ -205,7 +223,7 @@ def test_pattern_declaration_from_definition(
     When update_file_w_version() is called with a new version,
     Then the file is updated with the new version string in the specified tag or number format
 
-    Version variables can be separated by either "=", ":", or ':=' with optional whitespace
+    Version variables can be separated by either "=", ":", "@", or ':=' with optional whitespace
     between operator and variable name. The variable name or values can also be wrapped in either
     single or double quotes.
     """
