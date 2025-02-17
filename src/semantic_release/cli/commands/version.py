@@ -39,12 +39,12 @@ from semantic_release.version.translator import VersionTranslator
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
-    from typing import Iterable, Mapping
+    from typing import Mapping, Sequence
 
     from git.refs.tag import Tag
 
     from semantic_release.cli.cli_context import CliContextObj
-    from semantic_release.version.declaration import VersionDeclarationABC
+    from semantic_release.version.declaration import IVersionReplacer
     from semantic_release.version.version import Version
 
 
@@ -135,28 +135,43 @@ def version_from_forced_level(
 
 def apply_version_to_source_files(
     repo_dir: Path,
-    version_declarations: Iterable[VersionDeclarationABC],
+    version_declarations: Sequence[IVersionReplacer],
     version: Version,
     noop: bool = False,
 ) -> list[str]:
-    paths = [
-        str(declaration.path.resolve().relative_to(repo_dir))
-        for declaration in version_declarations
+    if len(version_declarations) < 1:
+        return []
+
+    if not noop:
+        log.debug("Updating version %s in repository files...", version)
+
+    paths = list(
+        map(
+            lambda decl, new_version=version, noop=noop: (  # type: ignore[misc]
+                decl.update_file_w_version(new_version=new_version, noop=noop)
+            ),
+            version_declarations,
+        )
+    )
+
+    repo_filepaths = [
+        str(updated_file.relative_to(repo_dir))
+        for updated_file in paths
+        if updated_file is not None
     ]
 
     if noop:
         noop_report(
-            "would have updated versions in the following paths:"
-            + "".join(f"\n    {path}" for path in paths)
+            str.join(
+                "",
+                [
+                    "would have updated versions in the following paths:",
+                    *[f"\n    {filepath}" for filepath in repo_filepaths],
+                ],
+            )
         )
-        return paths
 
-    log.debug("writing version %s to source paths %s", version, paths)
-    for declaration in version_declarations:
-        new_content = declaration.replace(new_version=version)
-        declaration.path.write_text(new_content)
-
-    return paths
+    return repo_filepaths
 
 
 def shell(

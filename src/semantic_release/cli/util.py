@@ -28,7 +28,7 @@ def noop_report(msg: str) -> None:
     Rich-prints a msg with a standard prefix to report when an action is not being
     taken due to a "noop" flag
     """
-    fullmsg = "[bold cyan]:shield: semantic-release 'noop' mode is enabled! " + msg
+    fullmsg = "[bold cyan][:shield: NOP] " + msg
     rprint(fullmsg)
 
 
