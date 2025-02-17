@@ -46,7 +46,7 @@ from semantic_release.commit_parser import (
     ScipyCommitParser,
     TagCommitParser,
 )
-from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR, SEMVER_REGEX
+from semantic_release.const import COMMIT_MESSAGE, DEFAULT_COMMIT_AUTHOR
 from semantic_release.errors import (
     DetachedHeadGitError,
     InvalidConfiguration,
@@ -55,11 +55,9 @@ from semantic_release.errors import (
     ParserLoadError,
 )
 from semantic_release.helpers import dynamic_import
-from semantic_release.version.declaration import (
-    PatternVersionDeclaration,
-    TomlVersionDeclaration,
-    VersionDeclarationABC,
-)
+from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
+from semantic_release.version.declarations.pattern import PatternVersionDeclaration
+from semantic_release.version.declarations.toml import TomlVersionDeclaration
 from semantic_release.version.translator import VersionTranslator
 
 log = logging.getLogger(__name__)
@@ -555,7 +553,7 @@ class RuntimeContext:
     commit_author: Actor
     commit_message: str
     changelog_excluded_commit_patterns: Tuple[Pattern[str], ...]
-    version_declarations: Tuple[VersionDeclarationABC, ...]
+    version_declarations: Tuple[IVersionReplacer, ...]
     hvcs_client: hvcs.HvcsBase
     changelog_insertion_flag: str
     changelog_mask_initial_release: bool
@@ -738,44 +736,41 @@ class RuntimeContext:
 
         commit_author = Actor(*_commit_author_valid.groups())
 
-        version_declarations: list[VersionDeclarationABC] = []
-        for decl in () if raw.version_toml is None else raw.version_toml:
-            try:
-                path, search_text = decl.split(":", maxsplit=1)
-                # VersionDeclarationABC handles path existence check
-                vd = TomlVersionDeclaration(path, search_text)
-            except ValueError as exc:
-                log.exception("Invalid TOML declaration %r", decl)
-                raise InvalidConfiguration(
-                    f"Invalid TOML declaration {decl!r}"
-                ) from exc
+        version_declarations: list[IVersionReplacer] = []
 
-            version_declarations.append(vd)
-
-        for decl in () if raw.version_variables is None else raw.version_variables:
-            try:
-                path, variable = decl.split(":", maxsplit=1)
-                # VersionDeclarationABC handles path existence check
-                search_text = str.join(
-                    "",
+        try:
+            version_declarations.extend(
+                TomlVersionDeclaration.from_string_definition(definition)
+                for definition in iter(raw.version_toml or ())
+            )
+        except ValueError as err:
+            raise InvalidConfiguration(
+                str.join(
+                    "\n",
                     [
-                        # Supports optional matching quotations around variable name
-                        # Negative lookbehind to ensure we don't match part of a variable name
-                        f"""(?x)(?P<quote1>['"])?(?<![\\w.-]){variable}(?P=quote1)?""",
-                        # Supports walrus, equals sign, or colon as assignment operator ignoring whitespace separation
-                        r"\s*(:=|[:=])\s*",
-                        # Supports optional matching quotations around version number of a SEMVER pattern
-                        f"""(?P<quote2>['"])?(?P<version>{SEMVER_REGEX.pattern})(?P=quote2)?""",
+                        "Invalid 'version_toml' configuration",
+                        str(err),
                     ],
                 )
-                pd = PatternVersionDeclaration(path, search_text)
-            except ValueError as exc:
-                log.exception("Invalid variable declaration %r", decl)
-                raise InvalidConfiguration(
-                    f"Invalid variable declaration {decl!r}"
-                ) from exc
+            ) from err
 
-            version_declarations.append(pd)
+        try:
+            version_declarations.extend(
+                PatternVersionDeclaration.from_string_definition(
+                    definition, raw.tag_format
+                )
+                for definition in iter(raw.version_variables or ())
+            )
+        except ValueError as err:
+            raise InvalidConfiguration(
+                str.join(
+                    "\n",
+                    [
+                        "Invalid 'version_variables' configuration",
+                        str(err),
+                    ],
+                )
+            ) from err
 
         # Provide warnings if the token is missing
         if not raw.remote.token:
