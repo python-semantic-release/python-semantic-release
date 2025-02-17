@@ -4,6 +4,42 @@
 CHANGELOG
 =========
 
+.. _changelog-v9.20.0:
+
+v9.20.0 (2025-02-17)
+====================
+
+✨ Features
+-----------
+
+* **cmd-version**: Enable stamping of tag formatted versions into files, closes `#846`_ (`PR#1190`_,
+  `8906d8e`_)
+
+* **cmd-version**: Extend ``version_variables`` to stamp versions with ``@`` symbol separator,
+  closes `#1156`_ (`PR#1185`_, `23f69b6`_)
+
+📖 Documentation
+----------------
+
+* **configuration**: Add usage information for tag format version stamping (`PR#1190`_, `8906d8e`_)
+
+* **configuration**: Clarify ``version_variables`` config description & ``@`` separator usage
+  (`PR#1185`_, `23f69b6`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Add ``deprecated~=1.2`` for deprecation notices & sphinx documentation (`PR#1190`_,
+  `8906d8e`_)
+
+.. _#1156: https://github.com/python-semantic-release/python-semantic-release/issues/1156
+.. _#846: https://github.com/python-semantic-release/python-semantic-release/issues/846
+.. _23f69b6: https://github.com/python-semantic-release/python-semantic-release/commit/23f69b6ac206d111b1e566367f9b2f033df5c87a
+.. _8906d8e: https://github.com/python-semantic-release/python-semantic-release/commit/8906d8e70467af1489d797ec8cb09b1f95e5d409
+.. _PR#1185: https://github.com/python-semantic-release/python-semantic-release/pull/1185
+.. _PR#1190: https://github.com/python-semantic-release/python-semantic-release/pull/1190
+
+
 .. _changelog-v9.19.1:
 
 v9.19.1 (2025-02-11)

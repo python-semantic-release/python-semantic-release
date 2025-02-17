@@ -1209,9 +1209,9 @@ within the TOML file, which is more accurate than a pattern replace.
 The ``version_toml`` option is commonly used to update the version number in the project
 definition file: ``pyproject.toml`` as seen in the example below.
 
-As of ${NEW_RELEASE_TAG}, the ``version_toml`` option accepts a colon-separated definition
+As of v9.20.0, the ``version_toml`` option accepts a colon-separated definition
 with either 2 or 3 parts. The 2-part definition includes the file path and the version
-parameter (in dot-notation). Newly with ${NEW_RELEASE_TAG}, it also accepts an optional
+parameter (in dot-notation). Newly with v9.20.0, it also accepts an optional
 3rd part to allow configuration of the format type.
 
 **Available Format Types**
@@ -1271,9 +1271,9 @@ The ``version_variables`` configuration option is a list of string definitions
 that defines where the version number should be updated in the repository, when
 a new version is released.
 
-As of ${NEW_RELEASE_TAG}, the ``version_variables`` option accepts a
+As of v9.20.0, the ``version_variables`` option accepts a
 colon-separated definition with either 2 or 3 parts. The 2-part definition includes
-the file path and the variable name. Newly with ${NEW_RELEASE_TAG}, it also accepts
+the file path and the variable name. Newly with v9.20.0, it also accepts
 an optional 3rd part to allow configuration of the format type.
 
 **Available Format Types**
@@ -1283,7 +1283,7 @@ an optional 3rd part to allow configuration of the format type.
 
 If the format type is not specified, it will default to the number format.
 
-Prior to ${NEW_RELEASE_TAG}, PSR only supports entries with the first 2-parts
+Prior to v9.20.0, PSR only supports entries with the first 2-parts
 as the tag format type was not available and would only replace numeric
 version numbers.
 
