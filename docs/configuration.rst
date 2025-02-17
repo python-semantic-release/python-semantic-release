@@ -1201,16 +1201,60 @@ Tags which do not match this format will not be considered as versions of your p
 
 **Type:** ``list[str]``
 
-Similar to :ref:`config-version_variables`, but allows the version number to be
-identified safely in a toml file like ``pyproject.toml``, with each entry using
-dotted notation to indicate the key for which the value represents the version:
+This configuration option is similar to :ref:`config-version_variables`, but it uses
+a TOML parser to interpret the data structure before, inserting the version. This
+allows users to use dot-notation to specify the version via the logical structure
+within the TOML file, which is more accurate than a pattern replace.
+
+The ``version_toml`` option is commonly used to update the version number in the project
+definition file: ``pyproject.toml`` as seen in the example below.
+
+As of ${NEW_RELEASE_TAG}, the ``version_toml`` option accepts a colon-separated definition
+with either 2 or 3 parts. The 2-part definition includes the file path and the version
+parameter (in dot-notation). Newly with ${NEW_RELEASE_TAG}, it also accepts an optional
+3rd part to allow configuration of the format type.
+
+**Available Format Types**
+
+- ``nf``: Number format (ex. ``1.2.3``)
+- ``tf``: :ref:`Tag Format <config-tag_format>` (ex. ``v1.2.3``)
+
+If the format type is not specified, it will default to the number format.
+
+**Example**
 
 .. code-block:: toml
 
     [semantic_release]
     version_toml = [
-        "pyproject.toml:tool.poetry.version",
+        # "file:variable:[format_type]"
+        "pyproject.toml:tool.poetry.version",  # Implied Default: Number format
+        "definition.toml:project.version:nf",  # Number format
+        "definition.toml:project.release:tf",  # Tag format
     ]
+
+This configuration will result in the following changes:
+
+.. code-block:: diff
+
+    diff a/pyproject.toml b/pyproject.toml
+
+      [tool.poetry]
+    - version = "0.1.0"
+    + version = "0.2.0"
+
+.. code-block:: diff
+
+    diff a/definition.toml b/definition.toml
+
+      [project]
+      name = "example"
+
+    - version = "0.1.0"
+    + version = "0.1.0"
+
+    - release = "v0.1.0"
+    + release = "v0.2.0"
 
 **Default:** ``[]``
 
@@ -1223,16 +1267,73 @@ dotted notation to indicate the key for which the value represents the version:
 
 **Type:** ``list[str]``
 
-Each entry represents a location where the version is stored in the source code,
-specified in ``file:variable`` format. For example:
+The ``version_variables`` configuration option is a list of string definitions
+that defines where the version number should be updated in the repository, when
+a new version is released.
+
+As of ${NEW_RELEASE_TAG}, the ``version_variables`` option accepts a
+colon-separated definition with either 2 or 3 parts. The 2-part definition includes
+the file path and the variable name. Newly with ${NEW_RELEASE_TAG}, it also accepts
+an optional 3rd part to allow configuration of the format type.
+
+**Available Format Types**
+
+- ``nf``: Number format (ex. ``1.2.3``)
+- ``tf``: :ref:`Tag Format <config-tag_format>` (ex. ``v1.2.3``)
+
+If the format type is not specified, it will default to the number format.
+
+Prior to ${NEW_RELEASE_TAG}, PSR only supports entries with the first 2-parts
+as the tag format type was not available and would only replace numeric
+version numbers.
+
+**Example**
 
 .. code-block:: toml
 
     [semantic_release]
+    tag_format = "v{version}"
     version_variables = [
-        "src/semantic_release/__init__.py:__version__",
-        "docs/conf.py:version",
+        # "file:variable:format_type"
+        "src/semantic_release/__init__.py:__version__",  # Implied Default: Number format
+        "docs/conf.py:version:nf",                       # Number format for sphinx docs
+        "kustomization.yml:newTag:tf",                   # Tag format
     ]
+
+First, the ``__version__`` variable in ``src/semantic_release/__init__.py`` will be updated
+with the next version using the `SemVer`_ number format.
+
+.. code-block:: diff
+
+    diff a/src/semantic_release/__init__.py b/src/semantic_release/__init__.py
+
+    - __version__ = "0.1.0"
+    + __version__ = "0.2.0"
+
+Then, the ``version`` variable in ``docs/conf.py`` will be updated with the next version
+with the next version using the `SemVer`_ number format because of the explicit ``nf``.
+
+.. code-block:: diff
+
+    diff a/docs/conf.py b/docs/conf.py
+
+    - version = "0.1.0"
+    + version = "0.2.0"
+
+Lastly, the ``newTag`` variable in ``kustomization.yml`` will be updated with the next version
+with the next version using the configured :ref:`config-tag_format` because the definition
+included ``tf``.
+
+.. code-block:: diff
+
+    diff a/kustomization.yml b/kustomization.yml
+
+      images:
+        - name: repo/image
+    -     newTag: v0.1.0
+    +     newTag: v0.2.0
+
+**How It works**
 
 Each version variable will be transformed into a Regular Expression that will be used
 to substitute the version number in the file. The replacement algorithm is **ONLY** a
@@ -1242,16 +1343,17 @@ any internal object structures (ie. ``file:object.version`` will not work).
 .. important::
     The Regular Expression expects a version value to exist in the file to be replaced.
     It cannot be an empty string or a non-semver compliant string. If this is the very
-    first time you are using PSR, we recommend you set the version to ``0.0.0``. This
-    may become more flexible in the future with resolution of issue `#941`_.
+    first time you are using PSR, we recommend you set the version to ``0.0.0``.
+
+    This may become more flexible in the future with resolution of issue `#941`_.
 
 .. _#941: https://github.com/python-semantic-release/python-semantic-release/issues/941
 
 Given the pattern matching nature of this feature, the Regular Expression is able to
-support most file formats as a variable declaration in most languages is very similar.
-We specifically support Python, YAML, and JSON as these have been the most common
-requests. This configuration option will also work regardless of file extension
-because its only a pattern match.
+support most file formats because of the similarity of variable declaration across
+programming languages. PSR specifically supports Python, YAML, and JSON as these have
+been the most commonly requested formats. This configuration option will also work
+regardless of file extension because it looks for a matching pattern string.
 
 .. note::
     This will also work for TOML but we recommend using :ref:`config-version_toml` for
@@ -1264,3 +1366,5 @@ because its only a pattern match.
     both. This is a limitation of the pattern matching and not a bug.
 
 **Default:** ``[]``
+
+.. _SemVer: https://semver.org/
