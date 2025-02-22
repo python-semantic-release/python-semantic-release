@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
@@ -12,7 +13,7 @@ from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from semantic_release import __version__
 from semantic_release.cli.commands.main import main
 
-from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
+from tests.const import MAIN_PROG_NAME, SUCCESS_EXIT_CODE, VERSION_SUBCMD
 from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import assert_exit_code, assert_successful_exit_code
 
@@ -23,6 +24,30 @@ if TYPE_CHECKING:
 
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
+
+
+@pytest.mark.parametrize(
+    "project_script_name",
+    [
+        "python-semantic-release",
+        "semantic-release",
+        "psr",
+    ],
+)
+def test_entrypoint_scripts(project_script_name: str):
+    # Setup
+    command = str.join(" ", [project_script_name, "--version"])
+    expected_output = f"semantic-release, version {__version__}\n"
+
+    # Act
+    proc = subprocess.run(  # noqa: S602, PLW1510
+        command, shell=True, text=True, capture_output=True
+    )
+
+    # Evaluate
+    assert SUCCESS_EXIT_CODE == proc.returncode  # noqa: SIM300
+    assert expected_output == proc.stdout
+    assert not proc.stderr
 
 
 def test_main_prints_version_and_exits(cli_runner: CliRunner):
