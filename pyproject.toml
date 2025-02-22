@@ -39,6 +39,7 @@ dependencies = [
 ]
 
 [project.scripts]
+python-semantic-release = "semantic_release.__main__:main"
 semantic-release = "semantic_release.__main__:main"
 psr = "semantic_release.__main__:main"
 
