@@ -122,24 +122,16 @@ jobs:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
           path: dist
 
-      - name: Evaluate | Determine Next Version
-        id: version
-        uses: ./
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          root_options: "-v --noop"
-
       - name: Release | Bump Version in Docs
-        if: steps.version.outputs.released == 'true' && steps.version.outputs.is_prerelease == 'false'
+        if: needs.validate.outputs.new-release-is-prerelease == 'false'
         env:
-          NEW_VERSION: ${{ steps.version.outputs.version }}
-          NEW_RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          NEW_VERSION: ${{ needs.validate.outputs.new-release-version }}
+          NEW_RELEASE_TAG: ${{ needs.validate.outputs.new-release-tag }}
         run: |
           python -m scripts.bump_version_in_docs
           git add docs/*
 
       - name: Evaluate | Verify upstream has NOT changed
-        if: steps.version.outputs.released == 'true'
         # Last chance to abort before causing an error as another PR/push was applied to the upstream branch
         # while this workflow was running. This is important because we are committing a version change
         shell: bash
@@ -147,8 +139,7 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: ./
-        if: steps.version.outputs.released == 'true'
+        uses: python-semantic-release/python-semantic-release@v9.20.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           root_options: "-v"
@@ -185,7 +176,8 @@ jobs:
 
     outputs:
       released: ${{ steps.release.outputs.released || 'false' }}
-      tag: ${{ steps.release.outputs.tag }}
+      new-release-version: ${{ steps.release.outputs.version }}
+      new-release-tag: ${{ steps.release.outputs.tag }}
 
 
   deploy:
