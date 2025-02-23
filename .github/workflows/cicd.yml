@@ -205,19 +205,6 @@ jobs:
       id-token: write  # needed for PyPI upload
 
     steps:
-      # Note: we need to checkout the repository at the workflow sha in case during the workflow
-      # the branch was updated. To keep PSR working with the configured release branches,
-      # we force a checkout of the desired release branch but at the workflow sha HEAD.
-      - name: Setup | Checkout Repository at workflow sha
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          ref: ${{ github.sha }}
-
-      - name: Setup | Force correct release branch on workflow sha
-        run: |
-          git checkout -B ${{ github.ref_name }}
-
       - name: Setup | Download Build Artifacts
         uses: actions/download-artifact@v4
         id: artifact-download
@@ -228,6 +215,8 @@ jobs:
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
         id: pypi-publish
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
+          packages-dir: dist
+          print-hash: true
           verbose: true
