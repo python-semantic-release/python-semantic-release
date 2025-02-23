@@ -643,7 +643,7 @@ Examples
 Common Workflow Example
 -----------------------
 
-The following is a common workflow example that uses both the Python Semantic Release Action
+The following is a simple common workflow example that uses both the Python Semantic Release Action
 and the Python Semantic Release Publish Action. This workflow will run on every push to the
 ``main`` branch and will create a new release upon a successful version determination. If a
 version is released, the workflow will then publish the package to PyPI and upload the package
@@ -661,25 +661,69 @@ to the GitHub Release Assets as well.
     jobs:
       release:
         runs-on: ubuntu-latest
-        concurrency: release
+        concurrency:
+          group: ${{ github.workflow }}-release-${{ github.ref_name }}
+          cancel-in-progress: false
 
         permissions:
           id-token: write
           contents: write
 
         steps:
-          # Note: we need to checkout the repository at the workflow sha in case during the workflow
-          # the branch was updated. To keep PSR working with the configured release branches,
-          # we force a checkout of the desired release branch but at the workflow sha HEAD.
-          - name: Setup | Checkout Repository at workflow sha
+          # Note: We checkout the repository at the branch that triggered the workflow
+          # with the entire history to ensure to match PSR's release branch detection
+          # and history evaluation.
+          # However, we forcefully reset the branch to the workflow sha because it is
+          # possible that the branch was updated while the workflow was running. This
+          # prevents accidentally releasing un-evaluated changes.
+          - name: Setup | Checkout Repository on Release Branch
             uses: actions/checkout@v4
             with:
+              ref: ${{ github.ref_name }}
               fetch-depth: 0
-              ref: ${{ github.sha }}
 
-          - name: Setup | Force correct release branch on workflow sha
+          - name: Setup | Force release branch to be at workflow sha
             run: |
-              git checkout -B ${{ github.ref_name }} ${{ github.sha }}
+              git reset --hard ${{ github.sha }}
+
+          - name: Evaluate | Verify upstream has NOT changed
+            # Last chance to abort before causing an error as another PR/push was applied to
+            # the upstream branch while this workflow was running. This is important
+            # because we are committing a version change (--commit). You may omit this step
+            # if you have 'commit: false' in your configuration.
+            #
+            # You may consider moving this to a repo script and call it from this step instead
+            # of writing it in-line.
+            shell: bash
+            run: |
+              set +o pipefail
+
+              UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | cut -d' ' -f2 | grep -E '\.{3}' | cut -d'.' -f4)"
+              printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
+
+              set -o pipefail
+
+              if [ -z "$UPSTREAM_BRANCH_NAME" ]; then
+                  printf >&2 '%s\n' "::error::Unable to determine upstream branch name!"
+                  exit 1
+              fi
+
+              git fetch "${UPSTREAM_BRANCH_NAME%%/*}"
+
+              if ! UPSTREAM_SHA="$(git rev-parse "$UPSTREAM_BRANCH_NAME")"; then
+                  printf >&2 '%s\n' "::error::Unable to determine upstream branch sha!"
+                  exit 1
+              fi
+
+              HEAD_SHA="$(git rev-parse HEAD)"
+
+              if [ "$HEAD_SHA" != "$UPSTREAM_SHA" ]; then
+                  printf >&2 '%s\n' "[HEAD SHA] $HEAD_SHA != $UPSTREAM_SHA [UPSTREAM SHA]"
+                  printf >&2 '%s\n' "::error::Upstream has changed, aborting release..."
+                  exit 1
+              fi
+
+              printf '%s\n' "Verified upstream branch has not changed, continuing with release..."
 
           - name: Action | Semantic Version Release
             id: release
@@ -706,6 +750,11 @@ to the GitHub Release Assets as well.
   one release job in the case if there are multiple pushes to ``main`` in a short period
   of time.
 
+  Secondly the *Evaluate | Verify upstream has NOT changed* step is used to ensure that the
+  upstream branch has not changed while the workflow was running. This is important because
+  we are committing a version change (``commit: true``) and there might be a push collision
+  that would cause undesired behavior. Review Issue `#1201`_ for more detailed information.
+
 .. warning::
   You must set ``fetch-depth`` to 0 when using ``actions/checkout@v4``, since
   Python Semantic Release needs access to the full history to build a changelog
@@ -721,6 +770,7 @@ to the GitHub Release Assets as well.
   case, you will also need to pass the new token to ``actions/checkout`` (as
   the ``token`` input) in order to gain push access.
 
+.. _#1201: https://github.com/python-semantic-release/python-semantic-release/issues/1201
 .. _concurrency: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency
 
 Version Overrides Example

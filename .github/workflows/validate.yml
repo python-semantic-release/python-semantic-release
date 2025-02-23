@@ -47,6 +47,15 @@ on:
       new-release-detected:
         description: Boolean string result for if new release is available
         value: ${{ jobs.build.outputs.new-release-detected }}
+      new-release-version:
+        description: Version string for the new release
+        value: ${{ jobs.build.outputs.new-release-version }}
+      new-release-tag:
+        description: Tag string for the new release
+        value: ${{ jobs.build.outputs.new-release-tag }}
+      new-release-is-prerelease:
+        description: Boolean string result for if new release is a pre-release
+        value: ${{ jobs.build.outputs.new-release-is-prerelease }}
       distribution-artifacts:
         description: Artifact Download name for the distribution artifacts
         value: ${{ jobs.build.outputs.distribution-artifacts }}
@@ -91,17 +100,31 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -e .[build]
 
-      - name: Build | Create the distribution artifacts
+      - name: Build | Build next version artifacts
+        id: version
+        uses: python-semantic-release/python-semantic-release@v9.20.0
+        with:
+          github_token: ""
+          root_options: "-v"
+          build: true
+          changelog: true
+          commit: false
+          push: false
+          tag: false
+          vcs_release: false
+
+      - name: Build | Annotate next version
+        if: steps.version.outputs.released == 'true'
+        run: |
+          printf '%s\n' "::notice::Next release will be '${{ steps.version.outputs.tag }}'"
+
+      - name: Build | Create non-versioned distribution artifact
+        if: steps.version.outputs.released == 'false'
+        run: python -m build .
+
+      - name: Build | Set distribution artifact variables
         id: build
         run: |
-          if new_version="$(semantic-release --strict version --print)"; then
-            printf '%s\n' "::notice::Next version will be '$new_version'"
-            printf '%s\n' "new_release_detected=true" >> $GITHUB_OUTPUT
-            semantic-release version --changelog --no-commit --no-tag
-          else
-            printf '%s\n' "new_release_detected=false" >> $GITHUB_OUTPUT
-            python -m build .
-          fi
           printf '%s\n' "dist_dir=dist/*" >> $GITHUB_OUTPUT
           printf '%s\n' "artifacts_name=dist" >> $GITHUB_OUTPUT
 
@@ -114,7 +137,10 @@ jobs:
           retention-days: 2
 
     outputs:
-      new-release-detected: ${{ steps.build.outputs.new_release_detected }}
+      new-release-detected: ${{ steps.version.outputs.released }}
+      new-release-version: ${{ steps.version.outputs.version }}
+      new-release-tag: ${{ steps.version.outputs.tag }}
+      new-release-is-prerelease: ${{ steps.version.outputs.is_prerelease }}
       distribution-artifacts: ${{ steps.build.outputs.artifacts_name }}
 
 

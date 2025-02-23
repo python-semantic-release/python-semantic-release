@@ -65,6 +65,9 @@ jobs:
   validate:
     uses: ./.github/workflows/validate.yml
     needs: eval-changes
+    concurrency:
+      group: ${{ github.workflow }}-validate-${{ github.ref_name }}
+      cancel-in-progress: true
     with:
       python-versions-linux: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
       python-versions-windows: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
@@ -81,9 +84,12 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    concurrency: push
     needs: validate
     if: ${{ needs.validate.outputs.new-release-detected == 'true' }}
+
+    concurrency:
+      group: ${{ github.workflow }}-release-${{ github.ref_name }}
+      cancel-in-progress: false
 
     permissions:
       contents: write
@@ -93,18 +99,21 @@ jobs:
       GITHUB_ACTIONS_AUTHOR_EMAIL: actions@users.noreply.github.com
 
     steps:
-      # Note: we need to checkout the repository at the workflow sha in case during the workflow
-      # the branch was updated. To keep PSR working with the configured release branches,
-      # we force a checkout of the desired release branch but at the workflow sha HEAD.
-      - name: Setup | Checkout Repository at workflow sha
+      # Note: We checkout the repository at the branch that triggered the workflow
+      # with the entire history to ensure to match PSR's release branch detection
+      # and history evaluation.
+      # However, we forcefully reset the branch to the workflow sha because it is
+      # possible that the branch was updated while the workflow was running. This
+      # prevents accidentally releasing un-evaluated changes.
+      - name: Setup | Checkout Repository on Release Branch
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
-          ref: ${{ github.sha }}
 
-      - name: Setup | Force correct release branch on workflow sha
+      - name: Setup | Force release branch to be at workflow sha
         run: |
-          git checkout -B ${{ github.ref_name }}
+          git reset --hard ${{ github.sha }}
 
       - name: Setup | Download Build Artifacts
         uses: actions/download-artifact@v4
@@ -113,25 +122,24 @@ jobs:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
           path: dist
 
-      - name: Evaluate | Determine Next Version
-        id: version
-        uses: ./
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          root_options: "-v --noop"
-
       - name: Release | Bump Version in Docs
-        if: steps.version.outputs.released == 'true' && steps.version.outputs.is_prerelease == 'false'
+        if: needs.validate.outputs.new-release-is-prerelease == 'false'
         env:
-          NEW_VERSION: ${{ steps.version.outputs.version }}
-          NEW_RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          NEW_VERSION: ${{ needs.validate.outputs.new-release-version }}
+          NEW_RELEASE_TAG: ${{ needs.validate.outputs.new-release-tag }}
         run: |
           python -m scripts.bump_version_in_docs
           git add docs/*
 
+      - name: Evaluate | Verify upstream has NOT changed
+        # Last chance to abort before causing an error as another PR/push was applied to the upstream branch
+        # while this workflow was running. This is important because we are committing a version change
+        shell: bash
+        run: bash .github/workflows/verify_upstream.sh
+
       - name: Release | Python Semantic Release
         id: release
-        uses: ./
+        uses: python-semantic-release/python-semantic-release@v9.20.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           root_options: "-v"
@@ -139,6 +147,7 @@ jobs:
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
         uses: python-semantic-release/publish-action@v9.20.0
+        if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
@@ -166,8 +175,9 @@ jobs:
           git push -u origin "$MAJOR_VERSION_TAG" --force
 
     outputs:
-      released: ${{ steps.release.outputs.released }}
-      tag: ${{ steps.release.outputs.tag }}
+      released: ${{ steps.release.outputs.released || 'false' }}
+      new-release-version: ${{ steps.release.outputs.version }}
+      new-release-tag: ${{ steps.release.outputs.tag }}
 
 
   deploy:
@@ -187,19 +197,6 @@ jobs:
       id-token: write  # needed for PyPI upload
 
     steps:
-      # Note: we need to checkout the repository at the workflow sha in case during the workflow
-      # the branch was updated. To keep PSR working with the configured release branches,
-      # we force a checkout of the desired release branch but at the workflow sha HEAD.
-      - name: Setup | Checkout Repository at workflow sha
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          ref: ${{ github.sha }}
-
-      - name: Setup | Force correct release branch on workflow sha
-        run: |
-          git checkout -B ${{ github.ref_name }}
-
       - name: Setup | Download Build Artifacts
         uses: actions/download-artifact@v4
         id: artifact-download
@@ -210,6 +207,8 @@ jobs:
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
         id: pypi-publish
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
+          packages-dir: dist
+          print-hash: true
           verbose: true
