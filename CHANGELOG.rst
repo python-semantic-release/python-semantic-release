@@ -4,6 +4,29 @@
 CHANGELOG
 =========
 
+.. _changelog-v9.21.0:
+
+v9.21.0 (2025-02-23)
+====================
+
+✨ Features
+-----------
+
+* Add package name variant, ``python-semantic-release``, project script, closes `#1195`_
+  (`PR#1199`_, `1ac97bc`_)
+
+📖 Documentation
+----------------
+
+* **github-actions**: Update example workflow to handle rapid merges (`PR#1200`_, `1a4116a`_)
+
+.. _#1195: https://github.com/python-semantic-release/python-semantic-release/issues/1195
+.. _1a4116a: https://github.com/python-semantic-release/python-semantic-release/commit/1a4116af4b999144998cf94cf84c9c23ff2e352f
+.. _1ac97bc: https://github.com/python-semantic-release/python-semantic-release/commit/1ac97bc74c69ce61cec98242c19bf8adc1d37fb9
+.. _PR#1199: https://github.com/python-semantic-release/python-semantic-release/pull/1199
+.. _PR#1200: https://github.com/python-semantic-release/python-semantic-release/pull/1200
+
+
 .. _changelog-v9.20.0:
 
 v9.20.0 (2025-02-17)
