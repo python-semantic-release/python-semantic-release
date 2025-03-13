@@ -1175,6 +1175,9 @@ For example, with tag format ``v{version}`` and ``add_partial_tags`` set to ``tr
 creating version ``1.2.3``, the tags ``v1`` and ``v1.2`` will be created or updated and
 will point to the same commit as the ``v1.2.3`` tag.
 
+The partial version tags will not be created or updated if the version is a not a release
+(ie. no pre-release and/or build metadata).
+
 **Default:** ``false``
 
 ----
