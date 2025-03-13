@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import git
 from logging import getLogger
 from pathlib import Path
 from re import (
@@ -165,6 +166,15 @@ class PatternVersionDeclaration(IVersionReplacer):
 
         new_content = self.replace(new_version)
         if new_content == self.content:
+            try:
+                log.debug(
+                    "The content of %s was unchanged but staging it in case this is a two step release",
+                    self._path,
+                )
+                git_repo = git.Repo(self._path.parent, search_parent_directories=True)
+                git_repo.index.add([str(self._path)])
+            except Exception as e:
+                log.exception("Failed to stage file %s: %s", self._path, e)
             return None
 
         self._path.write_text(new_content)
