@@ -711,8 +711,8 @@ def version(  # noqa: C901
                 tag=new_version.as_tag(),
                 noop=opts.noop,
             )
-            # Create or update partial tags
-            if add_partial_tags:
+            # Create or update partial tags for releases
+            if add_partial_tags and not (prerelease or build_metadata):
                 for partial_tag in (
                     new_version.as_major_tag(),
                     new_version.as_minor_tag(),
@@ -720,6 +720,7 @@ def version(  # noqa: C901
                     project.git_tag(
                         tag_name=partial_tag,
                         message=f"{partial_tag} is {new_version.as_tag()}",
+                        isotimestamp=commit_date.isoformat(),
                         noop=opts.noop,
                         force=True,
                     )
