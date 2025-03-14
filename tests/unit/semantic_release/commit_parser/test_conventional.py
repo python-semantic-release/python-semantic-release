@@ -1246,3 +1246,34 @@ def test_parser_ignore_merge_commit(
 
     assert isinstance(parsed_result, ParseError)
     assert "Ignoring merge commit" in parsed_result.error
+
+@pytest.mark.parametrize(
+    "commit_message, allowed_scopes, expected_result",
+    [
+        ("feat(pkg1): add feature A", ("pkg1",), True),
+        ("fix(pkg2): fix something", ("pkg1",), False),
+        ("chore(pkg3): maintenance task", ("pkg3",), True),
+        ("docs(pkg1): update documentation", ("pkg1", "pkg3"), True),
+        ("feat(pkg4): add feature B", (), True),  # Empty tuple means no scope restriction
+        ("fix: global fix", ("pkg1",), False),  # No scope in message, should not pass
+    ],
+)
+def test_parser_scope_filtering(make_commit_obj: MakeCommitObjFn, commit_message, allowed_scopes, expected_result):
+    """Tests whether ConventionalCommitParser correctly filters commits based on the allowed_scopes option."""
+    parser = ConventionalCommitParser(
+        options=ConventionalCommitParserOptions(allowed_scopes=allowed_scopes)
+    )
+
+    parsed_results = parser.parse(make_commit_obj(commit_message))
+
+    # Ensure that `parsed_results` is a list and extract the first element (if any)
+    assert isinstance(parsed_results, list), f"Expected list but got {type(parsed_results)}"
+    assert len(parsed_results) > 0, "Expected at least one parsed result"
+
+    result = parsed_results[0]  # Extract the first parsed commit or error
+
+    if expected_result:
+        assert isinstance(result, ParsedCommit), f"Expected ParsedCommit but got {result}"
+    else:
+        assert isinstance(result, ParseError), f"Expected ParseError but got {result}"
+        assert "Skipping commit due to scope filtering" in result.error

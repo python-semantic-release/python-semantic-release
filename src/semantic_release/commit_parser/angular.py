@@ -94,6 +94,9 @@ class AngularParserOptions(ParserOptions):
     one of these prefixes, it will not be considered a valid commit message.
     """
 
+    allowed_scopes: Tuple[str, ...] = ()
+    """If set, only commits with a matching scope will be considered."""
+
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
     """The minimum bump level to apply to valid commit message."""
 
@@ -335,10 +338,28 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         return len(commit.parents) > 1
 
     def parse_commit(self, commit: Commit) -> ParseResult:
-        if not (parsed_msg_result := self.parse_message(force_str(commit.message))):
+        parsed_msg_result = self.parse_message(force_str(commit.message))
+
+        if not parsed_msg_result:
             return _logged_parse_error(
-                commit,
-                f"Unable to parse commit message: {commit.message!r}",
+                commit, f"Unable to parse commit message: {commit.message!r}"
+            )
+
+        # Check if we have defined allowed scopes
+        has_allowed_scopes = bool(self.options.allowed_scopes)
+        has_scope = bool(parsed_msg_result.scope)
+        is_scope_allowed = (
+            has_scope and parsed_msg_result.scope in self.options.allowed_scopes
+        )
+
+        # If no allowed_scopes are defined, skip filtering
+        if not has_allowed_scopes:
+            return ParsedCommit.from_parsed_message_result(commit, parsed_msg_result)
+
+        # If allowed_scopes are defined, enforce filtering
+        if not has_scope or not is_scope_allowed:
+            return _logged_parse_error(
+                commit, f"Skipping commit due to scope filtering: {commit.message!r}"
             )
 
         return ParsedCommit.from_parsed_message_result(commit, parsed_msg_result)
