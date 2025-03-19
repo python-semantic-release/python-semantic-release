@@ -73,8 +73,8 @@ class HvcsClient(str, Enum):
 
 
 _known_commit_parsers: Dict[str, type[CommitParser]] = {
-    "conventional": ConventionalCommitParser,
     "angular": AngularCommitParser,
+    "conventional": ConventionalCommitParser,
     "conventional-monorepo": ConventionalCommitMonorepoParser,
     "emoji": EmojiCommitParser,
     "scipy": ScipyCommitParser,
