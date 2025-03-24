@@ -16,7 +16,7 @@ from deprecated.sphinx import deprecated
 from semantic_release.cli.util import noop_report
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.version.declarations.enum import VersionStampType
-from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
+from semantic_release.version.declarations.i_version_replacer import IVersionReplacer, UpdateResult, UpdateStatus
 from semantic_release.version.version import Version
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -148,39 +148,34 @@ class PatternVersionDeclaration(IVersionReplacer):
 
     def update_file_w_version(
         self, new_version: Version, noop: bool = False
-    ) -> Path | None:
+    ) -> UpdateResult:
+        if not self._path.exists():
+            noop_report(
+                f"FILE NOT FOUND: cannot stamp version in non-existent file {self._path}",
+            )
+            return UpdateResult(path=None, status=UpdateStatus.FILE_NOT_FOUND)
+
+        if len(self._search_pattern.findall(self.content)) < 1:
+            noop_report(
+                f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path}",
+            )
+            return UpdateResult(path=None, status=UpdateStatus.FILE_NOT_FOUND)
+
         if noop:
-            if not self._path.exists():
-                noop_report(
-                    f"FILE NOT FOUND: cannot stamp version in non-existent file {self._path}",
-                )
-                return None
-
-            if len(self._search_pattern.findall(self.content)) < 1:
-                noop_report(
-                    f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path}",
-                )
-                return None
-
-            return self._path
+            return UpdateResult(path=self._path, status=UpdateStatus.NO_CHANGE)
 
         new_content = self.replace(new_version)
         if new_content == self.content:
-            try:
-                log.debug(
-                    "The content of %s was unchanged but staging it in case this is a two step release",
-                    self._path,
-                )
-                git_repo = git.Repo(self._path.parent, search_parent_directories=True)
-                git_repo.index.add([str(self._path)])
-            except Exception as e:
-                log.exception("Failed to stage file %s: %s", self._path, e)
-            return None
+            log.debug(
+                "The content of %s was unchanged",
+                self._path,
+            )
+            return UpdateResult(path=self._path, status=UpdateStatus.NO_CHANGE)
 
         self._path.write_text(new_content)
         del self.content
 
-        return self._path
+        return UpdateResult(path=self._path, status=UpdateStatus.UPDATED)
 
     @classmethod
     def from_string_definition(

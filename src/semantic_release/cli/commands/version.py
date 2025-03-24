@@ -646,10 +646,9 @@ def version(  # noqa: C901
         credential_masker=runtime.masker,
     )
 
-    # Preparing for committing changes
+    # Preparing for committing changes; we always stage files even if we're not committing them in order to support a two-stage commit
+    project.git_add(paths=all_paths_to_add, noop=opts.noop)
     if commit_changes:
-        project.git_add(paths=all_paths_to_add, noop=opts.noop)
-
         # NOTE: If we haven't modified any source code then we skip trying to make a commit
         # and any tag that we apply will be to the HEAD commit (made outside of
         # running PSR
