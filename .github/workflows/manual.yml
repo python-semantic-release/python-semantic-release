@@ -65,7 +65,7 @@ jobs:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
 
       - name: Setup | Write file
-        uses: DamianReeves/write-file-action@v1.3
+        uses: DamianReeves/write-file-action@6929a9a6d1807689191dcc8bbe62b54d70a32b42  #v1.3
         with:
           path: .github/manual_eval_input.py
           write-mode: overwrite
