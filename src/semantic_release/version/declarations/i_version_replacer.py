@@ -1,27 +1,13 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass
-from enum import Enum, auto
 from typing import TYPE_CHECKING
+from semantic_release.version.declarations.enum import UpdateResult
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
 
     from semantic_release.version.version import Version
-
-
-class UpdateStatus(Enum):
-    FILE_NOT_FOUND = auto()
-    VERSION_NOT_FOUND = auto()
-    NO_CHANGE = auto()
-    UPDATED = auto()
-
-
-@dataclass
-class UpdateResult:
-    path: Path | None
-    status: UpdateStatus
 
 
 class IVersionReplacer(metaclass=ABCMeta):

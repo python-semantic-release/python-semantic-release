@@ -36,6 +36,10 @@ from semantic_release.version.algorithm import (
     tags_and_versions,
 )
 from semantic_release.version.translator import VersionTranslator
+from semantic_release.version.declarations.enum import (
+    UpdateResult,
+    UpdateStatus,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
@@ -138,36 +142,36 @@ def apply_version_to_source_files(
     version_declarations: Sequence[IVersionReplacer],
     version: Version,
     noop: bool = False,
-) -> list[str]:
+) -> list[UpdateResult]:
     if len(version_declarations) < 1:
         return []
 
     if not noop:
         log.debug("Updating version %s in repository files...", version)
 
-    paths = [
+    results: list[UpdateResult] = [
         decl.update_file_w_version(new_version=version, noop=noop)
         for decl in version_declarations
     ]
 
-    repo_filepaths = [
-        str(updated_file.relative_to(repo_dir))
-        for updated_file in paths
-        if updated_file is not None
-    ]
-
     if noop:
-        noop_report(
-            str.join(
-                "",
-                [
-                    "would have updated versions in the following paths:",
-                    *[f"\n    {filepath}" for filepath in repo_filepaths],
-                ],
+        updated_paths = [
+            str(result.path.relative_to(repo_dir))
+            for result in results
+            if result.path is not None and result.status in {
+                UpdateStatus.NOOP,
+                UpdateStatus.NO_CHANGE,
+                UpdateStatus.UPDATED,
+                UpdateStatus.VERSION_NOT_FOUND,
+            }
+        ]
+        if updated_paths:
+            noop_report(
+                "would have updated versions in the following paths:"
+                + "".join(f"\n    {path}" for path in updated_paths)
             )
-        )
 
-    return repo_filepaths
+    return results
 
 
 def shell(
@@ -610,13 +614,17 @@ def version(  # noqa: C901
         )
 
     # Apply the new version to the source files
-    files_with_new_version_written = apply_version_to_source_files(
+    results: list[UpdateResult] = apply_version_to_source_files(
         repo_dir=runtime.repo_dir,
         version_declarations=runtime.version_declarations,
         version=new_version,
         noop=opts.noop,
     )
-    all_paths_to_add.extend(files_with_new_version_written)
+
+    for result in results:
+        # We stage files that were updated and that would have been updated but had no resulting file changes to support a two-stage commit process
+        if result.status in {UpdateStatus.UPDATED, UpdateStatus.NO_CHANGE} and result.path is not None:
+            all_paths_to_add.extend(str(result.path))
     all_paths_to_add.extend(assets or [])
 
     # Build distributions before committing any changes - this way if the
@@ -646,7 +654,7 @@ def version(  # noqa: C901
         credential_masker=runtime.masker,
     )
 
-    # Preparing for committing changes; we always stage files even if we're not committing them in order to support a two-stage commit
+    # Preparing for committing changes; run a git_add regardless of the commit_changes status to support a two-stage commit process
     project.git_add(paths=all_paths_to_add, noop=opts.noop)
     if commit_changes:
         # NOTE: If we haven't modified any source code then we skip trying to make a commit

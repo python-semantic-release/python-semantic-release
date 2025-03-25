@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import git
 from logging import getLogger
 from pathlib import Path
 from re import (
@@ -15,8 +14,12 @@ from deprecated.sphinx import deprecated
 
 from semantic_release.cli.util import noop_report
 from semantic_release.const import SEMVER_REGEX
-from semantic_release.version.declarations.enum import VersionStampType
-from semantic_release.version.declarations.i_version_replacer import IVersionReplacer, UpdateResult, UpdateStatus
+from semantic_release.version.declarations.enum import (
+    VersionStampType,
+    UpdateResult,
+    UpdateStatus,
+)
+from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.version import Version
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -151,18 +154,18 @@ class PatternVersionDeclaration(IVersionReplacer):
     ) -> UpdateResult:
         if not self._path.exists():
             noop_report(
-                f"FILE NOT FOUND: cannot stamp version in non-existent file {self._path}",
+                f"FILE NOT FOUND: cannot stamp version in non-existent file {self._path!r}",
             )
             return UpdateResult(path=None, status=UpdateStatus.FILE_NOT_FOUND)
 
         if len(self._search_pattern.findall(self.content)) < 1:
             noop_report(
-                f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path}",
+                f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path!r}",
             )
-            return UpdateResult(path=None, status=UpdateStatus.FILE_NOT_FOUND)
+            return UpdateResult(path=None, status=UpdateStatus.VERSION_NOT_FOUND)
 
         if noop:
-            return UpdateResult(path=self._path, status=UpdateStatus.NO_CHANGE)
+            return UpdateResult(path=self._path, status=UpdateStatus.NOOP)
 
         new_content = self.replace(new_version)
         if new_content == self.content:
