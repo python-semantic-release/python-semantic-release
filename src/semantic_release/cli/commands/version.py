@@ -145,14 +145,10 @@ def apply_version_to_source_files(
     if not noop:
         log.debug("Updating version %s in repository files...", version)
 
-    paths = list(
-        map(
-            lambda decl, new_version=version, noop=noop: (  # type: ignore[misc]
-                decl.update_file_w_version(new_version=new_version, noop=noop)
-            ),
-            version_declarations,
-        )
-    )
+    paths = [
+        decl.update_file_w_version(new_version=version, noop=noop)
+        for decl in version_declarations
+    ]
 
     repo_filepaths = [
         str(updated_file.relative_to(repo_dir))
