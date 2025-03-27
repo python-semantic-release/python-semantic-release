@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING
-from semantic_release.version.declarations.enum import UpdateResult
 
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
@@ -58,14 +57,11 @@ class IVersionReplacer(metaclass=ABCMeta):
     @abstractmethod
     def update_file_w_version(
         self, new_version: Version, noop: bool = False
-    ) -> UpdateResult:
+    ) -> Path | None:
         """
         This method reads the underlying file, replaces each occurrence of the
         matched pattern, then writes the updated file.
 
         :param new_version: The new version number as a `Version` instance
-        :param noop: If True, perform a dry run without writing changes
-
-        :return: An UpdateResult with the path and update status
         """
         raise NotImplementedError  # pragma: no cover

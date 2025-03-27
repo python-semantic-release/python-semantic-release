@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum, auto
-from pathlib import Path
-from dataclasses import dataclass
+from enum import Enum
 
 
 class VersionStampType(str, Enum):
@@ -12,17 +10,3 @@ class VersionStampType(str, Enum):
     NUMBER_FORMAT = "nf"
 
     TAG_FORMAT = "tf"
-
-
-class UpdateStatus(Enum):
-    FILE_NOT_FOUND = auto()
-    VERSION_NOT_FOUND = auto()
-    NOOP = auto()
-    NO_CHANGE = auto()
-    UPDATED = auto()
-
-
-@dataclass
-class UpdateResult:
-    path: Path | None
-    status: UpdateStatus

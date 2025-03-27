@@ -9,11 +9,7 @@ from deprecated.sphinx import deprecated
 from dotty_dict import Dotty
 
 from semantic_release.cli.util import noop_report
-from semantic_release.version.declarations.enum import (
-    VersionStampType,
-    UpdateResult,
-    UpdateStatus,
-)
+from semantic_release.version.declarations.enum import VersionStampType
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.version import Version
 
@@ -92,34 +88,30 @@ class TomlVersionDeclaration(IVersionReplacer):
 
     def update_file_w_version(
         self, new_version: Version, noop: bool = False
-    ) -> UpdateResult:
-        if not self._path.exists():
-            noop_report(
-                f"FILE NOT FOUND: cannot stamp version in non-existent file {self._path!r}",
-            )
-            return UpdateResult(path=None, status=UpdateStatus.FILE_NOT_FOUND)
-
-        if self._search_text not in self._load():
-            noop_report(
-                f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path!r}",
-            )
-            return UpdateResult(path=None, status=UpdateStatus.VERSION_NOT_FOUND)
-
+    ) -> Path | None:
         if noop:
-            return UpdateResult(path=self._path, status=UpdateStatus.NOOP)
+            if not self._path.exists():
+                noop_report(
+                    f"FILE NOT FOUND: cannot stamp version in non-existent file {self._path!r}",
+                )
+                return None
+
+            if self._search_text not in self._load():
+                noop_report(
+                    f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path!r}",
+                )
+                return None
+
+            return self._path
 
         new_content = self.replace(new_version)
         if new_content == self.content:
-            log.debug(
-                "The content of %s was unchanged",
-                self._path,
-            )
-            return UpdateResult(path=self._path, status=UpdateStatus.NO_CHANGE)
+            return None
 
         self._path.write_text(new_content)
         del self.content
 
-        return UpdateResult(path=self._path, status=UpdateStatus.UPDATED)
+        return self._path
 
     @classmethod
     def from_string_definition(cls, replacement_def: str) -> TomlVersionDeclaration:

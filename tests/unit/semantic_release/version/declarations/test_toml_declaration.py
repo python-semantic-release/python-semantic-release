@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.version.declarations.enum import VersionStampType, UpdateStatus
+from semantic_release.version.declarations.enum import VersionStampType
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
 from semantic_release.version.version import Version
@@ -141,7 +141,7 @@ def test_toml_declaration_from_definition(
     version_replacer = TomlVersionDeclaration.from_string_definition(replacement_def)
 
     # Act: apply version change
-    result = version_replacer.update_file_w_version(
+    actual_file_modified = version_replacer.update_file_w_version(
         new_version=Version.parse(next_version, tag_format=tag_format),
         noop=False,
     )
@@ -149,8 +149,7 @@ def test_toml_declaration_from_definition(
     # Evaluate
     actual_contents = Path(test_file).read_text()
     assert resulting_contents == actual_contents
-    assert expected_filepath == result.path
-    assert result.status == UpdateStatus.UPDATED
+    assert expected_filepath == actual_file_modified
 
 
 def test_toml_declaration_no_file_change(
@@ -159,7 +158,7 @@ def test_toml_declaration_no_file_change(
     """
     Given a configured stamp file is already up-to-date,
     When update_file_w_version() is called with the same version,
-    Then the file is not modified and returns a status of NO_CHANGE.
+    Then the file is not modified and no path is returned
     """
     test_file = "test_file"
     next_version = Version.parse("1.2.3")
@@ -179,7 +178,7 @@ def test_toml_declaration_no_file_change(
     )
 
     # Act: apply version change
-    result = version_replacer.update_file_w_version(
+    file_modified = version_replacer.update_file_w_version(
         new_version=next_version,
         noop=False,
     )
@@ -187,8 +186,7 @@ def test_toml_declaration_no_file_change(
     # Evaluate
     actual_contents = Path(test_file).read_text()
     assert starting_contents == actual_contents
-    assert result.path == Path(test_file).resolve()
-    assert result.status == UpdateStatus.NO_CHANGE
+    assert file_modified is None
 
 
 def test_toml_declaration_error_on_missing_file():
@@ -197,12 +195,11 @@ def test_toml_declaration_error_on_missing_file():
         "nonexistent_file:version",
     )
 
-    result = version_replacer.update_file_w_version(
-        new_version=Version.parse("1.2.3"),
-        noop=False,
-    )
-    assert result.path is None
-    assert result.status == UpdateStatus.FILE_NOT_FOUND
+    with pytest.raises(FileNotFoundError):
+        version_replacer.update_file_w_version(
+            new_version=Version.parse("1.2.3"),
+            noop=False,
+        )
 
 
 def test_toml_declaration_no_version_in_file(
@@ -225,15 +222,14 @@ def test_toml_declaration_no_version_in_file(
         f"{test_file}:project.version:{VersionStampType.NUMBER_FORMAT.value}",
     )
 
-    result = version_replacer.update_file_w_version(
+    file_modified = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3"),
         noop=False,
     )
 
     # Evaluate
     actual_contents = expected_filepath.read_text()
-    assert result.path is None
-    assert result.status == UpdateStatus.VERSION_NOT_FOUND
+    assert file_modified is None
     assert starting_contents == actual_contents
 
 
@@ -257,8 +253,8 @@ def test_toml_declaration_noop_is_noop(
         f"{test_file}:project.version:{VersionStampType.NUMBER_FORMAT.value}",
     )
 
-    # Act: apply version change with noop=True
-    result = version_replacer.update_file_w_version(
+    # Act: apply version change
+    file_modified = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3"),
         noop=True,
     )
@@ -266,8 +262,7 @@ def test_toml_declaration_noop_is_noop(
     # Evaluate
     actual_contents = Path(test_file).read_text()
     assert starting_contents == actual_contents
-    assert result.path == expected_filepath
-    assert result.status == UpdateStatus.NOOP
+    assert expected_filepath == file_modified
 
 
 def test_toml_declaration_noop_warning_on_missing_file(
@@ -277,14 +272,13 @@ def test_toml_declaration_noop_warning_on_missing_file(
         "nonexistent_file:version",
     )
 
-    result = version_replacer.update_file_w_version(
+    file_to_modify = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3"),
         noop=True,
     )
 
     # Evaluate
-    assert result.path is None
-    assert result.status == UpdateStatus.FILE_NOT_FOUND
+    assert file_to_modify is None
     assert (
         "FILE NOT FOUND: cannot stamp version in non-existent file"
         in capsys.readouterr().err
@@ -311,14 +305,13 @@ def test_toml_declaration_noop_warning_on_no_version_in_file(
         f"{test_file}:project.version:{VersionStampType.NUMBER_FORMAT.value}",
     )
 
-    result = version_replacer.update_file_w_version(
+    file_to_modify = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3"),
         noop=True,
     )
 
     # Evaluate
-    assert result.path is None
-    assert result.status == UpdateStatus.VERSION_NOT_FOUND
+    assert file_to_modify is None
     assert (
         "VERSION PATTERN NOT FOUND: no version to stamp in file"
         in capsys.readouterr().err
