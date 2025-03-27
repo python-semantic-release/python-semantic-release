@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.version.declarations.enum import VersionStampType
+from semantic_release.version.declarations.enum import (
+    VersionStampType,
+    UpdateStatus,
+)
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.pattern import PatternVersionDeclaration
 from semantic_release.version.version import Version
@@ -238,7 +241,7 @@ def test_pattern_declaration_from_definition(
     )
 
     # Act: apply version change
-    actual_file_modified = version_replacer.update_file_w_version(
+    result = version_replacer.update_file_w_version(
         new_version=Version.parse(next_version, tag_format=tag_format),
         noop=False,
     )
@@ -246,7 +249,8 @@ def test_pattern_declaration_from_definition(
     # Evaluate
     actual_contents = Path(test_file).read_text()
     assert resulting_contents == actual_contents
-    assert expected_filepath == actual_file_modified
+    assert expected_filepath == result.path
+    assert result.status == UpdateStatus.UPDATED
 
 
 def test_pattern_declaration_no_file_change(
@@ -256,7 +260,7 @@ def test_pattern_declaration_no_file_change(
     """
     Given a configured stamp file is already up-to-date,
     When update_file_w_version() is called with the same version,
-    Then the file is not modified and no path is returned
+    Then the file is not modified and an UpdateResult with status NO_CHANGE is returned.
     """
     test_file = "test_file"
     expected_filepath = Path(test_file).resolve()
@@ -273,7 +277,7 @@ def test_pattern_declaration_no_file_change(
     )
 
     # Act: apply version change
-    file_modified = version_replacer.update_file_w_version(
+    result = version_replacer.update_file_w_version(
         new_version=next_version,
         noop=False,
     )
@@ -281,7 +285,8 @@ def test_pattern_declaration_no_file_change(
     # Evaluate
     actual_contents = expected_filepath.read_text()
     assert starting_contents == actual_contents
-    assert file_modified is None
+    assert result.path == expected_filepath
+    assert result.status == UpdateStatus.NO_CHANGE
 
 
 def test_pattern_declaration_error_on_missing_file(
@@ -293,11 +298,13 @@ def test_pattern_declaration_error_on_missing_file(
         tag_format=default_tag_format_str,
     )
 
-    with pytest.raises(FileNotFoundError):
-        version_replacer.update_file_w_version(
-            new_version=Version.parse("1.2.3", tag_format=default_tag_format_str),
-            noop=False,
-        )
+    # When the file does not exist, update_file_w_version returns an UpdateResult with status FILE_NOT_FOUND.
+    result = version_replacer.update_file_w_version(
+        new_version=Version.parse("1.2.3", tag_format=default_tag_format_str),
+        noop=False,
+    )
+    assert result.path is None
+    assert result.status == UpdateStatus.FILE_NOT_FOUND
 
 
 def test_pattern_declaration_no_version_in_file(
@@ -317,14 +324,15 @@ def test_pattern_declaration_no_version_in_file(
         tag_format=default_tag_format_str,
     )
 
-    file_modified = version_replacer.update_file_w_version(
+    result = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3", tag_format=default_tag_format_str),
         noop=False,
     )
 
     # Evaluate
     actual_contents = expected_filepath.read_text()
-    assert file_modified is None
+    assert result.path is None
+    assert result.status == UpdateStatus.VERSION_NOT_FOUND
     assert starting_contents == actual_contents
 
 
@@ -345,8 +353,8 @@ def test_pattern_declaration_noop_is_noop(
         tag_format=default_tag_format_str,
     )
 
-    # Act: apply version change
-    file_modified = version_replacer.update_file_w_version(
+    # Act: apply version change with noop=True
+    result = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3", tag_format=default_tag_format_str),
         noop=True,
     )
@@ -354,7 +362,8 @@ def test_pattern_declaration_noop_is_noop(
     # Evaluate
     actual_contents = Path(test_file).read_text()
     assert starting_contents == actual_contents
-    assert expected_filepath == file_modified
+    assert result.path == expected_filepath
+    assert result.status == UpdateStatus.NOOP
 
 
 def test_pattern_declaration_noop_warning_on_missing_file(
@@ -366,17 +375,16 @@ def test_pattern_declaration_noop_warning_on_missing_file(
         tag_format=default_tag_format_str,
     )
 
-    file_to_modify = version_replacer.update_file_w_version(
+    result = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3", tag_format=default_tag_format_str),
         noop=True,
     )
 
     # Evaluate
-    assert file_to_modify is None
-    assert (
-        "FILE NOT FOUND: cannot stamp version in non-existent file"
-        in capsys.readouterr().err
-    )
+    assert result.path is None
+    assert result.status == UpdateStatus.FILE_NOT_FOUND
+    captured = capsys.readouterr().err
+    assert "FILE NOT FOUND: cannot stamp version in non-existent file" in captured
 
 
 def test_pattern_declaration_noop_warning_on_no_version_in_file(
@@ -396,17 +404,16 @@ def test_pattern_declaration_noop_warning_on_no_version_in_file(
         tag_format=default_tag_format_str,
     )
 
-    file_to_modify = version_replacer.update_file_w_version(
+    result = version_replacer.update_file_w_version(
         new_version=Version.parse("1.2.3", tag_format=default_tag_format_str),
         noop=True,
     )
 
     # Evaluate
-    assert file_to_modify is None
-    assert (
-        "VERSION PATTERN NOT FOUND: no version to stamp in file"
-        in capsys.readouterr().err
-    )
+    assert result.path is None
+    assert result.status == UpdateStatus.VERSION_NOT_FOUND
+    captured = capsys.readouterr().err
+    assert "VERSION PATTERN NOT FOUND: no version to stamp in file" in captured
 
 
 @pytest.mark.parametrize(
