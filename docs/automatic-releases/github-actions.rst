@@ -735,7 +735,7 @@ to the GitHub Release Assets as well.
               git_committer_email: "actions@users.noreply.github.com"
 
           - name: Publish | Upload package to PyPI
-            uses: pypa/gh-action-pypi-publish@v1
+            uses: pypa/gh-action-pypi-publish@release/v1
             if: steps.release.outputs.released == 'true'
 
           - name: Publish | Upload to GitHub Release Assets
