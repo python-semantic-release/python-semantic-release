@@ -832,3 +832,10 @@ Publish Action.
      with:
        directory: ./project2
        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+   # Adjust the packages-dir in the upload step
+   - name: Publish | Upload package to PyPI
+     uses: pypa/gh-action-pypi-publish@v1
+     if: steps.release.outputs.released == 'true'
+     with:
+        packages-dir: project1/dist
