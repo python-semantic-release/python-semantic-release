@@ -82,7 +82,7 @@ environment variable is:
 
 .. code-block:: toml
 
-    [semantic_release.variable]
+    [semantic_release.remote.token]
     env = "ENV_VAR"
     default_env = "FALLBACK_ENV_VAR"
     default = "default value"
