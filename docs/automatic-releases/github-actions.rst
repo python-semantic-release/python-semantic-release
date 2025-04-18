@@ -734,16 +734,16 @@ to the GitHub Release Assets as well.
               git_committer_name: "github-actions"
               git_committer_email: "actions@users.noreply.github.com"
 
-          - name: Publish | Upload package to PyPI
-            uses: pypa/gh-action-pypi-publish@v1
-            if: steps.release.outputs.released == 'true'
-
           - name: Publish | Upload to GitHub Release Assets
             uses: python-semantic-release/publish-action@v9.21.0
             if: steps.release.outputs.released == 'true'
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               tag: ${{ steps.release.outputs.tag }}
+
+          - name: Publish | Upload package to PyPI
+            uses: pypa/gh-action-pypi-publish@SHA1_HASH  # vX.X.X
+            if: steps.release.outputs.released == 'true'
 
 .. important::
   The `concurrency`_ directive is used on the job to prevent race conditions of more than
@@ -816,26 +816,84 @@ For multiple packages, you would need to run the action multiple times, to relea
 each project. The following example demonstrates how to release two projects in
 a monorepo.
 
+Remember that for each release of each submodule you will then need to handle publishing
+each package separately as well. This is dependent on the result of your build commands.
+In the example below, we assume a simple ``build`` module command to build a ``sdist``
+and wheel artifacts into the submodule's ``dist`` directory.
+
 The ``directory`` input directive is also available for the Python Semantic Release
 Publish Action.
 
 .. code:: yaml
 
-   - name: Release Project 1
-     uses: python-semantic-release/python-semantic-release@v9.21.0
-     with:
-       directory: ./project1
-       github_token: ${{ secrets.GITHUB_TOKEN }}
+  jobs:
 
-   - name: Release Project 2
-     uses: python-semantic-release/python-semantic-release@v9.21.0
-     with:
-       directory: ./project2
-       github_token: ${{ secrets.GITHUB_TOKEN }}
+    release:
 
-   # Adjust the packages-dir in the upload step
-   - name: Publish | Upload package to PyPI
-     uses: pypa/gh-action-pypi-publish@v1
-     if: steps.release.outputs.released == 'true'
-     with:
-        packages-dir: project1/dist
+      env:
+        SUBMODULE_1_DIR: project1
+        SUBMODULE_2_DIR: project2
+
+      steps:
+
+        # ------------------------------------------------------------------- #
+        # Note the use of different IDs to distinguish which submodule was    #
+        # identified to be released. The subsequent actions then reference    #
+        # their specific release ID to determine if a release occurred.       #
+        # ------------------------------------------------------------------- #
+
+        - name: Release submodule 1
+          id: release-submod-1
+          uses: python-semantic-release/python-semantic-release@v9.21.0
+          with:
+            directory: ${{ env.SUBMODULE_1_DIR }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Release submodule 2
+          id: release-submod-2
+          uses: python-semantic-release/python-semantic-release@v9.21.0
+          with:
+            directory: ${{ env.SUBMODULE_2_DIR }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+
+        # ------------------------------------------------------------------- #
+        # For each submodule, you will have to publish the package separately #
+        # and only attempt to publish if the release for that submodule was   #
+        # deemed a release (and the release was successful).                  #
+        # ------------------------------------------------------------------- #
+
+        - name: Publish | Upload package 1 to GitHub Release Assets
+          uses: python-semantic-release/publish-action@v9.21.0
+          if: steps.release-submod-1.outputs.released == 'true'
+          with:
+            directory: ${{ env.SUBMODULE_1_DIR }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ steps.release-submod-1.outputs.tag }}
+
+        - name: Publish | Upload package 2 to GitHub Release Assets
+          uses: python-semantic-release/publish-action@v9.21.0
+          if: steps.release-submod-2.outputs.released == 'true'
+          with:
+            directory: ${{ env.SUBMODULE_2_DIR }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ steps.release-submod-2.outputs.tag }}
+
+        # ------------------------------------------------------------------- #
+        # Python Semantic Release is not responsible for publishing your      #
+        # python artifacts to PyPI. Use the official PyPA publish action      #
+        # instead. The following steps are an example but is not guaranteed   #
+        # to work as the action is not maintained by the                      #
+        # python-semantic-release team.                                       #
+        # ------------------------------------------------------------------- #
+
+        - name: Publish | Upload package 1 to PyPI
+          uses: pypa/gh-action-pypi-publish@SHA1_HASH  # vX.X.X
+          if: steps.release-submod-1.outputs.released == 'true'
+          with:
+            packages-dir: ${{ format('{}/dist', env.SUBMODULE_1_DIR) }}
+
+        - name: Publish | Upload package 2 to PyPI
+          uses: pypa/gh-action-pypi-publish@SHA1_HASH  # vX.X.X
+          if: steps.release-submod-2.outputs.released == 'true'
+          with:
+            packages-dir: ${{ format('{}/dist', env.SUBMODULE_2_DIR) }}
