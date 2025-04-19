@@ -74,10 +74,13 @@ def is_forced_prerelease(
     )
 
 
-def last_released(repo_dir: Path, tag_format: str) -> tuple[Tag, Version] | None:
+def last_released(
+    repo_dir: Path, tag_format: str, add_partial_tags: bool = False
+) -> tuple[Tag, Version] | None:
     with Repo(str(repo_dir)) as git_repo:
         ts_and_vs = tags_and_versions(
-            git_repo.tags, VersionTranslator(tag_format=tag_format)
+            git_repo.tags,
+            VersionTranslator(tag_format=tag_format, add_partial_tags=add_partial_tags),
         )
 
     return ts_and_vs[0] if ts_and_vs else None
@@ -451,7 +454,11 @@ def version(  # noqa: C901
     if print_last_released or print_last_released_tag:
         # TODO: get tag format a better way
         if not (
-            last_release := last_released(config.repo_dir, tag_format=config.tag_format)
+            last_release := last_released(
+                config.repo_dir,
+                tag_format=config.tag_format,
+                add_partial_tags=config.add_partial_tags,
+            )
         ):
             log.warning("No release tags found.")
             return
@@ -472,6 +479,7 @@ def version(  # noqa: C901
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
+    add_partial_tags = config.add_partial_tags
     gha_output = VersionGitHubActionsOutput(released=False)
 
     forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
@@ -703,6 +711,25 @@ def version(  # noqa: C901
                 tag=new_version.as_tag(),
                 noop=opts.noop,
             )
+            # Create or update partial tags for releases
+            if add_partial_tags and not (prerelease or build_metadata):
+                for partial_tag in (
+                    new_version.as_major_tag(),
+                    new_version.as_minor_tag(),
+                ):
+                    project.git_tag(
+                        tag_name=partial_tag,
+                        message=f"{partial_tag} is {new_version.as_tag()}",
+                        isotimestamp=commit_date.isoformat(),
+                        noop=opts.noop,
+                        force=True,
+                    )
+                    project.git_push_tag(
+                        remote_url=remote_url,
+                        tag=partial_tag,
+                        noop=opts.noop,
+                        force=True,
+                    )
 
     # Update GitHub Actions output value now that release has occurred
     gha_output.released = True
