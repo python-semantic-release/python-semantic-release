@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib.metadata
+
 from semantic_release.commit_parser import (
     CommitParser,
     ParsedCommit,
@@ -24,7 +26,7 @@ from semantic_release.version import (
     tags_and_versions,
 )
 
-__version__ = "9.21.0"
+__version__ = importlib.metadata.version(f"python_{__package__}".replace("_", "-"))
 
 __all__ = [
     "CommitParser",
