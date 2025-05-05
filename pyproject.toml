@@ -412,7 +412,6 @@ build_command = """
     python -m build .
 """
 major_on_zero = true
-version_variables = ["src/semantic_release/__init__.py:__version__"]
 version_toml = ["pyproject.toml:project.version"]
 
 [tool.semantic_release.changelog]
