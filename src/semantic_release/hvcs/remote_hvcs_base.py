@@ -95,10 +95,15 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
         query: str | None = None,
         fragment: str | None = None,
     ) -> str:
-        # Ensure any path prefix is transfered but not doubled up on the derived url
+        # Ensure any path prefix is transferred but not doubled up on the derived url
+        normalized_path = (
+            f"{self.hvcs_domain.path}/{path}"
+            if self.hvcs_domain.path and not path.startswith(self.hvcs_domain.path)
+            else path
+        )
         return self._derive_url(
             self.hvcs_domain,
-            path=f"{self.hvcs_domain.path or ''}/{path.lstrip(self.hvcs_domain.path)}",
+            path=normalized_path,
             auth=auth,
             query=query,
             fragment=fragment,
@@ -123,10 +128,15 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
         query: str | None = None,
         fragment: str | None = None,
     ) -> str:
-        # Ensure any api path prefix is transfered but not doubled up on the derived api url
+        # Ensure any api path prefix is transferred but not doubled up on the derived api url
+        normalized_endpoint = (
+            f"{self.api_url.path}/{endpoint}"
+            if self.api_url.path and not endpoint.startswith(self.api_url.path)
+            else endpoint
+        )
         return self._derive_url(
             self.api_url,
-            path=f"{self.api_url.path or ''}/{endpoint.lstrip(self.api_url.path)}",
+            path=normalized_endpoint,
             auth=auth,
             query=query,
             fragment=fragment,
