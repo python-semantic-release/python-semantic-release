@@ -337,7 +337,7 @@ before the :ref:`version <cmd-version>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release/python-semantic-release@v9.21.0
+    - uses: python-semantic-release/python-semantic-release@v9.21.1
       with:
         root_options: "-vv --noop"
 
@@ -576,7 +576,7 @@ before the :ref:`publish <cmd-publish>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release/publish-action@v9.21.0
+    - uses: python-semantic-release/publish-action@v9.21.1
       with:
         root_options: "-vv --noop"
 
@@ -728,14 +728,14 @@ to the GitHub Release Assets as well.
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release/python-semantic-release@v9.21.0
+            uses: python-semantic-release/python-semantic-release@v9.21.1
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
               git_committer_email: "actions@users.noreply.github.com"
 
           - name: Publish | Upload to GitHub Release Assets
-            uses: python-semantic-release/publish-action@v9.21.0
+            uses: python-semantic-release/publish-action@v9.21.1
             if: steps.release.outputs.released == 'true'
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -794,7 +794,7 @@ The equivalent GitHub Action configuration would be:
 
   - name: Action | Semantic Version Release
     # Adjust tag with desired version if applicable.
-    uses: python-semantic-release/python-semantic-release@v9.21.0
+    uses: python-semantic-release/python-semantic-release@v9.21.1
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
       force: patch
@@ -844,14 +844,14 @@ Publish Action.
 
         - name: Release submodule 1
           id: release-submod-1
-          uses: python-semantic-release/python-semantic-release@v9.21.0
+          uses: python-semantic-release/python-semantic-release@v9.21.1
           with:
             directory: ${{ env.SUBMODULE_1_DIR }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
 
         - name: Release submodule 2
           id: release-submod-2
-          uses: python-semantic-release/python-semantic-release@v9.21.0
+          uses: python-semantic-release/python-semantic-release@v9.21.1
           with:
             directory: ${{ env.SUBMODULE_2_DIR }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -863,7 +863,7 @@ Publish Action.
         # ------------------------------------------------------------------- #
 
         - name: Publish | Upload package 1 to GitHub Release Assets
-          uses: python-semantic-release/publish-action@v9.21.0
+          uses: python-semantic-release/publish-action@v9.21.1
           if: steps.release-submod-1.outputs.released == 'true'
           with:
             directory: ${{ env.SUBMODULE_1_DIR }}
@@ -871,7 +871,7 @@ Publish Action.
             tag: ${{ steps.release-submod-1.outputs.tag }}
 
         - name: Publish | Upload package 2 to GitHub Release Assets
-          uses: python-semantic-release/publish-action@v9.21.0
+          uses: python-semantic-release/publish-action@v9.21.1
           if: steps.release-submod-2.outputs.released == 'true'
           with:
             directory: ${{ env.SUBMODULE_2_DIR }}

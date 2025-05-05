@@ -4,6 +4,41 @@
 CHANGELOG
 =========
 
+.. _changelog-v9.21.1:
+
+v9.21.1 (2025-05-05)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **changelog-filters**: Fixes url resolution when prefix & path share letters, closes `#1204`_
+  (`PR#1239`_, `f61f8a3`_)
+
+📖 Documentation
+----------------
+
+* **github-actions**: Expound on monorepo example to include publishing actions (`PR#1229`_,
+  `550e85f`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Bump ``rich`` dependency from ``13.0`` to ``14.0`` (`PR#1224`_, `691536e`_)
+
+* **deps**: Expand ``python-gitlab`` dependency to include ``v5.0.0`` (`PR#1228`_, `a0cd1be`_)
+
+.. _#1204: https://github.com/python-semantic-release/python-semantic-release/issues/1204
+.. _550e85f: https://github.com/python-semantic-release/python-semantic-release/commit/550e85f5ec2695d5aa680014127846d58c680e31
+.. _691536e: https://github.com/python-semantic-release/python-semantic-release/commit/691536e98f311d0fc6d29a72c41ce5a65f1f4b6c
+.. _a0cd1be: https://github.com/python-semantic-release/python-semantic-release/commit/a0cd1be4e3aa283cbdc544785e5f895c8391dfb8
+.. _f61f8a3: https://github.com/python-semantic-release/python-semantic-release/commit/f61f8a38a1a3f44a7a56cf9dcb7dde748f90ca1e
+.. _PR#1224: https://github.com/python-semantic-release/python-semantic-release/pull/1224
+.. _PR#1228: https://github.com/python-semantic-release/python-semantic-release/pull/1228
+.. _PR#1229: https://github.com/python-semantic-release/python-semantic-release/pull/1229
+.. _PR#1239: https://github.com/python-semantic-release/python-semantic-release/pull/1239
+
+
 .. _changelog-v9.21.0:
 
 v9.21.0 (2025-02-23)
