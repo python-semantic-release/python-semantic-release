@@ -7,11 +7,14 @@ branding:
   color: orange
 
 inputs:
-  root_options:
-    default: "-v"
+
+  config_file:
+    default: ""
     required: false
     description: |
-      Additional options for the main command. Example: -vv --noop
+      Path to a custom semantic-release configuration file. By default, an empty
+      string will look for a pyproject.toml file in the current directory. This is the same
+      as passing the `-c` or `--config` parameter to semantic-release.
 
   directory:
     default: "."
@@ -19,64 +22,78 @@ inputs:
     description: Sub-directory to cd into before running semantic-release
 
   github_token:
-    type: string
     required: true
     description: GitHub token used to push release notes and new commits/tags
 
   git_committer_name:
-    type: string
     required: false
     description: The human name for the “committer” field
 
   git_committer_email:
-    type: string
     required: false
     description: The email address for the “committer” field
 
+  no_operation_mode:
+    default: "false"
+    required: false
+    description: |
+      If set to true, the github action will pass the `--noop` parameter to
+      semantic-release. This will cause semantic-release to run in "no operation"
+      mode. See the documentation for more information on this parameter. Note that,
+      this parameter will not affect the output of the action, so you will still get
+      the version determination decision as output values.
+
   ssh_public_signing_key:
-    type: string
     required: false
     description: The ssh public key used to sign commits
 
   ssh_private_signing_key:
-    type: string
     required: false
     description: The ssh private key used to sign commits
 
+  strict:
+    default: "false"
+    required: false
+    description: |
+      If set to true, the github action will pass the `--strict` parameter to
+      semantic-release. See the documentation for more information on this parameter.
+
+  verbosity:
+    default: "1"
+    required: false
+    description: |
+      Set the verbosity level of the output as the number of -v's to pass to
+      semantic-release. 0 is no extra output, 1 is info level output, 2 is
+      debug output, and 3 is silly debug level of output.
+
   # `semantic-release version` command line options
   prerelease:
-    type: string
     required: false
     description: |
       Force the next version to be a prerelease. Set to "true" or "false".
 
   prerelease_token:
-    type: string
     required: false
     description: "Force the next version to use this prerelease token, if it is a prerelease"
 
   force:
-    type: string
     required: false
     description: |
       Force the next version to be a major release. Must be set to
       one of "prerelease", "patch", "minor", or "major".
 
   commit:
-    type: string
     required: false
     description: Whether or not to commit changes locally. Defaults are handled
       by python-semantic-release internal version command.
 
   tag:
-    type: string
     required: false
     description: |
       Whether or not to make a local version tag. Defaults are handled
       by python-semantic-release internal version command.
 
   push:
-    type: string
     required: false
     description: |
       Whether or not to push local commits to the Git repository. See
@@ -84,26 +101,22 @@ inputs:
       for how the default is determined between push, tag, & commit.
 
   changelog:
-    type: string
     required: false
     description: |
       Whether or not to update the changelog.
 
   vcs_release:
-    type: string
     required: false
     description: |
       Whether or not to create a release in the remote VCS, if supported
 
   build:
-    type: string
     required: false
     description: |
       Whether or not to run the build_command for the project. Defaults are
       handled by python-semantic-release internal version command.
 
   build_metadata:
-    type: string
     required: false
     description: |
       Build metadata to append to the new version
