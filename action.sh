@@ -2,6 +2,12 @@
 
 set -e
 
+explicit_run_cmd() {
+  local cmd="$*"
+  printf '%s\n' "$> $cmd"
+  eval "$cmd"
+}
+
 # Convert "true"/"false" into command line args, returns "" if not defined
 eval_boolean_action_input() {
 	local -r input_name="$1"
@@ -13,11 +19,11 @@ eval_boolean_action_input() {
 	local -r if_false="$1"
 
 	if [ -z "$flag_value" ]; then
-		echo ""
+		printf ""
 	elif [ "$flag_value" = "true" ]; then
-		echo "$if_true"
+		printf '%s\n' "$if_true"
 	elif [ "$flag_value" = "false" ]; then
-		echo "$if_false"
+		printf '%s\n' "$if_false"
 	else
 		printf 'Error: Invalid value for input %s: %s is not "true" or "false\n"' \
 			"$input_name" "$flag_value" >&2
@@ -25,8 +31,53 @@ eval_boolean_action_input() {
 	fi
 }
 
+# Convert string input into command line args, returns "" if undefined
+eval_string_input() {
+	local -r input_name="$1"
+	shift
+	local -r if_defined="$1"
+	shift
+	local value
+	value="$(printf '%s' "$1" | tr -d ' ')"
+
+	if [ -z "$value" ]; then
+		printf ""
+		return 0
+	fi
+
+	printf '%s' "${if_defined/\%s/$value}"
+}
+
 # Convert inputs to command line arguments
-export ARGS=()
+ROOT_OPTIONS=()
+
+if ! printf '%s\n' "$INPUT_VERBOSITY" | grep -qE '^[0-9]+$'; then
+	printf "Error: Input 'verbosity' must be a positive integer\n" >&2
+	exit 1
+fi
+
+VERBOSITY_OPTIONS=""
+for ((i = 0; i < INPUT_VERBOSITY; i++)); do
+	[ "$i" -eq 0 ] && VERBOSITY_OPTIONS="-"
+	VERBOSITY_OPTIONS+="v"
+done
+
+ROOT_OPTIONS+=("$VERBOSITY_OPTIONS")
+
+if [ -n "$INPUT_CONFIG_FILE" ]; then
+	# Check if the file exists
+	if [ ! -f "$INPUT_CONFIG_FILE" ]; then
+		printf "Error: Input 'config_file' does not exist: %s\n" "$INPUT_CONFIG_FILE" >&2
+		exit 1
+	fi
+
+	ROOT_OPTIONS+=("$(eval_string_input "config_file" "--config %s" "$INPUT_CONFIG_FILE")") || exit 1
+fi
+
+ROOT_OPTIONS+=("$(eval_boolean_action_input "strict" "$INPUT_STRICT" "--strict" "")") || exit 1
+ROOT_OPTIONS+=("$(eval_boolean_action_input "no_operation_mode" "$INPUT_NO_OPERATION_MODE" "--noop" "")") || exit 1
+
+ARGS=()
 # v10 Breaking change as prerelease should be as_prerelease to match
 ARGS+=("$(eval_boolean_action_input "prerelease" "$INPUT_PRERELEASE" "--as-prerelease" "")") || exit 1
 ARGS+=("$(eval_boolean_action_input "commit" "$INPUT_COMMIT" "--commit" "--no-commit")") || exit 1
@@ -111,4 +162,4 @@ fi
 export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
 
 # Run Semantic Release (explicitly use the GitHub action version)
-eval "/psr/.venv/bin/semantic-release $INPUT_ROOT_OPTIONS version ${ARGS[*]}"
+explicit_run_cmd "/psr/.venv/bin/semantic-release ${ROOT_OPTIONS[*]} version ${ARGS[*]}"
