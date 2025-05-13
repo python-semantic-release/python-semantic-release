@@ -609,6 +609,25 @@ supported input and its purpose.
 
 ----
 
+.. _gh_actions-publish-inputs-config_file:
+
+``config_file``
+"""""""""""""""
+
+Path to a custom semantic-release configuration file. By default, an empty
+string will look for to the ``pyproject.toml`` file in the current directory.
+This is the same as passing the ``-c`` or ``--config`` parameter to semantic-release.
+
+**Required:** ``false``
+
+**Default:** ``""``
+
+.. seealso::
+
+  - :ref:`cmd-main-option-config` for the :ref:`semantic-release <cmd-main>` command
+
+----
+
 .. _gh_actions-publish-inputs-directory:
 
 ``directory``
@@ -642,10 +661,36 @@ The token should have the following `permissions`_:
 
 ----
 
+.. _gh_actions-publish-inputs-noop:
+
+``no_operation_mode``
+"""""""""""""""""""""
+
+If set to true, the github action will pass the ``--noop`` parameter to
+semantic-release. This will cause semantic-release to run in "no operation"
+mode.
+
+This is useful for testing the action without actually publishing anything.
+
+**Required:** ``false``
+
+**Default:** ``false``
+
+.. seealso::
+
+  - :ref:`cmd-main-option-noop` option for the :ref:`semantic-release <cmd-main>` command
+
+----
+
 .. _gh_actions-publish-inputs-root_options:
 
 ``root_options``
 """"""""""""""""
+
+.. important::
+  This option has been removed in version $NEW_VERSION and newer because of a
+  command injection vulnerability. Please update as to $NEW_RELEASE_TAG as soon
+  as possible.
 
 Additional options for the main ``semantic-release`` command, which will come
 before the :ref:`publish <cmd-publish>` subcommand.
@@ -695,6 +740,25 @@ Python Semantic Release will automatically determine the latest release if no
 .. seealso::
 
   - :ref:`cmd-publish-option-tag` option for the :ref:`publish <cmd-publish>` command
+
+----
+
+.. _gh_actions-publish-inputs-verbosity:
+
+``verbosity``
+"""""""""""""
+
+Set the verbosity level of the output as the number of ``-v``'s to pass to
+``semantic-release``. 0 is no extra output, 1 is info level output, 2 is debug output, and
+3 is a silly amount of debug output.
+
+**Required:** ``false``
+
+**Default:** ``"1"``
+
+.. seealso::
+
+  - :ref:`cmd-main-option-verbosity` for the :ref:`semantic-release <cmd-main>` command
 
 ----
 
