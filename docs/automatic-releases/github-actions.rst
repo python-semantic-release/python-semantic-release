@@ -163,6 +163,25 @@ to the index during the build command. This option is equivalent to adding eithe
 
 ----
 
+.. _gh_actions-psr-inputs-config_file:
+
+``config_file``
+"""""""""""""""
+
+Path to a custom semantic-release configuration file. By default, an empty
+string will look for to the ``pyproject.toml`` file in the current directory.
+This is the same as passing the ``-c`` or ``--config`` parameter to semantic-release.
+
+**Required:** ``false``
+
+**Default:** ``""``
+
+.. seealso::
+
+  - :ref:`cmd-main-option-config` for the :ref:`semantic-release <cmd-main>` command
+
+----
+
 .. _gh_actions-psr-inputs-directory:
 
 ``directory``
@@ -248,6 +267,27 @@ The token should have the following `permissions`_:
 
 ----
 
+.. _gh_actions-psr-inputs-noop:
+
+``no_operation_mode``
+"""""""""""""""""""""
+
+If set to true, the github action will pass the ``--noop`` parameter to
+semantic-release. This will cause semantic-release to run in "no operation"
+mode.
+
+This is useful for testing the action without making any permanent changes to the repository.
+
+**Required:** ``false``
+
+**Default:** ``false``
+
+.. seealso::
+
+  - :ref:`cmd-main-option-noop` option for the :ref:`semantic-release <cmd-main>` command
+
+----
+
 .. _gh_actions-psr-inputs-prerelease:
 
 ``prerelease``
@@ -330,6 +370,11 @@ to the remote repository. This option is equivalent to adding either ``--push`` 
 ``root_options``
 """"""""""""""""
 
+.. important::
+  This option has been removed in version $NEW_VERSION and newer because of a
+  command injection vulnerability. Please update as to $NEW_RELEASE_TAG as soon
+  as possible.
+
 Additional options for the main ``semantic-release`` command, which will come
 before the :ref:`version <cmd-version>` subcommand.
 
@@ -377,6 +422,20 @@ The private key used to sign a commit and tag.
 
 ----
 
+.. _gh_actions-psr-inputs-strict:
+
+``strict``
+""""""""""
+
+If set to true, the github action will pass the `--strict` parameter to
+``semantic-release``.
+
+.. seealso::
+
+  - :ref:`cmd-main-option-strict` option for the :ref:`semantic-release <cmd-main>` command
+
+----
+
 .. _gh_actions-psr-inputs-tag:
 
 ``tag``
@@ -421,6 +480,25 @@ equivalent to adding either ``--vcs-release`` (on ``true``) or ``--no-vcs-releas
 
   - :ref:`cmd-version-option-vcs-release` options for the :ref:`version <cmd-version>`
     command
+
+----
+
+.. _gh_actions-psr-inputs-verbosity:
+
+``verbosity``
+"""""""""""""
+
+Set the verbosity level of the output as the number of ``-v``'s to pass to
+``semantic-release``. 0 is no extra output, 1 is info level output, 2 is debug output, and
+3 is a silly amount of debug output.
+
+**Required:** ``false``
+
+**Default:** ``"1"``
+
+.. seealso::
+
+  - :ref:`cmd-main-option-verbosity` for the :ref:`semantic-release <cmd-main>` command
 
 ----
 
