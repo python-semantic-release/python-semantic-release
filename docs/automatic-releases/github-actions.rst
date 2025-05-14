@@ -800,6 +800,10 @@ to the GitHub Release Assets as well.
         branches:
           - main
 
+    # default: least privileged permissions across all jobs
+    permissions:
+      contents: read
+
     jobs:
       release:
         runs-on: ubuntu-latest
@@ -808,7 +812,6 @@ to the GitHub Release Assets as well.
           cancel-in-progress: false
 
         permissions:
-          id-token: write
           contents: write
 
         steps:
@@ -883,9 +886,49 @@ to the GitHub Release Assets as well.
               github_token: ${{ secrets.GITHUB_TOKEN }}
               tag: ${{ steps.release.outputs.tag }}
 
-          - name: Publish | Upload package to PyPI
-            uses: pypa/gh-action-pypi-publish@SHA1_HASH  # vX.X.X
-            if: steps.release.outputs.released == 'true'
+          - name: Upload | Distribution Artifacts
+            uses: actions/upload-artifact@v4
+            with:
+              name: distribution-artifacts
+              path: dist
+              if-no-files-found: error
+
+      deploy:
+        # 1. Separate out the deploy step from the publish step to run each step at
+        #    the least amount of token privilege
+        # 2. Also, deployments can fail, and its better to have a separate job if you need to retry
+        #    and it won't require reversing the release.
+        runs-on: ubuntu-latest
+        needs: release
+        if: ${{ needs.release.outputs.released == 'true' }}
+
+        permissions:
+          contents: read
+          id-token: write
+
+        steps:
+          - name: Setup | Download Build Artifacts
+            uses: actions/download-artifact@v4
+            id: artifact-download
+            with:
+              name: distribution-artifacts
+              path: dist
+
+          # ------------------------------------------------------------------- #
+          # Python Semantic Release is not responsible for publishing your      #
+          # python artifacts to PyPI. Use the official PyPA publish action      #
+          # instead. The following steps are an example but is not guaranteed   #
+          # to work as the action is not maintained by the                      #
+          # python-semantic-release team.                                       #
+          # ------------------------------------------------------------------- #
+
+          # see https://docs.pypi.org/trusted-publishers/
+          - name: Publish package distributions to PyPI
+            uses: pypa/gh-action-pypi-publish@@SHA1_HASH  # vX.X.X
+            with:
+              packages-dir: dist
+              print-hash: true
+              verbose: true
 
 .. important::
   The `concurrency`_ directive is used on the job to prevent race conditions of more than
