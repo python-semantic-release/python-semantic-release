@@ -2,5 +2,11 @@
 graft src/**/data/
 
 # include docs & testing into sdist, ignored for wheel build
-graft tests/
 graft docs/
+prune docs/_build/
+graft tests/
+prune tests/gh_action/
+
+# Remove any generated files
+prune **/__pycache__/
+prune src/*.egg-info

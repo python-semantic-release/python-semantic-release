@@ -140,4 +140,4 @@ outputs:
 
 runs:
   using: docker
-  image: Dockerfile
+  image: src/gh_action/Dockerfile
