@@ -23,7 +23,7 @@ classifiers = [
 readme = "README.rst"
 authors = [{ name = "Rolf Erik Lekang", email = "me@rolflekang.com" }]
 dependencies = [
-  "click ~= 8.0",
+  "click ~= 8.1.0",
   "click-option-group ~= 0.5",
   "gitpython ~= 3.0",
   "requests ~= 2.25",
