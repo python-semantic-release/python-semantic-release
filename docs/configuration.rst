@@ -1347,7 +1347,8 @@ The regular expression generated from the ``version_variables`` definition will:
 
 2. The variable name defined by ``variable`` and the version must be separated by
    an operand symbol (``=``, ``:``, ``:=``, or ``@``). Whitespace is optional around
-   the symbol.
+   the symbol. As of $NEW_VERSION, a double-equals (``==``) operator is also supported
+   as a valid operand symbol.
 
 3. The value of the variable must match a `SemVer`_ regular expression and can be
    enclosed by single (``'``) or double (``"``) quotation marks but they must match. However,
@@ -1399,6 +1400,9 @@ will be matched and replaced by the new version:
 
     # Custom Tag Format with tag_format set (monorepos)
     __release__ = "module-v1.2.3"
+
+    # requirements.txt
+    my-package == 1.2.3
 
 .. important::
     The Regular Expression expects a version value to exist in the file to be replaced.
