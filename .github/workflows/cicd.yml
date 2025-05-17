@@ -49,8 +49,10 @@ jobs:
              [ "${{ steps.ci-changed-files.outputs.ci_any_changed }}" == "true" ] || \
              [ "${{ steps.core-changed-files.outputs.docs_any_changed }}" == "true" ] || \
              [ "${{ steps.core-changed-files.outputs.src_any_changed }}" == "true" ] || \
-             [ "${{ steps.core-changed-files.outputs.tests_any_changed }}" == "true" ]; then
-             printf '%s\n' "any_changed=true" >> $GITHUB_OUTPUT
+             [ "${{ steps.core-changed-files.outputs.tests_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.gha_src_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.gha_tests_any_changed }}" == "true" ]; then
+              printf '%s\n' "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
     outputs:
@@ -60,6 +62,8 @@ jobs:
       doc-changes: ${{ steps.core-changed-files.outputs.docs_any_changed }}
       src-changes: ${{ steps.core-changed-files.outputs.src_any_changed }}
       test-changes: ${{ steps.core-changed-files.outputs.tests_any_changed }}
+      gha-src-changes: ${{ steps.core-changed-files.outputs.gha_src_any_changed }}
+      gha-test-changes: ${{ steps.core-changed-files.outputs.gha_tests_any_changed }}
 
 
   validate:
@@ -77,6 +81,8 @@ jobs:
       doc-files-changed: ${{ needs.eval-changes.outputs.doc-changes }}
       src-files-changed: ${{ needs.eval-changes.outputs.src-changes }}
       test-files-changed: ${{ needs.eval-changes.outputs.test-changes }}
+      gha-src-files-changed: ${{ needs.eval-changes.outputs.gha-src-changes }}
+      gha-test-files-changed: ${{ needs.eval-changes.outputs.gha-test-changes }}
     permissions: {}
     secrets: {}
 
