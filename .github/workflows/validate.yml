@@ -43,6 +43,16 @@ on:
         type: string
         required: false
         default: 'false'
+      gha-src-files-changed:
+        description: 'Boolean string result for if GitHub Action source files have changed'
+        type: string
+        required: false
+        default: 'false'
+      gha-test-files-changed:
+        description: 'Boolean string result for if GitHub Action test files have changed'
+        type: string
+        required: false
+        default: 'false'
     outputs:
       new-release-detected:
         description: Boolean string result for if new release is available
@@ -371,6 +381,56 @@ jobs:
         with:
           report_paths: ./tests/reports/*.xml
           annotate_only: true
+
+
+  test-gh-action:
+    name: Validate Action Build & Execution
+    runs-on: ubuntu-latest
+    if: inputs.gha-src-files-changed == 'true' || inputs.gha-test-files-changed == 'true' || inputs.ci-files-changed == 'true'
+
+    needs:
+      - build
+      - unit-test
+
+    env:
+      TEST_CONTAINER_TAG: psr-action:latest
+      ACTION_SRC_DIR: src/gh_action
+
+    steps:
+      - name: Setup | Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 1
+          ref: ${{ github.sha }}
+
+      - name: Setup | Download Distribution Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.distribution-artifacts }}
+          path: ${{ env.ACTION_SRC_DIR }}
+
+      - name: Setup | Update Dependency list with latest version
+        working-directory: ${{ env.ACTION_SRC_DIR }}
+        run: |
+          find . -name '*.whl' > requirements.txt
+
+      - name: Setup | Allow Docker build to include wheel files
+        working-directory: ${{ env.ACTION_SRC_DIR }}
+        run: |
+          printf '%s\n' "!*.whl" >> .dockerignore
+
+      - name: Build | Action Container
+        id: container-builder
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1  # v6.16.0
+        with:
+          context: ${{ env.ACTION_SRC_DIR }}
+          load: true # add to `docker images`
+          push: false
+          platforms: linux/amd64
+          tags: ${{ env.TEST_CONTAINER_TAG }}
+
+      - name: Test | Action Container
+        run: bash tests/gh_action/run.sh
 
 
   lint:
