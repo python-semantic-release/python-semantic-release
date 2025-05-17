@@ -450,7 +450,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             if not clean_paragraph.strip():
                 continue
 
-            # Check if the paragraph is the start of a new angular commit
+            # Check if the paragraph is the start of a new emoji commit
             if not self.emoji_selector.search(clean_paragraph):
                 if not separate_commit_msgs and not current_msg:
                     # if there are no separate commit messages and no current message
