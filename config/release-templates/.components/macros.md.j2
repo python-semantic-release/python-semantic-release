@@ -58,13 +58,12 @@
           )
 %}{#
 #}{%      if commit.linked_merge_request != ""
-%}{%        set pr_num = commit.linked_merge_request
-%}{#        # TODO: breaking change v10, remove summary line replacers as PSR will do it for us
-#}{%        set summary_line = summary_line | replace("(pull request ", "(") | replace("(" ~ pr_num ~ ")", "") | trim
-%}{#
-   #        # Add PR references with a link to the PR
+%}{#        # Add PR references with a link to the PR
 #}{%        set _ = link_references.append(
-              format_link(pr_num | pull_request_url, "PR" ~ pr_num)
+              format_link(
+                commit.linked_merge_request | pull_request_url,
+                "PR" ~ commit.linked_merge_request
+              )
             )
 %}{%      endif
 %}{#
