@@ -331,7 +331,7 @@ be copied to its target location without being rendered by the template engine.
     When initially starting out at customizing your own changelog templates, you
     should reference the default template embedded within PSR. The template directory
     is located at ``data/templates/`` within the PSR package. Within our templates
-    directory we separate out each type of commit parser (e.g. angular) and the
+    directory we separate out each type of commit parser (e.g. conventional) and the
     content format type (e.g. markdown). You can copy this directory to your
     repository's templates directory and then customize the templates to your liking.
 

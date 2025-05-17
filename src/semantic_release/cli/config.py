@@ -859,11 +859,11 @@ class RuntimeContext:
         # Here we just assume the desired changelog style matches the parser name
         # as we provide templates specific to each parser type. Unfortunately if the user has
         # provided a custom parser, it would be up to the user to provide custom templates
-        # but we just assume the base template is angular
+        # but we just assume the base template is conventional
         # changelog_style = (
         #     raw.commit_parser
         #     if raw.commit_parser in _known_commit_parsers
-        #     else "angular"
+        #     else "conventional"
         # )
 
         self = cls(
@@ -887,8 +887,7 @@ class RuntimeContext:
             changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
             # TODO: change when we have other styles per parser
             # changelog_style=changelog_style,
-            # TODO: Breaking Change v10, change to conventional
-            changelog_style="angular",
+            changelog_style="conventional",
             changelog_output_format=raw.changelog.default_templates.output_format,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,
