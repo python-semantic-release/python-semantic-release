@@ -412,6 +412,9 @@ build_command = """
     python -m build .
 """
 major_on_zero = true
+version_variables = [
+  "src/gh_action/requirements.txt:python-semantic-release:nf",
+]
 version_toml = ["pyproject.toml:project.version"]
 
 [tool.semantic_release.changelog]
