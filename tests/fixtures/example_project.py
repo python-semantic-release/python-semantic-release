@@ -248,7 +248,7 @@ def default_changelog_md_template() -> Path:
     return Path(
         str(
             files(semantic_release.__name__).joinpath(
-                Path("data", "templates", "angular", "md", "CHANGELOG.md.j2")
+                Path("data", "templates", "conventional", "md", "CHANGELOG.md.j2")
             )
         )
     ).resolve()
@@ -260,7 +260,7 @@ def default_changelog_rst_template() -> Path:
     return Path(
         str(
             files(semantic_release.__name__).joinpath(
-                Path("data", "templates", "angular", "rst", "CHANGELOG.rst.j2")
+                Path("data", "templates", "conventional", "rst", "CHANGELOG.rst.j2")
             )
         )
     ).resolve()
