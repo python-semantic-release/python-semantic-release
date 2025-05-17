@@ -1,16 +1,7 @@
 from __future__ import annotations
 
-from pydantic.dataclasses import dataclass
-
-from semantic_release.commit_parser.angular import (
-    AngularCommitParser,
-    AngularParserOptions,
-)
-
-
-@dataclass
-class ConventionalCommitParserOptions(AngularParserOptions):
-    """Options dataclass for the ConventionalCommitParser."""
+from semantic_release.commit_parser.angular import AngularCommitParser
+from .options import ConventionalCommitParserOptions
 
 
 class ConventionalCommitParser(AngularCommitParser):

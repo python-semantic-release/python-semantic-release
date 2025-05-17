@@ -31,6 +31,7 @@ from pydantic import (
 from typing_extensions import Annotated, Self
 from urllib3.util.url import parse_url
 
+from semantic_release.commit_parser.conventional_monorepo import ConventionalCommitMonorepoParser
 import semantic_release.hvcs as hvcs
 from semantic_release.changelog.context import ChangelogMode
 from semantic_release.changelog.template import environment
@@ -72,8 +73,9 @@ class HvcsClient(str, Enum):
 
 
 _known_commit_parsers: Dict[str, type[CommitParser]] = {
-    "conventional": ConventionalCommitParser,
     "angular": AngularCommitParser,
+    "conventional": ConventionalCommitParser,
+    "conventional-monorepo": ConventionalCommitMonorepoParser,
     "emoji": EmojiCommitParser,
     "scipy": ScipyCommitParser,
     "tag": TagCommitParser,
