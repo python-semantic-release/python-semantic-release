@@ -312,8 +312,7 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
                 accumulator["linked_issues"] = sort_numerically(
                     set(accumulator["linked_issues"]).union(new_issue_refs)
                 )
-                # TODO: breaking change v10, removes resolution footers from descriptions
-                # return accumulator
+                return accumulator
 
         # Prevent appending duplicate descriptions
         if text not in accumulator["descriptions"]:
