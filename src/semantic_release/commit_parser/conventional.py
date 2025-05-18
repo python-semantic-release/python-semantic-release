@@ -147,24 +147,23 @@ class ConventionalCommitParser(
                 )
             ) from err
 
-        self.commit_prefix = regexp(
+        self.commit_subject = regexp(
             str.join(
                 "",
                 [
                     f"^{commit_type_pattern.pattern}",
                     r"(?:\((?P<scope>[^\n]+)\))?",
-                    # TODO: remove ! support as it is not part of the angular commit spec (its part of conventional commits spec)
                     r"(?P<break>!)?:\s+",
+                    r"(?P<subject>[^\n]+)",
                 ],
             )
         )
 
-        self.re_parser = regexp(
+        self.commit_msg_pattern = regexp(
             str.join(
                 "",
                 [
-                    self.commit_prefix.pattern,
-                    r"(?P<subject>[^\n]+)",
+                    self.commit_subject.pattern,
                     r"(?:\n\n(?P<text>.+))?",  # commit body
                 ],
             ),
@@ -268,7 +267,7 @@ class ConventionalCommitParser(
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult | None:
-        if not (parsed := self.re_parser.match(message)):
+        if not (parsed := self.commit_msg_pattern.match(message)):
             return None
 
         parsed_break = parsed.group("break")
@@ -467,25 +466,31 @@ class ConventionalCommitParser(
             if not clean_paragraph.strip():
                 continue
 
-            # Check if the paragraph is the start of a new angular commit
-            if not self.commit_prefix.search(clean_paragraph):
-                if not separate_commit_msgs and not current_msg:
-                    # if there are no separate commit messages and no current message
-                    # then this is the first commit message
-                    current_msg = dedent(clean_paragraph)
-                    continue
-
-                # append the paragraph as part of the previous commit message
+            # Check if the paragraph is the start of a new conventional commit
+            # Note: that we check that the subject has more than one word to differentiate from
+            # a closing footer (e.g. "fix: #123", or "fix: ABC-123")
+            if (match := self.commit_subject.search(clean_paragraph)) and len(
+                match.group("subject").split(" ")
+            ) > 1:
+                # Since we found the start of the new commit, store any previous commit
+                # message separately and start the new commit message
                 if current_msg:
-                    current_msg += f"\n\n{dedent(clean_paragraph)}"
-                # else: drop the paragraph
+                    separate_commit_msgs.append(current_msg)
+
+                current_msg = clean_paragraph
                 continue
 
-            # Since we found the start of the new commit, store any previous commit
-            # message separately and start the new commit message
-            if current_msg:
-                separate_commit_msgs.append(current_msg)
+            if not separate_commit_msgs and not current_msg:
+                # if there are no separate commit messages and no current message
+                # then this is the first commit message
+                current_msg = dedent(clean_paragraph)
+                continue
 
-            current_msg = clean_paragraph
+            # append the paragraph as part of the previous commit message
+            if current_msg:
+                current_msg += f"\n\n{dedent(clean_paragraph)}"
+
+            # else: drop the paragraph
+            continue
 
         return [*separate_commit_msgs, current_msg]
