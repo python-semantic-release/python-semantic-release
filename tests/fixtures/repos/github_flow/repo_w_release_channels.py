@@ -106,7 +106,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
         )
         pr_num_gen = (i for i in count(start=2, step=1))
 
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -188,7 +188,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -237,7 +237,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -277,7 +277,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -331,7 +331,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -381,7 +381,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -435,7 +435,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],

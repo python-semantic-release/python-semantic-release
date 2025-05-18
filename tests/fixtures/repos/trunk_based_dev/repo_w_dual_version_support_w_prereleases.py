@@ -99,7 +99,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
             for i in count(step=1)
         )
 
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -179,7 +179,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -219,7 +219,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -269,7 +269,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                         "\n\n",
                                         [
                                             "API: add revolutionary feature",
-                                            "BREAKING CHANGE: this is a breaking change",
+                                            "This is a breaking change",
                                         ],
                                     ),
                                     "datetime": next(commit_timestamp_gen),
@@ -290,7 +290,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -336,7 +336,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "details": {
                                     "new_version": new_version,
                                     "max_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -377,7 +377,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "details": {
                                     "new_version": new_version,
                                     "max_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -418,7 +418,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "details": {
                                     "new_version": new_version,
                                     "max_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
