@@ -113,7 +113,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
         )
 
         # Common static actions or components
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -309,7 +309,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -359,7 +359,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -396,7 +396,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                         "\n\n",
                                         [
                                             "API: add revolutionary feature",
-                                            "BREAKING CHANGE: this is a breaking change",
+                                            "This is a breaking change",
                                         ],
                                     ),
                                     "datetime": next(commit_timestamp_gen),
@@ -417,7 +417,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -470,7 +470,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -500,7 +500,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -531,7 +531,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 {
                                     "conventional": "feat(cli): add new config cli command",
                                     "emoji": ":sparkles: (cli) add new config cli command",
-                                    "scipy": "ENH(cli): add new config cli command",
+                                    "scipy": "ENH:cli: add new config cli command",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -550,7 +550,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -571,7 +571,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 {
                                     "conventional": "feat(config): add new config option",
                                     "emoji": ":sparkles: (config) add new config option",
-                                    "scipy": "ENH(config): add new config option",
+                                    "scipy": "ENH: config: add new config option",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -590,7 +590,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -650,7 +650,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 {
                                     "conventional": "fix(cli): fix config cli command",
                                     "emoji": ":bug: (cli) fix config cli command",
-                                    "scipy": "BUG(cli): fix config cli command",
+                                    "scipy": "BUG:cli: fix config cli command",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -699,7 +699,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -729,7 +729,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 {
                                     "conventional": "fix(config): fix config option",
                                     "emoji": ":bug: (config) fix config option",
-                                    "scipy": "BUG(config): fix config option",
+                                    "scipy": "BUG: config: fix config option",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -778,7 +778,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -808,7 +808,7 @@ def get_repo_definition_4_git_flow_repo_w_3_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],

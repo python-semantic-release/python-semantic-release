@@ -93,7 +93,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
             for i in count(step=1)
         )
 
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -169,7 +169,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -209,7 +209,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -249,7 +249,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -270,7 +270,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                                 {
                                     "conventional": "feat(cli): add cli command",
                                     "emoji": ":sparkles:(cli) add cli command",
-                                    "scipy": "ENH(cli): add cli command",
+                                    "scipy": "ENH: cli: add cli command",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -289,7 +289,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
