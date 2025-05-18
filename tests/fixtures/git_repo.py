@@ -167,6 +167,7 @@ if TYPE_CHECKING:
             self,
             build_definition: Sequence[RepoActions],
             filter_4_changelog: bool = False,
+            ignore_merge_commits: bool = False,
         ) -> RepoDefinition: ...
 
     RepoDefinition: TypeAlias = dict[VersionStr, RepoVersionDef]  # type: ignore[misc] # mypy is thoroughly confused
@@ -1470,6 +1471,7 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
     def _get_commits(
         build_definition: Sequence[RepoActions],
         filter_4_changelog: bool = False,
+        ignore_merge_commits: bool = False,
     ) -> RepoDefinition:
         # Extract the commits from the build definition
         repo_def: RepoDefinition = {}
@@ -1494,7 +1496,14 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
                 if "commit_def" in build_step["details"]:
                     commit_def = build_step["details"]["commit_def"]  # type: ignore[typeddict-item]
 
-                    if filter_4_changelog and not commit_def["include_in_changelog"]:
+                    if any(
+                        (
+                            ignore_merge_commits
+                            and build_step["action"] == RepoActionStep.GIT_MERGE,
+                            filter_4_changelog
+                            and not commit_def["include_in_changelog"],
+                        )
+                    ):
                         continue
 
                     commits.append(commit_def)
