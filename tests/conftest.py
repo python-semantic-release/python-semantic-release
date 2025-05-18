@@ -396,6 +396,7 @@ def make_commit_obj(
             authored_date=commit_timestamp,
             committer=commit_author,
             committed_date=commit_timestamp,
+            parents=[],
         )
 
     return _make_commit
