@@ -534,15 +534,11 @@ def get_commit_def_of_conventional_commit(
                 "include_in_changelog": False,
             }
 
-        descriptions = list(parsed_result.descriptions)
-        if parsed_result.linked_merge_request:
-            descriptions[0] = str.join("(", descriptions[0].split("(")[:-1]).strip()
-
         return {
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
-            "desc": str.join("\n\n", descriptions),
+            "desc": str.join("\n\n", parsed_result.descriptions),
             "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
@@ -571,15 +567,11 @@ def get_commit_def_of_emoji_commit(
                 "include_in_changelog": False,
             }
 
-        descriptions = list(parsed_result.descriptions)
-        if parsed_result.linked_merge_request:
-            descriptions[0] = str.join("(", descriptions[0].split("(")[:-1]).strip()
-
         return {
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
-            "desc": str.join("\n\n", descriptions),
+            "desc": str.join("\n\n", parsed_result.descriptions),
             "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
@@ -608,15 +600,11 @@ def get_commit_def_of_scipy_commit(
                 "include_in_changelog": False,
             }
 
-        descriptions = list(parsed_result.descriptions)
-        if parsed_result.linked_merge_request:
-            descriptions[0] = str.join("(", descriptions[0].split("(")[:-1]).strip()
-
         return {
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
-            "desc": str.join("\n\n", descriptions),
+            "desc": str.join("\n\n", parsed_result.descriptions),
             "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
@@ -1145,21 +1133,7 @@ def separate_squashed_commit_def(
                 "msg": squashed_message,
                 "type": parsed_result.type,
                 "category": parsed_result.category,
-                "desc": str.join(
-                    "\n\n",
-                    (
-                        [
-                            # Strip out any MR references (since v9 doesn't) to prep for changelog generatro
-                            # TODO: remove in v10, as the parser will remove the MR reference
-                            str.join(
-                                "(", parsed_result.descriptions[0].split("(")[:-1]
-                            ).strip(),
-                            *parsed_result.descriptions[1:],
-                        ]
-                        if parsed_result.linked_merge_request
-                        else [*parsed_result.descriptions]
-                    ),
-                ),
+                "desc": str.join("\n\n", parsed_result.descriptions),
                 "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
                 "scope": parsed_result.scope,
                 "mr": parsed_result.linked_merge_request or squashed_commit_def["mr"],
