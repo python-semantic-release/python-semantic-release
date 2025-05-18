@@ -294,6 +294,11 @@ Guidelines`_ with all different commit types. Because of this small variance, th
 only extends our :ref:`commit_parser-builtin-angular` parser with pre-defined scipy commit types
 in the default Scipy Parser Options and all other features are inherited.
 
+**Limitations**:
+
+- Commits with the ``REV`` type are not currently supported. Track the implementation
+  of this feature in the issue `#402`_.
+
 If no commit parser options are provided via the configuration, the parser will use PSR's
 built-in :py:class:`defaults <semantic_release.commit_parser.scipy.ScipyParserOptions>`.
 
