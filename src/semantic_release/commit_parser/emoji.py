@@ -275,9 +275,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(subject):
             linked_merge_request = mr_match.group("mr_number")
-            # TODO: breaking change v10, removes PR number from subject/descriptions
-            # expects changelog template to format the line accordingly
-            # subject = self.mr_selector.sub("", subject).strip()
+            subject = self.mr_selector.sub("", subject).strip()
 
         # Search for emoji of the highest importance in the subject
         match = self.emoji_selector.search(subject)
