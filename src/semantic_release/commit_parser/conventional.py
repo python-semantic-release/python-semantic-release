@@ -240,10 +240,9 @@ class ConventionalCommitParser(
             notice := match.group("notice")
         ):
             accumulator["notices"].append(notice)
-            # TODO: breaking change v10, removes notice footers from descriptions
-            # return accumulator
+            return accumulator
 
-        elif match := self.issue_selector.search(text):
+        if match := self.issue_selector.search(text):
             # if match := self.issue_selector.search(text):
             predicate = regexp(r",? and | *[,;/& ] *").sub(
                 ",", match.group("issue_predicate") or ""
