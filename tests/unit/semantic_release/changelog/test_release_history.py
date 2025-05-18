@@ -74,10 +74,7 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
                 if commit["category"] not in commits_per_group:
                     commits_per_group[commit["category"]] = []
 
-                commits_per_group[commit["category"]].append(
-                    # TODO: remove the newline when our release history strips whitespace from commit messages
-                    commit["msg"].strip() + "\n"
-                )
+                commits_per_group[commit["category"]].append(commit["msg"].strip())
 
             if version_str == "Unreleased":
                 unreleased_history = commits_per_group
@@ -87,7 +84,9 @@ def create_release_history_from_repo_def() -> CreateReleaseHistoryFromRepoDefFn:
             version = Version.parse(version_str)
 
             # add the PSR version commit message
-            commits_per_group["Unknown"].append(COMMIT_MESSAGE.format(version=version))
+            commits_per_group["Unknown"].append(
+                COMMIT_MESSAGE.format(version=version).strip()
+            )
 
             # store the organized commits for this version
             released_history[version] = commits_per_group
@@ -132,7 +131,10 @@ def test_release_history(
 ):
     repo = repo_result["repo"]
     expected_release_history = create_release_history_from_repo_def(
-        get_commits_from_repo_build_def(repo_result["definition"])
+        get_commits_from_repo_build_def(
+            repo_result["definition"],
+            ignore_merge_commits=default_conventional_parser.options.ignore_merge_commits,
+        )
     )
     expected_released_versions = sorted(
         map(str, expected_release_history.released.keys())
@@ -179,7 +181,7 @@ def test_release_history(
         "\n---\n",
         sorted(
             [
-                msg
+                str(msg).strip()
                 for bucket in [
                     CONVENTIONAL_COMMITS_MINOR[::-1],
                     *expected_release_history.unreleased.values(),
