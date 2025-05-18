@@ -8,7 +8,7 @@ from functools import reduce
 from pathlib import Path
 from textwrap import dedent
 from time import sleep
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
@@ -956,10 +956,16 @@ def get_hvcs_client_from_repo_def(
 
         # Prevent the HVCS client from using the environment variables
         with mock.patch.dict(os.environ, {}, clear=True):
-            return hvcs_client_class(
-                example_git_https_url,
-                hvcs_domain=get_cfg_value_from_def(repo_def, "hvcs_domain"),
+            hvcs_client = cast(
+                "HvcsBase",
+                hvcs_client_class(
+                    example_git_https_url,
+                    hvcs_domain=get_cfg_value_from_def(repo_def, "hvcs_domain"),
+                ),
             )
+            # Force the HVCS client to attempt to resolve the repo name (as we generally cache it)
+            assert hvcs_client.repo_name
+            return cast("Github | Gitlab | Gitea | Bitbucket", hvcs_client)
 
     return _get_hvcs_client_from_repo_def
 
