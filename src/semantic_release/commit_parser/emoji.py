@@ -239,10 +239,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             notice := match.group("notice")
         ):
             accumulator["notices"].append(notice)
-            # TODO: breaking change v10, removes notice footers from descriptions
-            # return accumulator
+            return accumulator
 
-        elif self.options.parse_linked_issues and (
+        if self.options.parse_linked_issues and (
             match := self.issue_selector.search(text)
         ):
             predicate = regexp(r",? and | *[,;/& ] *").sub(
