@@ -111,16 +111,18 @@ class ScipyParserOptions(ParserOptions):
     just with different tag names.
     """
 
-    major_tags: Tuple[str, ...] = ("API",)
+    major_tags: Tuple[str, ...] = ("API", "DEP")
     """Commit-type prefixes that should result in a major release bump."""
 
-    minor_tags: Tuple[str, ...] = ("DEP", "DEV", "ENH", "REV", "FEAT")
+    minor_tags: Tuple[str, ...] = ("ENH", "FEAT")
     """Commit-type prefixes that should result in a minor release bump."""
 
     patch_tags: Tuple[str, ...] = ("BLD", "BUG", "MAINT")
     """Commit-type prefixes that should result in a patch release bump."""
 
     other_allowed_tags: Tuple[str, ...] = (
+        # "REV",  # Revert commits are NOT Currently Supported
+        "DEV",
         "BENCH",
         "DOC",
         "STY",
@@ -207,13 +209,13 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
                 "",
                 [
                     f"^{commit_type_pattern.pattern}",
-                    r"(?:\((?P<scope>[^\n]+)\))?",
-                    r":\s+",
+                    r"(?::[\t ]*(?P<scope>[^:\n]+))?",
+                    r":[\t ]+",
                 ],
             )
         )
 
-        self.re_parser = regexp(
+        self.commit_msg_pattern = regexp(
             str.join(
                 "",
                 [
@@ -318,7 +320,7 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult | None:
-        if not (parsed := self.re_parser.match(message)):
+        if not (parsed := self.commit_msg_pattern.match(message)):
             return None
 
         parsed_scope = parsed.group("scope") or ""
