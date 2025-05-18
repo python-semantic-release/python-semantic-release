@@ -1685,10 +1685,11 @@ def simulate_default_changelog_creation(  # noqa: C901
                 else:
                     commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
 
-                if len(descriptions) > 1:
-                    commit_cl_desc += (
-                        "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
-                    )
+                # COMMENTED out for v10 as the defualt changelog now only writes the subject line
+                # if len(descriptions) > 1:
+                #     commit_cl_desc += (
+                #         "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                #     )
 
                 # Add commits to section
                 if commit_cl_desc not in section_bullets:
@@ -1798,10 +1799,11 @@ def simulate_default_changelog_creation(  # noqa: C901
                 else:
                     commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
 
-                if len(descriptions) > 1:
-                    commit_cl_desc += (
-                        "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
-                    )
+                # COMMENTED out for v10 as the defualt changelog now only writes the subject line
+                # if len(descriptions) > 1:
+                #     commit_cl_desc += (
+                #         "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                #     )
 
                 # Add commits to section
                 if commit_cl_desc not in section_bullets:
