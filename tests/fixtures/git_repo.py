@@ -344,6 +344,7 @@ if TYPE_CHECKING:
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
             mask_initial_release: bool = False,
+            ignore_merge_commits: bool = True,  # Default as of v10
         ) -> Sequence[RepoActions]: ...
 
     class BuildRepoFromDefinitionFn(Protocol):
