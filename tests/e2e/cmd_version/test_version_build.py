@@ -151,6 +151,7 @@ def test_version_runs_build_command_windows(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: mock.MagicMock,
     post_mocker: mock.Mock,
+    clean_os_environment: dict[str, str],
 ):
     if shell == "cmd":
         build_result_file = get_wheel_file("%NEW_VERSION%")
@@ -174,9 +175,8 @@ def test_version_runs_build_command_windows(
     )
     build_command = pyproject_config.get("tool.semantic_release.build_command", "")
     patched_os_environment = {
+        **clean_os_environment,
         "CI": "true",
-        "PATH": os.getenv("PATH", ""),
-        "HOME": "/home/username",
         "VIRTUAL_ENV": "./.venv",
         # Simulate that all CI's are set
         "GITHUB_ACTIONS": "true",
@@ -184,29 +184,6 @@ def test_version_runs_build_command_windows(
         "GITEA_ACTIONS": "true",
         "BITBUCKET_REPO_FULL_NAME": "python-semantic-release/python-semantic-release.git",
         "PSR_DOCKER_GITHUB_ACTION": "true",
-        # Windows
-        "ALLUSERSAPPDATA": "C:\\ProgramData",
-        "ALLUSERSPROFILE": "C:\\ProgramData",
-        "APPDATA": "C:\\Users\\Username\\AppData\\Roaming",
-        "COMMONPROGRAMFILES": "C:\\Program Files\\Common Files",
-        "COMMONPROGRAMFILES(X86)": "C:\\Program Files (x86)\\Common Files",
-        "DEFAULTUSERPROFILE": "C:\\Users\\Default",
-        "HOMEPATH": "\\Users\\Username",
-        "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
-        "PROFILESFOLDER": "C:\\Users",
-        "PROGRAMFILES": "C:\\Program Files",
-        "PROGRAMFILES(X86)": "C:\\Program Files (x86)",
-        "SYSTEM": "C:\\Windows\\System32",
-        "SYSTEM16": "C:\\Windows\\System16",
-        "SYSTEM32": "C:\\Windows\\System32",
-        "SYSTEMDRIVE": "C:",
-        "SYSTEMROOT": "C:\\Windows",
-        "TEMP": "C:\\Users\\Username\\AppData\\Local\\Temp",
-        "TMP": "C:\\Users\\Username\\AppData\\Local\\Temp",
-        "USERPROFILE": "C:\\Users\\Username",
-        "USERSID": "S-1-5-21-1234567890-123456789-123456789-1234",
-        "USERNAME": "Username",  # must include for python getpass.getuser() on windows
-        "WINDIR": "C:\\Windows",
     }
 
     # Wrap subprocess.run to capture the arguments to the call
@@ -226,42 +203,17 @@ def test_version_runs_build_command_windows(
             [shell, "/c" if shell == "cmd" else "-Command", build_command],
             check=True,
             env={
+                **clean_os_environment,
                 "NEW_VERSION": next_release_version,  # injected into environment
                 "CI": patched_os_environment["CI"],
                 "BITBUCKET_CI": "true",  # Converted
                 "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
                 "GITEA_ACTIONS": patched_os_environment["GITEA_ACTIONS"],
                 "GITLAB_CI": patched_os_environment["GITLAB_CI"],
-                "HOME": patched_os_environment["HOME"],
-                "PATH": patched_os_environment["PATH"],
                 "VIRTUAL_ENV": patched_os_environment["VIRTUAL_ENV"],
                 "PSR_DOCKER_GITHUB_ACTION": patched_os_environment[
                     "PSR_DOCKER_GITHUB_ACTION"
                 ],
-                # Windows
-                "ALLUSERSAPPDATA": patched_os_environment["ALLUSERSAPPDATA"],
-                "ALLUSERSPROFILE": patched_os_environment["ALLUSERSPROFILE"],
-                "APPDATA": patched_os_environment["APPDATA"],
-                "COMMONPROGRAMFILES": patched_os_environment["COMMONPROGRAMFILES"],
-                "COMMONPROGRAMFILES(X86)": patched_os_environment[
-                    "COMMONPROGRAMFILES(X86)"
-                ],
-                "DEFAULTUSERPROFILE": patched_os_environment["DEFAULTUSERPROFILE"],
-                "HOMEPATH": patched_os_environment["HOMEPATH"],
-                "PATHEXT": patched_os_environment["PATHEXT"],
-                "PROFILESFOLDER": patched_os_environment["PROFILESFOLDER"],
-                "PROGRAMFILES": patched_os_environment["PROGRAMFILES"],
-                "PROGRAMFILES(X86)": patched_os_environment["PROGRAMFILES(X86)"],
-                "SYSTEM": patched_os_environment["SYSTEM"],
-                "SYSTEM16": patched_os_environment["SYSTEM16"],
-                "SYSTEM32": patched_os_environment["SYSTEM32"],
-                "SYSTEMDRIVE": patched_os_environment["SYSTEMDRIVE"],
-                "SYSTEMROOT": patched_os_environment["SYSTEMROOT"],
-                "TEMP": patched_os_environment["TEMP"],
-                "TMP": patched_os_environment["TMP"],
-                "USERPROFILE": patched_os_environment["USERPROFILE"],
-                "USERSID": patched_os_environment["USERSID"],
-                "WINDIR": patched_os_environment["WINDIR"],
             },
         )
 
@@ -294,11 +246,7 @@ def test_version_runs_build_command_w_user_env(
     patched_os_environment = {
         **clean_os_environment,
         "CI": "true",
-        "PATH": os.getenv("PATH", ""),
-        "HOME": "/home/username",
         "VIRTUAL_ENV": "./.venv",
-        # Windows
-        "USERNAME": "Username",  # must include for python getpass.getuser() on windows
         # Simulate that all CI's are set
         "GITHUB_ACTIONS": "true",
         "GITLAB_CI": "true",
@@ -366,8 +314,6 @@ def test_version_runs_build_command_w_user_env(
                 "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
                 "GITEA_ACTIONS": patched_os_environment["GITEA_ACTIONS"],
                 "GITLAB_CI": patched_os_environment["GITLAB_CI"],
-                "HOME": patched_os_environment["HOME"],
-                "PATH": patched_os_environment["PATH"],
                 "VIRTUAL_ENV": patched_os_environment["VIRTUAL_ENV"],
                 "PSR_DOCKER_GITHUB_ACTION": patched_os_environment[
                     "PSR_DOCKER_GITHUB_ACTION"
