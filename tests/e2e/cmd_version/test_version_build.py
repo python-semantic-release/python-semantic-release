@@ -13,15 +13,12 @@ import tomlkit
 from flatdict import FlatDict
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
-
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.repos import repo_w_trunk_only_conventional_commits
 from tests.util import assert_successful_exit_code, get_func_qual_name
 
 if TYPE_CHECKING:
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import GetWheelFileFn, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
 
@@ -67,7 +64,7 @@ def test_version_runs_build_command(
     repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     shell: str,
     get_wheel_file: GetWheelFileFn,
     example_pyproject_toml: Path,
@@ -100,10 +97,10 @@ def test_version_runs_build_command(
         wraps=subprocess.run,
     ) as patched_subprocess_run, mock.patch(
         get_func_qual_name(shellingham.detect_shell), return_value=(shell, shell)
-    ), mock.patch.dict(os.environ, patched_os_environment, clear=True):
+    ):
         # ACT: run & force a new version that will trigger the build command
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *cli_args]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:], env=patched_os_environment)
 
         # Evaluate
         assert_successful_exit_code(result, cli_cmd)
@@ -147,7 +144,7 @@ def test_version_runs_build_command_windows(
     repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     shell: str,
     get_wheel_file: GetWheelFileFn,
     example_pyproject_toml: Path,
@@ -218,10 +215,10 @@ def test_version_runs_build_command_windows(
         wraps=subprocess.run,
     ) as patched_subprocess_run, mock.patch(
         get_func_qual_name(shellingham.detect_shell), return_value=(shell, shell)
-    ), mock.patch.dict(os.environ, patched_os_environment, clear=True):
+    ):
         # ACT: run & force a new version that will trigger the build command
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *cli_args]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:], env=patched_os_environment)
 
         # Evaluate
         assert_successful_exit_code(result, cli_cmd)
@@ -288,12 +285,14 @@ def test_version_runs_build_command_w_user_env(
     repo_result: BuiltRepoResult,
     cli_args: list[str],
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     example_pyproject_toml: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    clean_os_environment: dict[str, str],
 ):
     # Setup
     patched_os_environment = {
+        **clean_os_environment,
         "CI": "true",
         "PATH": os.getenv("PATH", ""),
         "HOME": "/home/username",
@@ -337,7 +336,7 @@ def test_version_runs_build_command_w_user_env(
     ) as patched_subprocess_run, mock.patch(
         get_func_qual_name(shellingham.detect_shell),
         return_value=("bash", "/usr/bin/bash"),
-    ), mock.patch.dict(os.environ, patched_os_environment, clear=True):
+    ):
         cli_cmd = [
             MAIN_PROG_NAME,
             VERSION_SUBCMD,
@@ -349,7 +348,7 @@ def test_version_runs_build_command_w_user_env(
         ]
 
         # ACT: run & force a new version that will trigger the build command
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:], env=patched_os_environment)
 
         # Evaluate
         # [1] Make sure it did not error internally
@@ -360,6 +359,7 @@ def test_version_runs_build_command_w_user_env(
             ["bash", "-c", build_command],
             check=True,
             env={
+                **clean_os_environment,
                 "NEW_VERSION": next_release_version,  # injected into environment
                 "CI": patched_os_environment["CI"],
                 "BITBUCKET_CI": "true",  # Converted
@@ -384,7 +384,7 @@ def test_version_runs_build_command_w_user_env(
 
 @pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_version_skips_build_command_with_skip_build(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: mock.MagicMock,
     post_mocker: mock.Mock,
 ):
@@ -395,7 +395,7 @@ def test_version_skips_build_command_with_skip_build(
         return_value=subprocess.CompletedProcess(args=(), returncode=0),
     ) as patched_subprocess_run:
         # Act: force a new version
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)

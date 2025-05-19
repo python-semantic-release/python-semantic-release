@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from textwrap import dedent
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -13,7 +12,6 @@ from requests import Session
 
 import semantic_release.hvcs.github
 from semantic_release.changelog.context import ChangelogMode
-from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.hvcs.github import Github
 from semantic_release.version.version import Version
@@ -77,9 +75,9 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import TypedDict
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
+    from tests.conftest import RunCliFn
     from tests.e2e.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import (
         ExProjectDir,
@@ -123,7 +121,7 @@ if TYPE_CHECKING:
 def test_changelog_noop_is_noop(
     repo_result: BuiltRepoResult,
     arg0: str | None,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
 ):
     repo = repo_result["repo"]
@@ -152,7 +150,7 @@ def test_changelog_noop_is_noop(
     ), requests_mock.Mocker(session=session) as mocker:
         args = [arg0, f"v{version_str}"] if version_str and arg0 else []
         cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD, *args]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -227,7 +225,7 @@ def test_changelog_noop_is_noop(
 )
 def test_changelog_content_regenerated(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
     insertion_flag: str,
@@ -255,7 +253,7 @@ def test_changelog_content_regenerated(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -289,7 +287,7 @@ def test_changelog_content_regenerated_masked_initial_release(
     build_repo_from_definition: BuildRepoFromDefinitionFn,
     get_repo_definition_4_trunk_only_repo_w_tags: GetRepoDefinitionFn,
     example_project_dir: ExProjectDir,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     changelog_file: Path,
     insertion_flag: str,
 ):
@@ -319,7 +317,7 @@ def test_changelog_content_regenerated_masked_initial_release(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -353,7 +351,7 @@ def test_changelog_content_regenerated_masked_initial_release(
 )
 def test_changelog_update_mode_unchanged(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
 ):
@@ -376,7 +374,7 @@ def test_changelog_update_mode_unchanged(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -413,7 +411,7 @@ def test_changelog_update_mode_unchanged(
 )
 def test_changelog_update_mode_no_prev_changelog(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
 ):
@@ -439,7 +437,7 @@ def test_changelog_update_mode_no_prev_changelog(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -481,7 +479,7 @@ def test_changelog_update_mode_no_prev_changelog(
 )
 def test_changelog_update_mode_no_flag(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
     insertion_flag: str,
@@ -514,7 +512,7 @@ def test_changelog_update_mode_no_flag(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -555,7 +553,7 @@ def test_changelog_update_mode_no_flag(
 )
 def test_changelog_update_mode_no_header(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_format: ChangelogOutputFormat,
     changelog_file: Path,
@@ -613,7 +611,7 @@ def test_changelog_update_mode_no_header(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -657,7 +655,7 @@ def test_changelog_update_mode_no_header(
 )
 def test_changelog_update_mode_no_footer(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_format: ChangelogOutputFormat,
     changelog_file: Path,
@@ -717,7 +715,7 @@ def test_changelog_update_mode_no_footer(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -761,7 +759,7 @@ def test_changelog_update_mode_no_footer(
 )
 def test_changelog_update_mode_no_releases(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
     insertion_flag: str,
@@ -816,7 +814,7 @@ def test_changelog_update_mode_no_releases(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -862,7 +860,7 @@ def test_changelog_update_mode_unreleased_n_released(
     repo_result: BuiltRepoResult,
     commit_type: CommitConvention,
     changelog_format: ChangelogOutputFormat,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     example_git_ssh_url: str,
     file_in_repo: str,
@@ -933,7 +931,10 @@ def test_changelog_update_mode_unreleased_n_released(
         repo,
         commit_n_section[commit_type]["commit"],
     )
-    hvcs = Github(example_git_ssh_url, hvcs_domain=EXAMPLE_HVCS_DOMAIN)
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        hvcs = Github(example_git_ssh_url, hvcs_domain=EXAMPLE_HVCS_DOMAIN)
+        assert hvcs.repo_name  # force caching of repo values (ignoring the env)
 
     unreleased_change_variants = {
         ChangelogOutputFormat.MARKDOWN: dedent(
@@ -992,7 +993,7 @@ def test_changelog_update_mode_unreleased_n_released(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -1015,11 +1016,11 @@ def test_changelog_update_mode_unreleased_n_released(
 )
 def test_changelog_release_tag_not_in_history(
     args: list[str],
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_exit_code(2, result, cli_cmd)
@@ -1035,7 +1036,7 @@ def test_changelog_release_tag_not_in_history(
         ("--post-to-release-tag", "v0.2.0"),  #      latest release
     ],
 )
-def test_changelog_post_to_release(args: list[str], cli_runner: CliRunner):
+def test_changelog_post_to_release(args: list[str], run_cli: RunCliFn):
     # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're
     # made
 
@@ -1055,59 +1056,22 @@ def test_changelog_post_to_release(args: list[str], cli_runner: CliRunner):
         repo_name=EXAMPLE_REPO_NAME,
     )
 
-    clean_os_environment = dict(
-        filter(
-            lambda k_v: k_v[1] is not None,
-            {
-                "CI": "true",
-                "PATH": os.getenv("PATH"),
-                "HOME": os.getenv("HOME"),
-                "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
-                **(
-                    {}
-                    if sys.platform != "win32"
-                    else {
-                        # Windows Required variables
-                        "ALLUSERSAPPDATA": os.getenv("ALLUSERSAPPDATA"),
-                        "ALLUSERSPROFILE": os.getenv("ALLUSERSPROFILE"),
-                        "APPDATA": os.getenv("APPDATA"),
-                        "COMMONPROGRAMFILES": os.getenv("COMMONPROGRAMFILES"),
-                        "COMMONPROGRAMFILES(X86)": os.getenv("COMMONPROGRAMFILES(X86)"),
-                        "DEFAULTUSERPROFILE": os.getenv("DEFAULTUSERPROFILE"),
-                        "HOMEPATH": os.getenv("HOMEPATH"),
-                        "PATHEXT": os.getenv("PATHEXT"),
-                        "PROFILESFOLDER": os.getenv("PROFILESFOLDER"),
-                        "PROGRAMFILES": os.getenv("PROGRAMFILES"),
-                        "PROGRAMFILES(X86)": os.getenv("PROGRAMFILES(X86)"),
-                        "SYSTEM": os.getenv("SYSTEM"),
-                        "SYSTEM16": os.getenv("SYSTEM16"),
-                        "SYSTEM32": os.getenv("SYSTEM32"),
-                        "SYSTEMDRIVE": os.getenv("SYSTEMDRIVE"),
-                        "SYSTEMROOT": os.getenv("SYSTEMROOT"),
-                        "TEMP": os.getenv("TEMP"),
-                        "TMP": os.getenv("TMP"),
-                        "USERPROFILE": os.getenv("USERPROFILE"),
-                        "USERSID": os.getenv("USERSID"),
-                        "USERNAME": os.getenv("USERNAME"),
-                        "WINDIR": os.getenv("WINDIR"),
-                    }
-                ),
-            }.items(),
-        )
-    )
-
     # Patch out env vars that affect changelog URLs but only get set in e.g.
     # Github actions
     with mock.patch(
         # Patching the specific module's reference to the build_requests_session function
         f"{semantic_release.hvcs.github.__name__}.{semantic_release.hvcs.github.build_requests_session.__name__}",
         return_value=session,
-    ) as build_requests_session_mock, mock.patch.dict(
-        os.environ, clean_os_environment, clear=True
-    ):
+    ) as build_requests_session_mock:
         # Act
         cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(
+            cli_cmd[1:],
+            env={
+                "CI": "true",
+                "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
+            },
+        )
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -1127,7 +1091,7 @@ def test_custom_release_notes_template(
     use_release_notes_template: UseReleaseNotesTemplateFn,
     retrieve_runtime_context: RetrieveRuntimeContextFn,
     post_mocker: Mocker,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
     expected_call_count = 1
@@ -1157,7 +1121,7 @@ def test_custom_release_notes_template(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", tag]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Assert
     assert_successful_exit_code(result, cli_cmd)
@@ -1174,7 +1138,7 @@ def test_changelog_default_on_empty_template_dir(
     changelog_template_dir: Path,
     example_project_template_dir: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     # Setup: Make sure default changelog doesn't already exist
     example_changelog_md.unlink(missing_ok=True)
@@ -1190,7 +1154,7 @@ def test_changelog_default_on_empty_template_dir(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -1205,7 +1169,7 @@ def test_changelog_default_on_incorrect_config_template_file(
     changelog_template_dir: Path,
     example_project_template_dir: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     # Setup: Make sure default changelog doesn't already exist
     example_changelog_md.unlink(missing_ok=True)
@@ -1222,7 +1186,7 @@ def test_changelog_default_on_incorrect_config_template_file(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -1236,7 +1200,7 @@ def test_changelog_default_on_incorrect_config_template_file(
 def test_changelog_prevent_malicious_path_traversal_file(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     bad_changelog_file_str: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     # Setup: A malicious path traversal filepath outside of the repository
     update_pyproject_toml(
@@ -1246,7 +1210,7 @@ def test_changelog_prevent_malicious_path_traversal_file(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_exit_code(1, result, cli_cmd)
@@ -1261,7 +1225,7 @@ def test_changelog_prevent_malicious_path_traversal_file(
 def test_changelog_prevent_external_path_traversal_dir(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     template_dir_path: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     # Setup: A malicious path traversal filepath outside of the repository
     update_pyproject_toml(
@@ -1271,7 +1235,7 @@ def test_changelog_prevent_external_path_traversal_dir(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--noop", CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_exit_code(1, result, cli_cmd)

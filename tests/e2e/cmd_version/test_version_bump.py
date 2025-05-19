@@ -11,7 +11,6 @@ import tomlkit
 # Limitation in pytest-lazy-fixture - see https://stackoverflow.com/a/69884019
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
 from semantic_release.commit_parser.conventional import ConventionalCommitParser
 from semantic_release.commit_parser.emoji import EmojiCommitParser
 from semantic_release.commit_parser.scipy import ScipyCommitParser
@@ -58,10 +57,9 @@ from tests.util import (
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
-    from tests.conftest import GetStableDateNowFn
+    from tests.conftest import GetStableDateNowFn, RunCliFn
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
 
@@ -315,7 +313,7 @@ def test_version_force_level(
     next_release_version: str,
     example_project_dir: ExProjectDir,
     example_pyproject_toml: Path,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -347,7 +345,7 @@ def test_version_force_level(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *cli_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -515,7 +513,7 @@ def test_version_next_greater_than_version_one_conventional(
     prerelease_token: str,
     next_release_version: str,
     branch_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -554,7 +552,7 @@ def test_version_next_greater_than_version_one_conventional(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -654,7 +652,7 @@ def test_version_next_greater_than_version_one_no_bump_conventional(
     prerelease_token: str,
     next_release_version: str,
     branch_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -693,7 +691,7 @@ def test_version_next_greater_than_version_one_no_bump_conventional(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -814,7 +812,7 @@ def test_version_next_greater_than_version_one_emoji(
     prerelease_token: str,
     next_release_version: str,
     branch_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -853,7 +851,7 @@ def test_version_next_greater_than_version_one_emoji(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -953,7 +951,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     prerelease_token: str,
     next_release_version: str,
     branch_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -992,7 +990,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -1113,7 +1111,7 @@ def test_version_next_greater_than_version_one_scipy(
     prerelease_token: str,
     next_release_version: str,
     branch_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -1152,7 +1150,7 @@ def test_version_next_greater_than_version_one_scipy(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -1252,7 +1250,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     prerelease_token: str,
     next_release_version: str,
     branch_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -1291,7 +1289,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -1592,7 +1590,7 @@ def test_version_next_w_zero_dot_versions_conventional(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -1638,7 +1636,7 @@ def test_version_next_w_zero_dot_versions_conventional(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -1746,7 +1744,7 @@ def test_version_next_w_zero_dot_versions_no_bump_conventional(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -1792,7 +1790,7 @@ def test_version_next_w_zero_dot_versions_no_bump_conventional(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -2072,7 +2070,7 @@ def test_version_next_w_zero_dot_versions_emoji(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -2118,7 +2116,7 @@ def test_version_next_w_zero_dot_versions_emoji(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -2226,7 +2224,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -2272,7 +2270,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -2552,7 +2550,7 @@ def test_version_next_w_zero_dot_versions_scipy(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -2598,7 +2596,7 @@ def test_version_next_w_zero_dot_versions_scipy(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -2706,7 +2704,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -2752,7 +2750,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -3095,7 +3093,7 @@ def test_version_next_w_zero_dot_versions_minimums(
     branch_name: str,
     major_on_zero: bool,
     allow_zero_version: bool,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
@@ -3142,7 +3140,7 @@ def test_version_next_w_zero_dot_versions_minimums(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, *prerelease_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit

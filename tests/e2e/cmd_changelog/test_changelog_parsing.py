@@ -10,7 +10,6 @@ import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.context import ChangelogMode
-from semantic_release.cli.commands.main import main
 from semantic_release.cli.const import JINJA2_EXTENSION
 
 from tests.const import CHANGELOG_SUBCMD, MAIN_PROG_NAME
@@ -29,8 +28,7 @@ from tests.fixtures.repos.git_flow import (
 from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
 
@@ -68,7 +66,7 @@ if TYPE_CHECKING:
     ],
 )
 def test_changelog_parsing_ignore_merge_commits(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     repo_result: BuiltRepoResult,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     example_project_template_dir: Path,
@@ -131,7 +129,7 @@ def test_changelog_parsing_ignore_merge_commits(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
