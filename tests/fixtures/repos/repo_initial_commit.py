@@ -71,13 +71,14 @@ def get_repo_definition_4_repo_w_initial_commit(
     changelog_rst_file: Path,
     stable_now_date: GetStableDateNowFn,
 ) -> GetRepoDefinitionFn:
-    def _get_repo_from_defintion(
+    def _get_repo_from_definition(
         commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = False,
+        ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         repo_construction_steps: list[RepoActions] = []
         repo_construction_steps.extend(
@@ -142,7 +143,7 @@ def get_repo_definition_4_repo_w_initial_commit(
 
         return repo_construction_steps
 
-    return _get_repo_from_defintion
+    return _get_repo_from_definition
 
 
 @pytest.fixture(scope="session")
