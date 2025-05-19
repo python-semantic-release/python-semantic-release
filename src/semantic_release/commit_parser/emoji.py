@@ -268,7 +268,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult:
-        subject = message.split("\n", maxsplit=1)[0]
+        msg_parts = message.split("\n", maxsplit=1)
+        subject = msg_parts[0]
+        msg_body = msg_parts[1] if len(msg_parts) > 1 else ""
 
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(subject):
@@ -287,7 +289,10 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         # All emojis will remain part of the returned description
         body_components: dict[str, list[str]] = reduce(
             self.commit_body_components_separator,
-            parse_paragraphs(message),
+            [
+                subject,
+                *parse_paragraphs(msg_body),
+            ],
             {
                 "descriptions": [],
                 "notices": [],
@@ -302,11 +307,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             type=primary_emoji,
             category=primary_emoji,
             scope=parsed_scope,
-            # TODO: breaking change v10, removes breaking change footers from descriptions
-            # descriptions=(
-            #     descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions
-            # )
-            descriptions=descriptions,
+            descriptions=(
+                descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions
+            ),
             breaking_descriptions=(
                 descriptions[1:] if level_bump is LevelBump.MAJOR else ()
             ),
