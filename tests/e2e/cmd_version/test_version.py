@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
+from semantic_release.hvcs.github import Github
+
 from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
@@ -217,7 +219,7 @@ def test_version_on_last_release(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD]
-    result = run_cli(cli_cmd[1:])
+    result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)

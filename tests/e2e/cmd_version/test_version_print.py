@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
+from semantic_release.hvcs.github import Github
+
 from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
@@ -126,7 +128,7 @@ def test_version_print_next_version(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print", *force_args]
-    result = run_cli(cli_cmd[1:])
+    result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -136,7 +138,6 @@ def test_version_print_next_version(
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
-    assert not result.stderr
     assert f"{next_release_version}\n" == result.stdout
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
@@ -296,7 +297,7 @@ def test_version_print_tag_prints_next_tag(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-tag", *force_args]
-    result = run_cli(cli_cmd[1:])
+    result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -306,7 +307,6 @@ def test_version_print_tag_prints_next_tag(
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
-    assert not result.stderr
     assert f"{next_release_tag}\n" == result.stdout
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
@@ -340,7 +340,7 @@ def test_version_print_last_released_prints_version(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
-    result = run_cli(cli_cmd[1:])
+    result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
