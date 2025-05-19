@@ -99,7 +99,7 @@ if TYPE_CHECKING:
                 )
                 for commit_msg in [
                     dedent(
-                        # Conventional compliant prefix with skip-ci idicator
+                        # Conventional compliant prefix with skip-ci indicator
                         """\
                         chore(release): v{version} [skip ci]
 
