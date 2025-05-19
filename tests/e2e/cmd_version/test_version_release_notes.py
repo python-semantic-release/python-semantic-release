@@ -8,7 +8,6 @@ import pytest
 from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
 from semantic_release.version.version import Version
 
 from tests.const import (
@@ -27,10 +26,9 @@ from tests.util import assert_successful_exit_code, get_release_history_from_con
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
-    from tests.conftest import GetStableDateNowFn
+    from tests.conftest import GetStableDateNowFn, RunCliFn
     from tests.e2e.conftest import (
         RetrieveRuntimeContextFn,
     )
@@ -54,7 +52,7 @@ if TYPE_CHECKING:
 def test_custom_release_notes_template(
     repo_result: BuiltRepoResult,
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     use_release_notes_template: UseReleaseNotesTemplateFn,
     retrieve_runtime_context: RetrieveRuntimeContextFn,
     mocked_git_push: MagicMock,
@@ -69,7 +67,7 @@ def test_custom_release_notes_template(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--vcs-release"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Must run this after the action because the release history object should be pulled from the
     # repository after a tag is created
@@ -123,7 +121,7 @@ def test_custom_release_notes_template(
 )
 def test_default_release_notes_license_statement(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     license_name: str,
     license_setting: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
@@ -164,7 +162,7 @@ def test_default_release_notes_license_statement(
     # Act
     with freeze_time(now_datetime.astimezone(timezone.utc)):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-changelog", "--vcs-release"]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)

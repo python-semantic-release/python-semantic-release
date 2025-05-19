@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
-
 from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
@@ -22,10 +20,10 @@ from tests.util import assert_successful_exit_code
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from git import Repo
     from requests_mock import Mocker
 
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import GetWheelFileFn, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetVersionsFromRepoBuildDefFn
 
@@ -40,7 +38,7 @@ if TYPE_CHECKING:
 def test_version_noop_is_noop(
     repo_result: BuiltRepoResult,
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     get_wheel_file: GetWheelFileFn,
@@ -57,7 +55,7 @@ def test_version_noop_is_noop(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--noop", VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -88,7 +86,7 @@ def test_version_noop_is_noop(
 )
 def test_version_no_git_verify(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -127,7 +125,7 @@ def test_version_no_git_verify(
 
     # Execute
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Take measurement after the command
     head_after = repo.head.commit
@@ -148,7 +146,7 @@ def test_version_no_git_verify(
 )
 def test_version_on_nonrelease_branch(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -170,7 +168,7 @@ def test_version_on_nonrelease_branch(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
@@ -193,7 +191,7 @@ def test_version_on_nonrelease_branch(
 def test_version_on_last_release(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -219,7 +217,7 @@ def test_version_on_last_release(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -244,7 +242,7 @@ def test_version_on_last_release(
 )
 def test_version_only_tag_push(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ) -> None:
@@ -265,7 +263,7 @@ def test_version_only_tag_push(
         "--no-commit",
         "--tag",
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # capture values after the command
     tag_after = repo.tags[-1].name

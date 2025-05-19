@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import pytest
 import tomlkit
 
-from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import RawConfig
 
 from tests.const import GENERATE_CONFIG_SUBCMD, MAIN_PROG_NAME, VERSION_SUBCMD
@@ -17,8 +16,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
 
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import ExProjectDir
 
 
@@ -30,7 +28,7 @@ def raw_config_dict() -> dict[str, Any]:
 @pytest.mark.parametrize("args", [(), ("--format", "toml"), ("--format", "TOML")])
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_generate_config_toml(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     args: tuple[str],
     raw_config_dict: dict[str, Any],
     example_project_dir: ExProjectDir,
@@ -42,7 +40,7 @@ def test_generate_config_toml(
 
     # Act: Print the generated configuration to stdout
     cli_cmd = [MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD, *args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate: Check that the command ran successfully and that the output matches the expected configuration
     assert_successful_exit_code(result, cli_cmd)
@@ -62,7 +60,7 @@ def test_generate_config_toml(
         VERSION_SUBCMD,
         "--print",
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate: Check that the version command in noop mode ran successfully
     #   which means PSR loaded the configuration successfully
@@ -72,7 +70,7 @@ def test_generate_config_toml(
 @pytest.mark.parametrize("args", [("--format", "json"), ("--format", "JSON")])
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_generate_config_json(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     args: tuple[str],
     raw_config_dict: dict[str, Any],
     example_project_dir: ExProjectDir,
@@ -84,7 +82,7 @@ def test_generate_config_json(
 
     # Act: Print the generated configuration to stdout
     cli_cmd = [MAIN_PROG_NAME, GENERATE_CONFIG_SUBCMD, *args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate: Check that the command ran successfully and that the output matches the expected configuration
     assert_successful_exit_code(result, cli_cmd)
@@ -104,7 +102,7 @@ def test_generate_config_json(
         VERSION_SUBCMD,
         "--print",
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate: Check that the version command in noop mode ran successfully
     #   which means PSR loaded the configuration successfully
@@ -113,7 +111,7 @@ def test_generate_config_json(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_generate_config_pyproject_toml(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     raw_config_dict: dict[str, Any],
     example_pyproject_toml: Path,
 ):
@@ -135,7 +133,7 @@ def test_generate_config_pyproject_toml(
         "toml",
         "--pyproject",
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate: Check that the command ran successfully and that the output matches the expected configuration
     assert_successful_exit_code(result, cli_cmd)
@@ -154,7 +152,7 @@ def test_generate_config_pyproject_toml(
 
     # Act: Validate that the generated config is a valid configuration for PSR
     cli_cmd = [MAIN_PROG_NAME, "--noop", "--strict", VERSION_SUBCMD, "--print"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate: Check that the version command in noop mode ran successfully
     #   which means PSR loaded the configuration successfully

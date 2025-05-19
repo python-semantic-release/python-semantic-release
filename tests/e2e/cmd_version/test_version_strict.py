@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
-
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.repos import repo_w_trunk_only_conventional_commits
 from tests.util import assert_exit_code
@@ -14,9 +12,9 @@ from tests.util import assert_exit_code
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
+    from tests.conftest import RunCliFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetVersionsFromRepoBuildDefFn
 
 
@@ -27,7 +25,7 @@ if TYPE_CHECKING:
 def test_version_already_released_when_strict(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -50,7 +48,7 @@ def test_version_already_released_when_strict(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -75,7 +73,7 @@ def test_version_already_released_when_strict(
 )
 def test_version_on_nonrelease_branch_when_strict(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -98,7 +96,7 @@ def test_version_on_nonrelease_branch_when_strict(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_exit_code(2, result, cli_cmd)

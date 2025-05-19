@@ -11,7 +11,6 @@ import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release import __version__
-from semantic_release.cli.commands.main import main
 
 from tests.const import MAIN_PROG_NAME, SUCCESS_EXIT_CODE, VERSION_SUBCMD
 from tests.fixtures.repos import repo_w_no_tags_conventional_commits
@@ -20,8 +19,7 @@ from tests.util import assert_exit_code, assert_successful_exit_code
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
 
@@ -50,20 +48,19 @@ def test_entrypoint_scripts(project_script_name: str):
     assert not proc.stderr
 
 
-def test_main_prints_version_and_exits(cli_runner: CliRunner):
+def test_main_prints_version_and_exits(run_cli: RunCliFn):
     cli_cmd = [MAIN_PROG_NAME, "--version"]
 
     # Act
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
     assert result.output == f"semantic-release, version {__version__}\n"
 
 
-def test_main_no_args_prints_help_text(cli_runner: CliRunner):
-    result = cli_runner.invoke(main, [])
-    assert_successful_exit_code(result, [MAIN_PROG_NAME])
+def test_main_no_args_prints_help_text(run_cli: RunCliFn):
+    assert_successful_exit_code(run_cli(), [MAIN_PROG_NAME])
 
 
 @pytest.mark.parametrize(
@@ -71,14 +68,14 @@ def test_main_no_args_prints_help_text(cli_runner: CliRunner):
     [lazy_fixture(repo_w_no_tags_conventional_commits.__name__)],
 )
 def test_not_a_release_branch_exit_code(
-    repo_result: BuiltRepoResult, cli_runner: CliRunner
+    repo_result: BuiltRepoResult, run_cli: RunCliFn
 ):
     # Run anything that doesn't trigger the help text
     repo_result["repo"].git.checkout("-b", "branch-does-not-exist")
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-commit"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -90,14 +87,14 @@ def test_not_a_release_branch_exit_code(
 )
 def test_not_a_release_branch_exit_code_with_strict(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     # Run anything that doesn't trigger the help text
     repo_result["repo"].git.checkout("-b", "branch-does-not-exist")
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, "--no-commit"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_exit_code(2, result, cli_cmd)
@@ -109,7 +106,7 @@ def test_not_a_release_branch_exit_code_with_strict(
 )
 def test_not_a_release_branch_detached_head_exit_code(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     expected_err_msg = (
         "Detached HEAD state cannot match any release groups; no release will be made"
@@ -120,7 +117,7 @@ def test_not_a_release_branch_detached_head_exit_code(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-commit"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # detached head states should throw an error as release branches cannot be determined
     assert_exit_code(1, result, cli_cmd)
@@ -153,7 +150,7 @@ def json_file_with_no_configuration_for_psr(tmp_path: Path) -> Path:
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_default_config_is_used_when_none_in_toml_config_file(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     toml_file_with_no_configuration_for_psr: Path,
 ):
     cli_cmd = [
@@ -165,7 +162,7 @@ def test_default_config_is_used_when_none_in_toml_config_file(
     ]
 
     # Act
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -173,7 +170,7 @@ def test_default_config_is_used_when_none_in_toml_config_file(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_default_config_is_used_when_none_in_json_config_file(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     json_file_with_no_configuration_for_psr: Path,
 ):
     cli_cmd = [
@@ -185,7 +182,7 @@ def test_default_config_is_used_when_none_in_json_config_file(
     ]
 
     # Act
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -193,7 +190,7 @@ def test_default_config_is_used_when_none_in_json_config_file(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
 ):
     cli_cmd = [
         MAIN_PROG_NAME,
@@ -204,7 +201,7 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
     ]
 
     # Act
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_exit_code(2, result, cli_cmd)
@@ -213,14 +210,14 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_errors_when_config_file_invalid_configuration(
-    cli_runner: CliRunner, update_pyproject_toml: UpdatePyprojectTomlFn
+    run_cli: RunCliFn, update_pyproject_toml: UpdatePyprojectTomlFn
 ):
     # Setup
     update_pyproject_toml("tool.semantic_release.remote.type", "invalidType")
     cli_cmd = [MAIN_PROG_NAME, "--config", "pyproject.toml", VERSION_SUBCMD]
 
     # Act
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # preprocess results
     stderr_lines = result.stderr.splitlines()
@@ -232,7 +229,7 @@ def test_errors_when_config_file_invalid_configuration(
 
 
 def test_uses_default_config_when_no_config_file_found(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ):
@@ -252,7 +249,7 @@ def test_uses_default_config_when_no_config_file_found(
         cli_cmd = [MAIN_PROG_NAME, "--noop", VERSION_SUBCMD]
 
         # Act
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)

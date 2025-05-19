@@ -10,7 +10,6 @@ from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.context import ChangelogMode
-from semantic_release.cli.commands.main import main
 
 from tests.const import (
     MAIN_PROG_NAME,
@@ -35,9 +34,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import TypedDict
 
-    from click.testing import CliRunner
-
-    from tests.conftest import GetStableDateNowFn
+    from tests.conftest import GetStableDateNowFn, RunCliFn
     from tests.e2e.conftest import GetSanitizedChangelogContentFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
@@ -120,7 +117,7 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     build_repo_from_definition: BuildRepoFromDefinitionFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
     changelog_mode: ChangelogMode,
@@ -192,7 +189,7 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
 
     # Act: make the first release again
     with freeze_time(now_datetime.astimezone(timezone.utc)):
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
         assert_successful_exit_code(result, cli_cmd)
 
     # Act: apply commits for change of version
@@ -206,7 +203,7 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
 
     # Act: make the second release again
     with freeze_time(now_datetime.astimezone(timezone.utc) + timedelta(minutes=1)):
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     actual_content = get_sanitized_changelog_content(
         repo_dir=example_project_dir,

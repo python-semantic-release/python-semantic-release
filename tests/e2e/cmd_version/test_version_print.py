@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
-
 from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
@@ -31,9 +29,9 @@ from tests.util import (
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
+    from tests.conftest import RunCliFn
     from tests.fixtures.git_repo import (
         BuiltRepoResult,
         GetCfgValueFromDefFn,
@@ -96,7 +94,7 @@ def test_version_print_next_version(
     force_args: list[str],
     next_release_version: str,
     file_in_repo: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -128,7 +126,7 @@ def test_version_print_next_version(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print", *force_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -262,7 +260,7 @@ def test_version_print_tag_prints_next_tag(
     next_release_version: str,
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     file_in_repo: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -298,7 +296,7 @@ def test_version_print_tag_prints_next_tag(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-tag", *force_args]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -326,7 +324,7 @@ def test_version_print_tag_prints_next_tag(
 def test_version_print_last_released_prints_version(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -342,7 +340,7 @@ def test_version_print_last_released_prints_version(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -376,7 +374,7 @@ def test_version_print_last_released_prints_released_if_commits(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commits: list[str],
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     file_in_repo: str,
@@ -397,7 +395,7 @@ def test_version_print_last_released_prints_released_if_commits(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -424,7 +422,7 @@ def test_version_print_last_released_prints_released_if_commits(
 )
 def test_version_print_last_released_prints_nothing_if_no_tags(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     caplog: pytest.LogCaptureFixture,
@@ -438,7 +436,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -469,7 +467,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
 def test_version_print_last_released_on_detached_head(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -488,7 +486,7 @@ def test_version_print_last_released_on_detached_head(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -516,7 +514,7 @@ def test_version_print_last_released_on_detached_head(
 def test_version_print_last_released_on_nonrelease_branch(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -535,7 +533,7 @@ def test_version_print_last_released_on_nonrelease_branch(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -572,7 +570,7 @@ def test_version_print_last_released_tag_prints_correct_tag(
     repo_result: BuiltRepoResult,
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -589,7 +587,7 @@ def test_version_print_last_released_tag_prints_correct_tag(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -631,7 +629,7 @@ def test_version_print_last_released_tag_prints_released_if_commits(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commits: list[str],
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     file_in_repo: str,
@@ -653,7 +651,7 @@ def test_version_print_last_released_tag_prints_released_if_commits(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -680,7 +678,7 @@ def test_version_print_last_released_tag_prints_released_if_commits(
 )
 def test_version_print_last_released_tag_prints_nothing_if_no_tags(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     caplog: pytest.LogCaptureFixture,
@@ -694,7 +692,7 @@ def test_version_print_last_released_tag_prints_nothing_if_no_tags(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -734,7 +732,7 @@ def test_version_print_last_released_tag_on_detached_head(
     repo_result: BuiltRepoResult,
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -754,7 +752,7 @@ def test_version_print_last_released_tag_on_detached_head(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -791,7 +789,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
     repo_result: BuiltRepoResult,
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -811,7 +809,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-last-released-tag"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -843,7 +841,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 )
 def test_version_print_next_version_fails_on_detached_head(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     get_commit_def_fn: GetCommitDefFn,
     mocked_git_push: MagicMock,
@@ -870,7 +868,7 @@ def test_version_print_next_version_fails_on_detached_head(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -902,7 +900,7 @@ def test_version_print_next_version_fails_on_detached_head(
 )
 def test_version_print_next_tag_fails_on_detached_head(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     get_commit_def_fn: GetCommitDefFn,
     mocked_git_push: MagicMock,
@@ -929,7 +927,7 @@ def test_version_print_next_tag_fails_on_detached_head(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print-tag"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
