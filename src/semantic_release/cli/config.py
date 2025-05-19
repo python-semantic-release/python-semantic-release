@@ -718,7 +718,7 @@ class RuntimeContext:
                     # TODO: add any other placeholders here
                 ),
                 # We use re.escape to ensure that the commit message is treated as a literal
-                regex_escape(raw.commit_message),
+                regex_escape(raw.commit_message.strip()),
             )
         )
         changelog_excluded_commit_patterns = (
