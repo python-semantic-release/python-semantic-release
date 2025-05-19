@@ -92,7 +92,7 @@ EMOJI_COMMITS_MINOR = (
     *EMOJI_COMMITS_PATCH,
     ":sparkles::pencil: docs for something special\n",
     # Emoji in description should not be used to evaluate change type
-    ":sparkles: last minute rush order\n\n:boom: Good thing we're 10x developers\n",
+    ":sparkles: last minute rush order\n\nGood thing we're 10x developers :boom:\n",
 )
 EMOJI_COMMITS_MAJOR = (
     *EMOJI_COMMITS_MINOR,
