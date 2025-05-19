@@ -228,6 +228,7 @@ def get_windows_env() -> Mapping[str, str | None]:
             "SYSTEMROOT",
             "TEMP",
             "TMP",
+            "USERNAME",  # must include for python getpass.getuser() on windows
             "USERPROFILE",
             "USERSID",
             "WINDIR",
