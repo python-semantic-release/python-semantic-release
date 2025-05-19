@@ -66,14 +66,13 @@ def assert_exit_code(
                     "",
                     # Explain what command failed
                     "Unexpected exit code from command:",
-                    # f"  '{str.join(' ', cli_cmd)}'",
                     indent(f"'{str.join(' ', cli_cmd)}'", " " * 2),
                     "",
                     # Add indentation to each line for stdout & stderr
                     "stdout:",
-                    indent(result.stdout, " " * 2),
+                    indent(result.stdout, " " * 2) if result.stdout.strip() else "",
                     "stderr:",
-                    indent(result.stderr, " " * 2),
+                    indent(result.stderr, " " * 2) if result.stderr.strip() else "",
                 ],
             )
         )

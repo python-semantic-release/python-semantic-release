@@ -9,7 +9,6 @@ from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.context import ChangelogMode
-from semantic_release.cli.commands.main import main
 from semantic_release.cli.config import ChangelogOutputFormat
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
@@ -48,9 +47,7 @@ from tests.util import assert_successful_exit_code
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from click.testing import CliRunner
-
-    from tests.conftest import FormatDateStrFn, GetStableDateNowFn
+    from tests.conftest import FormatDateStrFn, GetStableDateNowFn, RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
         BuiltRepoResult,
@@ -176,7 +173,7 @@ def test_version_updates_changelog_w_new_version(
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     tag_format: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     changelog_file: Path,
     insertion_flag: str,
     cache: pytest.Cache,
@@ -255,7 +252,7 @@ def test_version_updates_changelog_w_new_version(
 
     with freeze_time(now_datetime.astimezone(timezone.utc)):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Capture the new changelog content (os aware because of expected content)
     with changelog_file.open(newline=os.linesep) as rfd:
@@ -307,7 +304,7 @@ def test_version_updates_changelog_wo_prev_releases(
     repo_result: BuiltRepoResult,
     cache_key: str,
     cache: pytest.Cache,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_format: ChangelogOutputFormat,
     changelog_file: Path,
@@ -408,7 +405,7 @@ def test_version_updates_changelog_wo_prev_releases(
     # Act
     with freeze_time(now_datetime.astimezone(timezone.utc)):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -532,7 +529,7 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     cache_key: str,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     tag_format: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
     cache: pytest.Cache,
@@ -581,7 +578,7 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     # Act
     with freeze_time(now_datetime.astimezone(timezone.utc)):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -611,7 +608,7 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
 @pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_version_maintains_changelog_in_update_mode_w_no_flag(
     changelog_file: Path,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     insertion_flag: str,
 ):
@@ -641,7 +638,7 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -687,7 +684,7 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     commit_type: CommitConvention,
     tag_format: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     changelog_file: Path,
     stable_now_date: GetStableDateNowFn,
     get_commits_from_repo_build_def: GetCommitsFromRepoBuildDefFn,
@@ -740,7 +737,7 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     # Act
     with freeze_time(now_datetime.astimezone(timezone.utc)):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-push", "--changelog"]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Capture the new changelog content (os aware because of expected content)
     actual_content = changelog_file.read_text()

@@ -10,6 +10,7 @@ from hashlib import md5
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 from click.testing import CliRunner
@@ -24,10 +25,35 @@ if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper
     from typing import Any, Callable, Generator, Protocol, Sequence, TypedDict
 
+    from click.testing import Result
     from filelock import AcquireReturnProxy
     from git import Actor
 
     from tests.fixtures.git_repo import RepoActions
+
+    class RunCliFn(Protocol):
+        """
+        Run the CLI with the provided arguments and a clean environment.
+
+        :param argv: The arguments to pass to the CLI.
+        :type argv: list[str] | None
+
+        :param env: The environment variables to set for the CLI.
+        :type env: dict[str, str] | None
+
+        :param invoke_kwargs: Additional arguments to pass to the invoke method.
+        :type invoke_kwargs: dict[str, Any] | None
+
+        :return: The result of the CLI invocation.
+        :rtype: Result
+        """
+
+        def __call__(
+            self,
+            argv: list[str] | None = None,
+            env: dict[str, str] | None = None,
+            invoke_kwargs: dict[str, Any] | None = None,
+        ) -> Result: ...
 
     class MakeCommitObjFn(Protocol):
         def __call__(self, message: str) -> Commit: ...
@@ -168,6 +194,25 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 @pytest.fixture
 def cli_runner() -> CliRunner:
     return CliRunner(mix_stderr=False)
+
+
+@pytest.fixture(scope="session")
+def run_cli(clean_os_environment: dict[str, str]) -> RunCliFn:
+    def _run_cli(
+        argv: list[str] | None = None,
+        env: dict[str, str] | None = None,
+        invoke_kwargs: dict[str, Any] | None = None,
+    ) -> Result:
+        from semantic_release.cli.commands.main import main
+
+        cli_runner = CliRunner(mix_stderr=False)
+        env_vars = {**clean_os_environment, **(env or {})}
+
+        with mock.patch.dict(os.environ, env_vars, clear=True):
+            # run the CLI with the provided arguments
+            return cli_runner.invoke(main, args=(argv or []), **(invoke_kwargs or {}))
+
+    return _run_cli
 
 
 @pytest.fixture(scope="session")

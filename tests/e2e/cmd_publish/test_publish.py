@@ -6,7 +6,6 @@ from unittest import mock
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
 from semantic_release.hvcs import Github
 
 from tests.const import MAIN_PROG_NAME, PUBLISH_SUBCMD
@@ -16,8 +15,7 @@ from tests.util import assert_exit_code, assert_successful_exit_code
 if TYPE_CHECKING:
     from typing import Sequence
 
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetVersionsFromRepoBuildDefFn
 
 
@@ -27,7 +25,7 @@ if TYPE_CHECKING:
 )
 def test_publish_latest_uses_latest_tag(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     cmd_args: Sequence[str],
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
 ):
@@ -41,7 +39,7 @@ def test_publish_latest_uses_latest_tag(
         cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, *cmd_args]
 
         # Act
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
         # Evaluate
         assert_successful_exit_code(result, cli_cmd)
@@ -53,7 +51,7 @@ def test_publish_latest_uses_latest_tag(
 )
 def test_publish_to_tag_uses_tag(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
 ):
     # Testing a non-latest tag to distinguish from test_publish_latest_uses_latest_tag()
@@ -64,7 +62,7 @@ def test_publish_to_tag_uses_tag(
         cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", previous_tag]
 
         # Act
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
         # Evaluate
         assert_successful_exit_code(result, cli_cmd)
@@ -74,14 +72,14 @@ def test_publish_to_tag_uses_tag(
 
 
 @pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
-def test_publish_fails_on_nonexistant_tag(cli_runner: CliRunner):
+def test_publish_fails_on_nonexistant_tag(run_cli: RunCliFn):
     non_existant_tag = "nonexistant-tag"
 
     with mock.patch.object(Github, Github.upload_dists.__name__) as mocked_upload_dists:
         cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", non_existant_tag]
 
         # Act
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
         # Evaluate
         assert_exit_code(1, result, cli_cmd)

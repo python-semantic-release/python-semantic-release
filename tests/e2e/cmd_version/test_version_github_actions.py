@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from semantic_release.cli.commands.main import main
-
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.repos import (
     repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
@@ -13,26 +11,30 @@ from tests.fixtures.repos import (
 from tests.util import actions_output_to_dict, assert_successful_exit_code
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
-    from click.testing import CliRunner
+    from tests.conftest import RunCliFn
+    from tests.fixtures.example_project import ExProjectDir
 
 
 @pytest.mark.usefixtures(
     repo_w_git_flow_w_alpha_prereleases_n_conventional_commits.__name__
 )
 def test_version_writes_github_actions_output(
-    cli_runner: CliRunner,
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    run_cli: RunCliFn,
+    example_project_dir: ExProjectDir,
 ):
-    mock_output_file = tmp_path / "action.out"
-    monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
-
-    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
+    mock_output_file = example_project_dir / "action.out"
 
     # Act
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch", "--no-push"]
+    result = run_cli(
+        cli_cmd[1:], env={"GITHUB_OUTPUT": str(mock_output_file.resolve())}
+    )
+    assert_successful_exit_code(result, cli_cmd)
+
+    if not mock_output_file.exists():
+        pytest.fail(
+            f"Expected output file {mock_output_file} to be created, but it does not exist."
+        )
 
     # Extract the output
     action_outputs = actions_output_to_dict(
@@ -40,7 +42,6 @@ def test_version_writes_github_actions_output(
     )
 
     # Evaluate
-    assert_successful_exit_code(result, cli_cmd)
     assert "released" in action_outputs
     assert action_outputs["released"] == "true"
     assert "version" in action_outputs

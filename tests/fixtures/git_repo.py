@@ -1032,7 +1032,9 @@ def build_configured_base_repo(  # noqa: C901
                 raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
 
             # Create HVCS Client instance
-            hvcs = hvcs_class(example_git_https_url, hvcs_domain=hvcs_domain)
+            with mock.patch.dict(os.environ, {}, clear=True):
+                hvcs = hvcs_class(example_git_https_url, hvcs_domain=hvcs_domain)
+                assert hvcs.repo_name  # Force the HVCS client to cache the repo name
 
             # Set tag format in configuration
             if tag_format_str is not None:

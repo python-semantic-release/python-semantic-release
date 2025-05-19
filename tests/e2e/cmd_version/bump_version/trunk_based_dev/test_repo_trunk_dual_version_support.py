@@ -7,8 +7,6 @@ import tomlkit
 from flatdict import FlatDict
 from freezegun import freeze_time
 
-from semantic_release.cli.commands.main import main
-
 from tests.const import (
     DEFAULT_BRANCH_NAME,
     MAIN_PROG_NAME,
@@ -25,9 +23,9 @@ if TYPE_CHECKING:
     from pathlib import Path
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
+    from tests.conftest import RunCliFn
     from tests.e2e.cmd_version.bump_version.conftest import InitMirrorRepo4RebuildFn
     from tests.e2e.conftest import GetSanitizedChangelogContentFn
     from tests.fixtures.example_project import ExProjectDir
@@ -56,7 +54,7 @@ if TYPE_CHECKING:
 )
 def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
     repo_fixture_name: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     build_trunk_only_repo_w_dual_version_support: BuildSpecificRepoFn,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     init_mirror_repo_for_rebuild: InitMirrorRepo4RebuildFn,
@@ -151,7 +149,7 @@ def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
                 else []
             )
             cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, *build_metadata_args]
-            result = cli_runner.invoke(main, cli_cmd[1:])
+            result = run_cli(cli_cmd[1:])
 
         # take measurement after running the version command
         actual_release_commit_text = mirror_git_repo.head.commit.message
