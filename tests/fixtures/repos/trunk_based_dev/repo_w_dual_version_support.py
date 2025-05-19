@@ -85,13 +85,14 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
     only official releases with latest and previous version support.
     """
 
-    def _get_repo_from_defintion(
+    def _get_repo_from_definition(
         commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = False,
+        ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
         commit_timestamp_gen = (
@@ -358,7 +359,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_support(
 
         return repo_construction_steps
 
-    return _get_repo_from_defintion
+    return _get_repo_from_definition
 
 
 @pytest.fixture(scope="session")
