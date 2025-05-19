@@ -23,7 +23,7 @@ if TYPE_CHECKING:
             ":boom: Breaking changes\n\nMore description\n\nEven more description",
             LevelBump.MAJOR,
             ":boom:",
-            [":boom: Breaking changes", "More description", "Even more description"],
+            [":boom: Breaking changes"],
             ["More description", "Even more description"],
         ),
         # Minor bump
@@ -63,7 +63,7 @@ if TYPE_CHECKING:
             ":sparkles: Add a new feature\n\n:boom: should not be detected",
             LevelBump.MINOR,
             ":sparkles:",
-            [":sparkles: Add a new feature", ":boom: should not be detected"],
+            [":sparkles: Add a new feature"],
             [],
         ),
     ],
@@ -91,28 +91,27 @@ def test_default_emoji_parser(
 
 @pytest.mark.parametrize(
     "message, subject, merge_request_number",
-    # TODO: in v10, we will remove the merge request number from the subject line
     [
         # GitHub, Gitea style
         (
             ":sparkles: add new feature (#123)",
-            ":sparkles: add new feature (#123)",
+            ":sparkles: add new feature",
             "#123",
         ),
         # GitLab style
         (
             ":bug: fix regex in parser (!456)",
-            ":bug: fix regex in parser (!456)",
+            ":bug: fix regex in parser",
             "!456",
         ),
         # BitBucket style
         (
             ":sparkles: add new feature (pull request #123)",
-            ":sparkles: add new feature (pull request #123)",
+            ":sparkles: add new feature",
             "#123",
         ),
         # Both a linked merge request and an issue footer (should return the linked merge request)
-        (":bug: superfix (#123)\n\nCloses: #400", ":bug: superfix (#123)", "#123"),
+        (":bug: superfix (#123)\n\nCloses: #400", ":bug: superfix", "#123"),
         # None
         (":bug: superfix", ":bug: superfix", ""),
         # None but includes an issue footer it should not be considered a linked merge request
@@ -547,9 +546,7 @@ def test_parser_return_release_notices_from_commit_message(
                     {
                         "bump": LevelBump.NO_RELEASE,
                         "type": "Other",
-                        "descriptions": [
-                            "Merged in feat/my-awesome-stuff (pull request #10)"
-                        ],
+                        "descriptions": ["Merged in feat/my-awesome-stuff"],
                         "linked_merge_request": "#10",
                     },
                     {
@@ -560,7 +557,6 @@ def test_parser_return_release_notices_from_commit_message(
                             ":bug:(release-config): some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -601,9 +597,7 @@ def test_parser_return_release_notices_from_commit_message(
                     {
                         "bump": LevelBump.NO_RELEASE,
                         "type": "Other",
-                        "descriptions": [
-                            "Merged in feat/my-awesome-stuff (pull request #10)"
-                        ],
+                        "descriptions": ["Merged in feat/my-awesome-stuff"],
                         "linked_merge_request": "#10",
                     },
                     {
@@ -614,7 +608,6 @@ def test_parser_return_release_notices_from_commit_message(
                             ":bug:(release-config): some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -643,15 +636,9 @@ def test_parser_return_release_notices_from_commit_message(
                         "scope": "",
                         "descriptions": [
                             ":boom::bug: changed option name",
-                            "A breaking change description",
-                            "Closes: #555",
-                            # This is a bit unusual but its because there is no identifier that will
-                            # identify this as a separate commit so it gets included in the previous commit
-                            "invalid non-conventional formatted commit",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
-                            "Closes: #555",
                             # This is a bit unusual but its because there is no identifier that will
                             # identify this as a separate commit so it gets included in the previous commit
                             "invalid non-conventional formatted commit",
@@ -749,7 +736,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                             ":bug:(release-config): some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -814,7 +800,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                             ":bug:(release-config): some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -839,12 +824,9 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                         "type": ":boom:",
                         "descriptions": [
                             ":boom::bug: changed option name",
-                            "A breaking change description",
-                            "Closes: #555",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
-                            "Closes: #555",
                         ],
                         "linked_issues": ("#555",),
                     },
@@ -933,11 +915,9 @@ def test_parser_squashed_commit_git_squash_style(
                         "type": ":bug:",
                         "scope": "release-config",
                         "descriptions": [
-                            # TODO: v10 removal of PR number from subject
-                            ":bug:(release-config): some commit subject (#10)",
+                            ":bug:(release-config): some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -978,11 +958,9 @@ def test_parser_squashed_commit_git_squash_style(
                         "type": ":bug:",
                         "scope": "release-config",
                         "descriptions": [
-                            # TODO: v10 removal of PR number from subject
-                            ":bug:(release-config): some commit subject (#10)",
+                            ":bug:(release-config): some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -1011,15 +989,11 @@ def test_parser_squashed_commit_git_squash_style(
                         "scope": "",
                         "descriptions": [
                             ":boom::bug: changed option name",
-                            "A breaking change description",
-                            "Closes: #555",
-                            # This is a bit unusual but its because there is no identifier that will
-                            # identify this as a separate commit so it gets included in the previous commit
-                            "* invalid non-conventional formatted commit",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
-                            "Closes: #555",
+                            # This is a bit unusual but its because there is no identifier that will
+                            # identify this as a separate commit so it gets included in the previous commit
                             "* invalid non-conventional formatted commit",
                         ],
                         "linked_issues": ("#555",),
