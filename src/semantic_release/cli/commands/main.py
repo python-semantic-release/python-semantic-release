@@ -21,7 +21,7 @@ from semantic_release.enums import SemanticReleaseLogLevels
 #     pass
 
 
-FORMAT = "[%(module)s.%(funcName)s] %(message)s"
+FORMAT = "%(message)s"
 
 
 class Cli(click.MultiCommand):
@@ -107,8 +107,6 @@ def main(
 
     For more information, visit https://python-semantic-release.readthedocs.io/
     """
-    console = Console(stderr=True)
-
     log_levels = [
         SemanticReleaseLogLevels.WARNING,
         SemanticReleaseLogLevels.INFO,
@@ -118,18 +116,18 @@ def main(
 
     globals.log_level = log_levels[verbosity]
 
-    logging.basicConfig(
-        level=globals.log_level,
-        format=FORMAT,
-        datefmt="[%X]",
-        handlers=[
-            RichHandler(
-                console=console, rich_tracebacks=True, tracebacks_suppress=[click]
-            ),
-        ],
+    # Set up our pretty console formatter
+    rich_handler = RichHandler(
+        console=Console(stderr=True), rich_tracebacks=True, tracebacks_suppress=[click]
     )
+    rich_handler.setFormatter(logging.Formatter(FORMAT, datefmt="[%X]"))
 
-    logger = logging.getLogger(__name__)
+    # Set up logging with our pretty console formatter
+    logger = logging.getLogger(semantic_release.__package__)
+    logger.handlers.clear()
+    logger.filters.clear()
+    logger.addHandler(rich_handler)
+    logger.setLevel(globals.log_level)
     logger.debug("logging level set to: %s", logging.getLevelName(globals.log_level))
 
     if noop:
