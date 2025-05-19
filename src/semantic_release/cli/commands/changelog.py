@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,13 +14,11 @@ from semantic_release.cli.changelog_writer import (
     write_changelog_files,
 )
 from semantic_release.cli.util import noop_report
+from semantic_release.globals import logger
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 
 if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.cli.cli_context import CliContextObj
-
-
-log = logging.getLogger(__name__)
 
 
 def get_license_name_for_release(tag_name: str, project_root: Path) -> str:
@@ -174,7 +171,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
             hvcs_client=hvcs_client,
             noop=runtime.global_cli_options.noop,
         )
-    except Exception as e:
-        log.exception(e)
+    except Exception as e:  # noqa: BLE001 # TODO: catch specific exceptions
+        logger.exception(e)
         click.echo("Failed to post release notes to remote", err=True)
         ctx.exit(1)

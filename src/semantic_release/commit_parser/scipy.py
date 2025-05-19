@@ -49,7 +49,6 @@ from __future__ import annotations
 import re
 from functools import reduce
 from itertools import zip_longest
-from logging import getLogger
 from re import compile as regexp
 from textwrap import dedent
 from typing import TYPE_CHECKING, Tuple
@@ -71,6 +70,7 @@ from semantic_release.commit_parser.util import (
 )
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -78,7 +78,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _logged_parse_error(commit: Commit, error: str) -> ParseError:
-    getLogger(__name__).debug(error)
+    logger.debug(error)
     return ParseError(commit, error=error)
 
 

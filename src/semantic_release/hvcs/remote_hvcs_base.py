@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
@@ -13,10 +12,6 @@ from semantic_release.hvcs import HvcsBase
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any
-
-
-# Globals
-logger = logging.getLogger(__name__)
 
 
 class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):

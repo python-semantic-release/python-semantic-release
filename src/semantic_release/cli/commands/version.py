@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import subprocess
 import sys
@@ -30,6 +29,7 @@ from semantic_release.errors import (
     UnexpectedResponse,
 )
 from semantic_release.gitproject import GitProject
+from semantic_release.globals import logger
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.algorithm import (
     next_version,
@@ -48,9 +48,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.version.version import Version
 
 
-log = logging.getLogger(__name__)
-
-
 def is_forced_prerelease(
     as_prerelease: bool, forced_level_bump: LevelBump | None, prerelease: bool
 ) -> bool:
@@ -62,7 +59,7 @@ def is_forced_prerelease(
     Otherwise (``force_level is None``) use the value of ``prerelease``
     """
     local_vars = list(locals().items())
-    log.debug(
+    logger.debug(
         "%s: %s",
         is_forced_prerelease.__name__,
         str.join(", ", iter(f"{k} = {v}" for k, v in local_vars)),
@@ -143,7 +140,7 @@ def apply_version_to_source_files(
         return []
 
     if not noop:
-        log.debug("Updating version %s in repository files...", version)
+        logger.debug("Updating version %s in repository files...", version)
 
     paths = list(
         map(
@@ -181,8 +178,8 @@ def shell(
     try:
         shell, _ = shellingham.detect_shell()
     except shellingham.ShellDetectionFailure:
-        log.warning("failed to detect shell, using default shell: %s", DEFAULT_SHELL)
-        log.debug("stack trace", exc_info=True)
+        logger.warning("failed to detect shell, using default shell: %s", DEFAULT_SHELL)
+        logger.debug("stack trace", exc_info=True)
         shell = DEFAULT_SHELL
 
     if not shell:
@@ -261,7 +258,7 @@ def build_distributions(
         noop_report(f"would have run the build_command {build_command}")
         return
 
-    log.info("Running build command %s", build_command)
+    logger.info("Running build command %s", build_command)
     rprint(f"[bold green]:hammer_and_wrench: Running build command: {build_command}")
 
     build_env_vars: dict[str, str] = dict(
@@ -295,8 +292,8 @@ def build_distributions(
         shell(build_command, env=build_env_vars, check=True)
         rprint("[bold green]Build completed successfully!")
     except subprocess.CalledProcessError as exc:
-        log.exception(exc)
-        log.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
+        logger.exception(exc)
+        logger.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
         raise BuildDistributionsError from exc
 
 
@@ -453,7 +450,7 @@ def version(  # noqa: C901
         if not (
             last_release := last_released(config.repo_dir, tag_format=config.tag_format)
         ):
-            log.warning("No release tags found.")
+            logger.warning("No release tags found.")
             return
 
         click.echo(last_release[0] if print_last_released_tag else last_release[1])
@@ -482,22 +479,24 @@ def version(  # noqa: C901
     )
 
     if prerelease_token:
-        log.info("Forcing use of %s as the prerelease token", prerelease_token)
+        logger.info("Forcing use of %s as the prerelease token", prerelease_token)
         translator.prerelease_token = prerelease_token
 
     # Only push if we're committing changes
     if push_changes and not commit_changes and not create_tag:
-        log.info("changes will not be pushed because --no-commit disables pushing")
+        logger.info("changes will not be pushed because --no-commit disables pushing")
         push_changes &= commit_changes
 
     # Only push if we're creating a tag
     if push_changes and not create_tag and not commit_changes:
-        log.info("new tag will not be pushed because --no-tag disables pushing")
+        logger.info("new tag will not be pushed because --no-tag disables pushing")
         push_changes &= create_tag
 
     # Only make a release if we're pushing the changes
     if make_vcs_release and not push_changes:
-        log.info("No vcs release will be created because pushing changes is disabled")
+        logger.info(
+            "No vcs release will be created because pushing changes is disabled"
+        )
         make_vcs_release &= push_changes
 
     if not forced_level_bump:
@@ -511,7 +510,7 @@ def version(  # noqa: C901
                 allow_zero_version=runtime.allow_zero_version,
             )
     else:
-        log.warning(
+        logger.warning(
             "Forcing a '%s' release due to '--%s' command-line flag",
             force_level,
             (
@@ -665,7 +664,7 @@ def version(  # noqa: C901
                 noop=opts.noop,
             )
         except GitCommitEmptyIndexError:
-            log.info("No local changes to add to any commit, skipping")
+            logger.info("No local changes to add to any commit, skipping")
 
     # Tag the version after potentially creating a new HEAD commit.
     # This way if no source code is modified, i.e. all metadata updates
@@ -711,7 +710,7 @@ def version(  # noqa: C901
         return
 
     if not isinstance(hvcs_client, RemoteHvcsBase):
-        log.info("Remote does not support releases. Skipping release creation...")
+        logger.info("Remote does not support releases. Skipping release creation...")
         return
 
     license_cfg = runtime.project_metadata.get(
@@ -774,7 +773,7 @@ def version(  # noqa: C901
         exception = err
     finally:
         if exception is not None:
-            log.exception(exception)
+            logger.exception(exception)
             click.echo(str(exception), err=True)
             if help_message:
                 click.echo(help_message, err=True)

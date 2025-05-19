@@ -123,7 +123,7 @@ def main(
     rich_handler.setFormatter(logging.Formatter(FORMAT, datefmt="[%X]"))
 
     # Set up logging with our pretty console formatter
-    logger = logging.getLogger(semantic_release.__package__)
+    logger = globals.logger
     logger.handlers.clear()
     logger.filters.clear()
     logger.addHandler(rich_handler)

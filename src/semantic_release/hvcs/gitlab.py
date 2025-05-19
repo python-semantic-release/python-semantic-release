@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
@@ -17,6 +16,7 @@ from urllib3.util.url import Url, parse_url
 
 from semantic_release.cli.util import noop_report
 from semantic_release.errors import UnexpectedResponse
+from semantic_release.globals import logger
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.util import suppress_not_found
@@ -25,13 +25,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
 
     from gitlab.v4.objects import Project as GitLabProject
-
-
-log = logging.getLogger(__name__)
-
-
-# Globals
-log = logging.getLogger(__name__)
 
 
 class Gitlab(RemoteHvcsBase):
@@ -91,12 +84,12 @@ class Gitlab(RemoteHvcsBase):
         available, otherwise from parsing the remote url
         """
         if "CI_PROJECT_NAMESPACE" in os.environ and "CI_PROJECT_NAME" in os.environ:
-            log.debug("getting repository owner and name from environment variables")
+            logger.debug("getting repository owner and name from environment variables")
             return os.environ["CI_PROJECT_NAMESPACE"], os.environ["CI_PROJECT_NAME"]
 
         return super()._get_repository_owner_and_name()
 
-    @logged_function(log)
+    @logged_function(logger)
     def create_release(
         self,
         tag: str,
@@ -112,7 +105,7 @@ class Gitlab(RemoteHvcsBase):
         :param release_notes: The changelog description for this version only
         :param prerelease: This parameter has no effect in GitLab
         :param assets: A list of paths to files to upload as assets (TODO: not implemented)
-        :param noop: If True, do not perform any actions, only log intents
+        :param noop: If True, do not perform any actions, only logger intents
 
         :return: The tag of the release
 
@@ -123,7 +116,7 @@ class Gitlab(RemoteHvcsBase):
             noop_report(f"would have created a release for tag {tag}")
             return tag
 
-        log.info("Creating release for %s", tag)
+        logger.info("Creating release for %s", tag)
         # ref: https://docs.gitlab.com/ee/api/releases/index.html#create-a-release
         self.project.releases.create(
             {
@@ -133,10 +126,10 @@ class Gitlab(RemoteHvcsBase):
                 "description": release_notes,
             }
         )
-        log.info("Successfully created release for %s", tag)
+        logger.info("Successfully created release for %s", tag)
         return tag
 
-    @logged_function(log)
+    @logged_function(logger)
     @suppress_not_found
     def get_release_by_tag(self, tag: str) -> gitlab.v4.objects.ProjectRelease | None:
         """
@@ -151,12 +144,12 @@ class Gitlab(RemoteHvcsBase):
         try:
             return self.project.releases.get(tag)
         except gitlab.exceptions.GitlabGetError:
-            log.debug("Release %s not found", tag)
+            logger.debug("Release %s not found", tag)
             return None
         except KeyError as err:
             raise UnexpectedResponse("JSON response is missing commit.id") from err
 
-    @logged_function(log)
+    @logged_function(logger)
     def edit_release_notes(  # type: ignore[override]
         self,
         release: gitlab.v4.objects.ProjectRelease,
@@ -174,7 +167,7 @@ class Gitlab(RemoteHvcsBase):
         :raises: GitlabUpdateError: If the server cannot perform the request
 
         """
-        log.info(
+        logger.info(
             "Updating release %s [%s]",
             release.name,
             release.attributes.get("commit", {}).get("id"),
@@ -183,7 +176,7 @@ class Gitlab(RemoteHvcsBase):
         release.save()
         return str(release.get_id())
 
-    @logged_function(log)
+    @logged_function(logger)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> str:
@@ -205,7 +198,7 @@ class Gitlab(RemoteHvcsBase):
                 tag=tag, release_notes=release_notes, prerelease=prerelease
             )
         except gitlab.GitlabCreateError:
-            log.info(
+            logger.info(
                 "New release %s could not be created for project %s",
                 tag,
                 self.project_namespace,
@@ -216,7 +209,7 @@ class Gitlab(RemoteHvcsBase):
                 f"release for tag {tag} could not be found, and could not be created"
             )
 
-        log.debug(
+        logger.debug(
             "Found existing release commit %s, updating", release_obj.commit.get("id")
         )
         # If this errors we let it die

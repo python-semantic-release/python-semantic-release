@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, TypedDict
@@ -11,6 +10,7 @@ from semantic_release.commit_parser import ParseError
 from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.commit_parser.util import force_str
 from semantic_release.enums import LevelBump
+from semantic_release.globals import logger
 from semantic_release.helpers import validate_types_in_sequence
 from semantic_release.version.algorithm import tags_and_versions
 
@@ -28,8 +28,6 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from semantic_release.version.translator import VersionTranslator
     from semantic_release.version.version import Version
-
-log = logging.getLogger(__name__)
 
 
 class ReleaseHistory:
@@ -72,17 +70,17 @@ class ReleaseHistory:
 
         for commit in repo.iter_commits("HEAD", topo_order=True):
             # Determine if we have found another release
-            log.debug("checking if commit %s matches any tags", commit.hexsha[:7])
+            logger.debug("checking if commit %s matches any tags", commit.hexsha[:7])
             t_v = tag_sha_2_version_lookup.get(commit.hexsha, None)
 
             if t_v is None:
-                log.debug("no tags correspond to commit %s", commit.hexsha)
+                logger.debug("no tags correspond to commit %s", commit.hexsha)
             else:
                 # Unpack the tuple (overriding the current version)
                 tag, the_version = t_v
                 # we have found the latest commit introduced by this tag
                 # so we create a new Release entry
-                log.debug("found commit %s for tag %s", commit.hexsha, tag.name)
+                logger.debug("found commit %s for tag %s", commit.hexsha, tag.name)
 
                 # tag.object is a Commit if the tag is lightweight, otherwise
                 # it is a TagObject with additional metadata about the tag
@@ -110,7 +108,7 @@ class ReleaseHistory:
 
                 released.setdefault(the_version, release)
 
-            log.info(
+            logger.info(
                 "parsing commit [%s] %s",
                 commit.hexsha[:8],
                 str(commit.message).replace("\n", " ")[:54],
@@ -153,7 +151,7 @@ class ReleaseHistory:
                     if isinstance(parsed_result, ParseError)
                     else parsed_result.type
                 )
-                log.debug("commit has type '%s'", commit_type)
+                logger.debug("commit has type '%s'", commit_type)
 
                 has_exclusion_match = any(
                     pattern.match(commit_message) for pattern in exclude_commit_patterns
@@ -166,7 +164,7 @@ class ReleaseHistory:
                 )
 
                 if ignore_merge_commits and parsed_result.is_merge_commit():
-                    log.info("Excluding merge commit[%s]", parsed_result.short_hash)
+                    logger.info("Excluding merge commit[%s]", parsed_result.short_hash)
                     continue
 
                 # Skip excluded commits except for any commit causing a version bump
@@ -174,7 +172,7 @@ class ReleaseHistory:
                 # are included, then the changelog will be empty. Even if ther was other
                 # commits included, the true reason for a version bump would be missing.
                 if has_exclusion_match and commit_level_bump == LevelBump.NO_RELEASE:
-                    log.info(
+                    logger.info(
                         "Excluding %s commit[%s] %s",
                         "piece of squashed" if is_squash_commit else "",
                         parsed_result.short_hash,
@@ -186,7 +184,7 @@ class ReleaseHistory:
                     isinstance(parsed_result, ParsedCommit)
                     and not parsed_result.include_in_changelog
                 ):
-                    log.info(
+                    logger.info(
                         str.join(
                             " ",
                             [
@@ -199,7 +197,7 @@ class ReleaseHistory:
                     continue
 
                 if the_version is None:
-                    log.info(
+                    logger.info(
                         "[Unreleased] adding commit[%s] to unreleased '%s'",
                         parsed_result.short_hash,
                         commit_type,
@@ -207,7 +205,7 @@ class ReleaseHistory:
                     unreleased[commit_type].append(parsed_result)
                     continue
 
-                log.info(
+                logger.info(
                     "[%s] adding commit[%s] to release '%s'",
                     the_version,
                     parsed_result.short_hash,

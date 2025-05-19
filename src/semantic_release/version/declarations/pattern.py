@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from logging import getLogger
 from pathlib import Path
 from re import (
     MULTILINE,
@@ -14,15 +13,13 @@ from deprecated.sphinx import deprecated
 
 from semantic_release.cli.util import noop_report
 from semantic_release.const import SEMVER_REGEX
+from semantic_release.globals import logger
 from semantic_release.version.declarations.enum import VersionStampType
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.version import Version
 
 if TYPE_CHECKING:  # pragma: no cover
     from re import Match
-
-
-log = getLogger(__name__)
 
 
 class VersionSwapper:
@@ -78,7 +75,7 @@ class PatternVersionDeclaration(IVersionReplacer):
     def content(self) -> str:
         """A cached property that stores the content of the configured source file."""
         if self._content is None:
-            log.debug("No content stored, reading from source file %s", self._path)
+            logger.debug("No content stored, reading from source file %s", self._path)
 
             if not self._path.exists():
                 raise FileNotFoundError(f"path {self._path!r} does not exist")
@@ -109,7 +106,7 @@ class PatternVersionDeclaration(IVersionReplacer):
             for m in self._search_pattern.finditer(self.content)
         }
 
-        log.debug(
+        logger.debug(
             "Parsing current version: path=%r pattern=%r num_matches=%s",
             self._path.resolve(),
             self._search_pattern,
@@ -136,7 +133,7 @@ class PatternVersionDeclaration(IVersionReplacer):
             self.content,
         )
 
-        log.debug(
+        logger.debug(
             "path=%r pattern=%r num_matches=%r",
             self._path,
             self._search_pattern,
