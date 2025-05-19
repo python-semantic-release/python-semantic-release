@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-import logging
 import re
 from collections import defaultdict
-from typing import Iterable
+from logging import Filter as LoggingFilter
+from typing import TYPE_CHECKING
 
-log = logging.getLogger(__name__)
+from semantic_release.globals import logger
+
+if TYPE_CHECKING:  # pragma: no cover
+    from logging import LogRecord
+    from typing import Iterable
 
 
 # https://relaxdiego.com/2014/07/logging-in-python.html
 # Updated/adapted for Python3
-class MaskingFilter(logging.Filter):
+class MaskingFilter(LoggingFilter):
     REPLACE_STR = "*" * 4
     _UNWANTED = frozenset([s for obj in ("", None) for s in (repr(obj), str(obj))])
 
@@ -27,11 +31,11 @@ class MaskingFilter(logging.Filter):
 
     def add_mask_for(self, data: str, name: str = "redacted") -> MaskingFilter:
         if data and data not in self._UNWANTED:
-            log.debug("Adding redact pattern '%r' to redact_patterns", name)
+            logger.debug("Adding redact pattern '%r' to redact_patterns", name)
             self._redact_patterns[name].add(data)
         return self
 
-    def filter(self, record: logging.LogRecord) -> bool:
+    def filter(self, record: LogRecord) -> bool:
         # Note if we blindly mask all types, we will actually cast arguments to
         # log functions from external libraries to strings before they are
         # formatted into the message - for example, a dependency calling
@@ -58,7 +62,7 @@ class MaskingFilter(logging.Filter):
 
     def mask(self, msg: str) -> str:
         if not isinstance(msg, str):
-            log.debug(  # type: ignore[unreachable]
+            logger.debug(  # type: ignore[unreachable]
                 "cannot mask object of type %s", type(msg)
             )
             return msg

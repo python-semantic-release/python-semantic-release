@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-# TODO: Remove v10
+# TODO: Remove v11
 from abc import ABC, abstractmethod
-from logging import getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from deprecated.sphinx import deprecated
 
+from semantic_release.globals import logger
 from semantic_release.version.declarations.enum import VersionStampType
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.pattern import PatternVersionDeclaration
@@ -25,7 +25,6 @@ __all__ = [
     "TomlVersionDeclaration",
     "VersionDeclarationABC",
 ]
-log = getLogger(__name__)
 
 
 @deprecated(
@@ -58,7 +57,7 @@ class VersionDeclarationABC(ABC):
         is cached in the instance variable _content
         """
         if self._content is None:
-            log.debug(
+            logger.debug(
                 "No content stored, reading from source file %s", self.path.resolve()
             )
             self._content = self.path.read_text()
@@ -66,7 +65,7 @@ class VersionDeclarationABC(ABC):
 
     @content.deleter
     def content(self) -> None:
-        log.debug("resetting instance-stored source file contents")
+        logger.debug("resetting instance-stored source file contents")
         self._content = None
 
     @abstractmethod
@@ -102,6 +101,6 @@ class VersionDeclarationABC(ABC):
         >>> vd = MyVD("path", r"__version__ = (?P<version>\d+\d+\d+)")
         >>> vd.write(vd.replace(new_version))
         """
-        log.debug("writing content to %r", self.path.resolve())
+        logger.debug("writing content to %r", self.path.resolve())
         self.path.write_text(content)
         self._content = None

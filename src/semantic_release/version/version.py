@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import re
 from functools import wraps
 from itertools import zip_longest
@@ -9,10 +8,8 @@ from typing import Callable, Union, overload
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidVersion
+from semantic_release.globals import logger
 from semantic_release.helpers import check_tag_format
-
-log = logging.getLogger(__name__)
-
 
 # Very heavily inspired by semver.version:_comparator, I don't think there's
 # a cleaner way to do this
@@ -116,7 +113,7 @@ class Version:
         if not isinstance(version_str, str):
             raise InvalidVersion(f"{version_str!r} cannot be parsed as a Version")
 
-        log.debug("attempting to parse string %r as Version", version_str)
+        logger.debug("attempting to parse string %r as Version", version_str)
         match = cls._VERSION_REGEX.fullmatch(version_str)
         if not match:
             raise InvalidVersion(f"{version_str!r} is not a valid Version")
@@ -131,7 +128,7 @@ class Version:
                     r"'1.2.3-my-custom-3rc.4'."
                 )
             prerelease_token, prerelease_revision = pm.groups()
-            log.debug(
+            logger.debug(
                 "parsed prerelease_token %s, prerelease_revision %s from version "
                 "string %s",
                 prerelease_token,
@@ -140,10 +137,10 @@ class Version:
             )
         else:
             prerelease_revision = None
-            log.debug("version string %s parsed as a non-prerelease", version_str)
+            logger.debug("version string %s parsed as a non-prerelease", version_str)
 
         build_metadata = match.group("buildmetadata") or ""
-        log.debug(
+        logger.debug(
             "parsed build metadata %r from version string %s",
             build_metadata,
             version_str,
@@ -218,7 +215,7 @@ class Version:
         if type(level) != LevelBump:
             raise TypeError(f"Unexpected level {level!r}: expected {LevelBump!r}")
 
-        log.debug("performing a %s level bump", level)
+        logger.debug("performing a %s level bump", level)
         if level is LevelBump.MAJOR:
             return Version(
                 self.major + 1,

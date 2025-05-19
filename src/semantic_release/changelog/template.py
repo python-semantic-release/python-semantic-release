@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import shutil
 from pathlib import Path, PurePosixPath
@@ -9,15 +8,13 @@ from typing import TYPE_CHECKING
 from jinja2 import FileSystemLoader
 from jinja2.sandbox import SandboxedEnvironment
 
+from semantic_release.globals import logger
 from semantic_release.helpers import dynamic_import
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Callable, Iterable, Literal
 
     from jinja2 import Environment
-
-
-log = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-arguments,too-many-locals
@@ -107,7 +104,7 @@ def recursive_render(
         and not file.startswith(".")
     ):
         output_path = (_root_dir / root.relative_to(template_dir)).resolve()
-        log.info("Rendering templates from %s to %s", root, output_path)
+        logger.info("Rendering templates from %s to %s", root, output_path)
         output_path.mkdir(parents=True, exist_ok=True)
         if file.endswith(".j2"):
             # We know the file ends with .j2 by the filter in the for-loop
@@ -122,18 +119,20 @@ def recursive_render(
             # contents of a file during the rendering of the template. This mechanism
             # is used for inserting into a current changelog. When using stream rendering
             # of the same file, it always came back empty
-            log.debug("rendering %s to %s", src_file_path, output_file_path)
+            logger.debug("rendering %s to %s", src_file_path, output_file_path)
             rendered_file = environment.get_template(src_file_path).render().rstrip()
             with open(output_file_path, "w", encoding="utf-8") as output_file:
                 output_file.write(f"{rendered_file}\n")
 
             rendered_paths.append(output_file_path)
+
         else:
             src_file = str((root / file).resolve())
             target_file = str((output_path / file).resolve())
-            log.debug(
+            logger.debug(
                 "source file %s is not a template, copying to %s", src_file, target_file
             )
             shutil.copyfile(src_file, target_file)
             rendered_paths.append(target_file)
+
     return rendered_paths

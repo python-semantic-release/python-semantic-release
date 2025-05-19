@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import warnings
 from abc import ABCMeta, abstractmethod
 from functools import lru_cache
@@ -12,10 +11,6 @@ from semantic_release.helpers import parse_git_url
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
-
-
-# Globals
-logger = logging.getLogger(__name__)
 
 
 class HvcsBase(metaclass=ABCMeta):

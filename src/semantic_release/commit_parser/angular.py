@@ -5,7 +5,6 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 
 from __future__ import annotations
 
-import logging
 import re
 from functools import reduce
 from itertools import zip_longest
@@ -31,13 +30,11 @@ from semantic_release.commit_parser.util import (
 )
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
 
 if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
-
-
-logger = logging.getLogger(__name__)
 
 
 def _logged_parse_error(commit: Commit, error: str) -> ParseError:
