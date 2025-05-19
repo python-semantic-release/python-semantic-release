@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import logging
 import os
 import re
 import string
@@ -12,12 +11,13 @@ from re import IGNORECASE, compile as regexp
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Sequence, TypeVar
 from urllib.parse import urlsplit
 
+from semantic_release.globals import logger
+
 if TYPE_CHECKING:  # pragma: no cover
+    from logging import Logger
     from re import Pattern
     from typing import Iterable
 
-
-log = logging.getLogger(__name__)
 
 number_pattern = regexp(r"(?P<prefix>\S*?)(?P<number>\d[\d,]*)\b")
 hex_number_pattern = regexp(
@@ -118,7 +118,7 @@ _R = TypeVar("_R")
 _FuncType = Callable[..., _R]
 
 
-def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncType[_R]]:
+def logged_function(logger: Logger) -> Callable[[_FuncType[_R]], _FuncType[_R]]:
     """
     Decorator which adds debug logging of a function's input arguments and return
     value.
@@ -151,7 +151,7 @@ def logged_function(logger: logging.Logger) -> Callable[[_FuncType[_R]], _FuncTy
     return _logged_function
 
 
-@logged_function(log)
+@logged_function(logger)
 def dynamic_import(import_path: str) -> Any:
     """
     Dynamically import an object from a conventionally formatted "module:attribute"
@@ -175,7 +175,7 @@ def dynamic_import(import_path: str) -> Any:
         )
 
         if module_path not in sys.modules:
-            log.debug("Loading '%s' from file '%s'", module_path, module_filepath)
+            logger.debug("Loading '%s' from file '%s'", module_path, module_filepath)
             spec = importlib.util.spec_from_file_location(
                 module_path, str(module_filepath)
             )
@@ -190,9 +190,9 @@ def dynamic_import(import_path: str) -> Any:
 
     # Otherwise, import as a module
     try:
-        log.debug("Importing module '%s'", module_name)
+        logger.debug("Importing module '%s'", module_name)
         module = importlib.import_module(module_name)
-        log.debug("Loading '%s' from module '%s'", attr, module_name)
+        logger.debug("Loading '%s' from module '%s'", attr, module_name)
         return getattr(module, attr)
     except TypeError as err:
         raise ImportError(
@@ -242,7 +242,7 @@ def parse_git_url(url: str) -> ParsedGitUrl:
 
     Raises ValueError if the url can't be parsed.
     """
-    log.debug("Parsing git url %r", url)
+    logger.debug("Parsing git url %r", url)
 
     # Normalizers are a list of tuples of (pattern, replacement)
     normalizers = [

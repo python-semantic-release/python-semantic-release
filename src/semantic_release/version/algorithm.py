@@ -11,6 +11,7 @@ from semantic_release.commit_parser.token import ParseError
 from semantic_release.const import DEFAULT_VERSION
 from semantic_release.enums import LevelBump, SemanticReleaseLogLevels
 from semantic_release.errors import InternalError, InvalidVersion
+from semantic_release.globals import logger
 from semantic_release.helpers import validate_types_in_sequence
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -27,9 +28,6 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from semantic_release.version.translator import VersionTranslator
     from semantic_release.version.version import Version
-
-
-logger = logging.getLogger(__name__)
 
 
 def tags_and_versions(

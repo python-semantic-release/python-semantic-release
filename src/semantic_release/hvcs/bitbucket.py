@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from functools import lru_cache
 from pathlib import PurePosixPath
@@ -14,14 +13,11 @@ from typing import TYPE_CHECKING
 
 from urllib3.util.url import Url, parse_url
 
+from semantic_release.globals import logger
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
-
-
-# Globals
-log = logging.getLogger(__name__)
 
 
 class Bitbucket(RemoteHvcsBase):
@@ -161,7 +157,7 @@ class Bitbucket(RemoteHvcsBase):
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
         # ref: https://support.atlassian.com/bitbucket-cloud/docs/variables-and-secrets/
         if "BITBUCKET_REPO_FULL_NAME" in os.environ:
-            log.info("Getting repository owner and name from environment variables.")
+            logger.info("Getting repository owner and name from environment variables.")
             owner, name = os.environ["BITBUCKET_REPO_FULL_NAME"].rsplit("/", 1)
             return owner, name
 

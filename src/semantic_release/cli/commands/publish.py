@@ -1,20 +1,17 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 import click
 from git import Repo
 
 from semantic_release.cli.util import noop_report
+from semantic_release.globals import logger
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.algorithm import tags_and_versions
 
 if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.cli.cli_context import CliContextObj
-
-
-log = logging.getLogger(__name__)
 
 
 def publish_distributions(
@@ -36,7 +33,7 @@ def publish_distributions(
         )
         return
 
-    log.info("Uploading distributions to release")
+    logger.info("Uploading distributions to release")
     for pattern in dist_glob_patterns:
         hvcs_client.upload_dists(tag=tag, dist_glob=pattern)  # type: ignore[attr-defined]
 

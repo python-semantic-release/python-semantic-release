@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from datetime import datetime
-from logging import getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -19,6 +18,7 @@ from semantic_release.errors import (
     GitPushError,
     GitTagError,
 )
+from semantic_release.globals import logger
 
 if TYPE_CHECKING:  # pragma: no cover
     from contextlib import _GeneratorContextManager
@@ -36,7 +36,7 @@ class GitProject:
         credential_masker: MaskingFilter | None = None,
     ) -> None:
         self._project_root = Path(directory).resolve()
-        self._logger = getLogger(__name__)
+        self._logger = logger
         self._cred_masker = credential_masker or MaskingFilter()
         self._commit_author = commit_author
 

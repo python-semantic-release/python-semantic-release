@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import re
 from functools import reduce
 from itertools import zip_longest
@@ -27,9 +26,8 @@ from semantic_release.commit_parser.util import (
 )
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

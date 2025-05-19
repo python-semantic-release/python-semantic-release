@@ -54,13 +54,13 @@ from semantic_release.errors import (
     NotAReleaseBranch,
     ParserLoadError,
 )
+from semantic_release.globals import logger
 from semantic_release.helpers import dynamic_import
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.pattern import PatternVersionDeclaration
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
 from semantic_release.version.translator import VersionTranslator
 
-log = logging.getLogger(__name__)
 NonEmptyString = Annotated[str, Field(..., min_length=1)]
 
 
@@ -179,7 +179,7 @@ class ChangelogConfig(BaseModel):
     @field_validator("changelog_file", mode="after")
     @classmethod
     def changelog_file_deprecation_warning(cls, val: str) -> str:
-        log.warning(
+        logger.warning(
             str.join(
                 " ",
                 [
@@ -329,7 +329,7 @@ class RemoteConfig(BaseModel):
             )
 
         if scheme == "https" and self.insecure:
-            log.warning(
+            logger.warning(
                 str.join(
                     "\n",
                     [
@@ -402,7 +402,7 @@ class RawConfig(BaseModel):
     @classmethod
     def tag_commit_parser_deprecation_warning(cls, val: str) -> str:
         if val == "tag":
-            log.warning(
+            logger.warning(
                 str.join(
                     " ",
                     [
@@ -418,7 +418,7 @@ class RawConfig(BaseModel):
     @classmethod
     def angular_commit_parser_deprecation_warning(cls, val: str) -> str:
         if val == "angular":
-            log.warning(
+            logger.warning(
                 str.join(
                     " ",
                     [
@@ -585,14 +585,14 @@ class RuntimeContext:
     ) -> BranchConfig:
         for group, options in choices.items():
             if regexp(options.match).match(active_branch):
-                log.info(
+                logger.info(
                     "Using group %r options, as %r matches %r",
                     group,
                     options.match,
                     active_branch,
                 )
                 return options
-            log.debug(
+            logger.debug(
                 "Rejecting group %r as %r doesn't match %r",
                 group,
                 options.match,
@@ -774,10 +774,10 @@ class RuntimeContext:
 
         # Provide warnings if the token is missing
         if not raw.remote.token:
-            log.debug("hvcs token is not set")
+            logger.debug("hvcs token is not set")
 
             if not raw.remote.ignore_token_for_push:
-                log.warning("Token value is missing!")
+                logger.warning("Token value is missing!")
 
         # hvcs_client
         hvcs_client_cls = _known_hvcs[raw.remote.type]

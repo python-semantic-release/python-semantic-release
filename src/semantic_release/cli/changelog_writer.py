@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from contextlib import suppress
-from logging import getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -25,6 +24,7 @@ from semantic_release.cli.const import (
 )
 from semantic_release.cli.util import noop_report
 from semantic_release.errors import InternalError
+from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -34,9 +34,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.changelog.release_history import Release, ReleaseHistory
     from semantic_release.cli.config import RuntimeContext
     from semantic_release.hvcs._base import HvcsBase
-
-
-log = getLogger(__name__)
 
 
 def get_default_tpl_dir(style: str, sub_dir: str | None = None) -> Path:
@@ -210,7 +207,9 @@ def write_changelog_files(
             noop=noop,
         )
 
-    log.info("No contents found in %r, using default changelog template", template_dir)
+    logger.info(
+        "No contents found in %r, using default changelog template", template_dir
+    )
     return [
         write_default_changelog(
             changelog_file=runtime_ctx.changelog_file,

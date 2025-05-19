@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
@@ -8,10 +7,10 @@ from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry  # type: ignore[import]
 
+from semantic_release.globals import logger
+
 if TYPE_CHECKING:  # pragma: no cover
     from semantic_release.hvcs.token_auth import TokenAuth
-
-logger = logging.getLogger(__name__)
 
 
 def build_requests_session(
