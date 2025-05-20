@@ -128,8 +128,7 @@ class ChangelogEnvironmentConfig(BaseModel):
 class DefaultChangelogTemplatesConfig(BaseModel):
     changelog_file: str = "CHANGELOG.md"
     output_format: ChangelogOutputFormat = ChangelogOutputFormat.NONE
-    # TODO: Breaking Change v10, it will become True
-    mask_initial_release: bool = False
+    mask_initial_release: bool = True
 
     @model_validator(mode="after")
     def interpret_output_format(self) -> Self:
