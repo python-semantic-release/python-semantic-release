@@ -126,7 +126,7 @@ if TYPE_CHECKING:
             hvcs_domain: str = ...,
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = True,  # Default as of v10
         ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
@@ -184,7 +184,7 @@ if TYPE_CHECKING:
             dest_file: Path | None = None,
             max_version: str | None = None,
             output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = True,  # Default as of v10
         ) -> str: ...
 
     class FormatGitSquashCommitMsgFn(Protocol):
@@ -343,7 +343,7 @@ if TYPE_CHECKING:
             hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = ...,
             ignore_merge_commits: bool = True,  # Default as of v10
         ) -> Sequence[RepoActions]: ...
 
@@ -405,7 +405,7 @@ if TYPE_CHECKING:
             previous_version: Version | None = None,
             license_name: str = "",
             dest_file: Path | None = None,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = True,  # Default as of v10
         ) -> str: ...
 
     class GetHvcsClientFromRepoDefFn(Protocol):
@@ -1000,7 +1000,7 @@ def build_configured_base_repo(  # noqa: C901
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,  # Default as of v10
     ) -> tuple[Path, HvcsBase]:
         if not cached_example_git_project.exists():
             raise RuntimeError("Unable to find cached git project files!")
@@ -1259,7 +1259,7 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
         repo_dir = Path(dest_dir)
         hvcs: Github | Gitlab | Gitea | Bitbucket
         tag_format_str: str
-        mask_initial_release: bool = False
+        mask_initial_release: bool = True  # Default as of v10
         current_commits: list[CommitDef] = []
         current_repo_def: RepoDefinition = {}
 
@@ -1878,8 +1878,7 @@ def simulate_default_changelog_creation(  # noqa: C901
         dest_file: Path | None = None,
         max_version: str | None = None,
         output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
-        # TODO: Breaking v10, when default is toggled to true, also change this to True
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,  # Default as of v10
     ) -> str:
         if output_format == ChangelogOutputFormat.MARKDOWN:
             header = dedent(
@@ -2094,8 +2093,7 @@ def generate_default_release_notes_from_def(  # noqa: C901
         previous_version: Version | None = None,
         license_name: str = "",
         dest_file: Path | None = None,
-        # TODO: Breaking v10, when default is toggled to true, also change this to True
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,  # Default as of v10
     ) -> str:
         limited_repo_def: RepoDefinition = get_commits_from_repo_build_def(
             build_definition=version_actions,

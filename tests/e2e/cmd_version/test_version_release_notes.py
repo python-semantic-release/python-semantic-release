@@ -98,14 +98,16 @@ def test_custom_release_notes_template(
 
 
 @pytest.mark.parametrize(
-    "repo_result, license_name, license_setting",
+    "repo_result, license_name, license_setting, mask_initial_release",
     [
         pytest.param(
             lazy_fixture(repo_fixture_name),
             license_name,
             license_setting,
+            mask_initial_release,
             marks=pytest.mark.comprehensive,
         )
+        for mask_initial_release in [True, False]
         for license_name in ["", "MIT", "GPL-3.0"]
         for license_setting in [
             "project.license-expression",
@@ -124,6 +126,7 @@ def test_default_release_notes_license_statement(
     run_cli: RunCliFn,
     license_name: str,
     license_setting: str,
+    mask_initial_release: bool,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -151,12 +154,18 @@ def test_default_release_notes_license_statement(
     # Setup: set the license for the test
     update_pyproject_toml(license_setting, license_name)
 
+    # Setup: set mask_initial_release value in configuration
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.mask_initial_release",
+        mask_initial_release,
+    )
+
     expected_release_notes = generate_default_release_notes_from_def(
         version_actions=repo_def,
         hvcs=get_hvcs_client_from_repo_def(repo_def),
         previous_version=None,
         license_name=license_name,
-        mask_initial_release=False,
+        mask_initial_release=mask_initial_release,
     )
 
     # Act
