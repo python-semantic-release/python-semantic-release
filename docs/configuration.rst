@@ -142,7 +142,9 @@ version to be ``1.0.0``, regardless of patch, minor, or major change level.
 Additionally, when ``allow_zero_version`` is set to ``false``,
 the :ref:`config-major_on_zero` setting is ignored.
 
-**Default:** ``true``
+*Default changed to ``false`` in $NEW_VERSION*
+
+**Default:** ``false``
 
 ----
 
