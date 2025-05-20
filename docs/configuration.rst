@@ -390,7 +390,9 @@ is there to document?
 The message details can be found in the ``first_release.md.j2`` and ``first_release.rst.j2``
 templates of the default changelog template directory.
 
-**Default:** ``false``
+*Default changed to ``true`` in $NEW_VERSION.*
+
+**Default:** ``true``
 
 .. seealso::
    - :ref:`changelog-templates-default_changelog`
