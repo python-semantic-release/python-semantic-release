@@ -245,9 +245,9 @@ def next_version(
     repo: Repo,
     translator: VersionTranslator,
     commit_parser: CommitParser[ParseResult, ParserOptions],
+    allow_zero_version: bool,
+    major_on_zero: bool,
     prerelease: bool = False,
-    major_on_zero: bool = True,
-    allow_zero_version: bool = True,
 ) -> Version:
     """
     Evaluate the history within `repo`, and based on the tags and commits in the repo
