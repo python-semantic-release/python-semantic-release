@@ -84,7 +84,7 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
         ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
@@ -281,6 +281,48 @@ def repo_w_no_tags_conventional_commits_w_zero_version(
             commit_type=commit_type,
             extra_configs={
                 "tool.semantic_release.allow_zero_version": True,
+            },
+        )
+        return build_repo_from_definition(cached_repo_path, repo_construction_steps)
+
+    build_repo_or_copy_cache(
+        repo_name=repo_name,
+        build_spec_hash=build_spec_hash_4_repo_w_no_tags,
+        build_repo_func=_build_repo,
+        dest_dir=example_project_dir,
+    )
+
+    if not (cached_repo_data := get_cached_repo_data(proj_dirname=repo_name)):
+        raise ValueError("Failed to retrieve repo data from cache")
+
+    return {
+        "definition": cached_repo_data["build_definition"],
+        "repo": example_project_git_repo(),
+    }
+
+
+@pytest.fixture
+def repo_w_no_tags_conventional_commits_unmasked_initial_release(
+    build_repo_from_definition: BuildRepoFromDefinitionFn,
+    get_repo_definition_4_trunk_only_repo_w_no_tags: GetRepoDefinitionFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
+    build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
+    build_spec_hash_4_repo_w_no_tags: str,
+    example_project_git_repo: ExProjectGitRepoFn,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+) -> BuiltRepoResult:
+    """Replicates repo with no tags, but with allow_zero_version=True"""
+    repo_name = repo_w_no_tags_conventional_commits_unmasked_initial_release.__name__
+    commit_type: CommitConvention = (
+        repo_name.split("_commits", maxsplit=1)[0].split("_")[-1]  # type: ignore[assignment]
+    )
+
+    def _build_repo(cached_repo_path: Path) -> Sequence[RepoActions]:
+        repo_construction_steps = get_repo_definition_4_trunk_only_repo_w_no_tags(
+            commit_type=commit_type,
+            extra_configs={
+                "tool.semantic_release.changelog.default_templates.mask_initial_release": False,
             },
         )
         return build_repo_from_definition(cached_repo_path, repo_construction_steps)

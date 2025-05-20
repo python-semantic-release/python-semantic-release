@@ -77,7 +77,7 @@ def get_repo_definition_4_repo_w_initial_commit(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
         ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         repo_construction_steps: list[RepoActions] = []
