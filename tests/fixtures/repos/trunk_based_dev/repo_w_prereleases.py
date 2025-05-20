@@ -85,7 +85,7 @@ def get_repo_definition_4_trunk_only_repo_w_prerelease_tags(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
         ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
