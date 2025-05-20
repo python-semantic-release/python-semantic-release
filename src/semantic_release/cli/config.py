@@ -360,7 +360,7 @@ class RawConfig(BaseModel):
     commit_parser_options: Dict[str, Any] = {}
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
-    allow_zero_version: bool = True
+    allow_zero_version: bool = False
     repo_dir: Annotated[Path, Field(validate_default=True)] = Path(".")
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
