@@ -340,7 +340,7 @@ def test_version_updates_changelog_wo_prev_releases(
         str(changelog_file.name),
     )
 
-    version = "v0.1.0"
+    version = "v1.0.0"
     rst_version_header = f"{version} ({repo_build_date_str})"
     search_n_replacements = {
         ChangelogOutputFormat.MARKDOWN: (
