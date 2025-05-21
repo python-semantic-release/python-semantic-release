@@ -157,7 +157,7 @@ class ChangelogConfig(BaseModel):
     )
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
     exclude_commit_patterns: Tuple[str, ...] = ()
-    mode: ChangelogMode = ChangelogMode.INIT
+    mode: ChangelogMode = ChangelogMode.UPDATE
     insertion_flag: str = ""
     template_dir: str = "templates"
 
