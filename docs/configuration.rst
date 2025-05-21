@@ -664,7 +664,7 @@ The patterns in this list are treated as regular expressions.
 ``mode``
 ********
 
-*Introduced in v9.10.0*
+*Introduced in v9.10.0. Default changed to `update` in $NEW_VERSION.*
 
 **Type:** ``Literal["init", "update"]``
 
@@ -682,7 +682,7 @@ version information at that location.
 If you are using a custom template directory, the `context.changelog_mode` value will exist in the
 changelog context but it is up to your implementation to determine if and/or how to use it.
 
-**Default:** ``init``
+**Default:** ``update``
 
 .. seealso::
    - :ref:`changelog-templates-default_changelog`
