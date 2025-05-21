@@ -147,7 +147,7 @@ def test_stamp_version_variables_python(
     update_pyproject_toml: UpdatePyprojectTomlFn,
     example_project_dir: ExProjectDir,
 ) -> None:
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = example_project_dir.joinpath(
         "src", EXAMPLE_PROJECT_NAME, "_version.py"
     )
@@ -181,7 +181,7 @@ def test_stamp_version_toml(
     default_tag_format_str: str,
 ) -> None:
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     orig_release = default_tag_format_str.format(version=orig_version)
     new_release = default_tag_format_str.format(version=new_version)
     target_file = Path("example.toml")
@@ -236,7 +236,7 @@ def test_stamp_version_variables_yaml(
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ) -> None:
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("example.yml")
     orig_yaml = dedent(
         f"""\
@@ -286,7 +286,7 @@ def test_stamp_version_variables_yaml_cff(
     Based on https://github.com/python-semantic-release/python-semantic-release/issues/962
     """
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("CITATION.cff")
     orig_yaml = dedent(
         f"""\
@@ -335,7 +335,7 @@ def test_stamp_version_variables_json(
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ) -> None:
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("plugins.json")
     orig_json = {
         "id": "test-plugin",
@@ -385,7 +385,7 @@ def test_stamp_version_variables_yaml_github_actions(
     Based on https://github.com/python-semantic-release/python-semantic-release/issues/1156
     """
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("combined.yml")
     action1_yaml_filepath = "my-org/my-actions/.github/workflows/action1.yml"
     action2_yaml_filepath = "my-org/my-actions/.github/workflows/action2.yml"
@@ -457,7 +457,7 @@ def test_stamp_version_variables_yaml_kustomization_container_spec(
     Based on https://github.com/python-semantic-release/python-semantic-release/issues/846
     """
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("kustomization.yaml")
     orig_yaml = dedent(
         f"""\

@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_result, next_release_version",
     [
-        (lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "0.1.0"),
+        (lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "1.0.0"),
     ],
 )
 def test_custom_release_notes_template(
@@ -131,7 +131,7 @@ def test_default_release_notes_license_statement(
     get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
     generate_default_release_notes_from_def: GenerateDefaultReleaseNotesFromDefFn,
 ):
-    new_version = "0.1.0"
+    new_version = "1.0.0"
 
     # Setup
     now_datetime = stable_now_date()

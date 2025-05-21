@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     "repo_result, next_release_version",
     # must use a repo that is ready for a release to prevent no release
     # logic from being triggered before the noop logic
-    [(lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "0.1.0")],
+    [(lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "1.0.0")],
 )
 def test_version_noop_is_noop(
     repo_result: BuiltRepoResult,
@@ -273,7 +273,7 @@ def test_version_only_tag_push(
 
     # Assert only tag was created, it was pushed and then release was created
     assert_successful_exit_code(result, cli_cmd)
-    assert tag_after == "v0.1.0"
+    assert tag_after == "v1.0.0"
     assert head_before == head_after
     assert mocked_git_push.call_count == 1  # 0 for commit, 1 for tag
     assert post_mocker.call_count == 1
