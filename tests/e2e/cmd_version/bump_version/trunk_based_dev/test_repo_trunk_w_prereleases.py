@@ -7,16 +7,12 @@ import tomlkit
 from flatdict import FlatDict
 from freezegun import freeze_time
 
-from tests.const import (
-    MAIN_PROG_NAME,
-    VERSION_SUBCMD,
-)
 from tests.fixtures.repos.trunk_based_dev import (
     repo_w_trunk_only_n_prereleases_conventional_commits,
     repo_w_trunk_only_n_prereleases_emoji_commits,
     repo_w_trunk_only_n_prereleases_scipy_commits,
 )
-from tests.util import assert_successful_exit_code, temporary_working_directory
+from tests.util import temporary_working_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -24,8 +20,10 @@ if TYPE_CHECKING:
 
     from requests_mock import Mocker
 
-    from tests.conftest import RunCliFn
-    from tests.e2e.cmd_version.bump_version.conftest import InitMirrorRepo4RebuildFn
+    from tests.e2e.cmd_version.bump_version.conftest import (
+        InitMirrorRepo4RebuildFn,
+        RunPSReleaseFn,
+    )
     from tests.e2e.conftest import GetSanitizedChangelogContentFn
     from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
@@ -53,7 +51,7 @@ if TYPE_CHECKING:
 )
 def test_trunk_repo_rebuild_w_prereleases(
     repo_fixture_name: str,
-    run_cli: RunCliFn,
+    run_psr_release: RunPSReleaseFn,
     build_trunk_only_repo_w_prerelease_tags: BuildSpecificRepoFn,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     init_mirror_repo_for_rebuild: InitMirrorRepo4RebuildFn,
@@ -131,39 +129,10 @@ def test_trunk_repo_rebuild_w_prereleases(
         with freeze_time(
             release_action_step["details"]["datetime"]
         ), temporary_working_directory(mirror_repo_dir):
-            build_metadata_args = (
-                [
-                    "--build-metadata",
-                    release_action_step["details"]["version"].split("+", maxsplit=1)[
-                        -1
-                    ],
-                ]
-                if len(release_action_step["details"]["version"].split("+", maxsplit=1))
-                > 1
-                else []
+            run_psr_release(
+                next_version_str=release_action_step["details"]["version"],
+                git_repo=mirror_git_repo,
             )
-            prerelease_args = (
-                [
-                    "--as-prerelease",
-                    "--prerelease-token",
-                    (
-                        release_action_step["details"]["version"]
-                        .split("-", maxsplit=1)[-1]
-                        .split(".", maxsplit=1)[0]
-                    ),
-                ]
-                if len(release_action_step["details"]["version"].split("-", maxsplit=1))
-                > 1
-                else []
-            )
-            cli_cmd = [
-                MAIN_PROG_NAME,
-                "--strict",
-                VERSION_SUBCMD,
-                *build_metadata_args,
-                *prerelease_args,
-            ]
-            result = run_cli(cli_cmd[1:])
 
         # take measurement after running the version command
         actual_release_commit_text = mirror_git_repo.head.commit.message
@@ -177,7 +146,7 @@ def test_trunk_repo_rebuild_w_prereleases(
         )
 
         # Evaluate (normal release actions should have occurred as expected)
-        assert_successful_exit_code(result, cli_cmd)
+        # ------------------------------------------------------------------
         # Make sure version file is updated
         assert expected_pyproject_toml_content == actual_pyproject_toml_content
         assert expected_version_file_content == actual_version_file_content
