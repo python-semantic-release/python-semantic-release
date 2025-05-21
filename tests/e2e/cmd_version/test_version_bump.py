@@ -34,6 +34,7 @@ from tests.fixtures import (
     repo_w_github_flow_w_feature_release_channel_conventional_commits,
     repo_w_initial_commit,
     repo_w_no_tags_conventional_commits,
+    repo_w_no_tags_conventional_commits_w_zero_version,
     repo_w_no_tags_emoji_commits,
     repo_w_no_tags_scipy_commits,
     repo_w_trunk_only_conventional_commits,
@@ -69,7 +70,9 @@ if TYPE_CHECKING:
     [
         *(
             (
-                lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
+                lazy_fixture(
+                    repo_w_no_tags_conventional_commits_w_zero_version.__name__
+                ),
                 cli_args,
                 next_release_version,
             )
