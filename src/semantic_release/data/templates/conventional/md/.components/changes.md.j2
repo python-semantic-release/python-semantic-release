@@ -1,0 +1,129 @@
+{%    from 'macros.md.j2' import apply_alphabetical_ordering_by_brk_descriptions
+%}{%  from 'macros.md.j2' import apply_alphabetical_ordering_by_descriptions
+%}{%  from 'macros.md.j2' import apply_alphabetical_ordering_by_release_notices
+%}{%  from 'macros.md.j2' import format_breaking_changes_description, format_commit_summary_line
+%}{%  from 'macros.md.j2' import format_release_notice
+%}{#
+EXAMPLE:
+
+### Features
+
+- Add new feature ([#10](https://domain.com/namespace/repo/pull/10),
+  [`abcdef0`](https://domain.com/namespace/repo/commit/HASH))
+
+- **scope**: Add new feature ([`abcdef0`](https://domain.com/namespace/repo/commit/HASH))
+
+### Bug Fixes
+
+- Fix bug ([#11](https://domain.com/namespace/repo/pull/11),
+  [`abcdef1`](https://domain.com/namespace/repo/commit/HASH))
+
+### Breaking Changes
+
+- With the change _____, the change causes ___ effect. Ultimately, this section
+  it is a more detailed description of the breaking change. With an optional
+  scope prefix like the commit messages above.
+
+- **scope**: this breaking change has a scope to identify the part of the code that
+  this breaking change applies to for better context.
+
+### Additional Release Information
+
+- This is a release note that provides additional information about the release
+  that is not a breaking change or a feature/bug fix.
+
+- **scope**: this release note has a scope to identify the part of the code that
+  this release note applies to for better context.
+
+#}{%  set max_line_width = max_line_width | default(100)
+%}{%  set hanging_indent = hanging_indent | default(2)
+%}{#
+#}{%  for type_, commits in commit_objects if type_ != "unknown"
+%}{#    PREPROCESS COMMITS (order by description & format description line)
+#}{%    set ns = namespace(commits=commits)
+%}{%    set _ = apply_alphabetical_ordering_by_descriptions(ns)
+%}{#
+#}{%    set commit_descriptions = []
+%}{#
+#}{%    for commit in ns.commits
+%}{#      # Add reference links to the commit summary line
+#}{%      set description = "- %s" | format(format_commit_summary_line(commit))
+%}{%      set description = description | autofit_text_width(max_line_width, hanging_indent)
+%}{%      set _ = commit_descriptions.append(description)
+%}{%    endfor
+%}{#
+   #    # PRINT SECTION (header & commits)
+#}{%    if commit_descriptions | length > 0
+%}{{      "\n"
+}}{{      "### %s\n" | format(type_ | title)
+}}{{      "\n"
+}}{{      "%s\n" | format(commit_descriptions | unique | join("\n\n"))
+}}{%    endif
+%}{%  endfor
+%}{#
+      # Determine if there are any breaking change commits by filtering the list by breaking descriptions
+      # commit_objects is a list of tuples [("Features", [ParsedCommit(), ...]), ("Bug Fixes", [ParsedCommit(), ...])]
+      # HOW: Filter out breaking change commits that have no breaking descriptions
+      #  1. Re-map the list to only the list of commits under the breaking category from the list of tuples
+      #  2. Peel off the outer list to get a list of ParsedCommit objects
+      #  3. Filter the list of ParsedCommits to only those with a breaking description
+#}{%  set breaking_commits = commit_objects | map(attribute="1.0")
+%}{%  set breaking_commits = breaking_commits | rejectattr("error", "defined") | selectattr("breaking_descriptions.0") | list
+%}{#
+#}{%  if breaking_commits | length > 0
+%}{#    PREPROCESS COMMITS
+#}{%    set brk_ns = namespace(commits=breaking_commits)
+%}{%    set _ = apply_alphabetical_ordering_by_brk_descriptions(brk_ns)
+%}{#
+#}{%    set brking_descriptions = []
+%}{#
+#}{%    for commit in brk_ns.commits
+%}{%      set full_description = "- %s" | format(
+            format_breaking_changes_description(commit).split("\n\n") | join("\n\n- ")
+          )
+%}{%      set _ = brking_descriptions.append(
+            full_description | autofit_text_width(max_line_width, hanging_indent)
+          )
+%}{%    endfor
+%}{#
+   #    # PRINT BREAKING CHANGE DESCRIPTIONS (header & descriptions)
+#}{{    "\n"
+}}{{    "### Breaking Changes\n"
+}}{{
+        "\n%s\n" | format(brking_descriptions | unique | join("\n\n"))
+}}{#
+#}{%  endif
+%}{#
+      # Determine if there are any commits with release notice information by filtering the list by release_notices
+      # commit_objects is a list of tuples [("Features", [ParsedCommit(), ...]), ("Bug Fixes", [ParsedCommit(), ...])]
+      # HOW: Filter out commits that have no release notices
+      #  1. Re-map the list to only the list of commits from the list of tuples
+      #  2. Peel off the outer list to get a list of ParsedCommit objects
+      #  3. Filter the list of ParsedCommits to only those with a release notice
+#}{%  set notice_commits = commit_objects | map(attribute="1.0")
+%}{%  set notice_commits = notice_commits | rejectattr("error", "defined") | selectattr("release_notices.0") | list
+%}{#
+#}{%  if notice_commits | length > 0
+%}{#    PREPROCESS COMMITS
+#}{%    set notice_ns = namespace(commits=notice_commits)
+%}{%    set _ = apply_alphabetical_ordering_by_release_notices(notice_ns)
+%}{#
+#}{%    set release_notices = []
+%}{#
+#}{%    for commit in notice_ns.commits
+%}{%      set full_description = "- %s" | format(
+            format_release_notice(commit).split("\n\n") | join("\n\n- ")
+          )
+%}{%      set _ = release_notices.append(
+            full_description | autofit_text_width(max_line_width, hanging_indent)
+          )
+%}{%    endfor
+%}{#
+   #    # PRINT RELEASE NOTICE INFORMATION (header & descriptions)
+#}{{    "\n"
+}}{{    "### Additional Release Information\n"
+}}{{
+        "\n%s\n" | format(release_notices | unique | join("\n\n"))
+}}{#
+#}{%  endif
+%}

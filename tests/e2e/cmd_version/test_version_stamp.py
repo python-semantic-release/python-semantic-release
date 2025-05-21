@@ -11,7 +11,6 @@ import yaml
 from dotty_dict import Dotty
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
 from semantic_release.version.declarations.enum import VersionStampType
 
 from tests.const import EXAMPLE_PROJECT_NAME, MAIN_PROG_NAME, VERSION_SUBCMD
@@ -29,8 +28,7 @@ from tests.util import (
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
 
@@ -58,7 +56,7 @@ VERSION_STAMP_CMD = [
 def test_version_only_stamp_version(
     repo_result: BuiltRepoResult,
     expected_new_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: MagicMock,
     example_pyproject_toml: Path,
@@ -93,7 +91,7 @@ def test_version_only_stamp_version(
 
     # Act (stamp the version but also create the changelog)
     cli_cmd = [*VERSION_STAMP_CMD, "--minor"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -145,11 +143,11 @@ def test_version_only_stamp_version(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_python(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     example_project_dir: ExProjectDir,
 ) -> None:
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = example_project_dir.joinpath(
         "src", EXAMPLE_PROJECT_NAME, "_version.py"
     )
@@ -162,7 +160,7 @@ def test_stamp_version_variables_python(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)
@@ -178,12 +176,12 @@ def test_stamp_version_variables_python(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_toml(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     default_tag_format_str: str,
 ) -> None:
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     orig_release = default_tag_format_str.format(version=orig_version)
     new_release = default_tag_format_str.format(version=new_version)
     target_file = Path("example.toml")
@@ -213,7 +211,7 @@ def test_stamp_version_toml(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)
@@ -234,11 +232,11 @@ def test_stamp_version_toml(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_yaml(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ) -> None:
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("example.yml")
     orig_yaml = dedent(
         f"""\
@@ -258,7 +256,7 @@ def test_stamp_version_variables_yaml(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)
@@ -277,7 +275,7 @@ def test_stamp_version_variables_yaml(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_yaml_cff(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ) -> None:
     """
@@ -288,7 +286,7 @@ def test_stamp_version_variables_yaml_cff(
     Based on https://github.com/python-semantic-release/python-semantic-release/issues/962
     """
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("CITATION.cff")
     orig_yaml = dedent(
         f"""\
@@ -314,7 +312,7 @@ def test_stamp_version_variables_yaml_cff(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)
@@ -333,11 +331,11 @@ def test_stamp_version_variables_yaml_cff(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_json(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
 ) -> None:
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("plugins.json")
     orig_json = {
         "id": "test-plugin",
@@ -356,7 +354,7 @@ def test_stamp_version_variables_json(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)
@@ -375,7 +373,7 @@ def test_stamp_version_variables_json(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_yaml_github_actions(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     default_tag_format_str: str,
 ) -> None:
@@ -387,7 +385,7 @@ def test_stamp_version_variables_yaml_github_actions(
     Based on https://github.com/python-semantic-release/python-semantic-release/issues/1156
     """
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("combined.yml")
     action1_yaml_filepath = "my-org/my-actions/.github/workflows/action1.yml"
     action2_yaml_filepath = "my-org/my-actions/.github/workflows/action2.yml"
@@ -425,7 +423,7 @@ def test_stamp_version_variables_yaml_github_actions(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)
@@ -447,7 +445,7 @@ def test_stamp_version_variables_yaml_github_actions(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_stamp_version_variables_yaml_kustomization_container_spec(
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     default_tag_format_str: str,
 ) -> None:
@@ -459,7 +457,7 @@ def test_stamp_version_variables_yaml_kustomization_container_spec(
     Based on https://github.com/python-semantic-release/python-semantic-release/issues/846
     """
     orig_version = "0.0.0"
-    new_version = "0.1.0"
+    new_version = "1.0.0"
     target_file = Path("kustomization.yaml")
     orig_yaml = dedent(
         f"""\
@@ -483,7 +481,7 @@ def test_stamp_version_variables_yaml_kustomization_container_spec(
 
     # Act
     cli_cmd = VERSION_STAMP_CMD
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Check the result
     assert_successful_exit_code(result, cli_cmd)

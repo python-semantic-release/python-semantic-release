@@ -180,6 +180,8 @@ jobs:
 
       - name: Test | Run pytest -m unit --comprehensive
         id: tests
+        env:
+          COLUMNS: 150
         run: |
           pytest                        \
             -vv                         \
@@ -248,6 +250,8 @@ jobs:
 
       - name: Test | Run pytest -m e2e --comprehensive
         id: tests
+        env:
+          COLUMNS: 150
         run: |
           pytest                                                   \
             -vv                                                    \
@@ -340,12 +344,15 @@ jobs:
       - name: Test | Run pytest -m e2e
         id: tests
         shell: pwsh
+
         # env:
           # Required for GitPython to work on Windows because of getpass.getuser()
           # USERNAME: "runneradmin"
+          # COLUMNS: 150
           # Because GHA is currently broken on Windows to pass these varables, we do it manually
         run: |
           $env:USERNAME = "runneradmin"
+          $env:COLUMNS = 150
           pytest                                                    `
             -vv                                                     `
             -nauto                                                  `

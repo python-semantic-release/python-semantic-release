@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, cast
 
@@ -9,12 +8,10 @@ from deprecated.sphinx import deprecated
 from dotty_dict import Dotty
 
 from semantic_release.cli.util import noop_report
+from semantic_release.globals import logger
 from semantic_release.version.declarations.enum import VersionStampType
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.version import Version
-
-# globals
-log = getLogger(__name__)
 
 
 class TomlVersionDeclaration(IVersionReplacer):
@@ -30,7 +27,7 @@ class TomlVersionDeclaration(IVersionReplacer):
     def content(self) -> str:
         """A cached property that stores the content of the configured source file."""
         if self._content is None:
-            log.debug("No content stored, reading from source file %s", self._path)
+            logger.debug("No content stored, reading from source file %s", self._path)
 
             if not self._path.exists():
                 raise FileNotFoundError(f"path {self._path!r} does not exist")
@@ -52,7 +49,7 @@ class TomlVersionDeclaration(IVersionReplacer):
         content = self._load()
         maybe_version: str = content.get(self._search_text)  # type: ignore[return-value]
         if maybe_version is not None:
-            log.debug(
+            logger.debug(
                 "Found a key %r that looks like a version (%r)",
                 self._search_text,
                 maybe_version,
@@ -69,7 +66,7 @@ class TomlVersionDeclaration(IVersionReplacer):
         """
         content = self._load()
         if self._search_text in content:
-            log.info(
+            logger.info(
                 "found %r in source file contents, replacing with %s",
                 self._search_text,
                 new_version,

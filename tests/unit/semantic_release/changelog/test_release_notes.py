@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 def release_notes_template() -> str:
     """Retrieve the semantic-release default release notes template."""
     version_notes_template = files(semantic_release.__name__).joinpath(
-        Path("data", "templates", "angular", "md", ".release_notes.md.j2")
+        Path("data", "templates", "conventional", "md", ".release_notes.md.j2")
     )
     return version_notes_template.read_text(encoding="utf-8")
 
@@ -156,7 +156,7 @@ def test_default_release_notes_template(
         release=release,
         template_dir=Path(""),
         history=artificial_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=mask_initial_release,
         license_name=license_name,
     )
@@ -248,7 +248,7 @@ def test_default_release_notes_template_w_a_brk_description(
         release=release,
         template_dir=Path(""),
         history=release_history_w_brk_change,
-        style="angular",
+        style="conventional",
         mask_initial_release=mask_initial_release,
     )
 
@@ -369,7 +369,7 @@ def test_default_release_notes_template_w_multiple_brk_changes(
         release=release,
         template_dir=Path(""),
         history=release_history_w_multiple_brk_changes,
-        style="angular",
+        style="conventional",
         mask_initial_release=mask_initial_release,
     )
 
@@ -417,7 +417,7 @@ def test_default_release_notes_template_first_release_masked(
         release=release,
         template_dir=Path(""),
         history=single_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=True,
         license_name=license_name,
     )
@@ -481,7 +481,7 @@ def test_default_release_notes_template_first_release_unmasked(
         release=release,
         template_dir=Path(""),
         history=single_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=False,
         license_name=license_name,
     )
@@ -529,7 +529,7 @@ def test_release_notes_context_sort_numerically_filter(
         release=release,
         template_dir=example_project_dir,
         history=single_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=False,
     )
 
@@ -576,7 +576,7 @@ def test_release_notes_context_sort_numerically_filter_reversed(
         release=release,
         template_dir=example_project_dir,
         history=single_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=False,
     )
 
@@ -603,7 +603,7 @@ def test_release_notes_context_pypi_url_filter(
         release=release,
         template_dir=example_project_dir,
         history=single_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=False,
     )
 
@@ -630,7 +630,7 @@ def test_release_notes_context_pypi_url_filter_tagged(
         release=release,
         template_dir=example_project_dir,
         history=single_release_history,
-        style="angular",
+        style="conventional",
         mask_initial_release=False,
     )
 
@@ -675,7 +675,7 @@ def test_release_notes_context_release_url_filter(
             release=release,
             template_dir=example_project_dir,
             history=single_release_history,
-            style="angular",
+            style="conventional",
             mask_initial_release=False,
         )
 
@@ -718,7 +718,7 @@ def test_release_notes_context_format_w_official_name_filter(
             release=release,
             template_dir=example_project_dir,
             history=single_release_history,
-            style="angular",
+            style="conventional",
             mask_initial_release=False,
         )
 
@@ -807,7 +807,7 @@ def test_default_release_notes_template_w_a_notice(
         release=release,
         template_dir=Path(""),
         history=release_history_w_a_notice,
-        style="angular",
+        style="conventional",
         mask_initial_release=mask_initial_release,
     )
 
@@ -928,7 +928,7 @@ def test_default_release_notes_template_w_a_notice_n_brk_change(
         release=release,
         template_dir=Path(""),
         history=release_history_w_notice_n_brk_change,
-        style="angular",
+        style="conventional",
         mask_initial_release=mask_initial_release,
     )
 
@@ -1041,7 +1041,7 @@ def test_default_release_notes_template_w_multiple_notices(
         release=release,
         template_dir=Path(""),
         history=release_history_w_multiple_notices,
-        style="angular",
+        style="conventional",
         mask_initial_release=mask_initial_release,
     )
 

@@ -54,13 +54,13 @@ from semantic_release.errors import (
     NotAReleaseBranch,
     ParserLoadError,
 )
+from semantic_release.globals import logger
 from semantic_release.helpers import dynamic_import
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.pattern import PatternVersionDeclaration
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
 from semantic_release.version.translator import VersionTranslator
 
-log = logging.getLogger(__name__)
 NonEmptyString = Annotated[str, Field(..., min_length=1)]
 
 
@@ -128,8 +128,7 @@ class ChangelogEnvironmentConfig(BaseModel):
 class DefaultChangelogTemplatesConfig(BaseModel):
     changelog_file: str = "CHANGELOG.md"
     output_format: ChangelogOutputFormat = ChangelogOutputFormat.NONE
-    # TODO: Breaking Change v10, it will become True
-    mask_initial_release: bool = False
+    mask_initial_release: bool = True
 
     @model_validator(mode="after")
     def interpret_output_format(self) -> Self:
@@ -158,7 +157,7 @@ class ChangelogConfig(BaseModel):
     )
     environment: ChangelogEnvironmentConfig = ChangelogEnvironmentConfig()
     exclude_commit_patterns: Tuple[str, ...] = ()
-    mode: ChangelogMode = ChangelogMode.INIT
+    mode: ChangelogMode = ChangelogMode.UPDATE
     insertion_flag: str = ""
     template_dir: str = "templates"
 
@@ -179,7 +178,7 @@ class ChangelogConfig(BaseModel):
     @field_validator("changelog_file", mode="after")
     @classmethod
     def changelog_file_deprecation_warning(cls, val: str) -> str:
-        log.warning(
+        logger.warning(
             str.join(
                 " ",
                 [
@@ -329,7 +328,7 @@ class RemoteConfig(BaseModel):
             )
 
         if scheme == "https" and self.insecure:
-            log.warning(
+            logger.warning(
                 str.join(
                     "\n",
                     [
@@ -360,7 +359,7 @@ class RawConfig(BaseModel):
     commit_parser_options: Dict[str, Any] = {}
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
-    allow_zero_version: bool = True
+    allow_zero_version: bool = False
     repo_dir: Annotated[Path, Field(validate_default=True)] = Path(".")
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
@@ -402,7 +401,7 @@ class RawConfig(BaseModel):
     @classmethod
     def tag_commit_parser_deprecation_warning(cls, val: str) -> str:
         if val == "tag":
-            log.warning(
+            logger.warning(
                 str.join(
                     " ",
                     [
@@ -418,7 +417,7 @@ class RawConfig(BaseModel):
     @classmethod
     def angular_commit_parser_deprecation_warning(cls, val: str) -> str:
         if val == "angular":
-            log.warning(
+            logger.warning(
                 str.join(
                     " ",
                     [
@@ -585,14 +584,14 @@ class RuntimeContext:
     ) -> BranchConfig:
         for group, options in choices.items():
             if regexp(options.match).match(active_branch):
-                log.info(
+                logger.info(
                     "Using group %r options, as %r matches %r",
                     group,
                     options.match,
                     active_branch,
                 )
                 return options
-            log.debug(
+            logger.debug(
                 "Rejecting group %r as %r doesn't match %r",
                 group,
                 options.match,
@@ -718,7 +717,7 @@ class RuntimeContext:
                     # TODO: add any other placeholders here
                 ),
                 # We use re.escape to ensure that the commit message is treated as a literal
-                regex_escape(raw.commit_message),
+                regex_escape(raw.commit_message.strip()),
             )
         )
         changelog_excluded_commit_patterns = (
@@ -774,10 +773,10 @@ class RuntimeContext:
 
         # Provide warnings if the token is missing
         if not raw.remote.token:
-            log.debug("hvcs token is not set")
+            logger.debug("hvcs token is not set")
 
             if not raw.remote.ignore_token_for_push:
-                log.warning("Token value is missing!")
+                logger.warning("Token value is missing!")
 
         # hvcs_client
         hvcs_client_cls = _known_hvcs[raw.remote.type]
@@ -859,11 +858,11 @@ class RuntimeContext:
         # Here we just assume the desired changelog style matches the parser name
         # as we provide templates specific to each parser type. Unfortunately if the user has
         # provided a custom parser, it would be up to the user to provide custom templates
-        # but we just assume the base template is angular
+        # but we just assume the base template is conventional
         # changelog_style = (
         #     raw.commit_parser
         #     if raw.commit_parser in _known_commit_parsers
-        #     else "angular"
+        #     else "conventional"
         # )
 
         self = cls(
@@ -887,8 +886,7 @@ class RuntimeContext:
             changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
             # TODO: change when we have other styles per parser
             # changelog_style=changelog_style,
-            # TODO: Breaking Change v10, change to conventional
-            changelog_style="angular",
+            changelog_style="conventional",
             changelog_output_format=raw.changelog.default_templates.output_format,
             prerelease=branch_config.prerelease,
             ignore_token_for_push=raw.remote.ignore_token_for_push,

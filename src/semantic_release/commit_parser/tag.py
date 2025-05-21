@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import re
 
 from git.objects.commit import Commit
@@ -12,8 +11,7 @@ from semantic_release.commit_parser._base import CommitParser, ParserOptions
 from semantic_release.commit_parser.token import ParsedCommit, ParseError, ParseResult
 from semantic_release.commit_parser.util import breaking_re, parse_paragraphs
 from semantic_release.enums import LevelBump
-
-logger = logging.getLogger(__name__)
+from semantic_release.globals import logger
 
 re_parser = re.compile(r"(?P<subject>[^\n]+)" + r"(:?\n\n(?P<text>.+))?", re.DOTALL)
 

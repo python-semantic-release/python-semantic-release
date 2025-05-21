@@ -137,11 +137,10 @@ def get_sanitized_rst_changelog_content(
 
     def _get_sanitized_rst_changelog_content(
         repo_dir: Path,
-        remove_insertion_flag: bool = True,
+        remove_insertion_flag: bool = False,
     ) -> str:
-        # TODO: v10 change -- default turns to update so this is not needed
-        # Because we are in init mode, the insertion flag is not present in the changelog
-        # we must take it out manually because our repo generation fixture includes it automatically
+        # Note that our repo generation fixture includes the insertion flag automatically
+        # toggle remove_insertion_flag to True to remove the insertion flag, applies to Init mode repos
         with (repo_dir / changelog_rst_file).open(newline=os.linesep) as rfd:
             # use os.linesep here because the insertion flag is os-specific
             # but convert the content to universal newlines for comparison
@@ -169,11 +168,10 @@ def get_sanitized_md_changelog_content(
 ) -> GetSanitizedChangelogContentFn:
     def _get_sanitized_md_changelog_content(
         repo_dir: Path,
-        remove_insertion_flag: bool = True,
+        remove_insertion_flag: bool = False,
     ) -> str:
-        # TODO: v10 change -- default turns to update so this is not needed
-        # Because we are in init mode, the insertion flag is not present in the changelog
-        # we must take it out manually because our repo generation fixture includes it automatically
+        # Note that our repo generation fixture includes the insertion flag automatically
+        # toggle remove_insertion_flag to True to remove the insertion flag, applies to Init mode repos
         with (repo_dir / changelog_md_file).open(newline=os.linesep) as rfd:
             # use os.linesep here because the insertion flag is os-specific
             # but convert the content to universal newlines for comparison

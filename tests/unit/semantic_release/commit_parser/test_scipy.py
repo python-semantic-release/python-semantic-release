@@ -1,3 +1,4 @@
+# ruff: noqa: SIM300
 from __future__ import annotations
 
 from re import compile as regexp
@@ -9,7 +10,6 @@ import pytest
 from semantic_release.commit_parser.scipy import (
     ScipyCommitParser,
     ScipyParserOptions,
-    tag_to_section,
 )
 from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
@@ -37,163 +37,400 @@ def test_parser_raises_unknown_message_style(
         assert isinstance(result, ParseError)
 
 
-def test_valid_scipy_parsed_chore_commits(
+@pytest.mark.parametrize(
+    "commit_message, expected_commit_details",
+    [
+        pytest.param(
+            commit_message,
+            expected_commit_details,
+            id=test_id,
+        )
+        for test_id, commit_message, expected_commit_details in [
+            (
+                "Chore Type: Benchmark related",
+                dedent(
+                    """\
+                    BENCH:optimize_milp.py: add new benchmark
+
+                    Benchmarks the performance of the MILP solver
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "none",
+                    "scope": "optimize_milp.py",
+                    "descriptions": [
+                        "add new benchmark",
+                        "Benchmarks the performance of the MILP solver",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Chore Type: Dev Tool Related",
+                dedent(
+                    """\
+                    DEV: add unicode check to pre-commit hook
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "none",
+                    "scope": "",
+                    "descriptions": [
+                        "add unicode check to pre-commit hook",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Chore Type: documentation related",
+                dedent(
+                    """\
+                    DOC: change approx_fprime doctest (#20568)
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "documentation",
+                    "scope": "",
+                    "descriptions": [
+                        "change approx_fprime doctest",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "#20568",
+                },
+            ),
+            (
+                "Chore Type: style related",
+                dedent(
+                    """\
+                    STY: fixed ruff & mypy issues
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "none",
+                    "scope": "",
+                    "descriptions": [
+                        "fixed ruff & mypy issues",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Chore Type: Test related",
+                dedent(
+                    """\
+                    TST: Skip Cython tests for editable installs
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "none",
+                    "scope": "",
+                    "descriptions": [
+                        "Skip Cython tests for editable installs",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Chore Type: Test related",
+                dedent(
+                    """\
+                    TEST: Skip Cython tests for editable installs
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "none",
+                    "scope": "",
+                    "descriptions": [
+                        "Skip Cython tests for editable installs",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Chore Type: Release related",
+                dedent(
+                    """\
+                    REL: set version to 1.0.0
+                    """
+                ),
+                {
+                    "bump": LevelBump.NO_RELEASE,
+                    "type": "none",
+                    "scope": "",
+                    "descriptions": [
+                        "set version to 1.0.0",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Patch Type: Build related",
+                dedent(
+                    """\
+                    BLD: move the optimize build steps earlier into the build sequence
+                    """
+                ),
+                {
+                    "bump": LevelBump.PATCH,
+                    "type": "fix",
+                    "scope": "",
+                    "descriptions": [
+                        "move the optimize build steps earlier into the build sequence",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Patch Type: Bug fix",
+                dedent(
+                    """\
+                    BUG: Fix invalid default bracket selection in _bracket_minimum (#20563)
+                    """
+                ),
+                {
+                    "bump": LevelBump.PATCH,
+                    "type": "fix",
+                    "scope": "",
+                    "descriptions": [
+                        "Fix invalid default bracket selection in _bracket_minimum",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "#20563",
+                },
+            ),
+            (
+                "Patch Type: Maintenance",
+                dedent(
+                    """\
+                    MAINT: optimize.linprog: fix bug when integrality is a list of all zeros (#20586)
+
+                    This is a bug fix for the linprog function in the optimize module.
+
+                    Closes: #555
+                    """
+                ),
+                {
+                    "bump": LevelBump.PATCH,
+                    "type": "fix",
+                    "scope": "optimize.linprog",
+                    "descriptions": [
+                        "fix bug when integrality is a list of all zeros",
+                        "This is a bug fix for the linprog function in the optimize module.",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": ("#555",),
+                    "linked_merge_request": "#20586",
+                },
+            ),
+            (
+                "Feature Type: Enhancement",
+                dedent(
+                    """\
+                    ENH: stats.ttest_1samp: add array-API support (#20545)
+
+                    Closes: #1444
+                    """
+                ),
+                {
+                    "bump": LevelBump.MINOR,
+                    "type": "feature",
+                    "scope": "stats.ttest_1samp",
+                    "descriptions": [
+                        "add array-API support",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": ("#1444",),
+                    "linked_merge_request": "#20545",
+                },
+            ),
+            # (
+            #     NOT CURRENTLY SUPPORTED
+            #     "Feature Type: Revert",
+            #     dedent(
+            #         """\
+            #         REV: revert "ENH: add new feature (#20545)"
+            #         This reverts commit 63ec09b9e844e616dcaa7bae35a0b66671b59fbb.
+            #         """
+            #     ),
+            #     {
+            #         "bump": LevelBump.MINOR,
+            #         "type": "other",
+            #         "scope": "",
+            #         "descriptions": [
+            #             'revert "ENH: add new feature (#20545)"',
+            #             "This reverts commit 63ec09b9e844e616dcaa7bae35a0b66671b59fbb.",
+            #         ],
+            #         "breaking_descriptions": [],
+            #         "linked_issues": (),
+            #         "linked_merge_request": "",
+            #     },
+            # ),
+            (
+                "Feature Type: FEAT",
+                dedent(
+                    """\
+                    FEAT: add new feature (#20545)
+                    """
+                ),
+                {
+                    "bump": LevelBump.MINOR,
+                    "type": "feature",
+                    "scope": "",
+                    "descriptions": [
+                        "add new feature",
+                    ],
+                    "breaking_descriptions": [],
+                    "linked_issues": (),
+                    "linked_merge_request": "#20545",
+                },
+            ),
+            (
+                "Breaking Type: API",
+                dedent(
+                    """\
+                    API: dropped support for Python 3.7
+
+                    Users of Python 3.7 should use version 1.0.0 or try to upgrade to Python 3.8
+                    or later to continue using this package.
+                    """
+                ),
+                {
+                    "bump": LevelBump.MAJOR,
+                    "type": "breaking",
+                    "scope": "",
+                    "descriptions": [
+                        "dropped support for Python 3.7",
+                    ],
+                    "breaking_descriptions": [
+                        "Users of Python 3.7 should use version 1.0.0 or try to upgrade to Python 3.8 or later to continue using this package.",
+                    ],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+            (
+                "Breaking Type: Deprecate",
+                dedent(
+                    """\
+                    DEP: deprecated the limprog function
+
+                    The linprog function is deprecated and will be removed in a future release.
+                    Use the new linprog2 function instead.
+                    """
+                ),
+                {
+                    "bump": LevelBump.MAJOR,
+                    "type": "breaking",
+                    "scope": "",
+                    "descriptions": [
+                        "deprecated the limprog function",
+                    ],
+                    "breaking_descriptions": [
+                        "The linprog function is deprecated and will be removed in a future release. Use the new linprog2 function instead.",
+                    ],
+                    "linked_issues": (),
+                    "linked_merge_request": "",
+                },
+            ),
+        ]
+    ],
+)
+def test_scipy_parser_parses_commit_message(
     default_scipy_parser: ScipyCommitParser,
     make_commit_obj: MakeCommitObjFn,
-    scipy_chore_commit_parts: list[tuple[str, str, list[str]]],
-    scipy_chore_commits: list[str],
+    commit_message: str,
+    expected_commit_details: dict | None,
 ):
-    expected_parts = scipy_chore_commit_parts
+    # Setup: Enable squash commit parsing
+    parser = ScipyCommitParser(
+        options=ScipyParserOptions(
+            **{
+                **default_scipy_parser.options.__dict__,
+                "parse_squash_commits": False,
+            }
+        )
+    )
 
-    for i, full_commit_msg in enumerate(scipy_chore_commits):
-        (commit_type, subject, commit_bodies) = expected_parts[i]
-        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
-        expected_type = tag_to_section[commit_type]
-        expected_descriptions = [
-            subject,
-            *[body.rstrip() for body in commit_bodies if body],
-        ]
-        expected_brk_desc: list[str] = []
+    # Build the commit object and parse it
+    the_commit = make_commit_obj(commit_message)
+    parsed_results = parser.parse(the_commit)
 
-        commit = make_commit_obj(full_commit_msg)
-        parsed_results = default_scipy_parser.parse(commit)
-        assert isinstance(parsed_results, Iterable)
+    # Validate the results
+    assert isinstance(parsed_results, Iterable)
+    assert 1 == len(
+        parsed_results
+    ), f"Expected 1 parsed result, but got {len(parsed_results)}"
 
-        result = next(iter(parsed_results))
-        assert isinstance(result, ParsedCommit)
-        assert LevelBump.NO_RELEASE is result.bump
-        assert expected_type == result.type
-        assert expected_descriptions == result.descriptions
-        assert expected_brk_desc == result.breaking_descriptions
-        assert not result.scope
+    result = next(iter(parsed_results))
 
+    if expected_commit_details is None:
+        assert isinstance(result, ParseError)
+        return
 
-def test_valid_scipy_parsed_patch_commits(
-    default_scipy_parser: ScipyCommitParser,
-    make_commit_obj: MakeCommitObjFn,
-    scipy_patch_commit_parts: list[tuple[str, str, list[str]]],
-    scipy_patch_commits: list[str],
-):
-    expected_parts = scipy_patch_commit_parts
-
-    for i, full_commit_msg in enumerate(scipy_patch_commits):
-        (commit_type, subject, commit_bodies) = expected_parts[i]
-        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
-        expected_type = tag_to_section[commit_type]
-        expected_descriptions = [
-            subject,
-            *[body.rstrip() for body in commit_bodies if body],
-        ]
-        expected_brk_desc: list[str] = []
-
-        commit = make_commit_obj(full_commit_msg)
-        parsed_results = default_scipy_parser.parse(commit)
-        assert isinstance(parsed_results, Iterable)
-
-        result = next(iter(parsed_results))
-        assert isinstance(result, ParsedCommit)
-        assert LevelBump.PATCH is result.bump
-        assert expected_type == result.type
-        assert expected_descriptions == result.descriptions
-        assert expected_brk_desc == result.breaking_descriptions
-        assert not result.scope
-
-
-def test_valid_scipy_parsed_minor_commits(
-    default_scipy_parser: ScipyCommitParser,
-    make_commit_obj: MakeCommitObjFn,
-    scipy_minor_commit_parts: list[tuple[str, str, list[str]]],
-    scipy_minor_commits: list[str],
-):
-    expected_parts = scipy_minor_commit_parts
-
-    for i, full_commit_msg in enumerate(scipy_minor_commits):
-        (commit_type, subject, commit_bodies) = expected_parts[i]
-        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
-        expected_type = tag_to_section[commit_type]
-        expected_descriptions = [
-            subject,
-            *[body for body in commit_bodies if body],
-        ]
-        expected_brk_desc: list[str] = []
-
-        commit = make_commit_obj(full_commit_msg)
-        parsed_results = default_scipy_parser.parse(commit)
-        assert isinstance(parsed_results, Iterable)
-
-        result = next(iter(parsed_results))
-        assert isinstance(result, ParsedCommit)
-        assert LevelBump.MINOR is result.bump
-        assert expected_type == result.type
-        assert expected_descriptions == result.descriptions
-        assert expected_brk_desc == result.breaking_descriptions
-        assert not result.scope
-
-
-def test_valid_scipy_parsed_major_commits(
-    default_scipy_parser: ScipyCommitParser,
-    make_commit_obj: MakeCommitObjFn,
-    scipy_major_commit_parts: list[tuple[str, str, list[str]]],
-    scipy_major_commits: list[str],
-):
-    expected_parts = scipy_major_commit_parts
-
-    for i, full_commit_msg in enumerate(scipy_major_commits):
-        (commit_type, subject, commit_bodies) = expected_parts[i]
-        commit_bodies = [unwordwrap.sub(" ", body).rstrip() for body in commit_bodies]
-        expected_type = tag_to_section[commit_type]
-        expected_descriptions = [
-            subject,
-            *[body for body in commit_bodies if body],
-        ]
-        brkg_prefix = "BREAKING CHANGE: "
-        expected_brk_desc = [
-            # TODO: Python 3.8 limitation, change to removeprefix() for 3.9+
-            block[block.startswith(brkg_prefix) and len(brkg_prefix) :]
-            # block.removeprefix("BREAKING CHANGE: ")
-            for block in commit_bodies
-            if block.startswith("BREAKING CHANGE")
-        ]
-
-        commit = make_commit_obj(full_commit_msg)
-        parsed_results = default_scipy_parser.parse(commit)
-
-        assert isinstance(parsed_results, Iterable)
-        assert len(parsed_results) == 1
-
-        result = next(iter(parsed_results))
-        assert isinstance(result, ParsedCommit)
-        assert LevelBump.MAJOR is result.bump
-        assert expected_type == result.type
-        assert expected_descriptions == result.descriptions
-        assert expected_brk_desc == result.breaking_descriptions
-        assert not result.scope
+    assert isinstance(result, ParsedCommit)
+    # Required
+    assert expected_commit_details["bump"] == result.bump
+    assert expected_commit_details["type"] == result.type
+    # Optional
+    assert expected_commit_details.get("scope", "") == result.scope
+    # TODO: v11 change to tuples
+    assert expected_commit_details.get("descriptions", []) == result.descriptions
+    assert (
+        expected_commit_details.get("breaking_descriptions", [])
+        == result.breaking_descriptions
+    )
+    assert expected_commit_details.get("linked_issues", ()) == result.linked_issues
+    assert (
+        expected_commit_details.get("linked_merge_request", "")
+        == result.linked_merge_request
+    )
 
 
 @pytest.mark.parametrize(
     "message, subject, merge_request_number",
-    # TODO: in v10, we will remove the merge request number from the subject line
     [
         # GitHub, Gitea style
         (
             "ENH: add new feature (#123)",
-            "add new feature (#123)",
+            "add new feature",
             "#123",
         ),
         # GitLab style
         (
             "BUG: fix regex in parser (!456)",
-            "fix regex in parser (!456)",
+            "fix regex in parser",
             "!456",
         ),
         # BitBucket style
         (
             "ENH: add new feature (pull request #123)",
-            "add new feature (pull request #123)",
+            "add new feature",
             "#123",
         ),
         # Both a linked merge request and an issue footer (should return the linked merge request)
-        ("DEP: add dependency (#123)\n\nCloses: #400", "add dependency (#123)", "#123"),
+        ("DEP: add dependency (#123)\n\nCloses: #400", "add dependency", "#123"),
         # None
         ("BUG: superfix", "superfix", ""),
         # None but includes an issue footer it should not be considered a linked merge request
@@ -233,7 +470,7 @@ def test_parser_return_linked_merge_request_from_commit_message(
                     """\
                     Merged in feat/my-awesome-stuff  (pull request #10)
 
-                    BUG(release-config): some commit subject
+                    BUG: release-config: some commit subject
 
                     An additional description
 
@@ -254,7 +491,6 @@ def test_parser_return_linked_merge_request_from_commit_message(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -268,7 +504,7 @@ def test_parser_return_linked_merge_request_from_commit_message(
                     """\
                     Merged in feat/my-awesome-stuff  (pull request #10)
 
-                    BUG(release-config): some commit subject
+                    BUG:release-config: some commit subject
 
                     An additional description
 
@@ -280,11 +516,11 @@ def test_parser_return_linked_merge_request_from_commit_message(
 
                     ENH: implemented searching gizmos by keyword
 
-                    DOC(parser): add new parser pattern
+                    DOC: parser: add new parser pattern
 
-                    MAINT(cli)!: changed option name
+                    API:cli: changed option name
 
-                    BREAKING CHANGE: A breaking change description
+                    A breaking change description
 
                     Closes: #555
 
@@ -301,7 +537,6 @@ def test_parser_return_linked_merge_request_from_commit_message(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -324,18 +559,16 @@ def test_parser_return_linked_merge_request_from_commit_message(
                     },
                     {
                         "bump": LevelBump.MAJOR,
-                        "type": "fix",
+                        "type": "breaking",
                         "scope": "cli",
                         "descriptions": [
                             "changed option name",
-                            "BREAKING CHANGE: A breaking change description",
-                            "Closes: #555",
-                            # This is a bit unusual but its because there is no identifier that will
-                            # identify this as a separate commit so it gets included in the previous commit
-                            "invalid non-conventional formatted commit",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
+                            # This is a bit unusual but its because there is no identifier that will
+                            # identify this as a separate commit so it gets included in the previous commit
+                            "invalid non-conventional formatted commit",
                         ],
                         "linked_issues": ("#555",),
                         "linked_merge_request": "#10",
@@ -408,7 +641,7 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                     Author: author <author@not-an-email.com>
                     Date:   Sun Jan 19 12:05:23 2025 +0000
 
-                        BUG(release-config): some commit subject
+                        BUG: release-config: some commit subject
 
                         An additional description
 
@@ -429,7 +662,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -446,7 +678,7 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                     Author: author <author@not-an-email.com>
                     Date:   Sun Jan 19 12:05:23 2025 +0000
 
-                        BUG(release-config): some commit subject
+                        BUG: release-config: some commit subject
 
                         An additional description
 
@@ -466,15 +698,15 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                     Author: author <author@not-an-email.com>
                     Date:   Sat Jan 18 10:13:53 2025 +0000
 
-                        DOC(parser): add new parser pattern
+                        DOC: parser: add new parser pattern
 
                     commit 5f0292fb5a88c3a46e4a02bec35b85f5228e8e51
                     Author: author <author@not-an-email.com>
                     Date:   Sat Jan 18 10:13:53 2025 +0000
 
-                        MAINT(cli): changed option name
+                        API:cli: changed option name
 
-                        BREAKING CHANGE: A breaking change description
+                        A breaking change description
 
                         Closes: #555
 
@@ -494,7 +726,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -514,12 +745,10 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                     },
                     {
                         "bump": LevelBump.MAJOR,
-                        "type": "fix",
+                        "type": "breaking",
                         "scope": "cli",
                         "descriptions": [
                             "changed option name",
-                            "BREAKING CHANGE: A breaking change description",
-                            "Closes: #555",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
@@ -589,7 +818,7 @@ def test_parser_squashed_commit_git_squash_style(
                 "Single commit squashed via GitHub PR resolution",
                 dedent(
                     """\
-                    BUG(release-config): some commit subject (#10)
+                    BUG: release-config: some commit subject (#10)
 
                     An additional description
 
@@ -606,10 +835,9 @@ def test_parser_squashed_commit_git_squash_style(
                         "type": "fix",
                         "scope": "release-config",
                         "descriptions": [
-                            "some commit subject (#10)",
+                            "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -621,7 +849,7 @@ def test_parser_squashed_commit_git_squash_style(
                 "Multiple commits squashed via GitHub PR resolution",
                 dedent(
                     """\
-                    BUG(release-config): some commit subject (#10)
+                    BUG: release-config: some commit subject (#10)
 
                     An additional description
 
@@ -633,13 +861,13 @@ def test_parser_squashed_commit_git_squash_style(
 
                     * ENH: implemented searching gizmos by keyword
 
-                    * DOC(parser): add new parser pattern
+                    * DOC: parser: add new parser pattern
 
-                    * MAINT(cli)!: changed option name
+                    * API:cli: changed option name
 
-                    BREAKING CHANGE: A breaking change description
+                      A breaking change description
 
-                    Closes: #555
+                      Closes: #555
 
                     * invalid non-conventional formatted commit
                     """
@@ -650,11 +878,9 @@ def test_parser_squashed_commit_git_squash_style(
                         "type": "fix",
                         "scope": "release-config",
                         "descriptions": [
-                            # TODO: v10 removal of PR number from subject
-                            "some commit subject (#10)",
+                            "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -677,18 +903,16 @@ def test_parser_squashed_commit_git_squash_style(
                     },
                     {
                         "bump": LevelBump.MAJOR,
-                        "type": "fix",
+                        "type": "breaking",
                         "scope": "cli",
                         "descriptions": [
                             "changed option name",
-                            "BREAKING CHANGE: A breaking change description",
-                            "Closes: #555",
-                            # This is a bit unusual but its because there is no identifier that will
-                            # identify this as a separate commit so it gets included in the previous commit
-                            "* invalid non-conventional formatted commit",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
+                            # This is a bit unusual but its because there is no identifier that will
+                            # identify this as a separate commit so it gets included in the previous commit
+                            "* invalid non-conventional formatted commit",
                         ],
                         "linked_issues": ("#555",),
                         "linked_merge_request": "#10",
@@ -866,7 +1090,7 @@ def test_parser_squashed_commit_github_squash_style(
         *[
             # JIRA style
             (
-                f"ENH(parser): add magic parser\n\n{footer}",
+                f"ENH: parser: add magic parser\n\n{footer}",
                 linked_issues,
             )
             for footer_prefix in SUPPORTED_ISSUE_CLOSURE_PREFIXES
@@ -994,7 +1218,7 @@ def test_parser_squashed_commit_github_squash_style(
         ],
         *[
             (
-                f"ENH(parser): add magic parser\n\n{footer}",
+                f"ENH: parser: add magic parser\n\n{footer}",
                 linked_issues,
             )
             for footer, linked_issues in [
@@ -1006,13 +1230,13 @@ def test_parser_squashed_commit_github_squash_style(
         ],
         (
             # Only grabs the issue reference when there is a GitHub PR reference in the subject
-            "ENH(parser): add magic parser (#123)\n\nCloses: #555",
+            "ENH: parser: add magic parser (#123)\n\nCloses: #555",
             ["#555"],
         ),
         # Does not grab an issue when there is only a GitHub PR reference in the subject
-        ("ENH(parser): add magic parser (#123)", []),
+        ("ENH: parser: add magic parser (#123)", []),
         # Does not grab an issue when there is only a Bitbucket PR reference in the subject
-        ("ENH(parser): add magic parser (pull request #123)", []),
+        ("ENH: parser: add magic parser (pull request #123)", []),
     ],
 )
 def test_parser_return_linked_issues_from_commit_message(
@@ -1044,7 +1268,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "single notice",
                 dedent(
                     """\
-                    BUG(parser): fix regex in scipy parser
+                    BUG:parser: fix regex in scipy parser
 
                     NOTICE: This is a notice
                     """
@@ -1055,7 +1279,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiline notice",
                 dedent(
                     """\
-                    BUG(parser): fix regex in scipy parser
+                    BUG:parser: fix regex in scipy parser
 
                     NOTICE: This is a notice that is longer than
                     other notices
@@ -1067,7 +1291,7 @@ def test_parser_return_linked_issues_from_commit_message(
                 "multiple notices",
                 dedent(
                     """\
-                    BUG(parser): fix regex in scipy parser
+                    BUG:parser: fix regex in scipy parser
 
                     NOTICE: This is a notice
 
@@ -1080,9 +1304,9 @@ def test_parser_return_linked_issues_from_commit_message(
                 "notice with other footer",
                 dedent(
                     """\
-                    BUG(parser): fix regex in scipy parser
+                    BUG:parser: fix regex in scipy parser
 
-                    BREAKING CHANGE: This is a breaking change
+                    This is a breaking change
 
                     NOTICE: This is a notice
                     """

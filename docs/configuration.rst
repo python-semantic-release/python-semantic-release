@@ -142,7 +142,9 @@ version to be ``1.0.0``, regardless of patch, minor, or major change level.
 Additionally, when ``allow_zero_version`` is set to ``false``,
 the :ref:`config-major_on_zero` setting is ignored.
 
-**Default:** ``true``
+*Default changed to ``false`` in $NEW_VERSION*
+
+**Default:** ``false``
 
 ----
 
@@ -388,7 +390,9 @@ is there to document?
 The message details can be found in the ``first_release.md.j2`` and ``first_release.rst.j2``
 templates of the default changelog template directory.
 
-**Default:** ``false``
+*Default changed to ``true`` in $NEW_VERSION.*
+
+**Default:** ``true``
 
 .. seealso::
    - :ref:`changelog-templates-default_changelog`
@@ -660,7 +664,7 @@ The patterns in this list are treated as regular expressions.
 ``mode``
 ********
 
-*Introduced in v9.10.0*
+*Introduced in v9.10.0. Default changed to `update` in $NEW_VERSION.*
 
 **Type:** ``Literal["init", "update"]``
 
@@ -678,7 +682,7 @@ version information at that location.
 If you are using a custom template directory, the `context.changelog_mode` value will exist in the
 changelog context but it is up to your implementation to determine if and/or how to use it.
 
-**Default:** ``init``
+**Default:** ``update``
 
 .. seealso::
    - :ref:`changelog-templates-default_changelog`

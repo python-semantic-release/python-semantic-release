@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 def default_changelog_template() -> str:
     """Retrieve the semantic-release default changelog template."""
     version_notes_template = files(semantic_release.__name__).joinpath(
-        Path("data", "templates", "angular", "md", "CHANGELOG.md.j2")
+        Path("data", "templates", "conventional", "md", "CHANGELOG.md.j2")
     )
     return version_notes_template.read_text(encoding="utf-8")
 
@@ -112,7 +112,7 @@ def test_default_changelog_template(
             insertion_flag="",
             mask_initial_release=True,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -235,7 +235,7 @@ def test_default_changelog_template_w_a_brk_change(
             insertion_flag="",
             mask_initial_release=True,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -381,7 +381,7 @@ def test_default_changelog_template_w_multiple_brk_changes(
             insertion_flag="",
             mask_initial_release=True,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -475,7 +475,7 @@ def test_default_changelog_template_no_initial_release_mask(
             insertion_flag="",
             mask_initial_release=False,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -572,7 +572,7 @@ def test_default_changelog_template_w_unreleased_changes(
             insertion_flag="",
             mask_initial_release=True,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -695,7 +695,7 @@ def test_default_changelog_template_w_a_notice(
             insertion_flag="",
             mask_initial_release=False,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -855,7 +855,7 @@ def test_default_changelog_template_w_a_notice_n_brk_change(
             insertion_flag="",
             mask_initial_release=False,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog
@@ -1019,7 +1019,7 @@ def test_default_changelog_template_w_multiple_notices(
             insertion_flag="",
             mask_initial_release=False,
         ),
-        changelog_style="angular",
+        changelog_style="conventional",
     )
 
     assert expected_changelog == actual_changelog

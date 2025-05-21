@@ -1,3 +1,4 @@
+# ruff: noqa: SIM300
 from __future__ import annotations
 
 from textwrap import dedent
@@ -80,7 +81,6 @@ def test_parser_raises_unknown_message_style(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -127,7 +127,6 @@ def test_parser_raises_unknown_message_style(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -154,8 +153,6 @@ def test_parser_raises_unknown_message_style(
                         "scope": "cli",
                         "descriptions": [
                             "changed option name",
-                            "BREAKING CHANGE: A breaking change description",
-                            "Closes: #555",
                             # This is a bit unusual but its because there is no identifier that will
                             # identify this as a separate commit so it gets included in the previous commit
                             "invalid non-conventional formatted commit",
@@ -255,7 +252,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -320,7 +316,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                             "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -344,8 +339,6 @@ def test_parser_squashed_commit_bitbucket_squash_style(
                         "scope": "cli",
                         "descriptions": [
                             "changed option name",
-                            "BREAKING CHANGE: A breaking change description",
-                            "Closes: #555",
                         ],
                         "breaking_descriptions": [
                             "A breaking change description",
@@ -432,11 +425,9 @@ def test_parser_squashed_commit_git_squash_style(
                         "type": "bug fixes",
                         "scope": "release-config",
                         "descriptions": [
-                            # TODO: v10 removal of PR number from subject
-                            "some commit subject (#10)",
+                            "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -477,11 +468,9 @@ def test_parser_squashed_commit_git_squash_style(
                         "type": "bug fixes",
                         "scope": "release-config",
                         "descriptions": [
-                            # TODO: v10 removal of PR number from subject
-                            "some commit subject (#10)",
+                            "some commit subject",
                             "An additional description",
                             "Second paragraph with multiple lines that will be condensed",
-                            "Resolves: #12",
                             "Signed-off-by: author <author@not-an-email.com>",
                         ],
                         "linked_issues": ("#12",),
@@ -508,8 +497,6 @@ def test_parser_squashed_commit_git_squash_style(
                         "scope": "cli",
                         "descriptions": [
                             "changed option name",
-                            "BREAKING CHANGE: A breaking change description",
-                            "Closes: #555",
                             # This is a bit unusual but its because there is no identifier that will
                             # identify this as a separate commit so it gets included in the previous commit
                             "* invalid non-conventional formatted commit",
@@ -689,7 +676,7 @@ _footer = "Closes: #400"
         ),
         (
             f"fix(tox): fix env \n\n{_long_text}\n\n{_footer}",
-            ["fix env ", _long_text, _footer],
+            ["fix env ", _long_text],
         ),
         ("fix: superfix", ["superfix"]),
     ],
@@ -717,23 +704,23 @@ def test_parser_return_subject_from_commit_message(
         # GitHub, Gitea style
         (
             "feat(parser): add emoji parser (#123)",
-            "add emoji parser (#123)",
+            "add emoji parser",
             "#123",
         ),
         # GitLab style
         (
             "fix(parser): fix regex in conventional parser (!456)",
-            "fix regex in conventional parser (!456)",
+            "fix regex in conventional parser",
             "!456",
         ),
         # BitBucket style
         (
             "feat(parser): add emoji parser (pull request #123)",
-            "add emoji parser (pull request #123)",
+            "add emoji parser",
             "#123",
         ),
         # Both a linked merge request and an issue footer (should return the linked merge request)
-        ("fix: superfix (#123)\n\nCloses: #400", "superfix (#123)", "#123"),
+        ("fix: superfix (#123)\n\nCloses: #400", "superfix", "#123"),
         # None
         ("fix: superfix", "superfix", ""),
         # None but includes an issue footer it should not be considered a linked merge request
@@ -760,7 +747,6 @@ def test_parser_return_linked_merge_request_from_commit_message(
 
 @pytest.mark.parametrize(
     "message, linked_issues",
-    # TODO: in v10, we will remove the issue reference footers from the descriptions
     [
         *[
             # GitHub, Gitea, GitLab style
@@ -1040,7 +1026,7 @@ def test_parser_return_linked_issues_from_commit_message(
     parsed_results = default_conventional_parser.parse(make_commit_obj(message))
 
     assert isinstance(parsed_results, Iterable)
-    assert len(parsed_results) == 1
+    assert 1 == len(parsed_results)
 
     result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)

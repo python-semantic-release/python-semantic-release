@@ -8,7 +8,6 @@ import pytest
 from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
 from semantic_release.version.version import Version
 
 from tests.const import (
@@ -27,10 +26,9 @@ from tests.util import assert_successful_exit_code, get_release_history_from_con
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
-    from tests.conftest import GetStableDateNowFn
+    from tests.conftest import GetStableDateNowFn, RunCliFn
     from tests.e2e.conftest import (
         RetrieveRuntimeContextFn,
     )
@@ -48,13 +46,13 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "repo_result, next_release_version",
     [
-        (lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "0.1.0"),
+        (lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "1.0.0"),
     ],
 )
 def test_custom_release_notes_template(
     repo_result: BuiltRepoResult,
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     use_release_notes_template: UseReleaseNotesTemplateFn,
     retrieve_runtime_context: RetrieveRuntimeContextFn,
     mocked_git_push: MagicMock,
@@ -69,7 +67,7 @@ def test_custom_release_notes_template(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--vcs-release"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Must run this after the action because the release history object should be pulled from the
     # repository after a tag is created
@@ -100,14 +98,16 @@ def test_custom_release_notes_template(
 
 
 @pytest.mark.parametrize(
-    "repo_result, license_name, license_setting",
+    "repo_result, license_name, license_setting, mask_initial_release",
     [
         pytest.param(
             lazy_fixture(repo_fixture_name),
             license_name,
             license_setting,
+            mask_initial_release,
             marks=pytest.mark.comprehensive,
         )
+        for mask_initial_release in [True, False]
         for license_name in ["", "MIT", "GPL-3.0"]
         for license_setting in [
             "project.license-expression",
@@ -123,9 +123,10 @@ def test_custom_release_notes_template(
 )
 def test_default_release_notes_license_statement(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     license_name: str,
     license_setting: str,
+    mask_initial_release: bool,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -133,7 +134,7 @@ def test_default_release_notes_license_statement(
     get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
     generate_default_release_notes_from_def: GenerateDefaultReleaseNotesFromDefFn,
 ):
-    new_version = "0.1.0"
+    new_version = "1.0.0"
 
     # Setup
     now_datetime = stable_now_date()
@@ -153,18 +154,24 @@ def test_default_release_notes_license_statement(
     # Setup: set the license for the test
     update_pyproject_toml(license_setting, license_name)
 
+    # Setup: set mask_initial_release value in configuration
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.mask_initial_release",
+        mask_initial_release,
+    )
+
     expected_release_notes = generate_default_release_notes_from_def(
         version_actions=repo_def,
         hvcs=get_hvcs_client_from_repo_def(repo_def),
         previous_version=None,
         license_name=license_name,
-        mask_initial_release=False,
+        mask_initial_release=mask_initial_release,
     )
 
     # Act
     with freeze_time(now_datetime.astimezone(timezone.utc)):
         cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--no-changelog", "--vcs-release"]
-        result = cli_runner.invoke(main, cli_cmd[1:])
+        result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)

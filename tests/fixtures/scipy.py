@@ -99,6 +99,7 @@ def scipy_nonparseable_commits() -> list[str]:
 def scipy_chore_subjects(scipy_chore_commit_types: list[str]) -> list[str]:
     subjects = {
         "BENCH": "disable very slow benchmark in optimize_milp.py",
+        "DEV": "add unicode check to pre-commit-hook",
         "DOC": "change approx_fprime doctest (#20568)",
         "STY": "fixed ruff & mypy issues",
         "TST": "Skip Cython tests for editable installs",
@@ -125,10 +126,8 @@ def scipy_patch_subjects(scipy_patch_commit_types: list[str]) -> list[str]:
 @pytest.fixture(scope="session")
 def scipy_minor_subjects(scipy_minor_commit_types: list[str]) -> list[str]:
     subjects = {
-        "DEP": "stats: switch kendalltau to kwarg-only, remove initial_lexsort",
-        "DEV": "add unicode check to pre-commit-hook",
         "ENH": "stats.ttest_1samp: add array-API support (#20545)",
-        "REV": "reverted a previous commit",
+        # "REV": "reverted a previous commit",
         "FEAT": "added a new feature",
     }
     # Test fixture modification failure prevention
@@ -140,6 +139,7 @@ def scipy_minor_subjects(scipy_minor_commit_types: list[str]) -> list[str]:
 def scipy_major_subjects(scipy_major_commit_types: list[str]) -> list[str]:
     subjects = {
         "API": "dropped support for python 3.7",
+        "DEP": "stats: switch kendalltau to kwarg-only, remove initial_lexsort",
     }
     # Test fixture modification failure prevention
     assert len(subjects.keys()) == len(scipy_major_commit_types)

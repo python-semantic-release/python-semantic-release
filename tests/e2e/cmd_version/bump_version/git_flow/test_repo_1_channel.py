@@ -7,27 +7,23 @@ import tomlkit
 from flatdict import FlatDict
 from freezegun import freeze_time
 
-from semantic_release.cli.commands.main import main
-
-from tests.const import (
-    MAIN_PROG_NAME,
-    VERSION_SUBCMD,
-)
 from tests.fixtures.repos.git_flow import (
     repo_w_git_flow_conventional_commits,
     repo_w_git_flow_emoji_commits,
     repo_w_git_flow_scipy_commits,
 )
-from tests.util import assert_successful_exit_code, temporary_working_directory
+from tests.util import temporary_working_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
-    from tests.e2e.cmd_version.bump_version.conftest import InitMirrorRepo4RebuildFn
+    from tests.e2e.cmd_version.bump_version.conftest import (
+        InitMirrorRepo4RebuildFn,
+        RunPSReleaseFn,
+    )
     from tests.e2e.conftest import GetSanitizedChangelogContentFn
     from tests.fixtures.example_project import ExProjectDir
     from tests.fixtures.git_repo import (
@@ -55,7 +51,7 @@ if TYPE_CHECKING:
 )
 def test_gitflow_repo_rebuild_1_channel(
     repo_fixture_name: str,
-    cli_runner: CliRunner,
+    run_psr_release: RunPSReleaseFn,
     build_git_flow_repo_w_1_release_channels: BuildSpecificRepoFn,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     init_mirror_repo_for_rebuild: InitMirrorRepo4RebuildFn,
@@ -133,19 +129,10 @@ def test_gitflow_repo_rebuild_1_channel(
         with freeze_time(
             release_action_step["details"]["datetime"]
         ), temporary_working_directory(mirror_repo_dir):
-            build_metadata_args = (
-                [
-                    "--build-metadata",
-                    release_action_step["details"]["version"].split("+", maxsplit=1)[
-                        -1
-                    ],
-                ]
-                if len(release_action_step["details"]["version"].split("+", maxsplit=1))
-                > 1
-                else []
+            run_psr_release(
+                next_version_str=release_action_step["details"]["version"],
+                git_repo=mirror_git_repo,
             )
-            cli_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD, *build_metadata_args]
-            result = cli_runner.invoke(main, cli_cmd[1:])
 
         # take measurement after running the version command
         actual_release_commit_text = mirror_git_repo.head.commit.message
@@ -159,7 +146,7 @@ def test_gitflow_repo_rebuild_1_channel(
         )
 
         # Evaluate (normal release actions should have occurred as expected)
-        assert_successful_exit_code(result, cli_cmd)
+        # ------------------------------------------------------------------
         # Make sure version file is updated
         assert expected_pyproject_toml_content == actual_pyproject_toml_content
         assert expected_version_file_content == actual_version_file_content
