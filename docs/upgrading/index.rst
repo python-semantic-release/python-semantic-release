@@ -22,5 +22,6 @@ versions of PSR to the latest version.
     :caption: Upgrade Guides
     :maxdepth: 1
 
+    Upgrading to v10 <10-upgrade>
     Upgrading to v9 <09-upgrade>
     Upgrading to v8 <08-upgrade>
