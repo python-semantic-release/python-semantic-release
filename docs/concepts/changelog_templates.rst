@@ -248,7 +248,7 @@ Configuration Examples
 
 If identified or supported by the parser, the default changelog templates will include
 a separate section of breaking changes and additional release information. Refer to the
-:ref:`commit parsing <commit-parsing>` section to see how to write commit messages that
+:ref:`commit parsing <commit_parsing>` section to see how to write commit messages that
 will be properly parsed and displayed in these sections.
 
 

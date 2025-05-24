@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
@@ -24,7 +25,8 @@ templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
 project = "python-semantic-release"
-copyright = f"2024, {author_name}"  # noqa: A001
+current_year = datetime.now(timezone.utc).astimezone().year
+copyright = f"{current_year}, {author_name}"  # noqa: A001
 
 version = semantic_release.__version__
 release = semantic_release.__version__
@@ -39,7 +41,7 @@ htmlhelp_basename = "python-semantic-releasedoc"
 # -- Automatically run sphinx-apidoc --------------------------------------
 
 docs_path = os.path.dirname(__file__)
-apidoc_output_dir = os.path.join(docs_path, "api")
+apidoc_output_dir = os.path.join(docs_path, "api", "modules")
 apidoc_module_dir = os.path.join(docs_path, "..", "src")
 apidoc_separate_modules = True
 apidoc_module_first = True

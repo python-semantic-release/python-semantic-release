@@ -26,3 +26,10 @@ No matter how you choose to contribute, please check out our
 
 .. |contributors| image:: https://contributors-img.web.app/image?repo=python-semantic-release/python-semantic-release
    :target: https://github.com/python-semantic-release/python-semantic-release/graphs/contributors
+
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   Contributing Guide <contributing_guide>
