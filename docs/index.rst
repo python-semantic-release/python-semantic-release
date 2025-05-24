@@ -68,7 +68,6 @@ Documentation Contents
    contributors
    upgrading/index
    Internal API <api/modules>
-   Algorithm <algorithm>
    Changelog <psr_changelog>
    View on GitHub <https://github.com/python-semantic-release/python-semantic-release>
 
