@@ -64,11 +64,10 @@ Documentation Contents
    Multibranch Releases <multibranch_releases>
    automatic-releases/index
    troubleshooting
-   contributing
-   contributors
    upgrading/index
    Internal API <api/modules>
    Changelog <psr_changelog>
+   Contributing <contributing/index>
    View on GitHub <https://github.com/python-semantic-release/python-semantic-release>
 
 Getting Started
