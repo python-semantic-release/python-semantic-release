@@ -986,6 +986,15 @@ The equivalent GitHub Action configuration would be:
       changelog: false
       build_metadata: abc123
 
+.. seealso::
+
+  - `Publish Action Manual Release Workflow`_: To maintain the Publish Action at the same
+    version as Python Semantic Release, we use a Manual release workflow which forces the
+    matching bump type as the root project. Check out this workflow to see how you can
+    manually provide input that triggers the desired version bump.
+
+.. _Publish Action Manual Release Workflow: https://github.com/python-semantic-release/publish-action/blob/main/.github/workflows/release.yml
+
 .. _gh_actions-monorepo:
 
 Actions with Monorepos
