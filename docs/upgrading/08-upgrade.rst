@@ -1,9 +1,9 @@
-.. _migrating-from-v7:
+.. _upgrade_v8:
 
-Migrating from Python Semantic Release v7
-=========================================
+Upgrading to v8
+===============
 
-Python Semantic Release 8.0.0 introduced a number of breaking changes.
+Python Semantic Release v8.0.0 introduced a number of breaking changes.
 The internals have been changed significantly to better support highly-requested
 features and to streamline the maintenance of the project.
 
@@ -12,18 +12,18 @@ exhibit different behavior to earlier versions of Python Semantic Release. This
 page is a guide to help projects to ``pip install python-semantic-release>=8.0.0`` with
 fewer surprises.
 
-.. _breaking-github-action:
+.. _upgrade_v8-github-action:
 
 Python Semantic Release GitHub Action
 -------------------------------------
 
-.. _breaking-removed-artefact-upload:
+.. _upgrade_v8-removed-artefact-upload:
 
 GitHub Action no longer publishes artifacts to PyPI or GitHub Releases
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Python Semantic Release no longer uploads distributions to PyPI - see
-:ref:`breaking-commands-repurposed-version-and-publish`. If you are
+:ref:`upgrade_v8-commands-repurposed-version-and-publish`. If you are
 using Python Semantic Release to publish release notes and artifacts to
 GitHub releases, there is a new GitHub Action `upload-to-gh-release`_
 which will perform this action for you.
@@ -111,7 +111,7 @@ GitHub Action:
 .. _upload-to-gh-release: https://github.com/python-semantic-release/upload-to-gh-release
 .. _pypa/gh-action-pypi-publish: https://github.com/pypa/gh-action-pypi-publish
 
-.. _breaking-github-action-removed-pypi-token:
+.. _upgrade_v8-github-action-removed-pypi-token:
 
 Removal of ``pypi_token``, ``repository_username`` and ``repository_password`` inputs
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -121,7 +121,7 @@ Since the library no longer supports publishing to PyPI, the ``pypi_token``,
 all been removed. See the above section for how to publish to PyPI using the official
 GitHub Action from the Python Packaging Authority (PyPA).
 
-.. _breaking-options-inputs:
+.. _upgrade_v8-options-inputs:
 
 Rename ``additional_options`` to ``root_options``
 """""""""""""""""""""""""""""""""""""""""""""""""
@@ -132,12 +132,12 @@ reason, and because the usage of the CLI has changed, ``additional_options`` has
 been renamed to ``root_options`` to reflect the fact that the options are for the
 main :ref:`cmd-main` command group.
 
-.. _breaking-commands:
+.. _upgrade_v8-commands:
 
 Commands
 --------
 
-.. _breaking-commands-repurposed-version-and-publish:
+.. _upgrade_v8-commands-repurposed-version-and-publish:
 
 Repurposing of ``version`` and ``publish`` commands
 """""""""""""""""""""""""""""""""""""""""""""""""""
@@ -189,7 +189,7 @@ With steps 1-6 being handled by the :ref:`cmd-version` command, step 7 being lef
 to the developer to handle, and lastly step 8 to be handled by the
 :ref:`cmd-publish` command.
 
-.. _breaking-removed-define-option:
+.. _upgrade_v8-removed-define-option:
 
 Removal of ``-D/--define`` command-line option
 """"""""""""""""""""""""""""""""""""""""""""""
@@ -206,7 +206,7 @@ specify using just command-line options.
 
 .. _#600: https://github.com/python-semantic-release/python-semantic-release/issues/600
 
-.. _breaking-commands-no-verify-ci:
+.. _upgrade_v8-commands-no-verify-ci:
 
 Removal of CI verifications
 """""""""""""""""""""""""""
@@ -230,7 +230,7 @@ shell commands *before* invoking ``semantic-release`` to verify your environment
    (e.g. via ``export RELEASE_BRANCH=main`` and/or replace the variable with the branch
    name you want to verify the CI environment for.
 
-.. _breaking-commands-no-verify-ci-travis:
+.. _upgrade_v8-commands-no-verify-ci-travis:
 
 Travis
 ~~~~~~
@@ -249,7 +249,7 @@ Travis
     fi
 
 
-.. _breaking-commands-no-verify-ci-semaphore:
+.. _upgrade_v8-commands-no-verify-ci-semaphore:
 
 Semaphore
 ~~~~~~~~~
@@ -269,7 +269,7 @@ Semaphore
     fi
 
 
-.. _breaking-commands-no-verify-ci-frigg:
+.. _upgrade_v8-commands-no-verify-ci-frigg:
 
 Frigg
 ~~~~~
@@ -287,7 +287,7 @@ Frigg
       exit 1
     fi
 
-.. _breaking-commands-no-verify-ci-circle-ci:
+.. _upgrade_v8-commands-no-verify-ci-circle-ci:
 
 Circle CI
 ~~~~~~~~~
@@ -305,7 +305,7 @@ Circle CI
       exit 1
     fi
 
-.. _breaking-commands-no-verify-ci-gitlab-ci:
+.. _upgrade_v8-commands-no-verify-ci-gitlab-ci:
 
 GitLab CI
 ~~~~~~~~~
@@ -320,7 +320,7 @@ GitLab CI
       exit 1
     fi
 
-.. _breaking-commands-no-verify-ci-bitbucket:
+.. _upgrade_v8-commands-no-verify-ci-bitbucket:
 
 **Condition**: environment variable ``BITBUCKET_BUILD_NUMBER`` is set
 
@@ -335,7 +335,7 @@ GitLab CI
       exit 1
     fi
 
-.. _breaking-commands-no-verify-ci-jenkins:
+.. _upgrade_v8-commands-no-verify-ci-jenkins:
 
 Jenkins
 ~~~~~~~
@@ -359,7 +359,7 @@ Jenkins
       exit 1
     fi
 
-.. _breaking-removed-build-status-checking:
+.. _upgrade_v8-removed-build-status-checking:
 
 Removal of Build Status Checking
 """"""""""""""""""""""""""""""""
@@ -368,7 +368,7 @@ Prior to v8, Python Semantic Release contained a configuration option,
 ``check_build_status``, which would attempt to prevent a release being made
 if it was possible to identify that a corresponding build pipeline was failing.
 For similar reasons to those motivating the removal of
-:ref:`CI Checks <breaking-commands-no-verify-ci>`, this feature has also been removed.
+:ref:`CI Checks <upgrade_v8-commands-no-verify-ci>`, this feature has also been removed.
 
 If you are leveraging this feature in Python Semantic Release v7, the following
 bash commands will replace the functionality, and you can add these to your pipeline.
@@ -386,7 +386,7 @@ installed, you can download it from `the curl website`_
 .. _installation guide for jq: https://jqlang.github.io/jq/download/
 .. _the curl website: https://curl.se/
 
-.. _breaking-removed-build-status-checking-github:
+.. _upgrade_v8-removed-build-status-checking-github:
 
 GitHub
 ~~~~~~
@@ -407,7 +407,7 @@ GitHub
 Note that ``$GITHUB_API_DOMAIN`` is typically ``api.github.com`` unless you are using
 GitHub Enterprise with a custom domain name.
 
-.. _breaking-removed-build-status-checking-gitea:
+.. _upgrade_v8-removed-build-status-checking-gitea:
 
 Gitea
 ~~~~~
@@ -425,7 +425,7 @@ Gitea
       exit 1
    fi
 
-.. _breaking-removed-build-status-checking-gitlab:
+.. _upgrade_v8-removed-build-status-checking-gitlab:
 
 Gitlab
 ~~~~~~
@@ -451,7 +451,7 @@ Gitlab
   done
 
 
-.. _breaking-commands-multibranch-releases:
+.. _upgrade_v8-commands-multibranch-releases:
 
 Multibranch releases
 """"""""""""""""""""
@@ -462,7 +462,7 @@ has been changed - you must manually check out the branch which you would like t
 against, and if you would like to create releases against this branch you must also ensure
 that it belongs to a :ref:`release group <multibranch-releases-configuring>`.
 
-.. _breaking-commands-changelog:
+.. _upgrade_v8-commands-changelog:
 
 ``changelog`` command
 """""""""""""""""""""
@@ -477,7 +477,7 @@ tag ``v1.1.4``, you should run::
 
     semantic-release changelog --post-to-release-tag v1.1.4
 
-.. _breaking-changelog-customization:
+.. _upgrade_v8-changelog-customization:
 
 Changelog customization
 """""""""""""""""""""""
@@ -492,7 +492,7 @@ fully open up customizing the changelog's appearance.
 .. _Jinja: https://jinja.palletsprojects.com/en/3.1.x/
 
 
-.. _breaking-configuration:
+.. _upgrade_v8-configuration:
 
 Configuration
 -------------
@@ -501,7 +501,7 @@ The configuration structure has been completely reworked, so you should read
 :ref:`configuration` carefully during the process of upgrading to v8+. However,
 some common pitfalls and potential sources of confusion are summarized here.
 
-.. _breaking-configuration-setup-cfg-unsupported:
+.. _upgrade_v8-configuration-setup-cfg-unsupported:
 
 ``setup.cfg`` is no longer supported
 """"""""""""""""""""""""""""""""""""
@@ -532,7 +532,7 @@ needs.
 .. _pip issue: https://github.com/pypa/pip/issues/8437#issuecomment-805313362
 
 
-.. _breaking-commit-parser-options:
+.. _upgrade_v8-commit-parser-options:
 
 Commit parser options
 """""""""""""""""""""
@@ -547,7 +547,7 @@ and if you need to parse multiple commit styles for a single project it's recomm
 that you create a parser following :ref:`commit_parser-custom_parser` that
 is tailored to the specific needs of your project.
 
-.. _breaking-version-variable-rename:
+.. _upgrade_v8-version-variable-rename:
 
 ``version_variable``
 """"""""""""""""""""
@@ -555,7 +555,7 @@ is tailored to the specific needs of your project.
 This option has been renamed to :ref:`version_variables <config-version_variables>`
 as it refers to a list of variables which can be updated.
 
-.. _breaking-version-pattern-removed:
+.. _upgrade_v8-version-pattern-removed:
 
 ``version_pattern``
 """""""""""""""""""
@@ -567,7 +567,7 @@ for a project and store this in an environment variable like so::
 
     export VERSION=$(semantic-release version --print)
 
-.. _breaking-version-toml-type:
+.. _upgrade_v8-version-toml-type:
 
 ``version_toml``
 """"""""""""""""
@@ -588,7 +588,7 @@ simply wrap the value in ``[]``:
    version_toml = ["pyproject.toml:tool.poetry.version"]
 
 
-.. _breaking-tag-format-validation:
+.. _upgrade_v8-tag-format-validation:
 
 ``tag_format``
 """"""""""""""
@@ -597,7 +597,7 @@ This option has the same effect as it did in Python Semantic Release prior to v8
 but Python Semantic Release will now verify that it has a ``{version}`` format
 key and raise an error if this is not the case.
 
-.. _breaking-upload-to-release-rename:
+.. _upgrade_v8-upload-to-release-rename:
 
 ``upload_to_release``
 """""""""""""""""""""
@@ -605,7 +605,7 @@ key and raise an error if this is not the case.
 This option has been renamed to
 :ref:`upload_to_vcs_release <config-publish-upload_to_vcs_release>`.
 
-.. _breaking-custom-commit-parsers:
+.. _upgrade_v8-custom-commit-parsers:
 
 Custom Commit Parsers
 ---------------------

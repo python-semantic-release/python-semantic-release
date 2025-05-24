@@ -2310,7 +2310,7 @@ v8.0.0 (2023-07-16)
 💥 BREAKING CHANGES
 --------------------
 
-* numerous breaking changes, see :ref:`migrating-from-v7` for more information
+* numerous breaking changes, see :ref:`upgrade_v8` for more information
 
 .. _ec30564: https://github.com/python-semantic-release/python-semantic-release/commit/ec30564b4ec732c001d76d3c09ba033066d2b6fe
 .. _PR#619: https://github.com/python-semantic-release/python-semantic-release/pull/619
