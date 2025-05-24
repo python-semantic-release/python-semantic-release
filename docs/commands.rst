@@ -23,10 +23,11 @@ Correct::
    semantic-release -vv --noop version --print
 
 With the exception of :ref:`cmd-main` and :ref:`cmd-generate-config`, all
-commands require that you have set up your project's configuration. To help with
-this step, :ref:`cmd-generate-config` can create the default configuration for you,
-which will allow you to tweak it to your needs rather than write it from scratch.
+commands require that you have set up your project's configuration.
 
+To help with setting up your project configuration, :ref:`cmd-generate-config`
+will print out the default configuration to the console, which
+you can then modify it to match your project & environment.
 
 .. _cmd-main:
 

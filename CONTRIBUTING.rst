@@ -1,3 +1,5 @@
+.. _contributing_guide:
+
 Contributing
 ------------
 
@@ -7,7 +9,7 @@ Please remember to write tests for the cool things you create or fix.
 
 Unsure about something? No worries, `open an issue`_.
 
-.. _open an issue: https://github.com/relekang/python-semantic-release/issues/new
+.. _open an issue: https://github.com/python-semantic-release/python-semantic-release/issues/new
 
 Commit messages
 ~~~~~~~~~~~~~~~
