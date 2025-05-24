@@ -1,4 +1,4 @@
-.. _commit-parsing:
+.. _commit_parsing:
 
 Commit Parsing
 ==============
@@ -641,7 +641,7 @@ should inherit from the
 The "options" class is used to validate the options which are configured in the repository,
 and to provide default values for these options where appropriate.
 
-.. _commit-parsing-commit-parsers:
+.. _commit_parsing-commit-parsers:
 
 Commit Parsers
 """"""""""""""

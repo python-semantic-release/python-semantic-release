@@ -1,7 +1,7 @@
 .. _cronjobs:
 
-Publish with cronjobs
-~~~~~~~~~~~~~~~~~~~~~
+Cron Job Publishing
+===================
 
 This is for you if for some reason you cannot publish from your CI or you would like releases to
 drop at a certain interval. Before you start, answer this: Are you sure you do not want a CI to

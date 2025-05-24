@@ -1,7 +1,7 @@
 .. _commands:
 
-Commands
-========
+Command Line Interface (CLI)
+============================
 
 All commands accept a ``-h/--help`` option, which displays the help text for the
 command and exits immediately.

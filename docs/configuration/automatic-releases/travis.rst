@@ -1,5 +1,7 @@
-Setting up python-semantic-release on Travis CI
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _travis_ci:
+
+Travis CI
+=========
 
 This guide expects you to have activated the repository on Travis CI.
 If this is not the case, please refer to `Travis documentation`_ on how to do that.

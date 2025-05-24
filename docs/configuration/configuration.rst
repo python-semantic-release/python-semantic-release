@@ -1,4 +1,4 @@
-.. _configuration:
+.. _config:
 
 Configuration
 =============
@@ -802,7 +802,7 @@ Built-in parsers:
 You can set any of the built-in parsers by their keyword but you can also specify
 your own commit parser in ``path/to/module_file.py:Class`` or ``module:Class`` form.
 
-For more information see :ref:`commit-parsing`.
+For more information see :ref:`commit_parsing`.
 
 **Default:** ``"conventional"``
 
