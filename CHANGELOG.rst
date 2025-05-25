@@ -113,6 +113,12 @@ v10.0.0 (2025-05-25)
 💥 Breaking Changes
 -------------------
 
+.. seealso::
+    *For a summarized walkthrough, check out our* |v10 migration guide|_ *as well.*
+
+.. _v10 migration guide: ../upgrading/10-upgrade.html
+.. |v10 migration guide| replace:: *v10 migration guide*
+
 * **changelog-md**: The default Markdown changelog template and release notes template will no
   longer print out the entire commit message contents, instead, it will only print the commit
   subject line. This comes to meet the high demand of better formatted changelogs and requests for
