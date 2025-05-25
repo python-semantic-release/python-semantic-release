@@ -89,7 +89,7 @@ v10.0.0 (2025-05-25)
 
 * **github-actions**: Update ``python-semantic-release/publish-action`` parameter notes (`c4d45ec`_)
 
-* **github-actions**: Update PSR action parameter documenation (`a082896`_)
+* **github-actions**: Update PSR action parameter documentation (`a082896`_)
 
 * **upgrading**: Re-locate version upgrade guides into ``Upgrading PSR`` (`a5f5e04`_)
 
@@ -164,13 +164,14 @@ v10.0.0 (2025-05-25)
   configuration.
 
 * **github-action**: The ``root_options`` action input parameter has been removed because it created
-  a command injection vulernability for arbitrary code to execute within the container context of
+  a command injection vulnerability for arbitrary code to execute within the container context of
   the GitHub action if a command injection code was provided as part of the ``root_options``
   parameter string. To eliminate the vulnerability, each relevant option that can be provided to
   ``semantic-release`` has been individually added as its own parameter and will be processed
   individually to prevent command injection. Please review our `Github Actions Configuration`__ page
-  on the Python Semantic Release Documentation website to review the newly available configuration
-  options that replace the ``root_options`` parameter.
+  to review the newly available configuration options that replace the ``root_options`` parameter.
+
+  __ https://github.com/python-semantic-release/python-semantic-release/blob/v10.0.0/docs/configuration/automatic-releases/github-actions.rst
 
 * **parser-conventional**: Any breaking change footer messages that the conventional commit parser
   detects will now be removed from the ``commit.descriptions[]`` list but maintained in and only in
@@ -178,145 +179,55 @@ v10.0.0 (2025-05-25)
   the commit message but that was redundant as the default changelog now handles breaking change
   footers in its own section.
 
-* **parser-conventional**: Any issue resolution footers that the parser detects will now be removed
-  from the ``commit.descriptions[]`` list. Previously, the descriptions included all text from the
-  commit message but now that the parser pulls out the issue numbers the numbers will be included in
-  the ``commit.linked_issues`` tuple for user extraction in any changelog generation.
+* **parser-conventional, parser-emoji, parser-scipy**: Any issue resolution footers that the parser
+  detects will now be removed from the ``commit.descriptions[]`` list. Previously, the descriptions
+  included all text from the commit message but now that the parser pulls out the issue numbers the
+  numbers will be included in the ``commit.linked_issues`` tuple for user extraction in any
+  changelog generation.
 
-* **parser-conventional**: Any release notice footer messages that the commit parser detects will
-  now be removed from the ``commit.descriptions[]`` list but maintained in and only in the
-  ``commit.notices[]`` list. Previously, the descriptions included all text from the commit message
-  but that was redundant as the default changelog now handles release notice footers in its own
-  section.
+* **parser-conventional, parser-emoji, parser-scipy**: Any release notice footer messages that the
+  commit parser detects will now be removed from the ``commit.descriptions[]`` list but maintained
+  in and only in the ``commit.notices[]`` list. Previously, the descriptions included all text from
+  the commit message but that was redundant as the default changelog now handles release notice
+  footers in its own section.
 
-* **parser-conventional**: Generally, a pull request or merge request number reference is included
-  in the subject line at the end within parentheses on some common VCS's like GitHub. PSR now looks
-  for this reference and extracts it into the ``commit.linked_merge_request`` and the
-  ``commit.linked_pull_request`` attributes of a commit object. Since this is now pulled out
-  individually, it is cleaner to remove this from the first line of the ``commit.descriptions`` list
-  (ie. the subject line) so that changelog macros do not have to replace the text but instead only
-  append a PR/MR link to the end of the line. The reference does maintain the PR/MR prefix indicator
-  (`#` or ``!``).
+* **parser-conventional, parser-emoji, parser-scipy**: Generally, a pull request or merge request
+  number reference is included in the subject line at the end within parentheses on some common
+  VCS's like GitHub. PSR now looks for this reference and extracts it into the
+  ``commit.linked_merge_request`` and the ``commit.linked_pull_request`` attributes of a commit
+  object. Since this is now pulled out individually, it is cleaner to remove this from the first
+  line of the ``commit.descriptions`` list (ie. the subject line) so that changelog macros do not
+  have to replace the text but instead only append a PR/MR link to the end of the line. The
+  reference does maintain the PR/MR prefix indicator (`#` or ``!``).
 
-* **parser-conventional**: The configuration setting ``commit_parser_options.ignore_merge_commits``
-  is now set to ``true`` by default. The feature to ignore squash commits was introduced in
-  ``v9.18.0`` and was originally set to ``false`` to prevent unexpected results on a non-breaking
-  update. The ignore merge commits feature prevents additional unnecessary processing on a commit
-  message that likely will not match a commit message syntax. Most merge commits are syntactically
-  pre-defined by Git or Remote Version Control System (ex. GitHub, etc.) and do not follow a commit
-  convention (nor should they). The larger issue with merge commits is that they ultimately are a
-  full copy of all the changes that were previously created and committed. The merge commit itself
-  ensures that the previous commit tree is maintained in history, therefore the commit message
-  always exists. If merge commits are parsed, it generally creates duplicate messages that will end
-  up in your changelog, which is less than desired in most cases. If you have previously used the
-  ``changelog.exclude_commit_patterns`` functionality to ignore merge commit messages then you will
-  want this setting set to ``true`` to improve parsing speed. You can also now remove the merge
-  commit exclude pattern from the list as well to improve parsing speed. If this functionality is
-  not desired, you will need to update your configuration to change the new setting to ``false``.
-
-* **parser-conventional**: The configuration setting ``commit_parser_options.parse_squash_commits``
-  is now set to ``true`` by default. The feature to parse squash commits was introduced in
-  ``v9.17.0`` and was originally set to ``false`` to prevent unexpected results on a non-breaking
-  update. The parse squash commits feature attempts to find additional commits of the same commit
-  type within the body of a single commit message. When squash commits are found, Python Semantic
-  Release will separate out each commit into its own artificial commit object and parse them
-  individually. This potentially can change the resulting version bump if a larger bump was detected
-  within the squashed components. It also allows for the changelog and release notes to separately
-  order and display each commit as originally written. If this is not desired, you will need to
-  update your configuration to change the new setting to ``false``.
-
-* **parser-emoji**: Any issue resolution footers that the parser detects will now be removed from
-  the ``commit.descriptions[]`` list. Previously, the descriptions included all text from the commit
-  message but now that the parser pulls out the issue numbers the numbers will be included in the
-  ``commit.linked_issues`` tuple for user extraction in any changelog generation.
-
-* **parser-emoji**: Any release notice footer messages that the emoji commit parser detects will now
-  be removed from the ``commit.descriptions[]`` list but maintained in and only in the
-  ``commit.notices[]`` list. Previously, the descriptions included all text from the commit message
-  but that was redundant as the default changelog now handles release notice footers in its own
-  section.
-
-* **parser-emoji**: Generally, a pull request or merge request number reference is included in the
-  subject line at the end within parentheses on some common VCS's (e.g. GitHub). PSR now looks for
-  these references and extract it into the ``commit.linked_merge_request`` field of a commit object.
-  Since this is now pulled out individually, it is cleaner to remove this from the first line of the
-  ``commit.descriptions`` list (ie. the subject line) so that changelog macros do not have to
-  replace the text but instead only append a PR/MR link to the end of the line. The reference will
-  maintain the PR/MR prefix indicator (e.g. ``#`` or ``!``).
-
-* **parser-emoji**: The configuration setting ``commit_parser_options.ignore_merge_commits`` is now
-  set to ``true`` by default. The feature to ignore squash commits was introduced in ``v9.18.0`` and
-  was originally set to ``false`` to prevent unexpected results on a non-breaking update. The ignore
-  merge commits feature prevents additional unnecessary processing on a commit message that likely
-  will not match a commit message syntax. Most merge commits are syntactically pre-defined by Git or
-  Remote Version Control System (ex. GitHub, etc.) and do not follow a commit convention (nor should
-  they). The larger issue with merge commits is that they ultimately are a full copy of all the
-  changes that were previously created and committed. The merge commit itself ensures that the
-  previous commit tree is maintained in history, therefore the commit message always exists. If
-  merge commits are parsed, it generally creates duplicate messages that will end up in your
-  changelog, which is less than desired in most cases. If you have previously used the
-  ``changelog.exclude_commit_patterns`` functionality to ignore merge commit messages then you will
-  want this setting set to ``true`` to improve parsing speed. You can also now remove the merge
-  commit exclude pattern from the list as well to improve parsing speed. If this functionality is
-  not desired, you will need to update your configuration to change the new setting to ``false``.
-
-* **parser-emoji**: The configuration setting ``commit_parser_options.parse_squash_commits`` is now
-  set to ``true`` by default. The feature to parse squash commits was introduced in ``v9.17.0`` and
-  was originally set to ``false`` to prevent unexpected results on a non-breaking update. The parse
-  squash commits feature attempts to find additional commits of the same commit type within the body
-  of a single commit message. When squash commits are found, Python Semantic Release will separate
-  out each commit into its own artificial commit object and parse them individually. This
-  potentially can change the resulting version bump if a larger bump was detected within the
-  squashed components. It also allows for the changelog and release notes to separately order and
-  display each commit as originally written. If this is not desired, you will need to update your
+* **parser-conventional, parser-emoji, parser-scipy**: The configuration setting
+  ``commit_parser_options.ignore_merge_commits`` is now set to ``true`` by default. The feature to
+  ignore squash commits was introduced in ``v9.18.0`` and was originally set to ``false`` to
+  prevent unexpected results on a non-breaking update. The ignore merge commits feature prevents
+  additional unnecessary processing on a commit message that likely will not match a commit message
+  syntax. Most merge commits are syntactically pre-defined by Git or Remote Version Control System
+  (ex. GitHub, etc.) and do not follow a commit convention (nor should they). The larger issue with
+  merge commits is that they ultimately are a full copy of all the changes that were previously
+  created and committed. The merge commit itself ensures that the previous commit tree is
+  maintained in history, therefore the commit message always exists. If merge commits are parsed,
+  it generally creates duplicate messages that will end up in your changelog, which is less than
+  desired in most cases. If you have previously used the ``changelog.exclude_commit_patterns``
+  functionality to ignore merge commit messages then you will want this setting set to ``true`` to
+  improve parsing speed. You can also now remove the merge commit exclude pattern from the list as
+  well to improve parsing speed. If this functionality is not desired, you will need to update your
   configuration to change the new setting to ``false``.
 
-* **parser-scipy**: Any issue resolution footers that the parser detects will now be removed from
-  the commit.descriptions[] list. Previously, the descriptions included all text from the commit
-  message but now that the parser pulls out the issue numbers the numbers will be included in the
-  commit.linked_issues tuple for user extraction in any changelog generation.
-
-* **parser-scipy**: Any release notice footer messages that the commit parser detects will now be
-  removed from the ``commit.descriptions[]`` list but maintained in and only in the
-  ``commit.notices[]`` list. Previously, the descriptions included all text from the commit message
-  but that was redundant as the default changelog now handles release notice footers in its own
-  section.
-
-* **parser-scipy**: Generally, a pull request or merge request number reference is included in the
-  subject line at the end within parentheses on some common VCS's like GitHub. PSR now looks for
-  this reference and extracts it into the ``commit.linked_merge_request`` and the
-  ``commit.linked_pull_request`` attributes of a commit object. Since this is now pulled out
-  individually, it is cleaner to remove this from the first line of the ``commit.descriptions`` list
-  (ie. the subject line) so that changelog macros do not have to replace the text but instead only
-  append a PR/MR link to the end of the line. The reference does maintain the PR/MR prefix indicator
-  (`#` or ``!``).
-
-* **parser-scipy**: The configuration setting ``commit_parser_options.ignore_merge_commits`` is now
-  set to ``true`` by default. The feature to ignore squash commits was introduced in ``v9.18.0`` and
-  was originally set to ``false`` to prevent unexpected results on a non-breaking update. The ignore
-  merge commits feature prevents additional unnecessary processing on a commit message that likely
-  will not match a commit message syntax. Most merge commits are syntactically pre-defined by Git or
-  Remote Version Control System (ex. GitHub, etc.) and do not follow a commit convention (nor should
-  they). The larger issue with merge commits is that they ultimately are a full copy of all the
-  changes that were previously created and committed. The merge commit itself ensures that the
-  previous commit tree is maintained in history, therefore the commit message always exists. If
-  merge commits are parsed, it generally creates duplicate messages that will end up in your
-  changelog, which is less than desired in most cases. If you have previously used the
-  ``changelog.exclude_commit_patterns`` functionality to ignore merge commit messages then you will
-  want this setting set to ``true`` to improve parsing speed. You can also now remove the merge
-  commit exclude pattern from the list as well to improve parsing speed. If this functionality is
-  not desired, you will need to update your configuration to change the new setting to ``false``.
-
-* **parser-scipy**: The configuration setting ``commit_parser_options.parse_squash_commits`` is now
-  set to ``true`` by default. The feature to parse squash commits was introduced in ``v9.17.0`` and
-  was originally set to ``false`` to prevent unexpected results on a non-breaking update. The parse
-  squash commits feature attempts to find additional commits of the same commit type within the body
-  of a single commit message. When squash commits are found, Python Semantic Release will separate
-  out each commit into its own artificial commit object and parse them individually. This
-  potentially can change the resulting version bump if a larger bump was detected within the
-  squashed components. It also allows for the changelog and release notes to separately order and
-  display each commit as originally written. If this is not desired, you will need to update your
-  configuration to change the new setting to ``false``.
+* **parser-conventional, parser-emoji, parser-scipy**: The configuration setting
+  ``commit_parser_options.parse_squash_commits`` is now set to ``true`` by default. The feature to
+  parse squash commits was introduced in ``v9.17.0`` and was originally set to ``false`` to prevent
+  unexpected results on a non-breaking update. The parse squash commits feature attempts to find
+  additional commits of the same commit type within the body of a single commit message. When
+  squash commits are found, Python Semantic Release will separate out each commit into its own
+  artificial commit object and parse them individually. This potentially can change the resulting
+  version bump if a larger bump was detected within the squashed components. It also allows for the
+  changelog and release notes to separately order and display each commit as originally written. If
+  this is not desired, you will need to update your configuration to change the new setting to
+  ``false``.
 
 .. _#733: https://github.com/python-semantic-release/python-semantic-release/issues/733
 .. _080e4bc: https://github.com/python-semantic-release/python-semantic-release/commit/080e4bcb14048a2dd10445546a7ee3159b3ab85c

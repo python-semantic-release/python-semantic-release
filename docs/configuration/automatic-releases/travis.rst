@@ -18,7 +18,7 @@ You will need to set up an environment variable in Travis. An easy way to do tha
 is to go to the settings page for your package and add it there. Make sure that the
 secret toggle is set correctly.
 
-You need to set the :ref:`GH_TOKEN <index-creating-vcs-releases>` environment
+You need to set the :ref:`GH_TOKEN <config-remote-token>` environment
 variable with a personal access token for Github. It will need either ``repo`` or
 ``public_repo`` scope depending on whether the repository is private or public.
 
