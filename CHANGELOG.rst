@@ -4,21 +4,6 @@
 CHANGELOG
 =========
 
-.. _changelog-v10.0.1:
-
-v10.0.1 (2025-05-25)
-====================
-
-🪲 Bug Fixes
-------------
-
-* **github-actions**: Bump the github-actions dependency to ``v10.0.0`` (#1255) (`PR#1255`_,
-  `2803676`_)
-
-.. _2803676: https://github.com/python-semantic-release/python-semantic-release/commit/2803676cf26c52177fa98d9144934853744a22bb
-.. _PR#1255: https://github.com/python-semantic-release/python-semantic-release/pull/1255
-
-
 .. _changelog-v10.0.0:
 
 v10.0.0 (2025-05-25)
