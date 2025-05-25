@@ -165,6 +165,7 @@ jobs:
           GIT_COMMITTER_NAME: ${{ env.GITHUB_ACTIONS_AUTHOR_NAME }}
           GIT_COMMITTER_EMAIL: ${{ env.GITHUB_ACTIONS_AUTHOR_EMAIL }}
         run: |
+          ls -la .git/
           MINOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1,2)"
           git tag --force --annotate "$MINOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MINOR_VERSION_TAG"
           git push -u origin "$MINOR_VERSION_TAG" --force
