@@ -60,7 +60,8 @@ if __name__ == "__main__":
         exit(1)
 
     update_github_actions_example(
-        DOCS_DIR / "automatic-releases" / "github-actions.rst", new_release_tag
+        DOCS_DIR / "configuration" / "automatic-releases" / "github-actions.rst",
+        new_release_tag,
     )
 
     for doc_file in DOCS_DIR.rglob("*.rst"):
