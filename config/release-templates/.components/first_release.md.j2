@@ -1,0 +1,18 @@
+{#  EXAMPLE:
+
+## vX.X.X (YYYY-MMM-DD)
+
+_This release is published under the MIT License._       # Release Notes Only
+
+- Initial Release
+
+#}{{
+"## %s (%s)\n" | format(
+    release.version.as_semver_tag(),
+    release.tagged_date.strftime("%Y-%m-%d")
+)
+}}{%  if license_name is defined and license_name
+%}{{    "\n_This release is published under the %s License._\n" | format(license_name)
+}}{%  endif
+%}
+- Initial Release
