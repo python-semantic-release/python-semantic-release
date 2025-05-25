@@ -420,7 +420,7 @@ v9.19.0 (2025-02-10)
 
 * Update references to Angular parser to Conventional Commit Parser (`PR#1177`_, `27ddf84`_)
 
-💡 ADDITIONAL RELEASE INFORMATION
+💡 Additional Release Information
 ---------------------------------
 
 * **parser-conventional**: The 'angular' commit parser has been renamed to 'conventional' to match
