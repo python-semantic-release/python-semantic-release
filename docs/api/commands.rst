@@ -496,4 +496,4 @@ corresponding release is found in the remote VCS, then Python Semantic Release w
 attempt to create one.
 
 If using this option, the relevant authentication token *must* be supplied via the
-relevant environment variable. For more information, see :ref:`index-creating-vcs-releases`.
+relevant environment variable.
