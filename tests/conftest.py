@@ -207,10 +207,11 @@ def run_cli(clean_os_environment: dict[str, str]) -> RunCliFn:
 
         cli_runner = CliRunner(mix_stderr=False)
         env_vars = {**clean_os_environment, **(env or {})}
+        args = ["-vv", *(argv or [])]
 
         with mock.patch.dict(os.environ, env_vars, clear=True):
             # run the CLI with the provided arguments
-            return cli_runner.invoke(main, args=(argv or []), **(invoke_kwargs or {}))
+            return cli_runner.invoke(main, args=args, **(invoke_kwargs or {}))
 
     return _run_cli
 

@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from requests_mock import Mocker
 
     from tests.conftest import RunCliFn
+    from tests.e2e.conftest import StripLoggingMessagesFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetVersionsFromRepoBuildDefFn
 
 
@@ -30,6 +31,7 @@ def test_version_already_released_when_strict(
     run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    strip_logging_messages: StripLoggingMessagesFn,
 ):
     """
     Given repo has no new changes since the last release,
@@ -60,7 +62,7 @@ def test_version_already_released_when_strict(
     # Evaluate
     assert_exit_code(2, result, cli_cmd)
     assert f"{latest_release_version}\n" == result.stdout
-    assert f"{expected_error_msg}\n" == result.stderr
+    assert f"{expected_error_msg}\n" == strip_logging_messages(result.stderr)
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after
@@ -78,6 +80,7 @@ def test_version_on_nonrelease_branch_when_strict(
     run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    strip_logging_messages: StripLoggingMessagesFn,
 ):
     """
     Given repo is on a non-release branch,
@@ -103,7 +106,7 @@ def test_version_on_nonrelease_branch_when_strict(
     # Evaluate
     assert_exit_code(2, result, cli_cmd)
     assert not result.stdout
-    assert expected_error_msg == result.stderr
+    assert expected_error_msg == strip_logging_messages(result.stderr)
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     tags_after = sorted([tag.name for tag in repo.tags])
