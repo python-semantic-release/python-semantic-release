@@ -22,6 +22,12 @@ from semantic_release.enums import SemanticReleaseLogLevels
 
 
 FORMAT = "%(message)s"
+LOG_LEVELS = [
+    SemanticReleaseLogLevels.WARNING,
+    SemanticReleaseLogLevels.INFO,
+    SemanticReleaseLogLevels.DEBUG,
+    SemanticReleaseLogLevels.SILLY,
+]
 
 
 class Cli(click.MultiCommand):
@@ -79,7 +85,7 @@ class Cli(click.MultiCommand):
     default=0,
     count=True,
     show_default=True,
-    type=click.IntRange(0, 2, clamp=True),
+    type=click.IntRange(0, len(LOG_LEVELS) - 1, clamp=True),
 )
 @click.option(
     "--strict",
@@ -107,14 +113,7 @@ def main(
 
     For more information, visit https://python-semantic-release.readthedocs.io/
     """
-    log_levels = [
-        SemanticReleaseLogLevels.WARNING,
-        SemanticReleaseLogLevels.INFO,
-        SemanticReleaseLogLevels.DEBUG,
-        SemanticReleaseLogLevels.SILLY,
-    ]
-
-    globals.log_level = log_levels[verbosity]
+    globals.log_level = LOG_LEVELS[verbosity]
 
     # Set up our pretty console formatter
     rich_handler = RichHandler(
