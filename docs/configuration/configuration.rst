@@ -142,7 +142,7 @@ version to be ``1.0.0``, regardless of patch, minor, or major change level.
 Additionally, when ``allow_zero_version`` is set to ``false``,
 the :ref:`config-major_on_zero` setting is ignored.
 
-*Default changed to ``false`` in $NEW_RELEASE_TAG*
+*Default changed to ``false`` in v10.0.0*
 
 **Default:** ``false``
 
@@ -390,7 +390,7 @@ is there to document?
 The message details can be found in the ``first_release.md.j2`` and ``first_release.rst.j2``
 templates of the default changelog template directory.
 
-*Default changed to ``true`` in $NEW_RELEASE_TAG.*
+*Default changed to ``true`` in v10.0.0.*
 
 **Default:** ``true``
 
@@ -664,7 +664,7 @@ The patterns in this list are treated as regular expressions.
 ``mode``
 ********
 
-*Introduced in v9.10.0. Default changed to `update` in $NEW_RELEASE_TAG.*
+*Introduced in v9.10.0. Default changed to `update` in v10.0.0.*
 
 **Type:** ``Literal["init", "update"]``
 
@@ -1351,7 +1351,7 @@ The regular expression generated from the ``version_variables`` definition will:
 
 2. The variable name defined by ``variable`` and the version must be separated by
    an operand symbol (``=``, ``:``, ``:=``, or ``@``). Whitespace is optional around
-   the symbol. As of $NEW_RELEASE_TAG, a double-equals (``==``) operator is also supported
+   the symbol. As of v10.0.0, a double-equals (``==``) operator is also supported
    as a valid operand symbol.
 
 3. The value of the variable must match a `SemVer`_ regular expression and can be
