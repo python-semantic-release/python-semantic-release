@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import git
 import pytest
+from click.testing import CliRunner
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release import __version__
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from tests.conftest import RunCliFn
+    from tests.e2e.conftest import StripLoggingMessagesFn
     from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult
 
@@ -59,8 +61,13 @@ def test_main_prints_version_and_exits(run_cli: RunCliFn):
     assert result.output == f"semantic-release, version {__version__}\n"
 
 
-def test_main_no_args_prints_help_text(run_cli: RunCliFn):
-    assert_successful_exit_code(run_cli(), [MAIN_PROG_NAME])
+def test_main_no_args_passes_w_help_text():
+    from semantic_release.cli.commands.main import main
+
+    cli_cmd = [MAIN_PROG_NAME]
+    result = CliRunner().invoke(main, prog_name=cli_cmd[0])
+    assert_successful_exit_code(result, cli_cmd)
+    assert "Usage: " in result.output
 
 
 @pytest.mark.parametrize(
@@ -210,7 +217,9 @@ def test_errors_when_config_file_does_not_exist_and_passed_explicitly(
 
 @pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_errors_when_config_file_invalid_configuration(
-    run_cli: RunCliFn, update_pyproject_toml: UpdatePyprojectTomlFn
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    strip_logging_messages: StripLoggingMessagesFn,
 ):
     # Setup
     update_pyproject_toml("tool.semantic_release.remote.type", "invalidType")
@@ -220,7 +229,7 @@ def test_errors_when_config_file_invalid_configuration(
     result = run_cli(cli_cmd[1:])
 
     # preprocess results
-    stderr_lines = result.stderr.splitlines()
+    stderr_lines = strip_logging_messages(result.stderr).splitlines()
 
     # Evaluate
     assert_exit_code(1, result, cli_cmd)

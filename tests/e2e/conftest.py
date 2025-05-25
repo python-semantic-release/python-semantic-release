@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from re import IGNORECASE, compile as regexp
+from re import IGNORECASE, MULTILINE, compile as regexp
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
@@ -46,6 +46,9 @@ if TYPE_CHECKING:
         """Retrieve the runtime context for a repo."""
 
         def __call__(self, repo: Repo) -> RuntimeContext: ...
+
+    class StripLoggingMessagesFn(Protocol):
+        def __call__(self, log: str) -> str: ...
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -114,6 +117,22 @@ def retrieve_runtime_context(
             os.chdir(cwd)
 
     return _retrieve_runtime_context
+
+
+@pytest.fixture(scope="session")
+def strip_logging_messages() -> StripLoggingMessagesFn:
+    """Fixture to strip logging messages from the output."""
+    # Log levels match SemanticReleaseLogLevel enum values
+    logger_msg_pattern = regexp(
+        r"^\s*(?:\[\d\d:\d\d:\d\d\])?\s*(FATAL|CRITICAL|ERROR|WARNING|INFO|DEBUG|SILLY).*?\n(?:\s+\S.*?\n)*(?!\n[ ]{11})",
+        MULTILINE,
+    )
+
+    def _strip_logging_messages(log: str) -> str:
+        # Make sure it ends with a newline
+        return logger_msg_pattern.sub("", log.rstrip("\n") + "\n")
+
+    return _strip_logging_messages
 
 
 @pytest.fixture(scope="session")
