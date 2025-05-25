@@ -145,10 +145,10 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@v9.21.1
+        uses: python-semantic-release/python-semantic-release@092ace20f4ebed6a656da54b499076f1a5b803c8  # v10.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          root_options: "-v"
+          verbosity: 1
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
