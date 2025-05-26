@@ -145,7 +145,7 @@ class ScipyParserOptions(ParserOptions):
     one of these prefixes, it will not be considered a valid commit message.
     """
 
-    # TODO: breaking v10, make consistent with AngularParserOptions
+    # TODO: breaking v11, make consistent with AngularParserOptions
     default_level_bump: LevelBump = LevelBump.NO_RELEASE
     """The minimum bump level to apply to valid commit message."""
 
@@ -161,7 +161,7 @@ class ScipyParserOptions(ParserOptions):
         return self._tag_to_level
 
     def __post_init__(self) -> None:
-        # TODO: breaking v10, remove as the name is now consistent
+        # TODO: breaking v11, remove as the name is now consistent
         self.default_bump_level = self.default_level_bump
         self._tag_to_level: dict[str, LevelBump] = {
             str(tag): level

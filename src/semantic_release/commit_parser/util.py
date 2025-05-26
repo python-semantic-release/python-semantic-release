@@ -6,7 +6,7 @@ from functools import reduce
 from re import MULTILINE, compile as regexp
 from typing import TYPE_CHECKING
 
-# TODO: remove in v10
+# TODO: remove in v11
 from semantic_release.helpers import (
     sort_numerically,  # noqa: F401 # TODO: maintained for compatibility
 )

@@ -269,7 +269,7 @@ def generate_release_notes(
         environment(autoescape=False, template_dir=tpl_dir)
     )
 
-    # TODO: Remove in v10
+    # TODO: Remove in v11
     release_notes_env.globals["context"] = release_notes_env.globals["ctx"] = {
         "history": history,
         "mask_initial_release": mask_initial_release,

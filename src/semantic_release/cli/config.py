@@ -148,7 +148,7 @@ class DefaultChangelogTemplatesConfig(BaseModel):
 
 
 class ChangelogConfig(BaseModel):
-    # TODO: BREAKING CHANGE v10, move to DefaultChangelogTemplatesConfig
+    # TODO: BREAKING CHANGE v11, move to DefaultChangelogTemplatesConfig
     changelog_file: str = ""
     """Deprecated! Moved to 'default_templates.changelog_file'"""
 
@@ -191,7 +191,7 @@ class ChangelogConfig(BaseModel):
 
     @model_validator(mode="after")
     def move_changelog_file(self) -> Self:
-        # TODO: Remove this method in v10
+        # TODO: Remove this method in v11
         if not self.changelog_file:
             return self
 
@@ -441,7 +441,7 @@ class RawConfig(BaseModel):
             parser_opts_type = None
             # If the commit parser is a known one, pull the default options object from it
             if self.commit_parser in _known_commit_parsers:
-                # TODO: BREAKING CHANGE v10
+                # TODO: BREAKING CHANGE v11
                 # parser_opts_type = (
                 #     _known_commit_parsers[self.commit_parser]
                 #     .get_default_options()
@@ -454,7 +454,7 @@ class RawConfig(BaseModel):
                 try:
                     # if its a custom parser, try to import it and pull the default options object type
                     custom_class = dynamic_import(self.commit_parser)
-                    # TODO: BREAKING CHANGE v10
+                    # TODO: BREAKING CHANGE v11
                     # parser_opts_type = custom_class.get_default_options().__class__
                     if hasattr(custom_class, "parser_options"):
                         parser_opts_type = custom_class.parser_options
@@ -695,7 +695,7 @@ class RuntimeContext:
             ) from err
 
         commit_parser_opts_class = commit_parser_cls.parser_options
-        # TODO: Breaking change v10
+        # TODO: Breaking change v11
         # commit_parser_opts_class = commit_parser_cls.get_default_options().__class__
         try:
             commit_parser = commit_parser_cls(
