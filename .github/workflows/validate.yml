@@ -393,7 +393,7 @@ jobs:
   test-gh-action:
     name: Validate Action Build & Execution
     runs-on: ubuntu-latest
-    if: inputs.gha-src-files-changed == 'true' || inputs.gha-test-files-changed == 'true' || inputs.ci-files-changed == 'true'
+    if: ${{ inputs.gha-src-files-changed == 'true' || inputs.gha-test-files-changed == 'true' || inputs.ci-files-changed == 'true' }}
 
     needs:
       - build
