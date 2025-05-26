@@ -4,6 +4,21 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.0.2:
+
+v10.0.2 (2025-05-26)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **github-actions**: Add filesystem UID/GID fixer after action workspace modification (`PR#1262`_,
+  `93e23c8`_)
+
+.. _93e23c8: https://github.com/python-semantic-release/python-semantic-release/commit/93e23c8993fe6f113095bfcd5089684f403cc6b9
+.. _PR#1262: https://github.com/python-semantic-release/python-semantic-release/pull/1262
+
+
 .. _changelog-v10.0.1:
 
 v10.0.1 (2025-05-25)
