@@ -205,7 +205,7 @@ def test_parser_squashed_commit_bitbucket_squash_style(
         assert expected["type"] == result.type
         # Optional
         assert expected.get("scope", "") == result.scope
-        # TODO: v10 change to tuples
+        # TODO: v11 change to tuples
         assert expected.get("descriptions", []) == result.descriptions
         assert expected.get("breaking_descriptions", []) == result.breaking_descriptions
         assert expected.get("linked_issues", ()) == result.linked_issues
@@ -388,7 +388,7 @@ def test_parser_squashed_commit_git_squash_style(
         assert expected["type"] == result.type
         # Optional
         assert expected.get("scope", "") == result.scope
-        # TODO: v10 change to tuples
+        # TODO: v11 change to tuples
         assert expected.get("descriptions", []) == result.descriptions
         assert expected.get("breaking_descriptions", []) == result.breaking_descriptions
         assert expected.get("linked_issues", ()) == result.linked_issues
@@ -549,7 +549,7 @@ def test_parser_squashed_commit_github_squash_style(
         assert expected["type"] == result.type
         # Optional
         assert expected.get("scope", "") == result.scope
-        # TODO: v10 change to tuples
+        # TODO: v11 change to tuples
         assert expected.get("descriptions", []) == result.descriptions
         assert expected.get("breaking_descriptions", []) == result.breaking_descriptions
         assert expected.get("linked_issues", ()) == result.linked_issues
@@ -699,7 +699,6 @@ def test_parser_return_subject_from_commit_message(
 
 @pytest.mark.parametrize(
     "message, subject, merge_request_number",
-    # TODO: in v10, we will remove the merge request number from the subject line
     [
         # GitHub, Gitea style
         (
@@ -1109,10 +1108,9 @@ def test_parser_return_release_notices_from_commit_message(
     assert isinstance(result, ParsedCommit)
     assert tuple(notices) == result.release_notices
 
-    # TODO: v10, remove this
-    # full_description = str.join("\n\n", result.descriptions)
-    # full_notice = str.join("\n\n", result.release_notices)
-    # assert full_notice not in full_description
+    full_description = str.join("\n\n", result.descriptions)
+    full_notice = str.join("\n\n", result.release_notices)
+    assert full_notice not in full_description
 
 
 ##############################
