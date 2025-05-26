@@ -152,7 +152,7 @@ jobs:
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@d3a9934c4fff57f0d4df24450566d3dba7e7082a  # v10.0.1
+        uses: python-semantic-release/publish-action@e5e3010f6a207cd5d6f5d3dccedbea355484ca02  # v10.0.2
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
