@@ -134,7 +134,7 @@ if TYPE_CHECKING:
 
     class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
         def __call__(
-            self, git_repo: Repo, commit_msgs: Sequence[CommitDef]
+            self, git_repo: Repo, commit_msgs: Sequence[CommitDef], file_path: str | None
         ) -> Sequence[CommitDef]: ...
 
     class CreateReleaseFn(Protocol):
@@ -273,6 +273,7 @@ if TYPE_CHECKING:
 
     class RepoActionMakeCommitsDetails(DetailsBase):
         commits: Sequence[CommitDef]
+        file: NotRequired[str | None]
 
     class RepoActionRelease(TypedDict):
         action: Literal[RepoActionStep.RELEASE]
@@ -926,11 +927,11 @@ def simulate_change_commits_n_rtn_changelog_entry(
     file_in_repo: str,
 ) -> SimulateChangeCommitsNReturnChangelogEntryFn:
     def _simulate_change_commits_n_rtn_changelog_entry(
-        git_repo: Repo, commit_msgs: Sequence[CommitDef]
+        git_repo: Repo, commit_msgs: Sequence[CommitDef], file_path: str | None = None
     ) -> Sequence[CommitDef]:
         changelog_entries = []
         for commit_msg in commit_msgs:
-            add_text_to_file(git_repo, file_in_repo)
+            add_text_to_file(git_repo, file_path or file_in_repo)
             changelog_entries.append(commit_n_rtn_changelog_entry(git_repo, commit_msg))
         return changelog_entries
 
@@ -1304,6 +1305,7 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             simulate_change_commits_n_rtn_changelog_entry(
                                 git_repo,
                                 mk_cmts_def["commits"],
+                                mk_cmts_def.get("file")
                             )
                         )
                         current_commits.extend(
