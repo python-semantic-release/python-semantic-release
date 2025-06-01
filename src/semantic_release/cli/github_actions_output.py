@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import logging
 import os
 
+from semantic_release.globals import logger
 from semantic_release.version.version import Version
-
-log = logging.getLogger(__name__)
 
 
 class VersionGitHubActionsOutput:
@@ -71,7 +69,7 @@ class VersionGitHubActionsOutput:
     def write_if_possible(self, filename: str | None = None) -> None:
         output_file = filename or os.getenv(self.OUTPUT_ENV_VAR)
         if not output_file:
-            log.info("not writing GitHub Actions output, as no file specified")
+            logger.info("not writing GitHub Actions output, as no file specified")
             return
 
         with open(output_file, "a", encoding="utf-8") as f:

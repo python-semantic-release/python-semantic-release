@@ -41,13 +41,13 @@ jobs:
 
       - name: Evaluate | Check common file types for changes
         id: core-changed-files
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8  #v45.0.9
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  #v46.0.5
         with:
           files_yaml_from_source_file: .github/changed-files-spec.yml
 
       - name: Evaluate | Check specific file types for changes
         id: ci-changed-files
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8  #v45.0.9
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  #v46.0.5
         with:
           files_yaml: |
             ci:
@@ -62,8 +62,10 @@ jobs:
              [ "${{ steps.ci-changed-files.outputs.ci_any_changed }}" == "true" ] || \
              [ "${{ steps.core-changed-files.outputs.docs_any_changed }}" == "true" ] || \
              [ "${{ steps.core-changed-files.outputs.src_any_changed }}" == "true" ] || \
-             [ "${{ steps.core-changed-files.outputs.tests_any_changed }}" == "true" ]; then
-             printf '%s\n' "any_changed=true" >> $GITHUB_OUTPUT
+             [ "${{ steps.core-changed-files.outputs.tests_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.gha_src_any_changed }}" == "true" ] || \
+             [ "${{ steps.core-changed-files.outputs.gha_tests_any_changed }}" == "true" ]; then
+              printf '%s\n' "any_changed=true" >> $GITHUB_OUTPUT
           fi
 
     outputs:
@@ -74,6 +76,8 @@ jobs:
       doc-changes: ${{ steps.core-changed-files.outputs.docs_any_changed }}
       src-changes: ${{ steps.core-changed-files.outputs.src_any_changed }}
       test-changes: ${{ steps.core-changed-files.outputs.tests_any_changed }}
+      gha-src-changes: ${{ steps.core-changed-files.outputs.gha_src_any_changed }}
+      gha-test-changes: ${{ steps.core-changed-files.outputs.gha_tests_any_changed }}
 
 
   validate:
@@ -91,5 +95,7 @@ jobs:
       doc-files-changed: ${{ needs.eval-changes.outputs.doc-changes }}
       src-files-changed: ${{ needs.eval-changes.outputs.src-changes }}
       test-files-changed: ${{ needs.eval-changes.outputs.test-changes }}
+      gha-src-files-changed: ${{ needs.eval-changes.outputs.gha-src-changes }}
+      gha-test-files-changed: ${{ needs.eval-changes.outputs.gha-test-changes }}
     permissions: {}
     secrets: {}

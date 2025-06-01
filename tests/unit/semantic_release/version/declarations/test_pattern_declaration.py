@@ -166,6 +166,15 @@ def test_pattern_declaration_is_version_replacer():
                 f"""if version := '{next_version}': """,
             ),
             (
+                "Explicit number format for requirements.txt file with double equals",
+                f"{test_file}:my-package:{VersionStampType.NUMBER_FORMAT.value}",
+                # irrelevant for this case
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses double equals separator
+                """my-package == 1.0.0""",
+                f"""my-package == {next_version}""",
+            ),
+            (
                 "Using default number format for multi-line & quoted json",
                 f"{test_file}:version:{VersionStampType.NUMBER_FORMAT.value}",
                 # irrelevant for this case

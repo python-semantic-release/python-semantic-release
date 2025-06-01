@@ -203,6 +203,29 @@ def test_commit_hash_url(default_gitea_client: Gitea):
     assert expected_url == default_gitea_client.commit_hash_url(sha)
 
 
+def test_commit_hash_url_w_custom_server():
+    """
+    Test the commit hash URL generation for a self-hosted Bitbucket server with prefix.
+
+    ref: https://github.com/python-semantic-release/python-semantic-release/issues/1204
+    """
+    sha = "244f7e11bcb1e1ce097db61594056bc2a32189a0"
+    expected_url = "{server}/{owner}/{repo}/commit/{sha}".format(
+        server=f"https://{EXAMPLE_HVCS_DOMAIN}/projects/demo-foo",
+        owner="foo",
+        repo=EXAMPLE_REPO_NAME,
+        sha=sha,
+    )
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        actual_url = Gitea(
+            remote_url=f"https://{EXAMPLE_HVCS_DOMAIN}/projects/demo-foo/foo/{EXAMPLE_REPO_NAME}.git",
+            hvcs_domain=f"https://{EXAMPLE_HVCS_DOMAIN}/projects/demo-foo",
+        ).commit_hash_url(sha)
+
+    assert expected_url == actual_url
+
+
 @pytest.mark.parametrize("issue_number", (666, "666", "#666"))
 def test_issue_url(default_gitea_client: Gitea, issue_number: int | str):
     expected_url = "{server}/{owner}/{repo}/issues/{issue_number}".format(

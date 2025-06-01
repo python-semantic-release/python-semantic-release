@@ -1,0 +1,199 @@
+{#
+  MACRO: format a inline link reference in Markdown
+#}{%  macro format_link(link, label)
+%}{{    "[%s](%s)" | format(label, link)
+}}{%  endmacro
+%}
+
+
+{#
+  MACRO: Capitalize the first letter of a string only
+#}{%  macro capitalize_first_letter_only(sentence)
+%}{{    (sentence[0] | upper) ~ sentence[1:]
+}}{%  endmacro
+%}
+
+
+{#
+  MACRO: commit message links or PR/MR links of commit
+#}{%  macro commit_msg_links(commit)
+%}{%    if commit.error is undefined
+%}{#
+   #      # Initialize variables
+#}{%      set link_references = []
+%}{%      set summary_line = capitalize_first_letter_only(
+            commit.descriptions[0] | safe
+          )
+%}{#
+#}{%      if commit.linked_merge_request != ""
+%}{#        # Add PR references with a link to the PR
+#}{%        set _ = link_references.append(
+              format_link(
+                commit.linked_merge_request | pull_request_url,
+                commit.linked_merge_request
+              )
+            )
+%}{%      endif
+%}{#
+   #      # DEFAULT: Always include the commit hash as a link
+#}{%      set _ = link_references.append(
+            format_link(
+              commit.hexsha | commit_hash_url,
+              "`%s`" | format(commit.short_hash)
+            )
+          )
+%}{#
+#}{%      set formatted_links = ""
+%}{%      if link_references | length > 0
+%}{%        set formatted_links = " (%s)" | format(link_references | join(", "))
+%}{%      endif
+%}{#
+          # Return the modified summary_line
+#}{{      summary_line ~ formatted_links
+}}{%    endif
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: format commit summary line
+#}{%  macro format_commit_summary_line(commit)
+%}{#    # Check for Parsing Error
+#}{%    if commit.error is undefined
+%}{#
+   #      # Add any message links to the commit summary line
+#}{%      set summary_line = commit_msg_links(commit)
+%}{#
+#}{%      if commit.scope
+%}{%        set summary_line = "**%s**: %s" | format(commit.scope, summary_line)
+%}{%      endif
+%}{#
+   #      # Return the modified summary_line
+#}{{      summary_line
+}}{#
+#}{%    else
+%}{#      # Return the first line of the commit if there was a Parsing Error
+#}{{      (commit.commit.message | string).split("\n", maxsplit=1)[0]
+}}{%    endif
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: format a commit descriptions list by:
+  - Capitalizing the first line of the description
+  - Adding an optional scope prefix
+  - Joining the rest of the descriptions with a double newline
+#}{%  macro format_attr_paragraphs(commit, attribute)
+%}{#    NOTE: requires namespace because of the way Jinja2 handles variable scoping with loops
+#}{%    set ns = namespace(full_description="")
+%}{#
+#}{%    if commit.error is undefined
+%}{%      for paragraph in commit | attr(attribute)
+%}{%        if paragraph | trim | length > 0
+%}{#
+#}{%          set ns.full_description = [
+                ns.full_description,
+                capitalize_first_letter_only(paragraph) | trim | safe,
+              ] | join("\n\n")
+%}{#
+#}{%        endif
+%}{%      endfor
+%}{#
+#}{%      set ns.full_description = ns.full_description | trim
+%}{#
+#}{%      if commit.scope
+%}{%        set ns.full_description = "**%s**: %s" | format(
+              commit.scope, ns.full_description
+            )
+%}{%      endif
+%}{%    endif
+%}{#
+#}{{    ns.full_description
+}}{%  endmacro
+%}
+
+
+{#
+  MACRO: format the breaking changes description by:
+  - Capitalizing the description
+  - Adding an optional scope prefix
+#}{%  macro format_breaking_changes_description(commit)
+%}{{    format_attr_paragraphs(commit, 'breaking_descriptions')
+}}{%  endmacro
+%}
+
+
+{#
+  MACRO: format the release notice by:
+  - Capitalizing the description
+  - Adding an optional scope prefix
+#}{%  macro format_release_notice(commit)
+%}{{    format_attr_paragraphs(commit, "release_notices")
+}}{%  endmacro
+%}
+
+
+{#
+   MACRO: order commits alphabetically by scope and attribute
+   - Commits are sorted based on scope and then the attribute alphabetically
+   - Commits without scope are placed first and sorted alphabetically by the attribute
+   - parameter: ns (namespace) object with a commits list
+   - parameter: attr (string) attribute to sort by
+   - returns None but modifies the ns.commits list in place
+#}{%  macro order_commits_alphabetically_by_scope_and_attr(ns, attr)
+%}{%    set ordered_commits = []
+%}{#
+   #    # Eliminate any ParseError commits from input set
+#}{%    set filtered_commits = ns.commits | rejectattr("error", "defined") | list
+%}{#
+   #    # grab all commits with no scope and sort alphabetically by attr
+#}{%    for commit in filtered_commits | rejectattr("scope") | sort(attribute=attr)
+%}{%      set _ = ordered_commits.append(commit)
+%}{%     endfor
+%}{#
+   #    # grab all commits with a scope and sort alphabetically by the scope and then attr
+#}{%    for commit in filtered_commits | selectattr("scope") | sort(attribute=(['scope', attr] | join(",")))
+%}{%      set _ = ordered_commits.append(commit)
+%}{%    endfor
+%}{#
+   #    # Return the ordered commits
+#}{%    set ns.commits = ordered_commits
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: apply smart ordering of commits objects based on alphabetized summaries and then scopes
+  - Commits are sorted based on the commit type and the commit message
+  - Commits are grouped by the commit type
+  - parameter: ns (namespace) object with a commits list
+  - returns None but modifies the ns.commits list in place
+#}{%  macro apply_alphabetical_ordering_by_descriptions(ns)
+%}{%    set _ = order_commits_alphabetically_by_scope_and_attr(ns, 'descriptions.0')
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: apply smart ordering of commits objects based on alphabetized breaking changes and then scopes
+  - Commits are sorted based on the commit type and the commit message
+  - Commits are grouped by the commit type
+  - parameter: ns (namespace) object with a commits list
+  - returns None but modifies the ns.commits list in place
+#}{%  macro apply_alphabetical_ordering_by_brk_descriptions(ns)
+%}{%    set _ = order_commits_alphabetically_by_scope_and_attr(ns, 'breaking_descriptions.0')
+%}{%  endmacro
+%}
+
+
+{#
+  MACRO: apply smart ordering of commits objects based on alphabetized release notices and then scopes
+  - Commits are sorted based on the commit type and the commit message
+  - Commits are grouped by the commit type
+  - parameter: ns (namespace) object with a commits list
+  - returns None but modifies the ns.commits list in place
+#}{%  macro apply_alphabetical_ordering_by_release_notices(ns)
+%}{%    set _ = order_commits_alphabetically_by_scope_and_attr(ns, 'release_notices.0')
+%}{%  endmacro
+%}

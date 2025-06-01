@@ -91,13 +91,14 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
     for a single release channel on the default branch.
     """
 
-    def _get_repo_from_defintion(
+    def _get_repo_from_definition(
         commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
+        ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
         commit_timestamp_gen = (
@@ -106,7 +107,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
         )
         pr_num_gen = (i for i in count(start=2, step=1))
 
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -182,7 +183,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -193,9 +194,9 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
 
         fix_branch_1_commits: Sequence[CommitSpec] = [
             {
-                "conventional": "fix(cli): add missing text",
-                "emoji": ":bug: add missing text",
-                "scipy": "MAINT: add missing text",
+                "conventional": "fix(cli): add missing text\n\nResolves: #123\n",
+                "emoji": ":bug: add missing text\n\nResolves: #123\n",
+                "scipy": "MAINT: add missing text\n\nResolves: #123\n",
                 "datetime": next(commit_timestamp_gen),
             },
         ]
@@ -326,7 +327,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -377,7 +378,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -388,7 +389,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_channel(
 
         return repo_construction_steps
 
-    return _get_repo_from_defintion
+    return _get_repo_from_definition
 
 
 @pytest.fixture(scope="session")

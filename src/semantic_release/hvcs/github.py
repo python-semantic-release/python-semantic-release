@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import glob
-import logging
 import mimetypes
 import os
 from functools import lru_cache
@@ -20,6 +19,7 @@ from semantic_release.errors import (
     IncompleteReleaseError,
     UnexpectedResponse,
 )
+from semantic_release.globals import logger
 from semantic_release.helpers import logged_function
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.token_auth import TokenAuth
@@ -27,10 +27,6 @@ from semantic_release.hvcs.util import build_requests_session, suppress_not_foun
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
-
-
-# Globals
-log = logging.getLogger(__name__)
 
 
 # Add a mime type for wheels
@@ -200,13 +196,13 @@ class Github(RemoteHvcsBase):
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
         # Github actions context
         if "GITHUB_REPOSITORY" in os.environ:
-            log.debug("getting repository owner and name from environment variables")
+            logger.debug("getting repository owner and name from environment variables")
             owner, name = os.environ["GITHUB_REPOSITORY"].rsplit("/", 1)
             return owner, name
 
         return super()._get_repository_owner_and_name()
 
-    @logged_function(log)
+    @logged_function(logger)
     def create_release(
         self,
         tag: str,
@@ -253,7 +249,7 @@ class Github(RemoteHvcsBase):
                 )
             return -1
 
-        log.info("Creating release for tag %s", tag)
+        logger.info("Creating release for tag %s", tag)
         releases_endpoint = self.create_api_url(
             endpoint=f"/repos/{self.owner}/{self.repo_name}/releases",
         )
@@ -273,7 +269,7 @@ class Github(RemoteHvcsBase):
 
         try:
             release_id: int = response.json()["id"]
-            log.info("Successfully created release with ID: %s", release_id)
+            logger.info("Successfully created release with ID: %s", release_id)
         except JSONDecodeError as err:
             raise UnexpectedResponse("Unreadable json response") from err
         except KeyError as err:
@@ -281,7 +277,7 @@ class Github(RemoteHvcsBase):
 
         errors = []
         for asset in assets or []:
-            log.info("Uploading asset %s", asset)
+            logger.info("Uploading asset %s", asset)
             try:
                 self.upload_release_asset(release_id, asset)
             except HTTPError as err:
@@ -295,13 +291,13 @@ class Github(RemoteHvcsBase):
             return release_id
 
         for error in errors:
-            log.exception(error)
+            logger.exception(error)
 
         raise IncompleteReleaseError(
             f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"
         )
 
-    @logged_function(log)
+    @logged_function(logger)
     @suppress_not_found
     def get_release_id_by_tag(self, tag: str) -> int | None:
         """
@@ -326,7 +322,7 @@ class Github(RemoteHvcsBase):
         except KeyError as err:
             raise UnexpectedResponse("JSON response is missing an id") from err
 
-    @logged_function(log)
+    @logged_function(logger)
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
         """
         Edit a release with updated change notes
@@ -335,7 +331,7 @@ class Github(RemoteHvcsBase):
         :param release_notes: The release notes for this version
         :return: The ID of the release that was edited
         """
-        log.info("Updating release %s", release_id)
+        logger.info("Updating release %s", release_id)
         release_endpoint = self.create_api_url(
             endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
         )
@@ -350,7 +346,7 @@ class Github(RemoteHvcsBase):
 
         return release_id
 
-    @logged_function(log)
+    @logged_function(logger)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
     ) -> int:
@@ -361,12 +357,12 @@ class Github(RemoteHvcsBase):
         :param prerelease: Whether or not this release should be created as a prerelease
         :return: The status of the request
         """
-        log.info("Creating release for %s", tag)
+        logger.info("Creating release for %s", tag)
         try:
             return self.create_release(tag, release_notes, prerelease)
         except HTTPError as err:
-            log.debug("error creating release: %s", err)
-            log.debug("looking for an existing release to update")
+            logger.debug("error creating release: %s", err)
+            logger.debug("looking for an existing release to update")
 
         release_id = self.get_release_id_by_tag(tag)
         if release_id is None:
@@ -374,11 +370,11 @@ class Github(RemoteHvcsBase):
                 f"release id for tag {tag} not found, and could not be created"
             )
 
-        log.debug("Found existing release %s, updating", release_id)
+        logger.debug("Found existing release %s, updating", release_id)
         # If this errors we let it die
         return self.edit_release_notes(release_id, release_notes)
 
-    @logged_function(log)
+    @logged_function(logger)
     @suppress_not_found
     def asset_upload_url(self, release_id: str) -> str | None:
         """
@@ -405,7 +401,7 @@ class Github(RemoteHvcsBase):
                 "JSON response is missing a key 'upload_url'"
             ) from err
 
-    @logged_function(log)
+    @logged_function(logger)
     def upload_release_asset(
         self, release_id: int, file: str, label: str | None = None
     ) -> bool:
@@ -442,7 +438,7 @@ class Github(RemoteHvcsBase):
             # Raise an error if the upload was unsuccessful
             response.raise_for_status()
 
-        log.debug(
+        logger.debug(
             "Successfully uploaded %s to Github, url: %s, status code: %s",
             file,
             response.url,
@@ -451,7 +447,7 @@ class Github(RemoteHvcsBase):
 
         return True
 
-    @logged_function(log)
+    @logged_function(logger)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
         """
         Upload distributions to a release
@@ -462,7 +458,7 @@ class Github(RemoteHvcsBase):
         # Find the release corresponding to this version
         release_id = self.get_release_id_by_tag(tag=tag)
         if not release_id:
-            log.warning("No release corresponds to tag %s, can't upload dists", tag)
+            logger.warning("No release corresponds to tag %s, can't upload dists", tag)
             return 0
 
         # Upload assets
@@ -474,14 +470,14 @@ class Github(RemoteHvcsBase):
                 self.upload_release_asset(release_id, file_path)
                 n_succeeded += 1
             except HTTPError:  # noqa: PERF203
-                log.exception("error uploading asset %s", file_path)
+                logger.exception("error uploading asset %s", file_path)
 
         return n_succeeded
 
     def remote_url(self, use_token: bool = True) -> str:
         """Get the remote url including the token for authentication if requested"""
         if not (self.token and use_token):
-            log.info("requested to use token for push but no token set, ignoring...")
+            logger.info("requested to use token for push but no token set, ignoring...")
             return self._remote_url
 
         actor = os.getenv("GITHUB_ACTOR", None)

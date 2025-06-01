@@ -133,6 +133,8 @@ jobs:
       doc-files-changed: true
       src-files-changed: true
       test-files-changed: true
+      gha-src-files-changed: true
+      gha-test-files-changed: true
       files-changed: true
     permissions: {}
     secrets: {}

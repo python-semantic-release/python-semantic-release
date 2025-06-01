@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
+from semantic_release.hvcs.github import Github
 
 from tests.const import (
     MAIN_PROG_NAME,
@@ -22,10 +22,11 @@ from tests.util import assert_successful_exit_code
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
-    from click.testing import CliRunner
     from git import Repo
     from requests_mock import Mocker
 
+    from tests.conftest import RunCliFn
+    from tests.e2e.conftest import StripLoggingMessagesFn
     from tests.fixtures.example_project import GetWheelFileFn, UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetVersionsFromRepoBuildDefFn
 
@@ -35,12 +36,12 @@ if TYPE_CHECKING:
     "repo_result, next_release_version",
     # must use a repo that is ready for a release to prevent no release
     # logic from being triggered before the noop logic
-    [(lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "0.1.0")],
+    [(lazy_fixture(repo_w_no_tags_conventional_commits.__name__), "1.0.0")],
 )
 def test_version_noop_is_noop(
     repo_result: BuiltRepoResult,
     next_release_version: str,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     get_wheel_file: GetWheelFileFn,
@@ -57,7 +58,7 @@ def test_version_noop_is_noop(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, "--noop", VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # take measurement after running the version command
     head_after = repo.head.commit
@@ -88,7 +89,7 @@ def test_version_noop_is_noop(
 )
 def test_version_no_git_verify(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
@@ -127,7 +128,7 @@ def test_version_no_git_verify(
 
     # Execute
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch"]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Take measurement after the command
     head_after = repo.head.commit
@@ -148,9 +149,10 @@ def test_version_no_git_verify(
 )
 def test_version_on_nonrelease_branch(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    strip_logging_messages: StripLoggingMessagesFn,
 ):
     """
     Given repo is on a non-release branch,
@@ -170,12 +172,12 @@ def test_version_on_nonrelease_branch(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
     assert not result.stdout
-    assert expected_error_msg == result.stderr
+    assert expected_error_msg == strip_logging_messages(result.stderr)
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     tags_after = sorted([tag.name for tag in repo.tags])
@@ -193,9 +195,10 @@ def test_version_on_nonrelease_branch(
 def test_version_on_last_release(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    strip_logging_messages: StripLoggingMessagesFn,
 ):
     """
     Given repo is on the last release version,
@@ -219,7 +222,7 @@ def test_version_on_last_release(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
 
     # take measurement after running the version command
     repo_status_after = repo.git.status(short=True)
@@ -229,7 +232,7 @@ def test_version_on_last_release(
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
     assert f"{latest_release_version}\n" == result.stdout
-    assert f"{expected_error_msg}\n" == result.stderr
+    assert f"{expected_error_msg}\n" == strip_logging_messages(result.stderr)
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after
@@ -244,7 +247,7 @@ def test_version_on_last_release(
 )
 def test_version_only_tag_push(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ) -> None:
@@ -265,7 +268,7 @@ def test_version_only_tag_push(
         "--no-commit",
         "--tag",
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # capture values after the command
     tag_after = repo.tags[-1].name
@@ -273,7 +276,7 @@ def test_version_only_tag_push(
 
     # Assert only tag was created, it was pushed and then release was created
     assert_successful_exit_code(result, cli_cmd)
-    assert tag_after == "v0.1.0"
+    assert tag_after == "v1.0.0"
     assert head_before == head_after
     assert mocked_git_push.call_count == 1  # 0 for commit, 1 for tag
     assert post_mocker.call_count == 1

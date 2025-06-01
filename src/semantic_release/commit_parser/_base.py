@@ -74,7 +74,7 @@ class CommitParser(ABC, Generic[_TT, _OPTS]):
             options if options is not None else self.get_default_options()
         )
 
-    # TODO: BREAKING CHANGE v10, add abstract method for all custom parsers
+    # TODO: BREAKING CHANGE v11, add abstract method for all custom parsers
     # @staticmethod
     # @abstractmethod
     def get_default_options(self) -> _OPTS:

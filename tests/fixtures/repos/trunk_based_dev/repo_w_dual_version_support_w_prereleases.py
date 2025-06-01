@@ -85,13 +85,14 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
     only official releases with latest and previous version support.
     """
 
-    def _get_repo_from_defintion(
+    def _get_repo_from_definition(
         commit_type: CommitConvention,
         hvcs_client_name: str = "github",
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
+        ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
         commit_timestamp_gen = (
@@ -99,7 +100,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
             for i in count(step=1)
         )
 
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -179,7 +180,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -219,7 +220,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -269,7 +270,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                         "\n\n",
                                         [
                                             "API: add revolutionary feature",
-                                            "BREAKING CHANGE: this is a breaking change",
+                                            "This is a breaking change",
                                         ],
                                     ),
                                     "datetime": next(commit_timestamp_gen),
@@ -290,7 +291,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -314,9 +315,9 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix: correct critical bug",
-                                    "emoji": ":bug: correct critical bug",
-                                    "scipy": "MAINT: correct critical bug",
+                                    "conventional": "fix: correct critical bug\n\nResolves: #123\n",
+                                    "emoji": ":bug: correct critical bug\n\nResolves: #123\n",
+                                    "scipy": "MAINT: correct critical bug\n\nResolves: #123\n",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -336,7 +337,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "details": {
                                     "new_version": new_version,
                                     "max_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -377,7 +378,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "details": {
                                     "new_version": new_version,
                                     "max_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -418,7 +419,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
                                 "details": {
                                     "new_version": new_version,
                                     "max_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -441,7 +442,7 @@ def get_repo_definition_4_trunk_only_repo_w_dual_version_spt_w_prereleases(
 
         return repo_construction_steps
 
-    return _get_repo_from_defintion
+    return _get_repo_from_definition
 
 
 @pytest.fixture(scope="session")

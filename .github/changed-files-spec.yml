@@ -2,8 +2,6 @@
 
 build:
     - MANIFEST.in
-    - Dockerfile
-    - .dockerignore
     - scripts/**
 docs:
     - docs/**
@@ -11,8 +9,15 @@ docs:
     - AUTHORS.rst
     - CONTRIBUTING.rst
     - CHANGELOG.rst
+gha_src:
+    - src/gh_action/**
 src:
-    - src/**
+    - src/semantic_release/**
     - pyproject.toml
+gha_tests:
+    - tests/gh_action/**
 tests:
-    - tests/**
+    - tests/e2e/**
+    - tests/fixtures/**
+    - tests/unit/**
+    - tests/*.py

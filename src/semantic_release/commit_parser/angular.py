@@ -5,7 +5,6 @@ https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-g
 
 from __future__ import annotations
 
-import logging
 import re
 from functools import reduce
 from itertools import zip_longest
@@ -31,13 +30,11 @@ from semantic_release.commit_parser.util import (
 )
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
 
 if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
-
-
-logger = logging.getLogger(__name__)
 
 
 def _logged_parse_error(commit: Commit, error: str) -> ParseError:
@@ -97,11 +94,9 @@ class AngularParserOptions(ParserOptions):
     default_bump_level: LevelBump = LevelBump.NO_RELEASE
     """The minimum bump level to apply to valid commit message."""
 
-    # TODO: breaking change v10, change default to True
     parse_squash_commits: bool = False
     """Toggle flag for whether or not to parse squash commits"""
 
-    # TODO: breaking change v10, change default to True
     ignore_merge_commits: bool = False
     """Toggle flag for whether or not to ignore merge commits"""
 
@@ -239,15 +234,11 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
     ) -> dict[str, list[str]]:
         if (match := breaking_re.match(text)) and (brk_desc := match.group(1)):
             accumulator["breaking_descriptions"].append(brk_desc)
-            # TODO: breaking change v10, removes breaking change footers from descriptions
-            # return accumulator
 
         elif (match := self.notice_selector.match(text)) and (
             notice := match.group("notice")
         ):
             accumulator["notices"].append(notice)
-            # TODO: breaking change v10, removes notice footers from descriptions
-            # return accumulator
 
         elif match := self.issue_selector.search(text):
             # if match := self.issue_selector.search(text):
@@ -268,8 +259,6 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
                 accumulator["linked_issues"] = sort_numerically(
                     set(accumulator["linked_issues"]).union(new_issue_refs)
                 )
-                # TODO: breaking change v10, removes resolution footers from descriptions
-                # return accumulator
 
         # Prevent appending duplicate descriptions
         if text not in accumulator["descriptions"]:
@@ -290,9 +279,6 @@ class AngularCommitParser(CommitParser[ParseResult, AngularParserOptions]):
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(parsed_subject):
             linked_merge_request = mr_match.group("mr_number")
-            # TODO: breaking change v10, removes PR number from subject/descriptions
-            # expects changelog template to format the line accordingly
-            # parsed_subject = self.pr_selector.sub("", parsed_subject).strip()
 
         body_components: dict[str, list[str]] = reduce(
             self.commit_body_components_separator,

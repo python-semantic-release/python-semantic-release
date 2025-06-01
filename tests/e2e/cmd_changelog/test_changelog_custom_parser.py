@@ -7,7 +7,6 @@ import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.context import ChangelogMode
-from semantic_release.cli.commands.main import main
 
 from tests.const import CHANGELOG_SUBCMD, MAIN_PROG_NAME
 from tests.fixtures.repos import repo_w_no_tags_conventional_commits
@@ -19,8 +18,7 @@ from tests.util import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from click.testing import CliRunner
-
+    from tests.conftest import RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn, UseCustomParserFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetCommitDefFn
 
@@ -30,7 +28,7 @@ if TYPE_CHECKING:
 )
 def test_changelog_custom_parser_remove_from_changelog(
     repo_result: BuiltRepoResult,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     use_custom_parser: UseCustomParserFn,
     get_commit_def_of_conventional_commit: GetCommitDefFn,
@@ -70,7 +68,7 @@ def test_changelog_custom_parser_remove_from_changelog(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Take measurement after action
     actual_content = changelog_md_file.read_text()

@@ -1,0 +1,2 @@
+[semantic-release]
+commit_parser = "emoji"

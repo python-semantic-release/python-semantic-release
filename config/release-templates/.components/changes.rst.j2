@@ -1,11 +1,12 @@
-{%   from 'macros.rst.j2' import apply_alphabetical_ordering_by_brk_descriptions
-%}{% from 'macros.rst.j2' import apply_alphabetical_ordering_by_descriptions
-%}{% from 'macros.rst.j2' import apply_alphabetical_ordering_by_release_notices
-%}{% from 'macros.rst.j2' import emoji_map, extract_issue_link_references, extract_pr_link_reference
-%}{% from 'macros.rst.j2' import format_breaking_changes_description, format_commit_summary_line
-%}{% from 'macros.rst.j2' import format_link_reference, format_release_notice
-%}{% from 'macros.rst.j2' import generate_heading_underline, section_heading_order
-%}{% from 'macros.rst.j2' import section_heading_translations
+{%   from 'macros.common.j2' import apply_alphabetical_ordering_by_brk_descriptions
+%}{% from 'macros.common.j2' import apply_alphabetical_ordering_by_descriptions
+%}{% from 'macros.common.j2' import apply_alphabetical_ordering_by_release_notices
+%}{% from 'macros.common.j2' import emoji_map, format_breaking_changes_description
+%}{% from 'macros.common.j2' import format_release_notice, section_heading_order
+%}{% from 'macros.common.j2' import section_heading_translations
+%}{% from 'macros.rst.j2' import extract_issue_link_references, extract_pr_link_reference
+%}{% from 'macros.rst.j2' import format_commit_summary_line, format_link_reference
+%}{% from 'macros.rst.j2' import generate_heading_underline
 %}{#
 
 ✨ Features

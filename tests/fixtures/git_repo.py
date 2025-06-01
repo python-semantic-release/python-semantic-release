@@ -8,7 +8,7 @@ from functools import reduce
 from pathlib import Path
 from textwrap import dedent
 from time import sleep
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
@@ -126,7 +126,7 @@ if TYPE_CHECKING:
             hvcs_domain: str = ...,
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = True,  # Default as of v10
         ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
@@ -167,6 +167,7 @@ if TYPE_CHECKING:
             self,
             build_definition: Sequence[RepoActions],
             filter_4_changelog: bool = False,
+            ignore_merge_commits: bool = False,
         ) -> RepoDefinition: ...
 
     RepoDefinition: TypeAlias = dict[VersionStr, RepoVersionDef]  # type: ignore[misc] # mypy is thoroughly confused
@@ -183,7 +184,7 @@ if TYPE_CHECKING:
             dest_file: Path | None = None,
             max_version: str | None = None,
             output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = True,  # Default as of v10
         ) -> str: ...
 
     class FormatGitSquashCommitMsgFn(Protocol):
@@ -342,7 +343,8 @@ if TYPE_CHECKING:
             hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = ...,
+            ignore_merge_commits: bool = True,  # Default as of v10
         ) -> Sequence[RepoActions]: ...
 
     class BuildRepoFromDefinitionFn(Protocol):
@@ -403,7 +405,7 @@ if TYPE_CHECKING:
             previous_version: Version | None = None,
             license_name: str = "",
             dest_file: Path | None = None,
-            mask_initial_release: bool = False,
+            mask_initial_release: bool = True,  # Default as of v10
         ) -> str: ...
 
     class GetHvcsClientFromRepoDefFn(Protocol):
@@ -533,15 +535,11 @@ def get_commit_def_of_conventional_commit(
                 "include_in_changelog": False,
             }
 
-        descriptions = list(parsed_result.descriptions)
-        if parsed_result.linked_merge_request:
-            descriptions[0] = str.join("(", descriptions[0].split("(")[:-1]).strip()
-
         return {
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
-            "desc": str.join("\n\n", descriptions),
+            "desc": str.join("\n\n", parsed_result.descriptions),
             "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
@@ -570,15 +568,11 @@ def get_commit_def_of_emoji_commit(
                 "include_in_changelog": False,
             }
 
-        descriptions = list(parsed_result.descriptions)
-        if parsed_result.linked_merge_request:
-            descriptions[0] = str.join("(", descriptions[0].split("(")[:-1]).strip()
-
         return {
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
-            "desc": str.join("\n\n", descriptions),
+            "desc": str.join("\n\n", parsed_result.descriptions),
             "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
@@ -607,15 +601,11 @@ def get_commit_def_of_scipy_commit(
                 "include_in_changelog": False,
             }
 
-        descriptions = list(parsed_result.descriptions)
-        if parsed_result.linked_merge_request:
-            descriptions[0] = str.join("(", descriptions[0].split("(")[:-1]).strip()
-
         return {
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
-            "desc": str.join("\n\n", descriptions),
+            "desc": str.join("\n\n", parsed_result.descriptions),
             "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
             "scope": parsed_result.scope,
             "mr": parsed_result.linked_merge_request,
@@ -967,10 +957,16 @@ def get_hvcs_client_from_repo_def(
 
         # Prevent the HVCS client from using the environment variables
         with mock.patch.dict(os.environ, {}, clear=True):
-            return hvcs_client_class(
-                example_git_https_url,
-                hvcs_domain=get_cfg_value_from_def(repo_def, "hvcs_domain"),
+            hvcs_client = cast(
+                "HvcsBase",
+                hvcs_client_class(
+                    example_git_https_url,
+                    hvcs_domain=get_cfg_value_from_def(repo_def, "hvcs_domain"),
+                ),
             )
+            # Force the HVCS client to attempt to resolve the repo name (as we generally cache it)
+            assert hvcs_client.repo_name
+            return cast("Github | Gitlab | Gitea | Bitbucket", hvcs_client)
 
     return _get_hvcs_client_from_repo_def
 
@@ -1004,7 +1000,7 @@ def build_configured_base_repo(  # noqa: C901
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,  # Default as of v10
     ) -> tuple[Path, HvcsBase]:
         if not cached_example_git_project.exists():
             raise RuntimeError("Unable to find cached git project files!")
@@ -1037,7 +1033,9 @@ def build_configured_base_repo(  # noqa: C901
                 raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
 
             # Create HVCS Client instance
-            hvcs = hvcs_class(example_git_https_url, hvcs_domain=hvcs_domain)
+            with mock.patch.dict(os.environ, {}, clear=True):
+                hvcs = hvcs_class(example_git_https_url, hvcs_domain=hvcs_domain)
+                assert hvcs.repo_name  # Force the HVCS client to cache the repo name
 
             # Set tag format in configuration
             if tag_format_str is not None:
@@ -1144,21 +1142,7 @@ def separate_squashed_commit_def(
                 "msg": squashed_message,
                 "type": parsed_result.type,
                 "category": parsed_result.category,
-                "desc": str.join(
-                    "\n\n",
-                    (
-                        [
-                            # Strip out any MR references (since v9 doesn't) to prep for changelog generatro
-                            # TODO: remove in v10, as the parser will remove the MR reference
-                            str.join(
-                                "(", parsed_result.descriptions[0].split("(")[:-1]
-                            ).strip(),
-                            *parsed_result.descriptions[1:],
-                        ]
-                        if parsed_result.linked_merge_request
-                        else [*parsed_result.descriptions]
-                    ),
-                ),
+                "desc": str.join("\n\n", parsed_result.descriptions),
                 "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
                 "scope": parsed_result.scope,
                 "mr": parsed_result.linked_merge_request or squashed_commit_def["mr"],
@@ -1275,7 +1259,7 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
         repo_dir = Path(dest_dir)
         hvcs: Github | Gitlab | Gitea | Bitbucket
         tag_format_str: str
-        mask_initial_release: bool = False
+        mask_initial_release: bool = True  # Default as of v10
         current_commits: list[CommitDef] = []
         current_repo_def: RepoDefinition = {}
 
@@ -1470,6 +1454,7 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
     def _get_commits(
         build_definition: Sequence[RepoActions],
         filter_4_changelog: bool = False,
+        ignore_merge_commits: bool = False,
     ) -> RepoDefinition:
         # Extract the commits from the build definition
         repo_def: RepoDefinition = {}
@@ -1494,7 +1479,14 @@ def get_commits_from_repo_build_def() -> GetCommitsFromRepoBuildDefFn:
                 if "commit_def" in build_step["details"]:
                     commit_def = build_step["details"]["commit_def"]  # type: ignore[typeddict-item]
 
-                    if filter_4_changelog and not commit_def["include_in_changelog"]:
+                    if any(
+                        (
+                            ignore_merge_commits
+                            and build_step["action"] == RepoActionStep.GIT_MERGE,
+                            filter_4_changelog
+                            and not commit_def["include_in_changelog"],
+                        )
+                    ):
                         continue
 
                     commits.append(commit_def)
@@ -1676,10 +1668,11 @@ def simulate_default_changelog_creation(  # noqa: C901
                 else:
                     commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
 
-                if len(descriptions) > 1:
-                    commit_cl_desc += (
-                        "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
-                    )
+                # COMMENTED out for v10 as the defualt changelog now only writes the subject line
+                # if len(descriptions) > 1:
+                #     commit_cl_desc += (
+                #         "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                #     )
 
                 # Add commits to section
                 if commit_cl_desc not in section_bullets:
@@ -1789,10 +1782,11 @@ def simulate_default_changelog_creation(  # noqa: C901
                 else:
                     commit_cl_desc = f"{commit_cl_desc} {sha_link}\n"
 
-                if len(descriptions) > 1:
-                    commit_cl_desc += (
-                        "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
-                    )
+                # COMMENTED out for v10 as the defualt changelog now only writes the subject line
+                # if len(descriptions) > 1:
+                #     commit_cl_desc += (
+                #         "\n" + str.join("\n\n", [*descriptions[1:]]) + "\n"
+                #     )
 
                 # Add commits to section
                 if commit_cl_desc not in section_bullets:
@@ -1884,8 +1878,7 @@ def simulate_default_changelog_creation(  # noqa: C901
         dest_file: Path | None = None,
         max_version: str | None = None,
         output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
-        # TODO: Breaking v10, when default is toggled to true, also change this to True
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,  # Default as of v10
     ) -> str:
         if output_format == ChangelogOutputFormat.MARKDOWN:
             header = dedent(
@@ -2100,8 +2093,7 @@ def generate_default_release_notes_from_def(  # noqa: C901
         previous_version: Version | None = None,
         license_name: str = "",
         dest_file: Path | None = None,
-        # TODO: Breaking v10, when default is toggled to true, also change this to True
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,  # Default as of v10
     ) -> str:
         limited_repo_def: RepoDefinition = get_commits_from_repo_build_def(
             build_definition=version_actions,

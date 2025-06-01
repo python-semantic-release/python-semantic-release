@@ -150,7 +150,7 @@ class ParsedCommit(NamedTuple):
         """A convience method to create a ParsedCommit object from a ParsedMessageResult object and a Commit object."""
         return ParsedCommit(
             bump=parsed_message_result.bump,
-            # TODO: breaking v10, swap back to type rather than category
+            # TODO: breaking v11, swap back to type rather than category
             type=parsed_message_result.category,
             scope=parsed_message_result.scope,
             descriptions=list(parsed_message_result.descriptions),

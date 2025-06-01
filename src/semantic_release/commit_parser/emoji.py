@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import re
 from functools import reduce
 from itertools import zip_longest
@@ -27,9 +26,8 @@ from semantic_release.commit_parser.util import (
 )
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
+from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -94,12 +92,10 @@ class EmojiParserOptions(ParserOptions):
     a whitespace separator.
     """
 
-    # TODO: breaking change v10, change default to True
-    parse_squash_commits: bool = False
+    parse_squash_commits: bool = True
     """Toggle flag for whether or not to parse squash commits"""
 
-    # TODO: breaking change v10, change default to True
-    ignore_merge_commits: bool = False
+    ignore_merge_commits: bool = True
     """Toggle flag for whether or not to ignore merge commits"""
 
     @property
@@ -239,10 +235,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             notice := match.group("notice")
         ):
             accumulator["notices"].append(notice)
-            # TODO: breaking change v10, removes notice footers from descriptions
-            # return accumulator
+            return accumulator
 
-        elif self.options.parse_linked_issues and (
+        if self.options.parse_linked_issues and (
             match := self.issue_selector.search(text)
         ):
             predicate = regexp(r",? and | *[,;/& ] *").sub(
@@ -262,8 +257,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
                 accumulator["linked_issues"] = sort_numerically(
                     set(accumulator["linked_issues"]).union(new_issue_refs)
                 )
-                # TODO: breaking change v10, removes resolution footers from descriptions
-                # return accumulator
+                return accumulator
 
         # Prevent appending duplicate descriptions
         if text not in accumulator["descriptions"]:
@@ -272,14 +266,14 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult:
-        subject = message.split("\n", maxsplit=1)[0]
+        msg_parts = message.split("\n", maxsplit=1)
+        subject = msg_parts[0]
+        msg_body = msg_parts[1] if len(msg_parts) > 1 else ""
 
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(subject):
             linked_merge_request = mr_match.group("mr_number")
-            # TODO: breaking change v10, removes PR number from subject/descriptions
-            # expects changelog template to format the line accordingly
-            # subject = self.mr_selector.sub("", subject).strip()
+            subject = self.mr_selector.sub("", subject).strip()
 
         # Search for emoji of the highest importance in the subject
         match = self.emoji_selector.search(subject)
@@ -293,7 +287,10 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         # All emojis will remain part of the returned description
         body_components: dict[str, list[str]] = reduce(
             self.commit_body_components_separator,
-            parse_paragraphs(message),
+            [
+                subject,
+                *parse_paragraphs(msg_body),
+            ],
             {
                 "descriptions": [],
                 "notices": [],
@@ -308,11 +305,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             type=primary_emoji,
             category=primary_emoji,
             scope=parsed_scope,
-            # TODO: breaking change v10, removes breaking change footers from descriptions
-            # descriptions=(
-            #     descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions
-            # )
-            descriptions=descriptions,
+            descriptions=(
+                descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions
+            ),
             breaking_descriptions=(
                 descriptions[1:] if level_bump is LevelBump.MAJOR else ()
             ),
@@ -450,7 +445,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             if not clean_paragraph.strip():
                 continue
 
-            # Check if the paragraph is the start of a new angular commit
+            # Check if the paragraph is the start of a new emoji commit
             if not self.emoji_selector.search(clean_paragraph):
                 if not separate_commit_msgs and not current_msg:
                     # if there are no separate commit messages and no current message

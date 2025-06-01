@@ -97,7 +97,8 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
+        ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
         commit_timestamp_gen = (
@@ -106,7 +107,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
         )
         pr_num_gen = (i for i in count(start=2, step=1))
 
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -188,7 +189,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -216,9 +217,9 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix: correct some text",
-                                    "emoji": ":bug: correct some text",
-                                    "scipy": "MAINT: correct some text",
+                                    "conventional": "fix: correct some text\n\nResolves: #123",
+                                    "emoji": ":bug: correct some text\n\nResolves: #123",
+                                    "scipy": "MAINT: correct some text\n\nResolves: #123",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -237,7 +238,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -277,7 +278,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -315,7 +316,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                     branch_name=FIX_BRANCH_1_NAME,
                                 ),
                                 "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": bool(commit_type == "emoji"),
+                                "include_in_changelog": not ignore_merge_commits,
                             },
                             commit_type,
                         ),
@@ -331,7 +332,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -381,7 +382,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -419,7 +420,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                     branch_name=FEAT_BRANCH_1_NAME,
                                 ),
                                 "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": bool(commit_type == "emoji"),
+                                "include_in_changelog": not ignore_merge_commits,
                             },
                             commit_type,
                         ),
@@ -435,7 +436,7 @@ def get_repo_definition_4_github_flow_repo_w_feature_release_channel(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],

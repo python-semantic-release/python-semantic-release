@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures import lf as lazy_fixture
 
-from semantic_release.cli.commands.main import main
 from semantic_release.version.version import Version
 
 from tests.const import CHANGELOG_SUBCMD, EXAMPLE_PROJECT_LICENSE, MAIN_PROG_NAME
@@ -20,10 +19,9 @@ from tests.fixtures.repos import (
 from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
-    from click.testing import CliRunner
     from requests_mock import Mocker
 
-    from tests.conftest import GetStableDateNowFn
+    from tests.conftest import GetStableDateNowFn, RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
         BuiltRepoResult,
@@ -49,7 +47,7 @@ def test_changelog_latest_release_notes(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     post_mocker: Mocker,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     generate_default_release_notes_from_def: GenerateDefaultReleaseNotesFromDefFn,
@@ -77,7 +75,7 @@ def test_changelog_latest_release_notes(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", release_tag]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -122,7 +120,7 @@ def test_changelog_previous_release_notes(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     post_mocker: Mocker,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     generate_default_release_notes_from_def: GenerateDefaultReleaseNotesFromDefFn,
@@ -157,7 +155,7 @@ def test_changelog_previous_release_notes(
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, "--post-to-release-tag", release_tag]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -213,7 +211,7 @@ def test_changelog_release_notes_license_change(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
-    cli_runner: CliRunner,
+    run_cli: RunCliFn,
     post_mocker: Mocker,
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     generate_default_release_notes_from_def: GenerateDefaultReleaseNotesFromDefFn,
@@ -296,7 +294,7 @@ def test_changelog_release_notes_license_change(
         "--post-to-release-tag",
         latest_release_tag,
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -316,7 +314,7 @@ def test_changelog_release_notes_license_change(
         "--post-to-release-tag",
         prev_release_tag,
     ]
-    result = cli_runner.invoke(main, cli_cmd[1:])
+    result = run_cli(cli_cmd[1:])
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)

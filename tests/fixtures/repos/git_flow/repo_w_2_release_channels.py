@@ -102,7 +102,8 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
         hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
-        mask_initial_release: bool = False,
+        mask_initial_release: bool = True,
+        ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
         commit_timestamp_gen = (
@@ -111,7 +112,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
         )
 
         # Common static actions or components
-        changelog_file_definitons: Sequence[RepoActionWriteChangelogsDestFile] = [
+        changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
@@ -156,7 +157,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                             tgt_branch_name=DEFAULT_BRANCH_NAME,
                         ),
                         "datetime": next(commit_timestamp_gen),
-                        "include_in_changelog": bool(commit_type == "emoji"),
+                        "include_in_changelog": not ignore_merge_commits,
                     },
                     commit_type,
                 ),
@@ -278,7 +279,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
                                 "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": bool(commit_type == "emoji"),
+                                "include_in_changelog": not ignore_merge_commits,
                             },
                             commit_type,
                         ),
@@ -301,7 +302,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -351,7 +352,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -388,7 +389,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                         "\n\n",
                                         [
                                             "API: add revolutionary feature",
-                                            "BREAKING CHANGE: this is a breaking change",
+                                            "This is a breaking change",
                                         ],
                                     ),
                                     "datetime": next(commit_timestamp_gen),
@@ -409,7 +410,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -463,7 +464,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
                                 "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": bool(commit_type == "emoji"),
+                                "include_in_changelog": not ignore_merge_commits,
                             },
                             commit_type,
                         ),
@@ -486,7 +487,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -517,7 +518,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 {
                                     "conventional": "feat(cli): add new config cli command",
                                     "emoji": ":sparkles: (cli) add new config cli command",
-                                    "scipy": "ENH(cli): add new config cli command",
+                                    "scipy": "ENH: cli: add new config cli command",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -550,7 +551,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
                                 "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": bool(commit_type == "emoji"),
+                                "include_in_changelog": not ignore_merge_commits,
                             },
                             commit_type,
                         ),
@@ -573,7 +574,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -602,9 +603,9 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "fix(config): fixed configuration generation",
-                                    "emoji": ":bug: (config) fixed configuration generation",
-                                    "scipy": "MAINT(config): fixed configuration generation",
+                                    "conventional": "fix(config): fixed configuration generation\n\nCloses: #123",
+                                    "emoji": ":bug: (config) fixed configuration generation\n\nCloses: #123",
+                                    "scipy": "MAINT:config: fixed configuration generation\n\nCloses: #123",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -637,7 +638,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                     tgt_branch_name=DEV_BRANCH_NAME,
                                 ),
                                 "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": bool(commit_type == "emoji"),
+                                "include_in_changelog": not ignore_merge_commits,
                             },
                             commit_type,
                         ),
@@ -660,7 +661,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -710,7 +711,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
@@ -731,14 +732,14 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 {
                                     "conventional": "fix(scope): correct some text",
                                     "emoji": ":bug: (scope) correct some text",
-                                    "scipy": "MAINT(scope): correct some text",
+                                    "scipy": "MAINT:scope: correct some text",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
                                 {
                                     "conventional": "feat(scope): add some more text",
                                     "emoji": ":sparkles:(scope) add some more text",
-                                    "scipy": "ENH(scope): add some more text",
+                                    "scipy": "ENH: scope: add some more text",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
                                 },
@@ -757,7 +758,7 @@ def get_repo_definition_4_git_flow_repo_w_2_release_channels(
                                 "action": RepoActionStep.WRITE_CHANGELOGS,
                                 "details": {
                                     "new_version": new_version,
-                                    "dest_files": changelog_file_definitons,
+                                    "dest_files": changelog_file_definitions,
                                 },
                             },
                         ],
