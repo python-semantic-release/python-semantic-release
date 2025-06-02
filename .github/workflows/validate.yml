@@ -195,7 +195,7 @@ jobs:
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857  # v5.5.1
+        uses: mikepenz/action-junit-report@65fe03598d8d251738592a497a9e8547a5c48eaa  # v5.6.0
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -285,7 +285,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857  # v5.5.1
+        uses: mikepenz/action-junit-report@65fe03598d8d251738592a497a9e8547a5c48eaa  # v5.6.0
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -383,7 +383,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857  # v5.5.1
+        uses: mikepenz/action-junit-report@65fe03598d8d251738592a497a9e8547a5c48eaa  # v5.6.0
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -428,7 +428,7 @@ jobs:
 
       - name: Build | Action Container
         id: container-builder
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0  # v6.17.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0
         with:
           context: ${{ env.ACTION_SRC_DIR }}
           load: true # add to `docker images`
