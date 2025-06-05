@@ -371,9 +371,9 @@ to the remote repository. This option is equivalent to adding either ``--push`` 
 """"""""""""""""
 
 .. important::
-  This option has been removed in v10.0.0 and newer because of a
-  command injection vulnerability. Please update as to v10.0.0 as soon
-  as possible.
+  This option has been removed in v10.0.0 and newer because of a command injection
+  vulnerability. Please update as to v10.0.0 as soon as possible. See
+  :ref:`Upgrading to v10 <upgrade_v10-root_options>` for more information.
 
 Additional options for the main ``semantic-release`` command, which will come
 before the :ref:`version <cmd-version>` subcommand.
@@ -382,7 +382,7 @@ before the :ref:`version <cmd-version>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release/python-semantic-release@v10.0.2
+    - uses: python-semantic-release/python-semantic-release@v9
       with:
         root_options: "-vv --noop"
 
@@ -688,9 +688,9 @@ This is useful for testing the action without actually publishing anything.
 """"""""""""""""
 
 .. important::
-  This option has been removed in v10.0.0 and newer because of a
-  command injection vulnerability. Please update as to v10.0.0 as soon
-  as possible.
+  This option has been removed in v10.0.0 and newer because of a command injection
+  vulnerability. Please update as to v10.0.0 as soon as possible. See
+  :ref:`Upgrading to v10 <upgrade_v10-root_options>` for more information.
 
 Additional options for the main ``semantic-release`` command, which will come
 before the :ref:`publish <cmd-publish>` subcommand.
@@ -699,7 +699,7 @@ before the :ref:`publish <cmd-publish>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release/publish-action@v10.0.2
+    - uses: python-semantic-release/publish-action@v9
       with:
         root_options: "-vv --noop"
 
