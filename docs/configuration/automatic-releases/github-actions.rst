@@ -382,13 +382,20 @@ before the :ref:`version <cmd-version>` subcommand.
 
   .. code:: yaml
 
-    - uses: python-semantic-release/python-semantic-release@v10.0.2
+    - uses: python-semantic-release/python-semantic-release@v9.21.1
       with:
         root_options: "-vv --noop"
 
   This configuration would cause the command to be
   ``semantic-release -vv --noop version``, which would run the version command
   verbosely but in no-operation mode.
+
+  With the v10.0.0 release, you can use:
+
+    - uses: python-semantic-release/python-semantic-release@v10.0.2
+      with:
+        no_operation_mode: true
+        verbosity: 2
 
 **Required:** ``false``
 
