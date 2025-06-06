@@ -328,3 +328,4 @@ EXAMPLE_RELEASE_NOTES_TEMPLATE = r"""
 """.lstrip()  # noqa: E501
 
 RELEASE_NOTES = "# Release Notes"
+DEFAULT_MERGE_STRATEGY_OPTION = "theirs"
