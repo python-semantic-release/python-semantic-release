@@ -33,6 +33,7 @@ import tests.util
 from tests.const import (
     COMMIT_MESSAGE,
     DEFAULT_BRANCH_NAME,
+    DEFAULT_MERGE_STRATEGY_OPTION,
     EXAMPLE_HVCS_DOMAIN,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
@@ -134,7 +135,7 @@ if TYPE_CHECKING:
 
     class SimulateChangeCommitsNReturnChangelogEntryFn(Protocol):
         def __call__(
-            self, git_repo: Repo, commit_msgs: Sequence[CommitDef], file_path: str | None
+            self, git_repo: Repo, commit_msgs: Sequence[CommitDef]
         ) -> Sequence[CommitDef]: ...
 
     class CreateReleaseFn(Protocol):
@@ -233,6 +234,7 @@ if TYPE_CHECKING:
             branch_name: str,
             commit_def: CommitDef,
             fast_forward: bool = True,
+            strategy_option: str = DEFAULT_MERGE_STRATEGY_OPTION,
         ) -> CommitDef: ...
 
     class CreateSquashMergeCommitFn(Protocol):
@@ -241,7 +243,7 @@ if TYPE_CHECKING:
             git_repo: Repo,
             branch_name: str,
             commit_def: CommitDef,
-            strategy_option: str = "theirs",
+            strategy_option: str = DEFAULT_MERGE_STRATEGY_OPTION,
         ) -> CommitDef: ...
 
     class CommitSpec(TypedDict):
@@ -273,7 +275,6 @@ if TYPE_CHECKING:
 
     class RepoActionMakeCommitsDetails(DetailsBase):
         commits: Sequence[CommitDef]
-        file: NotRequired[str | None]
 
     class RepoActionRelease(TypedDict):
         action: Literal[RepoActionStep.RELEASE]
@@ -312,7 +313,7 @@ if TYPE_CHECKING:
         branch_name: str
         commit_def: CommitDef
         fast_forward: Literal[False]
-        # strategy_option: str
+        strategy_option: NotRequired[str]
 
     class RepoActionGitFFMergeDetails(DetailsBase):
         branch_name: str
@@ -764,6 +765,7 @@ def create_merge_commit(stable_now_date: GetStableDateNowFn) -> CreateMergeCommi
         branch_name: str,
         commit_def: CommitDef,
         fast_forward: bool = True,
+        strategy_option: str = DEFAULT_MERGE_STRATEGY_OPTION,
     ) -> CommitDef:
         curr_dt = stable_now_date()
         commit_dt = (
@@ -785,6 +787,7 @@ def create_merge_commit(stable_now_date: GetStableDateNowFn) -> CreateMergeCommi
                 ff=fast_forward,
                 no_ff=bool(not fast_forward),
                 m=commit_def["msg"],
+                strategy_option=strategy_option,
             )
 
         # return the commit definition with the sha & message updated
@@ -805,7 +808,7 @@ def create_squash_merge_commit(
         git_repo: Repo,
         branch_name: str,
         commit_def: CommitDef,
-        strategy_option: str = "theirs",
+        strategy_option: str = DEFAULT_MERGE_STRATEGY_OPTION,
     ) -> CommitDef:
         curr_dt = stable_now_date()
         commit_dt = (
@@ -927,11 +930,11 @@ def simulate_change_commits_n_rtn_changelog_entry(
     file_in_repo: str,
 ) -> SimulateChangeCommitsNReturnChangelogEntryFn:
     def _simulate_change_commits_n_rtn_changelog_entry(
-        git_repo: Repo, commit_msgs: Sequence[CommitDef], file_path: str | None = None
+        git_repo: Repo, commit_msgs: Sequence[CommitDef]
     ) -> Sequence[CommitDef]:
         changelog_entries = []
         for commit_msg in commit_msgs:
-            add_text_to_file(git_repo, file_path or file_in_repo)
+            add_text_to_file(git_repo, file_in_repo)
             changelog_entries.append(commit_n_rtn_changelog_entry(git_repo, commit_msg))
         return changelog_entries
 
@@ -1305,7 +1308,6 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             simulate_change_commits_n_rtn_changelog_entry(
                                 git_repo,
                                 mk_cmts_def["commits"],
-                                mk_cmts_def.get("file")
                             )
                         )
                         current_commits.extend(
@@ -1406,6 +1408,9 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                                 branch_name=merge_def["branch_name"],
                                 commit_def=merge_def["commit_def"],
                                 fast_forward=merge_def["fast_forward"],
+                                strategy_option=merge_def.get(
+                                    "strategy_option", DEFAULT_MERGE_STRATEGY_OPTION
+                                ),
                             )
                             if merge_def["commit_def"]["include_in_changelog"]:
                                 current_commits.append(merge_def["commit_def"])

@@ -76,10 +76,12 @@ def test_trunk_repo_rebuild_w_feature_branch_and_release_in_default(
     commit_type: CommitConvention = (
         repo_fixture_name.split("commits", 1)[0].split("_")[-2]  # type: ignore[assignment]
     )
-    target_repo_definition = build_trunk_only_repo_w_feature_branch_and_release_in_default(
-        repo_name=repo_fixture_name,
-        commit_type=commit_type,
-        dest_dir=target_repo_dir,
+    target_repo_definition = (
+        build_trunk_only_repo_w_feature_branch_and_release_in_default(
+            repo_name=repo_fixture_name,
+            commit_type=commit_type,
+            dest_dir=target_repo_dir,
+        )
     )
     target_git_repo = git_repo_for_directory(target_repo_dir)
     target_repo_pyproject_toml = FlatDict(

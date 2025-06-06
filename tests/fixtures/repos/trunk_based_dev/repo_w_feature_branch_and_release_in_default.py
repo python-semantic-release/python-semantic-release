@@ -209,7 +209,6 @@ def get_repo_definition_4_trunk_only_repo_w_feature_branch_and_release_in_defaul
                         }
                     },
                 },
-
                 {
                     "action": RepoActionStep.GIT_CHECKOUT,
                     "details": {"branch": DEFAULT_BRANCH_NAME},
@@ -280,8 +279,6 @@ def get_repo_definition_4_trunk_only_repo_w_feature_branch_and_release_in_defaul
                             ],
                             commit_type,
                         ),
-                        # Update a different file to avoid merge conflicts
-                        "file": f"different-{file_in_repo}",
                     },
                 },
                 {
@@ -379,10 +376,8 @@ def build_trunk_only_repo_w_feature_branch_and_release_in_default(
         repo_name: str, commit_type: CommitConvention, dest_dir: Path
     ) -> Sequence[RepoActions]:
         def _build_repo(cached_repo_path: Path) -> Sequence[RepoActions]:
-            repo_construction_steps = (
-                get_repo_definition_4_trunk_only_repo_w_feature_branch_and_release_in_default(
-                    commit_type=commit_type,
-                )
+            repo_construction_steps = get_repo_definition_4_trunk_only_repo_w_feature_branch_and_release_in_default(
+                commit_type=commit_type,
             )
             return build_repo_from_definition(cached_repo_path, repo_construction_steps)
 
@@ -433,7 +428,9 @@ def repo_w_trunk_only_w_feature_branch_and_release_in_default_emoji_commits(
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    repo_name = repo_w_trunk_only_w_feature_branch_and_release_in_default_emoji_commits.__name__
+    repo_name = (
+        repo_w_trunk_only_w_feature_branch_and_release_in_default_emoji_commits.__name__
+    )
     commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
     return {
@@ -453,7 +450,9 @@ def repo_w_trunk_only_w_feature_branch_and_release_in_default_scipy_commits(
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    repo_name = repo_w_trunk_only_w_feature_branch_and_release_in_default_scipy_commits.__name__
+    repo_name = (
+        repo_w_trunk_only_w_feature_branch_and_release_in_default_scipy_commits.__name__
+    )
     commit_type: CommitConvention = repo_name.split("_")[-2]  # type: ignore[assignment]
 
     return {
