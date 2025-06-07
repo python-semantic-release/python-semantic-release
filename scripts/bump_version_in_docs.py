@@ -12,25 +12,6 @@ version_replace_pattern = regexp(r"\$(NEW_VERSION|{NEW_VERSION})")
 tag_replace_pattern = regexp(r"\$(NEW_RELEASE_TAG|{NEW_RELEASE_TAG})")
 
 
-def update_github_actions_example(filepath: Path, release_tag: str) -> None:
-    psr_regex = regexp(r"(uses: python-semantic-release/python-semantic-release)@\S+$")
-    psr_publish_action_regex = regexp(
-        r"(uses: python-semantic-release/publish-action)@\S+$"
-    )
-    file_content_lines: list[str] = filepath.read_text().splitlines()
-
-    for regex in [psr_regex, psr_publish_action_regex]:
-        file_content_lines = list(
-            map(
-                lambda line, regex=regex: regex.sub(r"\1@" + release_tag, line),  # type: ignore[misc]
-                file_content_lines,
-            )
-        )
-
-    print(f"Bumping version in {filepath} to", release_tag)
-    filepath.write_text(str.join("\n", file_content_lines) + "\n")
-
-
 def envsubst(filepath: Path, version: str, release_tag: str) -> None:
     file_content = filepath.read_text()
 
@@ -58,11 +39,6 @@ if __name__ == "__main__":
     if not new_version:
         print("NEW_VERSION environment variable is not set")
         exit(1)
-
-    update_github_actions_example(
-        DOCS_DIR / "configuration" / "automatic-releases" / "github-actions.rst",
-        new_release_tag,
-    )
 
     for doc_file in DOCS_DIR.rglob("*.rst"):
         envsubst(filepath=doc_file, version=new_version, release_tag=new_release_tag)
