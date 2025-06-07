@@ -42,18 +42,51 @@ This vulnerability existed in both the
 
 For the main :ref:`python-semantic-release/python-semantic-release <gh_actions-psr>` action,
 the following inputs are now available (in place of the old ``root_options`` parameter):
+:ref:`gh_actions-psr-inputs-config_file`, :ref:`gh_actions-psr-inputs-noop`,
+:ref:`gh_actions-psr-inputs-strict`, and :ref:`gh_actions-psr-inputs-verbosity`.
 
-- :ref:`gh_actions-psr-inputs-config_file`
-- :ref:`gh_actions-psr-inputs-noop`
-- :ref:`gh_actions-psr-inputs-strict`
-- :ref:`gh_actions-psr-inputs-verbosity`
+  **Example migration**
+
+  If you previously had the following in your GitHub Actions workflow file:
+
+  .. code:: yaml
+
+    - uses: python-semantic-release/python-semantic-release@v9
+      with:
+        root_options: "-vv --strict"
+
+  It would be updated to:
+
+  .. code:: yaml
+
+    - uses: python-semantic-release/python-semantic-release@v10
+      with:
+        strict: true
+        verbosity: 2
 
 For the :ref:`python-semantic-release/publish-action <gh_actions-publish>` action,
 the following inputs are now available (in place of the old ``root_options`` parameter):
+:ref:`gh_actions-publish-inputs-config_file`, :ref:`gh_actions-publish-inputs-noop`,
+and :ref:`gh_actions-publish-inputs-verbosity`.
 
-- :ref:`gh_actions-publish-inputs-config_file`
-- :ref:`gh_actions-publish-inputs-noop`
-- :ref:`gh_actions-publish-inputs-verbosity`
+  **Example migration**
+
+  If you previously had the following in your GitHub Actions workflow file:
+
+  .. code:: yaml
+
+    - uses: python-semantic-release/publish-action@v9
+      with:
+        root_options: "-v -c /path/to/releaserc.yaml"
+
+  It would be updated to:
+
+  .. code:: yaml
+
+    - uses: python-semantic-release/publish-action@v10
+      with:
+        config_file: /path/to/releaserc.yaml
+        verbosity: 1
 
 
 .. _upgrade_v10-changelog_format-1_line_commit_subjects:
