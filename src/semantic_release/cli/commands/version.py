@@ -142,14 +142,10 @@ def apply_version_to_source_files(
     if not noop:
         logger.debug("Updating version %s in repository files...", version)
 
-    paths = list(
-        map(
-            lambda decl, new_version=version, noop=noop: (  # type: ignore[misc]
-                decl.update_file_w_version(new_version=new_version, noop=noop)
-            ),
-            version_declarations,
-        )
-    )
+    paths = [
+        decl.update_file_w_version(new_version=version, noop=noop)
+        for decl in version_declarations
+    ]
 
     repo_filepaths = [
         str(updated_file.relative_to(repo_dir))
@@ -650,10 +646,9 @@ def version(  # noqa: C901
         credential_masker=runtime.masker,
     )
 
-    # Preparing for committing changes
+    # Preparing for committing changes; we always stage files even if we're not committing them in order to support a two-stage commit
+    project.git_add(paths=all_paths_to_add, noop=opts.noop)
     if commit_changes:
-        project.git_add(paths=all_paths_to_add, noop=opts.noop)
-
         # NOTE: If we haven't modified any source code then we skip trying to make a commit
         # and any tag that we apply will be to the HEAD commit (made outside of
         # running PSR
