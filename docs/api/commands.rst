@@ -115,12 +115,14 @@ but this command additionally ensures the updated changelog is included in the r
 commit that is made.
 
 .. seealso::
+    - :ref:`Ultraviolet (uv) integration <config-guides-uv_integration>`
     - :ref:`cmd-changelog`
     - :ref:`changelog-templates`
     - :ref:`config-tag_format`
     - :ref:`config-assets`
     - :ref:`config-version_toml`
     - :ref:`config-version_variables`
+
 
 .. _cmd-version-options:
 
