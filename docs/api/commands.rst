@@ -96,23 +96,70 @@ pipeline, while omitting this flag would allow the pipeline to continue to run.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Detect the semantically correct next version that should be applied to your
-project.
+project and release it.
 
-By default:
+By default (in order):
 
-  * Write this new version to the project metadata locations
-    specified in the configuration file
-  * Build the project using :ref:`config-build_command`, if specified
-  * Create a new commit with these locations and any other assets configured
-    to be included in a release
-  * Tag this commit according the configured format, with a tag that uniquely
-    identifies the version being released
-  * Push the new tag and commit to the remote for the repository
-  * Create a release (if supported) in the remote VCS for this tag
+  #.  Write this new version to the project metadata locations
+      specified in the configuration file
+
+  #.  Update the changelog file with the new version and any changes
+      introduced since the last release, using the configured changelog template
+
+  #.  Build the project using :ref:`config-build_command`, if specified
+
+  #.  Create a new commit with these locations and any other assets configured
+      to be included in a release
+
+  #.  Tag this commit according the configured format, with a tag that uniquely
+      identifies the version being released
+
+  #.  Push the new tag and commit to the remote for the repository
+
+  #.  Create a release in the remote VCS for this tag (if supported)
+
+All of these steps can be toggled on or off using the command line options
+described below. Some of the steps rely on others, so some options may implicitly
+disable others.
 
 Changelog generation is done identically to the way it is done in :ref:`cmd-changelog`,
 but this command additionally ensures the updated changelog is included in the release
 commit that is made.
+
+  **Common Variations**
+
+  .. code-block:: bash
+
+    # Print the next version that will be applied
+    semantic-release version --print
+
+    # Print the next version that will be applied, including the tag prefix
+    semantic-release version --print-tag
+
+    # Print the last released version
+    semantic-release version --print-last-released
+
+    # Print the last released version, including the tag prefix
+    semantic-release version --print-last-released-tag
+
+    # Only stamp the next version in the project metadata locations
+    semantic-release version --no-changelog --skip-build --no-commit --no-tag
+
+    # Stamp the version, update the changelog, and run the build command, then stop
+    semantic-release version --no-commit --no-tag
+
+    # Make all local changes but do not publish them to the remote (changelog, build, commit & tag)
+    semantic-release version --no-push
+
+    # Don't ever create a changelog (but do everything else)
+    semantic-release version --no-changelog
+
+    # Don't create a release in the remote VCS (but do publish the commit and tag)
+    semantic-release version --no-vcs-release
+
+    # Do everything
+    semantic-release version
+
 
 .. seealso::
     - :ref:`Ultraviolet (uv) integration <config-guides-uv_integration>`
@@ -364,9 +411,9 @@ Whether or not to push new commits and/or tags to the remote repository.
 ``--vcs-release/--no-vcs-release``
 **********************************
 
-Whether or not to create a "release" in the remote VCS service, if supported. Currently
-releases in GitHub and Gitea remotes are supported. If releases aren't supported in a
-remote VCS, this option will not cause a command failure, but will produce a warning.
+Whether or not to create a "release" in the remote VCS service, if supported. If
+releases aren't supported in a remote VCS, this option will not cause a command
+failure, but will produce a warning.
 
 **Default:** ``--no-vcs-release`` if ``--no-push`` is supplied (including where this is
 implied by supplying only ``--no-commit``), otherwise ``--vcs-release``
