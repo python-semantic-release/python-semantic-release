@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 import tomlkit
@@ -61,8 +61,6 @@ def test_version_only_stamp_version(
     post_mocker: MagicMock,
     example_pyproject_toml: Path,
     example_project_dir: ExProjectDir,
-    example_changelog_md: Path,
-    example_changelog_rst: Path,
 ) -> None:
     repo = repo_result["repo"]
     version_file = example_project_dir.joinpath(
@@ -97,10 +95,11 @@ def test_version_only_stamp_version(
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
     tags_set_difference = set.difference(tags_after, tags_before)
-    differing_files = [
+    actual_staged_files = [
         # Make sure filepath uses os specific path separators
         str(Path(file))
-        for file in str(repo.git.diff(name_only=True)).splitlines()
+        # Changed files should always be staged
+        for file in cast("str", repo.git.diff(staged=True, name_only=True)).splitlines()
     ]
     pyproject_toml_after = tomlkit.loads(
         example_pyproject_toml.read_text(encoding="utf-8")
@@ -125,7 +124,7 @@ def test_version_only_stamp_version(
     assert post_mocker.call_count == 0  # no vcs release creation occurred
 
     # Files that should receive version change
-    assert expected_changed_files == differing_files
+    assert expected_changed_files == actual_staged_files
 
     # Compare pyproject.toml
     assert pyproject_toml_before == pyproject_toml_after
