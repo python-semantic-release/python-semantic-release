@@ -20,7 +20,7 @@ updates:
 
   # Maintain dependencies for Docker (ie our GitHub Action)
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "src/gh_action"
     schedule:
       interval: "monthly"
     labels:
