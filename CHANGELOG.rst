@@ -4,6 +4,41 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.1.0:
+
+v10.1.0 (2025-06-12)
+====================
+
+✨ Features
+-----------
+
+* **cmd-version**: Always stage version stamped files & changelog even with ``--no-commit``, closes
+  `#1211`_ (`PR#1214`_, `de62334`_)
+
+📖 Documentation
+----------------
+
+* **cmd-version**: Improve command description & include common uses (`PR#1214`_, `de62334`_)
+
+* **configuration-guide**: Add how-to guide for ``uv`` integration (`PR#1214`_, `de62334`_)
+
+* **github-actions**: Clarify with examples of the ``root_options`` v10 migration change
+  (`PR#1271`_, `fbb63ec`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Expand ``python-gitlab`` dependency to include ``v6.0.0`` (`PR#1273`_, `99fc9cc`_)
+
+.. _#1211: https://github.com/python-semantic-release/python-semantic-release/issues/1211
+.. _99fc9cc: https://github.com/python-semantic-release/python-semantic-release/commit/99fc9ccabbae9adf5646731591080366eacbe03c
+.. _de62334: https://github.com/python-semantic-release/python-semantic-release/commit/de623344cd18b3dbe05823eb90fdd010c5505c92
+.. _fbb63ec: https://github.com/python-semantic-release/python-semantic-release/commit/fbb63ec76142ea903d8a0401369ec251abbec0fe
+.. _PR#1214: https://github.com/python-semantic-release/python-semantic-release/pull/1214
+.. _PR#1271: https://github.com/python-semantic-release/python-semantic-release/pull/1271
+.. _PR#1273: https://github.com/python-semantic-release/python-semantic-release/pull/1273
+
+
 .. _changelog-v10.0.2:
 
 v10.0.2 (2025-05-26)
