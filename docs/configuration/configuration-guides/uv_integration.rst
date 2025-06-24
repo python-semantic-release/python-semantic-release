@@ -44,17 +44,20 @@ resolve this issue depending on your preference:
 
       [tool.semantic_release]
       build_command = """
-        uv lock --offline
-        git add uv.lock
-        uv build
+          uv lock --upgrade-package "$PACKAGE_NAME"
+          git add uv.lock
+          uv build
       """
 
-    The ``--offline`` flag is used to ensure that the lock file is updated without
-    updating any dependency versions. The intent of this call is **ONLY** to update
+    The intent of the lock upgrade-package call is **ONLY** to update
     the version of your project within the lock file after PSR has updated the version
     in your project's definition file (e.g., ``pyproject.toml``). When you are running
     PSR, you have already tested the project as is and you don't want to actually
     update the dependencies if a new one just became available.
+
+    For ease of use, PSR provides the ``$PACKAGE_NAME`` environment variable that
+    contains the name of your package from the project's definition file
+    (``pyproject.toml:project.name``).
 
     If you are using the :ref:`PSR GitHub Action <gh_actions-psr>`, you will need to add an
     installation command for ``uv`` to the :ref:`build_command <config-build_command>`
@@ -71,21 +74,23 @@ resolve this issue depending on your preference:
 
       [tool.semantic_release]
       build_command = """
-        python -m pip install -e .[build]
-        uv lock --offline
-        git add uv.lock
-        uv build
+          python -m pip install -e '.[build]'
+          uv lock --upgrade-package "$PACKAGE_NAME"
+          git add uv.lock
+          uv build
       """
 
 #.  **Stamp the code first & then separately run release**: If you prefer to not modify the
-    build command, then you will need to run the ``uv lock --offline`` command prior to actually
-    creating the release. Essentially, you will run PSR twice: (1) once to update the version
-    in the project's definition file, and (2) a second time to generate the release.
+    build command, then you will need to run the ``uv lock --upgrade-package <your-package-name>``
+    command prior to actually creating the release. Essentially, you will run PSR twice:
+    (1) once to update the version in the project's definition file, and (2) a second time
+    to generate the release.
 
-    The intent of the ``uv lock --offline`` command is **ONLY** to update the version of your
-    project within the lock file after PSR has updated the version in your project's definition
-    file (e.g., ``pyproject.toml``). When you are running PSR, you have already tested the project
-    as is and you don't want to actually update the dependencies if a new one just became available.
+    The intent of the ``uv lock --upgrade-package <your-package-name>`` command is **ONLY**
+    to update the version of your project within the lock file after PSR has updated the
+    version in your project's definition file (e.g., ``pyproject.toml``). When you are
+    running PSR, you have already tested the project as is and you don't want to actually
+    update the dependencies if a new one just became available.
 
     .. code-block:: bash
 
@@ -94,7 +99,7 @@ resolve this issue depending on your preference:
       semantic-release -v version --skip-build --no-commit --no-tag --no-changelog
 
       # 2. run UV lock as pyproject.toml is updated with the next version
-      uv lock --offline
+      uv lock --upgrade-package <your-package-name>
 
       # 3. stage the lock file to ensure it is included in the PSR commit
       git add uv.lock
@@ -129,7 +134,7 @@ look like this:
 
   [tool.semantic_release]
   build_command = """
-    uv lock --offline
+    uv lock --upgrade-package "$PACKAGE_NAME"
     uv build
   """
 
