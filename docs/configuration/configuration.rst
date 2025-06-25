@@ -813,6 +813,22 @@ For more information see :ref:`commit_parsing`.
 ``commit_parser_options``
 """""""""""""""""""""""""
 
+This section defines configuration options that modify commit parser options.
+
+.. note::
+    **pyproject.toml:** ``[tool.semantic_release.commit_parser_options]``
+
+    **releaserc.toml:** ``[semantic_release.commit_parser_options]``
+
+    **releaserc.json:** ``{ "semantic_release": { "commit_parser_options": {} } }``
+
+----
+
+.. _config-commit_parser_options-types:
+
+``allowed_types``/``minor_types``/``patch_types``
+*************************************************
+
 **Type:** ``dict[str, Any]``
 
 This set of options are passed directly to the commit parser class specified in
@@ -823,6 +839,40 @@ For more information (to include defaults), see
 
 **Default:** ``ParserOptions { ... }``, where ``...`` depends on
 :ref:`commit_parser <config-commit_parser>`.
+
+----
+
+.. _config-commit_parser_options-path_filters:
+
+``path_filters``
+***************************
+
+**Type:** ``list[str]``
+
+A set of relative paths to filter commits by. Only commits with file changes that
+match these file paths or its subdirectories will be considered valid commits.
+
+Syntax is similar to .gitignore with file path globs and inverse file match globs
+via ``!`` prefix. Paths should be relative to the current working directory.
+
+**Default:** ``["."]``
+
+----
+
+.. _config-commit_parser_options-scope_prefix:
+
+``scope_prefix``
+***************************
+
+**Type:** ``str``
+
+A prefix that will be striped from the scope when parsing commit messages.
+
+If set, it will cause unscoped commits to be ignored. Use this in tandem with
+the :ref:`config-commit_parser_options-path_filters` option to filter commits by
+directory and scope.
+
+**Default:** ``""``
 
 ----
 
