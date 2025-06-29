@@ -210,6 +210,7 @@ GITLAB_CI                 Pass-through ``true`` if exists in process env, unset 
 HOME                      Pass-through ``HOME`` of parent process
 NEW_VERSION               Semantically determined next version (ex. ``1.2.3``)
 PATH                      Pass-through ``PATH`` of parent process
+PACKAGE_NAME              Project name as defined in ``pyproject.toml:project.name``
 PSR_DOCKER_GITHUB_ACTION  Pass-through ``true`` if exists in process env, unset otherwise
 VIRTUAL_ENV               Pass-through ``VIRTUAL_ENV`` if exists in process env, unset otherwise
 ========================  ======================================================================
