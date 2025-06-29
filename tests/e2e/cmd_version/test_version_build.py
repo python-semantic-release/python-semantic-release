@@ -109,6 +109,7 @@ def test_version_runs_build_command(
             check=True,
             env={
                 "NEW_VERSION": next_release_version,  # injected into environment
+                "PACKAGE_NAME": "",  # PSR injected environment variable
                 "CI": patched_os_environment["CI"],
                 "BITBUCKET_CI": "true",  # Converted
                 "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
@@ -168,6 +169,8 @@ def test_version_runs_build_command_windows(
         )
 
     # Setup
+    package_name = "my-package"
+    update_pyproject_toml("project.name", package_name)
     built_wheel_file = get_wheel_file(next_release_version)
     pyproject_config = FlatDict(
         tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")),
@@ -205,6 +208,7 @@ def test_version_runs_build_command_windows(
             env={
                 **clean_os_environment,
                 "NEW_VERSION": next_release_version,  # injected into environment
+                "PACKAGE_NAME": package_name,  # PSR injected environment variable
                 "CI": patched_os_environment["CI"],
                 "BITBUCKET_CI": "true",  # Converted
                 "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
@@ -276,6 +280,8 @@ def test_version_runs_build_command_w_user_env(
             "=ignored-invalid-named-var",  # TODO: validation error instead, but currently just ignore
         ],
     )
+    package_name = "my-package"
+    update_pyproject_toml("project.name", package_name)
 
     # Mock out subprocess.run
     with mock.patch(
@@ -309,6 +315,7 @@ def test_version_runs_build_command_w_user_env(
             env={
                 **clean_os_environment,
                 "NEW_VERSION": next_release_version,  # injected into environment
+                "PACKAGE_NAME": package_name,  # PSR injected environment variable
                 "CI": patched_os_environment["CI"],
                 "BITBUCKET_CI": "true",  # Converted
                 "GITHUB_ACTIONS": patched_os_environment["GITHUB_ACTIONS"],
