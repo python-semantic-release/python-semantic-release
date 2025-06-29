@@ -632,6 +632,7 @@ def version(  # noqa: C901
                     **runtime.build_command_env,
                     # PSR injected environment variables
                     "NEW_VERSION": str(new_version),
+                    "PACKAGE_NAME": runtime.project_metadata.get("name", ""),
                 },
                 noop=opts.noop,
             )
