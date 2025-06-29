@@ -4,6 +4,30 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.2.0:
+
+v10.2.0 (2025-06-29)
+====================
+
+✨ Features
+-----------
+
+* **cmd-version**: Adds ``PACKAGE_NAME`` value into build command environment (`db9bc13`_)
+
+📖 Documentation
+----------------
+
+* **configuration**: Update build command environment definition to include ``PACKAGE_NAME``
+  variable (`4aa3805`_)
+
+* **uv-integration**: Fix configuration guide for ``uv`` usage to ensure lock file update
+  (`5390145`_)
+
+.. _4aa3805: https://github.com/python-semantic-release/python-semantic-release/commit/4aa38059ce6b33ca23a547473e9fb8a19d3ffbe1
+.. _5390145: https://github.com/python-semantic-release/python-semantic-release/commit/5390145503b4d5dcca8f323e1ba6c5bec0bd079b
+.. _db9bc13: https://github.com/python-semantic-release/python-semantic-release/commit/db9bc132c8a0398f2cce647730c69a32ca35ba51
+
+
 .. _changelog-v10.1.0:
 
 v10.1.0 (2025-06-12)
