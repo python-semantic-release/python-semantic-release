@@ -9,6 +9,7 @@ from textwrap import dedent, indent
 from typing import Any
 
 import rich
+import rich.markup
 import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
@@ -26,8 +27,7 @@ def noop_report(msg: str) -> None:
     Rich-prints a msg with a standard prefix to report when an action is not being
     taken due to a "noop" flag
     """
-    fullmsg = "[bold cyan][:shield: NOP] " + msg
-    rprint(fullmsg)
+    rprint(f"[bold cyan][:shield: NOP] {rich.markup.escape(msg)}")
 
 
 def indented(msg: str, prefix: str = " " * 4) -> str:
