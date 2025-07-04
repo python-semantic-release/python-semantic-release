@@ -535,6 +535,20 @@ A boolean value indicating whether a release was made.
 
 ----
 
+.. _gh_actions-psr-outputs-commit_sha:
+
+``commit_sha``
+"""""""""""""""""
+
+**Type:** ``string``
+
+The commit SHA of the release if a release was made, otherwise an empty string.
+
+Example upon release: ``d4c3b2a1e0f9c8b7a6e5d4c3b2a1e0f9c8b7a6e5``
+Example when no release was made: ``""``
+
+----
+
 .. _gh_actions-psr-outputs-version:
 
 ``version``

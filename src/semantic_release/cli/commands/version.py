@@ -676,6 +676,9 @@ def version(  # noqa: C901
             noop=opts.noop,
         )
 
+        with Repo(str(runtime.repo_dir)) as git_repo:
+            gha_output.commit_sha = git_repo.head.commit.hexsha
+
     if push_changes:
         remote_url = runtime.hvcs_client.remote_url(
             use_token=not runtime.ignore_token_for_push

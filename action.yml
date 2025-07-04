@@ -130,6 +130,10 @@ outputs:
     description: |
       "true" if a release was made, "false" otherwise
 
+  commit_sha:
+    description: |
+      The commit SHA of the release if a release was made, otherwise an empty string
+
   tag:
     description: |
       The Git tag corresponding to the version output

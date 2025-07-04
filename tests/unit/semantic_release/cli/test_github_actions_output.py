@@ -25,25 +25,39 @@ if TYPE_CHECKING:
 def test_version_github_actions_output_format(
     released: bool, version: str, is_prerelease: bool
 ):
+    commit_sha = "0" * 40  # 40 zeroes to simulate a SHA-1 hash
     expected_output = dedent(
         f"""\
         released={'true' if released else 'false'}
         version={version}
         tag=v{version}
         is_prerelease={'true' if is_prerelease else 'false'}
+        commit_sha={commit_sha}
         """
     )
     output = VersionGitHubActionsOutput(
         released=released,
         version=Version.parse(version),
+        commit_sha=commit_sha,
     )
 
     # Evaluate (expected -> actual)
     assert expected_output == output.to_output_text()
 
 
-def test_version_github_actions_output_fails_if_missing_output():
+def test_version_github_actions_output_fails_if_missing_released_param():
     output = VersionGitHubActionsOutput(
+        version=Version.parse("1.2.3"),
+    )
+
+    # Execute with expected failure
+    with pytest.raises(ValueError, match="required outputs were not set"):
+        output.to_output_text()
+
+
+def test_version_github_actions_output_fails_if_missing_commit_sha_param():
+    output = VersionGitHubActionsOutput(
+        released=True,
         version=Version.parse("1.2.3"),
     )
 
@@ -57,10 +71,12 @@ def test_version_github_actions_output_writes_to_github_output_if_available(
 ):
     mock_output_file = tmp_path / "action.out"
     version_str = "1.2.3"
+    commit_sha = "0" * 40  # 40 zeroes to simulate a SHA-1 hash
     monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
     output = VersionGitHubActionsOutput(
         version=Version.parse(version_str),
         released=True,
+        commit_sha=commit_sha,
     )
 
     output.write_if_possible()
@@ -73,6 +89,8 @@ def test_version_github_actions_output_writes_to_github_output_if_available(
     assert version_str == action_outputs["version"]
     assert str(True).lower() == action_outputs["released"]
     assert str(False).lower() == action_outputs["is_prerelease"]
+    assert f"v{version_str}" == action_outputs["tag"]
+    assert commit_sha == action_outputs["commit_sha"]
 
 
 def test_version_github_actions_output_no_error_if_not_in_gha(
@@ -81,6 +99,7 @@ def test_version_github_actions_output_no_error_if_not_in_gha(
     output = VersionGitHubActionsOutput(
         version=Version.parse("1.2.3"),
         released=True,
+        commit_sha="0" * 40,  # 40 zeroes to simulate a SHA-1 hash
     )
 
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
