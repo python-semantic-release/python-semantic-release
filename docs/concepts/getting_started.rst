@@ -215,7 +215,7 @@ To set commit exclusion patterns for a conventional commits parsers, add the fol
 
 .. code-block:: toml
 
-    [tool.semantic_release.changelog.exclude_commit_patterns]
+    [tool.semantic_release.changelog]
     # Recommended patterns for conventional commits parser that is scope aware
     exclude_commit_patterns = [
         '''chore(?:\([^)]*?\))?: .+''',
