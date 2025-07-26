@@ -105,6 +105,7 @@ class VersionGitHubActionsOutput:
             "version": str(self.version),
             "tag": self.tag,
             "is_prerelease": str(self.is_prerelease).lower(),
+            "link": self._gh_client.create_release_url(self.tag) if self.tag else "",
             "commit_sha": self.commit_sha if self.commit_sha else "",
         }
 
