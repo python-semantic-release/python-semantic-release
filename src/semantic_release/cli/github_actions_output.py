@@ -23,12 +23,14 @@ class VersionGitHubActionsOutput:
         version: Version | None = None,
         commit_sha: str | None = None,
         release_notes: str | None = None,
+        prev_version: Version | None = None,
     ) -> None:
         self._gh_client = gh_client
         self._released = released
         self._version = version
         self._commit_sha = commit_sha
         self._release_notes = release_notes
+        self._prev_version = prev_version
 
     @property
     def released(self) -> bool | None:
