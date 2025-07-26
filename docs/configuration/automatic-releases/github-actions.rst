@@ -552,6 +552,18 @@ Example when no release was made: ``""``
 
 ----
 
+.. _gh_actions-psr-outputs-previous_version:
+
+``previous_version``
+""""""""""""""""""""
+
+**Type:** ``string``
+
+The previous version before the release, if a release was or will be made. If no release is detected,
+this will be the current version or an empty string if no previous version exists.
+
+----
+
 .. _gh_actions-psr-outputs-released:
 
 ``released``
