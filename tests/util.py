@@ -8,6 +8,7 @@ import stat
 import string
 from contextlib import contextmanager, suppress
 from pathlib import Path
+from re import compile as regexp
 from textwrap import indent
 from typing import TYPE_CHECKING, Tuple
 
@@ -190,7 +191,38 @@ def xdist_sort_hack(it: Iterable[_R]) -> Iterable[_R]:
 
 
 def actions_output_to_dict(output: str) -> dict[str, str]:
-    return {line.split("=")[0]: line.split("=")[1] for line in output.splitlines()}
+    single_line_var_pattern = regexp(r"^(?P<name>\w+)=(?P<value>.*?)\r?$")
+    multiline_var_pattern = regexp(r"^(?P<name>\w+?)<<EOF\r?$")
+    multiline_var_pattern_end = regexp(r"^EOF\r?$")
+
+    found_multiline_var = False
+    current_var_name = ""
+    current_var_value = ""
+    result: dict[str, str] = {}
+    for line in output.splitlines(keepends=True):
+        if found_multiline_var:
+            if match := multiline_var_pattern_end.match(line):
+                # End of a multiline variable
+                found_multiline_var = False
+                result[current_var_name] = current_var_value
+                continue
+
+            current_var_value += line
+            continue
+
+        if match := single_line_var_pattern.match(line):
+            # Single line variable
+            result[match.group("name")] = match.group("value")
+            continue
+
+        if match := multiline_var_pattern.match(line):
+            # Start of a multiline variable
+            found_multiline_var = True
+            current_var_name = match.group("name")
+            current_var_value = ""
+            continue
+
+    return result
 
 
 def get_release_history_from_context(runtime_context: RuntimeContext) -> ReleaseHistory:
