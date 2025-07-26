@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import os
 from re import compile as regexp
-from typing import Any
+from typing import TYPE_CHECKING
 
 from semantic_release.globals import logger
 from semantic_release.version.version import Version
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    from semantic_release.hvcs.github import Github
 
 
 class VersionGitHubActionsOutput:
@@ -13,11 +18,13 @@ class VersionGitHubActionsOutput:
 
     def __init__(
         self,
+        gh_client: Github,
         released: bool | None = None,
         version: Version | None = None,
         commit_sha: str | None = None,
         release_notes: str | None = None,
     ) -> None:
+        self._gh_client = gh_client
         self._released = released
         self._version = version
         self._commit_sha = commit_sha
