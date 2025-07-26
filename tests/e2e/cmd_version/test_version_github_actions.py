@@ -52,6 +52,9 @@ def test_version_writes_github_actions_output(
     all_versions = get_versions_from_repo_build_def(repo_def)
     latest_release_version = all_versions[-1]
     release_tag = tag_format_str.format(version=latest_release_version)
+    previous_version = (
+        Version.parse(all_versions[-2]) if len(all_versions) > 1 else None
+    )
     hvcs_client = cast("Github", get_hvcs_client_from_repo_def(repo_def))
     repo_actions_per_version = split_repo_actions_by_release_tags(
         repo_definition=repo_def,
@@ -66,12 +69,11 @@ def test_version_writes_github_actions_output(
         "is_prerelease": str(
             Version.parse(latest_release_version).is_prerelease
         ).lower(),
+        "previous_version": str(previous_version) if previous_version else "",
         "release_notes": generate_default_release_notes_from_def(
             version_actions=repo_actions_per_version[release_tag],
             hvcs=hvcs_client,
-            previous_version=(
-                Version.parse(all_versions[-2]) if len(all_versions) > 1 else None
-            ),
+            previous_version=previous_version,
             license_name=EXAMPLE_PROJECT_LICENSE,
             mask_initial_release=get_cfg_value_from_def(
                 repo_def, "mask_initial_release"
@@ -116,8 +118,6 @@ def test_version_writes_github_actions_output(
     assert expected_gha_output["tag"] == action_outputs["tag"]
     assert expected_gha_output["is_prerelease"] == action_outputs["is_prerelease"]
     assert expected_gha_output["link"] == action_outputs["link"]
+    assert expected_gha_output["previous_version"] == action_outputs["previous_version"]
     assert expected_gha_output["commit_sha"] == action_outputs["commit_sha"]
-    assert (
-        expected_gha_output["release_notes"].encode()
-        == action_outputs["release_notes"].encode()
-    )
+    assert expected_gha_output["release_notes"] == action_outputs["release_notes"]
