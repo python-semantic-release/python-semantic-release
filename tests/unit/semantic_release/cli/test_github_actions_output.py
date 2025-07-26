@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -26,19 +27,31 @@ def test_version_github_actions_output_format(
     released: bool, version: str, is_prerelease: bool
 ):
     commit_sha = "0" * 40  # 40 zeroes to simulate a SHA-1 hash
-    expected_output = dedent(
-        f"""\
+    release_notes = dedent(
+        """\
+        ## Changes
+        - Added new feature
+        - Fixed bug
+        """
+    )
+    expected_output = (
+        dedent(
+            f"""\
         released={'true' if released else 'false'}
         version={version}
         tag=v{version}
         is_prerelease={'true' if is_prerelease else 'false'}
         commit_sha={commit_sha}
         """
+        )
+        + f"release_notes<<EOF\n{release_notes}EOF{os.linesep}"
     )
+
     output = VersionGitHubActionsOutput(
         released=released,
         version=Version.parse(version),
         commit_sha=commit_sha,
+        release_notes=release_notes,
     )
 
     # Evaluate (expected -> actual)
@@ -72,11 +85,19 @@ def test_version_github_actions_output_writes_to_github_output_if_available(
     mock_output_file = tmp_path / "action.out"
     version_str = "1.2.3"
     commit_sha = "0" * 40  # 40 zeroes to simulate a SHA-1 hash
+    release_notes = dedent(
+        """\
+        ## Changes
+        - Added new feature
+        - Fixed bug
+        """
+    )
     monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
     output = VersionGitHubActionsOutput(
         version=Version.parse(version_str),
         released=True,
         commit_sha=commit_sha,
+        release_notes=release_notes,
     )
 
     output.write_if_possible()
@@ -91,6 +112,7 @@ def test_version_github_actions_output_writes_to_github_output_if_available(
     assert str(False).lower() == action_outputs["is_prerelease"]
     assert f"v{version_str}" == action_outputs["tag"]
     assert commit_sha == action_outputs["commit_sha"]
+    assert release_notes == action_outputs["release_notes"]
 
 
 def test_version_github_actions_output_no_error_if_not_in_gha(

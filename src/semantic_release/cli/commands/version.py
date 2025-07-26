@@ -641,6 +641,29 @@ def version(  # noqa: C901
             click.echo("Build failed, aborting release", err=True)
             ctx.exit(1)
 
+    license_cfg = runtime.project_metadata.get(
+        "license-expression",
+        runtime.project_metadata.get(
+            "license",
+            "",
+        ),
+    )
+
+    license_cfg = "" if not isinstance(license_cfg, (str, dict)) else license_cfg
+    license_cfg = (
+        license_cfg.get("text", "") if isinstance(license_cfg, dict) else license_cfg
+    )
+
+    gha_output.release_notes = release_notes = generate_release_notes(
+        hvcs_client,
+        release=release_history.released[new_version],
+        template_dir=runtime.template_dir,
+        history=release_history,
+        style=runtime.changelog_style,
+        mask_initial_release=runtime.changelog_mask_initial_release,
+        license_name="" if not isinstance(license_cfg, str) else license_cfg,
+    )
+
     project = GitProject(
         directory=runtime.repo_dir,
         commit_author=runtime.commit_author,
@@ -712,33 +735,6 @@ def version(  # noqa: C901
     if not isinstance(hvcs_client, RemoteHvcsBase):
         logger.info("Remote does not support releases. Skipping release creation...")
         return
-
-    license_cfg = runtime.project_metadata.get(
-        "license-expression",
-        runtime.project_metadata.get(
-            "license",
-            "",
-        ),
-    )
-
-    if not isinstance(license_cfg, (str, dict)) or license_cfg is None:
-        license_cfg = ""
-
-    license_name = (
-        license_cfg.get("text", "")
-        if isinstance(license_cfg, dict)
-        else license_cfg or ""
-    )
-
-    release_notes = generate_release_notes(
-        hvcs_client,
-        release=release_history.released[new_version],
-        template_dir=runtime.template_dir,
-        history=release_history,
-        style=runtime.changelog_style,
-        mask_initial_release=runtime.changelog_mask_initial_release,
-        license_name=license_name,
-    )
 
     exception: Exception | None = None
     help_message = ""
