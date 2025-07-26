@@ -513,6 +513,20 @@ and any actions that were taken.
 
 ----
 
+.. _gh_actions-psr-outputs-commit_sha:
+
+``commit_sha``
+""""""""""""""
+
+**Type:** ``string``
+
+The commit SHA of the release if a release was made, otherwise an empty string.
+
+Example upon release: ``d4c3b2a1e0f9c8b7a6e5d4c3b2a1e0f9c8b7a6e5``
+Example when no release was made: ``""``
+
+----
+
 .. _gh_actions-psr-outputs-is_prerelease:
 
 ``is_prerelease``
@@ -524,6 +538,20 @@ A boolean value indicating whether the released version is a prerelease.
 
 ----
 
+.. _gh_actions-psr-outputs-link:
+
+``link``
+""""""""
+
+**Type:** ``string``
+
+The URL link to the release if a release was made, otherwise an empty string.
+
+Example upon release: ``https://github.com/user/repo/releases/tag/v1.2.3``
+Example when no release was made: ``""``
+
+----
+
 .. _gh_actions-psr-outputs-released:
 
 ``released``
@@ -532,20 +560,6 @@ A boolean value indicating whether the released version is a prerelease.
 **Type:** ``Literal["true", "false"]``
 
 A boolean value indicating whether a release was made.
-
-----
-
-.. _gh_actions-psr-outputs-commit_sha:
-
-``commit_sha``
-"""""""""""""""""
-
-**Type:** ``string``
-
-The commit SHA of the release if a release was made, otherwise an empty string.
-
-Example upon release: ``d4c3b2a1e0f9c8b7a6e5d4c3b2a1e0f9c8b7a6e5``
-Example when no release was made: ``""``
 
 ----
 
