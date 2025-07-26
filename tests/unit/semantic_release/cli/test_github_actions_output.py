@@ -1,17 +1,24 @@
 from __future__ import annotations
 
+import os
 from textwrap import dedent
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 
 from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
+from semantic_release.hvcs.github import Github
 from semantic_release.version.version import Version
 
+from tests.const import EXAMPLE_HVCS_DOMAIN, EXAMPLE_REPO_NAME, EXAMPLE_REPO_OWNER
 from tests.util import actions_output_to_dict
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+
+BASE_VCS_URL = f"https://{EXAMPLE_HVCS_DOMAIN}/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -26,20 +33,35 @@ def test_version_github_actions_output_format(
     released: bool, version: str, is_prerelease: bool
 ):
     commit_sha = "0" * 40  # 40 zeroes to simulate a SHA-1 hash
-    expected_output = dedent(
-        f"""\
+    release_notes = dedent(
+        """\
+        ## Changes
+        - Added new feature
+        - Fixed bug
+        """
+    )
+    expected_output = (
+        dedent(
+            f"""\
         released={'true' if released else 'false'}
         version={version}
         tag=v{version}
         is_prerelease={'true' if is_prerelease else 'false'}
+        link={BASE_VCS_URL}/releases/tag/v{version}
         commit_sha={commit_sha}
         """
+        )
+        + f"release_notes<<EOF\n{release_notes}EOF{os.linesep}"
     )
-    output = VersionGitHubActionsOutput(
-        released=released,
-        version=Version.parse(version),
-        commit_sha=commit_sha,
-    )
+
+    with mock.patch("os.environ", {}, clear=True):
+        output = VersionGitHubActionsOutput(
+            gh_client=Github(f"{BASE_VCS_URL}.git"),
+            released=released,
+            version=Version.parse(version),
+            commit_sha=commit_sha,
+            release_notes=release_notes,
+        )
 
     # Evaluate (expected -> actual)
     assert expected_output == output.to_output_text()
@@ -47,6 +69,7 @@ def test_version_github_actions_output_format(
 
 def test_version_github_actions_output_fails_if_missing_released_param():
     output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
         version=Version.parse("1.2.3"),
     )
 
@@ -57,6 +80,7 @@ def test_version_github_actions_output_fails_if_missing_released_param():
 
 def test_version_github_actions_output_fails_if_missing_commit_sha_param():
     output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
         released=True,
         version=Version.parse("1.2.3"),
     )
@@ -67,19 +91,29 @@ def test_version_github_actions_output_fails_if_missing_commit_sha_param():
 
 
 def test_version_github_actions_output_writes_to_github_output_if_available(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    tmp_path: Path,
 ):
     mock_output_file = tmp_path / "action.out"
     version_str = "1.2.3"
     commit_sha = "0" * 40  # 40 zeroes to simulate a SHA-1 hash
-    monkeypatch.setenv("GITHUB_OUTPUT", str(mock_output_file.resolve()))
-    output = VersionGitHubActionsOutput(
-        version=Version.parse(version_str),
-        released=True,
-        commit_sha=commit_sha,
+    release_notes = dedent(
+        """\
+        ## Changes
+        - Added new feature
+        - Fixed bug
+        """
     )
 
-    output.write_if_possible()
+    patched_environ = {"GITHUB_OUTPUT": str(mock_output_file.resolve())}
+
+    with mock.patch("os.environ", patched_environ, clear=True):
+        VersionGitHubActionsOutput(
+            gh_client=Github(f"{BASE_VCS_URL}.git"),
+            version=Version.parse(version_str),
+            released=True,
+            commit_sha=commit_sha,
+            release_notes=release_notes,
+        ).write_if_possible()
 
     action_outputs = actions_output_to_dict(
         mock_output_file.read_text(encoding="utf-8")
@@ -89,14 +123,17 @@ def test_version_github_actions_output_writes_to_github_output_if_available(
     assert version_str == action_outputs["version"]
     assert str(True).lower() == action_outputs["released"]
     assert str(False).lower() == action_outputs["is_prerelease"]
+    assert f"{BASE_VCS_URL}/releases/tag/v{version_str}" == action_outputs["link"]
     assert f"v{version_str}" == action_outputs["tag"]
     assert commit_sha == action_outputs["commit_sha"]
+    assert release_notes == action_outputs["release_notes"]
 
 
 def test_version_github_actions_output_no_error_if_not_in_gha(
     monkeypatch: pytest.MonkeyPatch,
 ):
     output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
         version=Version.parse("1.2.3"),
         released=True,
         commit_sha="0" * 40,  # 40 zeroes to simulate a SHA-1 hash
