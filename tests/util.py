@@ -199,7 +199,7 @@ def actions_output_to_dict(output: str) -> dict[str, str]:
     current_var_name = ""
     current_var_value = ""
     result: dict[str, str] = {}
-    for line in output.splitlines():
+    for line in output.splitlines(keepends=True):
         if found_multiline_var:
             if match := multiline_var_pattern_end.match(line):
                 # End of a multiline variable
@@ -207,7 +207,7 @@ def actions_output_to_dict(output: str) -> dict[str, str]:
                 result[current_var_name] = current_var_value
                 continue
 
-            current_var_value += f"{line}{os.linesep}"
+            current_var_value += line
             continue
 
         if match := single_line_var_pattern.match(line):

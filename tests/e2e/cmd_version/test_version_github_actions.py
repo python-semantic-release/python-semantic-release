@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING, cast
 
 import pytest
@@ -110,6 +109,6 @@ def test_version_writes_github_actions_output(
     assert expected_gha_output["is_prerelease"] == action_outputs["is_prerelease"]
     assert expected_gha_output["commit_sha"] == action_outputs["commit_sha"]
     assert (
-        f'{expected_gha_output["release_notes"]}{os.linesep}'
-        == action_outputs["release_notes"]
+        expected_gha_output["release_notes"].encode()
+        == action_outputs["release_notes"].encode()
     )
