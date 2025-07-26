@@ -578,6 +578,12 @@ def version(  # noqa: C901
     if print_only or print_only_tag:
         return
 
+    # TODO: need a better way as this is inconsistent if releasing older version patches
+    if last_release := last_released(config.repo_dir, tag_format=config.tag_format):
+        # If we have a last release, we can set the previous version for the
+        # GitHub Actions output
+        gha_output.prev_version = last_release[1]
+
     with Repo(str(runtime.repo_dir)) as git_repo:
         release_history = ReleaseHistory.from_git_history(
             repo=git_repo,
