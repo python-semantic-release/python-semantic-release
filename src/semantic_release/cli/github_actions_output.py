@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from re import compile as regexp
+from typing import Any
 
 from semantic_release.globals import logger
 from semantic_release.version.version import Version
@@ -15,10 +16,12 @@ class VersionGitHubActionsOutput:
         released: bool | None = None,
         version: Version | None = None,
         commit_sha: str | None = None,
+        release_notes: str | None = None,
     ) -> None:
         self._released = released
         self._version = version
         self._commit_sha = commit_sha
+        self._release_notes = release_notes
 
     @property
     def released(self) -> bool | None:
@@ -64,21 +67,33 @@ class VersionGitHubActionsOutput:
 
         self._commit_sha = value
 
+    @property
+    def release_notes(self) -> str | None:
+        return self._release_notes if self._release_notes else None
+
+    @release_notes.setter
+    def release_notes(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("output 'release_notes' should be a string")
+        self._release_notes = value
+
     def to_output_text(self) -> str:
-        missing = set()
+        missing: set[str] = set()
         if self.version is None:
             missing.add("version")
         if self.released is None:
             missing.add("released")
         if self.released and self.commit_sha is None:
             missing.add("commit_sha")
+        if self.released and self.release_notes is None:
+            missing.add("release_notes")
 
         if missing:
             raise ValueError(
                 f"some required outputs were not set: {', '.join(missing)}"
             )
 
-        outputs = {
+        output_values: dict[str, Any] = {
             "released": str(self.released).lower(),
             "version": str(self.version),
             "tag": self.tag,
@@ -86,7 +101,21 @@ class VersionGitHubActionsOutput:
             "commit_sha": self.commit_sha if self.commit_sha else "",
         }
 
-        return str.join("", [f"{key}={value!s}\n" for key, value in outputs.items()])
+        multiline_output_values: dict[str, str] = {
+            "release_notes": self.release_notes if self.release_notes else "",
+        }
+
+        output_lines = [
+            *[f"{key}={value!s}{os.linesep}" for key, value in output_values.items()],
+            *[
+                f"{key}<<EOF{os.linesep}{value}EOF{os.linesep}"
+                if value
+                else f"{key}={os.linesep}"
+                for key, value in multiline_output_values.items()
+            ],
+        ]
+
+        return str.join("", output_lines)
 
     def write_if_possible(self, filename: str | None = None) -> None:
         output_file = filename or os.getenv(self.OUTPUT_ENV_VAR)
@@ -94,5 +123,5 @@ class VersionGitHubActionsOutput:
             logger.info("not writing GitHub Actions output, as no file specified")
             return
 
-        with open(output_file, "a", encoding="utf-8") as f:
-            f.write(self.to_output_text())
+        with open(output_file, "ab") as f:
+            f.write(self.to_output_text().encode("utf-8"))
