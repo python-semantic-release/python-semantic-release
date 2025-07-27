@@ -94,5 +94,5 @@ class VersionGitHubActionsOutput:
             logger.info("not writing GitHub Actions output, as no file specified")
             return
 
-        with open(output_file, "a", encoding="utf-8") as f:
-            f.write(self.to_output_text())
+        with open(output_file, "ab") as f:
+            f.write(self.to_output_text().encode("utf-8"))
