@@ -30,6 +30,7 @@ from semantic_release.errors import (
 )
 from semantic_release.gitproject import GitProject
 from semantic_release.globals import logger
+from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.algorithm import (
     next_version,
@@ -466,7 +467,12 @@ def version(  # noqa: C901
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
-    gha_output = VersionGitHubActionsOutput(released=False)
+    gha_output = VersionGitHubActionsOutput(
+        hvcs_client
+        if isinstance(hvcs_client, Github)
+        else Github(hvcs_client.remote_url(use_token=False)),
+        released=False,
+    )
 
     forced_level_bump = None if not force_level else LevelBump.from_string(force_level)
     prerelease = is_forced_prerelease(
