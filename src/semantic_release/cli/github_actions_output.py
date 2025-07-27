@@ -23,12 +23,14 @@ class VersionGitHubActionsOutput:
         version: Version | None = None,
         commit_sha: str | None = None,
         release_notes: str | None = None,
+        prev_version: Version | None = None,
     ) -> None:
         self._gh_client = gh_client
         self._released = released
         self._version = version
         self._commit_sha = commit_sha
         self._release_notes = release_notes
+        self._prev_version = prev_version
 
     @property
     def released(self) -> bool | None:
@@ -36,7 +38,7 @@ class VersionGitHubActionsOutput:
 
     @released.setter
     def released(self, value: bool) -> None:
-        if type(value) is not bool:
+        if not isinstance(value, bool):
             raise TypeError("output 'released' is boolean")
         self._released = value
 
@@ -46,7 +48,7 @@ class VersionGitHubActionsOutput:
 
     @version.setter
     def version(self, value: Version) -> None:
-        if type(value) is not Version:
+        if not isinstance(value, Version):
             raise TypeError("output 'released' should be a Version")
         self._version = value
 
@@ -84,6 +86,18 @@ class VersionGitHubActionsOutput:
             raise TypeError("output 'release_notes' should be a string")
         self._release_notes = value
 
+    @property
+    def prev_version(self) -> Version | None:
+        if not self.released:
+            return self.version
+        return self._prev_version if self._prev_version else None
+
+    @prev_version.setter
+    def prev_version(self, value: Version) -> None:
+        if not isinstance(value, Version):
+            raise TypeError("output 'prev_version' should be a Version")
+        self._prev_version = value
+
     def to_output_text(self) -> str:
         missing: set[str] = set()
         if self.version is None:
@@ -106,6 +120,7 @@ class VersionGitHubActionsOutput:
             "tag": self.tag,
             "is_prerelease": str(self.is_prerelease).lower(),
             "link": self._gh_client.create_release_url(self.tag) if self.tag else "",
+            "previous_version": str(self.prev_version) if self.prev_version else "",
             "commit_sha": self.commit_sha if self.commit_sha else "",
         }
 
