@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from typing import Any, Sequence
 
     from semantic_release.commit_parser._base import CommitParser, ParserOptions
-    from semantic_release.commit_parser.conventional import (
+    from semantic_release.commit_parser.conventional.parser import (
         ConventionalCommitParser,
     )
     from semantic_release.commit_parser.emoji import EmojiCommitParser
