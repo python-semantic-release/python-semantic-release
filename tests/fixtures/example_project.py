@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Generator, cast
 
 import pytest
 import tomlkit
@@ -37,7 +37,11 @@ from tests.util import copy_dir_tree, temporary_working_directory
 if TYPE_CHECKING:
     from typing import Any, Protocol, Sequence
 
+    from tomlkit.container import Container as TOMLContainer
+
     from semantic_release.commit_parser import CommitParser
+    from semantic_release.commit_parser._base import ParserOptions
+    from semantic_release.commit_parser.token import ParseResult
     from semantic_release.hvcs import HvcsBase
     from semantic_release.version.version import Version
 
@@ -53,25 +57,35 @@ if TYPE_CHECKING:
         def __call__(self, version_str: str) -> Path: ...
 
     class SetFlagFn(Protocol):
-        def __call__(self, flag: bool) -> None: ...
+        def __call__(self, flag: bool, toml_file: Path | str = ...) -> None: ...
 
     class UpdatePyprojectTomlFn(Protocol):
-        def __call__(self, setting: str, value: Any) -> None: ...
+        def __call__(
+            self, setting: str, value: Any, toml_file: Path | str = ...
+        ) -> None: ...
 
     class UseCustomParserFn(Protocol):
-        def __call__(self, module_import_str: str) -> None: ...
+        def __call__(
+            self, module_import_str: str, toml_file: Path | str = ...
+        ) -> None: ...
 
     class UseHvcsFn(Protocol):
-        def __call__(self, domain: str | None = None) -> type[HvcsBase]: ...
+        def __call__(
+            self, domain: str | None = None, toml_file: Path | str = ...
+        ) -> type[HvcsBase]: ...
 
     class UseParserFn(Protocol):
-        def __call__(self) -> type[CommitParser]: ...
+        def __call__(
+            self, toml_file: Path | str = ...
+        ) -> type[CommitParser[ParseResult, ParserOptions]]: ...
 
     class UseReleaseNotesTemplateFn(Protocol):
-        def __call__(self) -> None: ...
+        def __call__(self, toml_file: Path | str = ...) -> None: ...
 
     class UpdateVersionPyFileFn(Protocol):
-        def __call__(self, version: Version | str) -> None: ...
+        def __call__(
+            self, version: Version | str, version_file: Path | str = ...
+        ) -> None: ...
 
 
 @pytest.fixture(scope="session")
@@ -300,11 +314,15 @@ def use_release_notes_template(
     example_project_template_dir: Path,
     changelog_template_dir: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_file: Path,
 ) -> UseReleaseNotesTemplateFn:
-    def _use_release_notes_template() -> None:
+    def _use_release_notes_template(
+        toml_file: Path | str = pyproject_toml_file,
+    ) -> None:
         update_pyproject_toml(
             "tool.semantic_release.changelog.template_dir",
             str(changelog_template_dir),
+            toml_file=toml_file,
         )
         example_project_template_dir.mkdir(parents=True, exist_ok=True)
         release_notes_j2 = example_project_template_dir / ".release_notes.md.j2"
@@ -381,8 +399,10 @@ def example_project_template_dir(
 
 @pytest.fixture(scope="session")
 def update_version_py_file(version_py_file: Path) -> UpdateVersionPyFileFn:
-    def _update_version_py_file(version: Version | str) -> None:
-        cwd_version_py = version_py_file.resolve()
+    def _update_version_py_file(
+        version: Version | str, version_file: Path | str = version_py_file
+    ) -> None:
+        cwd_version_py = Path(version_file).resolve()
         cwd_version_py.parent.mkdir(parents=True, exist_ok=True)
         cwd_version_py.write_text(
             dedent(
@@ -399,8 +419,10 @@ def update_version_py_file(version_py_file: Path) -> UpdateVersionPyFileFn:
 def update_pyproject_toml(pyproject_toml_file: Path) -> UpdatePyprojectTomlFn:
     """Update the pyproject.toml file with the given content."""
 
-    def _update_pyproject_toml(setting: str, value: Any) -> None:
-        cwd_pyproject_toml = pyproject_toml_file.resolve()
+    def _update_pyproject_toml(
+        setting: str, value: Any, toml_file: Path | str = pyproject_toml_file
+    ) -> None:
+        cwd_pyproject_toml = Path(toml_file).resolve()
         with open(cwd_pyproject_toml) as rfd:
             pyproject_toml = tomlkit.load(rfd)
 
@@ -409,11 +431,13 @@ def update_pyproject_toml(pyproject_toml_file: Path) -> UpdatePyprojectTomlFn:
         new_setting_key = parts.pop(-1)
         new_setting[new_setting_key] = value
 
-        pointer = pyproject_toml
+        pointer: TOMLContainer = pyproject_toml
         for part in parts:
-            if pointer.get(part, None) is None:
-                pointer.add(part, tomlkit.table())
-            pointer = pointer.get(part, {})
+            if (next_pointer := pointer.get(part, None)) is None:
+                next_pointer = tomlkit.table()
+                pointer.add(part, next_pointer)
+
+            pointer = cast("TOMLContainer", next_pointer)
 
         if value is None:
             pointer.pop(new_setting_key)
@@ -432,127 +456,229 @@ def pyproject_toml_config_option_parser() -> str:
 
 
 @pytest.fixture(scope="session")
-def set_major_on_zero(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn:
+def pyproject_toml_config_option_remote_type() -> str:
+    return f"tool.{semantic_release.__name__}.remote.type"
+
+
+@pytest.fixture(scope="session")
+def pyproject_toml_config_option_remote_domain() -> str:
+    return f"tool.{semantic_release.__name__}.remote.domain"
+
+
+@pytest.fixture(scope="session")
+def set_major_on_zero(
+    pyproject_toml_file: Path, update_pyproject_toml: UpdatePyprojectTomlFn
+) -> SetFlagFn:
     """Turn on/off the major_on_zero setting."""
 
-    def _set_major_on_zero(flag: bool) -> None:
-        update_pyproject_toml("tool.semantic_release.major_on_zero", flag)
+    def _set_major_on_zero(
+        flag: bool, toml_file: Path | str = pyproject_toml_file
+    ) -> None:
+        update_pyproject_toml("tool.semantic_release.major_on_zero", flag, toml_file)
 
     return _set_major_on_zero
 
 
 @pytest.fixture(scope="session")
-def set_allow_zero_version(update_pyproject_toml: UpdatePyprojectTomlFn) -> SetFlagFn:
+def set_allow_zero_version(
+    pyproject_toml_file: Path, update_pyproject_toml: UpdatePyprojectTomlFn
+) -> SetFlagFn:
     """Turn on/off the allow_zero_version setting."""
 
-    def _set_allow_zero_version(flag: bool) -> None:
-        update_pyproject_toml("tool.semantic_release.allow_zero_version", flag)
+    def _set_allow_zero_version(
+        flag: bool, toml_file: Path | str = pyproject_toml_file
+    ) -> None:
+        update_pyproject_toml(
+            "tool.semantic_release.allow_zero_version", flag, toml_file
+        )
 
     return _set_allow_zero_version
 
 
 @pytest.fixture(scope="session")
 def use_conventional_parser(
+    pyproject_toml_file: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Conventional parser."""
 
-    def _use_conventional_parser() -> type[CommitParser]:
-        update_pyproject_toml(pyproject_toml_config_option_parser, "conventional")
-        return ConventionalCommitParser
+    def _use_conventional_parser(
+        toml_file: Path | str = pyproject_toml_file,
+    ) -> type[CommitParser[ParseResult, ParserOptions]]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_parser, "conventional", toml_file=toml_file
+        )
+        return cast(
+            "type[CommitParser[ParseResult, ParserOptions]]", ConventionalCommitParser
+        )
 
     return _use_conventional_parser
 
 
 @pytest.fixture(scope="session")
 def use_emoji_parser(
+    pyproject_toml_file: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Emoji parser."""
 
-    def _use_emoji_parser() -> type[CommitParser]:
-        update_pyproject_toml(pyproject_toml_config_option_parser, "emoji")
-        return EmojiCommitParser
+    def _use_emoji_parser(
+        toml_file: Path | str = pyproject_toml_file,
+    ) -> type[CommitParser[ParseResult, ParserOptions]]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_parser, "emoji", toml_file=toml_file
+        )
+        return cast("type[CommitParser[ParseResult, ParserOptions]]", EmojiCommitParser)
 
     return _use_emoji_parser
 
 
 @pytest.fixture(scope="session")
 def use_scipy_parser(
+    pyproject_toml_file: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     pyproject_toml_config_option_parser: str,
 ) -> UseParserFn:
     """Modify the configuration file to use the Scipy parser."""
 
-    def _use_scipy_parser() -> type[CommitParser]:
-        update_pyproject_toml(pyproject_toml_config_option_parser, "scipy")
-        return ScipyCommitParser
+    def _use_scipy_parser(
+        toml_file: Path | str = pyproject_toml_file,
+    ) -> type[CommitParser[ParseResult, ParserOptions]]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_parser, "scipy", toml_file=toml_file
+        )
+        return cast("type[CommitParser[ParseResult, ParserOptions]]", ScipyCommitParser)
 
     return _use_scipy_parser
 
 
 @pytest.fixture(scope="session")
 def use_custom_parser(
+    pyproject_toml_file: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     pyproject_toml_config_option_parser: str,
 ) -> UseCustomParserFn:
     """Modify the configuration file to use a user defined string parser."""
 
-    def _use_custom_parser(module_import_str: str) -> None:
-        update_pyproject_toml(pyproject_toml_config_option_parser, module_import_str)
+    def _use_custom_parser(
+        module_import_str: str, toml_file: Path | str = pyproject_toml_file
+    ) -> None:
+        update_pyproject_toml(
+            pyproject_toml_config_option_parser, module_import_str, toml_file=toml_file
+        )
 
     return _use_custom_parser
 
 
 @pytest.fixture(scope="session")
-def use_github_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+def use_github_hvcs(
+    pyproject_toml_file: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_remote_type: str,
+    pyproject_toml_config_option_remote_domain: str,
+) -> UseHvcsFn:
     """Modify the configuration file to use GitHub as the HVCS."""
 
-    def _use_github_hvcs(domain: str | None = None) -> type[HvcsBase]:
-        update_pyproject_toml("tool.semantic_release.remote.type", "github")
+    def _use_github_hvcs(
+        domain: str | None = None, toml_file: Path | str = pyproject_toml_file
+    ) -> type[HvcsBase]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_remote_type,
+            Github.__name__.lower(),
+            toml_file=toml_file,
+        )
+
         if domain is not None:
-            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
+            update_pyproject_toml(
+                pyproject_toml_config_option_remote_domain, domain, toml_file=toml_file
+            )
+
         return Github
 
     return _use_github_hvcs
 
 
 @pytest.fixture(scope="session")
-def use_gitlab_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+def use_gitlab_hvcs(
+    pyproject_toml_file: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_remote_type: str,
+    pyproject_toml_config_option_remote_domain: str,
+) -> UseHvcsFn:
     """Modify the configuration file to use GitLab as the HVCS."""
 
-    def _use_gitlab_hvcs(domain: str | None = None) -> type[HvcsBase]:
-        update_pyproject_toml("tool.semantic_release.remote.type", "gitlab")
+    def _use_gitlab_hvcs(
+        domain: str | None = None, toml_file: Path | str = pyproject_toml_file
+    ) -> type[HvcsBase]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_remote_type,
+            Gitlab.__name__.lower(),
+            toml_file=toml_file,
+        )
+
         if domain is not None:
-            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
+            update_pyproject_toml(
+                pyproject_toml_config_option_remote_domain, domain, toml_file=toml_file
+            )
+
         return Gitlab
 
     return _use_gitlab_hvcs
 
 
 @pytest.fixture(scope="session")
-def use_gitea_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+def use_gitea_hvcs(
+    pyproject_toml_file: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_remote_type: str,
+    pyproject_toml_config_option_remote_domain: str,
+) -> UseHvcsFn:
     """Modify the configuration file to use Gitea as the HVCS."""
 
-    def _use_gitea_hvcs(domain: str | None = None) -> type[HvcsBase]:
-        update_pyproject_toml("tool.semantic_release.remote.type", "gitea")
+    def _use_gitea_hvcs(
+        domain: str | None = None, toml_file: Path | str = pyproject_toml_file
+    ) -> type[HvcsBase]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_remote_type,
+            Gitea.__name__.lower(),
+            toml_file=toml_file,
+        )
+
         if domain is not None:
-            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
+            update_pyproject_toml(
+                pyproject_toml_config_option_remote_domain, domain, toml_file=toml_file
+            )
+
         return Gitea
 
     return _use_gitea_hvcs
 
 
 @pytest.fixture(scope="session")
-def use_bitbucket_hvcs(update_pyproject_toml: UpdatePyprojectTomlFn) -> UseHvcsFn:
+def use_bitbucket_hvcs(
+    pyproject_toml_file: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_config_option_remote_type: str,
+    pyproject_toml_config_option_remote_domain: str,
+) -> UseHvcsFn:
     """Modify the configuration file to use BitBucket as the HVCS."""
 
-    def _use_bitbucket_hvcs(domain: str | None = None) -> type[HvcsBase]:
-        update_pyproject_toml("tool.semantic_release.remote.type", "bitbucket")
+    def _use_bitbucket_hvcs(
+        domain: str | None = None, toml_file: Path | str = pyproject_toml_file
+    ) -> type[HvcsBase]:
+        update_pyproject_toml(
+            pyproject_toml_config_option_remote_type,
+            Bitbucket.__name__.lower(),
+            toml_file=toml_file,
+        )
+
         if domain is not None:
-            update_pyproject_toml("tool.semantic_release.remote.domain", domain)
+            update_pyproject_toml(
+                pyproject_toml_config_option_remote_domain, domain, toml_file=toml_file
+            )
+
         return Bitbucket
 
     return _use_bitbucket_hvcs
