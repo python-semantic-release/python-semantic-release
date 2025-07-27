@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union
 
 from semantic_release.commit_parser.token import ParseResultType
 
@@ -9,7 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from git.objects.commit import Commit
 
 
-class ParserOptions(dict):
+class ParserOptions(Dict[Union[str, int, float], Any]):
     """
     ParserOptions should accept the keyword arguments they are interested in
     from configuration and process them as desired, ultimately creating attributes
