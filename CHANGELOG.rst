@@ -4,6 +4,72 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.3.0:
+
+v10.3.0 (2025-08-04)
+====================
+
+✨ Features
+-----------
+
+* **github-actions**: Add ``commit_sha`` as a GitHub Actions output value, closes `#717`_
+  (`PR#1289`_, `39b647b`_)
+
+* **github-actions**: Add ``previous_version`` as a GitHub Actions output value (`PR#1302`_,
+  `c0197b7`_)
+
+* **github-actions**: Add ``release_notes`` as a GitHub Actions output value (`PR#1300`_,
+  `a3fd23c`_)
+
+* **github-actions**: Add release ``link`` as a GitHub Actions output value (`PR#1301`_, `888aea1`_)
+
+🪲 Bug Fixes
+------------
+
+* **github-actions**: Fix variable output newlines (`PR#1300`_, `a3fd23c`_)
+
+* **util**: Fixes no-op log output when commit message contains square-brackets, closes `#1251`_
+  (`PR#1287`_, `f25883f`_)
+
+📖 Documentation
+----------------
+
+* **getting-started**: Fixes ``changelog.exclude_commit_patterns`` example in startup guide, closes
+  `#1291`_ (`PR#1292`_, `2ce2e94`_)
+
+* **github-actions**: Add description of ``commit_sha`` GitHub Action output in docs (`PR#1289`_,
+  `39b647b`_)
+
+* **github-actions**: Add description of ``previous_release`` GitHub Action output (`PR#1302`_,
+  `c0197b7`_)
+
+* **github-actions**: Add description of ``release_notes`` GitHub Action output (`PR#1300`_,
+  `a3fd23c`_)
+
+* **github-actions**: Add description of release ``link`` GitHub Action output (`PR#1301`_,
+  `888aea1`_)
+
+* **README**: Update broken links to match re-located destinations (`PR#1285`_, `f4ec792`_)
+
+.. _#1251: https://github.com/python-semantic-release/python-semantic-release/issues/1251
+.. _#1291: https://github.com/python-semantic-release/python-semantic-release/issues/1291
+.. _#717: https://github.com/python-semantic-release/python-semantic-release/issues/717
+.. _2ce2e94: https://github.com/python-semantic-release/python-semantic-release/commit/2ce2e94e1930987a88c0a5e3d59baa7cb717f557
+.. _39b647b: https://github.com/python-semantic-release/python-semantic-release/commit/39b647ba62e242342ef5a0d07cb0cfdfa7769865
+.. _888aea1: https://github.com/python-semantic-release/python-semantic-release/commit/888aea1e450513ac7339c72d8b50fabdb4ac177b
+.. _a3fd23c: https://github.com/python-semantic-release/python-semantic-release/commit/a3fd23cb0e49f74cb4a345048609d3643a665782
+.. _c0197b7: https://github.com/python-semantic-release/python-semantic-release/commit/c0197b711cfa83f5b13f9ae4f37e555b26f544d9
+.. _f25883f: https://github.com/python-semantic-release/python-semantic-release/commit/f25883f8403365b787e7c3e86d2d982906804621
+.. _f4ec792: https://github.com/python-semantic-release/python-semantic-release/commit/f4ec792d73acb34b8f5183ec044a301b593f16f0
+.. _PR#1285: https://github.com/python-semantic-release/python-semantic-release/pull/1285
+.. _PR#1287: https://github.com/python-semantic-release/python-semantic-release/pull/1287
+.. _PR#1289: https://github.com/python-semantic-release/python-semantic-release/pull/1289
+.. _PR#1292: https://github.com/python-semantic-release/python-semantic-release/pull/1292
+.. _PR#1300: https://github.com/python-semantic-release/python-semantic-release/pull/1300
+.. _PR#1301: https://github.com/python-semantic-release/python-semantic-release/pull/1301
+.. _PR#1302: https://github.com/python-semantic-release/python-semantic-release/pull/1302
+
+
 .. _changelog-v10.2.0:
 
 v10.2.0 (2025-06-29)
