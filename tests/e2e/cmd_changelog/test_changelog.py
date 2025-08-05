@@ -77,6 +77,12 @@ if TYPE_CHECKING:
 
     from requests_mock import Mocker
 
+    from semantic_release.commit_parser.conventional.parser import (
+        ConventionalCommitParser,
+    )
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
+
     from tests.conftest import RunCliFn
     from tests.e2e.conftest import RetrieveRuntimeContextFn
     from tests.fixtures.example_project import (
@@ -867,9 +873,12 @@ def test_changelog_update_mode_unreleased_n_released(
     commit_n_rtn_changelog_entry: CommitNReturnChangelogEntryFn,
     changelog_file: Path,
     insertion_flag: str,
-    get_commit_def_of_conventional_commit: GetCommitDefFn,
-    get_commit_def_of_emoji_commit: GetCommitDefFn,
-    get_commit_def_of_scipy_commit: GetCommitDefFn,
+    get_commit_def_of_conventional_commit: GetCommitDefFn[ConventionalCommitParser],
+    get_commit_def_of_emoji_commit: GetCommitDefFn[EmojiCommitParser],
+    get_commit_def_of_scipy_commit: GetCommitDefFn[ScipyCommitParser],
+    default_conventional_parser: ConventionalCommitParser,
+    default_emoji_parser: EmojiCommitParser,
+    default_scipy_parser: ScipyCommitParser,
 ):
     """
     Given there are unreleased changes and a previous release in the changelog,
@@ -890,18 +899,23 @@ def test_changelog_update_mode_unreleased_n_released(
     commit_n_section: Commit2Section = {
         "conventional": {
             "commit": get_commit_def_of_conventional_commit(
-                "perf: improve the performance of the application"
+                "perf: improve the performance of the application",
+                parser=default_conventional_parser,
             ),
             "section": "Performance Improvements",
         },
         "emoji": {
             "commit": get_commit_def_of_emoji_commit(
-                ":zap: improve the performance of the application"
+                ":zap: improve the performance of the application",
+                parser=default_emoji_parser,
             ),
             "section": ":zap:",
         },
         "scipy": {
-            "commit": get_commit_def_of_scipy_commit("MAINT: fix an issue"),
+            "commit": get_commit_def_of_scipy_commit(
+                "MAINT: fix an issue",
+                parser=default_scipy_parser,
+            ),
             "section": "Fix",
         },
     }

@@ -12,7 +12,7 @@ from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Protocol
+    from typing import Protocol, Sequence
 
     from click.testing import Result
 
@@ -24,7 +24,8 @@ if TYPE_CHECKING:
         def __call__(
             self,
             mirror_repo_dir: Path,
-            configuration_step: RepoActionConfigure,
+            configuration_steps: Sequence[RepoActionConfigure],
+            files_to_remove: Sequence[Path],
         ) -> Path: ...
 
     class RunPSReleaseFn(Protocol):
@@ -32,18 +33,18 @@ if TYPE_CHECKING:
             self,
             next_version_str: str,
             git_repo: Repo,
+            config_toml_path: Path = ...,
         ) -> Result: ...
 
 
 @pytest.fixture(scope="session")
 def init_mirror_repo_for_rebuild(
     build_repo_from_definition: BuildRepoFromDefinitionFn,
-    changelog_md_file: Path,
-    changelog_rst_file: Path,
 ) -> InitMirrorRepo4RebuildFn:
     def _init_mirror_repo_for_rebuild(
         mirror_repo_dir: Path,
-        configuration_step: RepoActionConfigure,
+        configuration_steps: Sequence[RepoActionConfigure],
+        files_to_remove: Sequence[Path],
     ) -> Path:
         # Create the mirror repo directory
         mirror_repo_dir.mkdir(exist_ok=True, parents=True)
@@ -51,13 +52,23 @@ def init_mirror_repo_for_rebuild(
         # Initialize mirror repository
         build_repo_from_definition(
             dest_dir=mirror_repo_dir,
-            repo_construction_steps=[configuration_step],
+            repo_construction_steps=configuration_steps,
         )
 
         with Repo(mirror_repo_dir) as mirror_git_repo:
-            # remove the default changelog files to enable Update Mode (new default of v10)
-            mirror_git_repo.git.rm(str(changelog_md_file), force=True)
-            mirror_git_repo.git.rm(str(changelog_rst_file), force=True)
+            for filepath in files_to_remove:
+                file = (
+                    (mirror_git_repo.working_dir / filepath).resolve().absolute()
+                    if not filepath.is_absolute()
+                    else filepath
+                )
+                if (
+                    not file.is_relative_to(mirror_git_repo.working_dir)
+                    or not file.exists()
+                ):
+                    continue
+
+                mirror_git_repo.git.rm(str(file), force=True)
 
         return mirror_repo_dir
 
@@ -69,6 +80,7 @@ def run_psr_release(
     run_cli: RunCliFn,
     changelog_rst_file: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    pyproject_toml_file: Path,
 ) -> RunPSReleaseFn:
     base_version_cmd = [MAIN_PROG_NAME, "--strict", VERSION_SUBCMD]
     write_changelog_only_cmd = [
@@ -82,6 +94,7 @@ def run_psr_release(
     def _run_psr_release(
         next_version_str: str,
         git_repo: Repo,
+        config_toml_path: Path = pyproject_toml_file,
     ) -> Result:
         version_n_buildmeta = next_version_str.split("+", maxsplit=1)
         version_n_prerelease = version_n_buildmeta[0].split("-", maxsplit=1)
@@ -107,6 +120,7 @@ def run_psr_release(
         update_pyproject_toml(
             "tool.semantic_release.changelog.default_templates.changelog_file",
             str(changelog_rst_file),
+            toml_file=config_toml_path,
         )
         cli_cmd = [*write_changelog_only_cmd, *prerelease_args, *build_metadata_args]
         result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
@@ -116,7 +130,7 @@ def run_psr_release(
         git_repo.git.reset("--mixed", "HEAD")
 
         # Add the changelog file to the git index but reset the working directory
-        git_repo.git.add(str(changelog_rst_file))
+        git_repo.git.add(str(changelog_rst_file.resolve()))
         git_repo.git.checkout("--", ".")
 
         # Actual run to release & write the MD changelog

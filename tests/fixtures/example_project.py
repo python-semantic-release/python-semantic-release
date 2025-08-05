@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Generator, cast
+from unittest import mock
 
 import pytest
 import tomlkit
@@ -12,6 +13,12 @@ import tomlkit
 from importlib_resources import files
 
 import semantic_release
+from semantic_release.cli.config import (
+    GlobalCommandLineOptions,
+    RawConfig,
+    RuntimeContext,
+)
+from semantic_release.cli.util import load_raw_config_file
 from semantic_release.commit_parser import (
     ConventionalCommitParser,
     EmojiCommitParser,
@@ -54,7 +61,7 @@ if TYPE_CHECKING:
     ExProjectDir = Path
 
     class GetWheelFileFn(Protocol):
-        def __call__(self, version_str: str) -> Path: ...
+        def __call__(self, version_str: str, pkg_name: str = ...) -> Path: ...
 
     class SetFlagFn(Protocol):
         def __call__(self, flag: bool, toml_file: Path | str = ...) -> None: ...
@@ -86,6 +93,33 @@ if TYPE_CHECKING:
         def __call__(
             self, version: Version | str, version_file: Path | str = ...
         ) -> None: ...
+
+    class GetHvcsFn(Protocol):
+        def __call__(
+            self,
+            hvcs_client_name: str,
+            origin_url: str = ...,
+            hvcs_domain: str | None = None,
+        ) -> Github | Gitlab | Gitea | Bitbucket: ...
+
+    class ReadConfigFileFn(Protocol):
+        """Read the raw config file from `config_path`."""
+
+        def __call__(self, file: Path | str = ...) -> RawConfig: ...
+
+    class LoadRuntimeContextFn(Protocol):
+        """Load the runtime context from the config file."""
+
+        def __call__(
+            self, cli_opts: GlobalCommandLineOptions | None = None
+        ) -> RuntimeContext: ...
+
+    class GetParserFromConfigFileFn(Protocol):
+        """Get the commit parser from the config file."""
+
+        def __call__(
+            self, file: Path | str = ...
+        ) -> CommitParser[ParseResult, ParserOptions]: ...
 
 
 @pytest.fixture(scope="session")
@@ -282,10 +316,56 @@ def default_changelog_rst_template() -> Path:
 
 @pytest.fixture(scope="session")
 def get_wheel_file(dist_dir: Path) -> GetWheelFileFn:
-    def _get_wheel_file(version_str: str) -> Path:
-        return dist_dir / f"{EXAMPLE_PROJECT_NAME}-{version_str}-py3-none-any.whl"
+    def _get_wheel_file(
+        version_str: str,
+        pkg_name: str = EXAMPLE_PROJECT_NAME,
+    ) -> Path:
+        return dist_dir.joinpath(
+            f"{pkg_name.replace('-', '_')}-{version_str}-py3-none-any.whl"
+        )
 
     return _get_wheel_file
+
+
+@pytest.fixture(scope="session")
+def read_config_file(pyproject_toml_file: Path) -> ReadConfigFileFn:
+    def _read_config_file(file: Path | str = pyproject_toml_file) -> RawConfig:
+        config_text = load_raw_config_file(file)
+        return RawConfig.model_validate(config_text)
+
+    return _read_config_file
+
+
+@pytest.fixture(scope="session")
+def load_runtime_context(
+    read_config_file: ReadConfigFileFn,
+    pyproject_toml_file: Path,
+) -> LoadRuntimeContextFn:
+    def _load_runtime_context(
+        cli_opts: GlobalCommandLineOptions | None = None,
+    ) -> RuntimeContext:
+        opts = cli_opts or GlobalCommandLineOptions(
+            config_file=str(pyproject_toml_file),
+        )
+        raw_config = read_config_file(opts.config_file)
+        return RuntimeContext.from_raw_config(raw_config, opts)
+
+    return _load_runtime_context
+
+
+@pytest.fixture(scope="session")
+def get_parser_from_config_file(
+    pyproject_toml_file: Path,
+    load_runtime_context: LoadRuntimeContextFn,
+) -> GetParserFromConfigFileFn:
+    def _get_parser_from_config(
+        file: Path | str = pyproject_toml_file,
+    ) -> CommitParser[ParseResult, ParserOptions]:
+        return load_runtime_context(
+            cli_opts=GlobalCommandLineOptions(config_file=str(Path(file)))
+        ).commit_parser
+
+    return _get_parser_from_config
 
 
 @pytest.fixture
@@ -570,6 +650,34 @@ def use_custom_parser(
         )
 
     return _use_custom_parser
+
+
+@pytest.fixture(scope="session")
+def get_hvcs(example_git_https_url: str) -> GetHvcsFn:
+    hvcs_clients: dict[str, type[HvcsBase]] = {
+        "github": Github,
+        "gitlab": Gitlab,
+        "gitea": Gitea,
+        "bitbucket": Bitbucket,
+    }
+
+    def _get_hvcs(
+        hvcs_client_name: str,
+        origin_url: str = example_git_https_url,
+        hvcs_domain: str | None = None,
+    ) -> Github | Gitlab | Gitea | Bitbucket:
+        if (hvcs_class := hvcs_clients.get(hvcs_client_name)) is None:
+            raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
+
+        # Create HVCS Client instance
+        with mock.patch.dict(os.environ, {}, clear=True):
+            hvcs = hvcs_class(origin_url, hvcs_domain=hvcs_domain)
+            assert hvcs.repo_name  # Force the HVCS client to cache the repo name
+            assert hvcs.owner  # Force the HVCS client to cache the owner
+
+        return cast("Github | Gitlab | Gitea | Bitbucket", hvcs)
+
+    return _get_hvcs
 
 
 @pytest.fixture(scope="session")
