@@ -18,13 +18,22 @@ if TYPE_CHECKING:
 
     from tests.conftest import RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
-    from tests.fixtures.git_repo import BuildRepoFromDefinitionFn, RepoActionConfigure
+    from tests.fixtures.git_repo import (
+        BuildRepoFromDefinitionFn,
+        RepoActionConfigure,
+        RepoActionConfigureMonorepo,
+        RepoActionCreateMonorepo,
+    )
 
     class InitMirrorRepo4RebuildFn(Protocol):
         def __call__(
             self,
             mirror_repo_dir: Path,
-            configuration_steps: Sequence[RepoActionConfigure],
+            configuration_steps: Sequence[
+                RepoActionConfigure
+                | RepoActionCreateMonorepo
+                | RepoActionConfigureMonorepo
+            ],
             files_to_remove: Sequence[Path],
         ) -> Path: ...
 
@@ -43,7 +52,9 @@ def init_mirror_repo_for_rebuild(
 ) -> InitMirrorRepo4RebuildFn:
     def _init_mirror_repo_for_rebuild(
         mirror_repo_dir: Path,
-        configuration_steps: Sequence[RepoActionConfigure],
+        configuration_steps: Sequence[
+            RepoActionConfigure | RepoActionCreateMonorepo | RepoActionConfigureMonorepo
+        ],
         files_to_remove: Sequence[Path],
     ) -> Path:
         # Create the mirror repo directory
