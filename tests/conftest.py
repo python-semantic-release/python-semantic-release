@@ -1,4 +1,4 @@
-"""Note: fixtures are stored in the tests/fixtures directory for better organisation"""
+"""Note: fixtures are stored in the tests/fixtures directory for better organization"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from hashlib import md5
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
@@ -17,13 +17,15 @@ from click.testing import CliRunner
 from filelock import FileLock
 from git import Commit, Repo
 
+from semantic_release.version.version import Version
+
 from tests.const import PROJ_DIR
 from tests.fixtures import *
 from tests.util import copy_dir_tree, remove_dir_tree
 
 if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper
-    from typing import Any, Callable, Generator, Protocol, Sequence, TypedDict
+    from typing import Any, Callable, Generator, Optional, Protocol, Sequence, TypedDict
 
     from click.testing import Result
     from filelock import AcquireReturnProxy
@@ -325,7 +327,7 @@ def get_authorization_to_build_repo_cache(
 def get_cached_repo_data(request: pytest.FixtureRequest) -> GetCachedRepoDataFn:
     def _get_cached_repo_data(proj_dirname: str) -> RepoData | None:
         cache_key = f"psr/repos/{proj_dirname}"
-        return request.config.cache.get(cache_key, None)
+        return cast("Optional[RepoData]", request.config.cache.get(cache_key, None))
 
     return _get_cached_repo_data
 
@@ -335,6 +337,10 @@ def set_cached_repo_data(request: pytest.FixtureRequest) -> SetCachedRepoDataFn:
     def magic_serializer(obj: Any) -> Any:
         if isinstance(obj, Path):
             return obj.__fspath__()
+
+        if isinstance(obj, Version):
+            return obj.__dict__
+
         return obj
 
     def _set_cached_repo_data(proj_dirname: str, data: RepoData) -> None:
@@ -386,13 +392,30 @@ def build_repo_or_copy_cache(
             with log_file_lock, log_file.open(mode="a") as afd:
                 afd.write(f"{stable_now_date().isoformat()}: {build_msg}...\n")
 
+            try:
+                # Try to build repository but catch any errors so that it doesn't cascade through all tests
+                # do to an unreleased lock
+                build_definition = build_repo_func(cached_repo_path)
+            except Exception:
+                remove_dir_tree(cached_repo_path, force=True)
+
+                if filelock:
+                    filelock.lock.release()
+
+                with log_file_lock, log_file.open(mode="a") as afd:
+                    afd.write(
+                        f"{stable_now_date().isoformat()}: {build_msg}...FAILED\n"
+                    )
+
+                raise
+
             # Marks the date when the cached repo was created
             set_cached_repo_data(
                 repo_name,
                 {
                     "build_date": today_date_str,
                     "build_spec_hash": build_spec_hash,
-                    "build_definition": build_repo_func(cached_repo_path),
+                    "build_definition": build_definition,
                 },
             )
 

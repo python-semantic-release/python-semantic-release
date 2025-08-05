@@ -5,22 +5,18 @@ import sys
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import reduce
+from itertools import count
 from pathlib import Path
+from shutil import rmtree
 from textwrap import dedent
 from time import sleep
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeVar, cast
 from unittest import mock
 
 import pytest
 from git import Actor, Repo
 
 from semantic_release.cli.config import ChangelogOutputFormat
-from semantic_release.commit_parser.conventional import (
-    ConventionalCommitParser,
-    ConventionalCommitParserOptions,
-)
-from semantic_release.commit_parser.emoji import EmojiCommitParser, EmojiParserOptions
-from semantic_release.commit_parser.scipy import ScipyCommitParser, ScipyParserOptions
 from semantic_release.hvcs.bitbucket import Bitbucket
 from semantic_release.hvcs.gitea import Gitea
 from semantic_release.hvcs.github import Github
@@ -35,6 +31,7 @@ from tests.const import (
     DEFAULT_BRANCH_NAME,
     DEFAULT_MERGE_STRATEGY_OPTION,
     EXAMPLE_HVCS_DOMAIN,
+    EXAMPLE_PROJECT_NAME,
     EXAMPLE_REPO_NAME,
     EXAMPLE_REPO_OWNER,
     NULL_HEX_SHA,
@@ -47,9 +44,35 @@ from tests.util import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Generator, Literal, Protocol, Sequence, TypedDict, Union
+    from typing import (
+        Any,
+        Dict,
+        Generator,
+        Generic,
+        List,
+        Literal,
+        Protocol,
+        Sequence,
+        Set,
+        Tuple,
+        TypedDict,
+        TypeVar,
+        Union,
+    )
 
-    from tests.fixtures.example_project import UpdateVersionPyFileFn
+    from semantic_release.commit_parser._base import CommitParser, ParserOptions
+    from semantic_release.commit_parser.conventional import (
+        ConventionalCommitParser,
+    )
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
+    from semantic_release.commit_parser.token import ParsedMessageResult, ParseResult
+
+    from tests.fixtures.example_project import (
+        GetHvcsFn,
+        GetParserFromConfigFileFn,
+        UpdateVersionPyFileFn,
+    )
 
     try:
         # Python 3.8 and 3.9 compatibility
@@ -80,7 +103,9 @@ if TYPE_CHECKING:
     CommitMsg = str
     DatetimeISOStr = str
     ChangelogTypeHeading = str
-    TomlSerializableTypes = Union[dict, set, list, tuple, int, float, bool, str]
+    TomlSerializableTypes = Union[
+        Dict[Any, Any], Set[Any], List[Any], Tuple[Any, ...], int, float, bool, str
+    ]
 
     class RepoVersionDef(TypedDict):
         """
@@ -101,6 +126,7 @@ if TYPE_CHECKING:
         """List of indexes values to match to the commits list in the RepoVersionDef"""
 
     class CommitDef(TypedDict):
+        cid: str
         msg: CommitMsg
         type: str
         category: str
@@ -128,6 +154,7 @@ if TYPE_CHECKING:
             tag_format_str: str | None = None,
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
             mask_initial_release: bool = True,  # Default as of v10
+            package_name: str = ...,
         ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
@@ -145,6 +172,8 @@ if TYPE_CHECKING:
             version: str,
             tag_format: str = ...,
             timestamp: DatetimeISOStr | None = None,
+            version_py_file: Path | str = ...,
+            commit_message_format: str = ...,
         ) -> None: ...
 
     class ExProjectGitRepoFn(Protocol):
@@ -157,8 +186,10 @@ if TYPE_CHECKING:
             commit_type: CommitConvention,
         ) -> RepoDefinition: ...
 
-    class GetCommitDefFn(Protocol):
-        def __call__(self, msg: str) -> CommitDef: ...
+    T_contra = TypeVar("T_contra", contravariant=True)
+
+    class GetCommitDefFn(Protocol[T_contra]):
+        def __call__(self, msg: str, parser: T_contra) -> CommitDef: ...
 
     class GetVersionStringsFn(Protocol):
         def __call__(self) -> list[VersionStr]: ...
@@ -183,7 +214,7 @@ if TYPE_CHECKING:
             repo_definition: RepoDefinition,
             hvcs: Github | Gitlab | Gitea | Bitbucket,
             dest_file: Path | None = None,
-            max_version: str | None = None,
+            max_version: Version | Literal["Unreleased"] | None = None,
             output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
             mask_initial_release: bool = True,  # Default as of v10
         ) -> str: ...
@@ -247,6 +278,7 @@ if TYPE_CHECKING:
         ) -> CommitDef: ...
 
     class CommitSpec(TypedDict):
+        cid: str
         conventional: str
         emoji: str
         scipy: str
@@ -281,8 +313,11 @@ if TYPE_CHECKING:
         details: RepoActionReleaseDetails
 
     class RepoActionReleaseDetails(DetailsBase):
-        version: str
+        commit_message_format: NotRequired[str]
         datetime: DatetimeISOStr
+        tag_format: NotRequired[str]
+        version: str
+        version_py_file: NotRequired[Path | str]
 
     class RepoActionGitCheckout(TypedDict):
         action: Literal[RepoActionStep.GIT_CHECKOUT]
@@ -304,10 +339,7 @@ if TYPE_CHECKING:
         branch: str
         strategy_option: str
         commit_def: CommitDef
-
-    class RepoActionGitMerge(TypedDict):
-        action: Literal[RepoActionStep.GIT_MERGE]
-        details: RepoActionGitMergeDetails | RepoActionGitFFMergeDetails
+        config_file: NotRequired[Path | str]
 
     class RepoActionGitMergeDetails(DetailsBase):
         branch_name: str
@@ -319,22 +351,36 @@ if TYPE_CHECKING:
         branch_name: str
         fast_forward: Literal[True]
 
+    MergeDetails = TypeVar(
+        "MergeDetails",
+        bound=Union[RepoActionGitMergeDetails, RepoActionGitFFMergeDetails],
+    )
+
+    class RepoActionGitMerge(Generic[MergeDetails], TypedDict):
+        action: Literal[RepoActionStep.GIT_MERGE]
+        details: MergeDetails
+
     class RepoActionWriteChangelogs(TypedDict):
         action: Literal[RepoActionStep.WRITE_CHANGELOGS]
         details: RepoActionWriteChangelogsDetails
 
     class RepoActionWriteChangelogsDetails(DetailsBase):
-        new_version: str
-        max_version: NotRequired[str]
+        new_version: Version | Literal["Unreleased"]
+        max_version: NotRequired[Version | Literal["Unreleased"]]
         dest_files: Sequence[RepoActionWriteChangelogsDestFile]
+        commit_ids: Sequence[str]
 
     class RepoActionWriteChangelogsDestFile(TypedDict):
         path: Path | str
         format: ChangelogOutputFormat
+        mask_initial_release: bool
 
     class ConvertCommitSpecToCommitDefFn(Protocol):
         def __call__(
-            self, commit_spec: CommitSpec, commit_type: CommitConvention
+            self,
+            commit_spec: CommitSpec,
+            commit_type: CommitConvention,
+            parser: CommitParser[ParseResult, ParserOptions],
         ) -> CommitDef: ...
 
     class GetRepoDefinitionFn(Protocol):
@@ -361,11 +407,14 @@ if TYPE_CHECKING:
         repo: Repo
 
     class GetVersionsFromRepoBuildDefFn(Protocol):
-        def __call__(self, repo_def: Sequence[RepoActions]) -> Sequence[str]: ...
+        def __call__(self, repo_def: Sequence[RepoActions]) -> Sequence[Version]: ...
 
     class ConvertCommitSpecsToCommitDefsFn(Protocol):
         def __call__(
-            self, commits: Sequence[CommitSpec], commit_type: CommitConvention
+            self,
+            commits: Sequence[CommitSpec],
+            commit_type: CommitConvention,
+            parser: CommitParser[ParseResult, ParserOptions],
         ) -> Sequence[CommitDef]: ...
 
     class BuildSpecificRepoFn(Protocol):
@@ -375,12 +424,13 @@ if TYPE_CHECKING:
 
     RepoActions: TypeAlias = Union[
         RepoActionConfigure,
+        RepoActionGitCheckout,
+        RepoActionGitMerge[RepoActionGitMergeDetails],
+        RepoActionGitMerge[RepoActionGitFFMergeDetails],
+        RepoActionGitSquash,
         RepoActionMakeCommits,
         RepoActionRelease,
-        RepoActionGitCheckout,
-        RepoActionGitSquash,
         RepoActionWriteChangelogs,
-        RepoActionGitMerge,
     ]
 
     class GetGitRepo4DirFn(Protocol):
@@ -388,16 +438,24 @@ if TYPE_CHECKING:
 
     class SplitRepoActionsByReleaseTagsFn(Protocol):
         def __call__(
-            self, repo_definition: Sequence[RepoActions], tag_format_str: str
-        ) -> dict[str, list[RepoActions]]: ...
+            self,
+            repo_definition: Sequence[RepoActions],
+        ) -> dict[Version | Literal["Unreleased"] | None, list[RepoActions]]: ...
 
     class GetCfgValueFromDefFn(Protocol):
         def __call__(
             self, build_definition: Sequence[RepoActions], key: str
         ) -> Any: ...
 
+    class SquashedCommitSupportedParser(Protocol):
+        def unsquash_commit_message(self, message: str) -> list[str]: ...
+
+        def parse_message(self, message: str) -> ParsedMessageResult | None: ...
+
     class SeparateSquashedCommitDefFn(Protocol):
-        def __call__(self, squashed_commit_def: CommitDef) -> list[CommitDef]: ...
+        def __call__(
+            self, squashed_commit_def: CommitDef, parser: SquashedCommitSupportedParser
+        ) -> list[CommitDef]: ...
 
     class GenerateDefaultReleaseNotesFromDefFn(Protocol):
         def __call__(
@@ -469,6 +527,7 @@ def cached_example_git_project(
         # NOTE: We don't want to hold the repo object open for the entire test session,
         # the implementation on Windows holds some file descriptors open until close is called.
         with Repo.init(cached_repo_path) as repo:
+            rmtree(str(Path(repo.git_dir, "hooks")))
             # Without this the global config may set it to "master", we want consistency
             repo.git.branch("-M", DEFAULT_BRANCH_NAME)
             with repo.config_writer("repository") as config:
@@ -520,12 +579,11 @@ def example_git_https_url():
 
 
 @pytest.fixture(scope="session")
-def get_commit_def_of_conventional_commit(
-    default_conventional_parser: ConventionalCommitParser,
-) -> GetCommitDefFn:
-    def _get_commit_def_of_conventional_commit(msg: str) -> CommitDef:
-        if not (parsed_result := default_conventional_parser.parse_message(msg)):
+def get_commit_def_of_conventional_commit() -> GetCommitDefFn[ConventionalCommitParser]:
+    def _get_commit_def(msg: str, parser: ConventionalCommitParser) -> CommitDef:
+        if not (parsed_result := parser.parse_message(msg)):
             return {
+                "cid": "",
                 "msg": msg,
                 "type": "unknown",
                 "category": "Unknown",
@@ -538,6 +596,7 @@ def get_commit_def_of_conventional_commit(
             }
 
         return {
+            "cid": "",
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
@@ -549,16 +608,17 @@ def get_commit_def_of_conventional_commit(
             "include_in_changelog": True,
         }
 
-    return _get_commit_def_of_conventional_commit
+    return _get_commit_def
 
 
 @pytest.fixture(scope="session")
-def get_commit_def_of_emoji_commit(
-    default_emoji_parser: EmojiCommitParser,
-) -> GetCommitDefFn:
-    def _get_commit_def_of_emoji_commit(msg: str) -> CommitDef:
-        if not (parsed_result := default_emoji_parser.parse_message(msg)):
+def get_commit_def_of_emoji_commit() -> GetCommitDefFn[EmojiCommitParser]:
+    def _get_commit_def_of_emoji_commit(
+        msg: str, parser: EmojiCommitParser
+    ) -> CommitDef:
+        if not (parsed_result := parser.parse_message(msg)):
             return {
+                "cid": "",
                 "msg": msg,
                 "type": "unknown",
                 "category": "Other",
@@ -571,6 +631,7 @@ def get_commit_def_of_emoji_commit(
             }
 
         return {
+            "cid": "",
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
@@ -586,12 +647,13 @@ def get_commit_def_of_emoji_commit(
 
 
 @pytest.fixture(scope="session")
-def get_commit_def_of_scipy_commit(
-    default_scipy_parser: ScipyCommitParser,
-) -> GetCommitDefFn:
-    def _get_commit_def_of_scipy_commit(msg: str) -> CommitDef:
-        if not (parsed_result := default_scipy_parser.parse_message(msg)):
+def get_commit_def_of_scipy_commit() -> GetCommitDefFn[ScipyCommitParser]:
+    def _get_commit_def_of_scipy_commit(
+        msg: str, parser: ScipyCommitParser
+    ) -> CommitDef:
+        if not (parsed_result := parser.parse_message(msg)):
             return {
+                "cid": "",
                 "msg": msg,
                 "type": "unknown",
                 "category": "Unknown",
@@ -604,6 +666,7 @@ def get_commit_def_of_scipy_commit(
             }
 
         return {
+            "cid": "",
             "msg": msg,
             "type": parsed_result.type,
             "category": parsed_result.category,
@@ -715,17 +778,27 @@ def format_squash_commit_msg_github() -> FormatGitHubSquashCommitMsgFn:
         pr_number: int,
         squashed_commits: list[CommitDef | str],
     ) -> str:
-        sq_cmts: list[str] = (
-            squashed_commits  # type: ignore[assignment]
+        sq_commits: list[str] = (
+            cast("list[str]", squashed_commits)
             if len(squashed_commits) > 1 and not isinstance(squashed_commits[0], dict)
-            else [commit["msg"] for commit in squashed_commits]  # type: ignore[index]
+            else list(
+                filter(
+                    None,
+                    [
+                        commit.get("msg", "") if isinstance(commit, dict) else commit
+                        for commit in squashed_commits
+                    ],
+                )
+            )
         )
+        pr_title_parts = pr_title.strip().split("\n\n", maxsplit=1)
         return (
             str.join(
                 "\n\n",
                 [
-                    f"{pr_title} (#{pr_number})",
-                    *[f"* {commit_str}" for commit_str in sq_cmts],
+                    f"{pr_title_parts[0]} (#{pr_number})",
+                    *pr_title_parts[1:],
+                    *[f"* {commit_str}" for commit_str in sq_commits],
                 ],
             )
             + "\n"
@@ -852,9 +925,11 @@ def create_release_tagged_commit(
 ) -> CreateReleaseFn:
     def _mimic_semantic_release_commit(
         git_repo: Repo,
-        version: str,
+        version: Version | str,
         tag_format: str = default_tag_format_str,
         timestamp: DatetimeISOStr | None = None,
+        version_py_file: Path | str = "",
+        commit_message_format: str = COMMIT_MESSAGE,
     ) -> None:
         curr_dt = stable_now_date()
         commit_dt = (
@@ -865,15 +940,18 @@ def create_release_tagged_commit(
             sleep(1)  # ensure commit timestamps are unique
 
         # stamp version into version file
-        update_version_py_file(version)
+        if version_py_file:
+            update_version_py_file(version=version, version_file=version_py_file)
+        else:
+            update_version_py_file(version=version)
 
         # stamp version into pyproject.toml
-        update_pyproject_toml("tool.poetry.version", version)
+        update_pyproject_toml("tool.poetry.version", str(version))
 
         # commit --all files with version number commit message
         git_repo.git.commit(
             a=True,
-            m=COMMIT_MESSAGE.format(version=version),
+            m=commit_message_format.format(version=str(version)),
             date=commit_dt.isoformat(timespec="seconds"),
         )
 
@@ -884,7 +962,7 @@ def create_release_tagged_commit(
             GIT_COMMITTER_DATE=commit_dt.isoformat(timespec="seconds"),
         ):
             # tag commit with version number
-            tag_str = tag_format.format(version=version)
+            tag_str = tag_format.format(version=str(version))
             git_repo.git.tag(tag_str, m=tag_str)
 
     return _mimic_semantic_release_commit
@@ -932,10 +1010,13 @@ def simulate_change_commits_n_rtn_changelog_entry(
     def _simulate_change_commits_n_rtn_changelog_entry(
         git_repo: Repo, commit_msgs: Sequence[CommitDef]
     ) -> Sequence[CommitDef]:
-        changelog_entries = []
+        changelog_entries: list[CommitDef] = []
         for commit_msg in commit_msgs:
-            add_text_to_file(git_repo, file_in_repo)
+            if not git_repo.is_dirty(index=True, working_tree=False):
+                add_text_to_file(git_repo, file_in_repo)
+
             changelog_entries.append(commit_n_rtn_changelog_entry(git_repo, commit_msg))
+
         return changelog_entries
 
     return _simulate_change_commits_n_rtn_changelog_entry
@@ -970,6 +1051,7 @@ def get_hvcs_client_from_repo_def(
             )
             # Force the HVCS client to attempt to resolve the repo name (as we generally cache it)
             assert hvcs_client.repo_name
+            assert hvcs_client.owner
             return cast("Github | Gitlab | Gitea | Bitbucket", hvcs_client)
 
     return _get_hvcs_client_from_repo_def
@@ -978,6 +1060,47 @@ def get_hvcs_client_from_repo_def(
 @pytest.fixture(scope="session")
 def build_configured_base_repo(  # noqa: C901
     cached_example_git_project: Path,
+    configure_base_repo: BuildRepoFn,
+) -> BuildRepoFn:
+    """
+    This fixture is intended to simplify repo scenario building by initially
+    creating the repo but also configuring semantic_release in the pyproject.toml
+    for when the test executes semantic_release. It returns a function so that
+    derivative fixtures can call this fixture with individual parameters.
+    """
+
+    def _build_configured_base_repo(  # noqa: C901
+        dest_dir: Path | str,
+        commit_type: CommitConvention = "conventional",
+        hvcs_client_name: str = "github",
+        hvcs_domain: str = EXAMPLE_HVCS_DOMAIN,
+        tag_format_str: str | None = None,
+        extra_configs: dict[str, TomlSerializableTypes] | None = None,
+        mask_initial_release: bool = True,  # Default as of v10
+        package_name: str = EXAMPLE_PROJECT_NAME,
+    ) -> tuple[Path, HvcsBase]:
+        if not cached_example_git_project.exists():
+            raise RuntimeError("Unable to find cached git project files!")
+
+        # Copy the cached git project the dest directory
+        copy_dir_tree(cached_example_git_project, dest_dir)
+
+        return configure_base_repo(
+            dest_dir=dest_dir,
+            commit_type=commit_type,
+            hvcs_client_name=hvcs_client_name,
+            hvcs_domain=hvcs_domain,
+            tag_format_str=tag_format_str,
+            extra_configs=extra_configs,
+            mask_initial_release=mask_initial_release,
+            package_name=package_name,
+        )
+
+    return _build_configured_base_repo
+
+
+@pytest.fixture(scope="session")
+def configure_base_repo(  # noqa: C901
     use_github_hvcs: UseHvcsFn,
     use_gitlab_hvcs: UseHvcsFn,
     use_gitea_hvcs: UseHvcsFn,
@@ -989,6 +1112,8 @@ def build_configured_base_repo(  # noqa: C901
     example_git_https_url: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     get_wheel_file: GetWheelFileFn,
+    pyproject_toml_file: Path,
+    get_hvcs: GetHvcsFn,
 ) -> BuildRepoFn:
     """
     This fixture is intended to simplify repo scenario building by initially
@@ -997,7 +1122,7 @@ def build_configured_base_repo(  # noqa: C901
     derivative fixtures can call this fixture with individual parameters.
     """
 
-    def _build_configured_base_repo(  # noqa: C901
+    def _configure_base_repo(  # noqa: C901
         dest_dir: Path | str,
         commit_type: str = "conventional",
         hvcs_client_name: str = "github",
@@ -1005,53 +1130,52 @@ def build_configured_base_repo(  # noqa: C901
         tag_format_str: str | None = None,
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = True,  # Default as of v10
+        package_name: str = EXAMPLE_PROJECT_NAME,
     ) -> tuple[Path, HvcsBase]:
-        if not cached_example_git_project.exists():
-            raise RuntimeError("Unable to find cached git project files!")
-
-        # Copy the cached git project the dest directory
-        copy_dir_tree(cached_example_git_project, dest_dir)
-
         # Make sure we are in the dest directory
         with temporary_working_directory(dest_dir):
             # Set parser configuration
             if commit_type == "conventional":
-                use_conventional_parser()
+                use_conventional_parser(toml_file=pyproject_toml_file)
             elif commit_type == "emoji":
-                use_emoji_parser()
+                use_emoji_parser(toml_file=pyproject_toml_file)
             elif commit_type == "scipy":
-                use_scipy_parser()
+                use_scipy_parser(toml_file=pyproject_toml_file)
             else:
-                use_custom_parser(commit_type)
+                use_custom_parser(commit_type, toml_file=pyproject_toml_file)
 
             # Set HVCS configuration
             if hvcs_client_name == "github":
-                hvcs_class = use_github_hvcs(hvcs_domain)
+                use_github_hvcs(hvcs_domain, toml_file=pyproject_toml_file)
             elif hvcs_client_name == "gitlab":
-                hvcs_class = use_gitlab_hvcs(hvcs_domain)
+                use_gitlab_hvcs(hvcs_domain, toml_file=pyproject_toml_file)
             elif hvcs_client_name == "gitea":
-                hvcs_class = use_gitea_hvcs(hvcs_domain)
+                use_gitea_hvcs(hvcs_domain, toml_file=pyproject_toml_file)
             elif hvcs_client_name == "bitbucket":
-                hvcs_class = use_bitbucket_hvcs(hvcs_domain)
+                use_bitbucket_hvcs(hvcs_domain, toml_file=pyproject_toml_file)
             else:
                 raise ValueError(f"Unknown HVCS client name: {hvcs_client_name}")
 
             # Create HVCS Client instance
-            with mock.patch.dict(os.environ, {}, clear=True):
-                hvcs = hvcs_class(example_git_https_url, hvcs_domain=hvcs_domain)
-                assert hvcs.repo_name  # Force the HVCS client to cache the repo name
+            hvcs = get_hvcs(
+                hvcs_client_name=hvcs_client_name,
+                origin_url=example_git_https_url,
+                hvcs_domain=hvcs_domain,
+            )
 
             # Set tag format in configuration
             if tag_format_str is not None:
                 update_pyproject_toml(
-                    "tool.semantic_release.tag_format", tag_format_str
+                    "tool.semantic_release.tag_format",
+                    tag_format_str,
+                    toml_file=pyproject_toml_file,
                 )
 
             # Set the build_command to create a wheel file (using the build_command_env version variable)
             build_result_file = (
-                get_wheel_file("$NEW_VERSION")
+                get_wheel_file("$NEW_VERSION", pkg_name=package_name)
                 if sys.platform != "win32"
-                else get_wheel_file("$Env:NEW_VERSION")
+                else get_wheel_file("$Env:NEW_VERSION", pkg_name=package_name)
             )
             update_pyproject_toml(
                 # NOTE: must work in both bash and Powershell
@@ -1071,69 +1195,65 @@ def build_configured_base_repo(  # noqa: C901
                     New-Item -ItemType file -Path "$WHEEL_FILE" -Force | Select-Object OriginalPath
                     """
                 ),
+                toml_file=pyproject_toml_file,
             )
 
             # Set whether or not the initial release should be masked
             update_pyproject_toml(
                 "tool.semantic_release.changelog.default_templates.mask_initial_release",
                 mask_initial_release,
+                toml_file=pyproject_toml_file,
             )
 
             # Apply configurations to pyproject.toml
             if extra_configs is not None:
                 for key, value in extra_configs.items():
-                    update_pyproject_toml(key, value)
+                    update_pyproject_toml(key, value, toml_file=pyproject_toml_file)
 
         return Path(dest_dir), hvcs
 
-    return _build_configured_base_repo
+    return _configure_base_repo
 
 
 @pytest.fixture(scope="session")
-def separate_squashed_commit_def(
-    default_conventional_parser: ConventionalCommitParser,
-    default_emoji_parser: EmojiCommitParser,
-    default_scipy_parser: ScipyCommitParser,
-) -> SeparateSquashedCommitDefFn:
-    message_parsers: dict[
-        CommitConvention,
-        ConventionalCommitParser | EmojiCommitParser | ScipyCommitParser,
-    ] = {
-        "conventional": ConventionalCommitParser(
-            options=ConventionalCommitParserOptions(
-                **{
-                    **default_conventional_parser.options.__dict__,
-                    "parse_squash_commits": True,
-                }
-            )
-        ),
-        "emoji": EmojiCommitParser(
-            options=EmojiParserOptions(
-                **{
-                    **default_emoji_parser.options.__dict__,
-                    "parse_squash_commits": True,
-                }
-            )
-        ),
-        "scipy": ScipyCommitParser(
-            options=ScipyParserOptions(
-                **{
-                    **default_scipy_parser.options.__dict__,
-                    "parse_squash_commits": True,
-                }
-            )
-        ),
-    }
+def separate_squashed_commit_def() -> SeparateSquashedCommitDefFn:
+    # default_conventional_parser: ConventionalCommitParser,
+    # default_emoji_parser: EmojiCommitParser,
+    # default_scipy_parser: ScipyCommitParser,
+    # message_parsers: dict[
+    #     CommitConvention,
+    #     ConventionalCommitParser | EmojiCommitParser | ScipyCommitParser,
+    # ] = {
+    #     "conventional": ConventionalCommitParser(
+    #         options=ConventionalCommitParserOptions(
+    #             **{
+    #                 **default_conventional_parser.options.__dict__,
+    #                 "parse_squash_commits": True,
+    #             }
+    #         )
+    #     ),
+    #     "emoji": EmojiCommitParser(
+    #         options=EmojiParserOptions(
+    #             **{
+    #                 **default_emoji_parser.options.__dict__,
+    #                 "parse_squash_commits": True,
+    #             }
+    #         )
+    #     ),
+    #     "scipy": ScipyCommitParser(
+    #         options=ScipyParserOptions(
+    #             **{
+    #                 **default_scipy_parser.options.__dict__,
+    #                 "parse_squash_commits": True,
+    #             }
+    #         )
+    #     ),
+    # }
 
     def _separate_squashed_commit_def(
         squashed_commit_def: CommitDef,
+        parser: SquashedCommitSupportedParser,
     ) -> list[CommitDef]:
-        commit_type: CommitConvention = "conventional"
-        for parser_name, parser in message_parsers.items():
-            if squashed_commit_def["type"] in parser.options.allowed_tags:
-                commit_type = parser_name
-
-        parser = message_parsers[commit_type]
         if not hasattr(parser, "unsquash_commit_message"):
             return [squashed_commit_def]
 
@@ -1141,8 +1261,11 @@ def separate_squashed_commit_def(
             message=squashed_commit_def["msg"]
         )
 
+        commit_num_gen = (i for i in count(start=1, step=1))
+
         return [
             {
+                "cid": f"{squashed_commit_def['cid']}-{next(commit_num_gen)}",
                 "msg": squashed_message,
                 "type": parsed_result.type,
                 "category": parsed_result.category,
@@ -1166,12 +1289,12 @@ def separate_squashed_commit_def(
 
 @pytest.fixture(scope="session")
 def convert_commit_spec_to_commit_def(
-    get_commit_def_of_conventional_commit: GetCommitDefFn,
-    get_commit_def_of_emoji_commit: GetCommitDefFn,
-    get_commit_def_of_scipy_commit: GetCommitDefFn,
+    get_commit_def_of_conventional_commit: GetCommitDefFn[ConventionalCommitParser],
+    get_commit_def_of_emoji_commit: GetCommitDefFn[EmojiCommitParser],
+    get_commit_def_of_scipy_commit: GetCommitDefFn[ScipyCommitParser],
     stable_now_date: datetime,
 ) -> ConvertCommitSpecToCommitDefFn:
-    message_parsers: dict[CommitConvention, GetCommitDefFn] = {
+    message_parsers = {
         "conventional": get_commit_def_of_conventional_commit,
         "emoji": get_commit_def_of_emoji_commit,
         "scipy": get_commit_def_of_scipy_commit,
@@ -1180,12 +1303,14 @@ def convert_commit_spec_to_commit_def(
     def _convert(
         commit_spec: CommitSpec,
         commit_type: CommitConvention,
+        parser: CommitParser[ParseResult, ParserOptions],
     ) -> CommitDef:
-        parse_msg_fn = message_parsers[commit_type]
+        parse_msg_fn = cast("GetCommitDefFn[Any]", message_parsers[commit_type])
 
         # Extract the correct commit message for the commit type
         return {
-            **parse_msg_fn(commit_spec[commit_type]),
+            **parse_msg_fn(commit_spec[commit_type], parser=parser),
+            "cid": commit_spec["cid"],
             "datetime": (
                 commit_spec["datetime"]
                 if "datetime" in commit_spec
@@ -1204,9 +1329,11 @@ def convert_commit_specs_to_commit_defs(
     def _convert(
         commits: Sequence[CommitSpec],
         commit_type: CommitConvention,
+        parser: CommitParser[ParseResult, ParserOptions],
     ) -> Sequence[CommitDef]:
         return [
-            convert_commit_spec_to_commit_def(commit, commit_type) for commit in commits
+            convert_commit_spec_to_commit_def(commit, commit_type, parser=parser)
+            for commit in commits
         ]
 
     return _convert
@@ -1222,50 +1349,46 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     simulate_default_changelog_creation: SimulateDefaultChangelogCreationFn,
     separate_squashed_commit_def: SeparateSquashedCommitDefFn,
+    get_hvcs: GetHvcsFn,
+    example_git_https_url: str,
+    get_parser_from_config_file: GetParserFromConfigFileFn,
+    pyproject_toml_file: Path,
 ) -> BuildRepoFromDefinitionFn:
     def expand_repo_construction_steps(
         acc: Sequence[RepoActions], step: RepoActions
     ) -> Sequence[RepoActions]:
-        return [
-            *acc,
-            *(
-                reduce(
-                    expand_repo_construction_steps,  # type: ignore[arg-type]
-                    step["details"]["pre_actions"],
-                    [],
-                )
-                if "pre_actions" in step["details"]
-                else []
-            ),
-            step,
-            *(
-                reduce(
-                    expand_repo_construction_steps,  # type: ignore[arg-type]
-                    step["details"]["post_actions"],
-                    [],
-                )
-                if "post_actions" in step["details"]
-                else []
-            ),
-        ]
+        empty_tuple = cast("tuple[RepoActions, ...]", ())
+        unpacked_pre_actions = reduce(
+            expand_repo_construction_steps,  # type: ignore[arg-type]
+            step["details"].pop("pre_actions", empty_tuple),
+            empty_tuple,
+        )
+
+        unpacked_post_actions = reduce(
+            expand_repo_construction_steps,  # type: ignore[arg-type]
+            step["details"].pop("post_actions", empty_tuple),
+            empty_tuple,
+        )
+
+        return (*acc, *unpacked_pre_actions, step, *unpacked_post_actions)
 
     def _build_repo_from_definition(  # noqa: C901, its required and its just test code
         dest_dir: Path | str, repo_construction_steps: Sequence[RepoActions]
     ) -> Sequence[RepoActions]:
         completed_repo_steps: list[RepoActions] = []
 
-        expanded_repo_construction_steps: Sequence[RepoActions] = reduce(
-            expand_repo_construction_steps,
-            repo_construction_steps,
-            [],
+        expanded_repo_construction_steps: tuple[RepoActions, ...] = tuple(
+            reduce(
+                expand_repo_construction_steps,  # type: ignore[arg-type]
+                repo_construction_steps,
+                (),
+            )
         )
 
-        repo_dir = Path(dest_dir)
+        repo_dir = Path(dest_dir).resolve().absolute()
         hvcs: Github | Gitlab | Gitea | Bitbucket
-        tag_format_str: str
-        mask_initial_release: bool = True  # Default as of v10
-        current_commits: list[CommitDef] = []
-        current_repo_def: RepoDefinition = {}
+        commit_cache: dict[str, CommitDef] = {}
+        current_repo_def: dict[Version | Literal["Unreleased"], RepoVersionDef] = {}
 
         with temporary_working_directory(repo_dir):
             for step in expanded_repo_construction_steps:
@@ -1273,11 +1396,12 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                 action = step["action"]
 
                 if action == RepoActionStep.CONFIGURE:
-                    cfg_def: RepoActionConfigureDetails = step_result["details"]  # type: ignore[assignment]
+                    cfg_def = cast("RepoActionConfigureDetails", step_result["details"])
 
                     # Make sure the resulting build definition is complete with the default
-                    tag_format_str = cfg_def["tag_format_str"] or default_tag_format_str
-                    cfg_def["tag_format_str"] = tag_format_str
+                    cfg_def["tag_format_str"] = (
+                        cfg_def["tag_format_str"] or default_tag_format_str
+                    )
 
                     _, hvcs = build_configured_base_repo(  # type: ignore[assignment] # TODO: fix the type error
                         dest_dir,
@@ -1293,14 +1417,11 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             ]
                         },
                     )
-                    # Save configuration details for later steps
-                    mask_initial_release = cfg_def["mask_initial_release"]
-
-                    # Make sure the resulting build definition is complete with the default
-                    cfg_def["tag_format_str"] = tag_format_str
 
                 elif action == RepoActionStep.MAKE_COMMITS:
-                    mk_cmts_def: RepoActionMakeCommitsDetails = step_result["details"]  # type: ignore[assignment]
+                    mk_cmts_def = cast(
+                        "RepoActionMakeCommitsDetails", step_result["details"]
+                    )
 
                     # update the commit definitions with the repo hashes
                     with Repo(repo_dir) as git_repo:
@@ -1310,53 +1431,96 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                                 mk_cmts_def["commits"],
                             )
                         )
-                        current_commits.extend(
-                            filter(
-                                lambda commit: commit["include_in_changelog"],
-                                mk_cmts_def["commits"],
+
+                    for commit in mk_cmts_def["commits"]:
+                        if commit["cid"] in commit_cache:
+                            raise ValueError(
+                                f"Duplicate commit id '{commit['cid']}' detected!"
                             )
-                        )
+
+                        commit_cache.update({commit["cid"]: commit})
 
                 elif action == RepoActionStep.WRITE_CHANGELOGS:
-                    w_chlgs_def: RepoActionWriteChangelogsDetails = step["details"]  # type: ignore[assignment]
+                    w_chlgs_def = cast(
+                        "RepoActionWriteChangelogsDetails", step["details"]
+                    )
 
                     # Mark the repo definition with the latest stored commits for the upcoming release
                     new_version = w_chlgs_def["new_version"]
                     current_repo_def.update(
-                        {new_version: {"commits": [*current_commits]}}
+                        {
+                            new_version: {
+                                "commits": [
+                                    *filter(
+                                        None,
+                                        (
+                                            cmt
+                                            for commit_id in w_chlgs_def["commit_ids"]
+                                            if (cmt := commit_cache[commit_id])[
+                                                "include_in_changelog"
+                                            ]
+                                        ),
+                                    )
+                                ]
+                            }
+                        }
                     )
-                    current_commits.clear()
+
+                    # in order to support monorepo changelogs we must filter and map the stored repo definition
+                    # to match only the sub-package's versions which are identified by matching tag formats
+                    filtered_repo_def_4_changelog: RepoDefinition = {
+                        str(version): repo_def
+                        for version, repo_def in current_repo_def.items()
+                        if (
+                            isinstance(version, Version)
+                            and isinstance(new_version, Version)
+                            and version.tag_format == new_version.tag_format
+                        )
+                        or version == new_version
+                    }
 
                     # Write each changelog with the current repo definition
-                    for changelog_file_def in w_chlgs_def["dest_files"]:
-                        simulate_default_changelog_creation(
-                            current_repo_def,
-                            hvcs=hvcs,
-                            dest_file=repo_dir.joinpath(changelog_file_def["path"]),
-                            output_format=changelog_file_def["format"],
-                            mask_initial_release=mask_initial_release,
-                            max_version=w_chlgs_def.get("max_version", None),
-                        )
+                    with Repo(repo_dir) as git_repo:
+                        for changelog_file_def in w_chlgs_def["dest_files"]:
+                            changelog_file = repo_dir.joinpath(
+                                changelog_file_def["path"]
+                            )
+                            simulate_default_changelog_creation(
+                                filtered_repo_def_4_changelog,
+                                hvcs=hvcs,
+                                dest_file=changelog_file,
+                                output_format=changelog_file_def["format"],
+                                mask_initial_release=changelog_file_def[
+                                    "mask_initial_release"
+                                ],
+                                max_version=w_chlgs_def.get("max_version"),
+                            )
+
+                            git_repo.git.add(str(changelog_file), force=True)
 
                 elif action == RepoActionStep.RELEASE:
-                    release_def: RepoActionReleaseDetails = step["details"]  # type: ignore[assignment]
+                    release_def = cast("RepoActionReleaseDetails", step["details"])
 
                     with Repo(repo_dir) as git_repo:
                         create_release_tagged_commit(
                             git_repo,
                             version=release_def["version"],
-                            tag_format=tag_format_str,
+                            tag_format=release_def.get(
+                                "tag_format", default_tag_format_str
+                            ),
                             timestamp=release_def["datetime"],
+                            version_py_file=release_def.get("version_py_file", ""),
+                            commit_message_format=release_def.get(
+                                "commit_message_format", COMMIT_MESSAGE
+                            ),
                         )
 
                 elif action == RepoActionStep.GIT_CHECKOUT:
-                    ckout_def: RepoActionGitCheckoutDetails = step["details"]  # type: ignore[assignment]
+                    ckout_def = cast("RepoActionGitCheckoutDetails", step["details"])
 
                     with Repo(repo_dir) as git_repo:
                         if "create_branch" in ckout_def:
-                            create_branch_def: RepoActionGitCheckoutCreateBranch = (
-                                ckout_def["create_branch"]
-                            )
+                            create_branch_def = ckout_def["create_branch"]
                             start_head = git_repo.heads[
                                 create_branch_def["start_branch"]
                             ]
@@ -1370,7 +1534,9 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             git_repo.heads[ckout_def["branch"]].checkout()
 
                 elif action == RepoActionStep.GIT_SQUASH:
-                    squash_def: RepoActionGitSquashDetails = step_result["details"]  # type: ignore[assignment]
+                    squash_def = cast(
+                        "RepoActionGitSquashDetails", step_result["details"]
+                    )
 
                     # Update the commit definition with the repo hash
                     with Repo(repo_dir) as git_repo:
@@ -1380,27 +1546,44 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             commit_def=squash_def["commit_def"],
                             strategy_option=squash_def["strategy_option"],
                         )
-                        if squash_def["commit_def"]["include_in_changelog"]:
-                            current_commits.extend(
-                                separate_squashed_commit_def(
-                                    squashed_commit_def=squash_def["commit_def"],
-                                )
+                        if (
+                            first_cid := f"{squash_def['commit_def']['cid']}-1"
+                        ) in commit_cache:
+                            raise ValueError(
+                                f"Duplicate commit id '{first_cid}' detected!"
                             )
 
+                        commit_cache.update(
+                            {
+                                squashed_commit_def["cid"]: squashed_commit_def
+                                for squashed_commit_def in separate_squashed_commit_def(
+                                    squashed_commit_def=squash_def["commit_def"],
+                                    parser=cast(
+                                        "SquashedCommitSupportedParser",
+                                        get_parser_from_config_file(
+                                            file=squash_def.get(
+                                                "config_file", pyproject_toml_file
+                                            ),
+                                        ),
+                                    ),
+                                )
+                            }
+                        )
+
                 elif action == RepoActionStep.GIT_MERGE:
-                    this_step: RepoActionGitMerge = step_result  # type: ignore[assignment]
+                    this_step = cast("RepoActionGitMerge", step_result)
 
                     with Repo(repo_dir) as git_repo:
                         if this_step["details"]["fast_forward"]:
-                            ff_merge_def: RepoActionGitFFMergeDetails = this_step[  # type: ignore[assignment]
-                                "details"
-                            ]
+                            ff_merge_def = cast(
+                                "RepoActionGitFFMergeDetails", this_step["details"]
+                            )
                             git_repo.git.merge(ff_merge_def["branch_name"], ff=True)
 
                         else:
-                            merge_def: RepoActionGitMergeDetails = this_step[  # type: ignore[assignment]
-                                "details"
-                            ]
+                            merge_def = cast(
+                                "RepoActionGitMergeDetails", this_step["details"]
+                            )
 
                             # Update the commit definition with the repo hash
                             merge_def["commit_def"] = create_merge_commit(
@@ -1412,8 +1595,19 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                                     "strategy_option", DEFAULT_MERGE_STRATEGY_OPTION
                                 ),
                             )
-                            if merge_def["commit_def"]["include_in_changelog"]:
-                                current_commits.append(merge_def["commit_def"])
+
+                            if merge_def["commit_def"]["cid"] in commit_cache:
+                                raise ValueError(
+                                    f"Duplicate commit id '{merge_def['commit_def']['cid']}' detected!"
+                                )
+
+                            commit_cache.update(
+                                {
+                                    merge_def["commit_def"]["cid"]: merge_def[
+                                        "commit_def"
+                                    ]
+                                }
+                            )
 
                 else:
                     raise ValueError(f"Unknown action: {action}")
@@ -1445,10 +1639,15 @@ def get_cfg_value_from_def() -> GetCfgValueFromDefFn:
 
 
 @pytest.fixture(scope="session")
-def get_versions_from_repo_build_def() -> GetVersionsFromRepoBuildDefFn:
-    def _get_versions(repo_def: Sequence[RepoActions]) -> Sequence[str]:
+def get_versions_from_repo_build_def(
+    default_tag_format_str: str,
+) -> GetVersionsFromRepoBuildDefFn:
+    def _get_versions(repo_def: Sequence[RepoActions]) -> Sequence[Version]:
         return [
-            step["details"]["version"]
+            Version.parse(
+                step["details"]["version"],
+                tag_format=step["details"].get("tag_format", default_tag_format_str),
+            )
             for step in repo_def
             if step["action"] == RepoActionStep.RELEASE
         ]
@@ -1518,26 +1717,26 @@ def split_repo_actions_by_release_tags(
 ) -> SplitRepoActionsByReleaseTagsFn:
     def _split_repo_actions_by_release_tags(
         repo_definition: Sequence[RepoActions],
-        tag_format_str: str,
-    ) -> dict[str, list[RepoActions]]:
-        releasetags_2_steps: dict[str, list[RepoActions]] = {
-            "": [],
+    ) -> dict[Version | Literal["Unreleased"] | None, list[RepoActions]]:
+        releasetags_2_steps: dict[
+            Version | Literal["Unreleased"] | None, list[RepoActions]
+        ] = {
+            None: [],
         }
 
         # Create generator for next release tags
         next_release_tag_gen = (
-            tag_format_str.format(version=version)
-            for version in get_versions_from_repo_build_def(repo_definition)
+            version for version in get_versions_from_repo_build_def(repo_definition)
         )
 
         # initialize the first release tag
-        curr_release_tag = next(next_release_tag_gen)
+        curr_release_tag: Version | Literal["Unreleased"] = next(next_release_tag_gen)
         releasetags_2_steps[curr_release_tag] = []
 
         # Loop through all actions and split them by release tags
         for step in repo_definition:
-            if step["action"] == RepoActionStep.CONFIGURE:
-                releasetags_2_steps[""].append(step)
+            if any(step["action"] == action for action in [RepoActionStep.CONFIGURE]):
+                releasetags_2_steps[None].append(step)
                 continue
 
             if step["action"] == RepoActionStep.WRITE_CHANGELOGS:
@@ -1553,19 +1752,16 @@ def split_repo_actions_by_release_tags(
                     curr_release_tag = "Unreleased"
                     releasetags_2_steps[curr_release_tag] = []
 
-        # Run filter on any non-action steps of Unreleased
-        releasetags_2_steps["Unreleased"] = list(
-            filter(
-                lambda step: step["action"] != RepoActionStep.GIT_CHECKOUT,
-                releasetags_2_steps["Unreleased"],
-            )
-        )
+        insignificant_actions = [
+            RepoActionStep.GIT_CHECKOUT,
+        ]
 
-        # Remove Unreleased if there are no steps in an Unreleased section
-        if (
-            "Unreleased" in releasetags_2_steps
-            and not releasetags_2_steps["Unreleased"]
-        ):
+        # Remove Unreleased if there are no significant steps in an Unreleased section
+        if "Unreleased" in releasetags_2_steps and not [
+            step
+            for step in releasetags_2_steps["Unreleased"]
+            if step["action"] not in insignificant_actions
+        ]:
             del releasetags_2_steps["Unreleased"]
 
         # Return all actions split up by release tags
@@ -1883,7 +2079,7 @@ def simulate_default_changelog_creation(  # noqa: C901
         repo_definition: RepoDefinition,
         hvcs: Github | Gitlab | Gitea | Bitbucket,
         dest_file: Path | None = None,
-        max_version: str | None = None,
+        max_version: Version | Literal["Unreleased"] | None = None,
         output_format: ChangelogOutputFormat = ChangelogOutputFormat.MARKDOWN,
         mask_initial_release: bool = True,  # Default as of v10
     ) -> str:
@@ -1926,7 +2122,7 @@ def simulate_default_changelog_creation(  # noqa: C901
                 reduce_repo_def,  # type: ignore[arg-type]
                 repo_definition.items(),
                 {
-                    "version_limit": Version.parse(max_version),
+                    "version_limit": max_version,
                     "repo_def": {},
                 },
             )["repo_def"]

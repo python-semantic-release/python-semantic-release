@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import json
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.util import load_raw_config_file, parse_toml
 from semantic_release.errors import InvalidConfiguration
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from typing import Any
 
 
 @pytest.mark.parametrize(
@@ -45,7 +50,7 @@ from semantic_release.errors import InvalidConfiguration
         ),
     ],
 )
-def test_parse_toml(toml_text, expected):
+def test_parse_toml(toml_text: str, expected: dict[str, Any]):
     assert parse_toml(toml_text) == expected
 
 
@@ -62,7 +67,7 @@ def test_parse_toml_raises_invalid_configuration_with_invalid_toml():
 
 
 @pytest.fixture
-def raw_toml_config_file(tmp_path):
+def raw_toml_config_file(tmp_path: Path) -> Path:
     path = tmp_path / "config.toml"
 
     path.write_text(
@@ -81,10 +86,10 @@ def raw_toml_config_file(tmp_path):
 
 
 @pytest.fixture
-def raw_pyproject_toml_config_file(tmp_path):
+def raw_pyproject_toml_config_file(tmp_path: Path, pyproject_toml_file: Path) -> Path:
     tmp_path.mkdir(exist_ok=True)
 
-    path = tmp_path / "pyproject.toml"
+    path = tmp_path / pyproject_toml_file
 
     path.write_text(
         dedent(
@@ -102,7 +107,7 @@ def raw_pyproject_toml_config_file(tmp_path):
 
 
 @pytest.fixture
-def raw_json_config_file(tmp_path):
+def raw_json_config_file(tmp_path: Path) -> Path:
     tmp_path.mkdir(exist_ok=True)
 
     path = tmp_path / ".releaserc"
@@ -117,7 +122,7 @@ def raw_json_config_file(tmp_path):
 
 
 @pytest.fixture
-def invalid_toml_config_file(tmp_path):
+def invalid_toml_config_file(tmp_path: Path) -> Path:
     path = tmp_path / "config.toml"
 
     path.write_text(
@@ -136,7 +141,7 @@ def invalid_toml_config_file(tmp_path):
 
 
 @pytest.fixture
-def invalid_json_config_file(tmp_path):
+def invalid_json_config_file(tmp_path: Path) -> Path:
     tmp_path.mkdir(exist_ok=True)
 
     path = tmp_path / "releaserc.json"
@@ -153,7 +158,7 @@ def invalid_json_config_file(tmp_path):
 
 
 @pytest.fixture
-def invalid_other_config_file(tmp_path):
+def invalid_other_config_file(tmp_path: Path) -> Path:
     # e.g. XML
     path = tmp_path / "config.xml"
 
@@ -190,7 +195,9 @@ def invalid_other_config_file(tmp_path):
         ),
     ],
 )
-def test_load_raw_config_file_loads_config(raw_config_file, expected):
+def test_load_raw_config_file_loads_config(
+    raw_config_file: Path, expected: dict[str, Any]
+):
     assert load_raw_config_file(raw_config_file) == expected
 
 
@@ -202,6 +209,6 @@ def test_load_raw_config_file_loads_config(raw_config_file, expected):
         lazy_fixture(invalid_other_config_file.__name__),
     ],
 )
-def test_load_raw_invalid_config_file_raises_error(raw_config_file):
+def test_load_raw_invalid_config_file_raises_error(raw_config_file: Path):
     with pytest.raises(InvalidConfiguration):
         load_raw_config_file(raw_config_file)
