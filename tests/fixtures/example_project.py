@@ -24,6 +24,9 @@ from semantic_release.commit_parser import (
     EmojiCommitParser,
     ScipyCommitParser,
 )
+from semantic_release.commit_parser.conventional.parser_monorepo import (
+    ConventionalCommitMonorepoParser,
+)
 from semantic_release.hvcs import Bitbucket, Gitea, Github, Gitlab
 
 import tests.conftest
@@ -83,7 +86,7 @@ if TYPE_CHECKING:
 
     class UseParserFn(Protocol):
         def __call__(
-            self, toml_file: Path | str = ...
+            self, toml_file: Path | str = ..., monorepo: bool = ...
         ) -> type[CommitParser[ParseResult, ParserOptions]]: ...
 
     class UseReleaseNotesTemplateFn(Protocol):
@@ -584,13 +587,16 @@ def use_conventional_parser(
     """Modify the configuration file to use the Conventional parser."""
 
     def _use_conventional_parser(
-        toml_file: Path | str = pyproject_toml_file,
+        toml_file: Path | str = pyproject_toml_file, monorepo: bool = False
     ) -> type[CommitParser[ParseResult, ParserOptions]]:
         update_pyproject_toml(
-            pyproject_toml_config_option_parser, "conventional", toml_file=toml_file
+            pyproject_toml_config_option_parser,
+            f"conventional{'-monorepo' if monorepo else ''}",
+            toml_file=toml_file,
         )
         return cast(
-            "type[CommitParser[ParseResult, ParserOptions]]", ConventionalCommitParser
+            "type[CommitParser[ParseResult, ParserOptions]]",
+            ConventionalCommitMonorepoParser if monorepo else ConventionalCommitParser,
         )
 
     return _use_conventional_parser
@@ -605,8 +611,14 @@ def use_emoji_parser(
     """Modify the configuration file to use the Emoji parser."""
 
     def _use_emoji_parser(
-        toml_file: Path | str = pyproject_toml_file,
+        toml_file: Path | str = pyproject_toml_file, monorepo: bool = False
     ) -> type[CommitParser[ParseResult, ParserOptions]]:
+        if monorepo:
+            raise ValueError(
+                "The Emoji parser does not support monorepo mode. "
+                "Use the conventional parser instead."
+            )
+
         update_pyproject_toml(
             pyproject_toml_config_option_parser, "emoji", toml_file=toml_file
         )
@@ -624,8 +636,14 @@ def use_scipy_parser(
     """Modify the configuration file to use the Scipy parser."""
 
     def _use_scipy_parser(
-        toml_file: Path | str = pyproject_toml_file,
+        toml_file: Path | str = pyproject_toml_file, monorepo: bool = False
     ) -> type[CommitParser[ParseResult, ParserOptions]]:
+        if monorepo:
+            raise ValueError(
+                "The Scipy parser does not support monorepo mode. "
+                "Use the conventional parser instead."
+            )
+
         update_pyproject_toml(
             pyproject_toml_config_option_parser, "scipy", toml_file=toml_file
         )
