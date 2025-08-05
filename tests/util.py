@@ -152,7 +152,15 @@ def shortuid(length: int = 8) -> str:
 
 def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
     """Makes a deterministic file change for testing"""
-    tgt_file = Path(repo.working_tree_dir or ".") / filename
+    tgt_file = Path(filename).resolve().absolute()
+
+    # TODO: switch to Path.is_relative_to() when 3.8 support is deprecated
+    # if not tgt_file.is_relative_to(Path(repo.working_dir).resolve().absolute()):
+    if Path(repo.working_dir).resolve().absolute() not in tgt_file.parents:
+        raise ValueError(
+            f"File {tgt_file} is not relative to the repository working directory {repo.working_dir}"
+        )
+
     tgt_file.parent.mkdir(parents=True, exist_ok=True)
     file_contents = tgt_file.read_text() if tgt_file.exists() else ""
     line_number = len(file_contents.splitlines())
@@ -160,7 +168,7 @@ def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
     file_contents += f"{line_number}  {text or 'default text'}{os.linesep}"
     tgt_file.write_text(file_contents, encoding="utf-8")
 
-    repo.index.add(filename)
+    repo.index.add(tgt_file)
 
 
 def flatten_dircmp(dcmp: filecmp.dircmp) -> list[str]:
