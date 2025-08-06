@@ -19,6 +19,14 @@ There are two official GitHub Actions for Python Semantic Release:
     It is used to upload files, such as distribution artifacts and other assets,
     to a GitHub release.
 
+Included in this documentation are some recommended examples below if you want to get
+started quickly. These examples are not exhaustive and you will need to adjust them
+for your specific project needs especially if you are using a monorepo.
+
+- :ref:`GitHub Actions Example Workflows <gh_actions-examples>`
+
+- :ref:`GitHub Actions with Monorepos <gh_actions-monorepo>`
+
 .. note::
   These GitHub Actions are only simplified wrappers around the
   python-semantic-release CLI. Ultimately, they download and install the
