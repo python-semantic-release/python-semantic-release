@@ -34,6 +34,7 @@ if TYPE_CHECKING:
         def __call__(
             self,
             repo_dir: Path,
+            changelog_file: Path = ...,
             remove_insertion_flag: bool = True,
         ) -> str: ...
 
@@ -81,7 +82,7 @@ def config_path(example_project_dir: ExProjectDir) -> Path:
     return example_project_dir / DEFAULT_CONFIG_FILE
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def read_config_file() -> ReadConfigFileFn:
     def _read_config_file(file: Path | str) -> RawConfig:
         config_text = load_raw_config_file(file)
@@ -136,12 +137,12 @@ def strip_logging_messages() -> StripLoggingMessagesFn:
 
 
 @pytest.fixture(scope="session")
-def long_hash_pattern() -> Pattern:
+def long_hash_pattern() -> Pattern[str]:
     return regexp(r"\b([0-9a-f]{40})\b", IGNORECASE)
 
 
 @pytest.fixture(scope="session")
-def short_hash_pattern() -> Pattern:
+def short_hash_pattern() -> Pattern[str]:
     return regexp(r"\b([0-9a-f]{7})\b", IGNORECASE)
 
 
@@ -149,18 +150,22 @@ def short_hash_pattern() -> Pattern:
 def get_sanitized_rst_changelog_content(
     changelog_rst_file: Path,
     default_rst_changelog_insertion_flag: str,
-    long_hash_pattern: Pattern,
-    short_hash_pattern: Pattern,
+    long_hash_pattern: Pattern[str],
+    short_hash_pattern: Pattern[str],
 ) -> GetSanitizedChangelogContentFn:
     rst_short_hash_link_pattern = regexp(r"(_[0-9a-f]{7})\b", IGNORECASE)
 
     def _get_sanitized_rst_changelog_content(
         repo_dir: Path,
+        changelog_file: Path = changelog_rst_file,
         remove_insertion_flag: bool = False,
     ) -> str:
+        if not (changelog_path := repo_dir / changelog_file).exists():
+            return ""
+
         # Note that our repo generation fixture includes the insertion flag automatically
         # toggle remove_insertion_flag to True to remove the insertion flag, applies to Init mode repos
-        with (repo_dir / changelog_rst_file).open(newline=os.linesep) as rfd:
+        with changelog_path.open(newline=os.linesep) as rfd:
             # use os.linesep here because the insertion flag is os-specific
             # but convert the content to universal newlines for comparison
             changelog_content = (
@@ -182,16 +187,20 @@ def get_sanitized_rst_changelog_content(
 def get_sanitized_md_changelog_content(
     changelog_md_file: Path,
     default_md_changelog_insertion_flag: str,
-    long_hash_pattern: Pattern,
-    short_hash_pattern: Pattern,
+    long_hash_pattern: Pattern[str],
+    short_hash_pattern: Pattern[str],
 ) -> GetSanitizedChangelogContentFn:
     def _get_sanitized_md_changelog_content(
         repo_dir: Path,
+        changelog_file: Path = changelog_md_file,
         remove_insertion_flag: bool = False,
     ) -> str:
+        if not (changelog_path := repo_dir / changelog_file).exists():
+            return ""
+
         # Note that our repo generation fixture includes the insertion flag automatically
         # toggle remove_insertion_flag to True to remove the insertion flag, applies to Init mode repos
-        with (repo_dir / changelog_md_file).open(newline=os.linesep) as rfd:
+        with changelog_path.open(newline=os.linesep) as rfd:
             # use os.linesep here because the insertion flag is os-specific
             # but convert the content to universal newlines for comparison
             changelog_content = (

@@ -17,6 +17,8 @@ from click.testing import CliRunner
 from filelock import FileLock
 from git import Commit, Repo
 
+from semantic_release.version.version import Version
+
 from tests.const import PROJ_DIR
 from tests.fixtures import *
 from tests.util import copy_dir_tree, remove_dir_tree
@@ -335,6 +337,10 @@ def set_cached_repo_data(request: pytest.FixtureRequest) -> SetCachedRepoDataFn:
     def magic_serializer(obj: Any) -> Any:
         if isinstance(obj, Path):
             return obj.__fspath__()
+
+        if isinstance(obj, Version):
+            return obj.__dict__
+
         return obj
 
     def _set_cached_repo_data(proj_dirname: str, data: RepoData) -> None:
