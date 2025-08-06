@@ -4,6 +4,31 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.3.1:
+
+v10.3.1 (2025-08-06)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **github-actions**: Refactor the action output error checking for non-release executions, closes
+  `#1307`_ (`PR#1308`_, `5385724`_)
+
+📖 Documentation
+----------------
+
+* **github-actions**: Adjust docs for direct links to action example workflows, closes `#1303`_
+  (`PR#1309`_, `8efebe2`_)
+
+.. _#1303: https://github.com/python-semantic-release/python-semantic-release/issues/1303
+.. _#1307: https://github.com/python-semantic-release/python-semantic-release/issues/1307
+.. _5385724: https://github.com/python-semantic-release/python-semantic-release/commit/538572426cb30dd4d8c99cea660e290b56361f75
+.. _8efebe2: https://github.com/python-semantic-release/python-semantic-release/commit/8efebe281be2deab1b203cd01d9aedf1542c4ad4
+.. _PR#1308: https://github.com/python-semantic-release/python-semantic-release/pull/1308
+.. _PR#1309: https://github.com/python-semantic-release/python-semantic-release/pull/1309
+
+
 .. _changelog-v10.3.0:
 
 v10.3.0 (2025-08-04)
