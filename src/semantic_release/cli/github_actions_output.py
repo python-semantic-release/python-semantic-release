@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from enum import Enum
 from re import compile as regexp
 from typing import TYPE_CHECKING
 
@@ -13,12 +14,18 @@ if TYPE_CHECKING:
     from semantic_release.hvcs.github import Github
 
 
+class PersistenceMode(Enum):
+    TEMPORARY = "temporary"
+    PERMANENT = "permanent"
+
+
 class VersionGitHubActionsOutput:
     OUTPUT_ENV_VAR = "GITHUB_OUTPUT"
 
     def __init__(
         self,
         gh_client: Github,
+        mode: PersistenceMode = PersistenceMode.PERMANENT,
         released: bool | None = None,
         version: Version | None = None,
         commit_sha: str | None = None,
@@ -26,6 +33,7 @@ class VersionGitHubActionsOutput:
         prev_version: Version | None = None,
     ) -> None:
         self._gh_client = gh_client
+        self._mode = mode
         self._released = released
         self._version = version
         self._commit_sha = commit_sha
@@ -104,10 +112,11 @@ class VersionGitHubActionsOutput:
             missing.add("version")
         if self.released is None:
             missing.add("released")
-        if self.released and self.commit_sha is None:
-            missing.add("commit_sha")
-        if self.released and self.release_notes is None:
-            missing.add("release_notes")
+        if self.released:
+            if self.release_notes is None:
+                missing.add("release_notes")
+            if self._mode is PersistenceMode.PERMANENT and self.commit_sha is None:
+                missing.add("commit_sha")
 
         if missing:
             raise ValueError(

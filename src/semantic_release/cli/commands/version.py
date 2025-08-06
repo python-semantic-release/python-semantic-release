@@ -18,7 +18,10 @@ from semantic_release.cli.changelog_writer import (
     generate_release_notes,
     write_changelog_files,
 )
-from semantic_release.cli.github_actions_output import VersionGitHubActionsOutput
+from semantic_release.cli.github_actions_output import (
+    PersistenceMode,
+    VersionGitHubActionsOutput,
+)
 from semantic_release.cli.util import noop_report, rprint
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
@@ -468,9 +471,16 @@ def version(  # noqa: C901
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
     gha_output = VersionGitHubActionsOutput(
-        hvcs_client
-        if isinstance(hvcs_client, Github)
-        else Github(hvcs_client.remote_url(use_token=False)),
+        gh_client=(
+            hvcs_client
+            if isinstance(hvcs_client, Github)
+            else Github(hvcs_client.remote_url(use_token=False))
+        ),
+        mode=(
+            PersistenceMode.TEMPORARY
+            if opts.noop or (not commit_changes and not create_tag)
+            else PersistenceMode.PERMANENT
+        ),
         released=False,
     )
 
