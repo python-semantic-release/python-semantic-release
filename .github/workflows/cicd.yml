@@ -122,7 +122,7 @@ jobs:
           git reset --hard ${{ github.sha }}
 
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
@@ -145,14 +145,14 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@2896129e02bb7809d2cf0c1b8e9e795ee27acbcf  # v10.2.0
+        uses: python-semantic-release/python-semantic-release@5b9d941d5b29da138b933660ce1a9df75b54ce25  # v10.3.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           verbosity: 1
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@b717f67f7e7e9f709357bce5a542846503ce46ec  # v10.2.0
+        uses: python-semantic-release/publish-action@f8a3b2efc2282bc5219b83ba78ac64b69d6e05b9  # v10.3.1
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -204,7 +204,7 @@ jobs:
 
     steps:
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
