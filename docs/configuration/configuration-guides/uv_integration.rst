@@ -176,7 +176,7 @@ look like this:
           id: version
           env:
             GH_TOKEN: "none"
-          run: uv run semantic-release -v version --no-commit --no-tag
+          run: uv run semantic-release -v version --no-changelog --no-commit --no-tag
 
         - name: Upload | Distribution Artifacts
           if: ${{ steps.version.outputs.released == 'true' }}
