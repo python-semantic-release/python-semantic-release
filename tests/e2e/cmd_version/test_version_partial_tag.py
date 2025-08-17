@@ -30,57 +30,122 @@ if TYPE_CHECKING:
     from tests.fixtures.git_repo import BuiltRepoResult
 
 
+cases = (
+    # metadata release or pre-release should not affect partial tags
+    (["--prerelease"], "0.0.0-rc.1", ["v0", "v0.0"], [], []),
+    # Create partial tags when they don't exist
+    (
+        ["--minor", "--build-metadata", "build.12345"],
+        "0.1.0+build.12345",
+        [],
+        ["v0", "v0.1", "v0.1.0"],
+        [],
+    ),
+    (["--patch"], "0.0.1", [], ["v0", "v0.0"], []),
+    (["--minor"], "0.1.0", [], ["v0", "v0.1"], []),
+    (["--major"], "1.0.0", [], ["v1", "v1.0"], []),
+    # Update existing partial tags
+    (
+        ["--patch", "--build-metadata", "build.12345"],
+        "0.1.1+build.12345",
+        ["v0", "v0.0", "v0.1", "v0.1.0"],
+        ["v0.1.1"],
+        ["v0", "v0.1"],
+    ),
+    (["--patch"], "0.0.1", ["v0", "v0.0"], [], ["v0", "v0.0"]),
+    (["--minor"], "0.1.0", ["v0", "v0.0", "v0.1"], [], ["v0", "v0.1"]),
+    (
+        ["--major"],
+        "1.0.0",
+        ["v0", "v0.0", "v0.1", "v1", "v1.0"],
+        [],
+        ["v1", "v1.0"],
+    ),
+    # Update existing partial tags and create new one
+    (["--minor"], "0.1.0", ["v0", "v0.0"], ["v0.1"], ["v0"]),
+    # Partial tag disabled for older version, now enabled
+    (
+        ["--patch", "--build-metadata", "build.12345"],
+        "1.1.2+build.12345",
+        ["v0.1.0", "v0.1.1", "v1.0.0", "v1.1.0", "v1.1.1+build.1234"],
+        ["v1", "v1.1", "v1.1.2"],
+        [],
+    ),
+    (
+        ["--patch"],
+        "1.1.2",
+        ["v0.1.0", "v0.1.1", "v1.0.0", "v1.1.0", "v1.1.1"],
+        ["v1", "v1.1"],
+        [],
+    ),
+    (
+        ["--minor"],
+        "1.2.0",
+        ["v0.1.0", "v0.1.1", "v1.0.0", "v1.1.0", "v1.1.1"],
+        ["v1", "v1.2"],
+        [],
+    ),
+    (
+        ["--major"],
+        "2.0.0",
+        ["v0.1.0", "v0.1.1", "v1.0.0", "v1.1.0", "v1.1.1"],
+        ["v2", "v2.0"],
+        [],
+    ),
+)
+
+cases_ids = [
+    "metadata-release-or-pre-release",
+    "create-partial-tags-when-they-dont-exist__build-metadata",
+    "create-partial-tags-when-they-dont-exist__patch",
+    "create-partial-tags-when-they-dont-exist__minor",
+    "create-partial-tags-when-they-dont-exist__major",
+    "update-existing-partial-tags__build-metadata",
+    "update-existing-partial-tags__patch",
+    "update-existing-partial-tags__minor",
+    "update-existing-partial-tags__major",
+    "update-existing-partial-tags-and-create-new-one",
+    "partial-tag-disabled-for-older-version__build-metadata",
+    "partial-tag-disabled-for-older-version__patch",
+    "partial-tag-disabled-for-older-version__minor",
+    "partial-tag-enabled-for-newer-version__major",
+]
+
+
 @pytest.mark.parametrize(
-    "repo_result, cli_args, next_release_version, existing_partial_tags, expected_new_partial_tags, expected_moved_partial_tags",
+    "repo_result, add_partial_tags, cli_args, next_release_version, existing_partial_tags, expected_new_partial_tags, expected_moved_partial_tags",
     [
         *(
             (
                 lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
+                True,
                 cli_args,
                 next_release_version,
-                existing_partial_tags,
+                existing_tags,
                 expected_new_partial_tags,
                 expected_moved_partial_tags,
             )
-            for cli_args, next_release_version, existing_partial_tags, expected_new_partial_tags, expected_moved_partial_tags in (
-                # metadata release or pre-release should not affect partial tags
-                (["--prerelease"], "0.0.0-rc.1", ["v0", "v0.0"], [], []),
-                # Create partial tags when they don't exist
-                (
-                    ["--build-metadata", "build.12345"],
-                    "0.1.0+build.12345",
-                    [],
-                    ["v0", "v0.1", "v0.1.0"],
-                    [],
-                ),
-                (["--patch"], "0.0.1", [], ["v0", "v0.0"], []),
-                (["--minor"], "0.1.0", [], ["v0", "v0.1"], []),
-                (["--major"], "1.0.0", [], ["v1", "v1.0"], []),
-                # Update existing partial tags
-                (
-                    ["--build-metadata", "build.12345"],
-                    "0.1.0+build.12345",
-                    ["v0", "v0.0", "v0.1", "v0.1.0"],
-                    [],
-                    ["v0", "v0.1", "v0.1.0"],
-                ),
-                (["--patch"], "0.0.1", ["v0", "v0.0"], [], ["v0", "v0.0"]),
-                (["--minor"], "0.1.0", ["v0", "v0.0", "v0.1"], [], ["v0", "v0.1"]),
-                (
-                    ["--major"],
-                    "1.0.0",
-                    ["v0", "v0.0", "v0.1", "v1", "v1.0"],
-                    [],
-                    ["v1", "v1.0"],
-                ),
-                # Update existing partial tags and create new one
-                (["--minor"], "0.1.0", ["v0", "v0.0"], ["v0.1"], ["v0"]),
+            for cli_args, next_release_version, existing_tags, expected_new_partial_tags, expected_moved_partial_tags in cases
+        ),
+        *(
+            (
+                lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
+                False,
+                cli_args,
+                next_release_version,
+                existing_tags,
+                expected_new_partial_tags,
+                expected_moved_partial_tags,
             )
-        )
+            for cli_args, next_release_version, existing_tags, expected_new_partial_tags, expected_moved_partial_tags in cases
+        ),
     ],
+    ids=[f"{case_id}__partial-tags-enabled" for case_id in cases_ids]
+    + [f"{case_id}__partial-tags-disabled" for case_id in cases_ids],
 )
 def test_version_partial_tag_creation(
     repo_result: BuiltRepoResult,
+    add_partial_tags: bool,
     cli_args: list[str],
     next_release_version: str,
     example_project_dir: ExProjectDir,
@@ -95,7 +160,7 @@ def test_version_partial_tag_creation(
 ) -> None:
     """Test that the version creates the expected partial tags."""
     # Enable partial tags
-    update_pyproject_toml("tool.semantic_release.add_partial_tags", True)
+    update_pyproject_toml("tool.semantic_release.add_partial_tags", add_partial_tags)
 
     repo = repo_result["repo"]
     version_file = example_project_dir.joinpath(
@@ -107,6 +172,10 @@ def test_version_partial_tag_creation(
             "pyproject.toml",
             str(version_file.relative_to(example_project_dir)),
         ]
+    )
+    expected_new_partial_tags = expected_new_partial_tags if add_partial_tags else []
+    expected_moved_partial_tags = (
+        expected_moved_partial_tags if add_partial_tags else []
     )
 
     # Setup: create existing tags
