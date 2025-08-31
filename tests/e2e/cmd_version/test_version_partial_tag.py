@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from tests.fixtures.git_repo import BuiltRepoResult
 
 
-cases = (
+cases: tuple[tuple[list[str], str, list[str], list[str], list[str]], ...] = (
     # metadata release or pre-release should not affect partial tags
     (["--prerelease"], "0.0.0-rc.1", ["v0", "v0.0"], [], []),
     # Create partial tags when they don't exist
