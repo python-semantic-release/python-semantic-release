@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import count
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
 from semantic_release.cli.config import ChangelogOutputFormat
+from semantic_release.version.version import Version
 
 import tests.conftest
 import tests.const
@@ -20,7 +21,15 @@ from tests.const import (
 )
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Any, Sequence
+
+    from semantic_release.commit_parser._base import CommitParser, ParserOptions
+    from semantic_release.commit_parser.conventional import (
+        ConventionalCommitParser,
+    )
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
+    from semantic_release.commit_parser.token import ParseResult
 
     from tests.conftest import (
         GetCachedRepoDataFn,
@@ -39,15 +48,19 @@ if TYPE_CHECKING:
         ConvertCommitSpecsToCommitDefsFn,
         ConvertCommitSpecToCommitDefFn,
         ExProjectGitRepoFn,
+        FormatGitHubMergeCommitMsgFn,
         FormatGitMergeCommitMsgFn,
         GetRepoDefinitionFn,
+        RepoActionGitMerge,
+        RepoActionGitMergeDetails,
         RepoActions,
         RepoActionWriteChangelogsDestFile,
         TomlSerializableTypes,
     )
 
 
-FEAT_BRANCH_NAME = "feat/feature"
+FEAT_BRANCH_1_NAME = "feat/feature-1"
+FEAT_BRANCH_2_NAME = "feat/feature-2"
 
 
 @pytest.fixture(scope="session")
@@ -82,9 +95,14 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
     convert_commit_specs_to_commit_defs: ConvertCommitSpecsToCommitDefsFn,
     convert_commit_spec_to_commit_def: ConvertCommitSpecToCommitDefFn,
     format_merge_commit_msg_git: FormatGitMergeCommitMsgFn,
+    format_merge_commit_msg_github: FormatGitHubMergeCommitMsgFn,
     changelog_md_file: Path,
     changelog_rst_file: Path,
     stable_now_date: GetStableDateNowFn,
+    default_conventional_parser: ConventionalCommitParser,
+    default_emoji_parser: EmojiCommitParser,
+    default_scipy_parser: ScipyCommitParser,
+    default_tag_format_str: str,
 ) -> GetRepoDefinitionFn:
     """
     This fixture provides a function that builds a repository definition for a trunk-based development
@@ -95,6 +113,11 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
     It is the minimal reproducible example of the issue
     [#1252](https://github.com/python-semantic-release/python-semantic-release/issues/1252).
     """
+    parser_classes: dict[CommitConvention, CommitParser[Any, Any]] = {
+        "conventional": default_conventional_parser,
+        "emoji": default_emoji_parser,
+        "scipy": default_scipy_parser,
+    }
 
     def _get_repo_from_definition(
         commit_type: CommitConvention,
@@ -106,19 +129,26 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
         ignore_merge_commits: bool = True,
     ) -> Sequence[RepoActions]:
         stable_now_datetime = stable_now_date()
+        pr_num_gen = (i for i in count(start=2, step=1))
         commit_timestamp_gen = (
             (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
             for i in count(step=1)
+        )
+        commit_parser = cast(
+            "CommitParser[ParseResult, ParserOptions]",
+            parser_classes[commit_type],
         )
 
         changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
+                "mask_initial_release": mask_initial_release,
             },
             {
                 "path": changelog_rst_file,
                 "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                "mask_initial_release": mask_initial_release,
             },
         ]
 
@@ -131,7 +161,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                     "commit_type": commit_type,
                     "hvcs_client_name": hvcs_client_name,
                     "hvcs_domain": hvcs_domain,
-                    "tag_format_str": tag_format_str,
+                    "tag_format_str": tag_format_str or default_tag_format_str,
                     "mask_initial_release": mask_initial_release,
                     "extra_configs": {
                         # Set the default release branch
@@ -139,7 +169,8 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                             "match": r"^(main|master)$",
                             "prerelease": False,
                         },
-                        "tool.semantic_release.allow_zero_version": True,
+                        "tool.semantic_release.allow_zero_version": False,
+                        "tool.semantic_release.commit_parser_options.ignore_merge_commits": ignore_merge_commits,
                         **(extra_configs or {}),
                     },
                 },
@@ -147,7 +178,9 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
         )
 
         # Make initial release
-        new_version = "0.1.0"
+        new_version = Version.parse(
+            "1.0.0", tag_format=(tag_format_str or default_tag_format_str)
+        )
 
         repo_construction_steps.extend(
             [
@@ -157,6 +190,9 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
+                                    "cid": (
+                                        cid_db_c1_initial := "db_c1_initial_commit"
+                                    ),
                                     "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
@@ -166,6 +202,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                                     ),
                                 },
                                 {
+                                    "cid": (cid_db_c2_feat := "db_c2_feat"),
                                     "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
@@ -174,13 +211,15 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                                 },
                             ],
                             commit_type,
+                            parser=commit_parser,
                         ),
                     },
                 },
                 {
                     "action": RepoActionStep.RELEASE,
                     "details": {
-                        "version": new_version,
+                        "version": str(new_version),
+                        "tag_format": new_version.tag_format,
                         "datetime": next(commit_timestamp_gen),
                         "pre_actions": [
                             {
@@ -188,6 +227,7 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                                 "details": {
                                     "new_version": new_version,
                                     "dest_files": changelog_file_definitions,
+                                    "commit_ids": [cid_db_c1_initial, cid_db_c2_feat],
                                 },
                             },
                         ],
@@ -196,79 +236,27 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
             ]
         )
 
-        # Create a feature branch (without commits yet, just to pin a commit)
+        # Create a feature branch & make a commit (separate developer, slower activity)
         repo_construction_steps.extend(
             [
                 {
                     "action": RepoActionStep.GIT_CHECKOUT,
                     "details": {
                         "create_branch": {
-                            "name": FEAT_BRANCH_NAME,
+                            "name": FEAT_BRANCH_1_NAME,
                             "start_branch": DEFAULT_BRANCH_NAME,
                         }
                     },
                 },
                 {
-                    "action": RepoActionStep.GIT_CHECKOUT,
-                    "details": {"branch": DEFAULT_BRANCH_NAME},
-                },
-            ]
-        )
-
-        # Make another release in default branch
-        new_version = "0.2.0"
-
-        repo_construction_steps.extend(
-            [
-                {
                     "action": RepoActionStep.MAKE_COMMITS,
                     "details": {
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
-                                    "conventional": "feat: add another feature",
-                                    "emoji": ":sparkles: add another feature",
-                                    "scipy": "ENH: add another feature",
-                                    "datetime": next(commit_timestamp_gen),
-                                    "include_in_changelog": True,
-                                },
-                            ],
-                            commit_type,
-                        ),
-                    },
-                },
-                {
-                    "action": RepoActionStep.RELEASE,
-                    "details": {
-                        "version": new_version,
-                        "datetime": next(commit_timestamp_gen),
-                        "pre_actions": [
-                            {
-                                "action": RepoActionStep.WRITE_CHANGELOGS,
-                                "details": {
-                                    "new_version": new_version,
-                                    "dest_files": changelog_file_definitions,
-                                },
-                            },
-                        ],
-                    },
-                },
-            ]
-        )
-
-        # Add commit to the feature branch
-        repo_construction_steps.extend(
-            [
-                {
-                    "action": RepoActionStep.GIT_CHECKOUT,
-                    "details": {"branch": FEAT_BRANCH_NAME},
-                },
-                {
-                    "action": RepoActionStep.MAKE_COMMITS,
-                    "details": {
-                        "commits": convert_commit_specs_to_commit_defs(
-                            [
-                                {
+                                    "cid": (
+                                        cid_feb1_c1_feat := "feat_branch_1_c1_feat"
+                                    ),
                                     "conventional": "feat: add new feature in the feature branch",
                                     "emoji": ":sparkles: add new feature in the feature branch",
                                     "scipy": "ENH: add new feature in the feature branch",
@@ -277,83 +265,89 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                                 },
                             ],
                             commit_type,
+                            parser=commit_parser,
                         ),
                     },
                 },
             ]
         )
 
-        # Merge default branch into the feature branch to keep it up to date
+        # Create a 2nd feature branch & make a commit (separate developer, faster activity)
         repo_construction_steps.extend(
             [
                 {
-                    "action": RepoActionStep.GIT_MERGE,
+                    "action": RepoActionStep.GIT_CHECKOUT,
                     "details": {
-                        "branch_name": DEFAULT_BRANCH_NAME,
-                        "fast_forward": False,
-                        "commit_def": convert_commit_spec_to_commit_def(
-                            {
-                                "conventional": format_merge_commit_msg_git(
-                                    branch_name=DEFAULT_BRANCH_NAME,
-                                    tgt_branch_name=FEAT_BRANCH_NAME,
-                                ),
-                                "emoji": format_merge_commit_msg_git(
-                                    branch_name=DEFAULT_BRANCH_NAME,
-                                    tgt_branch_name=FEAT_BRANCH_NAME,
-                                ),
-                                "scipy": format_merge_commit_msg_git(
-                                    branch_name=DEFAULT_BRANCH_NAME,
-                                    tgt_branch_name=FEAT_BRANCH_NAME,
-                                ),
-                                "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": not ignore_merge_commits,
-                            },
+                        "create_branch": {
+                            "name": FEAT_BRANCH_2_NAME,
+                            "start_branch": DEFAULT_BRANCH_NAME,
+                        }
+                    },
+                },
+                {
+                    "action": RepoActionStep.MAKE_COMMITS,
+                    "details": {
+                        "commits": convert_commit_specs_to_commit_defs(
+                            [
+                                {
+                                    "cid": (
+                                        cid_feb2_c1_feat := "feat_branch_2_c1_feat"
+                                    ),
+                                    "conventional": "feat: add a faster feature",
+                                    "emoji": ":sparkles: add a faster feature",
+                                    "scipy": "ENH: add a faster feature",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "include_in_changelog": True,
+                                },
+                            ],
                             commit_type,
+                            parser=commit_parser,
                         ),
                     },
                 },
+            ]
+        )
+
+        # Merge feature branch 2 into default branch and release (faster activity is complete)
+        new_version = Version.parse("1.1.0", tag_format=new_version.tag_format)
+
+        merge_def_type_placeholder: RepoActionGitMerge[RepoActionGitMergeDetails] = {
+            "action": RepoActionStep.GIT_MERGE,
+            "details": {
+                "branch_name": FEAT_BRANCH_2_NAME,
+                "fast_forward": False,
+                "commit_def": convert_commit_spec_to_commit_def(
+                    {
+                        "cid": (cid_feb2_merge := "feat_branch_2_merge"),
+                        "conventional": (
+                            merge_msg := format_merge_commit_msg_github(
+                                pr_number=next(pr_num_gen),
+                                branch_name=FEAT_BRANCH_2_NAME,
+                            )
+                        ),
+                        "emoji": merge_msg,
+                        "scipy": merge_msg,
+                        "datetime": next(commit_timestamp_gen),
+                        "include_in_changelog": not ignore_merge_commits,
+                    },
+                    commit_type,
+                    parser=commit_parser,
+                ),
+            },
+        }
+
+        repo_construction_steps.extend(
+            [
                 {
                     "action": RepoActionStep.GIT_CHECKOUT,
                     "details": {"branch": DEFAULT_BRANCH_NAME},
                 },
-            ]
-        )
-
-        # Merge the feature branch into the default branch and make a release
-        new_version = "0.3.0"
-
-        repo_construction_steps.extend(
-            [
-                {
-                    "action": RepoActionStep.GIT_MERGE,
-                    "details": {
-                        "branch_name": FEAT_BRANCH_NAME,
-                        "fast_forward": False,
-                        "commit_def": convert_commit_spec_to_commit_def(
-                            {
-                                "conventional": format_merge_commit_msg_git(
-                                    branch_name=FEAT_BRANCH_NAME,
-                                    tgt_branch_name=DEFAULT_BRANCH_NAME,
-                                ),
-                                "emoji": format_merge_commit_msg_git(
-                                    branch_name=FEAT_BRANCH_NAME,
-                                    tgt_branch_name=DEFAULT_BRANCH_NAME,
-                                ),
-                                "scipy": format_merge_commit_msg_git(
-                                    branch_name=FEAT_BRANCH_NAME,
-                                    tgt_branch_name=DEFAULT_BRANCH_NAME,
-                                ),
-                                "datetime": next(commit_timestamp_gen),
-                                "include_in_changelog": not ignore_merge_commits,
-                            },
-                            commit_type,
-                        ),
-                    },
-                },
+                merge_def_type_placeholder,
                 {
                     "action": RepoActionStep.RELEASE,
                     "details": {
-                        "version": new_version,
+                        "version": str(new_version),
+                        "tag_format": new_version.tag_format,
                         "datetime": next(commit_timestamp_gen),
                         "pre_actions": [
                             {
@@ -361,6 +355,103 @@ def get_repo_definition_4_github_flow_repo_w_default_release_n_branch_update_mer
                                 "details": {
                                     "new_version": new_version,
                                     "dest_files": changelog_file_definitions,
+                                    "commit_ids": [cid_feb2_c1_feat, cid_feb2_merge],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ]
+        )
+
+        merge_def_type_placeholder = {
+            "action": RepoActionStep.GIT_MERGE,
+            "details": {
+                "branch_name": DEFAULT_BRANCH_NAME,
+                "fast_forward": False,
+                "commit_def": convert_commit_spec_to_commit_def(
+                    {
+                        "cid": (cid_feb1_update_merge := "feat_branch_1_update_merge"),
+                        "conventional": (
+                            merge_msg := format_merge_commit_msg_git(
+                                branch_name=DEFAULT_BRANCH_NAME,
+                                tgt_branch_name=FEAT_BRANCH_1_NAME,
+                            )
+                        ),
+                        "emoji": merge_msg,
+                        "scipy": merge_msg,
+                        "datetime": next(commit_timestamp_gen),
+                        "include_in_changelog": not ignore_merge_commits,
+                    },
+                    commit_type,
+                    parser=commit_parser,
+                ),
+            },
+        }
+
+        # Merge default branch into the feature branch to keep it up to date
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": FEAT_BRANCH_1_NAME},
+                },
+                merge_def_type_placeholder,
+            ]
+        )
+
+        # Merge the feature branch into the default branch and make a release
+        new_version = Version.parse("1.2.0", tag_format=new_version.tag_format)
+
+        merge_def_type_placeholder = {
+            "action": RepoActionStep.GIT_MERGE,
+            "details": {
+                "branch_name": FEAT_BRANCH_1_NAME,
+                "fast_forward": False,
+                "commit_def": convert_commit_spec_to_commit_def(
+                    {
+                        "cid": (cid_feb1_merge := "feat_branch_1_release_merge"),
+                        "conventional": (
+                            merge_msg := format_merge_commit_msg_github(
+                                pr_number=next(pr_num_gen),
+                                branch_name=FEAT_BRANCH_1_NAME,
+                            )
+                        ),
+                        "emoji": merge_msg,
+                        "scipy": merge_msg,
+                        "datetime": next(commit_timestamp_gen),
+                        "include_in_changelog": not ignore_merge_commits,
+                    },
+                    commit_type,
+                    parser=commit_parser,
+                ),
+            },
+        }
+
+        repo_construction_steps.extend(
+            [
+                {
+                    "action": RepoActionStep.GIT_CHECKOUT,
+                    "details": {"branch": DEFAULT_BRANCH_NAME},
+                },
+                merge_def_type_placeholder,
+                {
+                    "action": RepoActionStep.RELEASE,
+                    "details": {
+                        "version": str(new_version),
+                        "tag_format": new_version.tag_format,
+                        "datetime": next(commit_timestamp_gen),
+                        "pre_actions": [
+                            {
+                                "action": RepoActionStep.WRITE_CHANGELOGS,
+                                "details": {
+                                    "new_version": new_version,
+                                    "dest_files": changelog_file_definitions,
+                                    "commit_ids": [
+                                        cid_feb1_c1_feat,
+                                        cid_feb1_update_merge,
+                                        cid_feb1_merge,
+                                    ],
                                 },
                             },
                         ],

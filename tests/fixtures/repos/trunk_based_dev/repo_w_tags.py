@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import count
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
 from semantic_release.cli.config import ChangelogOutputFormat
+from semantic_release.version.version import Version
 
 import tests.conftest
 import tests.const
@@ -19,7 +20,15 @@ from tests.const import (
 )
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Any, Sequence
+
+    from semantic_release.commit_parser._base import CommitParser, ParserOptions
+    from semantic_release.commit_parser.conventional import (
+        ConventionalCommitParser,
+    )
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
+    from semantic_release.commit_parser.token import ParseResult
 
     from tests.conftest import (
         GetCachedRepoDataFn,
@@ -75,11 +84,20 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
     changelog_md_file: Path,
     changelog_rst_file: Path,
     stable_now_date: GetStableDateNowFn,
+    default_conventional_parser: ConventionalCommitParser,
+    default_emoji_parser: EmojiCommitParser,
+    default_scipy_parser: ScipyCommitParser,
+    default_tag_format_str: str,
 ) -> GetRepoDefinitionFn:
     """
     Builds a repository with trunk-only committing (no-branching) strategy with
     only official releases.
     """
+    parser_classes: dict[CommitConvention, CommitParser[Any, Any]] = {
+        "conventional": default_conventional_parser,
+        "emoji": default_emoji_parser,
+        "scipy": default_scipy_parser,
+    }
 
     def _get_repo_from_definition(
         commit_type: CommitConvention,
@@ -95,15 +113,21 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
             (stable_now_datetime + timedelta(seconds=i)).isoformat(timespec="seconds")
             for i in count(step=1)
         )
+        commit_parser = cast(
+            "CommitParser[ParseResult, ParserOptions]",
+            parser_classes[commit_type],
+        )
 
         changelog_file_definitions: Sequence[RepoActionWriteChangelogsDestFile] = [
             {
                 "path": changelog_md_file,
                 "format": ChangelogOutputFormat.MARKDOWN,
+                "mask_initial_release": mask_initial_release,
             },
             {
                 "path": changelog_rst_file,
                 "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                "mask_initial_release": mask_initial_release,
             },
         ]
 
@@ -116,7 +140,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                     "commit_type": commit_type,
                     "hvcs_client_name": hvcs_client_name,
                     "hvcs_domain": hvcs_domain,
-                    "tag_format_str": tag_format_str,
+                    "tag_format_str": tag_format_str or default_tag_format_str,
                     "mask_initial_release": mask_initial_release,
                     "extra_configs": {
                         # Set the default release branch
@@ -124,6 +148,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                             "match": r"^(main|master)$",
                             "prerelease": False,
                         },
+                        "tool.semantic_release.commit_parser_options.ignore_merge_commits": ignore_merge_commits,
                         "tool.semantic_release.allow_zero_version": True,
                         **(extra_configs or {}),
                     },
@@ -132,7 +157,9 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
         )
 
         # Make initial release
-        new_version = "0.1.0"
+        new_version = Version.parse(
+            "0.1.0", tag_format=(tag_format_str or default_tag_format_str)
+        )
 
         repo_construction_steps.extend(
             [
@@ -142,6 +169,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
+                                    "cid": (cid_c1_initial := "c1_initial_commit"),
                                     "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
@@ -151,6 +179,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                                     ),
                                 },
                                 {
+                                    "cid": (cid_c2_feat := "c2-feat"),
                                     "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
@@ -159,13 +188,15 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                                 },
                             ],
                             commit_type,
+                            parser=commit_parser,
                         ),
                     },
                 },
                 {
                     "action": RepoActionStep.RELEASE,
                     "details": {
-                        "version": new_version,
+                        "version": str(new_version),
+                        "tag_format": new_version.tag_format,
                         "datetime": next(commit_timestamp_gen),
                         "pre_actions": [
                             {
@@ -173,6 +204,10 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                                 "details": {
                                     "new_version": new_version,
                                     "dest_files": changelog_file_definitions,
+                                    "commit_ids": [
+                                        cid_c1_initial,
+                                        cid_c2_feat,
+                                    ],
                                 },
                             },
                         ],
@@ -182,7 +217,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
         )
 
         # Make a fix and officially release it
-        new_version = "0.1.1"
+        new_version = Version.parse("0.1.1", tag_format=new_version.tag_format)
         repo_construction_steps.extend(
             [
                 {
@@ -191,6 +226,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
+                                    "cid": (cid_c3_fix := "c3-fix"),
                                     "conventional": "fix: correct some text\n\nResolves: #123\n",
                                     "emoji": ":bug: correct some text\n\nResolves: #123\n",
                                     "scipy": "MAINT: correct some text\n\nResolves: #123\n",
@@ -199,13 +235,15 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                                 },
                             ],
                             commit_type,
+                            parser=commit_parser,
                         ),
                     },
                 },
                 {
                     "action": RepoActionStep.RELEASE,
                     "details": {
-                        "version": new_version,
+                        "version": str(new_version),
+                        "tag_format": new_version.tag_format,
                         "datetime": next(commit_timestamp_gen),
                         "pre_actions": [
                             {
@@ -213,6 +251,7 @@ def get_repo_definition_4_trunk_only_repo_w_tags(
                                 "details": {
                                     "new_version": new_version,
                                     "dest_files": changelog_file_definitions,
+                                    "commit_ids": [cid_c3_fix],
                                 },
                             },
                         ],

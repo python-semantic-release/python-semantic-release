@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import count
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -19,7 +19,15 @@ from tests.const import (
 )
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Any, Sequence
+
+    from semantic_release.commit_parser._base import CommitParser, ParserOptions
+    from semantic_release.commit_parser.conventional import (
+        ConventionalCommitParser,
+    )
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
+    from semantic_release.commit_parser.token import ParseResult
 
     from tests.conftest import (
         GetCachedRepoDataFn,
@@ -72,11 +80,19 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
     changelog_md_file: Path,
     changelog_rst_file: Path,
     stable_now_date: GetStableDateNowFn,
+    default_conventional_parser: ConventionalCommitParser,
+    default_emoji_parser: EmojiCommitParser,
+    default_scipy_parser: ScipyCommitParser,
 ) -> GetRepoDefinitionFn:
     """
     Builds a repository with trunk-only committing (no-branching) strategy without
     any releases.
     """
+    parser_classes: dict[CommitConvention, CommitParser[Any, Any]] = {
+        "conventional": default_conventional_parser,
+        "emoji": default_emoji_parser,
+        "scipy": default_scipy_parser,
+    }
 
     def _get_repo_from_definition(
         commit_type: CommitConvention,
@@ -110,6 +126,7 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                                 "match": r"^(main|master)$",
                                 "prerelease": False,
                             },
+                            "tool.semantic_release.commit_parser_options.ignore_merge_commits": ignore_merge_commits,
                             **(extra_configs or {}),
                         },
                     },
@@ -120,6 +137,7 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
+                                    "cid": (cid_c1_initial := "c1_initial_commit"),
                                     "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
@@ -129,6 +147,7 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                                     ),
                                 },
                                 {
+                                    "cid": (cid_c2_feat1 := "c2-feat1"),
                                     "conventional": "feat: add new feature",
                                     "emoji": ":sparkles: add new feature",
                                     "scipy": "ENH: add new feature",
@@ -136,6 +155,7 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                                     "include_in_changelog": True,
                                 },
                                 {
+                                    "cid": (cid_c3_fix1 := "c3-fix1"),
                                     "conventional": "fix: correct some text",
                                     "emoji": ":bug: correct some text",
                                     "scipy": "MAINT: correct some text",
@@ -143,6 +163,7 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                                     "include_in_changelog": True,
                                 },
                                 {
+                                    "cid": (cid_c4_fix2 := "c4-fix2"),
                                     "conventional": "fix: correct more text\n\nCloses: #123",
                                     "emoji": ":bug: correct more text\n\nCloses: #123",
                                     "scipy": "MAINT: correct more text\n\nCloses: #123",
@@ -151,6 +172,10 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                                 },
                             ],
                             commit_type,
+                            parser=cast(
+                                "CommitParser[ParseResult, ParserOptions]",
+                                parser_classes[commit_type],
+                            ),
                         ),
                     },
                 },
@@ -162,11 +187,19 @@ def get_repo_definition_4_trunk_only_repo_w_no_tags(
                             {
                                 "path": changelog_md_file,
                                 "format": ChangelogOutputFormat.MARKDOWN,
+                                "mask_initial_release": mask_initial_release,
                             },
                             {
                                 "path": changelog_rst_file,
                                 "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                                "mask_initial_release": mask_initial_release,
                             },
+                        ],
+                        "commit_ids": [
+                            cid_c1_initial,
+                            cid_c2_feat1,
+                            cid_c3_fix1,
+                            cid_c4_fix2,
                         ],
                     },
                 },
@@ -312,7 +345,7 @@ def repo_w_no_tags_conventional_commits_unmasked_initial_release(
     example_project_dir: ExProjectDir,
     change_to_ex_proj_dir: None,
 ) -> BuiltRepoResult:
-    """Replicates repo with no tags, but with allow_zero_version=True"""
+    """Replicates repo with no tags, but with mask_initial_release=False"""
     repo_name = repo_w_no_tags_conventional_commits_unmasked_initial_release.__name__
     commit_type: CommitConvention = (
         repo_name.split("_commits", maxsplit=1)[0].split("_")[-1]  # type: ignore[assignment]
