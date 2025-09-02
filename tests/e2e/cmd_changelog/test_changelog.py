@@ -14,7 +14,6 @@ import semantic_release.hvcs.github
 from semantic_release.changelog.context import ChangelogMode
 from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.hvcs.github import Github
-from semantic_release.version.version import Version
 
 from tests.const import (
     CHANGELOG_SUBCMD,
@@ -77,7 +76,7 @@ if TYPE_CHECKING:
 
     from requests_mock import Mocker
 
-    from semantic_release.commit_parser.conventional.parser import (
+    from semantic_release.commit_parser.conventional import (
         ConventionalCommitParser,
     )
     from semantic_release.commit_parser.emoji import EmojiCommitParser
@@ -1109,9 +1108,7 @@ def test_custom_release_notes_template(
 ) -> None:
     """Verify the template `.release_notes.md.j2` from `template_dir` is used."""
     expected_call_count = 1
-    version = Version.parse(
-        get_versions_from_repo_build_def(repo_result["definition"])[-1]
-    )
+    version = get_versions_from_repo_build_def(repo_result["definition"])[-1]
 
     # Setup
     use_release_notes_template()

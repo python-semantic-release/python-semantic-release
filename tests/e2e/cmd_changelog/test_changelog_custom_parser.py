@@ -18,6 +18,10 @@ from tests.util import (
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from semantic_release.commit_parser.conventional import (
+        ConventionalCommitParser,
+    )
+
     from tests.conftest import RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn, UseCustomParserFn
     from tests.fixtures.git_repo import BuiltRepoResult, GetCommitDefFn
@@ -31,9 +35,10 @@ def test_changelog_custom_parser_remove_from_changelog(
     run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     use_custom_parser: UseCustomParserFn,
-    get_commit_def_of_conventional_commit: GetCommitDefFn,
+    get_commit_def_of_conventional_commit: GetCommitDefFn[ConventionalCommitParser],
     changelog_md_file: Path,
     default_md_changelog_insertion_flag: str,
+    default_conventional_parser: ConventionalCommitParser,
 ):
     """
     Given when a changelog filtering custom parser is configured
@@ -41,7 +46,8 @@ def test_changelog_custom_parser_remove_from_changelog(
     Then the commit message is not included in the resulting changelog
     """
     ignored_commit_def = get_commit_def_of_conventional_commit(
-        "chore: do not include me in the changelog"
+        "chore: do not include me in the changelog",
+        parser=default_conventional_parser,
     )
 
     # Because we are in init mode, the insertion flag is not present in the changelog
