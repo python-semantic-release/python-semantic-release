@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -17,7 +17,15 @@ from tests.const import (
 )
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Any, Sequence
+
+    from semantic_release.commit_parser._base import CommitParser, ParserOptions
+    from semantic_release.commit_parser.conventional import (
+        ConventionalCommitParser,
+    )
+    from semantic_release.commit_parser.emoji import EmojiCommitParser
+    from semantic_release.commit_parser.scipy import ScipyCommitParser
+    from semantic_release.commit_parser.token import ParseResult
 
     from tests.conftest import (
         GetCachedRepoDataFn,
@@ -70,7 +78,16 @@ def get_repo_definition_4_repo_w_initial_commit(
     changelog_md_file: Path,
     changelog_rst_file: Path,
     stable_now_date: GetStableDateNowFn,
+    default_conventional_parser: ConventionalCommitParser,
+    default_emoji_parser: EmojiCommitParser,
+    default_scipy_parser: ScipyCommitParser,
 ) -> GetRepoDefinitionFn:
+    parser_classes: dict[CommitConvention, CommitParser[Any, Any]] = {
+        "conventional": default_conventional_parser,
+        "emoji": default_emoji_parser,
+        "scipy": default_scipy_parser,
+    }
+
     def _get_repo_from_definition(
         commit_type: CommitConvention,
         hvcs_client_name: str = "github",
@@ -97,6 +114,7 @@ def get_repo_definition_4_repo_w_initial_commit(
                                 "match": r"^(main|master)$",
                                 "prerelease": False,
                             },
+                            "tool.semantic_release.commit_parser_options.ignore_merge_commits": ignore_merge_commits,
                             **(extra_configs or {}),
                         },
                     },
@@ -107,6 +125,7 @@ def get_repo_definition_4_repo_w_initial_commit(
                         "commits": convert_commit_specs_to_commit_defs(
                             [
                                 {
+                                    "cid": "initial_commit",
                                     "conventional": INITIAL_COMMIT_MESSAGE,
                                     "emoji": INITIAL_COMMIT_MESSAGE,
                                     "scipy": INITIAL_COMMIT_MESSAGE,
@@ -119,6 +138,10 @@ def get_repo_definition_4_repo_w_initial_commit(
                                 },
                             ],
                             commit_type,
+                            parser=cast(
+                                "CommitParser[ParseResult, ParserOptions]",
+                                parser_classes[commit_type],
+                            ),
                         ),
                     },
                 },
@@ -130,11 +153,16 @@ def get_repo_definition_4_repo_w_initial_commit(
                             {
                                 "path": changelog_md_file,
                                 "format": ChangelogOutputFormat.MARKDOWN,
+                                "mask_initial_release": mask_initial_release,
                             },
                             {
                                 "path": changelog_rst_file,
                                 "format": ChangelogOutputFormat.RESTRUCTURED_TEXT,
+                                "mask_initial_release": mask_initial_release,
                             },
+                        ],
+                        "commit_ids": [
+                            "initial_commit",
                         ],
                     },
                 },

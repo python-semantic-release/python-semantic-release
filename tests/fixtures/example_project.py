@@ -121,6 +121,9 @@ if TYPE_CHECKING:
             self, file: Path | str = ...
         ) -> CommitParser[ParseResult, ParserOptions]: ...
 
+    class GetExpectedVersionPyFileContentFn(Protocol):
+        def __call__(self, version: Version | str) -> str: ...
+
 
 @pytest.fixture(scope="session")
 def deps_files_4_example_project() -> list[Path]:
@@ -478,19 +481,38 @@ def example_project_template_dir(
 
 
 @pytest.fixture(scope="session")
-def update_version_py_file(version_py_file: Path) -> UpdateVersionPyFileFn:
+def get_expected_version_py_file_content() -> GetExpectedVersionPyFileContentFn:
+    def _get_expected_version_py_file_content(version: Version | str) -> str:
+        return dedent(
+            f"""\
+            __version__ = "{version}"
+            """
+        )
+
+    return _get_expected_version_py_file_content
+
+
+@pytest.fixture(scope="session")
+def update_version_py_file(
+    version_py_file: Path,
+    get_expected_version_py_file_content: GetExpectedVersionPyFileContentFn,
+) -> UpdateVersionPyFileFn:
+    """
+    Updates the specified file with the expected version string content
+
+    :param version: The version to set in the file
+    :type version: Version | str
+
+    :param version_file: The file to update
+    :type version_file: Path | str
+    """
+
     def _update_version_py_file(
         version: Version | str, version_file: Path | str = version_py_file
     ) -> None:
         cwd_version_py = Path(version_file).resolve()
         cwd_version_py.parent.mkdir(parents=True, exist_ok=True)
-        cwd_version_py.write_text(
-            dedent(
-                f"""\
-                __version__ = "{version}"
-                """
-            )
-        )
+        cwd_version_py.write_text(get_expected_version_py_file_content(version))
 
     return _update_version_py_file
 
