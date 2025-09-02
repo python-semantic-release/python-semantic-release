@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,7 +12,6 @@ from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.util import assert_successful_exit_code
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import Protocol, Sequence
 
     from click.testing import Result
@@ -63,7 +63,7 @@ def init_mirror_repo_for_rebuild(
                     else filepath
                 )
                 if (
-                    not file.is_relative_to(mirror_git_repo.working_dir)
+                    Path(mirror_git_repo.working_dir) not in file.parents
                     or not file.exists()
                 ):
                     continue

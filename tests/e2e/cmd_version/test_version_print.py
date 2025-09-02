@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
@@ -11,7 +11,10 @@ from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
 )
-from tests.fixtures.commit_parsers import conventional_minor_commits
+from tests.fixtures.commit_parsers import (
+    conventional_minor_commits,
+    default_conventional_parser,
+)
 from tests.fixtures.git_repo import get_commit_def_of_conventional_commit
 from tests.fixtures.repos import (
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_conventional_commits_using_tag_format,
@@ -33,6 +36,9 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from requests_mock import Mocker
+
+    from semantic_release.commit_parser._base import CommitParser, ParserOptions
+    from semantic_release.commit_parser.token import ParseResult
 
     from tests.conftest import RunCliFn
     from tests.e2e.conftest import StripLoggingMessagesFn
@@ -136,7 +142,7 @@ def test_version_print_next_version(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -304,7 +310,7 @@ def test_version_print_tag_prints_next_tag(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -419,7 +425,7 @@ def test_version_print_tag_prints_next_tag_no_zero_versions(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -463,7 +469,7 @@ def test_version_print_last_released_prints_version(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -519,7 +525,7 @@ def test_version_print_last_released_prints_released_if_commits(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -560,7 +566,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred on print)
     assert_successful_exit_code(result, cli_cmd)
@@ -611,7 +617,7 @@ def test_version_print_last_released_on_detached_head(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
@@ -659,7 +665,7 @@ def test_version_print_last_released_on_nonrelease_branch(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
@@ -714,7 +720,7 @@ def test_version_print_last_released_tag_prints_correct_tag(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -779,7 +785,7 @@ def test_version_print_last_released_tag_prints_released_if_commits(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
@@ -820,7 +826,7 @@ def test_version_print_last_released_tag_prints_nothing_if_no_tags(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred on print)
     assert_successful_exit_code(result, cli_cmd)
@@ -881,7 +887,7 @@ def test_version_print_last_released_tag_on_detached_head(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
@@ -939,7 +945,7 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (expected -> actual)
     assert_successful_exit_code(result, cli_cmd)
@@ -955,11 +961,12 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
 
 
 @pytest.mark.parametrize(
-    "repo_result, get_commit_def_fn",
+    "repo_result, get_commit_def_fn, default_parser",
     [
         (
             lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             lazy_fixture(get_commit_def_of_conventional_commit.__name__),
+            lazy_fixture(default_conventional_parser.__name__),
         )
     ],
 )
@@ -967,7 +974,8 @@ def test_version_print_next_version_fails_on_detached_head(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
-    get_commit_def_fn: GetCommitDefFn,
+    get_commit_def_fn: GetCommitDefFn[CommitParser[ParseResult, ParserOptions]],
+    default_parser: CommitParser[ParseResult, ParserOptions],
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -983,7 +991,7 @@ def test_version_print_next_version_fails_on_detached_head(
     # Setup: make a commit to ensure we have something to release
     simulate_change_commits_n_rtn_changelog_entry(
         repo,
-        [get_commit_def_fn("fix: make a patch fix to codebase")],
+        [get_commit_def_fn("fix: make a patch fix to codebase", parser=default_parser)],
     )
 
     # Setup: take measurement before running the version command
@@ -999,7 +1007,7 @@ def test_version_print_next_version_fails_on_detached_head(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (expected -> actual)
     assert_exit_code(1, result, cli_cmd)
@@ -1015,11 +1023,12 @@ def test_version_print_next_version_fails_on_detached_head(
 
 
 @pytest.mark.parametrize(
-    "repo_result, get_commit_def_fn",
+    "repo_result, get_commit_def_fn, default_parser",
     [
         (
             lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
             lazy_fixture(get_commit_def_of_conventional_commit.__name__),
+            lazy_fixture(default_conventional_parser.__name__),
         )
     ],
 )
@@ -1027,7 +1036,8 @@ def test_version_print_next_tag_fails_on_detached_head(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
-    get_commit_def_fn: GetCommitDefFn,
+    get_commit_def_fn: GetCommitDefFn[CommitParser[ParseResult, ParserOptions]],
+    default_parser: CommitParser[ParseResult, ParserOptions],
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -1043,7 +1053,7 @@ def test_version_print_next_tag_fails_on_detached_head(
     # Setup: make a commit to ensure we have something to release
     simulate_change_commits_n_rtn_changelog_entry(
         repo,
-        [get_commit_def_fn("fix: make a patch fix to codebase")],
+        [get_commit_def_fn("fix: make a patch fix to codebase", parser=default_parser)],
     )
 
     # Setup: take measurement before running the version command
@@ -1059,7 +1069,7 @@ def test_version_print_next_tag_fails_on_detached_head(
     repo_status_after = repo.git.status(short=True)
     head_after = repo.head.commit.hexsha
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (expected -> actual)
     assert_exit_code(1, result, cli_cmd)

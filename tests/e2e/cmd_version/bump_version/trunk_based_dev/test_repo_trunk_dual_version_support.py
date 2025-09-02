@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
-import tomlkit
-from flatdict import FlatDict
 from freezegun import freeze_time
 
 from tests.const import (
@@ -23,6 +21,8 @@ if TYPE_CHECKING:
 
     from requests_mock import Mocker
 
+    from semantic_release.version.version import Version
+
     from tests.e2e.cmd_version.bump_version.conftest import (
         InitMirrorRepo4RebuildFn,
         RunPSReleaseFn,
@@ -34,7 +34,6 @@ if TYPE_CHECKING:
         BuildSpecificRepoFn,
         CommitConvention,
         GetGitRepo4DirFn,
-        RepoActionConfigure,
         RepoActionRelease,
         RepoActions,
         SplitRepoActionsByReleaseTagsFn,
@@ -63,10 +62,12 @@ def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
     build_repo_from_definition: BuildRepoFromDefinitionFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
-    default_tag_format_str: str,
     version_py_file: Path,
     get_sanitized_md_changelog_content: GetSanitizedChangelogContentFn,
     get_sanitized_rst_changelog_content: GetSanitizedChangelogContentFn,
+    pyproject_toml_file: Path,
+    changelog_md_file: Path,
+    changelog_rst_file: Path,
 ):
     # build target repo into a temporary directory
     target_repo_dir = example_project_dir / repo_fixture_name
@@ -79,30 +80,31 @@ def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
         dest_dir=target_repo_dir,
     )
     target_git_repo = git_repo_for_directory(target_repo_dir)
-    target_repo_pyproject_toml = FlatDict(
-        tomlkit.loads((target_repo_dir / "pyproject.toml").read_text(encoding="utf-8")),
-        delimiter=".",
-    )
-    tag_format_str: str = target_repo_pyproject_toml.get(  # type: ignore[assignment]
-        "tool.semantic_release.tag_format",
-        default_tag_format_str,
-    )
 
     # split repo actions by release actions
-    releasetags_2_steps: dict[str, list[RepoActions]] = (
-        split_repo_actions_by_release_tags(target_repo_definition, tag_format_str)
-    )
-    configuration_step: RepoActionConfigure = releasetags_2_steps.pop("")[0]  # type: ignore[assignment]
+    organized_steps = split_repo_actions_by_release_tags(target_repo_definition)
+    configuration_steps = organized_steps.pop(None)
+    unreleased_steps = organized_steps.pop("Unreleased", None)
+    if unreleased_steps:
+        raise ValueError("Unreleased steps found. Not Supported yet!")
+
+    release_tags_2_steps = cast("dict[Version, list[RepoActions]]", organized_steps)
 
     # Create the mirror repo directory
     mirror_repo_dir = init_mirror_repo_for_rebuild(
         mirror_repo_dir=(example_project_dir / "mirror"),
-        configuration_step=configuration_step,
+        configuration_steps=configuration_steps,  # type: ignore[arg-type]
+        files_to_remove=[
+            changelog_md_file,
+            changelog_rst_file,
+        ],
     )
     mirror_git_repo = git_repo_for_directory(mirror_repo_dir)
 
     # rebuild repo from scratch stopping before each release tag
-    for curr_release_tag, steps in releasetags_2_steps.items():
+    for curr_version, steps in release_tags_2_steps.items():
+        curr_release_tag = curr_version.as_tag()
+
         # make sure mocks are clear
         mocked_git_push.reset_mock()
         post_mocker.reset_mock()
@@ -121,7 +123,7 @@ def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
             repo_dir=target_repo_dir
         )
         expected_pyproject_toml_content = (
-            target_repo_dir / "pyproject.toml"
+            target_repo_dir / pyproject_toml_file
         ).read_text()
         expected_version_file_content = (target_repo_dir / version_py_file).read_text()
         expected_release_commit_text = target_git_repo.head.commit.message
@@ -144,7 +146,9 @@ def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
 
         # take measurement after running the version command
         actual_release_commit_text = mirror_git_repo.head.commit.message
-        actual_pyproject_toml_content = (mirror_repo_dir / "pyproject.toml").read_text()
+        actual_pyproject_toml_content = (
+            mirror_repo_dir / pyproject_toml_file
+        ).read_text()
         actual_version_file_content = (mirror_repo_dir / version_py_file).read_text()
         actual_md_changelog_content = get_sanitized_md_changelog_content(
             repo_dir=mirror_repo_dir
@@ -166,4 +170,4 @@ def test_trunk_repo_rebuild_dual_version_spt_official_releases_only(
         # Make sure tag is created
         assert curr_release_tag in [tag.name for tag in mirror_git_repo.tags]
         assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
-        assert post_mocker.call_count == 1  # vcs release creation occured
+        assert post_mocker.call_count == 1  # vcs release creation occurred

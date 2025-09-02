@@ -219,10 +219,11 @@ def test_errors_when_config_file_invalid_configuration(
     run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     strip_logging_messages: StripLoggingMessagesFn,
+    pyproject_toml_file: Path,
 ):
     # Setup
     update_pyproject_toml("tool.semantic_release.remote.type", "invalidType")
-    cli_cmd = [MAIN_PROG_NAME, "--config", "pyproject.toml", VERSION_SUBCMD]
+    cli_cmd = [MAIN_PROG_NAME, "--config", str(pyproject_toml_file), VERSION_SUBCMD]
 
     # Act
     result = run_cli(cli_cmd[1:])

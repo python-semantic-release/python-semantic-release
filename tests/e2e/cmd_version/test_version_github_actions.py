@@ -8,8 +8,6 @@ import pytest
 from freezegun import freeze_time
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
-from semantic_release.version.version import Version
-
 from tests.const import EXAMPLE_PROJECT_LICENSE, MAIN_PROG_NAME, VERSION_SUBCMD
 from tests.fixtures.repos import (
     repo_w_git_flow_w_alpha_prereleases_n_conventional_commits,
@@ -52,13 +50,10 @@ def test_version_writes_github_actions_output(
     all_versions = get_versions_from_repo_build_def(repo_def)
     latest_release_version = all_versions[-1]
     release_tag = tag_format_str.format(version=latest_release_version)
-    previous_version = (
-        Version.parse(all_versions[-2]) if len(all_versions) > 1 else None
-    )
+    previous_version = all_versions[-2] if len(all_versions) > 1 else None
     hvcs_client = cast("Github", get_hvcs_client_from_repo_def(repo_def))
     repo_actions_per_version = split_repo_actions_by_release_tags(
-        repo_definition=repo_def,
-        tag_format_str=tag_format_str,
+        repo_definition=repo_def
     )
     expected_gha_output = {
         "released": str(True).lower(),
@@ -66,12 +61,10 @@ def test_version_writes_github_actions_output(
         "tag": release_tag,
         "link": hvcs_client.create_release_url(release_tag),
         "commit_sha": "0" * 40,
-        "is_prerelease": str(
-            Version.parse(latest_release_version).is_prerelease
-        ).lower(),
+        "is_prerelease": str(latest_release_version.is_prerelease).lower(),
         "previous_version": str(previous_version) if previous_version else "",
         "release_notes": generate_default_release_notes_from_def(
-            version_actions=repo_actions_per_version[release_tag],
+            version_actions=repo_actions_per_version[latest_release_version],
             hvcs=hvcs_client,
             previous_version=previous_version,
             license_name=EXAMPLE_PROJECT_LICENSE,

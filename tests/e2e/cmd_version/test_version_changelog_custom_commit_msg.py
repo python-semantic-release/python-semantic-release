@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import TypedDict
 
-    from tests.conftest import GetStableDateNowFn, RunCliFn
+    from tests.conftest import GetCachedRepoDataFn, GetStableDateNowFn, RunCliFn
     from tests.e2e.conftest import GetSanitizedChangelogContentFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
@@ -43,7 +43,6 @@ if TYPE_CHECKING:
         CommitDef,
         GetCfgValueFromDefFn,
         GetVersionsFromRepoBuildDefFn,
-        RepoActions,
         SplitRepoActionsByReleaseTagsFn,
     )
 
@@ -66,7 +65,7 @@ if TYPE_CHECKING:
             "changelog_file",
             "get_sanitized_changelog_content",
             "repo_result",
-            "cache_key",
+            "repo_fixture_name",
         ],
     ),
     [
@@ -76,7 +75,7 @@ if TYPE_CHECKING:
             lazy_fixture(changelog_file),
             lazy_fixture(cl_sanitizer),
             lazy_fixture(repo_fixture_name),
-            f"psr/repos/{repo_fixture_name}",
+            repo_fixture_name,
             marks=pytest.mark.comprehensive,
         )
         for changelog_mode in [ChangelogMode.INIT, ChangelogMode.UPDATE]
@@ -122,11 +121,11 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
     changelog_file: Path,
     changelog_mode: ChangelogMode,
     custom_commit_message: str,
-    cache: pytest.Cache,
-    cache_key: str,
+    repo_fixture_name: str,
     stable_now_date: GetStableDateNowFn,
     example_project_dir: Path,
     get_sanitized_changelog_content: GetSanitizedChangelogContentFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     """
     Given a repo with a custom release commit message
@@ -145,16 +144,14 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
     repo_def = repo_result["definition"]
     tag_format_str: str = get_cfg_value_from_def(repo_def, "tag_format_str")  # type: ignore[assignment]
     all_versions = get_versions_from_repo_build_def(repo_def)
-    latest_tag = tag_format_str.format(version=all_versions[-1])
+    latest_version = all_versions[-1]
     previous_tag = tag_format_str.format(version=all_versions[-2])
 
     # split repo actions by release actions
-    releasetags_2_steps: dict[str, list[RepoActions]] = (
-        split_repo_actions_by_release_tags(repo_def, tag_format_str)
-    )
+    releasetags_2_steps = split_repo_actions_by_release_tags(repo_def)
 
     # Reverse release to make the previous version again with the new commit message
-    repo.git.tag("-d", latest_tag)
+    repo.git.tag("-d", latest_version.as_tag())
     repo.git.reset("--hard", f"{previous_tag}~1")
     repo.git.tag("-d", previous_tag)
 
@@ -169,7 +166,7 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
         custom_commit_message,
     )
 
-    if not (repo_build_data := cache.get(cache_key, None)):
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -193,9 +190,8 @@ def test_version_changelog_content_custom_commit_message_excluded_automatically(
         assert_successful_exit_code(result, cli_cmd)
 
     # Act: apply commits for change of version
-    steps_for_next_release = releasetags_2_steps[latest_tag][
-        :-1
-    ]  # stop before the release step
+    # stop before the release step
+    steps_for_next_release = releasetags_2_steps[latest_version][:-1]
     build_repo_from_definition(
         dest_dir=example_project_dir,
         repo_construction_steps=steps_for_next_release,
