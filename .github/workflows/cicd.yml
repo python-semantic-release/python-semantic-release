@@ -116,7 +116,7 @@ jobs:
           git reset --hard ${{ github.sha }}
 
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
@@ -198,7 +198,7 @@ jobs:
 
     steps:
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
