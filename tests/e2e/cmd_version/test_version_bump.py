@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import count
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 import tomlkit
@@ -61,7 +61,11 @@ if TYPE_CHECKING:
     from requests_mock import Mocker
 
     from tests.conftest import GetStableDateNowFn, RunCliFn
-    from tests.fixtures.example_project import ExProjectDir, UpdatePyprojectTomlFn
+    from tests.fixtures.example_project import (
+        ExProjectDir,
+        GetExpectedVersionPyFileContentFn,
+        UpdatePyprojectTomlFn,
+    )
     from tests.fixtures.git_repo import BuiltRepoResult
 
 
@@ -319,25 +323,33 @@ def test_version_force_level(
     run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
+    pyproject_toml_file: Path,
+    changelog_md_file: Path,
+    get_expected_version_py_file_content: GetExpectedVersionPyFileContentFn,
 ):
+    # Force clean directory state before test (needed for the repo_w_no_tags)
     repo = repo_result["repo"]
+    repo.git.reset("HEAD", hard=True)
+
     version_file = example_project_dir.joinpath(
         "src", EXAMPLE_PROJECT_NAME, "_version.py"
     )
+
     expected_changed_files = sorted(
         [
-            "CHANGELOG.md",
-            "pyproject.toml",
+            str(changelog_md_file),
+            str(pyproject_toml_file),
             str(version_file.relative_to(example_project_dir)),
         ]
+    )
+
+    expected_version_py_content = get_expected_version_py_file_content(
+        next_release_version
     )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
     tags_before = {tag.name for tag in repo.tags}
-    version_py_before = dynamic_python_import(
-        version_file, f"{EXAMPLE_PROJECT_NAME}._version"
-    ).__version__
 
     pyproject_toml_before = tomlkit.loads(
         example_pyproject_toml.read_text(encoding="utf-8")
@@ -353,7 +365,7 @@ def test_version_force_level(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
     differing_files = [
         # Make sure filepath uses os specific path separators
         str(Path(file))
@@ -367,9 +379,7 @@ def test_version_force_level(
     )
 
     # Load python module for reading the version (ensures the file is valid)
-    version_py_after = dynamic_python_import(
-        version_file, f"{EXAMPLE_PROJECT_NAME}._version"
-    ).__version__
+    actual_version_py_content = version_file.read_text()
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -391,8 +401,14 @@ def test_version_force_level(
     assert next_release_version == pyproj_version_after
 
     # Compare _version.py
-    assert next_release_version == version_py_after
-    assert version_py_before != version_py_after
+    assert expected_version_py_content == actual_version_py_content
+
+    # Verify content is parsable & importable
+    dynamic_version = dynamic_python_import(
+        version_file, f"{EXAMPLE_PROJECT_NAME}._version"
+    ).__version__
+
+    assert next_release_version == dynamic_version
 
 
 # NOTE: There is a bit of a corner-case where if we are not doing a
@@ -560,7 +576,7 @@ def test_version_next_greater_than_version_one_conventional(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -699,7 +715,7 @@ def test_version_next_greater_than_version_one_no_bump_conventional(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred when no bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -859,7 +875,7 @@ def test_version_next_greater_than_version_one_emoji(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -998,7 +1014,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -1158,7 +1174,7 @@ def test_version_next_greater_than_version_one_scipy(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -1297,7 +1313,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred when no bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -1644,7 +1660,7 @@ def test_version_next_w_zero_dot_versions_conventional(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -1798,7 +1814,7 @@ def test_version_next_w_zero_dot_versions_no_bump_conventional(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred when no bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -2124,7 +2140,7 @@ def test_version_next_w_zero_dot_versions_emoji(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -2278,7 +2294,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred when no bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -2604,7 +2620,7 @@ def test_version_next_w_zero_dot_versions_scipy(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -2758,7 +2774,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (no release actions should have occurred when no bump)
     assert_successful_exit_code(result, cli_cmd)
@@ -3148,7 +3164,7 @@ def test_version_next_w_zero_dot_versions_minimums(
     # take measurement after running the version command
     head_after = repo.head.commit
     tags_after = {tag.name for tag in repo.tags}
-    tags_set_difference = set.difference(tags_after, tags_before)
+    tags_set_difference = cast("set[str]", set.difference(tags_after, tags_before))
 
     # Evaluate (normal release actions should have occurred when forced patch bump)
     assert_successful_exit_code(result, cli_cmd)

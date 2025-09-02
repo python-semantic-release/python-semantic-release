@@ -48,7 +48,12 @@ from tests.util import assert_successful_exit_code
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from tests.conftest import FormatDateStrFn, GetStableDateNowFn, RunCliFn
+    from tests.conftest import (
+        FormatDateStrFn,
+        GetCachedRepoDataFn,
+        GetStableDateNowFn,
+        RunCliFn,
+    )
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
         BuiltRepoResult,
@@ -74,17 +79,17 @@ if TYPE_CHECKING:
     ],
 )
 @pytest.mark.parametrize(
-    "repo_result, cache_key, tag_format",
+    "repo_result, repo_fixture_name, tag_format",
     [
         (
             lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
+            repo_w_trunk_only_conventional_commits.__name__,
             "v{version}",
         ),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture),
-                f"psr/repos/{repo_fixture}",
+                repo_fixture,
                 "v{version}" if tag_format is None else tag_format,
                 marks=pytest.mark.comprehensive,
             )
@@ -177,9 +182,9 @@ def test_version_updates_changelog_w_new_version(
     run_cli: RunCliFn,
     changelog_file: Path,
     insertion_flag: str,
-    cache: pytest.Cache,
-    cache_key: str,
+    repo_fixture_name: str,
     stable_now_date: GetStableDateNowFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     """
     Given a previously released custom modified changelog file,
@@ -192,7 +197,7 @@ def test_version_updates_changelog_w_new_version(
         version=get_versions_from_repo_build_def(repo_result["definition"])[-1]
     )
 
-    if not (repo_build_data := cache.get(cache_key, None)):
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -280,16 +285,16 @@ def test_version_updates_changelog_w_new_version(
     ],
 )
 @pytest.mark.parametrize(
-    "repo_result, cache_key",
+    "repo_result, repo_fixture_name",
     [
         (
             lazy_fixture(repo_w_no_tags_conventional_commits.__name__),
-            f"psr/repos/{repo_w_no_tags_conventional_commits.__name__}",
+            repo_w_no_tags_conventional_commits.__name__,
         ),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture),
-                f"psr/repos/{repo_fixture}",
+                repo_fixture,
                 marks=pytest.mark.comprehensive,
             )
             for repo_fixture in [
@@ -303,8 +308,7 @@ def test_version_updates_changelog_w_new_version(
 )
 def test_version_updates_changelog_wo_prev_releases(
     repo_result: BuiltRepoResult,
-    cache_key: str,
-    cache: pytest.Cache,
+    repo_fixture_name: str,
     run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_format: ChangelogOutputFormat,
@@ -312,13 +316,14 @@ def test_version_updates_changelog_wo_prev_releases(
     insertion_flag: str,
     stable_now_date: GetStableDateNowFn,
     format_date_str: FormatDateStrFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     """
     Given the repository has no releases and the user has provided a initialized changelog,
     When the version command is run with changelog.mode set to "update",
     Then the version is created and the changelog file is updated with only an initial release statement
     """
-    if not (repo_build_data := cache.get(cache_key, None)):
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -433,11 +438,11 @@ def test_version_updates_changelog_wo_prev_releases(
     ],
 )
 @pytest.mark.parametrize(
-    "repo_result, cache_key",
+    "repo_result, repo_fixture_name",
     [
         pytest.param(
             lazy_fixture(repo_fixture),
-            f"psr/repos/{repo_fixture}",
+            repo_fixture,
             marks=pytest.mark.comprehensive,
         )
         for repo_fixture in [
@@ -448,8 +453,7 @@ def test_version_updates_changelog_wo_prev_releases(
 )
 def test_version_updates_changelog_wo_prev_releases_n_unmasked_initial_release(
     repo_result: BuiltRepoResult,
-    cache_key: str,
-    cache: pytest.Cache,
+    repo_fixture_name: str,
     run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_format: ChangelogOutputFormat,
@@ -457,13 +461,14 @@ def test_version_updates_changelog_wo_prev_releases_n_unmasked_initial_release(
     insertion_flag: str,
     stable_now_date: GetStableDateNowFn,
     format_date_str: FormatDateStrFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     """
     Given the repository has no releases and the user has provided a initialized changelog,
     When the version command is run with changelog.mode set to "update",
     Then the version is created and the changelog file is updated with new release info
     """
-    if not (repo_build_data := cache.get(cache_key, None)):
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -537,7 +542,7 @@ def test_version_updates_changelog_wo_prev_releases_n_unmasked_initial_release(
         ],
     )
 
-    # Grab the Unreleased changelog & create the initalized user changelog
+    # Grab the Unreleased changelog & create the initialized user changelog
     # force output to not perform any newline translations
     with changelog_file.open(mode="w", newline="") as wfd:
         wfd.write(
@@ -575,17 +580,17 @@ def test_version_updates_changelog_wo_prev_releases_n_unmasked_initial_release(
     ],
 )
 @pytest.mark.parametrize(
-    "repo_result, cache_key, tag_format",
+    "repo_result, repo_fixture_name, tag_format",
     [
         (
             lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
+            repo_w_trunk_only_conventional_commits.__name__,
             "v{version}",
         ),
         *[
             pytest.param(
                 lazy_fixture(repo_fixture),
-                f"psr/repos/{repo_fixture}",
+                repo_fixture,
                 "v{version}" if tag_format is None else tag_format,
                 marks=pytest.mark.comprehensive,
             )
@@ -672,14 +677,14 @@ def test_version_updates_changelog_wo_prev_releases_n_unmasked_initial_release(
 )
 def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
     repo_result: BuiltRepoResult,
-    cache_key: str,
+    repo_fixture_name: str,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     tag_format: str,
     run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
     changelog_file: Path,
-    cache: pytest.Cache,
     stable_now_date: GetStableDateNowFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     """
     Given that the changelog file does not exist,
@@ -692,7 +697,7 @@ def test_version_initializes_changelog_in_update_mode_w_no_prev_changelog(
         version=get_versions_from_repo_build_def(repo_result["definition"])[-1]
     )
 
-    if not (repo_build_data := cache.get(cache_key, None)):
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -808,11 +813,11 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
     ],
 )
 @pytest.mark.parametrize(
-    "repo_result, cache_key, commit_type, tag_format",
+    "repo_result, repo_fixture_name, commit_type, tag_format",
     [
         (
             lazy_fixture(repo_fixture),
-            f"psr/repos/{repo_fixture}",
+            repo_fixture,
             repo_fixture.split("_")[-2],
             "v{version}",
         )
@@ -824,8 +829,7 @@ def test_version_maintains_changelog_in_update_mode_w_no_flag(
 )
 def test_version_updates_changelog_w_new_version_n_filtered_commit(
     repo_result: BuiltRepoResult,
-    cache: pytest.Cache,
-    cache_key: str,
+    repo_fixture_name: str,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commit_type: CommitConvention,
     tag_format: str,
@@ -834,6 +838,7 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     changelog_file: Path,
     stable_now_date: GetStableDateNowFn,
     get_commits_from_repo_build_def: GetCommitsFromRepoBuildDefFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     """
     Given a project that has a version bumping change but also an exclusion pattern for the same change type,
@@ -844,9 +849,9 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     repo = repo_result["repo"]
     latest_version = get_versions_from_repo_build_def(repo_result["definition"])[-1]
     latest_tag = tag_format.format(version=latest_version)
-
     repo_definition = get_commits_from_repo_build_def(repo_result["definition"])
-    if not (repo_build_data := cache.get(cache_key, None)):
+
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -857,7 +862,7 @@ def test_version_updates_changelog_w_new_version_n_filtered_commit(
     )
 
     # expected version bump commit (that should be in changelog)
-    bumping_commit = repo_definition[latest_version]["commits"][-1]
+    bumping_commit = repo_definition[str(latest_version)]["commits"][-1]
     expected_bump_message = bumping_commit["desc"].capitalize()
 
     # Capture the expected changelog content

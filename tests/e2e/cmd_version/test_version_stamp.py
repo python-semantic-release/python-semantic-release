@@ -61,6 +61,7 @@ def test_version_only_stamp_version(
     post_mocker: MagicMock,
     example_pyproject_toml: Path,
     example_project_dir: ExProjectDir,
+    pyproject_toml_file: Path,
 ) -> None:
     repo = repo_result["repo"]
     version_file = example_project_dir.joinpath(
@@ -68,7 +69,7 @@ def test_version_only_stamp_version(
     )
     expected_changed_files = sorted(
         [
-            "pyproject.toml",
+            str(pyproject_toml_file),
             str(version_file.relative_to(example_project_dir)),
         ]
     )
