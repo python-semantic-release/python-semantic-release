@@ -84,7 +84,10 @@ jobs:
     needs: eval-changes
     uses: ./.github/workflows/validate.yml
     with:
-      python-versions-linux: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
+      # It was a bit of overkill before testing every minor version, and since this project is all about
+      # SemVer, we should expect Python to adhere to that model to. Therefore Only test across 2 OS's but
+      # the lowest supported minor version and the latest stable minor version (just in case).
+      python-versions-linux: '["3.8", "3.13"]'
       # Since the test suite takes ~4 minutes to complete on windows, and windows is billed higher
       # we are only going to run it on the oldest version of python we support. The older version
       # will be the most likely area to fail as newer minor versions maintain compatibility.
