@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_lazy_fixtures import lf as lazy_fixture
 
-from semantic_release.version.version import Version
-
 from tests.const import CHANGELOG_SUBCMD, EXAMPLE_PROJECT_LICENSE, MAIN_PROG_NAME
 from tests.fixtures.repos import (
     repo_w_github_flow_w_default_release_channel_conventional_commits,
@@ -21,7 +19,7 @@ from tests.util import assert_successful_exit_code
 if TYPE_CHECKING:
     from requests_mock import Mocker
 
-    from tests.conftest import GetStableDateNowFn, RunCliFn
+    from tests.conftest import GetCachedRepoDataFn, GetStableDateNowFn, RunCliFn
     from tests.fixtures.example_project import UpdatePyprojectTomlFn
     from tests.fixtures.git_repo import (
         BuiltRepoResult,
@@ -56,19 +54,16 @@ def test_changelog_latest_release_notes(
     repo_def = repo_result["definition"]
     tag_format_str: str = get_cfg_value_from_def(repo_def, "tag_format_str")  # type: ignore[assignment]
     repo_actions_per_version = split_repo_actions_by_release_tags(
-        repo_definition=repo_def,
-        tag_format_str=tag_format_str,
+        repo_definition=repo_def
     )
     all_versions = get_versions_from_repo_build_def(repo_def)
     latest_release_version = all_versions[-1]
     release_tag = tag_format_str.format(version=latest_release_version)
 
     expected_release_notes = generate_default_release_notes_from_def(
-        version_actions=repo_actions_per_version[release_tag],
+        version_actions=repo_actions_per_version[latest_release_version],
         hvcs=get_hvcs_client_from_repo_def(repo_def),
-        previous_version=(
-            Version.parse(all_versions[-2]) if len(all_versions) > 1 else None
-        ),
+        previous_version=(all_versions[-2] if len(all_versions) > 1 else None),
         license_name=EXAMPLE_PROJECT_LICENSE,
         mask_initial_release=get_cfg_value_from_def(repo_def, "mask_initial_release"),
     )
@@ -130,8 +125,7 @@ def test_changelog_previous_release_notes(
     repo_def = repo_result["definition"]
     tag_format_str: str = get_cfg_value_from_def(repo_def, "tag_format_str")  # type: ignore[assignment]
     repo_actions_per_version = split_repo_actions_by_release_tags(
-        repo_definition=repo_def,
-        tag_format_str=tag_format_str,
+        repo_definition=repo_def
     )
     # Extract all versions except for the latest one
     all_prev_versions = get_versions_from_repo_build_def(repo_def)[:-1]
@@ -139,10 +133,10 @@ def test_changelog_previous_release_notes(
     release_tag = tag_format_str.format(version=latest_release_version)
 
     expected_release_notes = generate_default_release_notes_from_def(
-        version_actions=repo_actions_per_version[release_tag],
+        version_actions=repo_actions_per_version[latest_release_version],
         hvcs=get_hvcs_client_from_repo_def(repo_def),
         previous_version=(
-            Version.parse(all_prev_versions[-2]) if len(all_prev_versions) > 1 else None
+            all_prev_versions[-2] if len(all_prev_versions) > 1 else None
         ),
         license_name=EXAMPLE_PROJECT_LICENSE,
         mask_initial_release=mask_initial_release,
@@ -170,17 +164,17 @@ def test_changelog_previous_release_notes(
 
 
 @pytest.mark.parametrize(
-    "repo_result, cache_key, mask_initial_release, license_name",
+    "repo_result, repo_fixture_name, mask_initial_release, license_name",
     [
         (
             lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
+            repo_w_trunk_only_conventional_commits.__name__,
             True,
             "BSD-3-Clause",
         ),
         pytest.param(
             lazy_fixture(repo_w_trunk_only_conventional_commits.__name__),
-            f"psr/repos/{repo_w_trunk_only_conventional_commits.__name__}",
+            repo_w_trunk_only_conventional_commits.__name__,
             False,
             "BSD-3-Clause",
             marks=pytest.mark.comprehensive,
@@ -188,7 +182,7 @@ def test_changelog_previous_release_notes(
         *[
             pytest.param(
                 lazy_fixture(repo_fixture_name),
-                f"psr/repos/{repo_fixture_name}",
+                repo_fixture_name,
                 mask_initial_release,
                 "BSD-3-Clause",
                 marks=pytest.mark.comprehensive,
@@ -216,15 +210,15 @@ def test_changelog_release_notes_license_change(
     split_repo_actions_by_release_tags: SplitRepoActionsByReleaseTagsFn,
     generate_default_release_notes_from_def: GenerateDefaultReleaseNotesFromDefFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
-    cache: pytest.Cache,
-    cache_key: str,
+    repo_fixture_name: str,
     stable_now_date: GetStableDateNowFn,
+    get_cached_repo_data: GetCachedRepoDataFn,
 ):
     # Setup
     repo_def = repo_result["definition"]
     tag_format_str: str = get_cfg_value_from_def(repo_def, "tag_format_str")  # type: ignore[assignment]
 
-    if not (repo_build_data := cache.get(cache_key, None)):
+    if not (repo_build_data := get_cached_repo_data(repo_fixture_name)):
         pytest.fail("Repo build date not found in cache")
 
     repo_build_datetime = datetime.strptime(repo_build_data["build_date"], "%Y-%m-%d")
@@ -236,7 +230,6 @@ def test_changelog_release_notes_license_change(
 
     repo_actions_per_version = split_repo_actions_by_release_tags(
         repo_definition=repo_def,
-        tag_format_str=tag_format_str,
     )
     # Extract all versions
     all_versions = get_versions_from_repo_build_def(repo_def)
@@ -247,21 +240,17 @@ def test_changelog_release_notes_license_change(
     prev_release_tag = tag_format_str.format(version=previous_release_version)
 
     expected_release_notes = generate_default_release_notes_from_def(
-        version_actions=repo_actions_per_version[latest_release_tag],
+        version_actions=repo_actions_per_version[latest_release_version],
         hvcs=get_hvcs_client_from_repo_def(repo_def),
-        previous_version=(
-            Version.parse(previous_release_version) if len(all_versions) > 1 else None
-        ),
+        previous_version=(previous_release_version if len(all_versions) > 1 else None),
         license_name=license_name,
         mask_initial_release=mask_initial_release,
     )
 
     expected_prev_release_notes = generate_default_release_notes_from_def(
-        version_actions=repo_actions_per_version[prev_release_tag],
+        version_actions=repo_actions_per_version[previous_release_version],
         hvcs=get_hvcs_client_from_repo_def(repo_def),
-        previous_version=(
-            Version.parse(all_versions[-3]) if len(all_versions) > 2 else None
-        ),
+        previous_version=(all_versions[-3] if len(all_versions) > 2 else None),
         license_name=EXAMPLE_PROJECT_LICENSE,
         mask_initial_release=mask_initial_release,
     )
