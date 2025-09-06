@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           fetch-depth: 100 # Must at least retrieve a set of commits to compare changes
           # primarily because of any 'Rebase and Merge' PR action in GitHub
@@ -115,7 +115,7 @@ jobs:
       # possible that the branch was updated while the workflow was running. This
       # prevents accidentally releasing un-evaluated changes.
       - name: Setup | Checkout Repository on Release Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
@@ -125,7 +125,7 @@ jobs:
           git reset --hard ${{ github.sha }}
 
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
@@ -148,14 +148,14 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@2896129e02bb7809d2cf0c1b8e9e795ee27acbcf  # v10.2.0
+        uses: python-semantic-release/python-semantic-release@9293da56b24a9bd1a97acd4e9b1aabda4ef89fd6  # v10.3.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           verbosity: 1
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@b717f67f7e7e9f709357bce5a542846503ce46ec  # v10.2.0
+        uses: python-semantic-release/publish-action@63a952936fa65b0942a64427d3636fa691d676ce  # v10.3.2
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -207,7 +207,7 @@ jobs:
 
     steps:
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}

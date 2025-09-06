@@ -90,7 +90,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository at workflow sha
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -112,7 +112,7 @@ jobs:
 
       - name: Build | Build next version artifacts
         id: version
-        uses: python-semantic-release/python-semantic-release@2896129e02bb7809d2cf0c1b8e9e795ee27acbcf  # v10.2.0
+        uses: python-semantic-release/python-semantic-release@9293da56b24a9bd1a97acd4e9b1aabda4ef89fd6  # v10.3.2
         with:
           github_token: ""
           verbosity: 1
@@ -161,7 +161,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
@@ -217,7 +217,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
@@ -229,7 +229,7 @@ jobs:
           cache: 'pip'
 
       - name: Setup | Download Distribution Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         with:
           name: ${{ needs.build.outputs.distribution-artifacts }}
           path: ./dist
@@ -306,7 +306,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
@@ -318,7 +318,7 @@ jobs:
           cache: 'pip'
 
       - name: Setup | Download Distribution Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         with:
           name: ${{ needs.build.outputs.distribution-artifacts }}
           path: dist
@@ -405,13 +405,13 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           fetch-depth: 1
           ref: ${{ github.sha }}
 
       - name: Setup | Download Distribution Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         with:
           name: ${{ needs.build.outputs.distribution-artifacts }}
           path: ${{ env.ACTION_SRC_DIR }}
@@ -447,7 +447,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
