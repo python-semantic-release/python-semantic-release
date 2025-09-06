@@ -4,6 +4,49 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.3.2:
+
+v10.3.2 (2025-09-06)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Prevent errors when PSR is executed in non-GitHub CI environments, closes
+  `#1315`_ (`PR#1322`_, `4df4be4`_)
+
+⚡ Performance Improvements
+---------------------------
+
+* **cmd-version**: Re-order operations for faster parsing in version determination (`PR#1310`_,
+  `63e435b`_)
+
+📖 Documentation
+----------------
+
+* **uv-integration**: Add ``--no-changelog`` to build step to increase job speed (`PR#1316`_,
+  `e1aece1`_)
+
+💡 Additional Release Information
+---------------------------------
+
+* **cmd-version**: Unfortunately, PSR introduced a bug in 10.3.0 when attempting to provide more CI
+  outputs for GitHub Actions. It required our GitHub client interface to be loaded and even if it
+  was not using GitHub CI to be run. This caused errors in Gitea and likely GitLab/Bitbucket
+  environments. This change prevents that from happening but if any users pipelines were
+  intentionally presenting the environment variable "GITHUB_OUTPUT" to enable action output to
+  enable passing along internal outputs of PSR then their hack will no longer work after this
+  change.
+
+.. _#1315: https://github.com/python-semantic-release/python-semantic-release/issues/1315
+.. _4df4be4: https://github.com/python-semantic-release/python-semantic-release/commit/4df4be465710e3b31ba65487069eccef1eeb8be1
+.. _63e435b: https://github.com/python-semantic-release/python-semantic-release/commit/63e435ba466e1e980b9680d0f759950e5e598a61
+.. _e1aece1: https://github.com/python-semantic-release/python-semantic-release/commit/e1aece18ae1998b1523be65b1e569837a7054251
+.. _PR#1310: https://github.com/python-semantic-release/python-semantic-release/pull/1310
+.. _PR#1316: https://github.com/python-semantic-release/python-semantic-release/pull/1316
+.. _PR#1322: https://github.com/python-semantic-release/python-semantic-release/pull/1322
+
+
 .. _changelog-v10.3.1:
 
 v10.3.1 (2025-08-06)
