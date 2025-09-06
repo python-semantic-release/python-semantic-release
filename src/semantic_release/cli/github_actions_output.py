@@ -24,7 +24,7 @@ class VersionGitHubActionsOutput:
 
     def __init__(
         self,
-        gh_client: Github,
+        gh_client: Github | None = None,
         mode: PersistenceMode = PersistenceMode.PERMANENT,
         released: bool | None = None,
         version: Version | None = None,
@@ -106,6 +106,12 @@ class VersionGitHubActionsOutput:
             raise TypeError("output 'prev_version' should be a Version")
         self._prev_version = value
 
+    @property
+    def gh_client(self) -> Github:
+        if not self._gh_client:
+            raise ValueError("GitHub client not set, cannot create links")
+        return self._gh_client
+
     def to_output_text(self) -> str:
         missing: set[str] = set()
         if self.version is None:
@@ -128,7 +134,7 @@ class VersionGitHubActionsOutput:
             "version": str(self.version),
             "tag": self.tag,
             "is_prerelease": str(self.is_prerelease).lower(),
-            "link": self._gh_client.create_release_url(self.tag) if self.tag else "",
+            "link": self.gh_client.create_release_url(self.tag) if self.tag else "",
             "previous_version": str(self.prev_version) if self.prev_version else "",
             "commit_sha": self.commit_sha if self.commit_sha else "",
         }

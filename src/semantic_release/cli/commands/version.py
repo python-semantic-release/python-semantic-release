@@ -471,11 +471,7 @@ def version(  # noqa: C901
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
     gha_output = VersionGitHubActionsOutput(
-        gh_client=(
-            hvcs_client
-            if isinstance(hvcs_client, Github)
-            else Github(hvcs_client.remote_url(use_token=False))
-        ),
+        gh_client=hvcs_client if isinstance(hvcs_client, Github) else None,
         mode=(
             PersistenceMode.TEMPORARY
             if opts.noop or (not commit_changes and not create_tag)
@@ -553,7 +549,8 @@ def version(  # noqa: C901
 
     # Update GitHub Actions output value with new version & set delayed write
     gha_output.version = new_version
-    ctx.call_on_close(gha_output.write_if_possible)
+    if isinstance(hvcs_client, Github):
+        ctx.call_on_close(gha_output.write_if_possible)
 
     # Make string variant of version or appropriate tag as necessary
     version_to_print = str(new_version) if not print_only_tag else new_version.as_tag()
