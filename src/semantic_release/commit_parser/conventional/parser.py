@@ -1,16 +1,25 @@
 from __future__ import annotations
 
-import re
 from functools import reduce
-from itertools import zip_longest
-from re import compile as regexp
+from logging import getLogger
+from re import (
+    DOTALL,
+    IGNORECASE,
+    MULTILINE,
+    Match as RegexMatch,
+    Pattern,
+    compile as regexp,
+    error as RegexError,  # noqa: N812
+)
 from textwrap import dedent
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, ClassVar
 
 from git.objects.commit import Commit
-from pydantic.dataclasses import dataclass
 
-from semantic_release.commit_parser._base import CommitParser, ParserOptions
+from semantic_release.commit_parser._base import CommitParser
+from semantic_release.commit_parser.conventional.options import (
+    ConventionalCommitParserOptions,
+)
 from semantic_release.commit_parser.token import (
     ParsedCommit,
     ParsedMessageResult,
@@ -25,16 +34,10 @@ from semantic_release.commit_parser.util import (
 )
 from semantic_release.enums import LevelBump
 from semantic_release.errors import InvalidParserOptions
-from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
 
-if TYPE_CHECKING:  # pragma: no cover
-    from git.objects.commit import Commit
-
-
-def _logged_parse_error(commit: Commit, error: str) -> ParseError:
-    logger.debug(error)
-    return ParseError(commit, error=error)
+if TYPE_CHECKING:
+    pass
 
 
 # TODO: Remove from here, allow for user customization instead via options
@@ -53,69 +56,6 @@ LONG_TYPE_NAMES = {
 }
 
 
-@dataclass
-class ConventionalCommitParserOptions(ParserOptions):
-    """Options dataclass for the ConventionalCommitParser."""
-
-    minor_tags: Tuple[str, ...] = ("feat",)
-    """Commit-type prefixes that should result in a minor release bump."""
-
-    patch_tags: Tuple[str, ...] = ("fix", "perf")
-    """Commit-type prefixes that should result in a patch release bump."""
-
-    other_allowed_tags: Tuple[str, ...] = (
-        "build",
-        "chore",
-        "ci",
-        "docs",
-        "style",
-        "refactor",
-        "test",
-    )
-    """Commit-type prefixes that are allowed but do not result in a version bump."""
-
-    allowed_tags: Tuple[str, ...] = (
-        *minor_tags,
-        *patch_tags,
-        *other_allowed_tags,
-    )
-    """
-    All commit-type prefixes that are allowed.
-
-    These are used to identify a valid commit message. If a commit message does not start with
-    one of these prefixes, it will not be considered a valid commit message.
-    """
-
-    default_bump_level: LevelBump = LevelBump.NO_RELEASE
-    """The minimum bump level to apply to valid commit message."""
-
-    parse_squash_commits: bool = True
-    """Toggle flag for whether or not to parse squash commits"""
-
-    ignore_merge_commits: bool = True
-    """Toggle flag for whether or not to ignore merge commits"""
-
-    @property
-    def tag_to_level(self) -> dict[str, LevelBump]:
-        """A mapping of commit tags to the level bump they should result in."""
-        return self._tag_to_level
-
-    def __post_init__(self) -> None:
-        self._tag_to_level: dict[str, LevelBump] = {
-            str(tag): level
-            for tag, level in [
-                # we have to do a type ignore as zip_longest provides a type that is not specific enough
-                # for our expected output. Due to the empty second array, we know the first is always longest
-                # and that means no values in the first entry of the tuples will ever be a LevelBump. We
-                # apply a str() to make mypy happy although it will never happen.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
-                *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
-                *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
-            ]
-            if "|" not in str(tag)
-        }
-
-
 class ConventionalCommitParser(
     CommitParser[ParseResult, ConventionalCommitParserOptions]
 ):
@@ -128,14 +68,57 @@ class ConventionalCommitParser(
     # TODO: Deprecate in lieu of get_default_options()
     parser_options = ConventionalCommitParserOptions
 
+    # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
+    mr_selector = regexp(r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$")
+
+    issue_selector = regexp(
+        str.join(
+            "",
+            [
+                r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
+                r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
+            ],
+        ),
+        flags=MULTILINE | IGNORECASE,
+    )
+
+    notice_selector = regexp(r"^NOTICE: (?P<notice>.+)$")
+
+    common_commit_msg_filters: ClassVar[dict[str, tuple[Pattern[str], str]]] = {
+        "typo-extra-spaces": (regexp(r"(\S)  +(\S)"), r"\1 \2"),
+        "git-header-commit": (
+            regexp(r"^[\t ]*commit [0-9a-f]+$\n?", flags=MULTILINE),
+            "",
+        ),
+        "git-header-author": (
+            regexp(r"^[\t ]*Author: .+$\n?", flags=MULTILINE),
+            "",
+        ),
+        "git-header-date": (
+            regexp(r"^[\t ]*Date: .+$\n?", flags=MULTILINE),
+            "",
+        ),
+        "git-squash-heading": (
+            regexp(
+                r"^[\t ]*Squashed commit of the following:.*$\n?",
+                flags=MULTILINE,
+            ),
+            "",
+        ),
+    }
+
     def __init__(self, options: ConventionalCommitParserOptions | None = None) -> None:
         super().__init__(options)
+
+        self._logger = getLogger(
+            str.join(".", [self.__module__, self.__class__.__name__])
+        )
 
         try:
             commit_type_pattern = regexp(
                 r"(?P<type>%s)" % str.join("|", self.options.allowed_tags)
             )
-        except re.error as err:
+        except RegexError as err:
             raise InvalidParserOptions(
                 str.join(
                     "\n",
@@ -167,45 +150,11 @@ class ConventionalCommitParser(
                     r"(?:\n\n(?P<text>.+))?",  # commit body
                 ],
             ),
-            flags=re.DOTALL,
+            flags=DOTALL,
         )
 
-        # GitHub & Gitea use (#123), GitLab uses (!123), and BitBucket uses (pull request #123)
-        self.mr_selector = regexp(
-            r"[\t ]+\((?:pull request )?(?P<mr_number>[#!]\d+)\)[\t ]*$"
-        )
-        self.issue_selector = regexp(
-            str.join(
-                "",
-                [
-                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
-                    r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
-                ],
-            ),
-            flags=re.MULTILINE | re.IGNORECASE,
-        )
-        self.notice_selector = regexp(r"^NOTICE: (?P<notice>.+)$")
-        self.filters = {
-            "typo-extra-spaces": (regexp(r"(\S)  +(\S)"), r"\1 \2"),
-            "git-header-commit": (
-                regexp(r"^[\t ]*commit [0-9a-f]+$\n?", flags=re.MULTILINE),
-                "",
-            ),
-            "git-header-author": (
-                regexp(r"^[\t ]*Author: .+$\n?", flags=re.MULTILINE),
-                "",
-            ),
-            "git-header-date": (
-                regexp(r"^[\t ]*Date: .+$\n?", flags=re.MULTILINE),
-                "",
-            ),
-            "git-squash-heading": (
-                regexp(
-                    r"^[\t ]*Squashed commit of the following:.*$\n?",
-                    flags=re.MULTILINE,
-                ),
-                "",
-            ),
+        self.filters: dict[str, tuple[Pattern[str], str]] = {
+            **self.common_commit_msg_filters,
             "git-squash-commit-prefix": (
                 regexp(
                     str.join(
@@ -215,16 +164,19 @@ class ConventionalCommitParser(
                             commit_type_pattern.pattern + r"\b",  # prior to commit type
                         ],
                     ),
-                    flags=re.MULTILINE,
+                    flags=MULTILINE,
                 ),
                 # move commit type to the start of the line
                 r"\1",
             ),
         }
 
-    @staticmethod
-    def get_default_options() -> ConventionalCommitParserOptions:
+    def get_default_options(self) -> ConventionalCommitParserOptions:
         return ConventionalCommitParserOptions()
+
+    def log_parse_error(self, commit: Commit, error: str) -> ParseError:
+        self._logger.debug(error)
+        return ParseError(commit, error=error)
 
     def commit_body_components_separator(
         self, accumulator: dict[str, list[str]], text: str
@@ -267,14 +219,20 @@ class ConventionalCommitParser(
         return accumulator
 
     def parse_message(self, message: str) -> ParsedMessageResult | None:
-        if not (parsed := self.commit_msg_pattern.match(message)):
-            return None
+        return (
+            self.create_parsed_message_result(match)
+            if (match := self.commit_msg_pattern.match(message))
+            else None
+        )
 
-        parsed_break = parsed.group("break")
-        parsed_scope = parsed.group("scope") or ""
-        parsed_subject = parsed.group("subject")
-        parsed_text = parsed.group("text")
-        parsed_type = parsed.group("type")
+    def create_parsed_message_result(
+        self, match: RegexMatch[str]
+    ) -> ParsedMessageResult:
+        parsed_break = match.group("break")
+        parsed_scope = match.group("scope") or ""
+        parsed_subject = match.group("subject")
+        parsed_text = match.group("text")
+        parsed_type = match.group("type")
 
         linked_merge_request = ""
         if mr_match := self.mr_selector.search(parsed_subject):
@@ -322,7 +280,7 @@ class ConventionalCommitParser(
 
     def parse_commit(self, commit: Commit) -> ParseResult:
         if not (parsed_msg_result := self.parse_message(force_str(commit.message))):
-            return _logged_parse_error(
+            return self.log_parse_error(
                 commit,
                 f"Unable to parse commit message: {commit.message!r}",
             )
@@ -342,7 +300,7 @@ class ConventionalCommitParser(
         will be returned as a list of a single ParseResult.
         """
         if self.options.ignore_merge_commits and self.is_merge_commit(commit):
-            return _logged_parse_error(
+            return self.log_parse_error(
                 commit, "Ignoring merge commit: %s" % commit.hexsha[:8]
             )
 
