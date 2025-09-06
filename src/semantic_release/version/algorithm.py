@@ -346,24 +346,7 @@ def next_version(
     # Step 5. apply the parser to each commit in the history (could return multiple results per commit)
     parsed_results = list(map(commit_parser.parse, commits_since_last_release))
 
-    # Step 5A. Validation type check for the parser results (important because of possible custom parsers)
-    for parsed_result in parsed_results:
-        if not any(
-            (
-                isinstance(parsed_result, (ParseError, ParsedCommit)),
-                type(parsed_result) == list
-                and validate_types_in_sequence(
-                    parsed_result, (ParseError, ParsedCommit)
-                ),
-                type(parsed_result) == tuple
-                and validate_types_in_sequence(
-                    parsed_result, (ParseError, ParsedCommit)
-                ),
-            )
-        ):
-            raise TypeError("Unexpected type returned from commit_parser.parse")
-
-    # Step 5B. Accumulate all parsed results into a single list accounting for possible multiple results per commit
+    # Step 5A. Accumulate all parsed results into a single list accounting for possible multiple results per commit
     consolidated_results: list[ParseResult] = reduce(
         lambda accumulated_results, p_results: [
             *accumulated_results,
@@ -377,6 +360,10 @@ def next_version(
         parsed_results,
         [],
     )
+
+    # Step 5B. Validation type check for the parser results (important because of possible custom parsers)
+    if not validate_types_in_sequence(consolidated_results, (ParseError, ParsedCommit)):
+        raise TypeError("Unexpected type returned from commit_parser.parse")
 
     # Step 5C. Parse the commits to determine the bump level that should be applied
     parsed_levels: set[LevelBump] = {
