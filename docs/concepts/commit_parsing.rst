@@ -49,6 +49,7 @@ Built-in Commit Parsers
 The following parsers are built in to Python Semantic Release:
 
 - :ref:`ConventionalCommitParser <commit_parser-builtin-conventional>`
+- :ref:`ConventionalCommitMonorepoParser <commit_parser-builtin-conventional-monorepo>` *(available in ${NEW_RELEASE_TAG}+)*
 - :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in v9.19.0)*
 - :ref:`EmojiCommitParser <commit_parser-builtin-emoji>`
 - :ref:`ScipyCommitParser <commit_parser-builtin-scipy>`
@@ -65,7 +66,7 @@ Conventional Commits Parser
 
 A parser that is designed to parse commits formatted according to the
 `Conventional Commits Specification`_.  The parser is implemented with the following
-logic in relation to how PSR's core features:
+logic in relation to PSR's core features:
 
 - **Version Bump Determination**: This parser extracts the commit type from the subject
   line of the commit (the first line of a commit message). This type is matched against
@@ -127,10 +128,95 @@ logic in relation to how PSR's core features:
 
 If no commit parser options are provided via the configuration, the parser will use PSR's
 built-in
-:py:class:`defaults <semantic_release.commit_parser.conventional.ConventionalCommitParserOptions>`.
+:py:class:`defaults <semantic_release.commit_parser.conventional.options.ConventionalCommitParserOptions>`.
 
 .. _#402: https://github.com/python-semantic-release/python-semantic-release/issues/402
 .. _Conventional Commits Specification: https://www.conventionalcommits.org/en/v1.0.0
+
+----
+
+.. _commit_parser-builtin-conventional-monorepo:
+
+Conventional Commits Monorepo Parser
+""""""""""""""""""""""""""""""""""""
+
+*Introduced in ${NEW_RELEASE_TAG}*
+
+.. important::
+  In order for this parser to be effective, please review the section titled
+  :ref:`monorepos` for details on file structure, configurations, and release actions.
+
+This parser is an extension of the :ref:`commit_parser-builtin-conventional`, designed specifically
+for monorepo environments. A monorepo environment is defined as a single source control repository
+that contains multiple packages, each of which can be released independently and may have different
+version numbers.
+
+This parser introduces two new configuration options that determine which packages are affected
+by a commit. These options control whether a commit is considered for version determination,
+changelog generation, and other release actions for the relevant packages. The 2 new
+configuration options are
+:py:class:`path_filters <semantic_release.commit_parser.conventional.options_monorepo.ConventionalCommitMonorepoParserOptions.path_filters>`
+and
+:py:class:`scope_prefix <semantic_release.commit_parser.conventional.options_monorepo.ConventionalCommitMonorepoParserOptions.scope_prefix>`.
+
+**Features**:
+
+- **Package Specific Commit Filtering**: For monorepo support, this parser uses 2 filtering rules
+  to determine if a commit should be considered for a specific package. The first rule is based on
+  file paths that are changed in the commit and the second rule is based on the optional scope
+  prefix defined in the commit message. If either rule matches, then the commit is considered
+  relevant to that package and will be used in version determination, changelog generation, etc,
+  for that package. If neither rule matches, then the commit is ignored for that package. File
+  path filtering rules are applied first and are the primary way to determine package relevance. The
+  :py:class:`path_filters <semantic_release.commit_parser.conventional.options_monorepo.ConventionalCommitMonorepoParserOptions.path_filters>`
+  option allows for specifying a list of file path patterns and will also support negated patterns
+  to ignore specific paths that otherwise would be selected from the file glob pattern.  Negated
+  patterns are defined by prefixing the pattern with an exclamation point (``!``). File path
+  filtering is quite effective by itself but to handle the edge cases, the parser has the
+  :py:class:`scope_prefix <semantic_release.commit_parser.conventional.options_monorepo.ConventionalCommitMonorepoParserOptions.scope_prefix>`
+  configuration option to allow the developer to specifically define when the commit is relevant
+  to the package. In monorepo setups, there are often shared files between packages (generally at
+  the root project level) that are modified occasionally but not always relevant to the package
+  being released. Since you do not want to define this path in the package configuration as it may
+  not be relevant to the release, then this parser will look for a match with the scope prefix.
+  The scope prefix is a regular expression that is used to match the text inside the scope field
+  of a Conventional Commit. The scope prefix is optional and is used only if file path filtering
+  does not match. Commits that have matching files in the commit will be considered relevant to
+  the package **regardless** if a scope prefix exists or if it matches.
+
+- **Version Bump Determination**: Once package-specific commit filtering is applied, the relevant
+  commits are passed to the Conventional Commits Parser for evaluation and then used for version
+  bump determination. See :ref:`commit_parser-builtin-conventional` for details.
+
+- **Changelog Generation**: Once package-specific commit filtering is applied, the relevant
+  commits are passed to the Conventional Commits Parser for evaluation and then used for
+  changelog generation. See :ref:`commit_parser-builtin-conventional` for details.
+
+- **Pull/Merge Request Identifier Detection**: Once package-specific commit filtering is applied,
+  the relevant commits are passed to the Conventional Commits Parser for pull/merge request
+  identifier detection. See :ref:`commit_parser-builtin-linked_merge_request_detection` for details.
+
+- **Linked Issue Identifier Detection**: Once package-specific commit filtering is applied, the
+  relevant commits are passed to the Conventional Commits Parser for linked issue identifier
+  detection. See :ref:`commit_parser-builtin-issue_number_detection` for details.
+
+- **Squash Commit Evaluation**: Squashed commits are separated out into individual commits with
+  the same set of changed files **BEFORE** the package-specific commit filtering is applied.
+  Each pseudo-commit is then subjected to the same filtering rules as regular commits. See
+  :ref:`commit_parser-builtin-squash_commit_evaluation` for details.
+
+- **Release Notice Footer Detection**: Once package-specific commit filtering is applied, the
+  relevant commits are passed to the Conventional Commits Parser for release notice footer
+  detection. See :ref:`commit_parser-builtin-release_notice_footer_detection` for details.
+
+**Limitations**:
+
+- ``revert`` commit type is NOT supported, see :ref:`commit_parser-builtin-conventional`'s
+  limitations for details.
+
+If no commit parser options are provided via the configuration, the parser will use PSR's
+built-in
+:py:class:`defaults <semantic_release.commit_parser.conventional.options_monorepo.ConventionalCommitMonorepoParserOptions>`.
 
 ----
 
