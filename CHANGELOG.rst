@@ -34,11 +34,11 @@ v10.4.0 (2025-09-08)
 * **config**: This release introduces a new built-in parser type that can be utilized for monorepo
   projects. The type value is ``conventional-monorepo`` and when specified it will apply the
   conventional commit parser to a monorepo environment. This parser has specialized options to help
-  handle monorepo projects as well. For more information, please refer to the [Monorepo
-  Docs](https://python-semantic-release.readthedocs.io/en/stable).
+  handle monorepo projects as well. For more information, please refer to the `Monorepo Docs`_.
 
 .. _#614: https://github.com/python-semantic-release/python-semantic-release/issues/614
 .. _e18f866: https://github.com/python-semantic-release/python-semantic-release/commit/e18f86640a78b374a327848b9e2ba868003d1a43
+.. _Monorepo Docs: /configuration/configuration-guides/monorepos.html
 .. _PR#1143: https://github.com/python-semantic-release/python-semantic-release/pull/1143
 
 
