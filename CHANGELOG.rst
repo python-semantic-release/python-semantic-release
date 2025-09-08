@@ -4,6 +4,44 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.4.0:
+
+v10.4.0 (2025-09-08)
+====================
+
+✨ Features
+-----------
+
+* **config**: Add ``conventional-monorepo`` as valid ``commit_parser`` type (`PR#1143`_, `e18f866`_)
+
+* **parser**: Add new conventional-commits standard parser for monorepos, closes `#614`_
+  (`PR#1143`_, `e18f866`_)
+
+📖 Documentation
+----------------
+
+* Add configuration guide for monorepo use with PSR (`PR#1143`_, `e18f866`_)
+
+* **commit-parsers**: Introduce conventional commit monorepo parser options & features (`PR#1143`_,
+  `e18f866`_)
+
+* **configuration**: Update ``commit_parser`` option with new ``conventional-monorepo`` value
+  (`PR#1143`_, `e18f866`_)
+
+💡 Additional Release Information
+---------------------------------
+
+* **config**: This release introduces a new built-in parser type that can be utilized for monorepo
+  projects. The type value is ``conventional-monorepo`` and when specified it will apply the
+  conventional commit parser to a monorepo environment. This parser has specialized options to help
+  handle monorepo projects as well. For more information, please refer to the [Monorepo
+  Docs](https://python-semantic-release.readthedocs.io/en/stable).
+
+.. _#614: https://github.com/python-semantic-release/python-semantic-release/issues/614
+.. _e18f866: https://github.com/python-semantic-release/python-semantic-release/commit/e18f86640a78b374a327848b9e2ba868003d1a43
+.. _PR#1143: https://github.com/python-semantic-release/python-semantic-release/pull/1143
+
+
 .. _changelog-v10.3.2:
 
 v10.3.2 (2025-09-06)

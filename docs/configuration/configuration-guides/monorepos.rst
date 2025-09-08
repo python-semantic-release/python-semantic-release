@@ -6,7 +6,7 @@ Releasing Packages from a Monorepo
 
 A monorepo (mono-repository) is a software development strategy where code for multiple projects is stored in a single source control system. This approach streamlines and consolidates configuration, but introduces complexities when using automated tools like Python Semantic Release (PSR).
 
-Previously, PSR offered limited compatibility with monorepos. As of ${NEW_RELEASE_TAG}, PSR introduces the :ref:`commit_parser-builtin-conventional-monorepo`, designed specifically for monorepo environments. To fully leverage this new parser, you must configure your monorepo as described below.
+Previously, PSR offered limited compatibility with monorepos. As of v10.4.0, PSR introduces the :ref:`commit_parser-builtin-conventional-monorepo`, designed specifically for monorepo environments. To fully leverage this new parser, you must configure your monorepo as described below.
 
 .. _monorepos-config:
 

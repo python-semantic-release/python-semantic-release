@@ -49,7 +49,7 @@ Built-in Commit Parsers
 The following parsers are built in to Python Semantic Release:
 
 - :ref:`ConventionalCommitParser <commit_parser-builtin-conventional>`
-- :ref:`ConventionalCommitMonorepoParser <commit_parser-builtin-conventional-monorepo>` *(available in ${NEW_RELEASE_TAG}+)*
+- :ref:`ConventionalCommitMonorepoParser <commit_parser-builtin-conventional-monorepo>` *(available in v10.4.0+)*
 - :ref:`AngularCommitParser <commit_parser-builtin-angular>` *(deprecated in v9.19.0)*
 - :ref:`EmojiCommitParser <commit_parser-builtin-emoji>`
 - :ref:`ScipyCommitParser <commit_parser-builtin-scipy>`
@@ -140,7 +140,7 @@ built-in
 Conventional Commits Monorepo Parser
 """"""""""""""""""""""""""""""""""""
 
-*Introduced in ${NEW_RELEASE_TAG}*
+*Introduced in v10.4.0*
 
 .. important::
   In order for this parser to be effective, please review the section titled
