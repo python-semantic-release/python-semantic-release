@@ -11,4 +11,5 @@ more specific configurations.
 .. toctree::
     :maxdepth: 1
 
+    Monorepos <monorepos>
     UV Project Setup <uv_integration>

@@ -64,6 +64,9 @@ if TYPE_CHECKING:
     from semantic_release.commit_parser.conventional import (
         ConventionalCommitParser,
     )
+    from semantic_release.commit_parser.conventional.parser_monorepo import (
+        ConventionalCommitMonorepoParser,
+    )
     from semantic_release.commit_parser.emoji import EmojiCommitParser
     from semantic_release.commit_parser.scipy import ScipyCommitParser
     from semantic_release.commit_parser.token import ParsedMessageResult, ParseResult
@@ -73,6 +76,7 @@ if TYPE_CHECKING:
         GetParserFromConfigFileFn,
         UpdateVersionPyFileFn,
     )
+    from tests.fixtures.monorepos.git_monorepo import BuildMonorepoFn
 
     try:
         # Python 3.8 and 3.9 compatibility
@@ -155,6 +159,7 @@ if TYPE_CHECKING:
             extra_configs: dict[str, TomlSerializableTypes] | None = None,
             mask_initial_release: bool = True,  # Default as of v10
             package_name: str = ...,
+            monorepo: bool = False,
         ) -> tuple[Path, HvcsBase]: ...
 
     class CommitNReturnChangelogEntryFn(Protocol):
@@ -301,6 +306,34 @@ if TYPE_CHECKING:
         mask_initial_release: bool
         extra_configs: dict[str, TomlSerializableTypes]
 
+    class RepoActionConfigureMonorepo(TypedDict):
+        action: Literal[RepoActionStep.CONFIGURE_MONOREPO]
+        details: RepoActionConfigureMonorepoDetails
+
+    class RepoActionConfigureMonorepoDetails(DetailsBase):
+        package_dir: Path | str
+        package_name: str
+        tag_format_str: str | None
+        mask_initial_release: bool
+        extra_configs: dict[str, TomlSerializableTypes]
+
+    class RepoActionCreateMonorepo(TypedDict):
+        action: Literal[RepoActionStep.CREATE_MONOREPO]
+        details: RepoActionCreateMonorepoDetails
+
+    class RepoActionCreateMonorepoDetails(DetailsBase):
+        commit_type: CommitConvention
+        hvcs_client_name: str
+        hvcs_domain: str
+        origin_url: NotRequired[str]
+
+    class RepoActionChangeDirectory(TypedDict):
+        action: Literal[RepoActionStep.CHANGE_DIRECTORY]
+        details: RepoActionChangeDirectoryDetails
+
+    class RepoActionChangeDirectoryDetails(DetailsBase):
+        directory: Path | str
+
     class RepoActionMakeCommits(TypedDict):
         action: Literal[RepoActionStep.MAKE_COMMITS]
         details: RepoActionMakeCommitsDetails
@@ -381,6 +414,7 @@ if TYPE_CHECKING:
             commit_spec: CommitSpec,
             commit_type: CommitConvention,
             parser: CommitParser[ParseResult, ParserOptions],
+            monorepo: bool = ...,
         ) -> CommitDef: ...
 
     class GetRepoDefinitionFn(Protocol):
@@ -415,6 +449,7 @@ if TYPE_CHECKING:
             commits: Sequence[CommitSpec],
             commit_type: CommitConvention,
             parser: CommitParser[ParseResult, ParserOptions],
+            monorepo: bool = ...,
         ) -> Sequence[CommitDef]: ...
 
     class BuildSpecificRepoFn(Protocol):
@@ -423,7 +458,10 @@ if TYPE_CHECKING:
         ) -> Sequence[RepoActions]: ...
 
     RepoActions: TypeAlias = Union[
+        RepoActionChangeDirectory,
         RepoActionConfigure,
+        RepoActionConfigureMonorepo,
+        RepoActionCreateMonorepo,
         RepoActionGitCheckout,
         RepoActionGitMerge[RepoActionGitMergeDetails],
         RepoActionGitMerge[RepoActionGitFFMergeDetails],
@@ -581,6 +619,43 @@ def example_git_https_url():
 @pytest.fixture(scope="session")
 def get_commit_def_of_conventional_commit() -> GetCommitDefFn[ConventionalCommitParser]:
     def _get_commit_def(msg: str, parser: ConventionalCommitParser) -> CommitDef:
+        if not (parsed_result := parser.parse_message(msg)):
+            return {
+                "cid": "",
+                "msg": msg,
+                "type": "unknown",
+                "category": "Unknown",
+                "desc": msg,
+                "brking_desc": "",
+                "scope": "",
+                "mr": "",
+                "sha": NULL_HEX_SHA,
+                "include_in_changelog": False,
+            }
+
+        return {
+            "cid": "",
+            "msg": msg,
+            "type": parsed_result.type,
+            "category": parsed_result.category,
+            "desc": str.join("\n\n", parsed_result.descriptions),
+            "brking_desc": str.join("\n\n", parsed_result.breaking_descriptions),
+            "scope": parsed_result.scope,
+            "mr": parsed_result.linked_merge_request,
+            "sha": NULL_HEX_SHA,
+            "include_in_changelog": True,
+        }
+
+    return _get_commit_def
+
+
+@pytest.fixture(scope="session")
+def get_commit_def_of_conventional_commit_monorepo() -> (
+    GetCommitDefFn[ConventionalCommitMonorepoParser]
+):
+    def _get_commit_def(
+        msg: str, parser: ConventionalCommitMonorepoParser
+    ) -> CommitDef:
         if not (parsed_result := parser.parse_message(msg)):
             return {
                 "cid": "",
@@ -1078,6 +1153,7 @@ def build_configured_base_repo(  # noqa: C901
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = True,  # Default as of v10
         package_name: str = EXAMPLE_PROJECT_NAME,
+        monorepo: bool = False,
     ) -> tuple[Path, HvcsBase]:
         if not cached_example_git_project.exists():
             raise RuntimeError("Unable to find cached git project files!")
@@ -1094,6 +1170,7 @@ def build_configured_base_repo(  # noqa: C901
             extra_configs=extra_configs,
             mask_initial_release=mask_initial_release,
             package_name=package_name,
+            monorepo=monorepo,
         )
 
     return _build_configured_base_repo
@@ -1131,16 +1208,19 @@ def configure_base_repo(  # noqa: C901
         extra_configs: dict[str, TomlSerializableTypes] | None = None,
         mask_initial_release: bool = True,  # Default as of v10
         package_name: str = EXAMPLE_PROJECT_NAME,
+        monorepo: bool = False,
     ) -> tuple[Path, HvcsBase]:
         # Make sure we are in the dest directory
         with temporary_working_directory(dest_dir):
             # Set parser configuration
             if commit_type == "conventional":
-                use_conventional_parser(toml_file=pyproject_toml_file)
+                use_conventional_parser(
+                    toml_file=pyproject_toml_file, monorepo=monorepo
+                )
             elif commit_type == "emoji":
-                use_emoji_parser(toml_file=pyproject_toml_file)
+                use_emoji_parser(toml_file=pyproject_toml_file, monorepo=monorepo)
             elif commit_type == "scipy":
-                use_scipy_parser(toml_file=pyproject_toml_file)
+                use_scipy_parser(toml_file=pyproject_toml_file, monorepo=monorepo)
             else:
                 use_custom_parser(commit_type, toml_file=pyproject_toml_file)
 
@@ -1290,12 +1370,16 @@ def separate_squashed_commit_def() -> SeparateSquashedCommitDefFn:
 @pytest.fixture(scope="session")
 def convert_commit_spec_to_commit_def(
     get_commit_def_of_conventional_commit: GetCommitDefFn[ConventionalCommitParser],
+    get_commit_def_of_conventional_commit_monorepo: GetCommitDefFn[
+        ConventionalCommitMonorepoParser
+    ],
     get_commit_def_of_emoji_commit: GetCommitDefFn[EmojiCommitParser],
     get_commit_def_of_scipy_commit: GetCommitDefFn[ScipyCommitParser],
     stable_now_date: datetime,
 ) -> ConvertCommitSpecToCommitDefFn:
     message_parsers = {
         "conventional": get_commit_def_of_conventional_commit,
+        "conventional-monorepo": get_commit_def_of_conventional_commit_monorepo,
         "emoji": get_commit_def_of_emoji_commit,
         "scipy": get_commit_def_of_scipy_commit,
     }
@@ -1304,8 +1388,12 @@ def convert_commit_spec_to_commit_def(
         commit_spec: CommitSpec,
         commit_type: CommitConvention,
         parser: CommitParser[ParseResult, ParserOptions],
+        monorepo: bool = False,
     ) -> CommitDef:
-        parse_msg_fn = cast("GetCommitDefFn[Any]", message_parsers[commit_type])
+        parse_msg_fn = cast(
+            "GetCommitDefFn[Any]",
+            message_parsers[f"{commit_type}{'-monorepo' if monorepo else ''}"],
+        )
 
         # Extract the correct commit message for the commit type
         return {
@@ -1330,9 +1418,12 @@ def convert_commit_specs_to_commit_defs(
         commits: Sequence[CommitSpec],
         commit_type: CommitConvention,
         parser: CommitParser[ParseResult, ParserOptions],
+        monorepo: bool = False,
     ) -> Sequence[CommitDef]:
         return [
-            convert_commit_spec_to_commit_def(commit, commit_type, parser=parser)
+            convert_commit_spec_to_commit_def(
+                commit, commit_type, parser=parser, monorepo=monorepo
+            )
             for commit in commits
         ]
 
@@ -1342,6 +1433,8 @@ def convert_commit_specs_to_commit_defs(
 @pytest.fixture(scope="session")
 def build_repo_from_definition(  # noqa: C901, its required and its just test code
     build_configured_base_repo: BuildRepoFn,
+    build_base_monorepo: BuildMonorepoFn,
+    configure_monorepo_package: BuildRepoFn,
     default_tag_format_str: str,
     create_release_tagged_commit: CreateReleaseFn,
     create_squash_merge_commit: CreateSquashMergeCommitFn,
@@ -1386,6 +1479,7 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
         )
 
         repo_dir = Path(dest_dir).resolve().absolute()
+        commit_type: CommitConvention = "conventional"
         hvcs: Github | Gitlab | Gitea | Bitbucket
         commit_cache: dict[str, CommitDef] = {}
         current_repo_def: dict[Version | Literal["Unreleased"], RepoVersionDef] = {}
@@ -1417,6 +1511,64 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                             ]
                         },
                     )
+
+                elif action == RepoActionStep.CREATE_MONOREPO:
+                    cfg_mr_def = cast(
+                        "RepoActionCreateMonorepoDetails", step_result["details"]
+                    )
+                    build_base_monorepo(dest_dir=repo_dir)
+                    hvcs = get_hvcs(
+                        hvcs_client_name=cfg_mr_def["hvcs_client_name"],
+                        origin_url=cfg_mr_def.get("origin_url")
+                        or example_git_https_url,
+                        hvcs_domain=cfg_mr_def["hvcs_domain"],
+                    )
+                    commit_type = cfg_mr_def["commit_type"]
+
+                elif action == RepoActionStep.CONFIGURE_MONOREPO:
+                    cfg_mr_pkg_def = cast(
+                        "RepoActionConfigureMonorepoDetails", step_result["details"]
+                    )
+                    configure_monorepo_package(
+                        dest_dir=cfg_mr_pkg_def["package_dir"],
+                        commit_type=commit_type,
+                        hvcs_client_name=hvcs.__class__.__name__.lower(),
+                        hvcs_domain=str(hvcs.hvcs_domain),
+                        tag_format_str=cfg_mr_pkg_def["tag_format_str"],
+                        extra_configs=cfg_mr_pkg_def["extra_configs"],
+                        mask_initial_release=cfg_mr_pkg_def["mask_initial_release"],
+                        package_name=cfg_mr_pkg_def["package_name"],
+                        monorepo=True,
+                    )
+
+                elif action == RepoActionStep.CHANGE_DIRECTORY:
+                    change_dir_def = cast(
+                        "RepoActionChangeDirectoryDetails", step_result["details"]
+                    )
+                    if not (
+                        new_cwd := Path(change_dir_def["directory"])
+                        .resolve()
+                        .absolute()
+                    ).exists():
+                        msg = f"Directory {change_dir_def['directory']} does not exist."
+                        raise NotADirectoryError(msg)
+
+                    # Helpful Transform to find the project root repo without needing to pass it around (ie '/' => repo_dir)
+                    new_cwd = (
+                        repo_dir if str(new_cwd) == str(repo_dir.root) else new_cwd
+                    )
+
+                    if not new_cwd.is_dir():
+                        msg = f"Path {change_dir_def['directory']} is not a directory."
+                        raise NotADirectoryError(msg)
+
+                    # TODO: 3.9+, use is_relative_to
+                    # if not new_cwd.is_relative_to(repo_dir):
+                    if repo_dir != new_cwd and repo_dir not in new_cwd.parents:
+                        msg = f"Cannot change directory to '{new_cwd}' as it is outside the repo directory '{repo_dir}'."
+                        raise ValueError(msg)
+
+                    os.chdir(str(new_cwd))
 
                 elif action == RepoActionStep.MAKE_COMMITS:
                     mk_cmts_def = cast(
@@ -1571,19 +1723,19 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                         )
 
                 elif action == RepoActionStep.GIT_MERGE:
-                    this_step = cast("RepoActionGitMerge", step_result)
+                    this_step = cast(
+                        "RepoActionGitMerge[RepoActionGitFFMergeDetails | RepoActionGitMergeDetails]",
+                        step_result,
+                    )
 
                     with Repo(repo_dir) as git_repo:
                         if this_step["details"]["fast_forward"]:
-                            ff_merge_def = cast(
-                                "RepoActionGitFFMergeDetails", this_step["details"]
+                            git_repo.git.merge(
+                                this_step["details"]["branch_name"], ff=True
                             )
-                            git_repo.git.merge(ff_merge_def["branch_name"], ff=True)
 
                         else:
-                            merge_def = cast(
-                                "RepoActionGitMergeDetails", this_step["details"]
-                            )
+                            merge_def = this_step["details"]
 
                             # Update the commit definition with the repo hash
                             merge_def["commit_def"] = create_merge_commit(
@@ -1735,7 +1887,14 @@ def split_repo_actions_by_release_tags(
 
         # Loop through all actions and split them by release tags
         for step in repo_definition:
-            if any(step["action"] == action for action in [RepoActionStep.CONFIGURE]):
+            if any(
+                step["action"] == action
+                for action in [
+                    RepoActionStep.CONFIGURE,
+                    RepoActionStep.CREATE_MONOREPO,
+                    RepoActionStep.CONFIGURE_MONOREPO,
+                ]
+            ):
                 releasetags_2_steps[None].append(step)
                 continue
 
@@ -1754,6 +1913,7 @@ def split_repo_actions_by_release_tags(
 
         insignificant_actions = [
             RepoActionStep.GIT_CHECKOUT,
+            RepoActionStep.CHANGE_DIRECTORY,
         ]
 
         # Remove Unreleased if there are no significant steps in an Unreleased section

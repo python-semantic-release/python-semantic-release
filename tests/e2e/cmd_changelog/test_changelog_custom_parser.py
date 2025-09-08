@@ -18,7 +18,7 @@ from tests.util import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from semantic_release.commit_parser.conventional import (
+    from semantic_release.commit_parser.conventional.parser import (
         ConventionalCommitParser,
     )
 
