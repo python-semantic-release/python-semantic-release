@@ -175,13 +175,6 @@ behavior, you will need to specify the parser options you want to override.
     parse_squash_commits = true
     ignore_merge_commits = true
 
-.. important::
-    Python Semantic Release does not currently support Monorepo projects. You will need to provide
-    a custom commit parser that is built for Monorepos. Follow the Monorepo-support progress in
-    `Issue #168 <https://github.com/python-semantic-release/python-semantic-release/issues/168>`_,
-    `Issue #614 <https://github.com/python-semantic-release/python-semantic-release/issues/614>`_,
-    and `PR #1143 <https://github.com/python-semantic-release/python-semantic-release/pull/1143>`_.
-
 
 Choosing your Changelog
 '''''''''''''''''''''''
