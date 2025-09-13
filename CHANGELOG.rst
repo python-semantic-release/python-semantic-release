@@ -4,6 +4,40 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.4.1:
+
+v10.4.1 (2025-09-13)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Fix error where ``--no-tag`` is not respected, closes `#1304`_ (`PR#1329`_,
+  `b090fa2`_)
+
+📖 Documentation
+----------------
+
+* **CHANGELOG**: Update hyperlink in v10.4.0's additional info paragraph (`PR#1323`_, `98ef722`_)
+
+* **getting-started-guide**: Remove notice about lack of monorepo support, closes `#1326`_
+  (`PR#1327`_, `3f21f3f`_)
+
+* **github-actions**: Fix recommended upstream detection script's upstream name parsing (`PR#1328`_,
+  `ccc91c0`_)
+
+.. _#1304: https://github.com/python-semantic-release/python-semantic-release/issues/1304
+.. _#1326: https://github.com/python-semantic-release/python-semantic-release/issues/1326
+.. _3f21f3f: https://github.com/python-semantic-release/python-semantic-release/commit/3f21f3fc47a0dacc11ec95feb2a23f8cf132e77b
+.. _98ef722: https://github.com/python-semantic-release/python-semantic-release/commit/98ef722b65bd6a37492cf7ec8b0425800f719114
+.. _b090fa2: https://github.com/python-semantic-release/python-semantic-release/commit/b090fa2efc0ebfb40bdc572fea307d356af95a3f
+.. _ccc91c0: https://github.com/python-semantic-release/python-semantic-release/commit/ccc91c09fab45358c7e52b42e6c0607c68c9d8f3
+.. _PR#1323: https://github.com/python-semantic-release/python-semantic-release/pull/1323
+.. _PR#1327: https://github.com/python-semantic-release/python-semantic-release/pull/1327
+.. _PR#1328: https://github.com/python-semantic-release/python-semantic-release/pull/1328
+.. _PR#1329: https://github.com/python-semantic-release/python-semantic-release/pull/1329
+
+
 .. _changelog-v10.4.0:
 
 v10.4.0 (2025-09-08)
