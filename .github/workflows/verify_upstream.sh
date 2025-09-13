@@ -5,7 +5,7 @@ set -eu +o pipefail
 # Example output of `git status -sb`:
 #   ## master...origin/master [behind 1]
 #   M .github/workflows/verify_upstream.sh
-UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | cut -d' ' -f2 | grep -E '\.{3}' | cut -d'.' -f4)"
+UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | awk -F '\\.\\.\\.' '{print $2}' | cut -d ' ' -f1)"
 printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
 
 set -o pipefail
