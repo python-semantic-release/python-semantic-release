@@ -710,7 +710,7 @@ def version(  # noqa: C901
     # are disabled, and the changelog generation is disabled or it's not
     # modified, then the HEAD commit will be tagged as a release commit
     # despite not being made by PSR
-    if commit_changes or create_tag:
+    if create_tag:
         project.git_tag(
             tag_name=new_version.as_tag(),
             message=new_version.as_tag(),
