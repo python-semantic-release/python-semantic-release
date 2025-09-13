@@ -903,7 +903,7 @@ to the GitHub Release Assets as well.
             run: |
               set +o pipefail
 
-              UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | cut -d' ' -f2 | grep -E '\.{3}' | cut -d'.' -f4)"
+              UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | awk -F '\\.\\.\\.' '{print $2}' | cut -d ' ' -f1)"
               printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
 
               set -o pipefail
