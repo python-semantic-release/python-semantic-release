@@ -35,7 +35,7 @@ mention the rationale here.
 
 ## PR Completion Checklist
 
-- [ ] Reviewed & followed the [Contributor Guidelines](https://python-semantic-release.readthedocs.io/en/latest/contributing.html)
+- [ ] Reviewed & followed the [Contributor Guidelines](https://python-semantic-release.readthedocs.io/en/stable/contributing/contributing_guide.html)
 
 - [ ] Changes Implemented & Validation pipeline succeeds
 
