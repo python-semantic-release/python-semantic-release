@@ -1125,6 +1125,14 @@ default token value will be for each remote type.
 **Default:** ``{ env = "<envvar name>" }``, where ``<envvar name>`` depends on
 :ref:`remote.type <config-remote-type>` as indicated above.
 
+A special case is the GitLab CI environment variable ``"CI_JOB_TOKEN"``. If this variable is set,
+it will be used as the job token for the GitLab API. This is useful for accessing the Gitlab Releases
+API in the CI environment.
+
+.. warning::
+    The value of ``"GITLAB_TOKEN"`` takes precedence over ``"CI_JOB_TOKEN"``. If both are set to the
+    same value, it is assumed to be a job token, not a personal access token.
+
 ----
 
 .. _config-remote-type:
