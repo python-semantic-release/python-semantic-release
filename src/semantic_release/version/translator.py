@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import re
+from re import VERBOSE, compile as regexp, escape as regex_escape
+from typing import TYPE_CHECKING
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.globals import logger
 from semantic_release.helpers import check_tag_format
 from semantic_release.version.version import Version
+
+if TYPE_CHECKING:
+    from re import Pattern
 
 
 class VersionTranslator:
@@ -17,7 +21,7 @@ class VersionTranslator:
     _VERSION_REGEX = SEMVER_REGEX
 
     @classmethod
-    def _invert_tag_format_to_re(cls, tag_format: str) -> re.Pattern[str]:
+    def _invert_tag_format_to_re(cls, tag_format: str) -> Pattern[str]:
         r"""
         Unpick the "tag_format" format string and create a regex which can be used to
         convert a tag to a version string.
@@ -31,9 +35,11 @@ class VersionTranslator:
         >>> assert m is not None
         >>> assert m.expand(r"\g<version>") == version
         """
-        pat = re.compile(
-            tag_format.replace(r"{version}", r"(?P<version>.*)"),
-            flags=re.VERBOSE,
+        pat = regexp(
+            regex_escape(tag_format).replace(
+                regex_escape(r"{version}"), r"(?P<version>.+)"
+            ),
+            flags=VERBOSE,
         )
         logger.debug("inverted tag_format %r to %r", tag_format, pat.pattern)
         return pat
