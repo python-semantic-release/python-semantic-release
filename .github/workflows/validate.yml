@@ -104,11 +104,12 @@ jobs:
         with:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
           cache: 'pip'
+          allow-prereleases: true
 
       - name: Setup | Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[build]
+          pip install --editable .[build]
 
       - name: Build | Build next version artifacts
         id: version
@@ -171,11 +172,12 @@ jobs:
         with:
           python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
+          allow-prereleases: true
 
       - name: Setup | Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[test]
+          pip install --editable .[test]
           pip install pytest-github-actions-annotate-failures
 
       - name: Test | Run pytest -m unit --comprehensive
@@ -227,6 +229,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+          allow-prereleases: true
 
       - name: Setup | Download Distribution Artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
@@ -242,7 +245,7 @@ jobs:
         # so that we can use it in the pytest command for coverage
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[test]
+          pip install --editable .[test]
           pip install pytest-github-actions-annotate-failures
           pip uninstall -y python-semantic-release
           pip install dist/python_semantic_release-*.whl
@@ -316,6 +319,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+          allow-prereleases: true
 
       - name: Setup | Download Distribution Artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
@@ -333,7 +337,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'stop'
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[test]
+          pip install --editable .[test]
           pip install pytest-github-actions-annotate-failures
           pip uninstall -y python-semantic-release
           $psrWheelFile = Get-ChildItem dist\python_semantic_release-*.whl -File | Select-Object -Index 0
@@ -457,11 +461,12 @@ jobs:
         with:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
           cache: 'pip'
+          allow-prereleases: true
 
       - name: Setup | Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[dev,mypy,test]
+          pip install --editable .[dev,mypy,test]
         # needs test because we run mypy over the tests as well and without the dependencies
         # mypy will throw import errors
 
