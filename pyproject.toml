@@ -32,7 +32,8 @@ dependencies = [
   "tomlkit ~= 0.11",
   "dotty-dict ~= 1.3",
   "importlib-resources ~= 6.0",
-  "pydantic ~= 2.0",
+  "pydantic ~= 2.0; python_version < '3.14'",
+  "pydantic >= 2.12.0a1; python_version >= '3.14'",
   "rich ~= 14.0",
   "shellingham ~= 1.5",
   "Deprecated ~= 1.2",  # Backport of deprecated decorator for python 3.8
