@@ -953,6 +953,9 @@ to the GitHub Release Assets as well.
               path: dist
               if-no-files-found: error
 
+        outputs:
+          released: ${{ steps.release.outputs.released || 'false' }}
+
       deploy:
         # 1. Separate out the deploy step from the publish step to run each step at
         #    the least amount of token privilege
