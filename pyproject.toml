@@ -22,7 +22,10 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 readme = "README.rst"
-authors = [{ name = "Rolf Erik Lekang", email = "me@rolflekang.com" }]
+authors = [
+  { name = "Rolf Erik Lekang", email = "me@rolflekang.com" },
+  { name = "codejedi365", email = "codejedi365@gmail.com" },
+]
 dependencies = [
   "click ~= 8.1.0",
   "click-option-group ~= 0.5",
