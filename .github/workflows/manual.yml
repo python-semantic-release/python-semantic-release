@@ -14,6 +14,11 @@ on:
         type: boolean
         required: true
         default: true
+      python3-14:
+        description: 'Test Python 3.14?'
+        type: boolean
+        required: true
+        default: true
       python3-13:
         description: 'Test Python 3.13?'
         type: boolean
@@ -79,6 +84,7 @@ jobs:
                 "3.11" if str(os.getenv("INPUT_PY3_11", False)).lower() == str(True).lower() else None,
                 "3.12" if str(os.getenv("INPUT_PY3_12", False)).lower() == str(True).lower() else None,
                 "3.13" if str(os.getenv("INPUT_PY3_13", False)).lower() == str(True).lower() else None,
+                "3.14" if str(os.getenv("INPUT_PY3_14", False)).lower() == str(True).lower() else None,
             ]))
 
             linux_versions = (
@@ -105,6 +111,7 @@ jobs:
           INPUT_PY3_11: ${{ inputs.python3-11 }}
           INPUT_PY3_12: ${{ inputs.python3-12 }}
           INPUT_PY3_13: ${{ inputs.python3-13 }}
+          INPUT_PY3_14: ${{ inputs.python3-14 }}
           INPUT_LINUX: ${{ inputs.linux }}
           INPUT_WINDOWS: ${{ inputs.windows }}
         run: |
