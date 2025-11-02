@@ -215,6 +215,59 @@ def test_pattern_declaration_is_version_replacer():
                     """
                 ),
             ),
+            (
+                "Using default number format for c-macro style definition (see #1348)",
+                f"{test_file}:APP_VERSION:{VersionStampType.NUMBER_FORMAT.value}",
+                # irrelevant for this case
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses colon separator with double quotes
+                dedent(
+                    """\
+                    #ifndef VERSION_H
+                    #define VERSION_H
+
+                    #define APP_VERSION "0.0.0"
+
+                    #endif // VERSION_H
+                    """
+                ),
+                dedent(
+                    f"""\
+                    #ifndef VERSION_H
+                    #define VERSION_H
+
+                    #define APP_VERSION "{next_version}"
+
+                    #endif // VERSION_H
+                    """
+                ),
+            ),
+            (
+                "Using default tag format for c-macro style definition (see #1348)",
+                f"{test_file}:APP_VERSION:{VersionStampType.TAG_FORMAT.value}",
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses colon separator with double quotes
+                dedent(
+                    """\
+                    #ifndef VERSION_H
+                    #define VERSION_H
+
+                    #define APP_VERSION "v0.0.0"
+
+                    #endif // VERSION_H
+                    """
+                ),
+                dedent(
+                    f"""\
+                    #ifndef VERSION_H
+                    #define VERSION_H
+
+                    #define APP_VERSION "v{next_version}"
+
+                    #endif // VERSION_H
+                    """
+                ),
+            ),
         ]
     ],
 )
