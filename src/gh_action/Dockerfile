@@ -1,5 +1,5 @@
 # This Dockerfile is only for GitHub Actions
-FROM python:3.13-bookworm
+FROM python:3.14-slim-trixie
 ARG WORK_DIR="/opt/psr"
 
 WORKDIR ${WORK_DIR}
