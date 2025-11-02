@@ -228,8 +228,8 @@ class PatternVersionDeclaration(IVersionReplacer):
                 # Negative lookbehind to ensure we don't match part of a variable name
                 f"""(?x)(?P<quote1>['"])?(?<![\\w.-]){regex_escape(variable)}(?P=quote1)?""",
                 # Supports walrus, equals sign, double-equals, colon, or @ as assignment operator
-                # ignoring whitespace separation
-                r"\s*(:=|==|[:=@])\s*",
+                # ignoring whitespace separation. Also allows a space as the separator for c-macro style definitions.
+                r"\s*(:=|==|[:=@ ])\s*",
                 # Supports optional matching quotations around a version pattern (tag or raw format)
                 f"""(?P<quote2>['"])?{value_replace_pattern_str}(?P=quote2)?""",
             ],
