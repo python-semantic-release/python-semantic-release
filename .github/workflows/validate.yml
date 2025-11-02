@@ -183,7 +183,7 @@ jobs:
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857  # v5.5.1
+        uses: mikepenz/action-junit-report@5b7ee5a21e8674b695313d769f3cbdfd5d4d53a4  # v6.0.0
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -271,7 +271,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857  # v5.5.1
+        uses: mikepenz/action-junit-report@5b7ee5a21e8674b695313d769f3cbdfd5d4d53a4  # v6.0.0
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -366,7 +366,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857  # v5.5.1
+        uses: mikepenz/action-junit-report@5b7ee5a21e8674b695313d769f3cbdfd5d4d53a4  # v6.0.0
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
