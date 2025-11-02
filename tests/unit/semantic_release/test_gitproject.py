@@ -223,3 +223,66 @@ def test_verify_upstream_unchanged_with_custom_ref(
 
     # Verify rev_parse was called with custom ref
     mock_repo.git.rev_parse.assert_called_once_with("HEAD~1")
+
+
+def test_is_shallow_clone_true(mock_gitproject: GitProject, tmp_path: Path) -> None:
+    """Test is_shallow_clone returns True when shallow file exists."""
+    # Create a shallow file
+    shallow_file = tmp_path / ".git" / "shallow"
+    shallow_file.parent.mkdir(parents=True, exist_ok=True)
+    shallow_file.touch()
+
+    assert mock_gitproject.is_shallow_clone() is True
+
+
+def test_is_shallow_clone_false(mock_gitproject: GitProject, tmp_path: Path) -> None:
+    """Test is_shallow_clone returns False when shallow file does not exist."""
+    # Ensure shallow file does not exist
+    shallow_file = tmp_path / ".git" / "shallow"
+    if shallow_file.exists():
+        shallow_file.unlink()
+
+    assert mock_gitproject.is_shallow_clone() is False
+
+
+def test_git_unshallow_success(
+    mock_gitproject: GitProject, mock_repo: RepoMock
+) -> None:
+    """Test git_unshallow successfully unshallows a repository."""
+    mock_gitproject.git_unshallow(noop=False)
+    mock_repo.git.fetch.assert_called_once_with("--unshallow")
+
+
+def test_git_unshallow_noop(mock_gitproject: GitProject, mock_repo: RepoMock) -> None:
+    """Test git_unshallow in noop mode does not execute the command."""
+    mock_gitproject.git_unshallow(noop=True)
+    mock_repo.git.fetch.assert_not_called()
+
+
+def test_git_unshallow_already_complete(
+    mock_gitproject: GitProject, mock_repo: RepoMock
+) -> None:
+    """Test git_unshallow handles already-complete repository gracefully."""
+    # Simulate error from git when repo is already complete
+    error_msg = "fatal: --unshallow on a complete repository does not make sense"
+    mock_repo.git.fetch.side_effect = GitCommandError(
+        "fetch", status=128, stderr=error_msg
+    )
+
+    # Should not raise an exception
+    mock_gitproject.git_unshallow(noop=False)
+
+
+def test_git_unshallow_other_error(
+    mock_gitproject: GitProject, mock_repo: RepoMock
+) -> None:
+    """Test git_unshallow raises exception for other errors."""
+    # Simulate a different error
+    error_msg = "fatal: some other error"
+    mock_repo.git.fetch.side_effect = GitCommandError(
+        "fetch", status=128, stderr=error_msg
+    )
+
+    # Should raise the exception
+    with pytest.raises(GitCommandError):
+        mock_gitproject.git_unshallow(noop=False)
