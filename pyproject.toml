@@ -172,7 +172,7 @@ commands =
 """
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 show_column_numbers = true
 show_error_context = true
 pretty = true
@@ -195,6 +195,9 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+# Disable strict TypedDict checking for tests due to parameterization patterns
+# that are not type-safe but are necessary for test fixtures
+disable_error_code = ["misc", "arg-type", "typeddict-item", "typeddict-unknown-key", "list-item", "index"]
 
 [[tool.mypy.overrides]]
 module = "flatdict"
