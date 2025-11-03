@@ -891,45 +891,6 @@ to the GitHub Release Assets as well.
             run: |
               git reset --hard ${{ github.sha }}
 
-          - name: Evaluate | Verify upstream has NOT changed
-            # Last chance to abort before causing an error as another PR/push was applied to
-            # the upstream branch while this workflow was running. This is important
-            # because we are committing a version change (--commit). You may omit this step
-            # if you have 'commit: false' in your configuration.
-            #
-            # You may consider moving this to a repo script and call it from this step instead
-            # of writing it in-line.
-            shell: bash
-            run: |
-              set +o pipefail
-
-              UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | awk -F '\\.\\.\\.' '{print $2}' | cut -d ' ' -f1)"
-              printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
-
-              set -o pipefail
-
-              if [ -z "$UPSTREAM_BRANCH_NAME" ]; then
-                  printf >&2 '%s\n' "::error::Unable to determine upstream branch name!"
-                  exit 1
-              fi
-
-              git fetch "${UPSTREAM_BRANCH_NAME%%/*}"
-
-              if ! UPSTREAM_SHA="$(git rev-parse "$UPSTREAM_BRANCH_NAME")"; then
-                  printf >&2 '%s\n' "::error::Unable to determine upstream branch sha!"
-                  exit 1
-              fi
-
-              HEAD_SHA="$(git rev-parse HEAD)"
-
-              if [ "$HEAD_SHA" != "$UPSTREAM_SHA" ]; then
-                  printf >&2 '%s\n' "[HEAD SHA] $HEAD_SHA != $UPSTREAM_SHA [UPSTREAM SHA]"
-                  printf >&2 '%s\n' "::error::Upstream has changed, aborting release..."
-                  exit 1
-              fi
-
-              printf '%s\n' "Verified upstream branch has not changed, continuing with release..."
-
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
@@ -998,11 +959,6 @@ to the GitHub Release Assets as well.
   one release job in the case if there are multiple pushes to ``main`` in a short period
   of time.
 
-  Secondly the *Evaluate | Verify upstream has NOT changed* step is used to ensure that the
-  upstream branch has not changed while the workflow was running. This is important because
-  we are committing a version change (``commit: true``) and there might be a push collision
-  that would cause undesired behavior. Review Issue `#1201`_ for more detailed information.
-
 .. warning::
   You must set ``fetch-depth`` to 0 when using ``actions/checkout@v4``, since
   Python Semantic Release needs access to the full history to build a changelog
@@ -1017,6 +973,11 @@ to the GitHub Release Assets as well.
   as a separate secret and using that instead of ``GITHUB_TOKEN``. In this
   case, you will also need to pass the new token to ``actions/checkout`` (as
   the ``token`` input) in order to gain push access.
+
+.. note::
+  As of $NEW_RELEASE_TAG, the verify upstream step is no longer required as it has been
+  integrated into PSR directly. If you are using an older version of PSR, you will need
+  to review the older documentation for that step. See Issue `#1201`_ for more details.
 
 .. _#1201: https://github.com/python-semantic-release/python-semantic-release/issues/1201
 .. _concurrency: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency
