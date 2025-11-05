@@ -118,6 +118,18 @@ By default (in order):
 
   #.  Create a release in the remote VCS for this tag (if supported)
 
+.. note::
+
+  Before pushing changes to the remote (step 6), Python Semantic Release automatically
+  verifies that the upstream branch has not changed since the commit that triggered
+  the release. This prevents push conflicts when another commit was made to the
+  upstream branch while the release was being prepared. If the upstream branch has
+  changed, the command will exit with an error, and you will need to pull the latest
+  changes and run the command again.
+
+  This verification only occurs when committing changes (``--commit``). If you are
+  running with ``--no-commit``, the verification will not be performed.
+
 All of these steps can be toggled on or off using the command line options
 described below. Some of the steps rely on others, so some options may implicitly
 disable others.
