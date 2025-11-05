@@ -75,7 +75,7 @@ class ConventionalCommitParser(
         str.join(
             "",
             [
-                r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
+                r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?|refs):",
                 r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
             ],
         ),
