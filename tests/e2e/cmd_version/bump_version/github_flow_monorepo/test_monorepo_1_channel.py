@@ -58,6 +58,7 @@ def test_githubflow_monorepo_rebuild_1_channel(
     example_project_dir: ExProjectDir,
     git_repo_for_directory: GetGitRepo4DirFn,
     build_repo_from_definition: BuildRepoFromDefinitionFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     get_sanitized_md_changelog_content: GetSanitizedChangelogContentFn,
@@ -114,6 +115,7 @@ def test_githubflow_monorepo_rebuild_1_channel(
         )
 
         # make sure mocks are clear
+        mocked_git_fetch.reset_mock()
         mocked_git_push.reset_mock()
         post_mocker.reset_mock()
 
@@ -247,5 +249,8 @@ def test_githubflow_monorepo_rebuild_1_channel(
             assert curr_release_str in [tag.name for tag in mirror_git_repo.tags]
 
         # Make sure publishing actions occurred
+        assert (
+            mocked_git_fetch.call_count == 1
+        )  # fetch called to check for remote changes
         assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
         assert post_mocker.call_count == 1  # vcs release creation occurred

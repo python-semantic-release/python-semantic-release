@@ -55,6 +55,7 @@ def test_custom_release_notes_template(
     run_cli: RunCliFn,
     use_release_notes_template: UseReleaseNotesTemplateFn,
     retrieve_runtime_context: RetrieveRuntimeContextFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ) -> None:
@@ -89,6 +90,7 @@ def test_custom_release_notes_template(
 
     # Assert
     assert_successful_exit_code(result, cli_cmd)
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None
@@ -128,6 +130,7 @@ def test_default_release_notes_license_statement(
     license_setting: str,
     mask_initial_release: bool,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -175,6 +178,7 @@ def test_default_release_notes_license_statement(
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1
     assert post_mocker.last_request is not None

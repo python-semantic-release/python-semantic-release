@@ -57,6 +57,7 @@ def test_version_only_stamp_version(
     repo_result: BuiltRepoResult,
     expected_new_version: str,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: MagicMock,
     example_pyproject_toml: Path,
