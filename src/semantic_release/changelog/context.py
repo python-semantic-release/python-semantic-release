@@ -119,7 +119,7 @@ def read_file(filepath: str) -> str:
             return rfd.read()
 
     except FileNotFoundError as err:
-        logging.warning(err)
+        logging.warning(str(err))
         return ""
 
 
