@@ -94,15 +94,28 @@ def cached_example_git_monorepo(
         # the implementation on Windows holds some file descriptors open until close is called.
         with Repo.init(cached_repo_path) as repo:
             rmtree(str(Path(repo.git_dir, "hooks")))
+
+            # set up remote origin (including a refs directory)
+            git_origin_dir = Path(repo.common_dir, "refs", "remotes", "origin")
+            repo.create_remote(name=git_origin_dir.name, url=example_git_https_url)
+            git_origin_dir.mkdir(parents=True, exist_ok=True)
+
             # Without this the global config may set it to "master", we want consistency
             repo.git.branch("-M", DEFAULT_BRANCH_NAME)
+
             with repo.config_writer("repository") as config:
                 config.set_value("user", "name", commit_author.name)
                 config.set_value("user", "email", commit_author.email)
                 config.set_value("commit", "gpgsign", False)
                 config.set_value("tag", "gpgsign", False)
 
-            repo.create_remote(name="origin", url=example_git_https_url)
+                # set up a remote tracking branch for the default branch
+                config.set_value(f'branch "{DEFAULT_BRANCH_NAME}"', "remote", "origin")
+                config.set_value(
+                    f'branch "{DEFAULT_BRANCH_NAME}"',
+                    "merge",
+                    f"refs/heads/{DEFAULT_BRANCH_NAME}",
+                )
 
             # make sure all base files are in index to enable initial commit
             repo.index.add(("*", ".gitignore"))

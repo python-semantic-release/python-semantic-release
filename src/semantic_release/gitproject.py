@@ -12,11 +12,16 @@ from git import GitCommandError, Repo
 from semantic_release.cli.masking_filter import MaskingFilter
 from semantic_release.cli.util import indented, noop_report
 from semantic_release.errors import (
+    DetachedHeadGitError,
     GitAddError,
     GitCommitEmptyIndexError,
     GitCommitError,
+    GitFetchError,
     GitPushError,
     GitTagError,
+    LocalGitError,
+    UnknownUpstreamBranchError,
+    UpstreamBranchChangedError,
 )
 from semantic_release.globals import logger
 
@@ -282,3 +287,94 @@ class GitProject:
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 raise GitPushError(f"Failed to push tag ({tag}) to remote") from err
+
+    def verify_upstream_unchanged(
+        self, local_ref: str = "HEAD", noop: bool = False
+    ) -> None:
+        """
+        Verify that the upstream branch has not changed since the given local reference.
+
+        :param local_ref: The local reference to compare against upstream (default: HEAD)
+        :param noop: Whether to skip the actual verification (for dry-run mode)
+
+        :raises UpstreamBranchChangedError: If the upstream branch has changed
+        """
+        if noop:
+            noop_report(
+                indented(
+                    """\
+                    would have verified that upstream branch has not changed
+                    """
+                )
+            )
+            return
+
+        with Repo(str(self.project_root)) as repo:
+            # Get the current active branch
+            try:
+                active_branch = repo.active_branch
+            except TypeError:
+                # When in detached HEAD state, active_branch raises TypeError
+                err_msg = (
+                    "Repository is in detached HEAD state, cannot verify upstream state"
+                )
+                raise DetachedHeadGitError(err_msg) from None
+
+            # Get the tracking branch (upstream branch)
+            if (tracking_branch := active_branch.tracking_branch()) is None:
+                err_msg = f"No upstream branch found for '{active_branch.name}'; cannot verify upstream state!"
+                raise UnknownUpstreamBranchError(err_msg)
+
+            upstream_full_ref_name = tracking_branch.name
+            self.logger.info("Upstream branch name: %s", upstream_full_ref_name)
+
+            # Extract the remote name from the tracking branch
+            # tracking_branch.name is in the format "remote/branch"
+            remote_name, remote_branch_name = upstream_full_ref_name.split(
+                "/", maxsplit=1
+            )
+            remote_ref_obj = repo.remotes[remote_name]
+
+            # Fetch the latest changes from the remote
+            self.logger.info("Fetching latest changes from remote '%s'", remote_name)
+            try:
+                remote_ref_obj.fetch()
+            except GitCommandError as err:
+                self.logger.exception(str(err))
+                err_msg = f"Failed to fetch from remote '{remote_name}'"
+                raise GitFetchError(err_msg) from err
+
+            # Get the SHA of the upstream branch
+            try:
+                upstream_commit_ref = remote_ref_obj.refs[remote_branch_name].commit
+                upstream_sha = upstream_commit_ref.hexsha
+            except AttributeError as err:
+                self.logger.exception(str(err))
+                err_msg = f"Unable to determine upstream branch SHA for '{upstream_full_ref_name}'"
+                raise GitFetchError(err_msg) from err
+
+            # Get the SHA of the specified ref (default: HEAD)
+            try:
+                local_commit = repo.commit(repo.git.rev_parse(local_ref))
+            except GitCommandError as err:
+                self.logger.exception(str(err))
+                err_msg = f"Unable to determine the SHA for local ref '{local_ref}'"
+                raise LocalGitError(err_msg) from err
+
+            # Compare the two SHAs
+            if local_commit.hexsha != upstream_sha and not any(
+                commit.hexsha == upstream_sha for commit in local_commit.iter_parents()
+            ):
+                err_msg = str.join(
+                    "\n",
+                    (
+                        f"[LOCAL SHA] {local_commit.hexsha} != {upstream_sha} [UPSTREAM SHA].",
+                        f"Upstream branch '{upstream_full_ref_name}' has changed!",
+                    ),
+                )
+                raise UpstreamBranchChangedError(err_msg)
+
+            self.logger.info(
+                "Verified upstream branch '%s' has not changed",
+                upstream_full_ref_name,
+            )

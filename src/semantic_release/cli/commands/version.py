@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import click
 import shellingham  # type: ignore[import]
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
-from git import Repo
+from git import GitCommandError, Repo
 from requests import HTTPError
 
 from semantic_release.changelog.release_history import ReleaseHistory
@@ -27,9 +27,14 @@ from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import (
     BuildDistributionsError,
+    DetachedHeadGitError,
     GitCommitEmptyIndexError,
+    GitFetchError,
     InternalError,
+    LocalGitError,
     UnexpectedResponse,
+    UnknownUpstreamBranchError,
+    UpstreamBranchChangedError,
 )
 from semantic_release.gitproject import GitProject
 from semantic_release.globals import logger
@@ -727,6 +732,29 @@ def version(  # noqa: C901
         )
 
         if commit_changes:
+            # Verify that the upstream branch has not changed before pushing
+            # This prevents conflicts if another commit was pushed while we were preparing the release
+            # We check HEAD~1 because we just made a release commit
+            try:
+                project.verify_upstream_unchanged(local_ref="HEAD~1", noop=opts.noop)
+            except UpstreamBranchChangedError as exc:
+                click.echo(str(exc), err=True)
+                click.echo(
+                    "Upstream branch has changed. Please pull the latest changes and try again.",
+                    err=True,
+                )
+                ctx.exit(1)
+            except (
+                DetachedHeadGitError,
+                GitCommandError,
+                UnknownUpstreamBranchError,
+                GitFetchError,
+                LocalGitError,
+            ) as exc:
+                click.echo(str(exc), err=True)
+                click.echo("Unable to verify upstream due to error!", err=True)
+                ctx.exit(1)
+
             # TODO: integrate into push branch
             with Repo(str(runtime.repo_dir)) as git_repo:
                 active_branch = git_repo.active_branch.name

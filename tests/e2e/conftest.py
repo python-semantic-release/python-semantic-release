@@ -6,6 +6,7 @@ from re import IGNORECASE, MULTILINE, compile as regexp
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
+import git.remote as git_remote
 import pytest
 from requests_mock import ANY
 
@@ -75,6 +76,26 @@ def mocked_git_push(monkeypatch: MonkeyPatch) -> MagicMock:
     cls = prepare_mocked_git_command_wrapper_type(push=mocked_push)
     monkeypatch.setattr(cli_config_module.Repo, "GitCommandWrapperType", cls)
     return mocked_push
+
+
+@pytest.fixture
+def mocked_git_fetch(monkeypatch: MonkeyPatch) -> MagicMock:
+    """
+    Mock the `Repo.git.fetch()` method in `semantic_release.cli.main` and
+    `git.Repo.remotes.Remote.fetch()`.
+    """
+    mocked_fetch = MagicMock()
+    cls = prepare_mocked_git_command_wrapper_type(fetch=mocked_fetch)
+    monkeypatch.setattr(cli_config_module.Repo, "GitCommandWrapperType", cls)
+
+    # define a small wrapper so the MagicMock does not receive `self`
+    def _fetch(self, *args, **kwargs):
+        return mocked_fetch(*args, **kwargs)
+
+    # Replace the method on the Remote class used by GitPython
+    monkeypatch.setattr(git_remote.Remote, "fetch", _fetch, raising=True)
+
+    return mocked_fetch
 
 
 @pytest.fixture

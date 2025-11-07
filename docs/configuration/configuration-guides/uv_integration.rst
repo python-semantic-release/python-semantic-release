@@ -291,7 +291,6 @@ look like this:
           env:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
-            bash .github/workflows/verify_upstream.sh
             uv run semantic-release -v --strict version --skip-build
             uv run semantic-release publish
 

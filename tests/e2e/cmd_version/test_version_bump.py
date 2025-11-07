@@ -321,6 +321,7 @@ def test_version_force_level(
     example_project_dir: ExProjectDir,
     example_pyproject_toml: Path,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     pyproject_toml_file: Path,
@@ -390,6 +391,7 @@ def test_version_force_level(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -534,6 +536,7 @@ def test_version_next_greater_than_version_one_conventional(
     branch_name: str,
     run_cli: RunCliFn,
     file_in_repo: str,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -553,6 +556,11 @@ def test_version_next_greater_than_version_one_conventional(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -587,6 +595,7 @@ def test_version_next_greater_than_version_one_conventional(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -673,6 +682,7 @@ def test_version_next_greater_than_version_one_no_bump_conventional(
     branch_name: str,
     run_cli: RunCliFn,
     file_in_repo: str,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -692,6 +702,11 @@ def test_version_next_greater_than_version_one_no_bump_conventional(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -724,6 +739,7 @@ def test_version_next_greater_than_version_one_no_bump_conventional(
     # No commit has been made
     assert head_sha_before == head_after.hexsha
     assert len(tags_set_difference) == 0  # No tag created
+    assert mocked_git_fetch.call_count == 0  # no git fetch called
     assert mocked_git_push.call_count == 0  # no git push of tag or commit
     assert post_mocker.call_count == 0  # no vcs release
 
@@ -833,6 +849,7 @@ def test_version_next_greater_than_version_one_emoji(
     branch_name: str,
     run_cli: RunCliFn,
     file_in_repo: str,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -852,6 +869,11 @@ def test_version_next_greater_than_version_one_emoji(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -886,6 +908,7 @@ def test_version_next_greater_than_version_one_emoji(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -972,6 +995,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     branch_name: str,
     run_cli: RunCliFn,
     file_in_repo: str,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -991,6 +1015,11 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1023,6 +1052,7 @@ def test_version_next_greater_than_version_one_no_bump_emoji(
     # No commit has been made
     assert head_sha_before == head_after.hexsha
     assert len(tags_set_difference) == 0  # No tag created
+    assert mocked_git_fetch.call_count == 0  # no git fetch called
     assert mocked_git_push.call_count == 0  # no git push of tag or commit
     assert post_mocker.call_count == 0  # no vcs release
 
@@ -1132,6 +1162,7 @@ def test_version_next_greater_than_version_one_scipy(
     branch_name: str,
     run_cli: RunCliFn,
     file_in_repo: str,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -1151,6 +1182,11 @@ def test_version_next_greater_than_version_one_scipy(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1185,6 +1221,7 @@ def test_version_next_greater_than_version_one_scipy(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -1271,6 +1308,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     branch_name: str,
     run_cli: RunCliFn,
     file_in_repo: str,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -1290,6 +1328,11 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1322,6 +1365,7 @@ def test_version_next_greater_than_version_one_no_bump_scipy(
     # No commit has been made
     assert head_sha_before == head_after.hexsha
     assert len(tags_set_difference) == 0  # No tag created
+    assert mocked_git_fetch.call_count == 0  # no git fetch called
     assert mocked_git_push.call_count == 0  # no git push of tag or commit
     assert post_mocker.call_count == 0  # no vcs release
 
@@ -1612,6 +1656,7 @@ def test_version_next_w_zero_dot_versions_conventional(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -1637,6 +1682,11 @@ def test_version_next_w_zero_dot_versions_conventional(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1671,6 +1721,7 @@ def test_version_next_w_zero_dot_versions_conventional(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -1766,6 +1817,7 @@ def test_version_next_w_zero_dot_versions_no_bump_conventional(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -1791,6 +1843,11 @@ def test_version_next_w_zero_dot_versions_no_bump_conventional(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -1823,6 +1880,7 @@ def test_version_next_w_zero_dot_versions_no_bump_conventional(
     # No commit has been made
     assert head_sha_before == head_after.hexsha
     assert len(tags_set_difference) == 0  # No tag created
+    assert mocked_git_fetch.call_count == 0  # no git fetch called
     assert mocked_git_push.call_count == 0  # no git push of tag or commit
     assert post_mocker.call_count == 0  # no vcs release
 
@@ -2092,6 +2150,7 @@ def test_version_next_w_zero_dot_versions_emoji(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -2117,6 +2176,11 @@ def test_version_next_w_zero_dot_versions_emoji(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2151,6 +2215,7 @@ def test_version_next_w_zero_dot_versions_emoji(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -2246,6 +2311,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -2271,6 +2337,11 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2303,6 +2374,7 @@ def test_version_next_w_zero_dot_versions_no_bump_emoji(
     # No commit has been made
     assert head_sha_before == head_after.hexsha
     assert len(tags_set_difference) == 0  # No tag created
+    assert mocked_git_fetch.call_count == 0  # no git fetch called
     assert mocked_git_push.call_count == 0  # no git push of tag or commit
     assert post_mocker.call_count == 0  # no vcs release
 
@@ -2572,6 +2644,7 @@ def test_version_next_w_zero_dot_versions_scipy(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -2597,6 +2670,11 @@ def test_version_next_w_zero_dot_versions_scipy(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2631,6 +2709,7 @@ def test_version_next_w_zero_dot_versions_scipy(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -2726,6 +2805,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -2751,6 +2831,11 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -2783,6 +2868,7 @@ def test_version_next_w_zero_dot_versions_no_bump_scipy(
     # No commit has been made
     assert head_sha_before == head_after.hexsha
     assert len(tags_set_difference) == 0  # No tag created
+    assert mocked_git_fetch.call_count == 0  # no git fetch called
     assert mocked_git_push.call_count == 0  # no git push of tag or commit
     assert post_mocker.call_count == 0  # no vcs release
 
@@ -3115,6 +3201,7 @@ def test_version_next_w_zero_dot_versions_minimums(
     run_cli: RunCliFn,
     file_in_repo: str,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     stable_now_date: GetStableDateNowFn,
@@ -3141,6 +3228,11 @@ def test_version_next_w_zero_dot_versions_minimums(
     for commit_message in commit_messages or []:
         add_text_to_file(repo, file_in_repo)
         repo.git.commit(m=commit_message, a=True, date=next(commit_timestamp_gen))
+        # Fake an automated push to remote by updating the remote tracking branch
+        repo.git.update_ref(
+            f"refs/remotes/origin/{repo.active_branch.name}",
+            repo.head.commit.hexsha,
+        )
 
     # Setup: take measurement before running the version command
     head_sha_before = repo.head.commit.hexsha
@@ -3175,5 +3267,6 @@ def test_version_next_w_zero_dot_versions_minimums(
     assert len(tags_set_difference) == 1  # A tag has been created
     assert f"v{next_release_version}" in tags_set_difference
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
