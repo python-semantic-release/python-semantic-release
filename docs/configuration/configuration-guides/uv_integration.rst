@@ -161,7 +161,6 @@ look like this:
           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
           with:
             ref: ${{ github.sha }}
-            fetch-depth: 0
 
         - name: Setup | Force correct release branch on workflow sha
           run: git checkout -B ${{ github.ref_name }}
@@ -259,7 +258,6 @@ look like this:
           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
           with:
             ref: ${{ github.ref_name }}
-            fetch-depth: 0
 
         - name: Setup | Force release branch to be at workflow sha
           run: git reset --hard ${{ github.sha }}
