@@ -496,6 +496,17 @@ def version(  # noqa: C901
         logger.info("Forcing use of %s as the prerelease token", prerelease_token)
         translator.prerelease_token = prerelease_token
 
+    # Check if the repository is shallow and unshallow it if necessary
+    # This ensures we have the full history for commit analysis
+    project = GitProject(
+        directory=runtime.repo_dir,
+        commit_author=runtime.commit_author,
+        credential_masker=runtime.masker,
+    )
+    if project.is_shallow_clone():
+        logger.info("Repository is a shallow clone, converting to full clone...")
+        project.git_unshallow(noop=opts.noop)
+
     # Only push if we're committing changes
     if push_changes and not commit_changes and not create_tag:
         logger.info("changes will not be pushed because --no-commit disables pushing")
@@ -686,12 +697,6 @@ def version(  # noqa: C901
         style=runtime.changelog_style,
         mask_initial_release=runtime.changelog_mask_initial_release,
         license_name="" if not isinstance(license_cfg, str) else license_cfg,
-    )
-
-    project = GitProject(
-        directory=runtime.repo_dir,
-        commit_author=runtime.commit_author,
-        credential_masker=runtime.masker,
     )
 
     # Preparing for committing changes; we always stage files even if we're not committing them in order to support a two-stage commit
