@@ -1170,17 +1170,8 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 **Type:** ``str``
 
 Specify the format to be used for the Git tag that will be added to the repo during
-a release invoked via :ref:`cmd-version`. The format string is a regular expression,
-which also must include the format keys below, otherwise an exception will be thrown.
-It *may* include any of the optional format keys, in which case the contents
-described will be formatted into the specified location in the Git tag that is created.
-
-For example, ``"(dev|stg|prod)-v{version}"`` is a valid ``tag_format`` matching tags such
-as:
-
-- ``dev-v1.2.3``
-- ``stg-v0.1.0-rc.1``
-- ``prod-v2.0.0+20230701``
+a release invoked via :ref:`cmd-version`. The string is used as a template for the tag
+name, and must include the ``{version}`` format key.
 
 This format will also be used for parsing tags already present in the repository into
 semantic versions; therefore if the tag format changes at some point in the
@@ -1195,6 +1186,13 @@ Format Key       Mandatory  Contents
 ================ =========  ==========================================================
 
 Tags which do not match this format will not be considered as versions of your project.
+
+This is critical for Monorepo projects where the tag format defines which package the
+version tag belongs to. Generally, the tag format for each package of the monorepo will
+include the package name as the prefix of the tag format. For example, if the package
+is named ``pkg1``, the tag format would be ``pkg1-v{version}`` and in the other package
+``pkg2``, the tag format would be ``pkg2-v{version}``. This allows PSR to determine
+which tags to use to determine the version for each package.
 
 **Default:** ``"v{version}"``
 
