@@ -409,6 +409,7 @@ sections = { "tests" = ["tests"] }
 ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
 
 [tool.semantic_release]
+add_partial_tags = true
 logging_use_named_masks = true
 commit_parser = "conventional"
 commit_parser_options = { parse_squash_commits = true, ignore_merge_commits = true }
