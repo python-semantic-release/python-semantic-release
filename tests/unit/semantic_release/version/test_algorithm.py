@@ -155,56 +155,49 @@ def test_sorted_repo_tags_and_versions(tags: list[str], sorted_tags: list[str]):
 @pytest.mark.parametrize(
     "tag_format, invalid_tags, valid_tags",
     [
-        (
-            "v{version}",
-            ("test-v1.1.0", "v1.1.0-test-test"),
-            [
-                "v1.0.0-rc.1",
-                "v1.0.0-beta.2",
-                "v1.0.0-beta.11",
-                "v1.0.0-alpha.1",
-                "v1.0.0-alpha.beta.1",
-                "v1.0.0",
-            ],
-        ),
-        (
-            "v{version}",
-            ("0.3", "0.4"),
-            [
-                "v1.0.0-rc.1",
-                "v1.0.0-beta.2",
-                "v1.0.0-beta.11",
-                "v1.0.0-alpha.1",
-                "v1.0.0-alpha.beta.1",
-                "v1.0.0",
-            ],
-        ),
-        (
-            r"(\w+--)?v{version}",
-            ("v1.1.0-test-test", "test_v1.1.0"),
-            [
-                "v1.0.0-rc.1",
-                "test--v1.1.0",
-                "v1.0.0-beta.2",
-                "v1.0.0-beta.11",
-                "v1.0.0-alpha.1",
-                "v1.0.0-alpha.beta.1",
-                "v1.0.0",
-            ],
-        ),
-        (
-            r"(?P<type>feature|fix)/v{version}--(?P<env>dev|stg|prod)",
-            ("v1.1.0--test", "test_v1.1.0", "docs/v1.2.0--dev"),
-            [
-                "feature/v1.0.0-rc.1--dev",
-                "fix/v1.1.0--stg",
-                "feature/v1.0.0-beta.2--stg",
-                "fix/v1.0.0-beta.11--dev",
-                "fix/v1.0.0-alpha.1--dev",
-                "feature/v1.0.0-alpha.beta.1--dev",
-                "feature/v1.0.0--prod",
-            ],
-        ),
+        pytest.param(
+            tag_format,
+            invalid_tags,
+            valid_tags,
+            id=test_id,
+        )
+        for test_id, tag_format, invalid_tags, valid_tags in [
+            (
+                "traditional-v-prefixed-versions",
+                "v{version}",
+                (
+                    "0.3",  # no v-prefix
+                    "test-v1.1.0",  # extra prefix
+                    "v1.1.0-test-test",  # bad suffix
+                ),
+                [
+                    "v1.0.0-rc.1",
+                    "v1.0.0-beta.2",
+                    "v1.0.0-beta.11",
+                    "v1.0.0-alpha.1",
+                    "v1.0.0-alpha.beta.1",
+                    "v1.0.0",
+                ],
+            ),
+            (
+                "monorepo-style-versions",
+                "pkg1-v{version}",
+                (
+                    "0.3",  # no pkg or version prefix
+                    "v1.1.0",  # no pkg prefix
+                    "pkg1-v1.1.0-test-test",  # bad suffix
+                    "pkg2-v1.1.0",  # wrong package prefix
+                ),
+                [
+                    "pkg1-v1.0.0-rc.1",
+                    "pkg1-v1.0.0-beta.2",
+                    "pkg1-v1.0.0-beta.11",
+                    "pkg1-v1.0.0-alpha.1",
+                    "pkg1-v1.0.0-alpha.beta.1",
+                    "pkg1-v1.0.0",
+                ],
+            ),
+        ]
     ],
 )
 def test_tags_and_versions_ignores_invalid_tags_as_versions(
