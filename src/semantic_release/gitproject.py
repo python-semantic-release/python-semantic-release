@@ -238,7 +238,12 @@ class GitProject:
                     raise GitCommitError("Failed to commit changes") from err
 
     def git_tag(
-        self, tag_name: str, message: str, isotimestamp: str, noop: bool = False
+        self,
+        tag_name: str,
+        message: str,
+        isotimestamp: str,
+        force: bool = False,
+        noop: bool = False,
     ) -> None:
         try:
             datetime.fromisoformat(isotimestamp)
@@ -248,21 +253,25 @@ class GitProject:
         if noop:
             command = str.join(
                 " ",
-                [
-                    f"GIT_COMMITTER_DATE={isotimestamp}",
-                    *(
-                        [
-                            f"GIT_AUTHOR_NAME={self._commit_author.name}",
-                            f"GIT_AUTHOR_EMAIL={self._commit_author.email}",
-                            f"GIT_COMMITTER_NAME={self._commit_author.name}",
-                            f"GIT_COMMITTER_EMAIL={self._commit_author.email}",
-                        ]
-                        if self._commit_author
-                        else [""]
-                    ),
-                    f"git tag -a {tag_name} -m '{message}'",
-                ],
-            )
+                filter(
+                    None,
+                    [
+                        f"GIT_COMMITTER_DATE={isotimestamp}",
+                        *(
+                            [
+                                f"GIT_AUTHOR_NAME={self._commit_author.name}",
+                                f"GIT_AUTHOR_EMAIL={self._commit_author.email}",
+                                f"GIT_COMMITTER_NAME={self._commit_author.name}",
+                                f"GIT_COMMITTER_EMAIL={self._commit_author.email}",
+                            ]
+                            if self._commit_author
+                            else [""]
+                        ),
+                        f"git tag -a {tag_name} -m '{message}'",
+                        "--force" if force else "",
+                    ],
+                ),
+            ).strip()
 
             noop_report(
                 indented(
@@ -279,7 +288,7 @@ class GitProject:
             {"GIT_COMMITTER_DATE": isotimestamp},
         ):
             try:
-                repo.git.tag("-a", tag_name, m=message)
+                repo.git.tag(tag_name, a=True, m=message, force=force)
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 raise GitTagError(f"Failed to create tag ({tag_name})") from err
@@ -305,13 +314,15 @@ class GitProject:
                     f"Failed to push branch ({branch}) to remote"
                 ) from err
 
-    def git_push_tag(self, remote_url: str, tag: str, noop: bool = False) -> None:
+    def git_push_tag(
+        self, remote_url: str, tag: str, noop: bool = False, force: bool = False
+    ) -> None:
         if noop:
             noop_report(
                 indented(
                     f"""\
                     would have run:
-                        git push {self._cred_masker.mask(remote_url)} tag {tag}
+                        git push {self._cred_masker.mask(remote_url)} tag {tag} {"--force" if force else ""}
                     """  # noqa: E501
                 )
             )
@@ -319,7 +330,7 @@ class GitProject:
 
         with Repo(str(self.project_root)) as repo:
             try:
-                repo.git.push(remote_url, "tag", tag)
+                repo.git.push(remote_url, "tag", tag, force=force)
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 raise GitPushError(f"Failed to push tag ({tag}) to remote") from err
