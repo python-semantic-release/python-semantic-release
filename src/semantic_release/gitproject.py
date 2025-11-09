@@ -90,6 +90,42 @@ class GitProject:
         with Repo(str(self.project_root)) as repo:
             return repo.is_dirty()
 
+    def is_shallow_clone(self) -> bool:
+        """
+        Check if the repository is a shallow clone.
+
+        :return: True if the repository is a shallow clone, False otherwise
+        """
+        with Repo(str(self.project_root)) as repo:
+            shallow_file = Path(repo.git_dir, "shallow")
+            return shallow_file.exists()
+
+    def git_unshallow(self, noop: bool = False) -> None:
+        """
+        Convert a shallow clone to a full clone by fetching the full history.
+
+        :param noop: Whether or not to actually run the unshallow command
+        """
+        if noop:
+            noop_report("would have run:\n" "    git fetch --unshallow")
+            return
+
+        with Repo(str(self.project_root)) as repo:
+            try:
+                self.logger.info("Converting shallow clone to full clone...")
+                repo.git.fetch("--unshallow")
+                self.logger.info("Repository unshallowed successfully")
+            except GitCommandError as err:
+                # If the repository is already a full clone, git fetch --unshallow will fail
+                # with "fatal: --unshallow on a complete repository does not make sense"
+                # We can safely ignore this error by checking the stderr message
+                stderr = str(err.stderr) if err.stderr else ""
+                if "does not make sense" in stderr or "complete repository" in stderr:
+                    self.logger.debug("Repository is already a full clone")
+                else:
+                    self.logger.exception(str(err))
+                    raise
+
     def git_add(
         self,
         paths: Sequence[Path | str],

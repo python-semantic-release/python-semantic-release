@@ -875,17 +875,16 @@ to the GitHub Release Assets as well.
           contents: write
 
         steps:
-          # Note: We checkout the repository at the branch that triggered the workflow
-          # with the entire history to ensure to match PSR's release branch detection
-          # and history evaluation.
-          # However, we forcefully reset the branch to the workflow sha because it is
-          # possible that the branch was updated while the workflow was running. This
-          # prevents accidentally releasing un-evaluated changes.
+          # Note: We checkout the repository at the branch that triggered the workflow.
+          # Python Semantic Release will automatically convert shallow clones to full clones
+          # if needed to ensure proper history evaluation. However, we forcefully reset the
+          # branch to the workflow sha because it is possible that the branch was updated
+          # while the workflow was running, which prevents accidentally releasing un-evaluated
+          # changes.
           - name: Setup | Checkout Repository on Release Branch
             uses: actions/checkout@v4
             with:
               ref: ${{ github.ref_name }}
-              fetch-depth: 0
 
           - name: Setup | Force release branch to be at workflow sha
             run: |
@@ -960,11 +959,6 @@ to the GitHub Release Assets as well.
   of time.
 
 .. warning::
-  You must set ``fetch-depth`` to 0 when using ``actions/checkout@v4``, since
-  Python Semantic Release needs access to the full history to build a changelog
-  and at least the latest tags to determine the next version.
-
-.. warning::
   The ``GITHUB_TOKEN`` secret is automatically configured by GitHub, with the
   same permissions role as the user who triggered the workflow run. This causes
   a problem if your default branch is protected to specific users.
@@ -973,6 +967,14 @@ to the GitHub Release Assets as well.
   as a separate secret and using that instead of ``GITHUB_TOKEN``. In this
   case, you will also need to pass the new token to ``actions/checkout`` (as
   the ``token`` input) in order to gain push access.
+
+.. note::
+  As of $NEW_RELEASE_TAG, Python Semantic Release automatically detects and converts
+  shallow clones to full clones when needed. While you can still use ``fetch-depth: 0``
+  with ``actions/checkout@v4`` to fetch the full history upfront, it is no longer
+  required. If you use the default shallow clone, Python Semantic Release will
+  automatically fetch the full history before evaluating commits. If you are using
+  an older version of PSR, you will need to unshallow the repository prior to use.
 
 .. note::
   As of $NEW_RELEASE_TAG, the verify upstream step is no longer required as it has been
