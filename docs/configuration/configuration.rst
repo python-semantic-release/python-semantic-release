@@ -1398,7 +1398,7 @@ The regular expression generated from the ``version_variables`` definition will:
 2. The variable name defined by ``variable`` and the version must be separated by
    an operand symbol (``=``, ``:``, ``:=``, or ``@``). Whitespace is optional around
    the symbol. As of v10.0.0, a double-equals (``==``) operator is also supported
-   as a valid operand symbol. As of $NEW_RELEASE_TAG, PSR can omit all operands as long
+   as a valid operand symbol. As of v10.5.0, PSR can omit all operands as long
    as there is at least one whitespace character between the variable name and the version.
 
 3. The value of the variable must match a `SemVer`_ regular expression and can be
