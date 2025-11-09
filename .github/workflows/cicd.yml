@@ -161,28 +161,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
 
-      - name: Release | Update Minor Release Tag Reference
-        if: steps.release.outputs.released == 'true' && steps.release.outputs.is_prerelease == 'false'
-        env:
-          FULL_VERSION_TAG: ${{ steps.release.outputs.tag }}
-          GIT_COMMITTER_NAME: ${{ env.GITHUB_ACTIONS_AUTHOR_NAME }}
-          GIT_COMMITTER_EMAIL: ${{ env.GITHUB_ACTIONS_AUTHOR_EMAIL }}
-        run: |
-          MINOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1,2)"
-          git tag --force --annotate "$MINOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MINOR_VERSION_TAG"
-          git push -u origin "$MINOR_VERSION_TAG" --force
-
-      - name: Release | Update Major Release Tag Reference
-        if: steps.release.outputs.released == 'true' && steps.release.outputs.is_prerelease == 'false'
-        env:
-          FULL_VERSION_TAG: ${{ steps.release.outputs.tag }}
-          GIT_COMMITTER_NAME: ${{ env.GITHUB_ACTIONS_AUTHOR_NAME }}
-          GIT_COMMITTER_EMAIL: ${{ env.GITHUB_ACTIONS_AUTHOR_EMAIL }}
-        run: |
-          MAJOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1)"
-          git tag --force --annotate "$MAJOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MAJOR_VERSION_TAG"
-          git push -u origin "$MAJOR_VERSION_TAG" --force
-
     outputs:
       released: ${{ steps.release.outputs.released || 'false' }}
       new-release-version: ${{ steps.release.outputs.version }}
