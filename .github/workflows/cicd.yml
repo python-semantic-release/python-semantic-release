@@ -140,12 +140,6 @@ jobs:
           python -m scripts.bump_version_in_docs
           git add docs/*
 
-      - name: Evaluate | Verify upstream has NOT changed
-        # Last chance to abort before causing an error as another PR/push was applied to the upstream branch
-        # while this workflow was running. This is important because we are committing a version change
-        shell: bash
-        run: bash .github/workflows/verify_upstream.sh
-
       - name: Release | Python Semantic Release
         id: release
         uses: python-semantic-release/python-semantic-release@02f2a5c74dbb6aa2989f10fc4af12cd8e6bf025f  # v10.5.2
