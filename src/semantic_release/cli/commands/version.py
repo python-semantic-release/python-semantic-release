@@ -749,7 +749,11 @@ def version(  # noqa: C901
             # This prevents conflicts if another commit was pushed while we were preparing the release
             # We check HEAD~1 because we just made a release commit
             try:
-                project.verify_upstream_unchanged(local_ref="HEAD~1", noop=opts.noop)
+                project.verify_upstream_unchanged(
+                    local_ref="HEAD~1",
+                    upstream_ref=config.remote.name,
+                    noop=opts.noop,
+                )
             except UpstreamBranchChangedError as exc:
                 click.echo(str(exc), err=True)
                 click.echo(
