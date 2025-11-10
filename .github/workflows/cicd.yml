@@ -148,7 +148,7 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@4d4cb0ab842247caea1963132c242c62aab1e4d5  # v10.4.1
+        uses: python-semantic-release/python-semantic-release@02f2a5c74dbb6aa2989f10fc4af12cd8e6bf025f  # v10.5.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           verbosity: 1
