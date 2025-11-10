@@ -206,6 +206,10 @@ def run_cli(clean_os_environment: dict[str, str]) -> RunCliFn:
         invoke_kwargs: dict[str, Any] | None = None,
     ) -> Result:
         from semantic_release.cli.commands.main import main
+        from semantic_release.globals import logger
+
+        # Prevent logs from being propagated to the root logger (pytest)
+        logger.propagate = False
 
         cli_runner = CliRunner(mix_stderr=False)
         env_vars = {**clean_os_environment, **(env or {})}
@@ -213,7 +217,11 @@ def run_cli(clean_os_environment: dict[str, str]) -> RunCliFn:
 
         with mock.patch.dict(os.environ, env_vars, clear=True):
             # run the CLI with the provided arguments
-            return cli_runner.invoke(main, args=args, **(invoke_kwargs or {}))
+            result = cli_runner.invoke(main, args=args, **(invoke_kwargs or {}))
+            # Force the output to be printed to stdout which will be captured by pytest
+            sys.stdout.write(result.stdout)
+            sys.stderr.write(result.stderr)
+            return result
 
     return _run_cli
 
