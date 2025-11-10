@@ -89,7 +89,7 @@ dev = [
   "ruff == 0.6.1"
 ]
 mypy = [
-  "mypy == 1.16.1",
+  "mypy == 1.17.0",
   "types-Deprecated ~= 1.2",
   "types-requests ~= 2.32.0",
   "types-pyyaml ~= 6.0",
