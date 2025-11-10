@@ -722,6 +722,7 @@ def version(  # noqa: C901
             )
         except GitCommitEmptyIndexError:
             logger.info("No local changes to add to any commit, skipping")
+            commit_changes = False
 
     # Tag the version after potentially creating a new HEAD commit.
     # This way if no source code is modified, i.e. all metadata updates
