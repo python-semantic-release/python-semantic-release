@@ -38,6 +38,7 @@ if TYPE_CHECKING:
         git: MockGit
         git_dir: str
         commit: MagicMock
+        refs: dict[str, MagicMock]
 
 
 @pytest.fixture
@@ -70,6 +71,7 @@ def mock_repo(tmp_path: Path) -> RepoMock:
 
     remote_obj.refs = {"main": ref_obj}
     repo.remotes = {"origin": remote_obj}
+    repo.refs = {"origin/main": ref_obj}
 
     # Mock git.rev_parse
     repo.git = MagicMock()
@@ -146,16 +148,38 @@ def test_verify_upstream_unchanged_noop(
     mock_repo.assert_not_called()
 
 
-def test_verify_upstream_unchanged_no_tracking_branch(
+def test_verify_upstream_unchanged_no_remote(
     mock_gitproject: GitProject, mock_repo: RepoMock
 ):
-    """Test that verify_upstream_unchanged raises error when no tracking branch exists."""
-    # Mock no tracking branch
+    """Test that verify_upstream_unchanged raises error when no remote exists."""
+    # Mock no remote
+    mock_repo.remotes = {}
+    # Simulate no tracking branch
     mock_repo.active_branch.tracking_branch = MagicMock(return_value=None)
 
     # Should raise UnknownUpstreamBranchError
+    with pytest.raises(
+        UnknownUpstreamBranchError,
+        match="No remote found; cannot verify upstream state!",
+    ):
+        mock_gitproject.verify_upstream_unchanged(
+            local_ref="HEAD", upstream_ref="upstream", noop=False
+        )
+
+
+def test_verify_upstream_unchanged_no_upstream_ref(
+    mock_gitproject: GitProject, mock_repo: RepoMock
+):
+    """Test that verify_upstream_unchanged raises error when no upstream ref exists."""
+    # Simulate no tracking branch
+    mock_repo.active_branch.tracking_branch = MagicMock(return_value=None)
+    mock_repo.refs = {}  # No refs available
+
+    # Should raise UnknownUpstreamBranchError
     with pytest.raises(UnknownUpstreamBranchError, match="No upstream branch found"):
-        mock_gitproject.verify_upstream_unchanged(local_ref="HEAD", noop=False)
+        mock_gitproject.verify_upstream_unchanged(
+            local_ref="HEAD", upstream_ref="origin", noop=False
+        )
 
 
 def test_verify_upstream_unchanged_detached_head(

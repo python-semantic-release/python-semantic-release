@@ -335,17 +335,23 @@ class GitProject:
                 self.logger.exception(str(err))
                 raise GitPushError(f"Failed to push tag ({tag}) to remote") from err
 
-    def verify_upstream_unchanged(
-        self, local_ref: str = "HEAD", noop: bool = False
+    def verify_upstream_unchanged(  # noqa: C901
+        self, local_ref: str = "HEAD", upstream_ref: str = "origin", noop: bool = False
     ) -> None:
         """
         Verify that the upstream branch has not changed since the given local reference.
 
         :param local_ref: The local reference to compare against upstream (default: HEAD)
+        :param upstream_ref: The name of the upstream remote or specific remote branch (default: origin)
         :param noop: Whether to skip the actual verification (for dry-run mode)
 
         :raises UpstreamBranchChangedError: If the upstream branch has changed
         """
+        if not local_ref.strip():
+            raise ValueError("Local reference cannot be empty")
+        if not upstream_ref.strip():
+            raise ValueError("Upstream reference cannot be empty")
+
         if noop:
             noop_report(
                 indented(
@@ -368,12 +374,30 @@ class GitProject:
                 raise DetachedHeadGitError(err_msg) from None
 
             # Get the tracking branch (upstream branch)
-            if (tracking_branch := active_branch.tracking_branch()) is None:
-                err_msg = f"No upstream branch found for '{active_branch.name}'; cannot verify upstream state!"
-                raise UnknownUpstreamBranchError(err_msg)
+            if (tracking_branch := active_branch.tracking_branch()) is not None:
+                upstream_full_ref_name = tracking_branch.name
+                self.logger.info("Upstream branch name: %s", upstream_full_ref_name)
+            else:
+                # If no tracking branch is set, derive it
+                upstream_name = (
+                    upstream_ref.strip()
+                    if upstream_ref.find("/") == -1
+                    else upstream_ref.strip().split("/", maxsplit=1)[0]
+                )
 
-            upstream_full_ref_name = tracking_branch.name
-            self.logger.info("Upstream branch name: %s", upstream_full_ref_name)
+                if not repo.remotes or upstream_name not in repo.remotes:
+                    err_msg = "No remote found; cannot verify upstream state!"
+                    raise UnknownUpstreamBranchError(err_msg)
+
+                upstream_full_ref_name = (
+                    f"{upstream_name}/{active_branch.name}"
+                    if upstream_ref.find("/") == -1
+                    else upstream_ref.strip()
+                )
+
+                if upstream_full_ref_name not in repo.refs:
+                    err_msg = f"No upstream branch found for '{active_branch.name}'; cannot verify upstream state!"
+                    raise UnknownUpstreamBranchError(err_msg)
 
             # Extract the remote name from the tracking branch
             # tracking_branch.name is in the format "remote/branch"
