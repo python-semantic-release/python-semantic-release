@@ -4,6 +4,21 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.5.2:
+
+v10.5.2 (2025-11-10)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Toggle verify upstream off when no version commit is made (`PR#1370`_,
+  `e0b3b70`_)
+
+.. _e0b3b70: https://github.com/python-semantic-release/python-semantic-release/commit/e0b3b7075a4c98cd7af97e0b8470872c11e7aeb9
+.. _PR#1370: https://github.com/python-semantic-release/python-semantic-release/pull/1370
+
+
 .. _changelog-v10.5.1:
 
 v10.5.1 (2025-11-10)
