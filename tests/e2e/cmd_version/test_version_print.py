@@ -105,7 +105,6 @@ def test_version_print_next_version(
     next_release_version: str,
     file_in_repo: str,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -270,7 +269,6 @@ def test_version_print_tag_prints_next_tag(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     file_in_repo: str,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -386,7 +384,6 @@ def test_version_print_tag_prints_next_tag_no_zero_versions(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     file_in_repo: str,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -450,7 +447,6 @@ def test_version_print_last_released_prints_version(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -502,7 +498,6 @@ def test_version_print_last_released_prints_released_if_commits(
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commits: list[str],
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     file_in_repo: str,
@@ -552,10 +547,8 @@ def test_version_print_last_released_prints_released_if_commits(
 def test_version_print_last_released_prints_nothing_if_no_tags(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
-    caplog: pytest.LogCaptureFixture,
 ):
     repo = repo_result["repo"]
 
@@ -577,10 +570,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     # Evaluate (no release actions should have occurred on print)
     assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
-
-    # must use capture log to see this, because we use the logger to print this message
-    # not click's output
-    assert "No release tags found." in caplog.text
+    assert "No release tags found." in result.stderr
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after
@@ -598,7 +588,6 @@ def test_version_print_last_released_on_detached_head(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -647,7 +636,6 @@ def test_version_print_last_released_on_nonrelease_branch(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -705,7 +693,6 @@ def test_version_print_last_released_tag_prints_correct_tag(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -766,7 +753,6 @@ def test_version_print_last_released_tag_prints_released_if_commits(
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     commits: list[str],
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     file_in_repo: str,
@@ -817,10 +803,8 @@ def test_version_print_last_released_tag_prints_released_if_commits(
 def test_version_print_last_released_tag_prints_nothing_if_no_tags(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
-    caplog: pytest.LogCaptureFixture,
 ):
     repo = repo_result["repo"]
 
@@ -842,10 +826,7 @@ def test_version_print_last_released_tag_prints_nothing_if_no_tags(
     # Evaluate (no release actions should have occurred on print)
     assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
-
-    # must use capture log to see this, because we use the logger to print this message
-    # not click's output
-    assert "No release tags found." in caplog.text
+    assert "No release tags found." in result.stderr
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after
@@ -872,7 +853,6 @@ def test_version_print_last_released_tag_on_detached_head(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -931,7 +911,6 @@ def test_version_print_last_released_tag_on_nonrelease_branch(
     get_cfg_value_from_def: GetCfgValueFromDefFn,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -989,7 +968,6 @@ def test_version_print_next_version_fails_on_detached_head(
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     get_commit_def_fn: GetCommitDefFn[CommitParser[ParseResult, ParserOptions]],
     default_parser: CommitParser[ParseResult, ParserOptions],
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -1052,7 +1030,6 @@ def test_version_print_next_tag_fails_on_detached_head(
     simulate_change_commits_n_rtn_changelog_entry: SimulateChangeCommitsNReturnChangelogEntryFn,
     get_commit_def_fn: GetCommitDefFn[CommitParser[ParseResult, ParserOptions]],
     default_parser: CommitParser[ParseResult, ParserOptions],
-    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
