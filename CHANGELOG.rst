@@ -4,6 +4,21 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.5.1:
+
+v10.5.1 (2025-11-10)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Fix upstream change detection to succeed without branch tracking (`PR#1369`_,
+  `7086257`_)
+
+.. _7086257: https://github.com/python-semantic-release/python-semantic-release/commit/7086257b641e241dc9a8d742bd62e3698a8b8173
+.. _PR#1369: https://github.com/python-semantic-release/python-semantic-release/pull/1369
+
+
 .. _changelog-v10.5.0:
 
 v10.5.0 (2025-11-09)
