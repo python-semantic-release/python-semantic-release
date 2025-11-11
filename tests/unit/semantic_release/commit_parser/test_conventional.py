@@ -860,7 +860,7 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 # body mentions an issue and has a different git footer
                 (
                     "In #666, the devils in the details...\n\nSigned-off-by: johndoe <johndoe@mail.com>",
-                    [],
+                    ["#666"],
                 ),
             ]
         ],
@@ -989,7 +989,7 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 # body mentions an issue and has a different git footer
                 (
                     "In ABC-666, the devils in the details...\n\nSigned-off-by: johndoe <johndoe@mail.com>",
-                    [],
+                    ["ABC-666"],
                 ),
             ]
         ],
