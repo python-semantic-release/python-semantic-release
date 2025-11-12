@@ -42,9 +42,6 @@ class ConventionalCommitParserOptions(ParserOptions):
     one of these prefixes, it will not be considered a valid commit message.
     """
 
-    default_bump_level: LevelBump = LevelBump.NO_RELEASE
-    """The minimum bump level to apply to valid commit message."""
-
     parse_squash_commits: bool = True
     """Toggle flag for whether or not to parse squash commits"""
 
@@ -64,7 +61,7 @@ class ConventionalCommitParserOptions(ParserOptions):
                 # for our expected output. Due to the empty second array, we know the first is always longest
                 # and that means no values in the first entry of the tuples will ever be a LevelBump. We
                 # apply a str() to make mypy happy although it will never happen.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.allowed_tags, (), fillvalue=LevelBump.NO_RELEASE),
                 *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
                 *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
             ]

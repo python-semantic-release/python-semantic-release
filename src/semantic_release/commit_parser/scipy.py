@@ -145,10 +145,6 @@ class ScipyParserOptions(ParserOptions):
     one of these prefixes, it will not be considered a valid commit message.
     """
 
-    # TODO: breaking v11, make consistent with AngularParserOptions
-    default_level_bump: LevelBump = LevelBump.NO_RELEASE
-    """The minimum bump level to apply to valid commit message."""
-
     parse_squash_commits: bool = True
     """Toggle flag for whether or not to parse squash commits"""
 
@@ -161,8 +157,6 @@ class ScipyParserOptions(ParserOptions):
         return self._tag_to_level
 
     def __post_init__(self) -> None:
-        # TODO: breaking v11, remove as the name is now consistent
-        self.default_bump_level = self.default_level_bump
         self._tag_to_level: dict[str, LevelBump] = {
             str(tag): level
             for tag, level in [
@@ -170,7 +164,7 @@ class ScipyParserOptions(ParserOptions):
                 # for our expected output. Due to the empty second array, we know the first is always longest
                 # and that means no values in the first entry of the tuples will ever be a LevelBump. We
                 # apply a str() to make mypy happy although it will never happen.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.allowed_tags, (), fillvalue=LevelBump.NO_RELEASE),
                 *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
                 *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
                 *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),
@@ -347,9 +341,7 @@ class ScipyCommitParser(CommitParser[ParseResult, ScipyParserOptions]):
             },
         )
 
-        level_bump = self.options.tag_to_level.get(
-            parsed_type, self.options.default_bump_level
-        )
+        level_bump = self.options.tag_to_level.get(parsed_type, LevelBump.NO_RELEASE)
 
         return ParsedMessageResult(
             bump=level_bump,
