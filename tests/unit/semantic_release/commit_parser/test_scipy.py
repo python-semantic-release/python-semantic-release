@@ -1361,3 +1361,17 @@ def test_parser_ignore_merge_commit(
 
     assert isinstance(parsed_result, ParseError)
     assert "Ignoring merge commit" in parsed_result.error
+
+
+def test_parser_other_allowed_tags_no_bump(make_commit_obj: MakeCommitObjFn):
+    """Test that commits with other_allowed_tags get NO_RELEASE bump level."""
+    options = ScipyParserOptions()
+    parsed_results = ScipyCommitParser(options).parse(
+        make_commit_obj("TST: add a test for scipy parser")
+    )
+
+    assert isinstance(parsed_results, Iterable)
+
+    result = next(iter(parsed_results))
+    assert isinstance(result, ParsedCommit)
+    assert result.bump is LevelBump.NO_RELEASE
