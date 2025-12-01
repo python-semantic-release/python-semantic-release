@@ -43,37 +43,46 @@ class ConventionalCommitMonorepoParserOptions(ConventionalCommitParserOptions):
     to match them literally.
     """
 
-    @classmethod
     @field_validator("path_filters", mode="before")
-    def convert_strs_to_paths(cls, value: Any) -> tuple[Path, ...]:
-        values = value if isinstance(value, Iterable) else [value]
-        results: list[Path] = []
-
-        for val in values:
-            if isinstance(val, (str, Path)):
-                results.append(Path(val))
-                continue
-
-            raise TypeError(f"Invalid type: {type(val)}, expected str or Path.")
-
-        return tuple(results)
-
     @classmethod
+    def convert_strs_to_paths(cls, value: Any) -> tuple[str, ...]:
+        if isinstance(value, str):
+            return (value,)
+
+        if isinstance(value, Path):
+            return (str(value),)
+
+        if isinstance(value, Iterable):
+            results: list[str] = []
+            for val in value:
+                if isinstance(val, (str, Path)):
+                    results.append(str(Path(val)))
+                    continue
+
+                msg = f"Invalid type: {type(val)}, expected str or Path."
+                raise TypeError(msg)
+
+            return tuple(results)
+
+        msg = f"Invalid type: {type(value)}, expected str, Path, or Iterable."
+        raise TypeError(msg)
+
     @field_validator("path_filters", mode="after")
-    def resolve_path(cls, dir_paths: tuple[Path, ...]) -> tuple[Path, ...]:
+    @classmethod
+    def resolve_path(cls, dir_path_strs: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(
             (
-                Path(f"!{Path(str_path[1:]).expanduser().absolute().resolve()}")
+                f"!{Path(str_path[1:]).expanduser().absolute().resolve()}"
                 # maintains the negation prefix if it exists
-                if (str_path := str(path)).startswith("!")
+                if str_path.startswith("!")
                 # otherwise, resolve the path normally
-                else path.expanduser().absolute().resolve()
+                else str(Path(str_path).expanduser().absolute().resolve())
             )
-            for path in dir_paths
+            for str_path in dir_path_strs
         )
 
-    @classmethod
     @field_validator("scope_prefix", mode="after")
+    @classmethod
     def validate_scope_prefix(cls, scope_prefix: str) -> str:
         if not scope_prefix:
             return ""
