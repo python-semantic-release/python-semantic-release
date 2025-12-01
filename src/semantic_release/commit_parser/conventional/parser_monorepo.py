@@ -133,7 +133,8 @@ class ConventionalCommitMonorepoParser(
         unique_selection_filters: set[str] = set()
         unique_ignore_filters: set[str] = set()
 
-        for str_path in path_filters:
+        for path in path_filters:
+            str_path = path.as_posix()
             str_filter = str_path[1:] if str_path.startswith("!") else str_path
             filter_list = (
                 file_ignore_filters

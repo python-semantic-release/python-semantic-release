@@ -23,7 +23,7 @@ class ConventionalCommitMonorepoParserOptions(ConventionalCommitParserOptions):
     # TODO: add example into the docstring
     """Options dataclass for ConventionalCommitMonorepoParser."""
 
-    path_filters: Annotated[Tuple[str, ...], Field(validate_default=True)] = (".",)
+    path_filters: Annotated[Tuple[Path, ...], Field(validate_default=True)] = (".",)
     """
     A set of relative paths to filter commits by. Only commits with file changes that
     match these file paths or its subdirectories will be considered valid commits.
@@ -43,8 +43,8 @@ class ConventionalCommitMonorepoParserOptions(ConventionalCommitParserOptions):
     to match them literally.
     """
 
-    @classmethod
     @field_validator("path_filters", mode="before")
+    @classmethod
     def convert_strs_to_paths(cls, value: Any) -> tuple[Path, ...]:
         values = value if isinstance(value, Iterable) else [value]
         results: list[Path] = []
@@ -58,8 +58,8 @@ class ConventionalCommitMonorepoParserOptions(ConventionalCommitParserOptions):
 
         return tuple(results)
 
-    @classmethod
     @field_validator("path_filters", mode="after")
+    @classmethod
     def resolve_path(cls, dir_paths: tuple[Path, ...]) -> tuple[Path, ...]:
         return tuple(
             (
@@ -72,8 +72,8 @@ class ConventionalCommitMonorepoParserOptions(ConventionalCommitParserOptions):
             for path in dir_paths
         )
 
-    @classmethod
     @field_validator("scope_prefix", mode="after")
+    @classmethod
     def validate_scope_prefix(cls, scope_prefix: str) -> str:
         if not scope_prefix:
             return ""
