@@ -90,7 +90,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository at workflow sha
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -100,7 +100,7 @@ jobs:
           git checkout -B ${{ github.ref_name }}
 
       - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c  # v6.0.0
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # v6.1.0
         with:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
           cache: 'pip'
@@ -161,13 +161,13 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c  # v6.0.0
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # v6.1.0
         with:
           python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
@@ -217,13 +217,13 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ matrix.python-version }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c  # v6.0.0
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # v6.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -306,13 +306,13 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ matrix.python-version }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c  # v6.0.0
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # v6.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -405,7 +405,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           fetch-depth: 1
           ref: ${{ github.sha }}
@@ -447,13 +447,13 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c  # v6.0.0
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548  # v6.1.0
         with:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
           cache: 'pip'
