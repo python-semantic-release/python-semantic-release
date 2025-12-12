@@ -413,7 +413,12 @@ before the :ref:`version <cmd-version>` subcommand.
 ``ssh_public_signing_key``
 """"""""""""""""""""""""""
 
-The public key associated with the private key used in signing a commit and tag.
+The public key associated with the private key used in signing a commit and tag
+using SSH signing.
+
+.. note::
+  SSH and GPG signing are mutually exclusive. You can only use one signing method
+  at a time. If both SSH and GPG signing keys are provided, the action will fail.
 
 **Required:** ``false``
 
@@ -424,7 +429,53 @@ The public key associated with the private key used in signing a commit and tag.
 ``ssh_private_signing_key``
 """""""""""""""""""""""""""
 
-The private key used to sign a commit and tag.
+The private key used to sign a commit and tag using SSH signing.
+
+.. note::
+  SSH and GPG signing are mutually exclusive. You can only use one signing method
+  at a time. If both SSH and GPG signing keys are provided, the action will fail.
+
+**Required:** ``false``
+
+----
+
+.. _gh_actions-psr-inputs-gpg_private_signing_key:
+
+``gpg_private_signing_key``
+"""""""""""""""""""""""""""
+
+The GPG private key used to sign commits and tags. This should be the ASCII-armored
+private key exported from GPG.
+
+To export your GPG private key in the correct format:
+
+.. code:: shell
+
+  gpg --armor --export-secret-keys YOUR_KEY_ID
+
+.. note::
+  GPG and SSH signing are mutually exclusive. You can only use one signing method
+  at a time. If both GPG and SSH signing keys are provided, the action will fail.
+
+.. warning::
+  Store the GPG private key as a GitHub secret. Never commit it directly to your
+  repository.
+
+**Required:** ``false``
+
+----
+
+.. _gh_actions-psr-inputs-gpg_passphrase:
+
+``gpg_passphrase``
+""""""""""""""""""
+
+The passphrase for the GPG private key, if the key is encrypted. If your GPG key
+does not have a passphrase, you can omit this input.
+
+.. warning::
+  Store the GPG passphrase as a GitHub secret. Never commit it directly to your
+  repository.
 
 **Required:** ``false``
 
@@ -1020,6 +1071,53 @@ The equivalent GitHub Action configuration would be:
     manually provide input that triggers the desired version bump.
 
 .. _Publish Action Manual Release Workflow: https://github.com/python-semantic-release/publish-action/blob/main/.github/workflows/release.yml
+
+GPG Signing Example
+-------------------
+
+If you want to sign your commits and tags with GPG instead of SSH, you can provide
+your GPG private key and optionally a passphrase. First, you'll need to export your
+GPG private key and store it as a GitHub secret.
+
+**Exporting your GPG key:**
+
+.. code:: shell
+
+  # List your GPG keys to find the key ID
+  gpg --list-secret-keys --keyid-format LONG
+
+  # Export the private key (replace YOUR_KEY_ID with your actual key ID)
+  gpg --armor --export-secret-keys YOUR_KEY_ID
+
+Copy the output (including the ``-----BEGIN PGP PRIVATE KEY BLOCK-----`` and
+``-----END PGP PRIVATE KEY BLOCK-----`` lines) and store it as a GitHub secret,
+for example ``GPG_PRIVATE_KEY``.
+
+If your key has a passphrase, store that as a separate secret, for example
+``GPG_PASSPHRASE``.
+
+**Using GPG signing in the workflow:**
+
+.. code:: yaml
+
+  - name: Action | Semantic Version Release with GPG Signing
+    # Adjust tag with desired version if applicable.
+    uses: python-semantic-release/python-semantic-release@v10.5.2
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      git_committer_name: "github-actions"
+      git_committer_email: "actions@users.noreply.github.com"
+      gpg_private_signing_key: ${{ secrets.GPG_PRIVATE_KEY }}
+      gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}  # Optional, only if key is encrypted
+
+.. important::
+  GPG and SSH signing are mutually exclusive. You cannot use both at the same time.
+  If you provide both ``gpg_private_signing_key`` and ``ssh_private_signing_key``
+  (or ``ssh_public_signing_key``), the action will fail with an error.
+
+.. note::
+  If your GPG key does not have a passphrase, you can omit the ``gpg_passphrase``
+  input.
 
 .. _gh_actions-monorepo:
 
