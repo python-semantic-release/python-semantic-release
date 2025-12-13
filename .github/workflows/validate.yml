@@ -139,7 +139,7 @@ jobs:
           printf '%s\n' "artifacts_name=dist" >> $GITHUB_OUTPUT
 
       - name: Upload | Distribution Artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: ${{ steps.build.outputs.artifacts_name }}
           path: ${{ steps.build.outputs.dist_dir }}
@@ -265,7 +265,7 @@ jobs:
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Cached Repos on Failure
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('cached-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -275,7 +275,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Tested Repos on Failure
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -363,7 +363,7 @@ jobs:
             `--junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Cached Repos on Failure
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('cached-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -373,7 +373,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Tested Repos on Failure
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
