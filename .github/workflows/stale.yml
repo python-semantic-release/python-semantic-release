@@ -28,7 +28,7 @@ jobs:
     steps:
 
       - name: Stale Issues/PRs
-        uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008  # v10.1.0
+        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d  # v10.1.1
         with:
           # default: 30, GitHub Actions API Rate limit is 1000/hr
           operations-per-run: ${{ env.OPERATIONS_RATE_LIMIT }}
@@ -67,7 +67,7 @@ jobs:
         # that point the submitter has 14 days before a reminder/warning is given. If
         # no response has been received within 3 weeks, the issue is closed. There are
         # no exemptions besides removing the awaiting-reply label.
-        uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008  # v10.1.0
+        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d  # v10.1.1
         with:
           # GitHub Actions API Rate limit is 1000/hr
           operations-per-run: ${{ env.OPERATIONS_RATE_LIMIT }}
@@ -97,7 +97,7 @@ jobs:
         # forgotten completely, this job will post a reminder message to the maintainers
         # No closures will occur and there are no exemptions besides removing the confirmed
         # label.
-        uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008  # v10.1.0
+        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d  # v10.1.1
         with:
           # GitHub Actions API Rate limit is 1000/hr
           operations-per-run: ${{ env.OPERATIONS_RATE_LIMIT }}
