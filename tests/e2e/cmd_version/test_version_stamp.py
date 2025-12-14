@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from os import linesep
 from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, cast
@@ -498,3 +499,132 @@ def test_stamp_version_variables_yaml_kustomization_container_spec(
     resulting_yaml_obj["images"][0]["newTag"] = original_yaml_obj["images"][0]["newTag"]
 
     assert original_yaml_obj == resulting_yaml_obj
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_stamp_version_variables_file_replacement_number_format(
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+) -> None:
+    """
+    Given a VERSION file with a version number,
+    When a version is stamped and configured to replace the entire file with number format,
+    Then the entire file content is replaced with the new version number
+
+    Based on https://github.com/python-semantic-release/python-semantic-release/issues/1375
+    """
+    orig_version = "0.0.0"
+    new_version = "1.0.0"
+    target_file = Path("VERSION")
+
+    # Setup: Write initial text in file
+    target_file.write_text(orig_version)
+
+    # Setup: Set configuration to replace the entire file
+    update_pyproject_toml(
+        "tool.semantic_release.version_variables",
+        [
+            f"{target_file}:*:{VersionStampType.NUMBER_FORMAT.value}",
+        ],
+    )
+
+    # Act
+    cli_cmd = VERSION_STAMP_CMD
+    result = run_cli(cli_cmd[1:])
+
+    # Check the result
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Read content
+    with target_file.open(newline="") as rfd:
+        resulting_content = rfd.read()
+
+    # Check the version was updated (entire file should be just the version)
+    assert f"{new_version}{linesep}" == resulting_content
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_stamp_version_variables_file_replacement_tag_format(
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    default_tag_format_str: str,
+) -> None:
+    """
+    Given a VERSION file with a version tag,
+    When a version is stamped and configured to replace the entire file with tag format,
+    Then the entire file content is replaced with the new version in tag format
+
+    Based on https://github.com/python-semantic-release/python-semantic-release/issues/1375
+    """
+    orig_version = "0.0.0"
+    new_version = "1.0.0"
+    target_file = Path("VERSION")
+    orig_tag = default_tag_format_str.format(version=orig_version)
+    expected_new_tag = default_tag_format_str.format(version=new_version)
+
+    # Setup: Write initial text in file
+    target_file.write_text(orig_tag)
+
+    # Setup: Set configuration to replace the entire file
+    update_pyproject_toml(
+        "tool.semantic_release.version_variables",
+        [
+            f"{target_file}:*:{VersionStampType.TAG_FORMAT.value}",
+        ],
+    )
+
+    # Act
+    cli_cmd = VERSION_STAMP_CMD
+    result = run_cli(cli_cmd[1:])
+
+    # Check the result
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Read content
+    with target_file.open(newline="") as rfd:
+        resulting_content = rfd.read()
+
+    # Check the version was updated (entire file should be just the tag)
+    assert f"{expected_new_tag}{linesep}" == resulting_content
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_stamp_version_variables_file_replacement_with_whitespace(
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+) -> None:
+    """
+    Given a VERSION file with a version number and trailing whitespace,
+    When a version is stamped and configured to replace the entire file,
+    Then the entire file content is replaced with just the new version (no whitespace)
+
+    Based on https://github.com/python-semantic-release/python-semantic-release/issues/1375
+    """
+    orig_version = "0.0.0"
+    new_version = "1.0.0"
+    target_file = Path("VERSION")
+
+    # Setup: Write initial text in file with trailing whitespace
+    target_file.write_text(f"  {orig_version}  \n")
+
+    # Setup: Set configuration to replace the entire file
+    update_pyproject_toml(
+        "tool.semantic_release.version_variables",
+        [
+            f"{target_file}:*",
+        ],
+    )
+
+    # Act
+    cli_cmd = VERSION_STAMP_CMD
+    result = run_cli(cli_cmd[1:])
+
+    # Check the result
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Read content
+    with target_file.open(newline="") as rfd:
+        resulting_content = rfd.read()
+
+    # Check the version was updated (entire file should be just the version, only trailing newline)
+    assert f"{new_version}{linesep}" == resulting_content
