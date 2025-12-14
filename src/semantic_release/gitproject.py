@@ -336,13 +336,18 @@ class GitProject:
                 raise GitPushError(f"Failed to push tag ({tag}) to remote") from err
 
     def verify_upstream_unchanged(  # noqa: C901
-        self, local_ref: str = "HEAD", upstream_ref: str = "origin", noop: bool = False
+        self,
+        local_ref: str = "HEAD",
+        upstream_ref: str = "origin",
+        remote_url: str | None = None,
+        noop: bool = False,
     ) -> None:
         """
         Verify that the upstream branch has not changed since the given local reference.
 
         :param local_ref: The local reference to compare against upstream (default: HEAD)
         :param upstream_ref: The name of the upstream remote or specific remote branch (default: origin)
+        :param remote_url: Optional authenticated remote URL to use for fetching (default: None, uses configured remote)
         :param noop: Whether to skip the actual verification (for dry-run mode)
 
         :raises UpstreamBranchChangedError: If the upstream branch has changed
