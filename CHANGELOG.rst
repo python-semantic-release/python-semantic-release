@@ -4,6 +4,34 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.5.3:
+
+v10.5.3 (2025-12-14)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Resolve unauthenticated git repo issues for upstream verification, closes
+  `#1373`_ (`PR#1388`_, `e164f68`_)
+
+* **github-action**: Fix failed signing issue when ssh was missing from action environment, closes
+  `#1376`_ (`PR#1389`_, `18b7eda`_)
+
+* **parser-conventional-monorepo**: Fix parser opts validator for outside dir path matches, closes
+  `#1380`_ (`PR#1382`_, `a51eadd`_)
+
+.. _#1373: https://github.com/python-semantic-release/python-semantic-release/issues/1373
+.. _#1376: https://github.com/python-semantic-release/python-semantic-release/issues/1376
+.. _#1380: https://github.com/python-semantic-release/python-semantic-release/issues/1380
+.. _18b7eda: https://github.com/python-semantic-release/python-semantic-release/commit/18b7edadd7e7dfe42ec43110acf5e1bd8bcd7eb3
+.. _a51eadd: https://github.com/python-semantic-release/python-semantic-release/commit/a51eadd8414a7e9cbfa66837ee5a840a6331dfa1
+.. _e164f68: https://github.com/python-semantic-release/python-semantic-release/commit/e164f682bfa4ca1e7cbe77aa068202fd8094eec7
+.. _PR#1382: https://github.com/python-semantic-release/python-semantic-release/pull/1382
+.. _PR#1388: https://github.com/python-semantic-release/python-semantic-release/pull/1388
+.. _PR#1389: https://github.com/python-semantic-release/python-semantic-release/pull/1389
+
+
 .. _changelog-v10.5.2:
 
 v10.5.2 (2025-11-10)
