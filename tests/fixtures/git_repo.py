@@ -142,6 +142,7 @@ if TYPE_CHECKING:
         sha: str
         datetime: NotRequired[DatetimeISOStr]
         include_in_changelog: bool
+        file_to_change: NotRequired[Path | str]
 
     class BaseRepoVersionDef(TypedDict):
         """A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types"""
@@ -290,6 +291,7 @@ if TYPE_CHECKING:
         scipy: str
         datetime: NotRequired[DatetimeISOStr]
         include_in_changelog: NotRequired[bool]
+        file_to_change: NotRequired[Path | str]
 
     class DetailsBase(TypedDict):
         pre_actions: NotRequired[Sequence[RepoActions]]
@@ -1127,7 +1129,9 @@ def simulate_change_commits_n_rtn_changelog_entry(
         changelog_entries: list[CommitDef] = []
         for commit_msg in commit_msgs:
             if not git_repo.is_dirty(index=True, working_tree=False):
-                add_text_to_file(git_repo, file_in_repo)
+                add_text_to_file(
+                    git_repo, str(commit_msg.get("file_to_change", file_in_repo))
+                )
 
             changelog_entries.append(commit_n_rtn_changelog_entry(git_repo, commit_msg))
 
@@ -1336,39 +1340,6 @@ def configure_base_repo(  # noqa: C901
 
 @pytest.fixture(scope="session")
 def separate_squashed_commit_def() -> SeparateSquashedCommitDefFn:
-    # default_conventional_parser: ConventionalCommitParser,
-    # default_emoji_parser: EmojiCommitParser,
-    # default_scipy_parser: ScipyCommitParser,
-    # message_parsers: dict[
-    #     CommitConvention,
-    #     ConventionalCommitParser | EmojiCommitParser | ScipyCommitParser,
-    # ] = {
-    #     "conventional": ConventionalCommitParser(
-    #         options=ConventionalCommitParserOptions(
-    #             **{
-    #                 **default_conventional_parser.options.__dict__,
-    #                 "parse_squash_commits": True,
-    #             }
-    #         )
-    #     ),
-    #     "emoji": EmojiCommitParser(
-    #         options=EmojiParserOptions(
-    #             **{
-    #                 **default_emoji_parser.options.__dict__,
-    #                 "parse_squash_commits": True,
-    #             }
-    #         )
-    #     ),
-    #     "scipy": ScipyCommitParser(
-    #         options=ScipyParserOptions(
-    #             **{
-    #                 **default_scipy_parser.options.__dict__,
-    #                 "parse_squash_commits": True,
-    #             }
-    #         )
-    #     ),
-    # }
-
     def _separate_squashed_commit_def(
         squashed_commit_def: CommitDef,
         parser: SquashedCommitSupportedParser,
@@ -1435,7 +1406,7 @@ def convert_commit_spec_to_commit_def(
         )
 
         # Extract the correct commit message for the commit type
-        return {
+        commit_def: CommitDef = {
             **parse_msg_fn(commit_spec[commit_type], parser=parser),
             "cid": commit_spec["cid"],
             "datetime": (
@@ -1443,8 +1414,17 @@ def convert_commit_spec_to_commit_def(
                 if "datetime" in commit_spec
                 else stable_now_date.isoformat(timespec="seconds")
             ),
-            "include_in_changelog": (commit_spec.get("include_in_changelog", True)),
+            "include_in_changelog": commit_spec.get("include_in_changelog", True),
         }
+
+        if "file_to_change" in commit_spec:
+            commit_def.update(
+                {
+                    "file_to_change": commit_spec["file_to_change"],
+                }
+            )
+
+        return commit_def
 
     return _convert
 
