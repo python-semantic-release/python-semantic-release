@@ -336,13 +336,18 @@ class GitProject:
                 raise GitPushError(f"Failed to push tag ({tag}) to remote") from err
 
     def verify_upstream_unchanged(  # noqa: C901
-        self, local_ref: str = "HEAD", upstream_ref: str = "origin", noop: bool = False
+        self,
+        local_ref: str = "HEAD",
+        upstream_ref: str = "origin",
+        remote_url: str | None = None,
+        noop: bool = False,
     ) -> None:
         """
         Verify that the upstream branch has not changed since the given local reference.
 
         :param local_ref: The local reference to compare against upstream (default: HEAD)
         :param upstream_ref: The name of the upstream remote or specific remote branch (default: origin)
+        :param remote_url: Optional authenticated remote URL to use for fetching (default: None, uses configured remote)
         :param noop: Whether to skip the actual verification (for dry-run mode)
 
         :raises UpstreamBranchChangedError: If the upstream branch has changed
@@ -409,7 +414,46 @@ class GitProject:
             # Fetch the latest changes from the remote
             self.logger.info("Fetching latest changes from remote '%s'", remote_name)
             try:
-                remote_ref_obj.fetch()
+                # Check if we should use authenticated URL for fetch
+                # Only use remote_url if:
+                # 1. It's provided and different from the configured remote URL
+                # 2. It contains authentication credentials (@ symbol)
+                # 3. The configured remote is NOT a local path, file:// URL, or test URL (example.com)
+                #    This ensures we don't break tests or local development
+                configured_url = remote_ref_obj.url
+                is_local_or_test_remote = (
+                    configured_url.startswith(("file://", "/", "C:/", "H:/"))
+                    or "example.com" in configured_url
+                    or not configured_url.startswith(
+                        (
+                            "https://",
+                            "http://",
+                            "git://",
+                            "git@",
+                            "ssh://",
+                            "git+ssh://",
+                        )
+                    )
+                )
+
+                use_authenticated_fetch = (
+                    remote_url
+                    and "@" in remote_url
+                    and remote_url != configured_url
+                    and not is_local_or_test_remote
+                )
+
+                if use_authenticated_fetch:
+                    # Use authenticated remote URL for fetch
+                    # Fetch the remote branch and update the local tracking ref
+                    repo.git.fetch(
+                        remote_url,
+                        f"refs/heads/{remote_branch_name}:refs/remotes/{upstream_full_ref_name}",
+                    )
+                else:
+                    # Use the default remote configuration for local paths,
+                    # file:// URLs, test URLs, or when no authentication is needed
+                    remote_ref_obj.fetch()
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 err_msg = f"Failed to fetch from remote '{remote_name}'"

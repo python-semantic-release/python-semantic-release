@@ -753,6 +753,7 @@ def version(  # noqa: C901
                 project.verify_upstream_unchanged(
                     local_ref="HEAD~1",
                     upstream_ref=config.remote.name,
+                    remote_url=remote_url,
                     noop=opts.noop,
                 )
             except UpstreamBranchChangedError as exc:

@@ -62,6 +62,7 @@ def mock_repo(tmp_path: Path) -> RepoMock:
     # Mock remotes
     remote_obj = MagicMock()
     remote_obj.fetch = MagicMock()
+    remote_obj.url = "https://github.com/owner/repo.git"  # Set a non-test URL
 
     # Mock refs for the remote
     ref_obj = MagicMock()
@@ -247,6 +248,25 @@ def test_verify_upstream_unchanged_with_custom_ref(
 
     # Verify rev_parse was called with custom ref
     mock_repo.git.rev_parse.assert_called_once_with("HEAD~1")
+
+
+def test_verify_upstream_unchanged_with_remote_url(
+    mock_gitproject: GitProject, mock_repo: RepoMock
+):
+    """Test that verify_upstream_unchanged uses remote_url when provided."""
+    remote_url = "https://token:x-oauth-basic@github.com/owner/repo.git"
+
+    # Should not raise an exception
+    mock_gitproject.verify_upstream_unchanged(
+        local_ref="HEAD", remote_url=remote_url, noop=False
+    )
+
+    # Verify git.fetch was called with the remote_url and proper refspec instead of remote_ref_obj.fetch()
+    mock_repo.git.fetch.assert_called_once_with(
+        remote_url, "refs/heads/main:refs/remotes/origin/main"
+    )
+    # Verify that remote_ref_obj.fetch() was NOT called
+    mock_repo.remotes["origin"].fetch.assert_not_called()
 
 
 def test_is_shallow_clone_true(mock_gitproject: GitProject, tmp_path: Path) -> None:
