@@ -88,8 +88,10 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
     monorepo_pkg2_changelog_rst_file: Path,
     monorepo_pkg1_name: str,
     monorepo_pkg2_name: str,
-    monorepo_pkg1_dir: Path,
-    monorepo_pkg2_dir: Path,
+    monorepo_pkg1_dir: str,
+    monorepo_pkg2_dir: str,
+    monorepo_pkg1_docs_dir: str,
+    monorepo_pkg2_docs_dir: str,
     monorepo_pkg1_version_py_file: Path,
     monorepo_pkg2_version_py_file: Path,
     stable_now_date: GetStableDateNowFn,
@@ -104,6 +106,7 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
 
     ```
     * chore(release): pkg1@0.1.0 [skip ci] (tag: pkg1-v0.1.0, branch: main)
+    * docs: pkg1 docs modified outside of pkg 1, identified by path filter
     * feat(pkg1): file modified outside of pkg 1, identified by scope
     * chore(release): pkg2@0.1.1 [skip ci] (tag: pkg2-v0.1.1)
     * fix(pkg2-cli): file modified outside of pkg 2, identified by scope
@@ -182,21 +185,23 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
         if commit_type != "conventional":
             raise ValueError(f"Unsupported commit type: {commit_type}")
 
+        pkg1_path_filters = (".", f"../../{monorepo_pkg1_docs_dir}")
         pkg1_commit_parser = ConventionalCommitMonorepoParser(
             options=ConventionalCommitMonorepoParserOptions(
                 parse_squash_commits=True,
                 ignore_merge_commits=ignore_merge_commits,
                 scope_prefix=f"{monorepo_pkg1_name}-?",
-                path_filters=(".",),
+                path_filters=pkg1_path_filters,
             )
         )
 
+        pkg2_path_filters = (".", f"../../{monorepo_pkg2_docs_dir}")
         pkg2_commit_parser = ConventionalCommitMonorepoParser(
             options=ConventionalCommitMonorepoParserOptions(
                 parse_squash_commits=pkg1_commit_parser.options.parse_squash_commits,
                 ignore_merge_commits=pkg1_commit_parser.options.ignore_merge_commits,
                 scope_prefix=f"{monorepo_pkg2_name}-?",
-                path_filters=(".",),
+                path_filters=pkg2_path_filters,
             )
         )
 
@@ -247,7 +252,7 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
                                         )
                                     ),
                                     "tool.semantic_release.commit_parser_options.scope_prefix": pkg1_commit_parser.options.scope_prefix,
-                                    "tool.semantic_release.commit_parser_options.path_filters": pkg1_commit_parser.options.path_filters,
+                                    "tool.semantic_release.commit_parser_options.path_filters": pkg1_path_filters,
                                     **(extra_configs or {}),
                                 },
                             },
@@ -271,7 +276,7 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
                                         )
                                     ),
                                     "tool.semantic_release.commit_parser_options.scope_prefix": pkg2_commit_parser.options.scope_prefix,
-                                    "tool.semantic_release.commit_parser_options.path_filters": pkg2_commit_parser.options.path_filters,
+                                    "tool.semantic_release.commit_parser_options.path_filters": pkg2_path_filters,
                                     **(extra_configs or {}),
                                 },
                             },
@@ -524,6 +529,14 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
                                     "scipy": "ENH:pkg1: file modified outside of pkg 1, identified by scope",
                                     "datetime": next(commit_timestamp_gen),
                                 },
+                                {
+                                    "cid": (cid_c11_pkg1_docs := "c11_pkg1_docs"),
+                                    "conventional": "docs: pkg1 docs modified outside of pkg 1, identified by path filter",
+                                    "emoji": ":book: pkg1 docs modified outside of pkg 1, identified by path filter",
+                                    "scipy": "DOC: pkg1 docs modified outside of pkg 1, identified by path filter",
+                                    "datetime": next(commit_timestamp_gen),
+                                    "file_to_change": f"{monorepo_pkg1_docs_dir}/index.rst",
+                                },
                             ],
                             commit_type,
                             parser=cast(
@@ -550,7 +563,10 @@ def get_repo_definition_4_trunk_only_monorepo_w_tags(
                                 "details": {
                                     "new_version": pkg1_new_version,
                                     "dest_files": pkg1_changelog_file_definitions,
-                                    "commit_ids": [cid_c10_pkg1_feat],
+                                    "commit_ids": [
+                                        cid_c10_pkg1_feat,
+                                        cid_c11_pkg1_docs,
+                                    ],
                                 },
                             },
                             change_to_pkg1_dir,
