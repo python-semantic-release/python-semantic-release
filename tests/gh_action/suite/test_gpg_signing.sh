@@ -14,14 +14,14 @@ readonly TEST_SSH_PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITest"
 readonly TEST_SSH_PRIVATE_KEY="-----BEGIN OPENSSH PRIVATE KEY-----\ntest\n-----END OPENSSH PRIVATE KEY-----"
 readonly TEST_GPG_PRIVATE_KEY="-----BEGIN PGP PRIVATE KEY BLOCK-----\ntest\n-----END PGP PRIVATE KEY BLOCK-----"
 
-# Helper function to test mutual exclusivity
+# Helper function to verify mutual exclusivity
 # Parameters:
 #   $1: test index
 #   $2: test name
 #   $3: ssh_public_key value (optional)
 #   $4: ssh_private_key value (optional)
 #   $5: description for error message
-test_mutual_exclusivity() {
+verify_mutual_exclusivity() {
     local index="${1:?Index not provided}"
     local test_name="${2:?Test name not provided}"
     local ssh_public="${3:-}"
@@ -72,7 +72,7 @@ test_gpg_signing_error_when_both_ssh_and_gpg() {
     local index="${1:?Index not provided}"
     local test_name="${FUNCNAME[0]}"
     
-    test_mutual_exclusivity "$index" "$test_name" \
+    verify_mutual_exclusivity "$index" "$test_name" \
         "$TEST_SSH_PUBLIC_KEY" \
         "$TEST_SSH_PRIVATE_KEY" \
         "both SSH keys and GPG key are provided"
@@ -83,7 +83,7 @@ test_gpg_signing_error_when_ssh_public_and_gpg() {
     local index="${1:?Index not provided}"
     local test_name="${FUNCNAME[0]}"
     
-    test_mutual_exclusivity "$index" "$test_name" \
+    verify_mutual_exclusivity "$index" "$test_name" \
         "$TEST_SSH_PUBLIC_KEY" \
         "" \
         "SSH public key and GPG key are provided"
@@ -94,7 +94,7 @@ test_gpg_signing_error_when_ssh_private_and_gpg() {
     local index="${1:?Index not provided}"
     local test_name="${FUNCNAME[0]}"
     
-    test_mutual_exclusivity "$index" "$test_name" \
+    verify_mutual_exclusivity "$index" "$test_name" \
         "" \
         "$TEST_SSH_PRIVATE_KEY" \
         "SSH private key and GPG key are provided"
