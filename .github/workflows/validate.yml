@@ -112,7 +112,7 @@ jobs:
 
       - name: Build | Build next version artifacts
         id: version
-        uses: python-semantic-release/python-semantic-release@02f2a5c74dbb6aa2989f10fc4af12cd8e6bf025f  # v10.5.2
+        uses: python-semantic-release/python-semantic-release@350c48fcb3ffcdfd2e0a235206bc2ecea6b69df0  # v10.5.3
         with:
           github_token: ""
           verbosity: 1
