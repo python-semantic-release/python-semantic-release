@@ -13,6 +13,7 @@ import requests_mock
 from requests import HTTPError, Response, Session
 from requests.auth import _basic_auth_str
 
+from semantic_release.errors import AssetUploadError
 from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.token_auth import TokenAuth
 
@@ -1026,7 +1027,7 @@ def test_upload_release_asset_fails(
 
 # Note - mocking as the logic for uploading an asset
 # is covered by testing above, no point re-testing.
-def test_upload_dists_when_release_id_not_found(default_gh_client):
+def test_upload_dists_when_release_id_not_found(default_gh_client: Github):
     tag = "v1.0.0"
     path = "doesn't matter"
     expected_num_uploads = 0
@@ -1093,3 +1094,223 @@ def test_upload_dists_when_release_id_found(
         assert expected_num_uploads == num_uploads
         mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
         assert expected_files_uploaded == mock_upload_release_asset.call_args_list
+
+
+@pytest.mark.parametrize(
+    "status_code, error_message",
+    [
+        (401, "Unauthorized"),
+        (403, "Forbidden"),
+        (400, "Bad Request"),
+        (404, "Not Found"),
+        (429, "Too Many Requests"),
+        (500, "Internal Server Error"),
+        (503, "Service Unavailable"),
+    ],
+)
+def test_upload_dists_fails_with_http_error(
+    default_gh_client: Github,
+    status_code: int,
+    error_message: str,
+):
+    """Given a release exists, when upload_release_asset raises HTTPError, then AssetUploadError is raised."""
+    # Setup
+    release_id = 123
+    tag = "v1.0.0"
+    files = ["dist/package-1.0.0.whl", "dist/package-1.0.0.tar.gz"]
+    glob_pattern = "dist/*"
+    expected_num_upload_attempts = len(files)
+
+    # Create mock HTTPError with proper response
+    http_error = HTTPError(error_message)
+    http_error.response = Response()
+    http_error.response.status_code = status_code
+    http_error.response._content = error_message.encode()
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ) as mock_get_release_id_by_tag, mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        side_effect=http_error,
+    ) as mock_upload_release_asset:
+        # Execute method under test expecting an exception to be raised
+        with pytest.raises(AssetUploadError) as exc_info:
+            default_gh_client.upload_dists(tag, glob_pattern)
+
+        # Evaluate (expected -> actual)
+        mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
+
+        # Should have attempted to upload all files even though they fail
+        assert expected_num_upload_attempts == mock_upload_release_asset.call_count
+
+        # Verify the error message contains useful information about failed uploads
+        error_msg = str(exc_info.value)
+
+        # Each file should be mentioned in the error message with status code
+        for file in files:
+            assert f"Failed to upload asset '{file}'" in error_msg
+            assert f"(HTTP {status_code})" in error_msg
+
+
+def test_upload_dists_fails_authentication_error_401(default_gh_client: Github):
+    """Given a release exists, when upload fails with 401, then AssetUploadError is raised with auth context."""
+    # Setup
+    release_id = 456
+    tag = "v2.0.0"
+    files = ["dist/package-2.0.0.whl"]
+    glob_pattern = "dist/*.whl"
+
+    # Create mock HTTPError for authentication failure
+    http_error = HTTPError("401 Client Error: Unauthorized")
+    http_error.response = Response()
+    http_error.response.status_code = 401
+    http_error.response._content = b'{"message": "Bad credentials"}'
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ), mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        side_effect=http_error,
+    ):
+        # Execute method under test expecting an exception to be raised
+        with pytest.raises(AssetUploadError) as exc_info:
+            default_gh_client.upload_dists(tag, glob_pattern)
+
+        # Verify the error message contains file, release information and status code
+        error_msg = str(exc_info.value)
+        assert "Failed to upload asset" in error_msg
+        assert files[0] in error_msg
+        assert "(HTTP 401)" in error_msg
+
+
+def test_upload_dists_fails_forbidden_error_403(default_gh_client: Github):
+    """Given a release exists, when upload fails with 403, then AssetUploadError is raised with permission context."""
+    # Setup
+    release_id = 789
+    tag = "v3.0.0"
+    files = ["dist/package-3.0.0.tar.gz"]
+    glob_pattern = "dist/*.tar.gz"
+
+    # Create mock HTTPError for forbidden access
+    http_error = HTTPError("403 Client Error: Forbidden")
+    http_error.response = Response()
+    http_error.response.status_code = 403
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ), mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        side_effect=http_error,
+    ):
+        # Execute method under test expecting an exception to be raised
+        with pytest.raises(AssetUploadError) as exc_info:
+            default_gh_client.upload_dists(tag, glob_pattern)
+
+        # Verify the error message contains file, release information and status code
+        error_msg = str(exc_info.value)
+        assert "Failed to upload asset" in error_msg
+        assert f"Failed to upload asset '{files[0]}'" in error_msg
+        assert "(HTTP 403)" in error_msg
+
+
+def test_upload_dists_partial_failure(default_gh_client: Github):
+    """Given multiple files to upload, when some succeed and some fail, then AssetUploadError is raised."""
+    # Setup
+    release_id = 999
+    tag = "v4.0.0"
+    files = [
+        "dist/package-4.0.0.whl",
+        "dist/package-4.0.0.tar.gz",
+        "dist/package-4.0.0-py3-none-any.whl",
+    ]
+    glob_pattern = "dist/*"
+    expected_num_upload_attempts = len(files)
+
+    # Create mock HTTPError for the second file
+    http_error = HTTPError("500 Server Error: Internal Server Error")
+    http_error.response = Response()
+    http_error.response.status_code = 500
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment - first upload succeeds, second fails, third fails
+    upload_results = [True, http_error, http_error]
+
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ), mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        side_effect=upload_results,
+    ) as mock_upload_release_asset:
+        # Execute method under test expecting an exception to be raised
+        with pytest.raises(AssetUploadError) as exc_info:
+            default_gh_client.upload_dists(tag, glob_pattern)
+
+        # Verify all uploads were attempted
+        assert expected_num_upload_attempts == mock_upload_release_asset.call_count
+
+        # Verify the error message mentions the failed files with status code
+        error_msg = str(exc_info.value)
+        assert f"Failed to upload asset '{files[1]}'" in error_msg
+        assert f"Failed to upload asset '{files[2]}'" in error_msg
+        assert "(HTTP 500)" in error_msg
+
+
+def test_upload_dists_all_succeed(default_gh_client: Github):
+    """Given multiple files to upload, when all succeed, then return count of successful uploads."""
+    # Setup
+    release_id = 111
+    tag = "v5.0.0"
+    files = ["dist/package-5.0.0.whl", "dist/package-5.0.0.tar.gz"]
+    glob_pattern = "dist/*"
+    expected_num_uploads = len(files)
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment - all uploads succeed
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gh_client,
+        default_gh_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ), mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        return_value=True,
+    ) as mock_upload_release_asset:
+        # Execute method under test
+        num_uploads = default_gh_client.upload_dists(tag, glob_pattern)
+
+        # Evaluate (expected -> actual)
+        assert expected_num_uploads == num_uploads
+        assert expected_num_uploads == mock_upload_release_asset.call_count
