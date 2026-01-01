@@ -63,6 +63,10 @@ def test_version_writes_github_actions_output(
         "commit_sha": "0" * 40,
         "is_prerelease": str(latest_release_version.is_prerelease).lower(),
         "previous_version": str(previous_version) if previous_version else "",
+        "id": "",  # Empty because --no-push means no GitHub release created
+        "upload_url": "",  # Empty because --no-push means no GitHub release created
+        "assets": "[]",  # Empty JSON array because no assets uploaded
+        "assets_dist": "{}",  # Empty JSON object because no assets uploaded
         "release_notes": generate_default_release_notes_from_def(
             version_actions=repo_actions_per_version[latest_release_version],
             hvcs=hvcs_client,
@@ -113,4 +117,8 @@ def test_version_writes_github_actions_output(
     assert expected_gha_output["link"] == action_outputs["link"]
     assert expected_gha_output["previous_version"] == action_outputs["previous_version"]
     assert expected_gha_output["commit_sha"] == action_outputs["commit_sha"]
+    assert expected_gha_output["id"] == action_outputs["id"]
+    assert expected_gha_output["upload_url"] == action_outputs["upload_url"]
+    assert expected_gha_output["assets"] == action_outputs["assets"]
+    assert expected_gha_output["assets_dist"] == action_outputs["assets_dist"]
     assert expected_gha_output["release_notes"] == action_outputs["release_notes"]
