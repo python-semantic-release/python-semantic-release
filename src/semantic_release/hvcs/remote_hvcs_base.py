@@ -1,4 +1,4 @@
-"""Common functionality and interface for interacting with Git remote VCS"""
+"""Base class for remote version control system (HVCS) support"""
 
 from __future__ import annotations
 
@@ -8,10 +8,12 @@ from typing import TYPE_CHECKING
 
 from urllib3.util.url import Url, parse_url
 
-from semantic_release.hvcs import HvcsBase
+from semantic_release.hvcs._base import HvcsBase
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any
+
+    from semantic_release.hvcs.github import ReleaseInfo
 
 
 class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
@@ -63,11 +65,14 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
         prerelease: bool = False,
         assets: list[str] | None = None,
         noop: bool = False,
-    ) -> int | str:
+    ) -> int | str | ReleaseInfo:
         """
         Create a release in a remote VCS, if supported
 
         Which includes uploading any assets as part of the release
+
+        :return: a release identifier (int for GitHub, str for other platforms)
+                 GitHub implementations may return ReleaseInfo instead of int
         """
         self._not_supported(self.create_release.__name__)
         return -1
@@ -75,10 +80,13 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
     @abstractmethod
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> int | str:
+    ) -> int | str | ReleaseInfo:
         """
         Create or update a release for the given tag in a remote VCS, attaching the
         given changelog, if supported
+
+        :return: a release identifier (int for GitHub, str for other platforms)
+                 GitHub implementations may return ReleaseInfo instead of int
         """
         self._not_supported(self.create_or_update_release.__name__)
         return -1
