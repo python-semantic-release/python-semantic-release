@@ -302,7 +302,9 @@ def build_distributions(
         rprint("[bold green]Build completed successfully!")
     except subprocess.CalledProcessError as exc:
         logger.exception(exc)
-        logger.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
+        logger.error(
+            "Build command failed with exit code %s", exc.returncode
+        )  # noqa: TRY400
         raise BuildDistributionsError from exc
 
 
