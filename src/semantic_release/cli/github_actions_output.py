@@ -210,9 +210,11 @@ class VersionGitHubActionsOutput:
         output_lines = [
             *[f"{key}={value!s}{os.linesep}" for key, value in output_values.items()],
             *[
-                f"{key}<<EOF{os.linesep}{value}EOF{os.linesep}"
-                if value
-                else f"{key}={os.linesep}"
+                (
+                    f"{key}<<EOF{os.linesep}{value}EOF{os.linesep}"
+                    if value
+                    else f"{key}={os.linesep}"
+                )
                 for key, value in multiline_output_values.items()
             ],
         ]
