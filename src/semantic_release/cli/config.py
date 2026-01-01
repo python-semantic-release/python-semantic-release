@@ -29,6 +29,7 @@ from pydantic import (
     model_validator,
 )
 from typing_extensions import Annotated, Self
+from upath import UPath
 from urllib3.util.url import parse_url
 
 import semantic_release.hvcs as hvcs
@@ -149,6 +150,39 @@ class DefaultChangelogTemplatesConfig(BaseModel):
         return self
 
 
+class StorageOptionsConfig(BaseModel):
+    """
+    fsspec storage options with environment variable support.
+
+    This configuration allows passing authentication and other options to fsspec
+    for remote template directories. Values can be either strings or EnvConfigVar
+    objects to resolve from environment variables.
+
+    Example configuration:
+        [tool.semantic_release.changelog.storage_options]
+        key = { env = "AWS_ACCESS_KEY_ID" }
+        secret = { env = "AWS_SECRET_ACCESS_KEY" }
+    """
+
+    model_config = {"extra": "allow"}
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_env_vars(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        resolved: Dict[str, Any] = {}
+        for key, value in values.items():
+            if isinstance(value, dict) and "env" in value:
+                # This is an EnvConfigVar-like dict
+                env_var = EnvConfigVar(**value)
+                resolved_value = env_var.getvalue()
+                # Only include if we got a value
+                if resolved_value is not None:
+                    resolved[key] = resolved_value
+            elif value is not None:
+                resolved[key] = value
+        return resolved
+
+
 class ChangelogConfig(BaseModel):
     # TODO: BREAKING CHANGE v11, move to DefaultChangelogTemplatesConfig
     changelog_file: str = ""
@@ -162,6 +196,20 @@ class ChangelogConfig(BaseModel):
     mode: ChangelogMode = ChangelogMode.UPDATE
     insertion_flag: str = ""
     template_dir: str = "templates"
+    storage_options: StorageOptionsConfig = Field(default_factory=StorageOptionsConfig)
+
+    @field_validator("template_dir", mode="after")
+    @classmethod
+    def validate_template_dir(cls, val: str) -> str:
+        # Chained protocols (e.g., simplecache::s3://) are not supported.
+        # Attackers could use arbitrarily complex nested protocols to bypass
+        # local path security heuristics. For example, simplecache::file:///etc/passwd
+        # would have protocol "simplecache", not "file", bypassing the local path
+        # traversal check. Rather than trying to parse and validate nested chains,
+        # we disallow them entirely.
+        if "::" in val:
+            raise ValueError("Chained protocols are not supported for template_dir.")
+        return val
 
     @field_validator("exclude_commit_patterns", mode="after")
     @classmethod
@@ -565,7 +613,7 @@ class RuntimeContext:
     changelog_output_format: ChangelogOutputFormat
     ignore_token_for_push: bool
     template_environment: Environment
-    template_dir: Path
+    template_dir: UPath
     build_command: Optional[str]
     build_command_env: dict[str, str]
     dist_glob_patterns: Tuple[str, ...]
@@ -808,18 +856,23 @@ class RuntimeContext:
                 "Changelog file destination must be inside of the repository directory."
             )
 
-        # Must use absolute after resolve because windows does not resolve if the path does not exist
-        # which means it returns a relative path. So we force absolute to ensure path is complete
-        # for the next check of path matching
-        template_dir = (
-            Path(raw.changelog.template_dir).expanduser().resolve().absolute()
-        )
+        template_dir_str = raw.changelog.template_dir
+        storage_opts = raw.changelog.storage_options.model_dump(exclude_none=True)
+        template_dir = UPath(template_dir_str, **storage_opts)
 
-        # Prevent path traversal attacks
-        if raw.repo_dir not in template_dir.parents:
-            raise InvalidConfiguration(
-                "Template directory must be inside of the repository directory."
-            )
+        # Prevent path traversal attacks (local paths only).
+        # Chained protocols are already rejected by ChangelogConfig.validate_template_dir,
+        # so we can safely check the protocol property here.
+        if template_dir.protocol in ("", "file", "local"):
+            # Must use absolute after resolve because windows does not resolve if the path does not exist
+            # which means it returns a relative path. So we force absolute to ensure path is complete
+            # for the next check of path matching
+            resolved = Path(template_dir_str).expanduser().resolve().absolute()
+            if raw.repo_dir not in resolved.parents and resolved != raw.repo_dir:
+                raise InvalidConfiguration(
+                    "Template directory must be inside of the repository directory."
+                )
+            template_dir = UPath(resolved)
 
         template_environment = environment(
             template_dir=template_dir,

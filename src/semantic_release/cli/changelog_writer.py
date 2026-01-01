@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -29,6 +28,7 @@ from semantic_release.helpers import sort_numerically
 
 if TYPE_CHECKING:  # pragma: no cover
     from jinja2 import Environment
+    from upath import UPath
 
     from semantic_release.changelog.context import ChangelogContext
     from semantic_release.changelog.release_history import Release, ReleaseHistory
@@ -107,7 +107,7 @@ def render_release_notes(
 
 
 def apply_user_changelog_template_directory(
-    template_dir: Path,
+    template_dir: Path | UPath | str,
     environment: Environment,
     destination_dir: Path,
     noop: bool = False,
@@ -180,21 +180,19 @@ def write_changelog_files(
         mask_initial_release=runtime_ctx.changelog_mask_initial_release,
     )
 
-    user_templates = []
+    user_templates: list[str] = []
 
     # Update known templates list if Directory exists and directory has actual files to render
     if template_dir.is_dir():
-        user_templates.extend(
-            [
-                f
-                for f in template_dir.rglob("*")
-                if f.is_file() and f.suffix == JINJA2_EXTENSION
-            ]
-        )
-
-        with suppress(ValueError):
-            # do not include a release notes override when considering number of changelog templates
-            user_templates.remove(template_dir / DEFAULT_RELEASE_NOTES_TPL_FILE)
+        user_templates = [
+            str(f)
+            for f in template_dir.rglob("*")
+            if (
+                f.is_file()
+                and f.suffix == JINJA2_EXTENSION
+                and f.name != DEFAULT_RELEASE_NOTES_TPL_FILE
+            )
+        ]
 
     # Render user templates if found
     if len(user_templates) > 0:
@@ -208,7 +206,7 @@ def write_changelog_files(
         )
 
     logger.info(
-        "No contents found in %r, using default changelog template", template_dir
+        "No contents found in %r, using default changelog template", str(template_dir)
     )
     return [
         write_default_changelog(
@@ -225,7 +223,7 @@ def write_changelog_files(
 def generate_release_notes(
     hvcs_client: HvcsBase,
     release: Release,
-    template_dir: Path,
+    template_dir: Path | UPath,
     history: ReleaseHistory,
     style: str,
     mask_initial_release: bool,
