@@ -279,10 +279,9 @@ def test_toml_declaration_noop_warning_on_missing_file(
 
     # Evaluate
     assert file_to_modify is None
-    assert (
-        "FILE NOT FOUND: cannot stamp version in non-existent file"
-        in capsys.readouterr().err
-    )
+    # Normalize whitespace since rich may wrap text based on terminal width
+    stderr_output = " ".join(capsys.readouterr().err.split())
+    assert "FILE NOT FOUND: cannot stamp version in non-existent file" in stderr_output
 
 
 def test_toml_declaration_noop_warning_on_no_version_in_file(
@@ -312,10 +311,9 @@ def test_toml_declaration_noop_warning_on_no_version_in_file(
 
     # Evaluate
     assert file_to_modify is None
-    assert (
-        "VERSION PATTERN NOT FOUND: no version to stamp in file"
-        in capsys.readouterr().err
-    )
+    # Normalize whitespace since rich may wrap text based on terminal width
+    stderr_output = " ".join(capsys.readouterr().err.split())
+    assert "VERSION PATTERN NOT FOUND: no version to stamp in file" in stderr_output
 
 
 @pytest.mark.parametrize(

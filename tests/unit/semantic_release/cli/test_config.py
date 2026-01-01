@@ -22,6 +22,7 @@ from semantic_release.cli.config import (
     HvcsClient,
     RawConfig,
     RuntimeContext,
+    StorageOptionsConfig,
     _known_hvcs,
 )
 from semantic_release.cli.util import load_raw_config_file
@@ -31,7 +32,7 @@ from semantic_release.commit_parser.scipy import ScipyParserOptions
 from semantic_release.commit_parser.tag import TagParserOptions
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
-from semantic_release.errors import ParserLoadError
+from semantic_release.errors import InvalidConfiguration, ParserLoadError
 
 from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import (
@@ -463,3 +464,267 @@ def test_git_remote_url_w_insteadof_alias(
 
     # Evaluate: the remote URL should be the full URL
     assert expected_url.url == actual_url
+
+
+def test_storage_options_plain_string_values():
+    config = StorageOptionsConfig.model_validate(
+        {
+            "key": "my-access-key",
+            "secret": "my-secret-key",
+            "bucket": "my-bucket",
+        }
+    )
+    dumped = config.model_dump(exclude_none=True)
+
+    assert dumped["key"] == "my-access-key"
+    assert dumped["secret"] == "my-secret-key"
+    assert dumped["bucket"] == "my-bucket"
+
+
+def test_storage_options_env_var_resolution():
+    with mock.patch.dict(os.environ, {"AWS_KEY": "resolved-key"}, clear=True):
+        config = StorageOptionsConfig.model_validate(
+            {
+                "key": {"env": "AWS_KEY"},
+            }
+        )
+    dumped = config.model_dump(exclude_none=True)
+
+    assert dumped["key"] == "resolved-key"
+
+
+def test_storage_options_missing_env_var_excluded():
+    with mock.patch.dict(os.environ, {}, clear=True):
+        config = StorageOptionsConfig.model_validate(
+            {
+                "key": {"env": "NONEXISTENT_VAR"},
+            }
+        )
+    dumped = config.model_dump(exclude_none=True)
+
+    assert "key" not in dumped
+
+
+def test_storage_options_env_var_with_default():
+    with mock.patch.dict(os.environ, {}, clear=True):
+        config = StorageOptionsConfig.model_validate(
+            {
+                "key": {"env": "MISSING_VAR", "default": "fallback-value"},
+            }
+        )
+    dumped = config.model_dump(exclude_none=True)
+
+    assert dumped["key"] == "fallback-value"
+
+
+def test_storage_options_env_var_with_default_env():
+    with mock.patch.dict(os.environ, {"BACKUP_KEY": "backup-value"}, clear=True):
+        config = StorageOptionsConfig.model_validate(
+            {
+                "key": {"env": "PRIMARY_KEY", "default_env": "BACKUP_KEY"},
+            }
+        )
+    dumped = config.model_dump(exclude_none=True)
+
+    assert dumped["key"] == "backup-value"
+
+
+def test_storage_options_mixed_values():
+    with mock.patch.dict(os.environ, {"SECRET_KEY": "secret123"}, clear=True):
+        config = StorageOptionsConfig.model_validate(
+            {
+                "bucket": "my-bucket",
+                "secret": {"env": "SECRET_KEY"},
+                "missing": {"env": "MISSING"},
+            }
+        )
+    dumped = config.model_dump(exclude_none=True)
+
+    assert dumped["bucket"] == "my-bucket"
+    assert dumped["secret"] == "secret123"
+    assert "missing" not in dumped
+
+
+def test_storage_options_empty_config():
+    config = StorageOptionsConfig.model_validate({})
+    dumped = config.model_dump(exclude_none=True)
+
+    assert dumped == {}
+
+
+@pytest.mark.parametrize(
+    "chained_protocol",
+    [
+        "simplecache::s3://bucket/templates",
+        "simplecache::http://example.com/templates",
+        "blockcache::file:///etc/templates",
+        "memory::s3://bucket/path",
+        "filecache::gcs://bucket/templates",
+    ],
+)
+def test_changelog_config_rejects_chained_protocols(chained_protocol: str):
+    with pytest.raises(
+        ValidationError,
+        match=regexp(r".*Chained protocols are not supported.*"),
+    ):
+        ChangelogConfig.model_validate(
+            {
+                "template_dir": chained_protocol,
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "valid_template_dir",
+    [
+        "templates",
+        "./templates",
+        "../templates",
+        "/absolute/path/templates",
+        "s3://bucket/templates",
+        "http://example.com/templates",
+        "https://example.com/templates",
+        "gcs://bucket/templates",
+        "az://container/templates",
+        "file:///local/path",
+    ],
+)
+def test_changelog_config_accepts_valid_template_dirs(valid_template_dir: str):
+    config = ChangelogConfig.model_validate(
+        {
+            "template_dir": valid_template_dir,
+        }
+    )
+
+    assert config.template_dir == valid_template_dir
+
+
+def test_changelog_config_with_storage_options():
+    with mock.patch.dict(os.environ, {"S3_KEY": "test-key"}, clear=True):
+        config = ChangelogConfig.model_validate(
+            {
+                "template_dir": "s3://bucket/templates",
+                "storage_options": {
+                    "key": {"env": "S3_KEY"},
+                },
+            }
+        )
+    opts = config.storage_options.model_dump(exclude_none=True)
+
+    assert config.template_dir == "s3://bucket/templates"
+    assert opts["key"] == "test-key"
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_local_template_dir_outside_repo_rejected(
+    example_pyproject_toml: Path,
+    example_project_dir: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    change_to_ex_proj_dir: None,
+):
+    outside_dir = example_project_dir.parent / "outside_repo_templates"
+    outside_dir.mkdir(parents=True, exist_ok=True)
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        str(outside_dir),
+    )
+
+    with pytest.raises(
+        InvalidConfiguration,
+        match=regexp(r".*Template directory must be inside.*repository.*"),
+    ):
+        RuntimeContext.from_raw_config(
+            RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
+            global_cli_options=GlobalCommandLineOptions(),
+        )
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_local_template_dir_inside_repo_accepted(
+    example_pyproject_toml: Path,
+    example_project_dir: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    change_to_ex_proj_dir: None,
+):
+    template_dir = example_project_dir / "my-templates"
+    template_dir.mkdir(parents=True)
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        str(template_dir),
+    )
+
+    runtime_ctx = RuntimeContext.from_raw_config(
+        RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
+        global_cli_options=GlobalCommandLineOptions(),
+    )
+
+    assert runtime_ctx is not None
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_relative_template_dir_resolved_correctly(
+    example_pyproject_toml: Path,
+    example_project_dir: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    change_to_ex_proj_dir: None,
+):
+    (example_project_dir / "rel-templates").mkdir()
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        "rel-templates",
+    )
+
+    runtime_ctx = RuntimeContext.from_raw_config(
+        RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
+        global_cli_options=GlobalCommandLineOptions(),
+    )
+
+    assert runtime_ctx is not None
+
+
+@pytest.mark.parametrize(
+    "remote_protocol",
+    [
+        "s3://bucket/templates",
+        "http://example.com/templates",
+        "https://example.com/templates",
+        "gcs://bucket/templates",
+    ],
+)
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_remote_protocol_skips_path_traversal_check(
+    remote_protocol: str,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    change_to_ex_proj_dir: None,
+):
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        remote_protocol,
+    )
+    # Remote protocols should not raise InvalidConfiguration for path traversal.
+    # They may fail for other reasons (network access), but path traversal check is skipped.
+    try:
+        RuntimeContext.from_raw_config(
+            RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
+            global_cli_options=GlobalCommandLineOptions(),
+        )
+    except InvalidConfiguration as err:
+        # If InvalidConfiguration is raised, it must NOT be about path traversal
+        assert "inside of the repository" not in str(err)  # noqa: PT017
+
+
+@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
+def test_default_template_dir_accepted(
+    example_pyproject_toml: Path,
+    example_project_dir: Path,
+    change_to_ex_proj_dir: None,
+):
+    (example_project_dir / "templates").mkdir()
+
+    runtime_ctx = RuntimeContext.from_raw_config(
+        RawConfig.model_validate(load_raw_config_file(example_pyproject_toml)),
+        global_cli_options=GlobalCommandLineOptions(),
+    )
+
+    assert runtime_ctx is not None
