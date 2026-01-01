@@ -52,8 +52,12 @@ def test_version_github_actions_output_format(
             link={BASE_VCS_URL}/releases/tag/v{version}
             previous_version={prev_version or ""}
             commit_sha={commit_sha}
+            id=
+            upload_url=
+            assets=[]
+            assets_dist={{}}
             """
-        )
+        ).replace("\n", os.linesep)
         + f"release_notes<<EOF{os.linesep}{release_notes}EOF{os.linesep}"
     )
 
@@ -159,3 +163,201 @@ def test_version_github_actions_output_no_error_if_not_in_gha(
 
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     output.write_if_possible()
+
+
+def test_version_github_actions_output_with_release_id():
+    """Test that release_id property works correctly"""
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+        release_id=12345,
+    )
+
+    assert output.release_id == 12345
+
+
+def test_version_github_actions_output_release_id_validation():
+    """Test that release_id setter validates type"""
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+    )
+
+    with pytest.raises(TypeError, match="should be an integer"):
+        output.release_id = "not an int"
+
+
+def test_version_github_actions_output_with_upload_url():
+    """Test that upload_url property works correctly"""
+    test_url = "https://uploads.github.com/repos/owner/repo/releases/123/assets"
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+        upload_url=test_url,
+    )
+
+    assert output.upload_url == test_url
+
+
+def test_version_github_actions_output_upload_url_validation():
+    """Test that upload_url setter validates type"""
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+    )
+
+    with pytest.raises(TypeError, match="should be a string"):
+        output.upload_url = 123
+
+
+def test_version_github_actions_output_with_assets():
+    """Test that assets property works correctly"""
+    test_assets = [
+        {
+            "name": "package-1.0.0.tar.gz",
+            "size": 1024,
+            "content_type": "application/gzip",
+            "browser_download_url": f"{BASE_VCS_URL}/releases/download/v1.0.0/package-1.0.0.tar.gz",
+        },
+        {
+            "name": "package-1.0.0-py3-none-any.whl",
+            "size": 2048,
+            "content_type": "application/octet-stream",
+            "browser_download_url": f"{BASE_VCS_URL}/releases/download/v1.0.0/package-1.0.0-py3-none-any.whl",
+        },
+    ]
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+        assets=test_assets,
+    )
+
+    assert output.assets == test_assets
+    assert len(output.assets) == 2
+
+
+def test_version_github_actions_output_assets_validation():
+    """Test that assets setter validates type"""
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+    )
+
+    with pytest.raises(TypeError, match="should be a list"):
+        output.assets = {"not": "a list"}
+
+
+def test_version_github_actions_output_assets_dist():
+    """Test that assets_dist property correctly categorizes distribution assets"""
+    test_assets = [
+        {
+            "name": "package-1.0.0.tar.gz",
+            "size": 1024,
+            "browser_download_url": f"{BASE_VCS_URL}/releases/download/v1.0.0/package-1.0.0.tar.gz",
+        },
+        {
+            "name": "package-1.0.0-py3-none-any.whl",
+            "size": 2048,
+            "browser_download_url": f"{BASE_VCS_URL}/releases/download/v1.0.0/package-1.0.0-py3-none-any.whl",
+        },
+        {
+            "name": "checksums.txt",
+            "size": 128,
+            "browser_download_url": f"{BASE_VCS_URL}/releases/download/v1.0.0/checksums.txt",
+        },
+    ]
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git"),
+        assets=test_assets,
+    )
+
+    assets_dist = output.assets_dist
+
+    # Verify wheel is categorized correctly
+    assert "wheel" in assets_dist
+    assert assets_dist["wheel"]["name"] == "package-1.0.0-py3-none-any.whl"
+
+    # Verify sdist is categorized correctly
+    assert "sdist" in assets_dist
+    assert assets_dist["sdist"]["name"] == "package-1.0.0.tar.gz"
+
+    # Verify other files use extension as key
+    assert "txt" in assets_dist
+    assert assets_dist["txt"]["name"] == "checksums.txt"
+
+
+def test_version_github_actions_output_format_with_new_fields():
+    """Test that output format includes all new fields"""
+    commit_sha = "0" * 40
+    version_str = "1.2.3"
+    release_notes = "Test release"
+    release_id = 12345
+    upload_url = "https://uploads.github.com/repos/owner/repo/releases/123/assets"
+    test_assets = [
+        {
+            "name": "package-1.0.0.tar.gz",
+            "size": 1024,
+        }
+    ]
+
+    output = VersionGitHubActionsOutput(
+        gh_client=Github(f"{BASE_VCS_URL}.git", hvcs_domain=EXAMPLE_HVCS_DOMAIN),
+        released=True,
+        version=Version.parse(version_str),
+        commit_sha=commit_sha,
+        release_notes=release_notes,
+        release_id=release_id,
+        upload_url=upload_url,
+        assets=test_assets,
+    )
+
+    output_text = output.to_output_text()
+
+    # Verify new fields are present in output
+    assert f"id={release_id}" in output_text
+    assert f"upload_url={upload_url}" in output_text
+    assert "assets=[" in output_text
+    assert "assets_dist={" in output_text
+
+
+def test_version_github_actions_output_writes_new_fields_to_file(tmp_path: Path):
+    """Test that new fields are written to GitHub Actions output file"""
+    mock_output_file = tmp_path / "action.out"
+    version_str = "1.2.3"
+    commit_sha = "0" * 40
+    release_notes = "Test release"
+    release_id = 12345
+    upload_url = "https://uploads.github.com/repos/owner/repo/releases/123/assets"
+    test_assets = [
+        {
+            "name": "package-1.0.0-py3-none-any.whl",
+            "size": 2048,
+        }
+    ]
+
+    patched_environ = {"GITHUB_OUTPUT": str(mock_output_file.resolve())}
+
+    with mock.patch.dict(os.environ, patched_environ, clear=True):
+        VersionGitHubActionsOutput(
+            gh_client=Github(f"{BASE_VCS_URL}.git", hvcs_domain=EXAMPLE_HVCS_DOMAIN),
+            version=Version.parse(version_str),
+            released=True,
+            commit_sha=commit_sha,
+            release_notes=release_notes,
+            release_id=release_id,
+            upload_url=upload_url,
+            assets=test_assets,
+        ).write_if_possible()
+
+    with open(mock_output_file, encoding="utf-8", newline=os.linesep) as rfd:
+        action_outputs = actions_output_to_dict(rfd.read())
+
+    # Verify new fields are present in the output file
+    assert str(release_id) == action_outputs["id"]
+    assert upload_url == action_outputs["upload_url"]
+    assert action_outputs["assets"]  # Should be a JSON string
+    assert action_outputs["assets_dist"]  # Should be a JSON string
+
+    # Verify JSON can be parsed
+    import json
+
+    assets_list = json.loads(action_outputs["assets"])
+    assert len(assets_list) == 1
+    assert assets_list[0]["name"] == "package-1.0.0-py3-none-any.whl"
+
+    assets_dist_dict = json.loads(action_outputs["assets_dist"])
+    assert "wheel" in assets_dist_dict
