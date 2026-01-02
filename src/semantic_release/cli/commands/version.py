@@ -705,6 +705,7 @@ def version(  # noqa: C901
         style=runtime.changelog_style,
         mask_initial_release=runtime.changelog_mask_initial_release,
         license_name="" if not isinstance(license_cfg, str) else license_cfg,
+        template_environment=runtime.template_environment,
     )
 
     # Preparing for committing changes; we always stage files even if we're not committing them in order to support a two-stage commit

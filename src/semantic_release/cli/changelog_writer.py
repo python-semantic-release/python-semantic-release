@@ -230,24 +230,27 @@ def generate_release_notes(
     style: str,
     mask_initial_release: bool,
     license_name: str = "",
+    template_environment: Environment | None = None,
 ) -> str:
     users_tpl_file = template_dir / DEFAULT_RELEASE_NOTES_TPL_FILE
+    has_custom_template = users_tpl_file.is_file()
 
-    # Determine if the user has a custom release notes template or we should use
-    # the default template directory with our default release notes template
     tpl_dir = (
         template_dir
-        if users_tpl_file.is_file()
+        if has_custom_template
         else get_default_tpl_dir(
             style=style, sub_dir=ChangelogOutputFormat.MARKDOWN.value
         )
     )
 
     release_notes_tpl_file = (
-        users_tpl_file.name
-        if users_tpl_file.is_file()
-        else DEFAULT_RELEASE_NOTES_TPL_FILE
+        users_tpl_file.name if has_custom_template else DEFAULT_RELEASE_NOTES_TPL_FILE
     )
+
+    if has_custom_template and template_environment is not None:
+        env = template_environment
+    else:
+        env = environment(autoescape=False, template_dir=tpl_dir)
 
     release_notes_env = ReleaseNotesContext(
         repo_name=hvcs_client.repo_name,
@@ -263,11 +266,7 @@ def generate_release_notes(
             autofit_text_width,
             sort_numerically,
         ),
-    ).bind_to_environment(
-        # Use a new, non-configurable environment for release notes -
-        # not user-configurable at the moment
-        environment(autoescape=False, template_dir=tpl_dir)
-    )
+    ).bind_to_environment(env)
 
     # TODO: Remove in v11
     release_notes_env.globals["context"] = release_notes_env.globals["ctx"] = {

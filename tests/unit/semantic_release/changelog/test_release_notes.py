@@ -1046,3 +1046,43 @@ def test_default_release_notes_template_w_multiple_notices(
     )
 
     assert expected_content == actual_content
+
+
+def test_release_notes_uses_custom_jinja_extension(
+    example_git_https_url: str,
+    single_release_history: ReleaseHistory,
+    example_project_dir: ExProjectDir,
+    change_to_ex_proj_dir: None,
+):
+    from jinja2.ext import Extension
+
+    from semantic_release.changelog.template import environment
+
+    class CustomExtension(Extension):
+        def __init__(self, environment):
+            super().__init__(environment)
+            environment.filters["shout"] = lambda s: s.upper() + "!"
+
+    version = list(single_release_history.released.keys())[-1]
+    release = single_release_history.released[version]
+    example_project_dir.joinpath(".release_notes.md.j2").write_text(
+        """{{ "hello" | shout }}"""
+    )
+    template_env = environment(
+        template_dir=example_project_dir,
+        extensions=[CustomExtension],  # type: ignore[list-item]
+    )
+
+    expected_content = f"HELLO!{os.linesep}"
+
+    actual_content = generate_release_notes(
+        hvcs_client=Github(remote_url=example_git_https_url),
+        release=release,
+        template_dir=example_project_dir,
+        history=single_release_history,
+        style="conventional",
+        mask_initial_release=False,
+        template_environment=template_env,
+    )
+
+    assert expected_content == actual_content
