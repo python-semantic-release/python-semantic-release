@@ -128,6 +128,25 @@ class ChangelogEnvironmentConfig(BaseModel):
 
 
 class DefaultChangelogTemplatesConfig(BaseModel):
+    # TODO: v11 suggested breaking change - rename to `changelog_filename` and disallow
+    # directory components. Users should use `output_dir` to specify the destination
+    # directory instead.
+    #
+    # Why this simplifies the code:
+    # - changelog_writer.py currently has conditional logic to check if output_dir equals
+    #   repo_dir to decide whether to preserve the directory component of changelog_file
+    #   or use just the filename. With a pure filename, we can always use
+    #   `output_dir / changelog_filename` unconditionally.
+    # - config validation currently checks the raw config value for directory components
+    #   to prevent ambiguous configurations. This validation becomes unnecessary.
+    #
+    # Why output_dir is valuable:
+    # - Enables writing changelogs to directories outside the current working directory,
+    #   which is essential for monorepos where PSR runs from a package subdirectory
+    #   (e.g., packages/pkg1/) but needs to write to a consolidated docs directory
+    #   (e.g., ../../docs/source/pkg1/).
+    # - Before output_dir, achieving this required complex shell scripts or custom
+    #   templates that manually handled path resolution and file copying.
     changelog_file: str = "CHANGELOG.md"
     output_format: ChangelogOutputFormat = ChangelogOutputFormat.NONE
     mask_initial_release: bool = True
@@ -162,6 +181,7 @@ class ChangelogConfig(BaseModel):
     mode: ChangelogMode = ChangelogMode.UPDATE
     insertion_flag: str = ""
     template_dir: str = "templates"
+    output_dir: str = "."
 
     @field_validator("exclude_commit_patterns", mode="after")
     @classmethod
@@ -566,6 +586,7 @@ class RuntimeContext:
     ignore_token_for_push: bool
     template_environment: Environment
     template_dir: Path
+    output_dir: Path
     build_command: Optional[str]
     build_command_env: dict[str, str]
     dist_glob_patterns: Tuple[str, ...]
@@ -814,12 +835,37 @@ class RuntimeContext:
         template_dir = (
             Path(raw.changelog.template_dir).expanduser().resolve().absolute()
         )
+        output_dir = Path(raw.changelog.output_dir).expanduser().resolve().absolute()
 
         # Prevent path traversal attacks
         if raw.repo_dir not in template_dir.parents:
             raise InvalidConfiguration(
                 "Template directory must be inside of the repository directory."
             )
+        if raw.repo_dir not in output_dir.parents and output_dir != raw.repo_dir:
+            raise InvalidConfiguration(
+                "Output directory must be inside of the repository directory."
+            )
+
+        # Prevent ambiguous configuration: output_dir and changelog_file with directory
+        # Only validate when output_dir is explicitly set (not the default ".")
+        # This preserves backward compatibility for users who set changelog_file with a
+        # directory component (e.g., "docs/CHANGELOG.md") without setting output_dir
+        # TODO: v11 simplification - once changelog_file is renamed to changelog_filename
+        # and directory components are disallowed, this entire validation block can be
+        # removed. See DefaultChangelogTemplatesConfig for details.
+        output_dir_explicitly_set = raw.changelog.output_dir != "."
+        configured_changelog_path = Path(raw.changelog.default_templates.changelog_file)
+        has_directory_component = str(configured_changelog_path.parent) != "."
+
+        if output_dir_explicitly_set and has_directory_component:
+            raise InvalidConfiguration(
+                "Cannot specify both 'changelog.output_dir' and a directory path in "
+                "'changelog.default_templates.changelog_file'. Use 'output_dir' for "
+                "the destination directory and 'changelog_file' for just the filename."
+            )
+
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         template_environment = environment(
             template_dir=template_dir,
@@ -897,6 +943,7 @@ class RuntimeContext:
             ignore_token_for_push=raw.remote.ignore_token_for_push,
             template_dir=template_dir,
             template_environment=template_environment,
+            output_dir=output_dir,
             dist_glob_patterns=raw.publish.dist_glob_patterns,
             upload_to_vcs_release=raw.publish.upload_to_vcs_release,
             global_cli_options=global_cli_options,
