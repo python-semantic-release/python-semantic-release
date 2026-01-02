@@ -61,6 +61,7 @@ class Cli(click.MultiCommand):
     cls=Cli,
     context_settings={
         "help_option_names": ["-h", "--help"],
+        "resilient_parsing": True,
     },
 )
 @click.version_option(
