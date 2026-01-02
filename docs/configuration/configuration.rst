@@ -744,6 +744,40 @@ This option is discussed in more detail at :ref:`changelog-templates`
 
 ----
 
+.. _config-changelog-output_dir:
+
+``output_dir``
+**************
+
+**Type:** ``str``
+
+Specifies the directory where rendered changelog templates will be written. By default,
+templates are rendered to the project root directory. Use this setting to output the
+changelog to a different location, such as a ``docs/`` subdirectory.
+
+When using the default changelog template (no custom ``template_dir``), the changelog
+file will be placed at ``<output_dir>/<changelog_file_name>``. For example, with
+``output_dir = "docs"`` and the default ``changelog_file = "CHANGELOG.md"``, the
+changelog will be written to ``docs/CHANGELOG.md``.
+
+When using custom templates via ``template_dir``, the entire template directory structure
+will be rendered relative to ``output_dir`` instead of the project root.
+
+.. note::
+   You cannot specify both ``output_dir`` and a directory path in ``changelog_file``.
+   Use ``output_dir`` for the destination directory and ``changelog_file`` for just the
+   filename. For example, use ``output_dir = "docs"`` with ``changelog_file = "CHANGELOG.md"``
+   rather than ``changelog_file = "docs/CHANGELOG.md"``.
+
+**Default:** ``"."`` (project root)
+
+.. seealso::
+
+   - :ref:`monorepos` - Using ``output_dir`` to consolidate changelogs in monorepo documentation directories
+   - :ref:`changelog-templates` - Custom template directory rendering with ``output_dir``
+
+----
+
 .. _config-commit_author:
 
 ``commit_author``
