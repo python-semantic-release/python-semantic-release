@@ -8,7 +8,7 @@ import os
 from functools import lru_cache
 from pathlib import PurePosixPath
 from re import compile as regexp
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from requests import HTTPError, JSONDecodeError
 from urllib3.util.url import Url, parse_url
@@ -27,6 +27,14 @@ from semantic_release.hvcs.util import build_requests_session, suppress_not_foun
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
+
+
+class ReleaseInfo(NamedTuple):
+    """Information about a created release"""
+
+    id: int
+    upload_url: str
+    assets: list[dict[str, Any]]
 
 
 # Add a mime type for wheels
@@ -210,7 +218,7 @@ class Github(RemoteHvcsBase):
         prerelease: bool = False,
         assets: list[str] | None = None,
         noop: bool = False,
-    ) -> int:
+    ) -> ReleaseInfo:
         """
         Create a new release
 
@@ -224,7 +232,7 @@ class Github(RemoteHvcsBase):
 
         :param assets: a list of artifacts to upload to the release
 
-        :return: the ID of the release
+        :return: ReleaseInfo containing the release ID, upload URL, and asset information
         """
         if noop:
             noop_report(
@@ -247,7 +255,7 @@ class Github(RemoteHvcsBase):
                         ],
                     )
                 )
-            return -1
+            return ReleaseInfo(id=-1, upload_url="", assets=[])
 
         logger.info("Creating release for tag %s", tag)
         releases_endpoint = self.create_api_url(
@@ -268,18 +276,22 @@ class Github(RemoteHvcsBase):
         response.raise_for_status()
 
         try:
-            release_id: int = response.json()["id"]
+            release_data = response.json()
+            release_id: int = release_data["id"]
+            upload_url: str = release_data["upload_url"].replace("{?name,label}", "")
             logger.info("Successfully created release with ID: %s", release_id)
         except JSONDecodeError as err:
             raise UnexpectedResponse("Unreadable json response") from err
         except KeyError as err:
-            raise UnexpectedResponse("JSON response is missing an id") from err
+            raise UnexpectedResponse("JSON response is missing required keys") from err
 
+        asset_info: list[dict[str, Any]] = []
         errors = []
         for asset in assets or []:
             logger.info("Uploading asset %s", asset)
             try:
-                self.upload_release_asset(release_id, asset)
+                asset_data = self.upload_release_asset(release_id, asset)
+                asset_info.append(asset_data)
             except HTTPError as err:
                 errors.append(
                     AssetUploadError(f"Failed asset upload for {asset}").with_traceback(
@@ -288,7 +300,7 @@ class Github(RemoteHvcsBase):
                 )
 
         if len(errors) < 1:
-            return release_id
+            return ReleaseInfo(id=release_id, upload_url=upload_url, assets=asset_info)
 
         for error in errors:
             logger.exception(error)
@@ -349,13 +361,13 @@ class Github(RemoteHvcsBase):
     @logged_function(logger)
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> int:
+    ) -> ReleaseInfo:
         """
         Post release changelog
         :param tag: The version number
         :param release_notes: The release notes for this version
         :param prerelease: Whether or not this release should be created as a prerelease
-        :return: The status of the request
+        :return: ReleaseInfo containing the release ID, upload URL, and asset information
         """
         logger.info("Creating release for %s", tag)
         try:
@@ -372,7 +384,14 @@ class Github(RemoteHvcsBase):
 
         logger.debug("Found existing release %s, updating", release_id)
         # If this errors we let it die
-        return self.edit_release_notes(release_id, release_notes)
+        updated_id = self.edit_release_notes(release_id, release_notes)
+
+        # Get the upload_url for the existing release
+        upload_url = self.asset_upload_url(release_id)
+        if upload_url is None:
+            upload_url = ""
+
+        return ReleaseInfo(id=updated_id, upload_url=upload_url, assets=[])
 
     @logged_function(logger)
     @suppress_not_found
@@ -404,14 +423,14 @@ class Github(RemoteHvcsBase):
     @logged_function(logger)
     def upload_release_asset(
         self, release_id: int, file: str, label: str | None = None
-    ) -> bool:
+    ) -> dict[str, Any]:
         """
         Upload an asset to an existing release
         https://docs.github.com/rest/reference/repos#upload-a-release-asset
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
         :param label: Optional custom label for this file
-        :return: The status of the request
+        :return: The asset information from the API response
         """
         url = self.asset_upload_url(release_id)
         if url is None:
@@ -445,7 +464,16 @@ class Github(RemoteHvcsBase):
             response.status_code,
         )
 
-        return True
+        try:
+            asset_data = response.json()
+            # Remove the uploader field as specified in issue #401
+            asset_data.pop("uploader", None)
+        except JSONDecodeError as err:
+            raise UnexpectedResponse(
+                "Unreadable json response from asset upload"
+            ) from err
+        else:
+            return asset_data
 
     @logged_function(logger)
     def upload_dists(self, tag: str, dist_glob: str) -> int:

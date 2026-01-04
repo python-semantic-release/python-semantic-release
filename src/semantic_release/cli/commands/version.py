@@ -302,7 +302,9 @@ def build_distributions(
         rprint("[bold green]Build completed successfully!")
     except subprocess.CalledProcessError as exc:
         logger.exception(exc)
-        logger.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
+        logger.error(
+            "Build command failed with exit code %s", exc.returncode
+        )  # noqa: TRY400
         raise BuildDistributionsError from exc
 
 
@@ -826,13 +828,24 @@ def version(  # noqa: C901
     exception: Exception | None = None
     help_message = ""
     try:
-        hvcs_client.create_release(
+        release_result = hvcs_client.create_release(
             tag=new_version.as_tag(),
             release_notes=release_notes,
             prerelease=new_version.is_prerelease,
             assets=assets,
             noop=opts.noop,
         )
+        # Update GitHub Actions output with release information
+        # Only Github returns ReleaseInfo with asset details
+        if isinstance(hvcs_client, Github):
+            from semantic_release.hvcs.github import ReleaseInfo
+
+            if isinstance(release_result, ReleaseInfo):
+                gha_output.release_id = release_result.id
+                gha_output.upload_url = release_result.upload_url
+                gha_output.assets = release_result.assets
+            elif isinstance(release_result, int):
+                gha_output.release_id = release_result
     except HTTPError as err:
         exception = err
     except UnexpectedResponse as err:
