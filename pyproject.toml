@@ -62,7 +62,7 @@ build = [
 docs = [
   "Sphinx ~= 7.4",
   "sphinxcontrib-apidoc == 0.6.0",
-  "sphinx-autobuild == 2024.2.4",
+  "sphinx-autobuild == 2025.8.25",
   "furo ~= 2025.9",
 ]
 test = [
