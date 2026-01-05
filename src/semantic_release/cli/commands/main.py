@@ -30,8 +30,8 @@ LOG_LEVELS = [
 ]
 
 
-class Cli(click.MultiCommand):
-    """Root MultiCommand for the semantic-release CLI"""
+class Cli(click.Group):
+    """Root Group for the semantic-release CLI"""
 
     class SubCmds(Enum):
         """Subcommand import definitions"""

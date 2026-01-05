@@ -76,8 +76,8 @@ jobs:
       # It was a bit of overkill before testing every minor version, and since this project is all about
       # SemVer, we should expect Python to adhere to that model to. Therefore Only test across 2 OS's but
       # the lowest supported minor version and the latest stable minor version.
-      python-versions-linux: '["3.8", "3.14"]'
-      python-versions-windows: '["3.8", "3.14"]'
+      python-versions-linux: '["3.10", "3.14"]'
+      python-versions-windows: '["3.10", "3.14"]'
       files-changed: ${{ needs.eval-changes.outputs.any-file-changes }}
       build-files-changed: ${{ needs.eval-changes.outputs.build-changes }}
       ci-files-changed: ${{ needs.eval-changes.outputs.ci-changes }}

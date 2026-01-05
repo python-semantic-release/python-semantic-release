@@ -77,7 +77,7 @@ permissions: {}
 
 
 env:
-  LOWEST_PYTHON_VERSION: '3.8'
+  LOWEST_PYTHON_VERSION: '3.10'
   COMMON_PYTHON_VERSION: '3.11'
 
 

@@ -65,7 +65,7 @@ def test_main_no_args_passes_w_help_text():
 
     cli_cmd = [MAIN_PROG_NAME]
     result = CliRunner().invoke(main, prog_name=cli_cmd[0])
-    assert_successful_exit_code(result, cli_cmd)
+    assert_exit_code(2, result, cli_cmd)
     assert "Usage: " in result.output
 
 
