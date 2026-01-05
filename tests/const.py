@@ -39,7 +39,7 @@ MAIN_PROG_NAME = str(semantic_release.__name__).replace("_", "-")
 SUCCESS_EXIT_CODE = 0
 
 CHANGELOG_SUBCMD = Cli.SubCmds.CHANGELOG.name.lower()
-GENERATE_CONFIG_SUBCMD = Cli.SubCmds.GENERATE_CONFIG.name.lower()
+GENERATE_CONFIG_SUBCMD = Cli.SubCmds.GENERATE_CONFIG.name.lower().replace("_", "-")
 PUBLISH_SUBCMD = Cli.SubCmds.PUBLISH.name.lower()
 VERSION_SUBCMD = Cli.SubCmds.VERSION.name.lower()
 
