@@ -40,6 +40,7 @@ dependencies = [
   "rich ~= 14.0",
   "shellingham ~= 1.5",
   "Deprecated ~= 1.2",  # Backport of deprecated decorator for python 3.8
+  "universal-pathlib ~= 0.2.0",
 ]
 
 [project.scripts]
