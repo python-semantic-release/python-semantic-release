@@ -77,6 +77,20 @@ def default_gl_client(
             False,
         ),
         (
+            # Gather CI_JOB_TOKEN from environment, different from token does not override
+            {"CI_JOB_TOKEN": "job_token_123"},
+            None,
+            f"https://{Gitlab.DEFAULT_DOMAIN}",
+            False,
+        ),
+        (
+            # Gather CI_JOB_TOKEN from environment
+            {"CI_JOB_TOKEN": "abc123"},
+            None,
+            f"https://{Gitlab.DEFAULT_DOMAIN}",
+            False,
+        ),
+        (
             # Custom domain with path prefix (derives from environment)
             {"CI_SERVER_URL": "https://special.custom.server/vcs/"},
             None,
@@ -135,7 +149,16 @@ def test_gitlab_client_init(
 
         # Evaluate (expected -> actual)
         assert expected_hvcs_domain == client.hvcs_domain.url
-        assert token == client.token
+        if "CI_JOB_TOKEN" in patched_os_environ and (
+            patched_os_environ["CI_JOB_TOKEN"] == token or not token
+        ):
+            assert client._client.job_token == patched_os_environ["CI_JOB_TOKEN"]
+            assert client._client.private_token is None
+            assert client.token == patched_os_environ["CI_JOB_TOKEN"]
+        else:
+            assert client._client.job_token is None
+            assert client._client.private_token == token
+            assert token == client.token
         assert remote_url == client._remote_url
 
 
