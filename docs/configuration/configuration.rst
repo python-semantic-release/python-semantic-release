@@ -1326,6 +1326,10 @@ colon-separated definition with either 2 or 3 parts. The 2-part definition inclu
 the file path and the variable name. Newly with v9.20.0, it also accepts
 an optional 3rd part to allow configuration of the format type.
 
+As of ${NEW_RELEASE_TAG}, the ``version_variables`` option also supports entire file
+replacement by using an asterisk (``*``) as the pattern/variable name. This is useful
+for files that contain only a version number, such as ``VERSION`` files.
+
 **Available Format Types**
 
 - ``nf``: Number format (ex. ``1.2.3``)
@@ -1348,6 +1352,9 @@ version numbers.
         "src/semantic_release/__init__.py:__version__",  # Implied Default: Number format
         "docs/conf.py:version:nf",                       # Number format for sphinx docs
         "kustomization.yml:newTag:tf",                   # Tag format
+        # File replacement (entire file content is replaced with version)
+        "VERSION:*:nf",                                  # Replace entire file with number format
+        "RELEASE:*:tf",                                  # Replace entire file with tag format
     ]
 
 First, the ``__version__`` variable in ``src/semantic_release/__init__.py`` will be updated
@@ -1370,7 +1377,7 @@ with the next version using the `SemVer`_ number format because of the explicit 
     - version = "0.1.0"
     + version = "0.2.0"
 
-Lastly, the ``newTag`` variable in ``kustomization.yml`` will be updated with the next version
+Then, the ``newTag`` variable in ``kustomization.yml`` will be updated with the next version
 with the next version using the configured :ref:`config-tag_format` because the definition
 included ``tf``.
 
@@ -1383,10 +1390,34 @@ included ``tf``.
     -     newTag: v0.1.0
     +     newTag: v0.2.0
 
+Next, the entire content of the ``VERSION`` file will be replaced with the next version
+using the `SemVer`_ number format (because of the ``*`` pattern and ``nf`` format type).
+
+.. code-block:: diff
+
+    diff a/VERSION b/VERSION
+
+    - 0.1.0
+    + 0.2.0
+
+Finally, the entire content of the ``RELEASE`` file will be replaced with the next version
+using the configured :ref:`config-tag_format` (because of the ``*`` pattern and ``tf`` format type).
+
+.. code-block:: diff
+
+    diff a/RELEASE b/RELEASE
+
+    - v0.1.0
+    + v0.2.0
+
 **How It works**
 
-Each version variable will be transformed into a Regular Expression that will be used
-to substitute the version number in the file. The replacement algorithm is **ONLY** a
+Each version variable will be transformed into either a Regular Expression (for pattern-based
+replacement) or a file replacement operation (when using the ``*`` pattern).
+
+**Pattern-Based Replacement**
+
+When a variable name is specified (not ``*``), the replacement algorithm is **ONLY** a
 pattern match and replace. It will **NOT** evaluate the code nor will PSR understand
 any internal object structures (ie. ``file:object.version`` will not work).
 
@@ -1419,6 +1450,24 @@ regardless of file extension because it looks for a matching pattern string.
     This will also work for TOML but we recommend using :ref:`config-version_toml` for
     TOML files as it actually will interpret the TOML file and replace the version
     number before writing the file back to disk.
+
+**File Replacement**
+
+When the pattern/variable name is specified as an asterisk (``*``), the entire file content
+will be replaced with the version string. This is useful for files that contain only a
+version number, such as ``VERSION`` files or similar single-line version storage files.
+
+The file replacement operation:
+
+1. Reads the current file content if it exists (any whitespace is stripped)
+2. Sets or replaces the entire file content with the new version string
+3. Writes the new version back to the file (with only a single trailing newline)
+
+The format type (``nf`` or ``tf``) determines whether the version is written as a
+plain number (e.g., ``1.2.3``) or with the :ref:`config-tag_format` prefix/suffix
+(e.g., ``v1.2.3``).
+
+**Examples of Pattern-Based Replacement**
 
 This is a comprehensive list (but not all variations) of examples where the following versions
 will be matched and replaced by the new version:
