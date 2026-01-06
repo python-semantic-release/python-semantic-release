@@ -195,7 +195,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 @pytest.fixture
 def cli_runner() -> CliRunner:
-    return CliRunner(mix_stderr=False)
+    return CliRunner()
 
 
 @pytest.fixture(scope="session")
@@ -211,7 +211,7 @@ def run_cli(clean_os_environment: dict[str, str]) -> RunCliFn:
         # Prevent logs from being propagated to the root logger (pytest)
         logger.propagate = False
 
-        cli_runner = CliRunner(mix_stderr=False)
+        cli_runner = CliRunner()
         env_vars = {**clean_os_environment, **(env or {})}
         args = ["-vv", *(argv or [])]
 

@@ -39,16 +39,6 @@ on:
         type: boolean
         required: true
         default: true
-      python3-9:
-        description: 'Test Python 3.9?'
-        type: boolean
-        required: true
-        default: true
-      python3-8:
-        description: 'Test Python 3.8?'
-        type: boolean
-        required: true
-        default: true
 
 
 # default token permissions = none
@@ -78,8 +68,6 @@ jobs:
             import json, os
 
             version_list = list(filter(None, [
-                "3.8" if str(os.getenv("INPUT_PY3_8", False)).lower() == str(True).lower() else None,
-                "3.9" if str(os.getenv("INPUT_PY3_9", False)).lower() == str(True).lower() else None,
                 "3.10" if str(os.getenv("INPUT_PY3_10", False)).lower() == str(True).lower() else None,
                 "3.11" if str(os.getenv("INPUT_PY3_11", False)).lower() == str(True).lower() else None,
                 "3.12" if str(os.getenv("INPUT_PY3_12", False)).lower() == str(True).lower() else None,
@@ -105,8 +93,6 @@ jobs:
       - name: Evaluate | Generate Test Matrix
         id: test-matrix
         env:
-          INPUT_PY3_8: ${{ inputs.python3-8 }}
-          INPUT_PY3_9: ${{ inputs.python3-9 }}
           INPUT_PY3_10: ${{ inputs.python3-10 }}
           INPUT_PY3_11: ${{ inputs.python3-11 }}
           INPUT_PY3_12: ${{ inputs.python3-12 }}

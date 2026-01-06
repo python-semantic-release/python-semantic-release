@@ -24,7 +24,7 @@ tag and annotating releases on a remote Git server with version-specific release
 
 ### Installation
 
-Requires 3.9+ for development dependencies, but runtime supports 3.8+.
+Requires 3.10+ for development dependencies and runtime.
 
 ```bash
 # Set up for development
@@ -499,10 +499,10 @@ itself to perform the release steps. The release process includes:
 
 ## Python Version Support
 
-- Runtime Minimum: Python 3.8
-- Development Dependencies: Python 3.9+
-- Tested on: Python 3.8, 3.14
-- Target version for type checking: Python 3.8
+- Runtime Minimum: Python 3.10
+- Development Dependencies: Python 3.10+
+- Tested on: Python 3.10, 3.14
+- Target version for type checking: Python 3.10
 
 ## Dependencies to Know
 

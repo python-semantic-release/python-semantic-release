@@ -8,13 +8,11 @@ build-backend = "setuptools.build_meta"
 name = "python-semantic-release"
 version = "10.5.3"
 description = "Automatic Semantic Versioning for Python projects"
-requires-python = "~= 3.8"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -27,9 +25,9 @@ authors = [
   { name = "codejedi365", email = "codejedi365@gmail.com" },
 ]
 dependencies = [
-  "click ~= 8.1.0",
+  "click ~= 8.3.0",
   "click-option-group ~= 0.5",
-  "gitpython ~= 3.0",
+  "gitpython ~= 3.1",
   "requests ~= 2.25",
   "jinja2 ~= 3.1",
   "python-gitlab >= 4.0.0, < 7.0.0",
@@ -173,11 +171,11 @@ commands =
 [testenv:ruff]
 deps = .[dev]
 commands =
-    ruff check . --statistics --output-format=text
+    ruff check . --statistics
 """
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 show_column_numbers = true
 show_error_context = true
 pretty = true
