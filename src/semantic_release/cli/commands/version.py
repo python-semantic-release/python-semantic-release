@@ -343,7 +343,7 @@ def _post_release_announcements(
                             hvcs_client=hvcs_client,
                             issue_id=pr_ref,
                             template_name=".pr_publish_announcement.md.j2",
-                            version=new_version,
+                            release=release,
                             release_notes=release_notes,
                             runtime=runtime,
                         )
@@ -357,7 +357,7 @@ def _post_release_announcements(
                             hvcs_client=hvcs_client,
                             issue_id=issue_id,
                             template_name=".issue_resolution_announcement.md.j2",
-                            version=new_version,
+                            release=release,
                             release_notes=release_notes,
                             runtime=runtime,
                         )
@@ -376,7 +376,7 @@ def _post_announcement_to_issue(
     hvcs_client: Github,
     issue_id: str,
     template_name: str,
-    version: Version,
+    release: dict,
     release_notes: str,
     runtime: CliContextObj,
 ) -> None:
@@ -386,7 +386,7 @@ def _post_announcement_to_issue(
     :param hvcs_client: The GitHub HVCS client
     :param issue_id: The issue or PR number
     :param template_name: The template file name to render
-    :param version: The new version being released
+    :param release: The release object containing version and other metadata
     :param release_notes: The generated release notes
     :param runtime: The CLI runtime context
     """
@@ -394,7 +394,7 @@ def _post_announcement_to_issue(
         # Render the announcement template
         template = runtime.template_environment.get_template(template_name)
         announcement = template.render(
-            version=str(version),
+            release=release,
             release_notes=release_notes,
         )
 
