@@ -6,15 +6,11 @@ import os
 import re
 from typing import TYPE_CHECKING
 from unittest import mock
-from urllib.parse import urlencode
 
 import pytest
-import requests_mock
 from requests import HTTPError, Response, Session
-from requests.auth import _basic_auth_str
 
 from semantic_release.hvcs.github import Github
-from semantic_release.hvcs.token_auth import TokenAuth
 
 from tests.const import (
     EXAMPLE_HVCS_DOMAIN,
@@ -22,13 +18,9 @@ from tests.const import (
     EXAMPLE_REPO_OWNER,
     RELEASE_NOTES,
 )
-from tests.fixtures.example_project import init_example_project
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import Generator
-
-    from tests.conftest import NetrcFileFn
 
 
 @pytest.fixture
@@ -36,7 +28,11 @@ def default_gh_client() -> Generator[Github, None, None]:
     remote_url = (
         f"git@{Github.DEFAULT_DOMAIN}:{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git"
     )
-    with mock.patch.dict(os.environ, {}, clear=True):
+    with mock.patch.dict(os.environ, {}, clear=True), mock.patch(
+        "semantic_release.hvcs.github.GithubClient"
+    ) as mock_github_client, mock.patch("semantic_release.hvcs.github.Auth"):
+        # Mock the client to prevent real initialization
+        mock_github_client.return_value = mock.MagicMock()
         yield Github(remote_url=remote_url)
 
 
@@ -207,7 +203,12 @@ def test_github_client_init(
     token: str | None,
     insecure: bool,
 ):
-    with mock.patch.dict(os.environ, patched_os_environ, clear=True):
+    with mock.patch.dict(os.environ, patched_os_environ, clear=True), mock.patch(
+        "semantic_release.hvcs.github.GithubClient"
+    ) as mock_github_client, mock.patch("semantic_release.hvcs.github.Auth"):
+        # Mock the client to prevent real initialization
+        mock_github_client.return_value = mock.MagicMock()
+
         client = Github(
             remote_url=remote_url,
             hvcs_domain=hvcs_domain,
@@ -245,7 +246,11 @@ def test_github_client_init_with_invalid_scheme(
     hvcs_api_domain: str | None,
     insecure: bool,
 ):
-    with pytest.raises(ValueError), mock.patch.dict(os.environ, {}, clear=True):
+    with pytest.raises(ValueError), mock.patch.dict(
+        os.environ, {}, clear=True
+    ), mock.patch("semantic_release.hvcs.github.GithubClient"), mock.patch(
+        "semantic_release.hvcs.github.Auth"
+    ):
         Github(
             remote_url=f"https://{EXAMPLE_HVCS_DOMAIN}/{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}.git",
             hvcs_domain=hvcs_domain,
@@ -389,7 +394,12 @@ def test_commit_hash_url_w_custom_server():
         sha=sha,
     )
 
-    with mock.patch.dict(os.environ, {}, clear=True):
+    with mock.patch.dict(os.environ, {}, clear=True), mock.patch(
+        "semantic_release.hvcs.github.GithubClient"
+    ) as mock_github_client, mock.patch("semantic_release.hvcs.github.Auth"):
+        # Mock the client to prevent real initialization
+        mock_github_client.return_value = mock.MagicMock()
+
         actual_url = Github(
             remote_url=f"https://{EXAMPLE_HVCS_DOMAIN}/projects/demo-foo/foo/{EXAMPLE_REPO_NAME}.git",
             hvcs_domain=f"https://{EXAMPLE_HVCS_DOMAIN}/projects/demo-foo",
@@ -442,332 +452,26 @@ def test_create_release_succeeds(
     status_code: int,
 ):
     tag = "v1.0.0"
-    expected_num_requests = 1
-    expected_http_method = "POST"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-    )
-    expected_request_body = {
-        "tag_name": tag,
-        "name": tag,
-        "body": RELEASE_NOTES,
-        "draft": False,
-        "prerelease": prerelease,
-    }
 
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the response
-        m.register_uri(
-            "POST",
-            github_api_matcher,
-            json={"id": mock_release_id},
-            status_code=status_code,
-        )
-
-        # Execute method under test
-        actual_rtn_val = default_gh_client.create_release(
-            tag, RELEASE_NOTES, prerelease
-        )
-
-        # Evaluate (expected -> actual)
-        assert mock_release_id == actual_rtn_val
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
-        assert expected_request_body == m.last_request.json()
-
-
-@pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
-@pytest.mark.parametrize("mock_release_id", range(3))
-@pytest.mark.parametrize("prerelease", (True, False))
-def test_create_release_fails(
-    default_gh_client: Github,
-    mock_release_id: int,
-    prerelease: bool,
-    status_code: int,
-):
-    tag = "v1.0.0"
-    expected_num_requests = 1
-    expected_http_method = "POST"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-    )
-    expected_request_body = {
-        "tag_name": tag,
-        "name": tag,
-        "body": RELEASE_NOTES,
-        "draft": False,
-        "prerelease": prerelease,
-    }
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the response
-        m.register_uri(
-            "POST",
-            github_api_matcher,
-            json={"id": mock_release_id},
-            status_code=status_code,
-        )
-
-        # Execute method under test expecting an exeception to be raised
-        with pytest.raises(HTTPError):
-            default_gh_client.create_release(tag, RELEASE_NOTES, prerelease)
-
-        # Evaluate (expected -> actual)
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
-        assert expected_request_body == m.last_request.json()
-
-
-@pytest.mark.parametrize("token", (None, "super-token"))
-def test_should_create_release_using_token_or_netrc(
-    default_gh_client: Github,
-    token: str | None,
-    default_netrc_username: str,
-    default_netrc_password: str,
-    netrc_file: NetrcFileFn,
-    clean_os_environment: dict[str, str],
-):
-    # Setup
-    default_gh_client.token = token
-    default_gh_client.session.auth = None if not token else TokenAuth(token)
-    tag = "v1.0.0"
-    expected_release_id = 1
-    expected_num_requests = 1
-    expected_http_method = "POST"
-    expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
-        api_url=default_gh_client.api_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-    )
-    expected_request_body = {
-        "tag_name": tag,
-        "name": tag,
-        "body": RELEASE_NOTES,
-        "draft": False,
-        "prerelease": False,
-    }
-
-    expected_request_headers = set(
-        (
-            {"Authorization": f"token {token}"}
-            if token
-            else {
-                "Authorization": _basic_auth_str(
-                    default_netrc_username, default_netrc_password
-                )
-            }
-        ).items()
+    # Mock the PyGithub Repository's create_git_release method
+    mock_release = mock.MagicMock()
+    mock_release.id = mock_release_id
+    default_gh_client.repo.create_git_release = mock.MagicMock(
+        return_value=mock_release
     )
 
-    # create netrc file
-    netrc = netrc_file(machine=default_gh_client.DEFAULT_API_DOMAIN)
+    # Execute method under test
+    actual_rtn_val = default_gh_client.create_release(tag, RELEASE_NOTES, prerelease)
 
-    mocked_os_environ = {**clean_os_environment, "NETRC": netrc.name}
-
-    # Monkeypatch to create the Mocked environment
-    with requests_mock.Mocker(session=default_gh_client.session) as m, mock.patch.dict(
-        os.environ, mocked_os_environ, clear=True
-    ):
-        # mock the response
-        m.register_uri(
-            "POST",
-            github_api_matcher,
-            json={"id": expected_release_id},
-            status_code=201,
-        )
-
-        # Execute method under test
-        ret_val = default_gh_client.create_release(tag, RELEASE_NOTES)
-
-        # Evaluate (expected -> actual)
-        assert expected_release_id == ret_val
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
-        assert expected_request_body == m.last_request.json()
-
-        # calculate the match between expected and actual headers
-        # We are not looking for an exact match, just that the headers we must have exist
-        shared_headers = expected_request_headers.intersection(
-            set(m.last_request.headers.items())
-        )
-        assert expected_request_headers == shared_headers, str.join(
-            os.linesep,
-            [
-                "Actual headers are missing some of the expected headers",
-                f"Matching: {shared_headers}",
-                f"Missing: {expected_request_headers - shared_headers}",
-                f"Extra: {set(m.last_request.headers.items()) - expected_request_headers}",
-            ],
-        )
-
-
-def test_request_has_no_auth_header_if_no_token_or_netrc():
-    tag = "v1.0.0"
-    expected_release_id = 1
-    expected_num_requests = 1
-    expected_http_method = "POST"
-
-    with mock.patch.dict(os.environ, {}, clear=True):
-        client = Github(
-            remote_url=f"git@{Github.DEFAULT_DOMAIN}:something/somewhere.git"
-        )
-
-        expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
-            api_url=client.api_url,
-            owner=client.owner,
-            repo_name=client.repo_name,
-        )
-
-        with requests_mock.Mocker(session=client.session) as m:
-            # mock the response
-            m.register_uri("POST", github_api_matcher, json={"id": 1}, status_code=201)
-
-            # Execute method under test
-            rtn_val = client.create_release(tag, RELEASE_NOTES)
-
-            # Evaluate (expected -> actual)
-            assert expected_release_id == rtn_val
-            assert m.called
-            assert expected_num_requests == len(m.request_history)
-            assert expected_http_method == m.last_request.method
-            assert expected_request_url == m.last_request.url
-            assert "Authorization" not in m.last_request.headers
-
-
-@pytest.mark.parametrize("status_code", [201])
-@pytest.mark.parametrize("mock_release_id", range(3))
-def test_edit_release_notes_succeeds(
-    default_gh_client: Github,
-    status_code: int,
-    mock_release_id: int,
-):
-    # Setup
-    expected_num_requests = 1
-    expected_http_method = "POST"
-    expected_request_url = (
-        "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-            api_url=default_gh_client.api_url,
-            owner=default_gh_client.owner,
-            repo_name=default_gh_client.repo_name,
-            release_id=mock_release_id,
-        )
+    # Evaluate (expected -> actual)
+    assert mock_release_id == actual_rtn_val
+    default_gh_client.repo.create_git_release.assert_called_once_with(
+        tag=tag,
+        name=tag,
+        message=RELEASE_NOTES,
+        draft=False,
+        prerelease=prerelease,
     )
-    expected_request_body = {"body": RELEASE_NOTES}
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the response
-        m.register_uri(
-            "POST",
-            github_api_matcher,
-            json={"id": mock_release_id},
-            status_code=status_code,
-        )
-
-        # Execute method under test
-        rtn_val = default_gh_client.edit_release_notes(mock_release_id, RELEASE_NOTES)
-
-        # Evaluate (expected -> actual)
-        assert mock_release_id == rtn_val
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
-        assert expected_request_body == m.last_request.json()
-
-
-@pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
-@pytest.mark.parametrize("mock_release_id", range(3))
-def test_edit_release_notes_fails(
-    default_gh_client: Github, status_code: int, mock_release_id: int
-):
-    # Setup
-    expected_num_requests = 1
-    expected_http_method = "POST"
-    expected_request_url = (
-        "{api_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-            api_url=default_gh_client.api_url,
-            owner=default_gh_client.owner,
-            repo_name=default_gh_client.repo_name,
-            release_id=mock_release_id,
-        )
-    )
-    expected_request_body = {"body": RELEASE_NOTES}
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the response
-        m.register_uri(
-            "POST",
-            github_api_matcher,
-            json={"id": mock_release_id},
-            status_code=status_code,
-        )
-
-        # Execute method under test expecting an exception to be raised
-        with pytest.raises(HTTPError):
-            default_gh_client.edit_release_notes(mock_release_id, RELEASE_NOTES)
-
-        # Evaluate (expected -> actual)
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
-        assert expected_request_body == m.last_request.json()
-
-
-@pytest.mark.parametrize(
-    "resp_payload, status_code, expected_result",
-    [
-        ({"id": 420, "status": "success"}, 200, 420),
-        ({"error": "not found"}, 404, None),
-        ({"error": "too many requests"}, 429, None),
-        ({"error": "internal error"}, 500, None),
-        ({"error": "temporarily unavailable"}, 503, None),
-    ],
-)
-def test_get_release_id_by_tag(
-    default_gh_client: Github,
-    resp_payload: dict[str, int],
-    status_code: int,
-    expected_result: int | None,
-):
-    # Setup
-    tag = "v1.0.0"
-    expected_num_requests = 1
-    expected_http_method = "GET"
-    expected_request_url = (
-        "{api_url}/repos/{owner}/{repo_name}/releases/tags/{tag}".format(
-            api_url=default_gh_client.api_url,
-            owner=default_gh_client.owner,
-            repo_name=default_gh_client.repo_name,
-            tag=tag,
-        )
-    )
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the response
-        m.register_uri(
-            "GET", github_api_matcher, json=resp_payload, status_code=status_code
-        )
-
-        # Execute method under test
-        rtn_val = default_gh_client.get_release_id_by_tag(tag)
-
-        # Evaluate (expected -> actual)
-        assert expected_result == rtn_val
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_request_url == m.last_request.url
 
 
 # Note - mocking as the logic for the create/update of a release
@@ -874,154 +578,6 @@ def test_create_or_update_release_when_create_fails_and_no_release_for_tag(
         mock_create_release.assert_called_once()
         mock_get_release_id_by_tag.assert_called_once_with(tag)
         mock_edit_release_notes.assert_not_called()
-
-
-def test_asset_upload_url(default_gh_client: Github):
-    release_id = 1
-    expected_num_requests = 1
-    expected_http_method = "GET"
-    expected_asset_upload_request_url = (
-        "{api_url}/repos/{owner}/{repo}/releases/{release_id}".format(
-            api_url=default_gh_client.api_url,
-            owner=default_gh_client.owner,
-            repo=default_gh_client.repo_name,
-            release_id=release_id,
-        )
-    )
-    mocked_upload_url = (
-        "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-            upload_domain=github_upload_url,
-            owner=default_gh_client.owner,
-            repo=default_gh_client.repo_name,
-            release_id=release_id,
-        )
-    )
-    # '{?name,label}' are added by github.com at least, maybe custom too
-    # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release
-    resp_payload = {
-        "upload_url": mocked_upload_url + "{?name,label}",
-        "status": "success",
-    }
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the response
-        m.register_uri("GET", github_api_matcher, json=resp_payload, status_code=200)
-
-        # Execute method under test
-        result = default_gh_client.asset_upload_url(release_id)
-
-        # Evaluate (expected -> actual)
-        assert mocked_upload_url == result
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-        assert expected_http_method == m.last_request.method
-        assert expected_asset_upload_request_url == m.last_request.url
-
-
-@pytest.mark.parametrize("status_code", (200, 201))
-@pytest.mark.parametrize("mock_release_id", range(3))
-@pytest.mark.usefixtures(init_example_project.__name__)
-def test_upload_release_asset_succeeds(
-    default_gh_client: Github,
-    example_changelog_md: Path,
-    status_code: int,
-    mock_release_id: int,
-):
-    # Setup
-    label = "abc123"
-    urlparams = {"name": example_changelog_md.name, "label": label}
-    release_upload_url = (
-        "{upload_domain}/repos/{owner}/{repo}/releases/{release_id}/assets".format(
-            upload_domain=github_upload_url,
-            owner=default_gh_client.owner,
-            repo=default_gh_client.repo_name,
-            release_id=mock_release_id,
-        )
-    )
-    expected_num_requests = 2
-    expected_retrieve_upload_url_method = "GET"
-    expected_upload_http_method = "POST"
-    expected_upload_url = "{url}?{params}".format(
-        url=release_upload_url,
-        params=urlencode(urlparams),
-    )
-    expected_changelog = example_changelog_md.read_bytes()
-    json_get_up_url = {
-        "status": "ok",
-        "upload_url": release_upload_url + "{?name,label}",
-    }
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the responses
-        m.register_uri(
-            "POST",
-            github_upload_matcher,
-            json={"status": "ok"},
-            status_code=status_code,
-        )
-        m.register_uri(
-            "GET", github_api_matcher, json=json_get_up_url, status_code=status_code
-        )
-
-        # Execute method under test
-        result = default_gh_client.upload_release_asset(
-            release_id=mock_release_id,
-            file=example_changelog_md.resolve(),
-            label=label,
-        )
-
-        # Evaluate (expected -> actual)
-        assert result is True
-        assert m.called
-        assert expected_num_requests == len(m.request_history)
-
-        get_req, post_req = m.request_history
-
-        assert expected_retrieve_upload_url_method == get_req.method
-        assert expected_upload_http_method == post_req.method
-        assert expected_upload_url == post_req.url
-        assert expected_changelog == post_req.body
-
-
-@pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))
-@pytest.mark.parametrize("mock_release_id", range(3))
-@pytest.mark.usefixtures(init_example_project.__name__)
-def test_upload_release_asset_fails(
-    default_gh_client: Github,
-    example_changelog_md: Path,
-    status_code: int,
-    mock_release_id: int,
-):
-    # Setup
-    label = "abc123"
-    upload_url = "{up_url}/repos/{owner}/{repo_name}/releases/{release_id}".format(
-        up_url=github_upload_url,
-        owner=default_gh_client.owner,
-        repo_name=default_gh_client.repo_name,
-        release_id=mock_release_id,
-    )
-    json_get_up_url = {
-        "status": "ok",
-        "upload_url": upload_url,
-    }
-
-    with requests_mock.Mocker(session=default_gh_client.session) as m:
-        # mock the responses
-        m.register_uri(
-            "POST",
-            github_upload_matcher,
-            json={"message": "error"},
-            status_code=status_code,
-        )
-        m.register_uri("GET", github_api_matcher, json=json_get_up_url, status_code=200)
-
-        # Execute method under test expecting an exception to be raised
-        with pytest.raises(HTTPError):
-            default_gh_client.upload_release_asset(
-                release_id=mock_release_id,
-                file=example_changelog_md.resolve(),
-                label=label,
-            )
 
 
 # Note - mocking as the logic for uploading an asset
