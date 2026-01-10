@@ -168,15 +168,28 @@ def write_changelog_files(
     hvcs_client: HvcsBase,
     noop: bool = False,
 ) -> list[str]:
-    project_dir = Path(runtime_ctx.repo_dir)
+    output_dir = runtime_ctx.output_dir
     template_dir = runtime_ctx.template_dir
+
+    # Determine the changelog file path:
+    # - If output_dir is the repo root (default), use changelog_file as configured
+    #   (preserves backward compatibility for changelog_file with directory component)
+    # - If output_dir is explicitly set, use output_dir with just the filename
+    # TODO: v11 simplification - once changelog_file is renamed to changelog_filename
+    # and directory components are disallowed, this conditional can be replaced with:
+    #   changelog_file = output_dir / runtime_ctx.changelog_file.name
+    # See DefaultChangelogTemplatesConfig in config.py for details.
+    if output_dir == runtime_ctx.repo_dir:
+        changelog_file = runtime_ctx.changelog_file
+    else:
+        changelog_file = output_dir / runtime_ctx.changelog_file.name
 
     changelog_context = make_changelog_context(
         hvcs_client=hvcs_client,
         release_history=release_history,
         mode=runtime_ctx.changelog_mode,
         insertion_flag=runtime_ctx.changelog_insertion_flag,
-        prev_changelog_file=runtime_ctx.changelog_file,
+        prev_changelog_file=changelog_file,
         mask_initial_release=runtime_ctx.changelog_mask_initial_release,
     )
 
@@ -203,7 +216,7 @@ def write_changelog_files(
             environment=changelog_context.bind_to_environment(
                 runtime_ctx.template_environment
             ),
-            destination_dir=project_dir,
+            destination_dir=output_dir,
             noop=noop,
         )
 
@@ -212,8 +225,8 @@ def write_changelog_files(
     )
     return [
         write_default_changelog(
-            changelog_file=runtime_ctx.changelog_file,
-            destination_dir=project_dir,
+            changelog_file=changelog_file,
+            destination_dir=output_dir,
             output_format=runtime_ctx.changelog_output_format,
             changelog_context=changelog_context,
             changelog_style=runtime_ctx.changelog_style,
