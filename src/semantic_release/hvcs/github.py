@@ -10,10 +10,8 @@ from pathlib import PurePosixPath
 from re import compile as regexp
 from typing import TYPE_CHECKING
 
-from github import Auth
-from github import Github as GithubClient
-from github import GithubException
-from requests import HTTPError, JSONDecodeError
+from github import Auth, Github as GithubClient, GithubException
+from requests import HTTPError
 from urllib3.util.url import Url, parse_url
 
 from semantic_release.cli.util import noop_report
@@ -31,7 +29,6 @@ from semantic_release.hvcs.util import build_requests_session, suppress_not_foun
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
 
-    from github.GitRelease import GitRelease
     from github.Repository import Repository
 
 
@@ -189,7 +186,12 @@ class Github(RemoteHvcsBase):
 
         # Initialize PyGithub client with appropriate base_url
         base_url = self._determine_github_api_base_url()
-        self._github_client = GithubClient(auth=self._github_auth, base_url=base_url)
+        if base_url is not None:
+            self._github_client = GithubClient(
+                auth=self._github_auth, base_url=base_url
+            )
+        else:
+            self._github_client = GithubClient(auth=self._github_auth)
 
     def _determine_github_api_base_url(self) -> str | None:
         """
@@ -216,8 +218,12 @@ class Github(RemoteHvcsBase):
         Raises
         ------
         GithubException: If the repository cannot be accessed
+
         """
         if self._repository is None:
+            if self._github_client is None:
+                msg = "GitHub client not initialized"
+                raise RuntimeError(msg)
             try:
                 self._repository = self._github_client.get_repo(
                     f"{self.owner}/{self.repo_name}"
@@ -356,13 +362,14 @@ class Github(RemoteHvcsBase):
         """
         try:
             release = self.repo.get_release(tag)
-            return release.id
         except GithubException as err:
             if err.status == 404:
                 logger.debug("Release not found for tag %s", tag)
                 return None
             logger.error("Failed to get release by tag %s: %s", tag, err)
             raise UnexpectedResponse(f"Failed to get release by tag: {err}") from err
+        else:
+            return release.id
 
     @logged_function(logger)
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
@@ -383,11 +390,12 @@ class Github(RemoteHvcsBase):
                 draft=release.draft,
                 prerelease=release.prerelease,
             )
-            logger.debug("Successfully updated release %s", release_id)
-            return release_id
         except GithubException as err:
             logger.error("Failed to edit release notes for %s: %s", release_id, err)
             raise UnexpectedResponse(f"Failed to edit release: {err}") from err
+        else:
+            logger.debug("Successfully updated release %s", release_id)
+            return release_id
 
     @logged_function(logger)
     def create_or_update_release(
@@ -467,13 +475,6 @@ class Github(RemoteHvcsBase):
                 content_type=content_type,
             )
 
-            logger.debug(
-                "Successfully uploaded %s to GitHub release %s",
-                file,
-                release_id,
-            )
-            return True
-
         except GithubException as err:
             logger.error(
                 "Failed to upload asset %s to release %s: %s",
@@ -482,6 +483,13 @@ class Github(RemoteHvcsBase):
                 err,
             )
             raise AssetUploadError(f"Failed to upload {file}") from err
+        else:
+            logger.debug(
+                "Successfully uploaded %s to GitHub release %s",
+                file,
+                release_id,
+            )
+            return True
 
     @logged_function(logger)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
@@ -596,11 +604,14 @@ class Github(RemoteHvcsBase):
             logger.debug("Posting comment to issue/PR %d", issue_id)
             issue = self.repo.get_issue(issue_id)
             comment = issue.create_comment(body)
-            logger.info("Posted comment %d to issue/PR %d", comment.id, issue_id)
-            return comment.id
         except GithubException as err:
             logger.error("Failed to post comment to issue/PR %d: %s", issue_id, err)
-            raise UnexpectedResponse(f"Failed to post comment to issue {issue_id}") from err
+            raise UnexpectedResponse(
+                f"Failed to post comment to issue {issue_id}"
+            ) from err
+        else:
+            logger.info("Posted comment %d to issue/PR %d", comment.id, issue_id)
+            return comment.id
 
     @logged_function(logger)
     def check_issue_state(self, issue_id: int) -> str:
@@ -614,11 +625,14 @@ class Github(RemoteHvcsBase):
         try:
             logger.debug("Checking state of issue/PR %d", issue_id)
             issue = self.repo.get_issue(issue_id)
-            logger.debug("Issue/PR %d state is %s", issue_id, issue.state)
-            return issue.state
         except GithubException as err:
             logger.error("Failed to get state of issue/PR %d: %s", issue_id, err)
-            raise UnexpectedResponse(f"Failed to get state of issue {issue_id}") from err
+            raise UnexpectedResponse(
+                f"Failed to get state of issue {issue_id}"
+            ) from err
+        else:
+            logger.debug("Issue/PR %d state is %s", issue_id, issue.state)
+            return issue.state
 
     @logged_function(logger)
     def add_labels_to_issue(self, issue_id: int, labels: list[str]) -> None:
@@ -636,7 +650,9 @@ class Github(RemoteHvcsBase):
             logger.info("Added labels %s to issue/PR %d", labels, issue_id)
         except GithubException as err:
             logger.error("Failed to add labels to issue/PR %d: %s", issue_id, err)
-            raise UnexpectedResponse(f"Failed to add labels to issue {issue_id}") from err
+            raise UnexpectedResponse(
+                f"Failed to add labels to issue {issue_id}"
+            ) from err
 
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (

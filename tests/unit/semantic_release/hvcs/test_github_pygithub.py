@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import os
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
-from github import Auth, GithubException
-from github import Github as GithubClient
+from github import Auth, Github as GithubClient, GithubException
 from github.GitRelease import GitRelease
 from github.Repository import Repository
 from requests import Session
@@ -964,6 +963,7 @@ class TestGithubCreateOrUpdateRelease:
         mock_release.update_release.assert_called_once()
         assert release_id == 12345
 
+
 # ============================================================================
 # Test Issue/PR Announcement Methods
 # ============================================================================
@@ -1042,7 +1042,9 @@ class TestGithubPostComment:
         )
 
         # Act & Assert
-        with pytest.raises(UnexpectedResponse, match="Failed to post comment to issue 123"):
+        with pytest.raises(
+            UnexpectedResponse, match="Failed to post comment to issue 123"
+        ):
             github_hvcs.post_comment(issue_id, comment_body)
 
 
@@ -1144,7 +1146,9 @@ class TestGithubCheckIssueState:
         )
 
         # Act & Assert
-        with pytest.raises(UnexpectedResponse, match="Failed to get state of issue 999"):
+        with pytest.raises(
+            UnexpectedResponse, match="Failed to get state of issue 999"
+        ):
             github_hvcs.check_issue_state(issue_id)
 
 
@@ -1247,5 +1251,7 @@ class TestGithubAddLabelsToIssue:
         )
 
         # Act & Assert
-        with pytest.raises(UnexpectedResponse, match="Failed to add labels to issue 333"):
+        with pytest.raises(
+            UnexpectedResponse, match="Failed to add labels to issue 333"
+        ):
             github_hvcs.add_labels_to_issue(issue_id, labels)

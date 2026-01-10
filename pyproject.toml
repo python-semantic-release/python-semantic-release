@@ -403,7 +403,7 @@ section-order = [
 sections = { "tests" = ["tests"] }
 
 [tool.vulture]
-ignore_names = ["change_to_ex_proj_dir", "init_example_project"]
+ignore_names = ["change_to_ex_proj_dir", "init_example_project", "pluginmanager", "base_repo_def", "init_example_monorepo"]
 
 [tool.semantic_release]
 logging_use_named_masks = true
