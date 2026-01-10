@@ -68,7 +68,11 @@ class Gitlab(RemoteHvcsBase):
             ).url.rstrip("/")
         )
 
-        self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
+        self._client = gitlab.Gitlab(
+            self.hvcs_domain.url,
+            private_token=self.token,
+            ssl_verify=not allow_insecure,
+        )
         self._api_url = parse_url(self._client.api_url)
 
     @property
