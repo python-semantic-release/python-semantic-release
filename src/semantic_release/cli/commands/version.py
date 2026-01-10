@@ -23,6 +23,7 @@ from semantic_release.cli.github_actions_output import (
     VersionGitHubActionsOutput,
 )
 from semantic_release.cli.util import noop_report, rprint
+from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import (
@@ -296,6 +297,118 @@ def build_distributions(
         logger.exception(exc)
         logger.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
         raise BuildDistributionsError from exc
+
+
+def _post_release_announcements(
+    hvcs_client: Github,
+    release_history: ReleaseHistory,
+    new_version: Version,
+    release_notes: str,
+    runtime: CliContextObj,
+) -> None:
+    """
+    Post release announcements to linked issues and PRs.
+
+    Extracts all linked issues and PRs from commits in the release,
+    renders appropriate announcement templates, and posts comments.
+
+    :param hvcs_client: The GitHub HVCS client
+    :param release_history: The release history containing all commits
+    :param new_version: The new version being released
+    :param release_notes: The generated release notes
+    :param runtime: The CLI runtime context
+    """
+    try:
+        # Get the release data for this version
+        release = release_history.released.get(new_version)
+        if not release:
+            logger.warning("Could not find release data for version %s", new_version)
+            return
+
+        # Track processed issues/PRs to avoid duplicates
+        processed_issues: set[str] = set()
+
+        # Extract all commits from the release
+        for commits in release["elements"].values():
+            for commit in commits:
+                # Only process ParsedCommit objects (not ParseError)
+                if not isinstance(commit, ParsedCommit):
+                    continue
+
+                # Handle the linked PR first
+                if commit.linked_merge_request:
+                    pr_ref = commit.linked_merge_request.lstrip("#GH-!")
+                    if pr_ref and pr_ref not in processed_issues:
+                        _post_announcement_to_issue(
+                            hvcs_client=hvcs_client,
+                            issue_id=pr_ref,
+                            template_name=".pr_publish_announcement.md.j2",
+                            version=new_version,
+                            release_notes=release_notes,
+                            runtime=runtime,
+                        )
+                        processed_issues.add(pr_ref)
+
+                # Handle all linked issues
+                for issue_ref in commit.linked_issues:
+                    issue_id = issue_ref.lstrip("#GH-!")
+                    if issue_id and issue_id not in processed_issues:
+                        _post_announcement_to_issue(
+                            hvcs_client=hvcs_client,
+                            issue_id=issue_id,
+                            template_name=".issue_resolution_announcement.md.j2",
+                            version=new_version,
+                            release_notes=release_notes,
+                            runtime=runtime,
+                        )
+                        processed_issues.add(issue_id)
+
+        logger.info(
+            "Posted release announcements to %d issue(s)/PR(s)", len(processed_issues)
+        )
+
+    except Exception as exc:  # noqa: BLE001
+        # Best effort: don't fail the entire release if announcements fail
+        logger.warning("Failed to post release announcements: %s", exc, exc_info=True)
+
+
+def _post_announcement_to_issue(
+    hvcs_client: Github,
+    issue_id: str,
+    template_name: str,
+    version: Version,
+    release_notes: str,
+    runtime: CliContextObj,
+) -> None:
+    """
+    Post an announcement comment to a single issue or PR.
+
+    :param hvcs_client: The GitHub HVCS client
+    :param issue_id: The issue or PR number
+    :param template_name: The template file name to render
+    :param version: The new version being released
+    :param release_notes: The generated release notes
+    :param runtime: The CLI runtime context
+    """
+    try:
+        # Render the announcement template
+        template = runtime.template_environment.get_template(template_name)
+        announcement = template.render(
+            version=str(version),
+            release_notes=release_notes,
+        )
+
+        # Post the comment
+        hvcs_client.post_comment(issue_id, announcement)
+        logger.debug("Posted announcement to issue/PR #%s", issue_id)
+
+        # Add the "released" label
+        hvcs_client.add_labels_to_issue(issue_id, ["released"])
+        logger.debug("Added 'released' label to issue/PR #%s", issue_id)
+
+    except Exception as exc:  # noqa: BLE001
+        # Best effort: log but continue processing other issues
+        logger.warning("Failed to post announcement to issue/PR #%s: %s", issue_id, exc)
 
 
 @click.command(
@@ -765,6 +878,17 @@ def version(  # noqa: C901
             assets=assets,
             noop=opts.noop,
         )
+
+        # Post release announcements to linked issues and PRs
+        if not opts.noop and isinstance(hvcs_client, Github):
+            _post_release_announcements(
+                hvcs_client=hvcs_client,
+                release_history=release_history,
+                new_version=new_version,
+                release_notes=release_notes,
+                runtime=runtime,
+            )
+
     except HTTPError as err:
         exception = err
     except UnexpectedResponse as err:
