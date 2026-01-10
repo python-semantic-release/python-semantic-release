@@ -48,7 +48,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from git.refs.tag import Tag
 
+    from semantic_release.changelog.release_history import Release
     from semantic_release.cli.cli_context import CliContextObj
+    from semantic_release.cli.config import RuntimeContext
     from semantic_release.version.declaration import IVersionReplacer
     from semantic_release.version.version import Version
 
@@ -304,7 +306,7 @@ def _post_release_announcements(
     release_history: ReleaseHistory,
     new_version: Version,
     release_notes: str,
-    runtime: CliContextObj,
+    runtime: RuntimeContext,
 ) -> None:
     """
     Post release announcements to linked issues and PRs.
@@ -376,9 +378,9 @@ def _post_announcement_to_issue(
     hvcs_client: Github,
     issue_id: str,
     template_name: str,
-    release: dict,
+    release: Release,
     release_notes: str,
-    runtime: CliContextObj,
+    runtime: RuntimeContext,
 ) -> None:
     """
     Post an announcement comment to a single issue or PR.
