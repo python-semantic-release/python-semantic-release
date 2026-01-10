@@ -13,6 +13,7 @@ from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git import Repo
 from requests import HTTPError
 
+from semantic_release.changelog.context import ReleaseNotesContext
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli.changelog_writer import (
     generate_release_notes,
@@ -305,7 +306,6 @@ def _post_release_announcements(
     hvcs_client: Github,
     release_history: ReleaseHistory,
     new_version: Version,
-    release_notes: str,
     runtime: RuntimeContext,
 ) -> None:
     """
@@ -317,7 +317,6 @@ def _post_release_announcements(
     :param hvcs_client: The GitHub HVCS client
     :param release_history: The release history containing all commits
     :param new_version: The new version being released
-    :param release_notes: The generated release notes
     :param runtime: The CLI runtime context
     """
     try:
@@ -346,7 +345,6 @@ def _post_release_announcements(
                             issue_id=pr_ref,
                             template_name=".pr_publish_announcement.md.j2",
                             release=release,
-                            release_notes=release_notes,
                             runtime=runtime,
                         )
                         processed_issues.add(pr_ref)
@@ -360,7 +358,6 @@ def _post_release_announcements(
                             issue_id=issue_id,
                             template_name=".issue_resolution_announcement.md.j2",
                             release=release,
-                            release_notes=release_notes,
                             runtime=runtime,
                         )
                         processed_issues.add(issue_id)
@@ -379,7 +376,6 @@ def _post_announcement_to_issue(
     issue_id: str,
     template_name: str,
     release: Release,
-    release_notes: str,
     runtime: RuntimeContext,
 ) -> None:
     """
@@ -389,25 +385,51 @@ def _post_announcement_to_issue(
     :param issue_id: The issue or PR number
     :param template_name: The template file name to render
     :param release: The release object containing version and other metadata
-    :param release_notes: The generated release notes
     :param runtime: The CLI runtime context
     """
     try:
-        # Render the announcement template
-        template = runtime.template_environment.get_template(template_name)
-        announcement = template.render(
-            release=release,
-            release_notes=release_notes,
+        # Convert issue_id to int (it comes in as string from commit parsing)
+        issue_number = int(issue_id)
+
+        # Create a template environment with proper filters using ReleaseNotesContext
+        # This ensures filters like create_release_url and format_w_official_vcs_name are available
+        from semantic_release.changelog.context import (
+            autofit_text_width,
+            create_pypi_url,
         )
+        from semantic_release.helpers import sort_numerically
+
+        template_env = ReleaseNotesContext(
+            repo_name=hvcs_client.repo_name,
+            repo_owner=hvcs_client.owner,
+            hvcs_type=hvcs_client.__class__.__name__.lower(),
+            version=release["version"],
+            release=release,
+            mask_initial_release=False,  # Not applicable for announcements
+            license_name="",  # Not applicable for announcements
+            filters=(
+                *hvcs_client.get_changelog_context_filters(),
+                create_pypi_url,
+                autofit_text_width,
+                sort_numerically,
+            ),
+        ).bind_to_environment(runtime.template_environment)
+
+        # Render the announcement template with proper filter context
+        template = template_env.get_template(template_name)
+        announcement = template.render()
 
         # Post the comment
-        hvcs_client.post_comment(issue_id, announcement)
-        logger.debug("Posted announcement to issue/PR #%s", issue_id)
+        hvcs_client.post_comment(issue_number, announcement)
+        logger.debug("Posted announcement to issue/PR #%d", issue_number)
 
         # Add the "released" label
-        hvcs_client.add_labels_to_issue(issue_id, ["released"])
-        logger.debug("Added 'released' label to issue/PR #%s", issue_id)
+        hvcs_client.add_labels_to_issue(issue_number, ["released"])
+        logger.debug("Added 'released' label to issue/PR #%d", issue_number)
 
+    except ValueError as exc:
+        # Log if issue_id cannot be converted to int
+        logger.warning("Invalid issue/PR ID '%s': %s", issue_id, exc)
     except Exception as exc:  # noqa: BLE001
         # Best effort: log but continue processing other issues
         logger.warning("Failed to post announcement to issue/PR #%s: %s", issue_id, exc)
@@ -887,7 +909,6 @@ def version(  # noqa: C901
                 hvcs_client=hvcs_client,
                 release_history=release_history,
                 new_version=new_version,
-                release_notes=release_notes,
                 runtime=runtime,
             )
 
