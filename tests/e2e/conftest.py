@@ -63,9 +63,53 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 @pytest.fixture
 def post_mocker(requests_mock: Mocker) -> Mocker:
-    """Patch all POST requests, mocking a response body for VCS release creation."""
-    requests_mock.register_uri("POST", ANY, json={"id": 999})
-    return requests_mock
+    """
+    Patch all POST requests, mocking a response body for VCS release creation.
+
+    Also mocks GET requests for PyGithub repository access to avoid unmocked requests.
+    """
+    # Track POST and GET requests separately
+    post_requests = []
+    get_requests = []
+
+    def post_callback(request, context):
+        """Callback for POST requests."""
+        post_requests.append(request)
+        return {"id": 999}
+
+    def get_callback(request, context):
+        """Callback for GET requests (PyGithub repository access)."""
+        get_requests.append(request)
+        return {
+            "id": 1296269,
+            "owner": {"login": "example_owner"},
+            "name": "example_repo",
+            "full_name": "example_owner/example_repo",
+            "description": "Test repository",
+            "private": False,
+        }
+
+    requests_mock.register_uri("POST", ANY, json=post_callback)
+    requests_mock.register_uri("GET", ANY, json=get_callback)
+
+    # Create a wrapper that filters call_count and last_request to POST only
+    class PostOnlyMocker:
+        def __init__(self, mocker, post_list):
+            self._mocker = mocker
+            self._post_list = post_list
+
+        @property
+        def call_count(self):
+            return len(self._post_list)
+
+        @property
+        def last_request(self):
+            return self._post_list[-1] if self._post_list else None
+
+        def __getattr__(self, name):
+            return getattr(self._mocker, name)
+
+    return PostOnlyMocker(requests_mock, post_requests)
 
 
 @pytest.fixture
