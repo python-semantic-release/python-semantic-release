@@ -30,7 +30,6 @@ from semantic_release.commit_parser.emoji import EmojiParserOptions
 from semantic_release.commit_parser.scipy import ScipyParserOptions
 from semantic_release.commit_parser.tag import TagParserOptions
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
-from semantic_release.enums import LevelBump
 from semantic_release.errors import ParserLoadError
 
 from tests.fixtures.repos import repo_w_no_tags_conventional_commits
@@ -138,7 +137,6 @@ def test_load_user_defined_parser_opts():
         "allowed_tags": ["foo", "bar", "baz"],
         "minor_tags": ["bar"],
         "patch_tags": ["baz"],
-        "default_bump_level": LevelBump.PATCH.value,
     }
     raw_config = RawConfig.model_validate(
         {
