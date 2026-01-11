@@ -1,6 +1,6 @@
 {#
   MACRO: format a inline link reference in Markdown
-#}{%  macro format_link(link, label)
+#}{%  macro format_link_reference(link, label)
 %}{{    "[%s](%s)" | format(label, link)
 }}{%  endmacro
 %}
@@ -28,7 +28,7 @@
 #}{%      if commit.linked_merge_request != ""
 %}{#        # Add PR references with a link to the PR
 #}{%        set _ = link_references.append(
-              format_link(
+              format_link_reference(
                 commit.linked_merge_request | pull_request_url,
                 commit.linked_merge_request
               )
@@ -37,7 +37,7 @@
 %}{#
    #      # DEFAULT: Always include the commit hash as a link
 #}{%      set _ = link_references.append(
-            format_link(
+            format_link_reference(
               commit.hexsha | commit_hash_url,
               "`%s`" | format(commit.short_hash)
             )
