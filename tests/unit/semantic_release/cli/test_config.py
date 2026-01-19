@@ -164,7 +164,13 @@ def test_default_toml_config_valid(example_project_dir: ExProjectDir):
     default_config_file = example_project_dir / "default.toml"
 
     default_config_file.write_text(
-        tomlkit.dumps(RawConfig().model_dump(mode="json", exclude_none=True))
+        tomlkit.dumps(
+            RawConfig().model_dump(
+                mode="json",
+                exclude_none=True,
+                exclude={"changelog": {"changelog_file"}},
+            )
+        )
     )
 
     written = default_config_file.read_text(encoding="utf-8")
@@ -444,8 +450,14 @@ def test_git_remote_url_w_insteadof_alias(
     # Setup: set each supported HVCS client type
     update_pyproject_toml("tool.semantic_release.remote.type", hvcs_type)
 
-    # Act: load the configuration (in clear environment)
-    with mock.patch.dict(os.environ, {}, clear=True):
+    # Act: load the configuration (with cleared token environment but preserved system paths)
+    # Preserve critical system variables that are needed for subprocess calls (e.g., git)
+    preserved_env = {
+        k: v
+        for k, v in os.environ.items()
+        if k in ("PATH", "SYSTEMROOT", "PATHEXT", "TEMP", "TMP")
+    }
+    with mock.patch.dict(os.environ, preserved_env, clear=True):
         # Essentially the same as CliContextObj._init_runtime_ctx()
         project_config = tomlkit.loads(
             example_pyproject_toml.read_text(encoding="utf-8")
