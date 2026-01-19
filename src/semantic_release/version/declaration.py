@@ -9,6 +9,7 @@ from deprecated.sphinx import deprecated
 
 from semantic_release.globals import logger
 from semantic_release.version.declarations.enum import VersionStampType
+from semantic_release.version.declarations.file import FileVersionDeclaration
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.pattern import PatternVersionDeclaration
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
@@ -19,11 +20,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 # Globals
 __all__ = [
+    "FileVersionDeclaration",
     "IVersionReplacer",
-    "VersionStampType",
     "PatternVersionDeclaration",
     "TomlVersionDeclaration",
     "VersionDeclarationABC",
+    "VersionStampType",
 ]
 
 

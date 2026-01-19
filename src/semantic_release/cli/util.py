@@ -75,7 +75,7 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
     while trying to read the specified configuration file
     """
     logger.info("Loading configuration from %s", config_file)
-    raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8")
+    raw_text = (Path() / config_file).resolve().read_text(encoding="utf-8-sig")
     try:
         logger.debug("Trying to parse configuration %s in TOML format", config_file)
         return parse_toml(raw_text)

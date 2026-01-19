@@ -549,7 +549,6 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
-    caplog: pytest.LogCaptureFixture,
 ):
     repo = repo_result["repo"]
 
@@ -571,10 +570,7 @@ def test_version_print_last_released_prints_nothing_if_no_tags(
     # Evaluate (no release actions should have occurred on print)
     assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
-
-    # must use capture log to see this, because we use the logger to print this message
-    # not click's output
-    assert "No release tags found." in caplog.text
+    assert "No release tags found." in result.stderr
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after
@@ -809,7 +805,6 @@ def test_version_print_last_released_tag_prints_nothing_if_no_tags(
     run_cli: RunCliFn,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
-    caplog: pytest.LogCaptureFixture,
 ):
     repo = repo_result["repo"]
 
@@ -831,10 +826,7 @@ def test_version_print_last_released_tag_prints_nothing_if_no_tags(
     # Evaluate (no release actions should have occurred on print)
     assert_successful_exit_code(result, cli_cmd)
     assert result.stdout == ""
-
-    # must use capture log to see this, because we use the logger to print this message
-    # not click's output
-    assert "No release tags found." in caplog.text
+    assert "No release tags found." in result.stderr
 
     # assert nothing else happened (no code changes, no commit, no tag, no push, no vcs release)
     assert repo_status_before == repo_status_after

@@ -59,6 +59,7 @@ def test_trunk_repo_rebuild_only_official_releases(
     example_project_dir: ExProjectDir,
     git_repo_for_directory: GetGitRepo4DirFn,
     build_repo_from_definition: BuildRepoFromDefinitionFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     version_py_file: Path,
@@ -105,6 +106,7 @@ def test_trunk_repo_rebuild_only_official_releases(
         curr_release_tag = curr_version.as_tag()
 
         # make sure mocks are clear
+        mocked_git_fetch.reset_mock()
         mocked_git_push.reset_mock()
         post_mocker.reset_mock()
 
@@ -163,5 +165,8 @@ def test_trunk_repo_rebuild_only_official_releases(
         assert expected_release_commit_text == actual_release_commit_text
         # Make sure tag is created
         assert curr_release_tag in [tag.name for tag in mirror_git_repo.tags]
+        assert (
+            mocked_git_fetch.call_count == 1
+        )  # fetch called to check for remote changes
         assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
         assert post_mocker.call_count == 1  # vcs release creation occurred

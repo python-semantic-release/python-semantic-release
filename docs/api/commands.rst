@@ -118,6 +118,18 @@ By default (in order):
 
   #.  Create a release in the remote VCS for this tag (if supported)
 
+.. note::
+
+  Before pushing changes to the remote (step 6), Python Semantic Release automatically
+  verifies that the upstream branch has not changed since the commit that triggered
+  the release. This prevents push conflicts when another commit was made to the
+  upstream branch while the release was being prepared. If the upstream branch has
+  changed, the command will exit with an error, and you will need to pull the latest
+  changes and run the command again.
+
+  This verification only occurs when committing changes (``--commit``). If you are
+  running with ``--no-commit``, the verification will not be performed.
+
 All of these steps can be toggled on or off using the command line options
 described below. Some of the steps rely on others, so some options may implicitly
 disable others.
@@ -461,16 +473,36 @@ Release corresponding to this version.
 
 Generate default configuration for semantic-release, to help you get started
 quickly. You can inspect the defaults, write to a file and then edit according to
-your needs.
-For example, to append the default configuration to your pyproject.toml
-file, you can use the following command::
+your needs. For example, to append the default configuration to your ``pyproject.toml``
+file, you can use the following command (in POSIX-Compliant shells):
 
-    $ semantic-release generate-config -f toml --pyproject >> pyproject.toml
+.. code-block:: bash
+
+    semantic-release generate-config --pyproject >> pyproject.toml
+
+On Windows PowerShell, the redirection operators (`>`/`>>`) default to UTF-16LE,
+which can introduce NUL characters. Prefer one of the following to keep UTF-8:
+
+.. code-block:: console
+
+    # 2 File output Piping Options in PowerShell (Out-File or Set-Content)
+
+    # Example for writing to pyproject.toml using Out-File:
+    semantic-release generate-config --pyproject | Out-File -Encoding utf8 pyproject.toml
+
+    # Example for writing to a releaserc.toml file using Set-Content:
+    semantic-release generate-config -f toml | Set-Content -Encoding utf8 releaserc.toml
 
 If your project doesn't already leverage TOML files for configuration, it might better
-suit your project to use JSON instead::
+suit your project to use JSON instead:
 
-    $ semantic-release generate-config -f json
+.. code-block:: bash
+
+    # POSIX-Compliant shell example
+    semantic-release generate-config -f json | tee releaserc.json
+
+    # Windows PowerShell example
+    semantic-release generate-config -f json | Out-File -Encoding utf8 releaserc.json
 
 If you would like to add JSON configuration to a shared file, e.g. ``package.json``, you
 can then simply add the output from this command as a **top-level** key to the file.

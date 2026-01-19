@@ -1162,6 +1162,52 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 
 ----
 
+.. _config-add_partial_tags:
+
+``add_partial_tags``
+""""""""""""""""""""
+
+**Type:** ``bool``
+
+Specify if partial version tags should be handled when creating a new version. If set to
+``true``, a ``major`` and a ``major.minor`` tag will be created or updated, using the format
+specified in :ref:`tag_format`. If version has build metadata, a ``major.minor.patch`` tag
+will also be created or updated.
+
+Partial version tags are **disabled** for pre-release versions.
+
+**Example**
+
+.. code-block:: toml
+
+    [semantic_release]
+    tag_format = "v{version}"
+    add_partial_tags = true
+
+This configuration with the next version of ``1.2.3`` will result in:
+
+.. code-block:: bash
+
+    git log --decorate --oneline --graph --all
+    # * 4d4cb0a (tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3
+    # * 3a2b1c0 fix: some bug
+    # * 2b1c0a9 (tag: v1.2.2) 1.2.2
+    # ...
+
+If build-metadata is used, the next version of ``1.2.3+20251109`` will result in:
+
+.. code-block:: bash
+
+    git log --decorate --oneline --graph --all
+    # * 4d4cb0a (tag: v1.2.3+20251109, tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3+20251109
+    # * 3a2b1c0 chore: add partial tags to PSR configuration
+    # * 2b1c0a9 (tag: v1.2.3+20251031) 1.2.3+20251031
+    # ...
+
+**Default:** ``false``
+
+----
+
 .. _config-tag_format:
 
 ``tag_format``
@@ -1170,17 +1216,8 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 **Type:** ``str``
 
 Specify the format to be used for the Git tag that will be added to the repo during
-a release invoked via :ref:`cmd-version`. The format string is a regular expression,
-which also must include the format keys below, otherwise an exception will be thrown.
-It *may* include any of the optional format keys, in which case the contents
-described will be formatted into the specified location in the Git tag that is created.
-
-For example, ``"(dev|stg|prod)-v{version}"`` is a valid ``tag_format`` matching tags such
-as:
-
-- ``dev-v1.2.3``
-- ``stg-v0.1.0-rc.1``
-- ``prod-v2.0.0+20230701``
+a release invoked via :ref:`cmd-version`. The string is used as a template for the tag
+name, and must include the ``{version}`` format key.
 
 This format will also be used for parsing tags already present in the repository into
 semantic versions; therefore if the tag format changes at some point in the
@@ -1195,6 +1232,13 @@ Format Key       Mandatory  Contents
 ================ =========  ==========================================================
 
 Tags which do not match this format will not be considered as versions of your project.
+
+This is critical for Monorepo projects where the tag format defines which package the
+version tag belongs to. Generally, the tag format for each package of the monorepo will
+include the package name as the prefix of the tag format. For example, if the package
+is named ``pkg1``, the tag format would be ``pkg1-v{version}`` and in the other package
+``pkg2``, the tag format would be ``pkg2-v{version}``. This allows PSR to determine
+which tags to use to determine the version for each package.
 
 **Default:** ``"v{version}"``
 
@@ -1282,6 +1326,10 @@ colon-separated definition with either 2 or 3 parts. The 2-part definition inclu
 the file path and the variable name. Newly with v9.20.0, it also accepts
 an optional 3rd part to allow configuration of the format type.
 
+As of ${NEW_RELEASE_TAG}, the ``version_variables`` option also supports entire file
+replacement by using an asterisk (``*``) as the pattern/variable name. This is useful
+for files that contain only a version number, such as ``VERSION`` files.
+
 **Available Format Types**
 
 - ``nf``: Number format (ex. ``1.2.3``)
@@ -1304,6 +1352,9 @@ version numbers.
         "src/semantic_release/__init__.py:__version__",  # Implied Default: Number format
         "docs/conf.py:version:nf",                       # Number format for sphinx docs
         "kustomization.yml:newTag:tf",                   # Tag format
+        # File replacement (entire file content is replaced with version)
+        "VERSION:*:nf",                                  # Replace entire file with number format
+        "RELEASE:*:tf",                                  # Replace entire file with tag format
     ]
 
 First, the ``__version__`` variable in ``src/semantic_release/__init__.py`` will be updated
@@ -1326,7 +1377,7 @@ with the next version using the `SemVer`_ number format because of the explicit 
     - version = "0.1.0"
     + version = "0.2.0"
 
-Lastly, the ``newTag`` variable in ``kustomization.yml`` will be updated with the next version
+Then, the ``newTag`` variable in ``kustomization.yml`` will be updated with the next version
 with the next version using the configured :ref:`config-tag_format` because the definition
 included ``tf``.
 
@@ -1339,10 +1390,34 @@ included ``tf``.
     -     newTag: v0.1.0
     +     newTag: v0.2.0
 
+Next, the entire content of the ``VERSION`` file will be replaced with the next version
+using the `SemVer`_ number format (because of the ``*`` pattern and ``nf`` format type).
+
+.. code-block:: diff
+
+    diff a/VERSION b/VERSION
+
+    - 0.1.0
+    + 0.2.0
+
+Finally, the entire content of the ``RELEASE`` file will be replaced with the next version
+using the configured :ref:`config-tag_format` (because of the ``*`` pattern and ``tf`` format type).
+
+.. code-block:: diff
+
+    diff a/RELEASE b/RELEASE
+
+    - v0.1.0
+    + v0.2.0
+
 **How It works**
 
-Each version variable will be transformed into a Regular Expression that will be used
-to substitute the version number in the file. The replacement algorithm is **ONLY** a
+Each version variable will be transformed into either a Regular Expression (for pattern-based
+replacement) or a file replacement operation (when using the ``*`` pattern).
+
+**Pattern-Based Replacement**
+
+When a variable name is specified (not ``*``), the replacement algorithm is **ONLY** a
 pattern match and replace. It will **NOT** evaluate the code nor will PSR understand
 any internal object structures (ie. ``file:object.version`` will not work).
 
@@ -1354,7 +1429,7 @@ The regular expression generated from the ``version_variables`` definition will:
 2. The variable name defined by ``variable`` and the version must be separated by
    an operand symbol (``=``, ``:``, ``:=``, or ``@``). Whitespace is optional around
    the symbol. As of v10.0.0, a double-equals (``==``) operator is also supported
-   as a valid operand symbol. As of $NEW_RELEASE_TAG, PSR can omit all operands as long
+   as a valid operand symbol. As of v10.5.0, PSR can omit all operands as long
    as there is at least one whitespace character between the variable name and the version.
 
 3. The value of the variable must match a `SemVer`_ regular expression and can be
@@ -1375,6 +1450,24 @@ regardless of file extension because it looks for a matching pattern string.
     This will also work for TOML but we recommend using :ref:`config-version_toml` for
     TOML files as it actually will interpret the TOML file and replace the version
     number before writing the file back to disk.
+
+**File Replacement**
+
+When the pattern/variable name is specified as an asterisk (``*``), the entire file content
+will be replaced with the version string. This is useful for files that contain only a
+version number, such as ``VERSION`` files or similar single-line version storage files.
+
+The file replacement operation:
+
+1. Reads the current file content if it exists (any whitespace is stripped)
+2. Sets or replaces the entire file content with the new version string
+3. Writes the new version back to the file (with only a single trailing newline)
+
+The format type (``nf`` or ``tf``) determines whether the version is written as a
+plain number (e.g., ``1.2.3``) or with the :ref:`config-tag_format` prefix/suffix
+(e.g., ``v1.2.3``).
+
+**Examples of Pattern-Based Replacement**
 
 This is a comprehensive list (but not all variations) of examples where the following versions
 will be matched and replaced by the new version:

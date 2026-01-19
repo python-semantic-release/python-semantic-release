@@ -875,72 +875,32 @@ to the GitHub Release Assets as well.
           contents: write
 
         steps:
-          # Note: We checkout the repository at the branch that triggered the workflow
-          # with the entire history to ensure to match PSR's release branch detection
-          # and history evaluation.
-          # However, we forcefully reset the branch to the workflow sha because it is
-          # possible that the branch was updated while the workflow was running. This
-          # prevents accidentally releasing un-evaluated changes.
+          # Note: We checkout the repository at the branch that triggered the workflow.
+          # Python Semantic Release will automatically convert shallow clones to full clones
+          # if needed to ensure proper history evaluation. However, we forcefully reset the
+          # branch to the workflow sha because it is possible that the branch was updated
+          # while the workflow was running, which prevents accidentally releasing un-evaluated
+          # changes.
           - name: Setup | Checkout Repository on Release Branch
             uses: actions/checkout@v4
             with:
               ref: ${{ github.ref_name }}
-              fetch-depth: 0
 
           - name: Setup | Force release branch to be at workflow sha
             run: |
               git reset --hard ${{ github.sha }}
 
-          - name: Evaluate | Verify upstream has NOT changed
-            # Last chance to abort before causing an error as another PR/push was applied to
-            # the upstream branch while this workflow was running. This is important
-            # because we are committing a version change (--commit). You may omit this step
-            # if you have 'commit: false' in your configuration.
-            #
-            # You may consider moving this to a repo script and call it from this step instead
-            # of writing it in-line.
-            shell: bash
-            run: |
-              set +o pipefail
-
-              UPSTREAM_BRANCH_NAME="$(git status -sb | head -n 1 | awk -F '\\.\\.\\.' '{print $2}' | cut -d ' ' -f1)"
-              printf '%s\n' "Upstream branch name: $UPSTREAM_BRANCH_NAME"
-
-              set -o pipefail
-
-              if [ -z "$UPSTREAM_BRANCH_NAME" ]; then
-                  printf >&2 '%s\n' "::error::Unable to determine upstream branch name!"
-                  exit 1
-              fi
-
-              git fetch "${UPSTREAM_BRANCH_NAME%%/*}"
-
-              if ! UPSTREAM_SHA="$(git rev-parse "$UPSTREAM_BRANCH_NAME")"; then
-                  printf >&2 '%s\n' "::error::Unable to determine upstream branch sha!"
-                  exit 1
-              fi
-
-              HEAD_SHA="$(git rev-parse HEAD)"
-
-              if [ "$HEAD_SHA" != "$UPSTREAM_SHA" ]; then
-                  printf >&2 '%s\n' "[HEAD SHA] $HEAD_SHA != $UPSTREAM_SHA [UPSTREAM SHA]"
-                  printf >&2 '%s\n' "::error::Upstream has changed, aborting release..."
-                  exit 1
-              fi
-
-              printf '%s\n' "Verified upstream branch has not changed, continuing with release..."
-
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release/python-semantic-release@v10.4.1
+            uses: python-semantic-release/python-semantic-release@v10.5.3
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
               git_committer_email: "actions@users.noreply.github.com"
 
           - name: Publish | Upload to GitHub Release Assets
-            uses: python-semantic-release/publish-action@v10.4.1
+            uses: python-semantic-release/publish-action@v10.5.3
             if: steps.release.outputs.released == 'true'
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -998,16 +958,6 @@ to the GitHub Release Assets as well.
   one release job in the case if there are multiple pushes to ``main`` in a short period
   of time.
 
-  Secondly the *Evaluate | Verify upstream has NOT changed* step is used to ensure that the
-  upstream branch has not changed while the workflow was running. This is important because
-  we are committing a version change (``commit: true``) and there might be a push collision
-  that would cause undesired behavior. Review Issue `#1201`_ for more detailed information.
-
-.. warning::
-  You must set ``fetch-depth`` to 0 when using ``actions/checkout@v4``, since
-  Python Semantic Release needs access to the full history to build a changelog
-  and at least the latest tags to determine the next version.
-
 .. warning::
   The ``GITHUB_TOKEN`` secret is automatically configured by GitHub, with the
   same permissions role as the user who triggered the workflow run. This causes
@@ -1017,6 +967,19 @@ to the GitHub Release Assets as well.
   as a separate secret and using that instead of ``GITHUB_TOKEN``. In this
   case, you will also need to pass the new token to ``actions/checkout`` (as
   the ``token`` input) in order to gain push access.
+
+.. note::
+  As of v10.5.0, Python Semantic Release automatically detects and converts
+  shallow clones to full clones when needed. While you can still use ``fetch-depth: 0``
+  with ``actions/checkout@v4`` to fetch the full history upfront, it is no longer
+  required. If you use the default shallow clone, Python Semantic Release will
+  automatically fetch the full history before evaluating commits. If you are using
+  an older version of PSR, you will need to unshallow the repository prior to use.
+
+.. note::
+  As of v10.5.0, the verify upstream step is no longer required as it has been
+  integrated into PSR directly. If you are using an older version of PSR, you will need
+  to review the older documentation for that step. See Issue `#1201`_ for more details.
 
 .. _#1201: https://github.com/python-semantic-release/python-semantic-release/issues/1201
 .. _concurrency: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idconcurrency
@@ -1042,7 +1005,7 @@ The equivalent GitHub Action configuration would be:
 
   - name: Action | Semantic Version Release
     # Adjust tag with desired version if applicable.
-    uses: python-semantic-release/python-semantic-release@v10.4.1
+    uses: python-semantic-release/python-semantic-release@v10.5.3
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
       force: patch
@@ -1101,14 +1064,14 @@ Publish Action.
 
         - name: Release submodule 1
           id: release-submod-1
-          uses: python-semantic-release/python-semantic-release@v10.4.1
+          uses: python-semantic-release/python-semantic-release@v10.5.3
           with:
             directory: ${{ env.SUBMODULE_1_DIR }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
 
         - name: Release submodule 2
           id: release-submod-2
-          uses: python-semantic-release/python-semantic-release@v10.4.1
+          uses: python-semantic-release/python-semantic-release@v10.5.3
           with:
             directory: ${{ env.SUBMODULE_2_DIR }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -1120,7 +1083,7 @@ Publish Action.
         # ------------------------------------------------------------------- #
 
         - name: Publish | Upload package 1 to GitHub Release Assets
-          uses: python-semantic-release/publish-action@v10.4.1
+          uses: python-semantic-release/publish-action@v10.5.3
           if: steps.release-submod-1.outputs.released == 'true'
           with:
             directory: ${{ env.SUBMODULE_1_DIR }}
@@ -1128,7 +1091,7 @@ Publish Action.
             tag: ${{ steps.release-submod-1.outputs.tag }}
 
         - name: Publish | Upload package 2 to GitHub Release Assets
-          uses: python-semantic-release/publish-action@v10.4.1
+          uses: python-semantic-release/publish-action@v10.5.3
           if: steps.release-submod-2.outputs.released == 'true'
           with:
             directory: ${{ env.SUBMODULE_2_DIR }}

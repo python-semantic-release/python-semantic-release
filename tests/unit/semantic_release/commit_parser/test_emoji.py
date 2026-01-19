@@ -42,20 +42,28 @@ if TYPE_CHECKING:
             [":bug: Fixing a bug", "The bug is finally gone!"],
             [],
         ),
-        # No release
+        # No release with specified emoji
         (
-            ":pencil: Documentation changes",
+            ":memo: Documentation changes",
+            LevelBump.NO_RELEASE,
+            ":memo:",
+            [":memo: Documentation changes"],
+            [],
+        ),
+        # No release with random emoji
+        (
+            ":construction: Work in progress",
             LevelBump.NO_RELEASE,
             "Other",
-            [":pencil: Documentation changes"],
+            [":construction: Work in progress"],
             [],
         ),
         # Multiple emojis
         (
-            ":sparkles::pencil: Add a feature and document it",
+            ":sparkles::memo: Add a feature and document it",
             LevelBump.MINOR,
             ":sparkles:",
-            [":sparkles::pencil: Add a feature and document it"],
+            [":sparkles::memo: Add a feature and document it"],
             [],
         ),
         # Emoji in description

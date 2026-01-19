@@ -68,6 +68,7 @@ def test_version_runs_build_command(
     shell: str,
     get_wheel_file: GetWheelFileFn,
     example_pyproject_toml: Path,
+    mocked_git_fetch: mock.MagicMock,
     mocked_git_push: mock.MagicMock,
     post_mocker: mock.Mock,
 ):
@@ -125,6 +126,9 @@ def test_version_runs_build_command(
         )
 
         assert built_wheel_file.exists()
+        assert (
+            mocked_git_fetch.call_count == 1
+        )  # fetch called to check for remote changes
         assert mocked_git_push.call_count == 2
         assert post_mocker.call_count == 1
 
@@ -150,6 +154,7 @@ def test_version_runs_build_command_windows(
     get_wheel_file: GetWheelFileFn,
     example_pyproject_toml: Path,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: mock.MagicMock,
     mocked_git_push: mock.MagicMock,
     post_mocker: mock.Mock,
     clean_os_environment: dict[str, str],
@@ -223,6 +228,9 @@ def test_version_runs_build_command_windows(
 
         dist_file_exists = built_wheel_file.exists()
         assert dist_file_exists, f"\n  Expected wheel file to be created at {built_wheel_file}, but it does not exist."
+        assert (
+            mocked_git_fetch.call_count == 1
+        )  # fetch called to check for remote changes
         assert mocked_git_push.call_count == 2
         assert post_mocker.call_count == 1
 
@@ -338,6 +346,7 @@ def test_version_runs_build_command_w_user_env(
 @pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
 def test_version_skips_build_command_with_skip_build(
     run_cli: RunCliFn,
+    mocked_git_fetch: mock.MagicMock,
     mocked_git_push: mock.MagicMock,
     post_mocker: mock.Mock,
 ):
@@ -354,5 +363,6 @@ def test_version_skips_build_command_with_skip_build(
     assert_successful_exit_code(result, cli_cmd)
     patched_subprocess_run.assert_not_called()
 
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2
     assert post_mocker.call_count == 1

@@ -65,7 +65,12 @@ class EmojiParserOptions(ParserOptions):
     )
     """Commit-type prefixes that should result in a patch release bump."""
 
-    other_allowed_tags: Tuple[str, ...] = (":memo:", ":checkmark:")
+    other_allowed_tags: Tuple[str, ...] = (
+        ":checkmark:",
+        ":construction_worker:",
+        ":memo:",
+        ":recycle:",
+    )
     """Commit-type prefixes that are allowed but do not result in a version bump."""
 
     allowed_tags: Tuple[str, ...] = (

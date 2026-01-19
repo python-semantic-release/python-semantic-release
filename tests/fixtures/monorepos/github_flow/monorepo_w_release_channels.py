@@ -97,8 +97,10 @@ def get_repo_definition_4_github_flow_monorepo_w_feature_release_channel(
     monorepo_pkg2_changelog_rst_file: Path,
     monorepo_pkg1_name: str,
     monorepo_pkg2_name: str,
-    monorepo_pkg1_dir: Path,
-    monorepo_pkg2_dir: Path,
+    monorepo_pkg1_dir: str,
+    monorepo_pkg2_dir: str,
+    monorepo_pkg1_docs_dir: str,
+    monorepo_pkg2_docs_dir: str,
     monorepo_pkg1_version_py_file: Path,
     monorepo_pkg2_version_py_file: Path,
     stable_now_date: GetStableDateNowFn,
@@ -119,7 +121,7 @@ def get_repo_definition_4_github_flow_monorepo_w_feature_release_channel(
     | * chore(release): pkg2@1.1.0-alpha.2 [skip ci] (tag: pkg2-v1.1.0-alpha.2, branch: pkg2/feat/pr-2)
     | * fix(pkg2-cli): file modified outside of pkg 2, identified by scope
     | * chore(release): pkg2@1.1.0-alpha.1 [skip ci] (tag: pkg2-v1.1.0-alpha.1)
-    | * docs: add cli documentation
+    | * docs: pkg2 docs modified outside of pkg 2, identified by path filter
     | * test: add cli tests
     | * feat: no pkg scope but file in pkg 2 directory
     |/
@@ -203,21 +205,23 @@ def get_repo_definition_4_github_flow_monorepo_w_feature_release_channel(
         if commit_type != "conventional":
             raise ValueError(f"Unsupported commit type: {commit_type}")
 
+        pkg1_path_filters = (".", f"../../{monorepo_pkg1_docs_dir}")
         pkg1_commit_parser = ConventionalCommitMonorepoParser(
             options=ConventionalCommitMonorepoParserOptions(
                 parse_squash_commits=True,
                 ignore_merge_commits=ignore_merge_commits,
                 scope_prefix=f"{monorepo_pkg1_name}-?",
-                path_filters=(".",),
+                path_filters=pkg1_path_filters,
             )
         )
 
+        pkg2_path_filters = (".", f"../../{monorepo_pkg2_docs_dir}")
         pkg2_commit_parser = ConventionalCommitMonorepoParser(
             options=ConventionalCommitMonorepoParserOptions(
                 parse_squash_commits=pkg1_commit_parser.options.parse_squash_commits,
                 ignore_merge_commits=pkg1_commit_parser.options.ignore_merge_commits,
                 scope_prefix=f"{monorepo_pkg2_name}-?",
-                path_filters=(".",),
+                path_filters=pkg2_path_filters,
             )
         )
 
@@ -277,7 +281,7 @@ def get_repo_definition_4_github_flow_monorepo_w_feature_release_channel(
                                         "prerelease_token": "alpha",
                                     },
                                     "tool.semantic_release.commit_parser_options.scope_prefix": pkg1_commit_parser.options.scope_prefix,
-                                    "tool.semantic_release.commit_parser_options.path_filters": pkg1_commit_parser.options.path_filters,
+                                    "tool.semantic_release.commit_parser_options.path_filters": pkg1_path_filters,
                                     **(extra_configs or {}),
                                 },
                             },
@@ -307,7 +311,7 @@ def get_repo_definition_4_github_flow_monorepo_w_feature_release_channel(
                                         "prerelease_token": "alpha",
                                     },
                                     "tool.semantic_release.commit_parser_options.scope_prefix": pkg2_commit_parser.options.scope_prefix,
-                                    "tool.semantic_release.commit_parser_options.path_filters": pkg2_commit_parser.options.path_filters,
+                                    "tool.semantic_release.commit_parser_options.path_filters": pkg2_path_filters,
                                     **(extra_configs or {}),
                                 },
                             },
@@ -646,11 +650,12 @@ def get_repo_definition_4_github_flow_monorepo_w_feature_release_channel(
                                         cid_pkg2_feb1_c3_docs
                                         := "pkg2_feat_branch_1_c3_docs"
                                     ),
-                                    "conventional": "docs: add cli documentation",
-                                    "emoji": ":memo: add cli documentation",
-                                    "scipy": "DOC: add cli documentation",
+                                    "conventional": "docs: pkg2 docs modified outside of pkg 2, identified by path filter",
+                                    "emoji": ":book: pkg2 docs modified outside of pkg 2, identified by path filter",
+                                    "scipy": "DOC: pkg2 docs modified outside of pkg 2, identified by path filter",
                                     "datetime": next(commit_timestamp_gen),
                                     "include_in_changelog": True,
+                                    "file_to_change": f"../../{monorepo_pkg2_docs_dir}/index.rst",
                                 },
                             ],
                             commit_type,

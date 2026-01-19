@@ -3,6 +3,8 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING
 
+from deprecated.sphinx import deprecated
+
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
 
@@ -32,6 +34,10 @@ class IVersionReplacer(metaclass=ABCMeta):
             )
         )
 
+    @deprecated(
+        version="9.20.0",
+        reason="Function is unused and will be removed in a future release",
+    )
     @abstractmethod
     def parse(self) -> set[Version]:
         """

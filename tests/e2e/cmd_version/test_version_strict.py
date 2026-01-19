@@ -29,6 +29,7 @@ def test_version_already_released_when_strict(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -78,6 +79,7 @@ def test_version_already_released_when_strict(
 def test_version_on_nonrelease_branch_when_strict(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,

@@ -16,16 +16,18 @@ concurrency:
 
 jobs:
 
-  commitlint:
+  lint-commits:
     # condition: Execute IFF it is protected branch update, or a PR that is NOT in a draft state
     if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+      - name: Setup | Checkout Repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           fetch-depth: 0
 
-      - uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed  # v6.2.1
+      - name: Lint | Commit Messages
+        uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed  # v6.2.1
 
 
   eval-changes:
@@ -35,19 +37,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+      - name: Setup | Checkout Repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
-          fetch-depth: 100
+          fetch-depth: 0
 
       - name: Evaluate | Check common file types for changes
         id: core-changed-files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  #v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891  #v47.0.1
         with:
           files_yaml_from_source_file: .github/changed-files-spec.yml
 
       - name: Evaluate | Check specific file types for changes
         id: ci-changed-files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  #v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891  #v47.0.1
         with:
           files_yaml: |
             ci:

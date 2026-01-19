@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import click
 import shellingham  # type: ignore[import]
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
-from git import Repo
+from git import GitCommandError, Repo
 from requests import HTTPError
 
 from semantic_release.changelog.context import ReleaseNotesContext
@@ -29,9 +29,14 @@ from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import (
     BuildDistributionsError,
+    DetachedHeadGitError,
     GitCommitEmptyIndexError,
+    GitFetchError,
     InternalError,
+    LocalGitError,
     UnexpectedResponse,
+    UnknownUpstreamBranchError,
+    UpstreamBranchChangedError,
 )
 from semantic_release.gitproject import GitProject
 from semantic_release.globals import logger
@@ -79,10 +84,13 @@ def is_forced_prerelease(
     )
 
 
-def last_released(repo_dir: Path, tag_format: str) -> tuple[Tag, Version] | None:
+def last_released(
+    repo_dir: Path, tag_format: str, add_partial_tags: bool = False
+) -> tuple[Tag, Version] | None:
     with Repo(str(repo_dir)) as git_repo:
         ts_and_vs = tags_and_versions(
-            git_repo.tags, VersionTranslator(tag_format=tag_format)
+            git_repo.tags,
+            VersionTranslator(tag_format=tag_format, add_partial_tags=add_partial_tags),
         )
 
     return ts_and_vs[0] if ts_and_vs else None
@@ -586,7 +594,11 @@ def version(  # noqa: C901
     if print_last_released or print_last_released_tag:
         # TODO: get tag format a better way
         if not (
-            last_release := last_released(config.repo_dir, tag_format=config.tag_format)
+            last_release := last_released(
+                config.repo_dir,
+                tag_format=config.tag_format,
+                add_partial_tags=config.add_partial_tags,
+            )
         ):
             logger.warning("No release tags found.")
             return
@@ -607,6 +619,7 @@ def version(  # noqa: C901
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
     opts = runtime.global_cli_options
+    add_partial_tags = config.add_partial_tags
     gha_output = VersionGitHubActionsOutput(
         gh_client=hvcs_client if isinstance(hvcs_client, Github) else None,
         mode=(
@@ -627,6 +640,17 @@ def version(  # noqa: C901
     if prerelease_token:
         logger.info("Forcing use of %s as the prerelease token", prerelease_token)
         translator.prerelease_token = prerelease_token
+
+    # Check if the repository is shallow and unshallow it if necessary
+    # This ensures we have the full history for commit analysis
+    project = GitProject(
+        directory=runtime.repo_dir,
+        commit_author=runtime.commit_author,
+        credential_masker=runtime.masker,
+    )
+    if project.is_shallow_clone():
+        logger.info("Repository is a shallow clone, converting to full clone...")
+        project.git_unshallow(noop=opts.noop)
 
     # Only push if we're committing changes
     if push_changes and not commit_changes and not create_tag:
@@ -820,12 +844,6 @@ def version(  # noqa: C901
         license_name="" if not isinstance(license_cfg, str) else license_cfg,
     )
 
-    project = GitProject(
-        directory=runtime.repo_dir,
-        commit_author=runtime.commit_author,
-        credential_masker=runtime.masker,
-    )
-
     # Preparing for committing changes; we always stage files even if we're not committing them in order to support a two-stage commit
     project.git_add(paths=all_paths_to_add, noop=opts.noop)
     if commit_changes:
@@ -841,6 +859,7 @@ def version(  # noqa: C901
             )
         except GitCommitEmptyIndexError:
             logger.info("No local changes to add to any commit, skipping")
+            commit_changes = False
 
     # Tag the version after potentially creating a new HEAD commit.
     # This way if no source code is modified, i.e. all metadata updates
@@ -864,6 +883,34 @@ def version(  # noqa: C901
         )
 
         if commit_changes:
+            # Verify that the upstream branch has not changed before pushing
+            # This prevents conflicts if another commit was pushed while we were preparing the release
+            # We check HEAD~1 because we just made a release commit
+            try:
+                project.verify_upstream_unchanged(
+                    local_ref="HEAD~1",
+                    upstream_ref=config.remote.name,
+                    remote_url=remote_url,
+                    noop=opts.noop,
+                )
+            except UpstreamBranchChangedError as exc:
+                click.echo(str(exc), err=True)
+                click.echo(
+                    "Upstream branch has changed. Please pull the latest changes and try again.",
+                    err=True,
+                )
+                ctx.exit(1)
+            except (
+                DetachedHeadGitError,
+                GitCommandError,
+                UnknownUpstreamBranchError,
+                GitFetchError,
+                LocalGitError,
+            ) as exc:
+                click.echo(str(exc), err=True)
+                click.echo("Unable to verify upstream due to error!", err=True)
+                ctx.exit(1)
+
             # TODO: integrate into push branch
             with Repo(str(runtime.repo_dir)) as git_repo:
                 active_branch = git_repo.active_branch.name
@@ -881,6 +928,27 @@ def version(  # noqa: C901
                 tag=new_version.as_tag(),
                 noop=opts.noop,
             )
+            # Create or update partial tags for releases
+            if add_partial_tags and not prerelease:
+                partial_tags = [new_version.as_major_tag(), new_version.as_minor_tag()]
+                # If build metadata is set, also retag the version without the metadata
+                if build_metadata:
+                    partial_tags.append(new_version.as_patch_tag())
+
+                for partial_tag in partial_tags:
+                    project.git_tag(
+                        tag_name=partial_tag,
+                        message=f"{partial_tag} => {new_version.as_tag()}",
+                        isotimestamp=commit_date.isoformat(),
+                        noop=opts.noop,
+                        force=True,
+                    )
+                    project.git_push_tag(
+                        remote_url=remote_url,
+                        tag=partial_tag,
+                        noop=opts.noop,
+                        force=True,
+                    )
 
     # Update GitHub Actions output value now that release has occurred
     gha_output.released = True

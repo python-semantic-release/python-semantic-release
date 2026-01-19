@@ -58,26 +58,21 @@ def get_func_qual_name(func: Callable) -> str:
 def assert_exit_code(
     exit_code: int, result: ClickInvokeResult, cli_cmd: list[str]
 ) -> bool:
-    if result.exit_code != exit_code:
-        raise AssertionError(
-            str.join(
-                os.linesep,
-                [
-                    f"{result.exit_code} != {exit_code} (actual != expected)",
-                    "",
-                    # Explain what command failed
-                    "Unexpected exit code from command:",
-                    indent(f"'{str.join(' ', cli_cmd)}'", " " * 2),
-                    "",
-                    # Add indentation to each line for stdout & stderr
-                    "stdout:",
-                    indent(result.stdout, " " * 2) if result.stdout.strip() else "",
-                    "stderr:",
-                    indent(result.stderr, " " * 2) if result.stderr.strip() else "",
-                ],
-            )
+    if result.exit_code == exit_code:
+        return True
+
+    raise AssertionError(
+        str.join(
+            os.linesep,
+            [
+                f"{result.exit_code} != {exit_code} (actual != expected)",
+                "",
+                # Explain what command failed
+                "Unexpected exit code from command:",
+                indent(f"'{str.join(' ', cli_cmd)}'", " " * 2),
+            ],
         )
-    return True
+    )
 
 
 def assert_successful_exit_code(result: ClickInvokeResult, cli_cmd: list[str]) -> bool:

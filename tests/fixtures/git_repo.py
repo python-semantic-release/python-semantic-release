@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from contextlib import suppress
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import reduce
@@ -141,6 +142,7 @@ if TYPE_CHECKING:
         sha: str
         datetime: NotRequired[DatetimeISOStr]
         include_in_changelog: bool
+        file_to_change: NotRequired[Path | str]
 
     class BaseRepoVersionDef(TypedDict):
         """A Common Repo definition for a get_commits_repo_*() fixture with all commit convention types"""
@@ -289,6 +291,7 @@ if TYPE_CHECKING:
         scipy: str
         datetime: NotRequired[DatetimeISOStr]
         include_in_changelog: NotRequired[bool]
+        file_to_change: NotRequired[Path | str]
 
     class DetailsBase(TypedDict):
         pre_actions: NotRequired[Sequence[RepoActions]]
@@ -566,15 +569,28 @@ def cached_example_git_project(
         # the implementation on Windows holds some file descriptors open until close is called.
         with Repo.init(cached_repo_path) as repo:
             rmtree(str(Path(repo.git_dir, "hooks")))
+
+            # set up remote origin (including a refs directory)
+            git_origin_dir = Path(repo.common_dir, "refs", "remotes", "origin")
+            repo.create_remote(name=git_origin_dir.name, url=example_git_https_url)
+            git_origin_dir.mkdir(parents=True, exist_ok=True)
+
             # Without this the global config may set it to "master", we want consistency
             repo.git.branch("-M", DEFAULT_BRANCH_NAME)
+
             with repo.config_writer("repository") as config:
                 config.set_value("user", "name", commit_author.name)
                 config.set_value("user", "email", commit_author.email)
                 config.set_value("commit", "gpgsign", False)
                 config.set_value("tag", "gpgsign", False)
 
-            repo.create_remote(name="origin", url=example_git_https_url)
+                # set up a remote tracking branch for the default branch
+                config.set_value(f'branch "{DEFAULT_BRANCH_NAME}"', "remote", "origin")
+                config.set_value(
+                    f'branch "{DEFAULT_BRANCH_NAME}"',
+                    "merge",
+                    f"refs/heads/{DEFAULT_BRANCH_NAME}",
+                )
 
             # make sure all base files are in index to enable initial commit
             repo.index.add(("*", ".gitignore"))
@@ -981,6 +997,15 @@ def create_squash_merge_commit(
             date=commit_dt.isoformat(timespec="seconds"),
         )
 
+        # After a merge we need to ensure the remote tracking branch is updated
+        with suppress(TypeError):
+            # Fake an automated push to remote by updating the remote tracking branch
+            # Detached HEAD commits won't have an active branch and throw a TypeError
+            git_repo.git.update_ref(
+                f"refs/remotes/origin/{git_repo.active_branch.name}",
+                git_repo.head.commit.hexsha,
+            )
+
         # return the commit definition with the sha & message updated
         return {
             **commit_def,
@@ -1030,6 +1055,14 @@ def create_release_tagged_commit(
             date=commit_dt.isoformat(timespec="seconds"),
         )
 
+        with suppress(TypeError):
+            # Fake an automated push to remote by updating the remote tracking branch
+            # Detached HEAD commits won't have an active branch and throw a TypeError
+            git_repo.git.update_ref(
+                f"refs/remotes/origin/{git_repo.active_branch.name}",
+                git_repo.head.commit.hexsha,
+            )
+
         # ensure commit timestamps are unique (adding one second even though a nanosecond has gone by)
         commit_dt += timedelta(seconds=1)
 
@@ -1067,6 +1100,14 @@ def commit_n_rtn_changelog_entry(
             date=commit_dt.isoformat(timespec="seconds"),
         )
 
+        with suppress(TypeError):
+            # Fake an automated push to remote by updating the remote tracking branch
+            # Detached HEAD commits won't have an active branch and throw a TypeError
+            git_repo.git.update_ref(
+                f"refs/remotes/origin/{git_repo.active_branch.name}",
+                git_repo.head.commit.hexsha,
+            )
+
         # Capture the resulting commit message and sha
         return {
             **commit_def,
@@ -1088,7 +1129,9 @@ def simulate_change_commits_n_rtn_changelog_entry(
         changelog_entries: list[CommitDef] = []
         for commit_msg in commit_msgs:
             if not git_repo.is_dirty(index=True, working_tree=False):
-                add_text_to_file(git_repo, file_in_repo)
+                add_text_to_file(
+                    git_repo, str(commit_msg.get("file_to_change", file_in_repo))
+                )
 
             changelog_entries.append(commit_n_rtn_changelog_entry(git_repo, commit_msg))
 
@@ -1297,39 +1340,6 @@ def configure_base_repo(  # noqa: C901
 
 @pytest.fixture(scope="session")
 def separate_squashed_commit_def() -> SeparateSquashedCommitDefFn:
-    # default_conventional_parser: ConventionalCommitParser,
-    # default_emoji_parser: EmojiCommitParser,
-    # default_scipy_parser: ScipyCommitParser,
-    # message_parsers: dict[
-    #     CommitConvention,
-    #     ConventionalCommitParser | EmojiCommitParser | ScipyCommitParser,
-    # ] = {
-    #     "conventional": ConventionalCommitParser(
-    #         options=ConventionalCommitParserOptions(
-    #             **{
-    #                 **default_conventional_parser.options.__dict__,
-    #                 "parse_squash_commits": True,
-    #             }
-    #         )
-    #     ),
-    #     "emoji": EmojiCommitParser(
-    #         options=EmojiParserOptions(
-    #             **{
-    #                 **default_emoji_parser.options.__dict__,
-    #                 "parse_squash_commits": True,
-    #             }
-    #         )
-    #     ),
-    #     "scipy": ScipyCommitParser(
-    #         options=ScipyParserOptions(
-    #             **{
-    #                 **default_scipy_parser.options.__dict__,
-    #                 "parse_squash_commits": True,
-    #             }
-    #         )
-    #     ),
-    # }
-
     def _separate_squashed_commit_def(
         squashed_commit_def: CommitDef,
         parser: SquashedCommitSupportedParser,
@@ -1396,7 +1406,7 @@ def convert_commit_spec_to_commit_def(
         )
 
         # Extract the correct commit message for the commit type
-        return {
+        commit_def: CommitDef = {
             **parse_msg_fn(commit_spec[commit_type], parser=parser),
             "cid": commit_spec["cid"],
             "datetime": (
@@ -1404,8 +1414,17 @@ def convert_commit_spec_to_commit_def(
                 if "datetime" in commit_spec
                 else stable_now_date.isoformat(timespec="seconds")
             ),
-            "include_in_changelog": (commit_spec.get("include_in_changelog", True)),
+            "include_in_changelog": commit_spec.get("include_in_changelog", True),
         }
+
+        if "file_to_change" in commit_spec:
+            commit_def.update(
+                {
+                    "file_to_change": commit_spec["file_to_change"],
+                }
+            )
+
+        return commit_def
 
     return _convert
 
@@ -1680,6 +1699,18 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                                 create_branch_def["name"],
                                 commit=start_head.commit,
                             )
+                            # set up a remote tracking branch for the new branch
+                            with git_repo.config_writer("repository") as config:
+                                config.set_value(
+                                    f'branch "{create_branch_def["name"]}"',
+                                    "remote",
+                                    "origin",
+                                )
+                                config.set_value(
+                                    f'branch "{create_branch_def["name"]}"',
+                                    "merge",
+                                    f'refs/heads/{create_branch_def["name"]}',
+                                )
                             new_branch_head.checkout()
 
                         elif "branch" in ckout_def:
@@ -1759,6 +1790,15 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
                                         "commit_def"
                                     ]
                                 }
+                            )
+
+                        # After a merge we need to ensure the remote tracking branch is updated
+                        with suppress(TypeError):
+                            # Fake an automated push to remote by updating the remote tracking branch
+                            # Detached HEAD commits won't have an active branch and throw a TypeError
+                            git_repo.git.update_ref(
+                                f"refs/remotes/origin/{git_repo.active_branch.name}",
+                                git_repo.head.commit.hexsha,
                             )
 
                 else:

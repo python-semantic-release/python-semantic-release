@@ -16,6 +16,8 @@ RUN \
     apt update && apt install -y --no-install-recommends \
         # install git with git-lfs support
         git git-lfs \
+        # install ssh client for git signing
+        openssh-client \
         # install python cmodule / binary module build utilities
         python3-dev gcc make cmake cargo \
     # Configure global pip

@@ -4,6 +4,151 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.5.3:
+
+v10.5.3 (2025-12-14)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Resolve unauthenticated git repo issues for upstream verification, closes
+  `#1373`_ (`PR#1388`_, `e164f68`_)
+
+* **github-action**: Fix failed signing issue when ssh was missing from action environment, closes
+  `#1376`_ (`PR#1389`_, `18b7eda`_)
+
+* **parser-conventional-monorepo**: Fix parser opts validator for outside dir path matches, closes
+  `#1380`_ (`PR#1382`_, `a51eadd`_)
+
+.. _#1373: https://github.com/python-semantic-release/python-semantic-release/issues/1373
+.. _#1376: https://github.com/python-semantic-release/python-semantic-release/issues/1376
+.. _#1380: https://github.com/python-semantic-release/python-semantic-release/issues/1380
+.. _18b7eda: https://github.com/python-semantic-release/python-semantic-release/commit/18b7edadd7e7dfe42ec43110acf5e1bd8bcd7eb3
+.. _a51eadd: https://github.com/python-semantic-release/python-semantic-release/commit/a51eadd8414a7e9cbfa66837ee5a840a6331dfa1
+.. _e164f68: https://github.com/python-semantic-release/python-semantic-release/commit/e164f682bfa4ca1e7cbe77aa068202fd8094eec7
+.. _PR#1382: https://github.com/python-semantic-release/python-semantic-release/pull/1382
+.. _PR#1388: https://github.com/python-semantic-release/python-semantic-release/pull/1388
+.. _PR#1389: https://github.com/python-semantic-release/python-semantic-release/pull/1389
+
+
+.. _changelog-v10.5.2:
+
+v10.5.2 (2025-11-10)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Toggle verify upstream off when no version commit is made (`PR#1370`_,
+  `e0b3b70`_)
+
+.. _e0b3b70: https://github.com/python-semantic-release/python-semantic-release/commit/e0b3b7075a4c98cd7af97e0b8470872c11e7aeb9
+.. _PR#1370: https://github.com/python-semantic-release/python-semantic-release/pull/1370
+
+
+.. _changelog-v10.5.1:
+
+v10.5.1 (2025-11-10)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Fix upstream change detection to succeed without branch tracking (`PR#1369`_,
+  `7086257`_)
+
+.. _7086257: https://github.com/python-semantic-release/python-semantic-release/commit/7086257b641e241dc9a8d742bd62e3698a8b8173
+.. _PR#1369: https://github.com/python-semantic-release/python-semantic-release/pull/1369
+
+
+.. _changelog-v10.5.0:
+
+v10.5.0 (2025-11-09)
+====================
+
+✨ Features
+-----------
+
+* **cmd-version**: Add automatic repository un-shallowing to version workflow (`PR#1366`_,
+  `90a1ffa`_)
+
+* **cmd-version**: Add functionality to create & update partial version tags (`PR#1115`_,
+  `a28f940`_)
+
+* **cmd-version**: Adds c-macro style version definition support to ``version_variables``, closes
+  `#1348`_ (`PR#1349`_, `4ce1fca`_)
+
+* **cmd-version**: Adds upstream check into workflow to prevent commit push collisions (`PR#1360`_,
+  `d77193e`_)
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Prevent regular expression errors on ``tag_format`` (`PR#1367`_, `e7d7aa7`_)
+
+📖 Documentation
+----------------
+
+* **commands**: Add description of automated upstream version checking upon version creation
+  (`PR#1360`_, `d77193e`_)
+
+* **configuration**: Add description for ``add_partial_tags`` setting & usage examples (`PR#1115`_,
+  `a28f940`_)
+
+* **configuration**: Fix ``tag_format`` definition (`PR#1367`_, `e7d7aa7`_)
+
+* **configuration**: Update ``version_variables`` examples with a c-macro style replacement
+  (`PR#1349`_, `4ce1fca`_)
+
+* **github-actions**: Adds release job outputs definition to example (`PR#1344`_, `0fb4875`_)
+
+* **github-actions**: Removed verify upstream status step from example workflow (`PR#1360`_,
+  `d77193e`_)
+
+* **github-actions**: Update example to remove need to specify repo checkout's fetch depth
+  (`PR#1366`_, `90a1ffa`_)
+
+* **uv-integration**: Remove verify upstream check from uv integration example (`PR#1360`_,
+  `d77193e`_)
+
+* **uv-integration**: Update example to remove need to specify repo checkout's fetch depth
+  (`PR#1366`_, `90a1ffa`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Bump ``tomlkit`` dependency from ~=0.11.0 to ~=0.13.0 (`PR#1355`_, `55c94ec`_)
+
+* **deps**: Change github-actions container image to ``python:3.14-slim-trixie`` (`PR#1346`_,
+  `1a23712`_)
+
+💡 Additional Release Information
+---------------------------------
+
+* **cmd-version**: If you were previously handling the unshallowing of a repository clone in your
+  CI/CD pipelines, you may now remove that step from your workflow. PSR will now detect a shallow
+  repository and unshallow it before evaluating the commit history.
+
+.. _#1348: https://github.com/python-semantic-release/python-semantic-release/issues/1348
+.. _0fb4875: https://github.com/python-semantic-release/python-semantic-release/commit/0fb4875fa24ed283ed2d97ff6ab1879669a787ca
+.. _1a23712: https://github.com/python-semantic-release/python-semantic-release/commit/1a237125badcb597ae7a92db4e01c2ff3293bce8
+.. _4ce1fca: https://github.com/python-semantic-release/python-semantic-release/commit/4ce1fcac60ac73657a4aaaaa3cb7c4afc7eac2c1
+.. _55c94ec: https://github.com/python-semantic-release/python-semantic-release/commit/55c94ecde1aec47b88aa172d031ab33afa7f795d
+.. _90a1ffa: https://github.com/python-semantic-release/python-semantic-release/commit/90a1ffa55c5a1605c59cb26a1797f9a37fdfa784
+.. _a28f940: https://github.com/python-semantic-release/python-semantic-release/commit/a28f9401c4b285aa1007b72eb051d42567f33f93
+.. _d77193e: https://github.com/python-semantic-release/python-semantic-release/commit/d77193e30807968ba6a26bd356a868db62dc1098
+.. _e7d7aa7: https://github.com/python-semantic-release/python-semantic-release/commit/e7d7aa74a216cd2fdd78afc1e0e8b6b8044954ec
+.. _PR#1115: https://github.com/python-semantic-release/python-semantic-release/pull/1115
+.. _PR#1344: https://github.com/python-semantic-release/python-semantic-release/pull/1344
+.. _PR#1346: https://github.com/python-semantic-release/python-semantic-release/pull/1346
+.. _PR#1349: https://github.com/python-semantic-release/python-semantic-release/pull/1349
+.. _PR#1355: https://github.com/python-semantic-release/python-semantic-release/pull/1355
+.. _PR#1360: https://github.com/python-semantic-release/python-semantic-release/pull/1360
+.. _PR#1366: https://github.com/python-semantic-release/python-semantic-release/pull/1366
+.. _PR#1367: https://github.com/python-semantic-release/python-semantic-release/pull/1367
+
+
 .. _changelog-v10.4.1:
 
 v10.4.1 (2025-09-13)

@@ -57,6 +57,7 @@ from semantic_release.errors import (
 )
 from semantic_release.globals import logger
 from semantic_release.helpers import dynamic_import
+from semantic_release.version.declarations.file import FileVersionDeclaration
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.declarations.pattern import PatternVersionDeclaration
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
@@ -366,6 +367,7 @@ class RawConfig(BaseModel):
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
     tag_format: str = "v{version}"
+    add_partial_tags: bool = False
     publish: PublishConfig = PublishConfig()
     version_toml: Optional[Tuple[str, ...]] = None
     version_variables: Optional[Tuple[str, ...]] = None
@@ -756,12 +758,22 @@ class RuntimeContext:
             ) from err
 
         try:
-            version_declarations.extend(
-                PatternVersionDeclaration.from_string_definition(
-                    definition, raw.tag_format
+            for definition in iter(raw.version_variables or ()):
+                # Check if this is a file replacement definition (pattern is "*")
+                parts = definition.split(":", maxsplit=2)
+                if len(parts) >= 2 and parts[1] == "*":
+                    # Use FileVersionDeclaration for entire file replacement
+                    version_declarations.append(
+                        FileVersionDeclaration.from_string_definition(definition)
+                    )
+                    continue
+
+                # Use PatternVersionDeclaration for pattern-based replacement
+                version_declarations.append(
+                    PatternVersionDeclaration.from_string_definition(
+                        definition, raw.tag_format
+                    )
                 )
-                for definition in iter(raw.version_variables or ())
-            )
         except ValueError as err:
             raise InvalidConfiguration(
                 str.join(
@@ -827,7 +839,9 @@ class RuntimeContext:
 
         # version_translator
         version_translator = VersionTranslator(
-            tag_format=raw.tag_format, prerelease_token=branch_config.prerelease_token
+            tag_format=raw.tag_format,
+            prerelease_token=branch_config.prerelease_token,
+            add_partial_tags=raw.add_partial_tags,
         )
 
         build_cmd_env = {}

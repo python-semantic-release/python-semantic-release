@@ -42,6 +42,7 @@ def test_version_noop_is_noop(
     repo_result: BuiltRepoResult,
     next_release_version: str,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     get_wheel_file: GetWheelFileFn,
@@ -91,6 +92,7 @@ def test_version_no_git_verify(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
     update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ):
@@ -100,6 +102,11 @@ def test_version_no_git_verify(
     update_pyproject_toml("tool.semantic_release.no_git_verify", True)
     repo.git.commit(
         m="chore: adjust project configuration for --no-verify release commits", a=True
+    )
+    # Fake an automated push to remote by updating the remote tracking branch
+    repo.git.update_ref(
+        f"refs/remotes/origin/{repo.active_branch.name}",
+        repo.head.commit.hexsha,
     )
 
     # setup: create executable pre-commit script
@@ -140,6 +147,7 @@ def test_version_no_git_verify(
     # A commit has been made (regardless of precommit)
     assert [head_sha_before] == [head.hexsha for head in head_after.parents]
     assert len(tags_set_difference) == 1  # A tag has been created
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
     assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
     assert post_mocker.call_count == 1  # vcs release creation occurred
 
@@ -150,6 +158,7 @@ def test_version_no_git_verify(
 def test_version_on_nonrelease_branch(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -196,6 +205,7 @@ def test_version_on_last_release(
     repo_result: BuiltRepoResult,
     get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
     strip_logging_messages: StripLoggingMessagesFn,
@@ -248,6 +258,7 @@ def test_version_on_last_release(
 def test_version_only_tag_push(
     repo_result: BuiltRepoResult,
     run_cli: RunCliFn,
+    mocked_git_fetch: MagicMock,
     mocked_git_push: MagicMock,
     post_mocker: Mocker,
 ) -> None:

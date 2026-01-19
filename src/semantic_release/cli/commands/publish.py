@@ -6,6 +6,7 @@ import click
 from git import Repo
 
 from semantic_release.cli.util import noop_report
+from semantic_release.errors import AssetUploadError
 from semantic_release.globals import logger
 from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.algorithm import tags_and_versions
@@ -90,9 +91,13 @@ def publish(cli_ctx: CliContextObj, tag: str) -> None:
         )
         return
 
-    publish_distributions(
-        tag=tag,
-        hvcs_client=hvcs_client,
-        dist_glob_patterns=dist_glob_patterns,
-        noop=runtime.global_cli_options.noop,
-    )
+    try:
+        publish_distributions(
+            tag=tag,
+            hvcs_client=hvcs_client,
+            dist_glob_patterns=dist_glob_patterns,
+            noop=runtime.global_cli_options.noop,
+        )
+    except AssetUploadError as err:
+        click.echo(err, err=True)
+        ctx.exit(1)

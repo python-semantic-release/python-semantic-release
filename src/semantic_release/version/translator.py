@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import re
+from re import VERBOSE, compile as regexp, escape as regex_escape
+from typing import TYPE_CHECKING
 
 from semantic_release.const import SEMVER_REGEX
 from semantic_release.globals import logger
 from semantic_release.helpers import check_tag_format
 from semantic_release.version.version import Version
+
+if TYPE_CHECKING:
+    from re import Pattern
 
 
 class VersionTranslator:
@@ -17,7 +21,7 @@ class VersionTranslator:
     _VERSION_REGEX = SEMVER_REGEX
 
     @classmethod
-    def _invert_tag_format_to_re(cls, tag_format: str) -> re.Pattern[str]:
+    def _invert_tag_format_to_re(cls, tag_format: str) -> Pattern[str]:
         r"""
         Unpick the "tag_format" format string and create a regex which can be used to
         convert a tag to a version string.
@@ -31,9 +35,11 @@ class VersionTranslator:
         >>> assert m is not None
         >>> assert m.expand(r"\g<version>") == version
         """
-        pat = re.compile(
-            tag_format.replace(r"{version}", r"(?P<version>.*)"),
-            flags=re.VERBOSE,
+        pat = regexp(
+            regex_escape(tag_format).replace(
+                regex_escape(r"{version}"), r"(?P<version>.+)"
+            ),
+            flags=VERBOSE,
         )
         logger.debug("inverted tag_format %r to %r", tag_format, pat.pattern)
         return pat
@@ -42,11 +48,19 @@ class VersionTranslator:
         self,
         tag_format: str = "v{version}",
         prerelease_token: str = "rc",  # noqa: S107
+        add_partial_tags: bool = False,
     ) -> None:
         check_tag_format(tag_format)
         self.tag_format = tag_format
         self.prerelease_token = prerelease_token
+        self.add_partial_tags = add_partial_tags
         self.from_tag_re = self._invert_tag_format_to_re(self.tag_format)
+        self.partial_tag_re = regexp(
+            regex_escape(tag_format).replace(
+                regex_escape(r"{version}"), r"[0-9]+(\.(0|[1-9][0-9]*))?$"
+            ),
+            flags=VERBOSE,
+        )
 
     def from_string(self, version_str: str) -> Version:
         """
@@ -69,6 +83,10 @@ class VersionTranslator:
         tag_match = self.from_tag_re.match(tag)
         if not tag_match:
             return None
+        if self.add_partial_tags:
+            partial_tag_match = self.partial_tag_re.match(tag)
+            if partial_tag_match:
+                return None
         raw_version_str = tag_match.group("version")
         return self.from_string(raw_version_str)
 

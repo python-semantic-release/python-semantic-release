@@ -68,8 +68,12 @@ def build_spec_hash_4_example_monorepo(
 @pytest.fixture(scope="session")
 def cached_example_monorepo(
     build_repo_or_copy_cache: BuildRepoOrCopyCacheFn,
-    monorepo_pkg1_dir: Path,
-    monorepo_pkg2_dir: Path,
+    monorepo_pkg1_name: str,
+    monorepo_pkg2_name: str,
+    monorepo_pkg1_dir: str,
+    monorepo_pkg2_dir: str,
+    monorepo_pkg1_docs_dir: str,
+    monorepo_pkg2_docs_dir: str,
     monorepo_pkg1_version_py_file: Path,
     monorepo_pkg2_version_py_file: Path,
     monorepo_pkg1_pyproject_toml_file: Path,
@@ -104,6 +108,13 @@ def cached_example_monorepo(
                 print("{pkg_name} Hello World")
             '''
         ).lstrip()
+        doc_index_contents = dedent(
+            """
+            ==================
+            {pkg_name} Documentation
+            ==================
+            """
+        ).lstrip()
 
         with temporary_working_directory(cached_project_path):
             update_version_py_file(
@@ -127,6 +138,14 @@ def cached_example_monorepo(
             (".gitignore", gitignore_contents),
             (monorepo_pkg1_pyproject_toml_file, EXAMPLE_PYPROJECT_TOML_CONTENT),
             (monorepo_pkg2_pyproject_toml_file, EXAMPLE_PYPROJECT_TOML_CONTENT),
+            (
+                Path(monorepo_pkg1_docs_dir, "index.rst"),
+                doc_index_contents.format(pkg_name=monorepo_pkg1_name),
+            ),
+            (
+                Path(monorepo_pkg2_docs_dir, "index.rst"),
+                doc_index_contents.format(pkg_name=monorepo_pkg2_name),
+            ),
         ]
 
         for file, contents in file_2_contents:
@@ -214,6 +233,27 @@ def monorepo_pkg1_name() -> str:
 @pytest.fixture(scope="session")
 def monorepo_pkg2_name() -> str:
     return "pkg2"
+
+
+@pytest.fixture(scope="session")
+def monorepo_pkg_docs_dir_pattern() -> str:
+    return str(Path("docs", "source", "{package_name}"))
+
+
+@pytest.fixture(scope="session")
+def monorepo_pkg1_docs_dir(
+    monorepo_pkg1_name: str,
+    monorepo_pkg_docs_dir_pattern: str,
+) -> str:
+    return monorepo_pkg_docs_dir_pattern.format(package_name=monorepo_pkg1_name)
+
+
+@pytest.fixture(scope="session")
+def monorepo_pkg2_docs_dir(
+    monorepo_pkg2_name: str,
+    monorepo_pkg_docs_dir_pattern: str,
+) -> str:
+    return monorepo_pkg_docs_dir_pattern.format(package_name=monorepo_pkg2_name)
 
 
 @pytest.fixture(scope="session")

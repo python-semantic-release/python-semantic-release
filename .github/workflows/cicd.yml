@@ -19,21 +19,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+      - name: Setup | Checkout Repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
-          fetch-depth: 100 # Must at least retrieve a set of commits to compare changes
-          # primarily because of any 'Rebase and Merge' PR action in GitHub
+          fetch-depth: 0
 
       - name: Evaluate | Check common file types for changes
         id: core-changed-files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  #v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891  #v47.0.1
         with:
           base_sha: ${{ github.event.push.before }}
           files_yaml_from_source_file: .github/changed-files-spec.yml
 
       - name: Evaluate | Check specific file types for changes
         id: ci-changed-files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  #v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891  #v47.0.1
         with:
           base_sha: ${{ github.event.push.before }}
           files_yaml: |
@@ -115,7 +115,7 @@ jobs:
       # possible that the branch was updated while the workflow was running. This
       # prevents accidentally releasing un-evaluated changes.
       - name: Setup | Checkout Repository on Release Branch
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
@@ -125,7 +125,7 @@ jobs:
           git reset --hard ${{ github.sha }}
 
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
@@ -140,48 +140,20 @@ jobs:
           python -m scripts.bump_version_in_docs
           git add docs/*
 
-      - name: Evaluate | Verify upstream has NOT changed
-        # Last chance to abort before causing an error as another PR/push was applied to the upstream branch
-        # while this workflow was running. This is important because we are committing a version change
-        shell: bash
-        run: bash .github/workflows/verify_upstream.sh
-
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@4d4cb0ab842247caea1963132c242c62aab1e4d5  # v10.4.1
+        uses: python-semantic-release/python-semantic-release@350c48fcb3ffcdfd2e0a235206bc2ecea6b69df0  # v10.5.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           verbosity: 1
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@ae6462adc12bd3d1738070d784b65b5189b955a9  # v10.4.1
+        uses: python-semantic-release/publish-action@310a9983a0ae878b29f3aac778d7c77c1db27378  # v10.5.3
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
-
-      - name: Release | Update Minor Release Tag Reference
-        if: steps.release.outputs.released == 'true' && steps.release.outputs.is_prerelease == 'false'
-        env:
-          FULL_VERSION_TAG: ${{ steps.release.outputs.tag }}
-          GIT_COMMITTER_NAME: ${{ env.GITHUB_ACTIONS_AUTHOR_NAME }}
-          GIT_COMMITTER_EMAIL: ${{ env.GITHUB_ACTIONS_AUTHOR_EMAIL }}
-        run: |
-          MINOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1,2)"
-          git tag --force --annotate "$MINOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MINOR_VERSION_TAG"
-          git push -u origin "$MINOR_VERSION_TAG" --force
-
-      - name: Release | Update Major Release Tag Reference
-        if: steps.release.outputs.released == 'true' && steps.release.outputs.is_prerelease == 'false'
-        env:
-          FULL_VERSION_TAG: ${{ steps.release.outputs.tag }}
-          GIT_COMMITTER_NAME: ${{ env.GITHUB_ACTIONS_AUTHOR_NAME }}
-          GIT_COMMITTER_EMAIL: ${{ env.GITHUB_ACTIONS_AUTHOR_EMAIL }}
-        run: |
-          MAJOR_VERSION_TAG="$(echo "$FULL_VERSION_TAG" | cut -d. -f1)"
-          git tag --force --annotate "$MAJOR_VERSION_TAG" "${FULL_VERSION_TAG}^{}" -m "$MAJOR_VERSION_TAG"
-          git push -u origin "$MAJOR_VERSION_TAG" --force
 
     outputs:
       released: ${{ steps.release.outputs.released || 'false' }}
@@ -207,7 +179,7 @@ jobs:
 
     steps:
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
