@@ -443,11 +443,12 @@ Common Issue Identifier Detection
 
 All of the PSR built-in parsers implement common issue identifier detection logic,
 which is similar to many VCS platforms such as GitHub, GitLab, and BitBucket. The
-parsers will look for common issue closure text prefixes in the `Git Trailer format`_
-in the commit message to identify and extract issue numbers. The detection logic is
-not strict to any specific issue tracker as we try to provide a flexible approach
-to identifying issue numbers but in order to be flexible, it is **required** to the
-use the `Git Trailer format`_ with a colon (``:``) as the token separator.
+parsers will look for common issue closure text prefixes in commit message footers
+to identify and extract issue numbers. The detection logic is not strict to any specific
+issue tracker as we try to provide a flexible approach to identifying issue numbers.
+PSR supports the `Git Trailer format`_ with a colon (``:``) as the token separator,
+as well as the more casual format without a colon (e.g., ``Closes #123`` or ``Closes: #123``)
+to match common VCS platform conventions.
 
 PSR attempts to support all variants of issue closure text prefixes, but not all will work
 for your VCS. PSR supports the following case-insensitive prefixes and their conjugations
@@ -466,13 +467,13 @@ the need of extra git trailers (although PSR does support multiple git trailers)
 various list formats which can be used to identify more than one issue in a list. This format
 will not necessarily work on your VCS. PSR currently support the following list formats:
 
-- comma-separated (ex. ``Closes: #123, #456, #789``)
-- space-separated (ex. ``resolve: #123 #456 #789``)
-- semicolon-separated (ex. ``Fixes: #123; #456; #789``)
-- slash-separated (ex. ``close: #123/#456/#789``)
-- ampersand-separated (ex. ``Implement: #123 & #789``)
-- and-separated (ex. ``Resolve: #123 and #456 and #789``)
-- mixed (ex. ``Closed: #123, #456, and #789`` or ``Fixes: #123, #456 & #789``)
+- comma-separated (ex. ``Closes #123, #456, #789`` or ``Closes: #123, #456, #789``)
+- space-separated (ex. ``resolve #123 #456 #789`` or ``resolve: #123 #456 #789``)
+- semicolon-separated (ex. ``Fixes #123; #456; #789`` or ``Fixes: #123; #456; #789``)
+- slash-separated (ex. ``close #123/#456/#789`` or ``close: #123/#456/#789``)
+- ampersand-separated (ex. ``Implement #123 & #789`` or ``Implement: #123 & #789``)
+- and-separated (ex. ``Resolve #123 and #456 and #789`` or ``Resolve: #123 and #456 and #789``)
+- mixed (ex. ``Closed #123, #456, and #789`` or ``Fixes #123, #456 & #789`` or with colons)
 
 All the examples above use the most common issue number prefix (``#``) but PSR is flexible
 to support other prefixes used by VCS platforms or issue trackers such as JIRA (ex. ``ABC-###``).
