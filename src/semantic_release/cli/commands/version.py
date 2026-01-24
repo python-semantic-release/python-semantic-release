@@ -6,6 +6,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 import click
 import shellingham  # type: ignore[import]
@@ -19,6 +20,9 @@ from semantic_release.cli.changelog_writer import (
     generate_release_notes,
     write_changelog_files,
 )
+from semantic_release.cli.changelog_writer import get_default_tpl_dir
+from semantic_release.cli.config import ChangelogOutputFormat
+from semantic_release.changelog.template import environment
 from semantic_release.cli.github_actions_output import (
     PersistenceMode,
     VersionGitHubActionsOutput,
@@ -421,7 +425,20 @@ def _post_announcement_to_issue(
                 autofit_text_width,
                 sort_numerically,
             ),
-        ).bind_to_environment(runtime.template_environment)
+        )
+
+        # Prefer user-provided template if present, else fall back to default
+        users_tpl_file = runtime.template_dir / template_name
+        if users_tpl_file.is_file():
+            template_env = template_env.bind_to_environment(runtime.template_environment)
+        else:
+            default_tpl_dir = get_default_tpl_dir(
+                style=runtime.changelog_style,
+                sub_dir=ChangelogOutputFormat.MARKDOWN.value,
+            )
+            template_env = template_env.bind_to_environment(
+                environment(autoescape=False, template_dir=default_tpl_dir)
+            )
 
         # Render the announcement template with proper filter context
         template = template_env.get_template(template_name)
