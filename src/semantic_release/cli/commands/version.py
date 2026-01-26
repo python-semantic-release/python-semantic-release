@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
 import shellingham  # type: ignore[import]
@@ -16,13 +17,13 @@ from requests import HTTPError
 
 from semantic_release.changelog.context import ReleaseNotesContext
 from semantic_release.changelog.release_history import ReleaseHistory
+from semantic_release.changelog.template import environment
 from semantic_release.cli.changelog_writer import (
     generate_release_notes,
+    get_default_tpl_dir,
     write_changelog_files,
 )
-from semantic_release.cli.changelog_writer import get_default_tpl_dir
 from semantic_release.cli.config import ChangelogOutputFormat
-from semantic_release.changelog.template import environment
 from semantic_release.cli.github_actions_output import (
     PersistenceMode,
     VersionGitHubActionsOutput,
@@ -210,9 +211,28 @@ def shell(
         },
     )
 
+    # Merge custom environment variables with the current environment
+    # to ensure PATH and other necessary variables are available
+    merged_env = {**os.environ, **(env or {})}
+
+    # Find the full path to the shell executable using the merged environment's PATH
+    # This ensures the shell can be found even when using a custom environment
+    shell_path = shutil.which(shell, path=merged_env.get("PATH"))
+    if not shell_path:
+        # Fallback to the shell name if which() fails
+        logger.warning(
+            "Failed to find shell executable '%s' in PATH, will attempt to use shell name directly",
+            shell,
+        )
+        logger.debug("PATH value: %s", merged_env.get("PATH"))
+        shell_path = shell
+
+    logger.debug("Using shell executable: %s", shell_path)
+    logger.debug("Shell command parameter: %s", shell_cmd_param[shell])
+
     return subprocess.run(  # noqa: S603
-        [shell, shell_cmd_param[shell], cmd],
-        env=(env or {}),
+        [shell_path, shell_cmd_param[shell], cmd],
+        env=merged_env,
         check=check,
     )
 
@@ -283,7 +303,7 @@ def build_distributions(
             lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
             {
                 # Common values
-                "PATH": os.getenv("PATH", ""),
+                "PATH": os.getenv("PATH", None),
                 "HOME": os.getenv("HOME", None),
                 "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
                 # Windows environment variables
@@ -312,6 +332,10 @@ def build_distributions(
         logger.exception(exc)
         logger.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
         raise BuildDistributionsError from exc
+    except FileNotFoundError as exc:
+        logger.exception(exc)
+        logger.error("Failed to execute build command: shell executable not found")  # noqa: TRY400
+        raise BuildDistributionsError("Shell executable not found") from exc
 
 
 def _post_release_announcements(
@@ -411,7 +435,7 @@ def _post_announcement_to_issue(
         )
         from semantic_release.helpers import sort_numerically
 
-        template_env = ReleaseNotesContext(
+        template_context = ReleaseNotesContext(
             repo_name=hvcs_client.repo_name,
             repo_owner=hvcs_client.owner,
             hvcs_type=hvcs_client.__class__.__name__.lower(),
@@ -430,13 +454,15 @@ def _post_announcement_to_issue(
         # Prefer user-provided template if present, else fall back to default
         users_tpl_file = runtime.template_dir / template_name
         if users_tpl_file.is_file():
-            template_env = template_env.bind_to_environment(runtime.template_environment)
+            template_env = template_context.bind_to_environment(
+                runtime.template_environment
+            )
         else:
             default_tpl_dir = get_default_tpl_dir(
                 style=runtime.changelog_style,
                 sub_dir=ChangelogOutputFormat.MARKDOWN.value,
             )
-            template_env = template_env.bind_to_environment(
+            template_env = template_context.bind_to_environment(
                 environment(autoescape=False, template_dir=default_tpl_dir)
             )
 
