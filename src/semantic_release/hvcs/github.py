@@ -514,10 +514,12 @@ class Github(RemoteHvcsBase):
             try:
                 self.upload_release_asset(release_id, file_path)
                 n_succeeded += 1
-            except HTTPError as err:  # noqa: PERF203
+            except (HTTPError, AssetUploadError) as err:  # noqa: PERF203
                 logger.exception("error uploading asset %s", file_path)
                 status_code = (
-                    err.response.status_code if err.response is not None else "unknown"
+                    err.response.status_code
+                    if isinstance(err, HTTPError) and err.response is not None
+                    else "unknown"
                 )
                 error_msg = f"Failed to upload asset '{file_path}' to release"
                 if status_code != "unknown":
