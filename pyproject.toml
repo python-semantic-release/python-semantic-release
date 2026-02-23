@@ -80,7 +80,7 @@ test = [
   "pytest-order ~= 1.3",
   "pytest-pretty ~= 1.2",
   "pytest-xdist ~= 3.0",
-  "responses ~= 0.25.0",
+  "responses ~= 0.26.0",
   "requests-mock ~= 1.10",
 ]
 dev = [
