@@ -48,7 +48,7 @@ semantic-release = "semantic_release.__main__:main"
 psr = "semantic_release.__main__:main"
 
 [project.urls]
-changelog = "https://github.com/python-semantic-release/python-semantic-release/blob/master/CHANGELOG.md"
+changelog = "https://python-semantic-release.readthedocs.io/en/stable/misc/psr_changelog.html"
 documentation = "https://python-semantic-release.readthedocs.io"
 homepage = "https://python-semantic-release.readthedocs.io"
 issues = "https://github.com/python-semantic-release/python-semantic-release/issues"
