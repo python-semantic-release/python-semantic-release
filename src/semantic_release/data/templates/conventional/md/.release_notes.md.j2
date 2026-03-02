@@ -67,7 +67,8 @@ _This release is published under the MIT License._
 }}{%    endif
 %}{%  endif
 %}{#
-#}{{  "\n"
+#}{%  if include_pypi_link | default(False)
+%}{{  "\n"
 }}{{  "---\n"
 }}{{  "\n"
 }}{{  "**Installable artifacts are available from**:\n\n"
@@ -77,4 +78,5 @@ _This release is published under the MIT License._
           "PyPi Registry",
         )
       )
-}}
+}}{%  endif
+%}
