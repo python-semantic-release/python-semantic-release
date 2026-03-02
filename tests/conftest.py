@@ -311,6 +311,14 @@ def cached_files_dir(request: pytest.FixtureRequest) -> Path:
 
 
 @pytest.fixture(scope="session")
+def worker_id() -> str:
+    # Fallback for when pytest-xdist is not active (e.g. `-p no:xdist` or xdist not installed).
+    # pytest-xdist overrides this fixture with its own value when `-n` is used, so this
+    # stub will not interfere with parallel runs.
+    return "master"
+
+
+@pytest.fixture(scope="session")
 def get_authorization_to_build_repo_cache(
     tmp_path_factory: pytest.TempPathFactory, worker_id: str
 ) -> GetAuthorizationToBuildRepoCacheFn:
