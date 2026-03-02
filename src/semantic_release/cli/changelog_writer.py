@@ -230,6 +230,7 @@ def generate_release_notes(
     style: str,
     mask_initial_release: bool,
     license_name: str = "",
+    include_pypi_link: bool = False,
 ) -> str:
     users_tpl_file = template_dir / DEFAULT_RELEASE_NOTES_TPL_FILE
 
@@ -257,6 +258,7 @@ def generate_release_notes(
         release=release,
         mask_initial_release=mask_initial_release,
         license_name=license_name,
+        include_pypi_link=include_pypi_link,
         filters=(
             *hvcs_client.get_changelog_context_filters(),
             create_pypi_url,
