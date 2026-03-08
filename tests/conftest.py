@@ -311,21 +311,13 @@ def cached_files_dir(request: pytest.FixtureRequest) -> Path:
 
 
 @pytest.fixture(scope="session")
-def worker_id() -> str:
-    # Fallback for when pytest-xdist is not active (e.g. `-p no:xdist` or xdist not installed).
-    # pytest-xdist overrides this fixture with its own value when `-n` is used, so this
-    # stub will not interfere with parallel runs.
-    return "master"
-
-
-@pytest.fixture(scope="session")
 def get_authorization_to_build_repo_cache(
-    tmp_path_factory: pytest.TempPathFactory, worker_id: str
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> GetAuthorizationToBuildRepoCacheFn:
     def _get_authorization_to_build_repo_cache(
         repo_name: str,
     ) -> AcquireReturnProxy | None:
-        if worker_id == "master":
+        if os.getenv("PYTEST_XDIST_WORKER", "master") == "master":
             # not executing with multiple workers via xdist, so just continue
             return None
 
@@ -340,16 +332,45 @@ def get_authorization_to_build_repo_cache(
 
 
 @pytest.fixture(scope="session")
-def get_cached_repo_data(request: pytest.FixtureRequest) -> GetCachedRepoDataFn:
+def get_cached_repo_data(
+    request: pytest.FixtureRequest,
+    cached_files_dir: Path,
+) -> GetCachedRepoDataFn:
+    shared_repo_data_dir = cached_files_dir.joinpath("repo-data")
+    shared_repo_data_dir.mkdir(parents=True, exist_ok=True)
+
     def _get_cached_repo_data(proj_dirname: str) -> RepoData | None:
         cache_key = f"psr/repos/{proj_dirname}"
-        return cast("Optional[RepoData]", request.config.cache.get(cache_key, None))
+        if cached_repo_data := cast(
+            "Optional[RepoData]", request.config.cache.get(cache_key, None)
+        ):
+            return cached_repo_data
+
+        repo_data_file = shared_repo_data_dir.joinpath(f"{proj_dirname}.json")
+        if not repo_data_file.exists():
+            return None
+
+        try:
+            cached_repo_data = cast(
+                "RepoData", json.loads(repo_data_file.read_text(encoding="utf-8"))
+            )
+        except json.JSONDecodeError:
+            return None
+
+        request.config.cache.set(cache_key, cached_repo_data)
+        return cached_repo_data
 
     return _get_cached_repo_data
 
 
 @pytest.fixture(scope="session")
-def set_cached_repo_data(request: pytest.FixtureRequest) -> SetCachedRepoDataFn:
+def set_cached_repo_data(
+    request: pytest.FixtureRequest,
+    cached_files_dir: Path,
+) -> SetCachedRepoDataFn:
+    shared_repo_data_dir = cached_files_dir.joinpath("repo-data")
+    shared_repo_data_dir.mkdir(parents=True, exist_ok=True)
+
     def magic_serializer(obj: Any) -> Any:
         if isinstance(obj, Path):
             return obj.__fspath__()
@@ -361,10 +382,17 @@ def set_cached_repo_data(request: pytest.FixtureRequest) -> SetCachedRepoDataFn:
 
     def _set_cached_repo_data(proj_dirname: str, data: RepoData) -> None:
         cache_key = f"psr/repos/{proj_dirname}"
-        request.config.cache.set(
-            cache_key,
-            json.loads(json.dumps(data, default=magic_serializer)),
+        cached_repo_data = json.loads(json.dumps(data, default=magic_serializer))
+        request.config.cache.set(cache_key, cached_repo_data)
+
+        # Persist metadata in a shared cache file so xdist workers can read it.
+        repo_data_file = shared_repo_data_dir.joinpath(f"{proj_dirname}.json")
+        repo_data_tmp_file = repo_data_file.with_suffix(f"{repo_data_file.suffix}.tmp")
+        repo_data_tmp_file.write_text(
+            json.dumps(cached_repo_data),
+            encoding="utf-8",
         )
+        repo_data_tmp_file.replace(repo_data_file)
 
     return _set_cached_repo_data
 
@@ -391,61 +419,62 @@ def build_repo_or_copy_cache(
         # Runs before the cache is checked because the cache will be set once the build is complete
         filelock = get_authorization_to_build_repo_cache(repo_name)
 
-        cached_repo_data = get_cached_repo_data(repo_name)
-        cached_repo_path = cached_files_dir.joinpath(repo_name)
+        try:
+            cached_repo_data = get_cached_repo_data(repo_name)
+            cached_repo_path = cached_files_dir.joinpath(repo_name)
 
-        # Determine if the build spec has changed since the last cached build
-        unmodified_build_spec = bool(
-            cached_repo_data and cached_repo_data["build_spec_hash"] == build_spec_hash
-        )
-
-        if not unmodified_build_spec or not cached_repo_path.exists():
-            # Cache miss, so build the repo (make sure its clean first)
-            remove_dir_tree(cached_repo_path, force=True)
-            cached_repo_path.mkdir(parents=True, exist_ok=True)
-
-            build_msg = f"Building cached project files for {repo_name}"
-            with log_file_lock, log_file.open(mode="a") as afd:
-                afd.write(f"{stable_now_date().isoformat()}: {build_msg}...\n")
-
-            try:
-                # Try to build repository but catch any errors so that it doesn't cascade through all tests
-                # do to an unreleased lock
-                build_definition = build_repo_func(cached_repo_path)
-            except Exception:
-                remove_dir_tree(cached_repo_path, force=True)
-
-                if filelock:
-                    filelock.lock.release()
-
-                with log_file_lock, log_file.open(mode="a") as afd:
-                    afd.write(
-                        f"{stable_now_date().isoformat()}: {build_msg}...FAILED\n"
-                    )
-
-                raise
-
-            # Marks the date when the cached repo was created
-            set_cached_repo_data(
-                repo_name,
-                {
-                    "build_date": today_date_str,
-                    "build_spec_hash": build_spec_hash,
-                    "build_definition": build_definition,
-                },
+            # Determine if the build spec has changed since the last cached build
+            unmodified_build_spec = bool(
+                cached_repo_data
+                and cached_repo_data["build_spec_hash"] == build_spec_hash
             )
 
-            with log_file_lock, log_file.open(mode="a") as afd:
-                afd.write(f"{stable_now_date().isoformat()}: {build_msg}...DONE\n")
+            if not unmodified_build_spec or not cached_repo_path.exists():
+                # Cache miss, so build the repo (make sure its clean first)
+                remove_dir_tree(cached_repo_path, force=True)
+                cached_repo_path.mkdir(parents=True, exist_ok=True)
 
-        if filelock:
-            filelock.lock.release()
+                build_msg = f"Building cached project files for {repo_name}"
+                with log_file_lock, log_file.open(mode="a") as afd:
+                    afd.write(f"{stable_now_date().isoformat()}: {build_msg}...\n")
 
-        if dest_dir:
-            copy_dir_tree(cached_repo_path, dest_dir)
-            return dest_dir
+                try:
+                    # Try to build repository but catch any errors so that it doesn't
+                    # cascade through all tests due to an unreleased lock
+                    build_definition = build_repo_func(cached_repo_path)
+                except Exception:
+                    remove_dir_tree(cached_repo_path, force=True)
 
-        return cached_repo_path
+                    with log_file_lock, log_file.open(mode="a") as afd:
+                        afd.write(
+                            f"{stable_now_date().isoformat()}: {build_msg}...FAILED\n"
+                        )
+
+                    raise
+
+                # Marks the date when the cached repo was created
+                set_cached_repo_data(
+                    repo_name,
+                    {
+                        "build_date": today_date_str,
+                        "build_spec_hash": build_spec_hash,
+                        "build_definition": build_definition,
+                    },
+                )
+
+                with log_file_lock, log_file.open(mode="a") as afd:
+                    afd.write(f"{stable_now_date().isoformat()}: {build_msg}...DONE\n")
+
+            # Keep the lock held while copying so another worker cannot delete/rebuild
+            # the cache directory mid-copy.
+            if dest_dir:
+                copy_dir_tree(cached_repo_path, dest_dir)
+                return dest_dir
+
+            return cached_repo_path
+        finally:
+            if filelock:
+                filelock.lock.release()
 
     return _build_repo_w_cache_checking
 
