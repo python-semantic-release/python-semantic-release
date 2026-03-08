@@ -457,22 +457,26 @@ def test_create_release_succeeds(
     # Mock the PyGithub Repository's create_git_release method
     mock_release = mock.MagicMock()
     mock_release.id = mock_release_id
-    default_gh_client.repo.create_git_release = mock.MagicMock(
-        return_value=mock_release
-    )
 
-    # Execute method under test
-    actual_rtn_val = default_gh_client.create_release(tag, RELEASE_NOTES, prerelease)
+    with mock.patch.object(
+        default_gh_client.repo,
+        "create_git_release",
+        return_value=mock_release,
+    ) as mock_create_git_release:
+        # Execute method under test
+        actual_rtn_val = default_gh_client.create_release(
+            tag, RELEASE_NOTES, prerelease
+        )
 
-    # Evaluate (expected -> actual)
-    assert mock_release_id == actual_rtn_val
-    default_gh_client.repo.create_git_release.assert_called_once_with(
-        tag=tag,
-        name=tag,
-        message=RELEASE_NOTES,
-        draft=False,
-        prerelease=prerelease,
-    )
+        # Evaluate (expected -> actual)
+        assert mock_release_id == actual_rtn_val
+        mock_create_git_release.assert_called_once_with(
+            tag=tag,
+            name=tag,
+            message=RELEASE_NOTES,
+            draft=False,
+            prerelease=prerelease,
+        )
 
 
 # Note - mocking as the logic for the create/update of a release
