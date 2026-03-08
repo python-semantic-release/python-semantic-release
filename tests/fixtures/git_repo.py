@@ -507,6 +507,7 @@ if TYPE_CHECKING:
             license_name: str = "",
             dest_file: Path | None = None,
             mask_initial_release: bool = True,  # Default as of v10
+            include_pypi_link: bool = False,
         ) -> str: ...
 
     class GetHvcsClientFromRepoDefFn(Protocol):
@@ -2497,6 +2498,7 @@ def generate_default_release_notes_from_def(  # noqa: C901
         license_name: str = "",
         dest_file: Path | None = None,
         mask_initial_release: bool = True,  # Default as of v10
+        include_pypi_link: bool = False,
     ) -> str:
         limited_repo_def: RepoDefinition = get_commits_from_repo_build_def(
             build_definition=version_actions,
@@ -2532,7 +2534,7 @@ def generate_default_release_notes_from_def(  # noqa: C901
             ],
         )
 
-        if previous_version and not isinstance(hvcs, Gitea):
+        if include_pypi_link and previous_version and not isinstance(hvcs, Gitea):
             release_notes_content += "\n---\n\n**Installable artifacts are available from**:\n\n- [PyPi Registry](https://pypi.org/project/{repo_name}/{version})\n".format(
                 repo_name=hvcs.repo_name,
                 version=version,
