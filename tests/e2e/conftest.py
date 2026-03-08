@@ -78,6 +78,9 @@ class _PostOnlyMocker:
     def last_request(self) -> _RequestObjectProxy | None:
         return self._post_list[-1] if self._post_list else None
 
+    def reset_mock(self) -> None:
+        self._post_list.clear()
+
     def __getattr__(self, name: str) -> Any:
         return getattr(self._mocker, name)
 
