@@ -1,4 +1,5 @@
-{#  EXAMPLE:
+{%    from ".components/macros.md.j2" import format_link_reference
+%}{#  EXAMPLE:
 
 ## v1.0.0 (2020-01-01)
 
@@ -30,6 +31,12 @@ _This release is published under the MIT License._
 
 **Detailed Changes**: [vX.X.X...vX.X.X](https://domain.com/namespace/repo/compare/vX.X.X...vX.X.X)
 
+---
+
+**Installable artifacts are available from**:
+
+- [PyPi Registry](https://pypi.org/project/package_name/x.x.x)
+
 #}{#  # Set line width to 1000 to avoid wrapping as GitHub will handle it
 #}{%  set max_line_width = max_line_width | default(1000)
 %}{%  set hanging_indent = hanging_indent | default(2)
@@ -59,4 +66,17 @@ _This release is published under the MIT License._
 }}{{      "**Detailed Changes**: %s" | format(detailed_changes_link)
 }}{%    endif
 %}{%  endif
+%}{#
+#}{%  if include_pypi_link | default(False)
+%}{{  "\n"
+}}{{  "---\n"
+}}{{  "\n"
+}}{{  "**Installable artifacts are available from**:\n\n"
+}}{{  "- %s" | format(
+        format_link_reference(
+          repo_name | create_pypi_url(release.version | string),
+          "PyPi Registry",
+        )
+      )
+}}{%  endif
 %}

@@ -4,7 +4,6 @@ import importlib
 import logging
 from enum import Enum
 
-# from typing import TYPE_CHECKING
 import click
 from rich.console import Console
 from rich.logging import RichHandler
@@ -17,10 +16,6 @@ from semantic_release.cli.const import DEFAULT_CONFIG_FILE
 from semantic_release.cli.util import rprint
 from semantic_release.enums import SemanticReleaseLogLevels
 
-# if TYPE_CHECKING:
-#     pass
-
-
 FORMAT = "%(message)s"
 LOG_LEVELS = [
     SemanticReleaseLogLevels.WARNING,
@@ -30,7 +25,7 @@ LOG_LEVELS = [
 ]
 
 
-class Cli(click.MultiCommand):
+class Cli(click.MultiCommand):  # type: ignore[misc, valid-type]
     """Root MultiCommand for the semantic-release CLI"""
 
     class SubCmds(Enum):

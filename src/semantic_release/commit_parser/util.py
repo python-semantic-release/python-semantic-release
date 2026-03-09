@@ -100,6 +100,12 @@ def force_str(msg: str | bytes | bytearray | memoryview) -> str:
 
 
 def deep_copy_commit(commit: Commit) -> dict[str, Any]:
+    # Only copy attributes that are always safe to access without triggering gitdb
+    # lazy-loading.  Lazy-loaded attributes (e.g. ``tree``, ``gpgsig``) cause GitPython
+    # to spawn a ``git cat-file --batch`` subprocess; on Windows this can exhaust OS
+    # handles / pagefile space (WinError 1450 / 1455) after many test-spawned repos.
+    # The artificial commits produced by ``unsquash_commit`` are used solely for message
+    # parsing, so ``tree`` and ``gpgsig`` are not needed.
     keys = [
         "repo",
         "binsha",
@@ -108,18 +114,18 @@ def deep_copy_commit(commit: Commit) -> dict[str, Any]:
         "committer",
         "committed_date",
         "message",
-        "tree",
         "parents",
         "encoding",
-        "gpgsig",
         "author_tz_offset",
         "committer_tz_offset",
     ]
     kwargs = {}
     for key in keys:
-        with suppress(ValueError):
+        # Suppress ValueError (GitPython internal) and OSError (WinError 1450/1455 resource
+        # exhaustion) so a single failing attribute never aborts the whole copy.
+        with suppress(ValueError, OSError):
             if hasattr(commit, key) and (value := getattr(commit, key)) is not None:
-                if key in ["parents", "repo", "tree"]:
+                if key in ["parents", "repo"]:
                     # These tend to have circular references so don't deepcopy them
                     kwargs[key] = value
                     continue

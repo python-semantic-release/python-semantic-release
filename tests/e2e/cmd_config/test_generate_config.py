@@ -29,7 +29,11 @@ NULL_BYTE = b"\x00"
 
 @pytest.fixture
 def raw_config_dict() -> dict[str, Any]:
-    return RawConfig().model_dump(mode="json", exclude_none=True)
+    return RawConfig().model_dump(
+        mode="json",
+        exclude_none=True,
+        exclude={"changelog": {"changelog_file"}},
+    )
 
 
 @pytest.mark.parametrize("args", [(), ("--format", "toml"), ("--format", "TOML")])

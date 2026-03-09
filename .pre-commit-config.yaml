@@ -2,7 +2,7 @@
 default_language_version:
   python: python3
 
-exclude: "^CHANGELOG.md$"
+exclude: "^CHANGELOG.rst$"
 
 repos:
   # Meta hooks
@@ -56,9 +56,22 @@ repos:
         additional_dependencies:
           - "pydantic>=2,<3"
           - "types-requests"
+          - "types-Deprecated"
+          - "types-pyyaml"
+          - "click~=8.1"
+          - "gitpython~=3.0"
+          - "jinja2~=3.1"
+          - "PyGithub~=2.0"
+          - "python-gitlab>=4.0.0,<7.0.0"
+          - "tomlkit~=0.13.0"
+          - "rich~=14.0"
+          - "shellingham~=1.5"
+          - "importlib-resources~=6.0"
+          - "click-option-group~=0.5"
         log_file: "mypy.log"
         files: "^(src|tests)/.*"
         pass_filenames: false
+        args: ["src"]
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
@@ -80,8 +93,9 @@ repos:
           - --min-confidence
           - "100"
           - --sort-by-size
-          - "semantic_release"
+          - "src/semantic_release"
           - "tests"
+        pass_filenames: false
 
   - repo: https://github.com/pycqa/bandit
     rev: 1.7.8

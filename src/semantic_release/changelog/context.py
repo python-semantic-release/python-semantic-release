@@ -30,6 +30,7 @@ class ReleaseNotesContext:
     release: Release
     mask_initial_release: bool
     license_name: str
+    include_pypi_link: bool = False
     filters: tuple[Callable[..., Any], ...] = ()
 
     def bind_to_environment(self, env: Environment) -> Environment:

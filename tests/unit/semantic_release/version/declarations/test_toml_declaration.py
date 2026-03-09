@@ -328,11 +328,12 @@ def test_toml_declaration_noop_warning_on_no_version_in_file(
         )
         for replacement_def, error_msg in [
             (
-                f"{Path(__file__)!s}",
+                # Use a relative path to avoid Windows drive letter colon issue
+                "test_file_path.toml",
                 regexp(r"Invalid TOML replacement definition .*, missing ':'"),
             ),
             (
-                f"{Path(__file__)!s}:tool.poetry.version:not_a_valid_version_type",
+                "test_file_path.toml:tool.poetry.version:not_a_valid_version_type",
                 "Invalid stamp type, must be one of:",
             ),
         ]

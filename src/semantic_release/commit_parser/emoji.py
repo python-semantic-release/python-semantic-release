@@ -182,8 +182,8 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             str.join(
                 "",
                 [
-                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):",
-                    r"[\t ]+(?P<issue_predicate>.+)[\t ]*$",
+                    r"^(?:clos(?:e|es|ed|ing)|fix(?:es|ed|ing)?|resolv(?:e|es|ed|ing)|implement(?:s|ed|ing)?):[ \t]+",
+                    r"(?P<issue_predicate>.+)[\t ]*$",
                 ],
             ),
             flags=re.MULTILINE | re.IGNORECASE,

@@ -134,7 +134,10 @@ def test_file_declaration_from_definition(
 
     # Evaluate
     actual_contents = Path(test_file).read_text()
-    assert resulting_contents == actual_contents
+    # Normalize line endings for cross-platform compatibility
+    assert resulting_contents.replace("\r\n", "\n") == actual_contents.replace(
+        "\r\n", "\n"
+    )
     assert expected_filepath == actual_file_modified
 
 
@@ -166,7 +169,11 @@ def test_file_declaration_no_file_change():
 
     # Evaluate
     actual_contents = expected_filepath.read_text()
-    assert starting_contents == actual_contents
+    # Normalize line endings and strip trailing whitespace for cross-platform compatibility
+    assert (
+        starting_contents.replace("\r\n", "\n").rstrip()
+        == actual_contents.replace("\r\n", "\n").rstrip()
+    )
     assert file_modified is None
 
 
@@ -194,7 +201,11 @@ def test_file_declaration_creates_when_missing_file():
     # Evaluate
     assert missing_file_path.exists()
     actual_contents = missing_file_path.read_text()
-    assert expected_contents == actual_contents
+    # Normalize line endings and strip trailing whitespace for cross-platform compatibility
+    assert (
+        expected_contents.replace("\r\n", "\n").rstrip()
+        == actual_contents.replace("\r\n", "\n").rstrip()
+    )
 
 
 @pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)

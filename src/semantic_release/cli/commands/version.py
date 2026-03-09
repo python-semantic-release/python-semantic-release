@@ -5,6 +5,7 @@ import subprocess
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import click
@@ -13,16 +14,21 @@ from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from git import GitCommandError, Repo
 from requests import HTTPError
 
+from semantic_release.changelog.context import ReleaseNotesContext
 from semantic_release.changelog.release_history import ReleaseHistory
+from semantic_release.changelog.template import environment
 from semantic_release.cli.changelog_writer import (
     generate_release_notes,
+    get_default_tpl_dir,
     write_changelog_files,
 )
+from semantic_release.cli.config import ChangelogOutputFormat
 from semantic_release.cli.github_actions_output import (
     PersistenceMode,
     VersionGitHubActionsOutput,
 )
 from semantic_release.cli.util import noop_report, rprint
+from semantic_release.commit_parser.token import ParsedCommit
 from semantic_release.const import DEFAULT_SHELL, DEFAULT_VERSION
 from semantic_release.enums import LevelBump
 from semantic_release.errors import (
@@ -52,7 +58,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from git.refs.tag import Tag
 
+    from semantic_release.changelog.release_history import Release
     from semantic_release.cli.cli_context import CliContextObj
+    from semantic_release.cli.config import RuntimeContext
     from semantic_release.version.declaration import IVersionReplacer
     from semantic_release.version.version import Version
 
@@ -183,15 +191,20 @@ def shell(
     cmd: str, *, env: Mapping[str, str] | None = None, check: bool = True
 ) -> subprocess.CompletedProcess:
     shell: str | None
+    shell_path: str | None
     try:
-        shell, _ = shellingham.detect_shell()
+        shell, shell_path = shellingham.detect_shell()
     except shellingham.ShellDetectionFailure:
         logger.warning("failed to detect shell, using default shell: %s", DEFAULT_SHELL)
         logger.debug("stack trace", exc_info=True)
         shell = DEFAULT_SHELL
+        shell_path = DEFAULT_SHELL
 
     if not shell:
         raise TypeError("'shell' is None")
+
+    if not shell_path:
+        raise TypeError("'shell_path' is None")
 
     shell_cmd_param = defaultdict(
         lambda: "-c",
@@ -203,7 +216,7 @@ def shell(
     )
 
     return subprocess.run(  # noqa: S603
-        [shell, shell_cmd_param[shell], cmd],
+        [shell_path, shell_cmd_param[shell], cmd],
         env=(env or {}),
         check=check,
     )
@@ -275,7 +288,7 @@ def build_distributions(
             lambda k_v: k_v[1] is not None,  # type: ignore[arg-type]
             {
                 # Common values
-                "PATH": os.getenv("PATH", ""),
+                "PATH": os.getenv("PATH", None),
                 "HOME": os.getenv("HOME", None),
                 "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", None),
                 # Windows environment variables
@@ -304,6 +317,158 @@ def build_distributions(
         logger.exception(exc)
         logger.error("Build command failed with exit code %s", exc.returncode)  # noqa: TRY400
         raise BuildDistributionsError from exc
+    except FileNotFoundError as exc:
+        logger.exception(exc)
+        logger.error("Failed to execute build command: shell executable not found")  # noqa: TRY400
+        raise BuildDistributionsError("Shell executable not found") from exc
+
+
+def _post_release_announcements(
+    hvcs_client: Github,
+    release_history: ReleaseHistory,
+    new_version: Version,
+    runtime: RuntimeContext,
+) -> None:
+    """
+    Post release announcements to linked issues and PRs.
+
+    Extracts all linked issues and PRs from commits in the release,
+    renders appropriate announcement templates, and posts comments.
+
+    :param hvcs_client: The GitHub HVCS client
+    :param release_history: The release history containing all commits
+    :param new_version: The new version being released
+    :param runtime: The CLI runtime context
+    """
+    try:
+        # Get the release data for this version
+        release = release_history.released.get(new_version)
+        if not release:
+            logger.warning("Could not find release data for version %s", new_version)
+            return
+
+        # Track processed issues/PRs to avoid duplicates
+        processed_issues: set[str] = set()
+
+        # Extract all commits from the release
+        for commits in release["elements"].values():
+            for commit in commits:
+                # Only process ParsedCommit objects (not ParseError)
+                if not isinstance(commit, ParsedCommit):
+                    continue
+
+                # Handle the linked PR first
+                if commit.linked_merge_request:
+                    pr_ref = commit.linked_merge_request.lstrip("#GH-!")
+                    if pr_ref and pr_ref not in processed_issues:
+                        _post_announcement_to_issue(
+                            hvcs_client=hvcs_client,
+                            issue_id=pr_ref,
+                            template_name=".pr_publish_announcement.md.j2",
+                            release=release,
+                            runtime=runtime,
+                        )
+                        processed_issues.add(pr_ref)
+
+                # Handle all linked issues
+                for issue_ref in commit.linked_issues:
+                    issue_id = issue_ref.lstrip("#GH-!")
+                    if issue_id and issue_id not in processed_issues:
+                        _post_announcement_to_issue(
+                            hvcs_client=hvcs_client,
+                            issue_id=issue_id,
+                            template_name=".issue_resolution_announcement.md.j2",
+                            release=release,
+                            runtime=runtime,
+                        )
+                        processed_issues.add(issue_id)
+
+        logger.info(
+            "Posted release announcements to %d issue(s)/PR(s)", len(processed_issues)
+        )
+
+    except Exception as exc:  # noqa: BLE001
+        # Best effort: don't fail the entire release if announcements fail
+        logger.warning("Failed to post release announcements: %s", exc, exc_info=True)
+
+
+def _post_announcement_to_issue(
+    hvcs_client: Github,
+    issue_id: str,
+    template_name: str,
+    release: Release,
+    runtime: RuntimeContext,
+) -> None:
+    """
+    Post an announcement comment to a single issue or PR.
+
+    :param hvcs_client: The GitHub HVCS client
+    :param issue_id: The issue or PR number
+    :param template_name: The template file name to render
+    :param release: The release object containing version and other metadata
+    :param runtime: The CLI runtime context
+    """
+    try:
+        # Convert issue_id to int (it comes in as string from commit parsing)
+        issue_number = int(issue_id)
+
+        # Create a template environment with proper filters using ReleaseNotesContext
+        # This ensures filters like create_release_url and format_w_official_vcs_name are available
+        from semantic_release.changelog.context import (
+            autofit_text_width,
+            create_pypi_url,
+        )
+        from semantic_release.helpers import sort_numerically
+
+        template_context = ReleaseNotesContext(
+            repo_name=hvcs_client.repo_name,
+            repo_owner=hvcs_client.owner,
+            hvcs_type=hvcs_client.__class__.__name__.lower(),
+            version=release["version"],
+            release=release,
+            mask_initial_release=False,  # Not applicable for announcements
+            license_name="",  # Not applicable for announcements
+            filters=(
+                *hvcs_client.get_changelog_context_filters(),
+                create_pypi_url,
+                autofit_text_width,
+                sort_numerically,
+            ),
+        )
+
+        # Prefer user-provided template if present, else fall back to default
+        users_tpl_file = runtime.template_dir / template_name
+        if users_tpl_file.is_file():
+            template_env = template_context.bind_to_environment(
+                runtime.template_environment
+            )
+        else:
+            default_tpl_dir = get_default_tpl_dir(
+                style=runtime.changelog_style,
+                sub_dir=ChangelogOutputFormat.MARKDOWN.value,
+            )
+            template_env = template_context.bind_to_environment(
+                environment(autoescape=False, template_dir=default_tpl_dir)
+            )
+
+        # Render the announcement template with proper filter context
+        template = template_env.get_template(template_name)
+        announcement = template.render()
+
+        # Post the comment
+        hvcs_client.post_comment(issue_number, announcement)
+        logger.debug("Posted announcement to issue/PR #%d", issue_number)
+
+        # Add the "released" label
+        hvcs_client.add_labels_to_issue(issue_number, ["released"])
+        logger.debug("Added 'released' label to issue/PR #%d", issue_number)
+
+    except ValueError as exc:
+        # Log if issue_id cannot be converted to int
+        logger.warning("Invalid issue/PR ID '%s': %s", issue_id, exc)
+    except Exception as exc:  # noqa: BLE001
+        # Best effort: log but continue processing other issues
+        logger.warning("Failed to post announcement to issue/PR #%s: %s", issue_id, exc)
 
 
 @click.command(
@@ -833,6 +998,16 @@ def version(  # noqa: C901
             assets=assets,
             noop=opts.noop,
         )
+
+        # Post release announcements to linked issues and PRs
+        if not opts.noop and isinstance(hvcs_client, Github):
+            _post_release_announcements(
+                hvcs_client=hvcs_client,
+                release_history=release_history,
+                new_version=new_version,
+                runtime=runtime,
+            )
+
     except HTTPError as err:
         exception = err
     except UnexpectedResponse as err:

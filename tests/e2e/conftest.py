@@ -23,11 +23,12 @@ from tests.util import prepare_mocked_git_command_wrapper_type
 
 if TYPE_CHECKING:
     from re import Pattern
-    from typing import Protocol
+    from typing import Any, Protocol
 
     from git.repo import Repo
     from pytest import MonkeyPatch
     from requests_mock.mocker import Mocker
+    from requests_mock.request import _RequestObjectProxy
 
     from tests.fixtures.example_project import ExProjectDir
 
@@ -62,11 +63,60 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
             item.add_marker(pytest.mark.e2e)
 
 
+class _PostOnlyMocker:
+    """Wrapper around a requests_mock Mocker that filters call_count/last_request to POST only."""
+
+    def __init__(self, mocker: Mocker, post_list: list[_RequestObjectProxy]) -> None:
+        self._mocker = mocker
+        self._post_list = post_list
+
+    @property
+    def call_count(self) -> int:
+        return len(self._post_list)
+
+    @property
+    def last_request(self) -> _RequestObjectProxy | None:
+        return self._post_list[-1] if self._post_list else None
+
+    def reset_mock(self) -> None:
+        self._post_list.clear()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._mocker, name)
+
+
 @pytest.fixture
-def post_mocker(requests_mock: Mocker) -> Mocker:
-    """Patch all POST requests, mocking a response body for VCS release creation."""
-    requests_mock.register_uri("POST", ANY, json={"id": 999})
-    return requests_mock
+def post_mocker(requests_mock: Mocker) -> _PostOnlyMocker:
+    """
+    Patch all POST requests, mocking a response body for VCS release creation.
+
+    Also mocks GET requests for PyGithub repository access to avoid unmocked requests.
+    """
+    # Track POST and GET requests separately
+    post_requests = []
+    get_requests = []
+
+    def post_callback(request, context):
+        """Callback for POST requests."""
+        post_requests.append(request)
+        return {"id": 999}
+
+    def get_callback(request, context):
+        """Callback for GET requests (PyGithub repository access)."""
+        get_requests.append(request)
+        return {
+            "id": 1296269,
+            "owner": {"login": "example_owner"},
+            "name": "example_repo",
+            "full_name": "example_owner/example_repo",
+            "description": "Test repository",
+            "private": False,
+        }
+
+    requests_mock.register_uri("POST", ANY, json=post_callback)
+    requests_mock.register_uri("GET", ANY, json=get_callback)
+
+    return _PostOnlyMocker(requests_mock, post_requests)
 
 
 @pytest.fixture

@@ -114,8 +114,12 @@ def remove_dir_tree(directory: Path | str = ".", force: bool = False) -> None:
     """
 
     def on_read_only_error(_func, path, _exc_info):
-        os.chmod(path, stat.S_IWRITE)
-        os.unlink(path)
+        if os.path.isdir(path):
+            os.chmod(path, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            os.chmod(path, stat.S_IWRITE)
+            os.unlink(path)
 
     # Prevent error if already deleted or never existed, that is our desired state
     with suppress(FileNotFoundError):
@@ -149,9 +153,10 @@ def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
     """Makes a deterministic file change for testing"""
     tgt_file = Path(filename).resolve().absolute()
 
-    # TODO: switch to Path.is_relative_to() when 3.8 support is deprecated
-    # if not tgt_file.is_relative_to(Path(repo.working_dir).resolve().absolute()):
-    if Path(repo.working_dir).resolve().absolute() not in tgt_file.parents:
+    if (
+        Path(repo.working_dir).resolve().absolute() not in tgt_file.parents
+        and Path(repo.working_dir).resolve().absolute() != tgt_file
+    ):
         raise ValueError(
             f"File {tgt_file} is not relative to the repository working directory {repo.working_dir}"
         )

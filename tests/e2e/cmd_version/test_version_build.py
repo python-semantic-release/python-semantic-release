@@ -318,7 +318,7 @@ def test_version_runs_build_command_w_user_env(
 
         # [2] Make sure the subprocess was called with the correct environment
         patched_subprocess_run.assert_called_once_with(
-            ["bash", "-c", build_command],
+            ["/usr/bin/bash", "-c", build_command],
             check=True,
             env={
                 **clean_os_environment,

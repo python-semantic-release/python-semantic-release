@@ -507,6 +507,7 @@ if TYPE_CHECKING:
             license_name: str = "",
             dest_file: Path | None = None,
             mask_initial_release: bool = True,  # Default as of v10
+            include_pypi_link: bool = False,
         ) -> str: ...
 
     class GetHvcsClientFromRepoDefFn(Protocol):
@@ -2497,6 +2498,7 @@ def generate_default_release_notes_from_def(  # noqa: C901
         license_name: str = "",
         dest_file: Path | None = None,
         mask_initial_release: bool = True,  # Default as of v10
+        include_pypi_link: bool = False,
     ) -> str:
         limited_repo_def: RepoDefinition = get_commits_from_repo_build_def(
             build_definition=version_actions,
@@ -2505,35 +2507,40 @@ def generate_default_release_notes_from_def(  # noqa: C901
         version: Version = Version.parse(next(iter(limited_repo_def.keys())))
         version_def: RepoVersionDef = limited_repo_def[str(version)]
 
-        release_notes_content = (
-            str.join(
-                "\n" * 2,
-                [
-                    (
-                        build_initial_version_entry_markdown(str(version), license_name)
-                        if mask_initial_release and not previous_version
-                        else build_version_entry_markdown(
-                            str(version), version_def, hvcs, license_name
-                        )
-                    ).rstrip(),
-                    *(
-                        [
-                            "---",
-                            "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
-                                prev_version=previous_version.as_tag(),
-                                new_version=version.as_tag(),
-                                version_compare_url=hvcs.compare_url(
-                                    previous_version.as_tag(), version.as_tag()
-                                ),
+        release_notes_content = str.join(
+            "\n" * 2,
+            [
+                (
+                    build_initial_version_entry_markdown(str(version), license_name)
+                    if mask_initial_release and not previous_version
+                    else build_version_entry_markdown(
+                        str(version), version_def, hvcs, license_name
+                    )
+                ).rstrip(),
+                *(
+                    [
+                        "---",
+                        "**Detailed Changes**: [{prev_version}...{new_version}]({version_compare_url})".format(
+                            prev_version=previous_version.as_tag(),
+                            new_version=version.as_tag(),
+                            version_compare_url=hvcs.compare_url(
+                                previous_version.as_tag(), version.as_tag()
                             ),
-                        ]
-                        if previous_version and not isinstance(hvcs, Gitea)
-                        else []
-                    ),
-                ],
-            ).rstrip()
-            + "\n"
+                        ),
+                    ]
+                    if previous_version and not isinstance(hvcs, Gitea)
+                    else []
+                ),
+            ],
         )
+
+        if include_pypi_link and previous_version and not isinstance(hvcs, Gitea):
+            release_notes_content += "\n---\n\n**Installable artifacts are available from**:\n\n- [PyPi Registry](https://pypi.org/project/{repo_name}/{version})\n".format(
+                repo_name=hvcs.repo_name,
+                version=version,
+            )
+        else:
+            release_notes_content = release_notes_content.rstrip() + "\n"
 
         if dest_file is not None:
             # Converts universal newlines to the OS-specific upon write

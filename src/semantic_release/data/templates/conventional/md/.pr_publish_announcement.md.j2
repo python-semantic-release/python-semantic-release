@@ -1,0 +1,19 @@
+{%    from ".components/macros.md.j2" import format_link_reference
+%}{#
+EXAMPLE:
+
+### :tada: This PR has been published as part of Version #.#.# :tada:
+
+You can find more information about this release on the [GitHub Releases](https://domain.com/namespace/repo/releases/tag/v#.#.#) page.
+
+#}{%  if create_release_url is defined
+%}{%    set vcs_release_link = format_link_reference(
+          release.version.as_tag() | create_release_url,
+          "%s Releases" | format_w_official_vcs_name,
+        )
+%}{%  endif -%}
+### :tada: This PR has been published as part of Version {{ release.version | string }} :tada:
+
+{% if vcs_release_link is defined and vcs_release_link %}
+You can find more information about this release on the {{ vcs_release_link }} page.
+{%- endif %}

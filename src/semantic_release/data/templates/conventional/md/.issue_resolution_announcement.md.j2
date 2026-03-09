@@ -1,0 +1,21 @@
+{%    from ".components/macros.md.j2" import format_link_reference
+%}{#
+EXAMPLE:
+
+### :tada: This issue has been resolved in Version #.#.# :tada:
+
+You can find more information about this release on the [GitHub Releases](https://domain.com/namespace/repo/releases/tag/v#.#.#) page.
+
+If your issue persists, please reply here and we will re-open the issue. If you receive a new error, please open a new issue and reference this issue number in the new issue description.
+
+#}{%  if create_release_url is defined
+%}{%    set vcs_release_link = format_link_reference(
+          release.version.as_tag() | create_release_url,
+          "%s Releases" | format_w_official_vcs_name,
+        )
+%}{%  endif -%}
+### :tada: This issue has been resolved in Version {{ release.version | string }} :tada:
+{% if vcs_release_link is defined and vcs_release_link %}
+You can find more information about this release on the {{ vcs_release_link }} page.
+{%- endif %}
+If your issue persists, please reply here and we will re-open the issue. If you receive a new error, please open a new issue and reference this issue number in the new issue description.

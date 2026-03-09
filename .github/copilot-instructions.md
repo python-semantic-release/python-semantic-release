@@ -255,6 +255,10 @@ and is not present in the default branch.
 [optional footer(s)]
 ```
 
+The header line (`<type>(<scope>): <summary>`) must not exceed **100 characters**.
+This limit is enforced by commitlint in CI and will cause the pipeline to fail.
+Always check the length of the header before committing.
+
 Scopes by the specification are optional but for this project, they are required and
 only by exception can they be omitted.
 
@@ -548,3 +552,7 @@ itself to perform the release steps. The release process includes:
   versioning. Make as few breaking changes as possible by adding backwards compatibility
   and if you do make a breaking change, be sure to include a detailed description in the
   `BREAKING CHANGE` footer of the commit message.
+
+- Never disable or bypass pre-commit hooks (e.g. do not use `git commit --no-verify`).
+  All hooks must remain active and pass before committing. If a hook is failing, fix the
+  underlying issue rather than skipping the check.

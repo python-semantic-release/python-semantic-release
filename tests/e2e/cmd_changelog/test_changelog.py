@@ -9,6 +9,7 @@ import pytest
 import requests_mock
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from requests import Session
+from requests_mock import ANY
 
 import semantic_release.hvcs.github
 from semantic_release.changelog.context import ChangelogMode
@@ -1049,49 +1050,45 @@ def test_changelog_release_tag_not_in_history(
         ("--post-to-release-tag", "v0.2.0"),  #      latest release
     ],
 )
-def test_changelog_post_to_release(args: list[str], run_cli: RunCliFn):
-    # Set up a requests HTTP session so we can catch the HTTP calls and ensure they're
-    # made
-
-    session = Session()
-    session.hooks = {"response": [lambda r, *_, **__: r.raise_for_status()]}
-
-    mock_adapter = requests_mock.Adapter()
-    mock_adapter.register_uri(
-        method=requests_mock.ANY, url=requests_mock.ANY, json={"id": 10001}
-    )
-    session.mount("http://", mock_adapter)
-    session.mount("https://", mock_adapter)
-
+def test_changelog_post_to_release(
+    args: list[str], run_cli: RunCliFn, requests_mock: Mocker
+):
     expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
         api_url=f"https://{EXAMPLE_HVCS_DOMAIN}/api/v3",  # GitHub API URL
         owner=EXAMPLE_REPO_OWNER,
         repo_name=EXAMPLE_REPO_NAME,
     )
 
-    # Patch out env vars that affect changelog URLs but only get set in e.g.
-    # Github actions
-    with mock.patch(
-        # Patching the specific module's reference to the build_requests_session function
-        f"{semantic_release.hvcs.github.__name__}.{semantic_release.hvcs.github.build_requests_session.__name__}",
-        return_value=session,
-    ) as build_requests_session_mock:
-        # Act
-        cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
-        result = run_cli(
-            cli_cmd[1:],
-            env={
-                "CI": "true",
-                "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
-            },
-        )
+    # Register GET mocks (for PyGithub repository access and release lookups)
+    requests_mock.register_uri(
+        "GET",
+        ANY,
+        json={
+            "id": 1296269,
+            "name": EXAMPLE_REPO_NAME,
+            "full_name": f"{EXAMPLE_REPO_OWNER}/{EXAMPLE_REPO_NAME}",
+            "owner": {"login": EXAMPLE_REPO_OWNER},
+            "private": False,
+        },
+    )
+    # Register POST mock (for release creation)
+    requests_mock.register_uri("POST", ANY, json={"id": 10001})
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD, *args]
+    result = run_cli(
+        cli_cmd[1:],
+        env={
+            "CI": "true",
+            "VIRTUAL_ENV": os.getenv("VIRTUAL_ENV", "./.venv"),
+        },
+    )
 
     # Evaluate
     assert_successful_exit_code(result, cli_cmd)
-    assert build_requests_session_mock.called
-    assert mock_adapter.called
-    assert mock_adapter.last_request is not None
-    assert expected_request_url == mock_adapter.last_request.url
+    post_requests = [r for r in requests_mock.request_history if r.method == "POST"]
+    assert len(post_requests) > 0
+    assert expected_request_url in [r.url.replace(":443/", "/") for r in post_requests]
 
 
 @pytest.mark.parametrize(

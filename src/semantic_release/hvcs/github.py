@@ -10,7 +10,8 @@ from pathlib import PurePosixPath
 from re import compile as regexp
 from typing import TYPE_CHECKING
 
-from requests import HTTPError, JSONDecodeError
+from github import Auth, Github as GithubClient, GithubException
+from requests import HTTPError
 from urllib3.util.url import Url, parse_url
 
 from semantic_release.cli.util import noop_report
@@ -27,6 +28,8 @@ from semantic_release.hvcs.util import build_requests_session, suppress_not_foun
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
+
+    from github.Repository import Repository
 
 
 # Add a mime type for wheels
@@ -94,6 +97,12 @@ class Github(RemoteHvcsBase):
         self.token = token
         auth = None if not self.token else TokenAuth(self.token)
         self.session = build_requests_session(auth=auth)
+
+        # Initialize PyGithub client
+        github_auth = Auth.Token(self.token) if self.token else None
+        self._github_client: GithubClient | None = None
+        self._github_auth = github_auth
+        self._repository: Repository | None = None
 
         # ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
         domain_url_str = (
@@ -175,6 +184,61 @@ class Github(RemoteHvcsBase):
             ).url.rstrip("/")
         )
 
+        # Initialize PyGithub client with appropriate base_url
+        base_url = self._determine_github_api_base_url()
+        if base_url is not None:
+            self._github_client = GithubClient(
+                auth=self._github_auth, base_url=base_url
+            )
+        else:
+            self._github_client = GithubClient(auth=self._github_auth)
+
+    def _determine_github_api_base_url(self) -> str | None:
+        """
+        Determine the base URL for PyGithub client based on GitHub product type
+
+        Returns None for github.com (uses PyGithub's default api.github.com),
+        or the full API URL for GitHub Enterprise Server instances.
+        """
+        if self.hvcs_domain.url == f"https://{self.DEFAULT_DOMAIN}":
+            # Use PyGithub's default (api.github.com)
+            return None
+        # Use the calculated api_url for GitHub Enterprise Server
+        return self.api_url.url
+
+    @property
+    def repo(self) -> Repository:
+        """
+        Lazy-load and cache the GitHub repository object
+
+        Returns
+        -------
+        Repository: The PyGithub Repository object for this HVCS instance
+
+        Raises
+        ------
+        GithubException: If the repository cannot be accessed
+
+        """
+        if self._repository is None:
+            if self._github_client is None:
+                msg = "GitHub client not initialized"
+                raise RuntimeError(msg)
+            try:
+                self._repository = self._github_client.get_repo(
+                    f"{self.owner}/{self.repo_name}"
+                )
+                logger.debug("Loaded repository %s/%s", self.owner, self.repo_name)
+            except GithubException as err:
+                logger.error(
+                    "Failed to get repository %s/%s: %s",
+                    self.owner,
+                    self.repo_name,
+                    err,
+                )
+                raise
+        return self._repository
+
     def _derive_api_url_from_base_domain(self) -> Url:
         return parse_url(
             Url(
@@ -250,37 +314,27 @@ class Github(RemoteHvcsBase):
             return -1
 
         logger.info("Creating release for tag %s", tag)
-        releases_endpoint = self.create_api_url(
-            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases",
-        )
-        response = self.session.post(
-            releases_endpoint,
-            json={
-                "tag_name": tag,
-                "name": tag,
-                "body": release_notes,
-                "draft": False,
-                "prerelease": prerelease,
-            },
-        )
-
-        # Raise an error if the request was not successful
-        response.raise_for_status()
 
         try:
-            release_id: int = response.json()["id"]
+            release = self.repo.create_git_release(
+                tag=tag,
+                name=tag,
+                message=release_notes,
+                draft=False,
+                prerelease=prerelease,
+            )
+            release_id: int = release.id
             logger.info("Successfully created release with ID: %s", release_id)
-        except JSONDecodeError as err:
-            raise UnexpectedResponse("Unreadable json response") from err
-        except KeyError as err:
-            raise UnexpectedResponse("JSON response is missing an id") from err
+        except GithubException as err:
+            logger.error("Failed to create release: %s", err)
+            raise UnexpectedResponse(f"Failed to create release: {err}") from err
 
         errors = []
         for asset in assets or []:
             logger.info("Uploading asset %s", asset)
             try:
                 self.upload_release_asset(release_id, asset)
-            except HTTPError as err:
+            except (GithubException, AssetUploadError) as err:
                 errors.append(
                     AssetUploadError(f"Failed asset upload for {asset}").with_traceback(
                         err.__traceback__
@@ -306,21 +360,16 @@ class Github(RemoteHvcsBase):
         :param tag: Tag to get release for
         :return: ID of release, if found, else None
         """
-        tag_endpoint = self.create_api_url(
-            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/tags/{tag}",
-        )
-        response = self.session.get(tag_endpoint)
-
-        # Raise an error if the request was not successful
-        response.raise_for_status()
-
         try:
-            data = response.json()
-            return data["id"]
-        except JSONDecodeError as err:
-            raise UnexpectedResponse("Unreadable json response") from err
-        except KeyError as err:
-            raise UnexpectedResponse("JSON response is missing an id") from err
+            release = self.repo.get_release(tag)
+        except GithubException as err:
+            if err.status == 404:
+                logger.debug("Release not found for tag %s", tag)
+                return None
+            logger.error("Failed to get release by tag %s: %s", tag, err)
+            raise UnexpectedResponse(f"Failed to get release by tag: {err}") from err
+        else:
+            return release.id
 
     @logged_function(logger)
     def edit_release_notes(self, release_id: int, release_notes: str) -> int:
@@ -332,19 +381,21 @@ class Github(RemoteHvcsBase):
         :return: The ID of the release that was edited
         """
         logger.info("Updating release %s", release_id)
-        release_endpoint = self.create_api_url(
-            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
-        )
 
-        response = self.session.post(
-            release_endpoint,
-            json={"body": release_notes},
-        )
-
-        # Raise an error if the update was unsuccessful
-        response.raise_for_status()
-
-        return release_id
+        try:
+            release = self.repo.get_release(release_id)
+            release.update_release(
+                name=release.title,
+                message=release_notes,
+                draft=release.draft,
+                prerelease=release.prerelease,
+            )
+        except GithubException as err:
+            logger.error("Failed to edit release notes for %s: %s", release_id, err)
+            raise UnexpectedResponse(f"Failed to edit release: {err}") from err
+        else:
+            logger.debug("Successfully updated release %s", release_id)
+            return release_id
 
     @logged_function(logger)
     def create_or_update_release(
@@ -360,7 +411,7 @@ class Github(RemoteHvcsBase):
         logger.info("Creating release for %s", tag)
         try:
             return self.create_release(tag, release_notes, prerelease)
-        except HTTPError as err:
+        except (HTTPError, UnexpectedResponse) as err:
             logger.debug("error creating release: %s", err)
             logger.debug("looking for an existing release to update")
 
@@ -376,7 +427,7 @@ class Github(RemoteHvcsBase):
 
     @logged_function(logger)
     @suppress_not_found
-    def asset_upload_url(self, release_id: str) -> str | None:
+    def asset_upload_url(self, release_id: int) -> str | None:
         """
         Get the correct upload url for a release
         https://docs.github.com/en/enterprise-server@3.5/rest/releases/releases#get-a-release
@@ -384,22 +435,17 @@ class Github(RemoteHvcsBase):
         :return: URL to upload for a release if found, else None
         """
         # https://docs.github.com/en/enterprise-server@3.5/rest/releases/assets#upload-a-release-asset
-        release_url = self.create_api_url(
-            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
-        )
-
-        response = self.session.get(release_url)
-        response.raise_for_status()
-
         try:
-            upload_url: str = response.json()["upload_url"]
+            release = self.repo.get_release(release_id)
+            # PyGithub handles upload_url internally, but we need it for compatibility
+            upload_url: str = release.upload_url
             return upload_url.replace("{?name,label}", "")
-        except JSONDecodeError as err:
-            raise UnexpectedResponse("Unreadable json response") from err
-        except KeyError as err:
-            raise UnexpectedResponse(
-                "JSON response is missing a key 'upload_url'"
-            ) from err
+        except GithubException as err:
+            if err.status == 404:
+                logger.debug("Release not found: %s", release_id)
+                return None
+            logger.error("Failed to get upload URL for release %s: %s", release_id, err)
+            raise UnexpectedResponse(f"Failed to get upload URL: {err}") from err
 
     @logged_function(logger)
     def upload_release_asset(
@@ -413,39 +459,37 @@ class Github(RemoteHvcsBase):
         :param label: Optional custom label for this file
         :return: The status of the request
         """
-        url = self.asset_upload_url(release_id)
-        if url is None:
-            raise ValueError(
-                "There is no associated url for uploading asset for release "
-                f"{release_id}. Release url: "
-                f"{self.api_url}/repos/{self.owner}/{self.repo_name}/releases/{release_id}"
+        try:
+            release = self.repo.get_release(release_id)
+
+            # Determine content type
+            content_type = (
+                mimetypes.guess_type(file, strict=False)[0]
+                or "application/octet-stream"
             )
 
-        content_type = (
-            mimetypes.guess_type(file, strict=False)[0] or "application/octet-stream"
-        )
-
-        with open(file, "rb") as data:
-            response = self.session.post(
-                url,
-                params={"name": os.path.basename(file), "label": label},
-                headers={
-                    "Content-Type": content_type,
-                },
-                data=data.read(),
+            # Upload the asset using PyGithub
+            release.upload_asset(
+                path=file,
+                label=label or os.path.basename(file),
+                content_type=content_type,
             )
 
-            # Raise an error if the upload was unsuccessful
-            response.raise_for_status()
-
-        logger.debug(
-            "Successfully uploaded %s to Github, url: %s, status code: %s",
-            file,
-            response.url,
-            response.status_code,
-        )
-
-        return True
+        except GithubException as err:
+            logger.error(
+                "Failed to upload asset %s to release %s: %s",
+                file,
+                release_id,
+                err,
+            )
+            raise AssetUploadError(f"Failed to upload {file}") from err
+        else:
+            logger.debug(
+                "Successfully uploaded %s to GitHub release %s",
+                file,
+                release_id,
+            )
+            return True
 
     @logged_function(logger)
     def upload_dists(self, tag: str, dist_glob: str) -> int:
@@ -470,10 +514,12 @@ class Github(RemoteHvcsBase):
             try:
                 self.upload_release_asset(release_id, file_path)
                 n_succeeded += 1
-            except HTTPError as err:  # noqa: PERF203
+            except (HTTPError, AssetUploadError) as err:  # noqa: PERF203
                 logger.exception("error uploading asset %s", file_path)
                 status_code = (
-                    err.response.status_code if err.response is not None else "unknown"
+                    err.response.status_code
+                    if isinstance(err, HTTPError) and err.response is not None
+                    else "unknown"
                 )
                 error_msg = f"Failed to upload asset '{file_path}' to release"
                 if status_code != "unknown":
@@ -556,6 +602,70 @@ class Github(RemoteHvcsBase):
             return format_str.format(vcs_name=Github.OFFICIAL_NAME)
 
         return format_str
+
+    @logged_function(logger)
+    def post_comment(self, issue_id: int, body: str) -> int:
+        """
+        Post a comment to an issue or pull request.
+
+        :param issue_id: The issue/PR number
+        :param body: The comment text
+        :return: The comment ID
+        :raises UnexpectedResponse: If the comment could not be posted
+        """
+        try:
+            logger.debug("Posting comment to issue/PR %d", issue_id)
+            issue = self.repo.get_issue(issue_id)
+            comment = issue.create_comment(body)
+        except GithubException as err:
+            logger.error("Failed to post comment to issue/PR %d: %s", issue_id, err)
+            raise UnexpectedResponse(
+                f"Failed to post comment to issue {issue_id}"
+            ) from err
+        else:
+            logger.info("Posted comment %d to issue/PR %d", comment.id, issue_id)
+            return comment.id
+
+    @logged_function(logger)
+    def check_issue_state(self, issue_id: int) -> str:
+        """
+        Check the state of an issue or pull request.
+
+        :param issue_id: The issue/PR number
+        :return: The issue state ("open" or "closed")
+        :raises UnexpectedResponse: If the issue state could not be retrieved
+        """
+        try:
+            logger.debug("Checking state of issue/PR %d", issue_id)
+            issue = self.repo.get_issue(issue_id)
+        except GithubException as err:
+            logger.error("Failed to get state of issue/PR %d: %s", issue_id, err)
+            raise UnexpectedResponse(
+                f"Failed to get state of issue {issue_id}"
+            ) from err
+        else:
+            logger.debug("Issue/PR %d state is %s", issue_id, issue.state)
+            return issue.state
+
+    @logged_function(logger)
+    def add_labels_to_issue(self, issue_id: int, labels: list[str]) -> None:
+        """
+        Add labels to an issue or pull request.
+
+        :param issue_id: The issue/PR number
+        :param labels: List of label names to add
+        :raises UnexpectedResponse: If labels could not be added
+        """
+        try:
+            logger.debug("Adding labels %s to issue/PR %d", labels, issue_id)
+            issue = self.repo.get_issue(issue_id)
+            issue.add_to_labels(*labels)
+            logger.info("Added labels %s to issue/PR %d", labels, issue_id)
+        except GithubException as err:
+            logger.error("Failed to add labels to issue/PR %d: %s", issue_id, err)
+            raise UnexpectedResponse(
+                f"Failed to add labels to issue {issue_id}"
+            ) from err
 
     def get_changelog_context_filters(self) -> tuple[Callable[..., Any], ...]:
         return (

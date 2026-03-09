@@ -47,7 +47,12 @@ def generate_config(
     # due to possible IntEnum values (which are not supported by tomlkit.dumps, see sdispater/tomlkit#237),
     # we must ensure the transformation of the model to a dict uses json serializable values
     config_dct = {
-        "semantic_release": RawConfig().model_dump(mode="json", exclude_none=True)
+        "semantic_release": RawConfig().model_dump(
+            mode="json",
+            exclude_none=True,
+            # Drop deprecated changelog option to avoid emitting warnings in defaults
+            exclude={"changelog": {"changelog_file"}},
+        )
     }
 
     if is_pyproject_toml:

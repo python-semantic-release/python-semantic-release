@@ -181,6 +181,8 @@ class ChangelogConfig(BaseModel):
     @field_validator("changelog_file", mode="after")
     @classmethod
     def changelog_file_deprecation_warning(cls, val: str) -> str:
+        if not val:
+            return val
         logger.warning(
             str.join(
                 " ",
