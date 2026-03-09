@@ -153,7 +153,10 @@ def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
     """Makes a deterministic file change for testing"""
     tgt_file = Path(filename).resolve().absolute()
 
-    if Path(repo.working_dir).resolve().absolute() not in tgt_file.parents and Path(repo.working_dir).resolve().absolute() != tgt_file:
+    if (
+        Path(repo.working_dir).resolve().absolute() not in tgt_file.parents
+        and Path(repo.working_dir).resolve().absolute() != tgt_file
+    ):
         raise ValueError(
             f"File {tgt_file} is not relative to the repository working directory {repo.working_dir}"
         )

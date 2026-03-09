@@ -7,9 +7,9 @@ from unittest import mock
 
 import pytest
 import requests_mock
-from requests_mock import ANY
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 from requests import Session
+from requests_mock import ANY
 
 import semantic_release.hvcs.github
 from semantic_release.changelog.context import ChangelogMode
@@ -1050,7 +1050,9 @@ def test_changelog_release_tag_not_in_history(
         ("--post-to-release-tag", "v0.2.0"),  #      latest release
     ],
 )
-def test_changelog_post_to_release(args: list[str], run_cli: RunCliFn, requests_mock: Mocker):
+def test_changelog_post_to_release(
+    args: list[str], run_cli: RunCliFn, requests_mock: Mocker
+):
     expected_request_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
         api_url=f"https://{EXAMPLE_HVCS_DOMAIN}/api/v3",  # GitHub API URL
         owner=EXAMPLE_REPO_OWNER,

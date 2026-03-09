@@ -203,6 +203,9 @@ def shell(
     if not shell:
         raise TypeError("'shell' is None")
 
+    if not shell_path:
+        raise TypeError("'shell_path' is None")
+
     shell_cmd_param = defaultdict(
         lambda: "-c",
         {

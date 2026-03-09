@@ -98,7 +98,8 @@ def test_build_repo_or_copy_cache_holds_lock_until_copy_complete(
 
     monkeypatch.setattr(root_conftest, "copy_dir_tree", wrapped_copy_dir_tree)
 
-    build_repo_or_copy_cache = root_conftest.build_repo_or_copy_cache.__wrapped__(
+    build_repo_or_copy_cache = root_conftest.build_repo_or_copy_cache.__wrapped__  # type: ignore[attr-defined]
+    build_repo_or_copy_cache = build_repo_or_copy_cache(
         cached_files_dir=cached_files_dir,
         today_date_str="2026-03-08",
         stable_now_date=lambda: datetime(2026, 3, 8, tzinfo=timezone.utc),
@@ -131,11 +132,13 @@ def test_cached_repo_metadata_is_shared_via_filesystem(tmp_path: Path) -> None:
     writer_request = _DummyRequest()
     reader_request = _DummyRequest()
 
-    set_cached_repo_data = root_conftest.set_cached_repo_data.__wrapped__(
+    set_cached_repo_data = root_conftest.set_cached_repo_data.__wrapped__  # type: ignore[attr-defined]
+    set_cached_repo_data = set_cached_repo_data(
         request=writer_request,
         cached_files_dir=cached_files_dir,
     )
-    get_cached_repo_data = root_conftest.get_cached_repo_data.__wrapped__(
+    get_cached_repo_data = root_conftest.get_cached_repo_data.__wrapped__  # type: ignore[attr-defined]
+    get_cached_repo_data = get_cached_repo_data(
         request=reader_request,
         cached_files_dir=cached_files_dir,
     )
@@ -159,7 +162,8 @@ def test_get_authorization_to_build_repo_cache_uses_xdist_env(
     shared_base = tmp_path / "pytest-1" / "popen-gw0"
     shared_base.mkdir(parents=True)
 
-    get_authorization = root_conftest.get_authorization_to_build_repo_cache.__wrapped__(
+    get_authorization = root_conftest.get_authorization_to_build_repo_cache.__wrapped__  # type: ignore[attr-defined]
+    get_authorization = get_authorization(
         tmp_path_factory=_DummyTmpPathFactory(shared_base),
     )
 
@@ -183,7 +187,8 @@ def test_get_authorization_to_build_repo_cache_returns_none_without_xdist(
     shared_base = tmp_path / "pytest-1" / "popen-gw0"
     shared_base.mkdir(parents=True)
 
-    get_authorization = root_conftest.get_authorization_to_build_repo_cache.__wrapped__(
+    get_authorization = root_conftest.get_authorization_to_build_repo_cache.__wrapped__  # type: ignore[attr-defined]
+    get_authorization = get_authorization(
         tmp_path_factory=_DummyTmpPathFactory(shared_base),
     )
 
