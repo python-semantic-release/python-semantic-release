@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
 from collections import defaultdict
@@ -192,12 +191,14 @@ def shell(
     cmd: str, *, env: Mapping[str, str] | None = None, check: bool = True
 ) -> subprocess.CompletedProcess:
     shell: str | None
+    shell_path: str | None
     try:
-        shell, _ = shellingham.detect_shell()
+        shell, shell_path = shellingham.detect_shell()
     except shellingham.ShellDetectionFailure:
         logger.warning("failed to detect shell, using default shell: %s", DEFAULT_SHELL)
         logger.debug("stack trace", exc_info=True)
         shell = DEFAULT_SHELL
+        shell_path = DEFAULT_SHELL
 
     if not shell:
         raise TypeError("'shell' is None")
@@ -211,28 +212,9 @@ def shell(
         },
     )
 
-    # Merge custom environment variables with the current environment
-    # to ensure PATH and other necessary variables are available
-    merged_env = {**os.environ, **(env or {})}
-
-    # Find the full path to the shell executable using the merged environment's PATH
-    # This ensures the shell can be found even when using a custom environment
-    shell_path = shutil.which(shell, path=merged_env.get("PATH"))
-    if not shell_path:
-        # Fallback to the shell name if which() fails
-        logger.warning(
-            "Failed to find shell executable '%s' in PATH, will attempt to use shell name directly",
-            shell,
-        )
-        logger.debug("PATH value: %s", merged_env.get("PATH"))
-        shell_path = shell
-
-    logger.debug("Using shell executable: %s", shell_path)
-    logger.debug("Shell command parameter: %s", shell_cmd_param[shell])
-
     return subprocess.run(  # noqa: S603
         [shell_path, shell_cmd_param[shell], cmd],
-        env=merged_env,
+        env=(env or {}),
         check=check,
     )
 

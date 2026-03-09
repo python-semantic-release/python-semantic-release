@@ -151,12 +151,9 @@ def shortuid(length: int = 8) -> str:
 
 def add_text_to_file(repo: Repo, filename: str, text: str | None = None):
     """Makes a deterministic file change for testing"""
-    # Resolve relative to repo.working_dir to avoid relying on cwd (Python 3.8 compat)
-    tgt_file = (Path(repo.working_dir) / filename).resolve().absolute()
+    tgt_file = Path(filename).resolve().absolute()
 
-    # TODO: switch to Path.is_relative_to() when 3.8 support is deprecated
-    # if not tgt_file.is_relative_to(Path(repo.working_dir).resolve().absolute()):
-    if Path(repo.working_dir).resolve().absolute() not in tgt_file.parents:
+    if Path(repo.working_dir).resolve().absolute() not in tgt_file.parents and Path(repo.working_dir).resolve().absolute() != tgt_file:
         raise ValueError(
             f"File {tgt_file} is not relative to the repository working directory {repo.working_dir}"
         )

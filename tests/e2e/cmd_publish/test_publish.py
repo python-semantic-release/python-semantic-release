@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -149,14 +150,15 @@ def test_publish_fails_on_github_upload_dists(
         file.parent.mkdir(parents=True, exist_ok=True)
         file.touch()
 
+    repo_url = hvcs_client.create_api_url(endpoint=f"/repos/{hvcs_client.owner}/{hvcs_client.repo_name}"); requests_mock.register_uri("GET", re.compile(f".*/repos/{hvcs_client.owner}/{hvcs_client.repo_name}$"), json={"url": repo_url})
     # Setup: Mock upload url retrieval
-    requests_mock.register_uri("GET", tag_endpoint, json={"id": release_id})
+    requests_mock.register_uri("GET", re.compile(f".*{release_tag}.*"), json={"id": release_id})
     requests_mock.register_uri(
-        "GET", release_endpoint, json={"upload_url": f"{upload_url}{{?name,label}}"}
+        "GET", re.compile(f".*/releases/{release_id}.*"), json={"upload_url": f"{upload_url}{{?name,label}}"}
     )
 
     # Setup: Mock upload failure
-    uploader_mock = requests_mock.register_uri("POST", upload_url, status_code=403)
+    uploader_mock = requests_mock.register_uri("POST", re.compile(f".*/releases/{release_id}/assets.*"), status_code=403)
 
     # Act
     cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", "latest"]
