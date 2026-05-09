@@ -13,7 +13,18 @@ from re import (
     error as RegExpError,  # noqa: N812
     escape as regex_escape,
 )
-from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 # typing_extensions is for Python 3.8, 3.9, 3.10 compatibility
 import tomlkit
@@ -363,7 +374,7 @@ class RawConfig(BaseModel):
     logging_use_named_masks: bool = False
     major_on_zero: bool = True
     allow_zero_version: bool = False
-    repo_dir: Annotated[Path, Field(validate_default=True)] = Path(".")
+    repo_dir: Path = Field(default=cast("Path", "."), validate_default=True)
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
     tag_format: str = "v{version}"
@@ -388,18 +399,19 @@ class RawConfig(BaseModel):
                 found_path = (
                     Path(git_repo.working_tree_dir or git_repo.working_dir)
                     .expanduser()
+                    .resolve()
                     .absolute()
                 )
 
         except InvalidGitRepositoryError as err:
-            raise InvalidGitRepositoryError("No valid git repository found!") from err
+            msg = "No valid git repository found!"
+            raise InvalidGitRepositoryError(msg) from err
 
-        if dir_path.absolute() != found_path:
-            logging.warning(
-                "Found .git/ in higher parent directory rather than provided in configuration."
-            )
+        if dir_path.resolve().absolute() != found_path:
+            msg = "Found .git/ in higher parent directory rather than provided in configuration."
+            logger.warning(msg)
 
-        return found_path.resolve()
+        return found_path
 
     @field_validator("commit_parser", mode="after")
     @classmethod
