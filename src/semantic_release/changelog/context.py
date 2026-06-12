@@ -170,6 +170,10 @@ def autofit_text_width(text: str, maxwidth: int = 100, indent_size: int = 0) -> 
         )
 
         # Initialize the line for each paragraph
+        # Guard against empty paragraphs (e.g. from whitespace-only lines in commit bodies),
+        # which would cause words[0] to raise an IndexError.
+        if not words:
+            continue
         line = words[0]
         next_line = ""
 
