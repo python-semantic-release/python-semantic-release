@@ -2,6 +2,7 @@ from typing import Iterable
 
 import pytest
 
+from semantic_release.globals import logger
 from semantic_release.helpers import ParsedGitUrl, parse_git_url, sort_numerically
 
 
@@ -118,6 +119,30 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url, sort_numerical
 def test_parse_valid_git_urls(url: str, expected: ParsedGitUrl):
     """Test that a valid given git remote url is parsed correctly."""
     assert expected == parse_git_url(url)
+
+
+def test_parse_git_url_does_not_log_credentials(caplog: pytest.LogCaptureFixture):
+    """Test that credentials in git urls are masked before logging."""
+    username = "x-oauth-basic"
+    secret = "ghp_secret_token"
+    url = f"https://{username}:{secret}@github.example.com/owner/project.git"
+
+    parse_git_url.cache_clear()
+    caplog.set_level("DEBUG", logger=logger.name)
+
+    expected_parsed_url = ParsedGitUrl(
+        "https",
+        f"{username}:{secret}@github.example.com",
+        "owner",
+        "project",
+    )
+
+    actual_parsed_url = parse_git_url(url)
+
+    assert expected_parsed_url == actual_parsed_url
+    assert username not in caplog.text
+    assert secret not in caplog.text
+    assert "<credentials>@github.example.com" in caplog.text
 
 
 @pytest.mark.parametrize(
