@@ -1,4 +1,5 @@
 from typing import Iterable
+from unittest.mock import patch
 
 import pytest
 
@@ -118,6 +119,34 @@ from semantic_release.helpers import ParsedGitUrl, parse_git_url, sort_numerical
 def test_parse_valid_git_urls(url: str, expected: ParsedGitUrl):
     """Test that a valid given git remote url is parsed correctly."""
     assert expected == parse_git_url(url)
+
+
+def test_parse_git_url_does_not_log_credentials():
+    """Test that credentials in git urls are masked before logging."""
+    username = "x-oauth-basic"
+    secret = "ghp_secret_token"
+    url = f"https://{username}:{secret}@github.example.com/owner/project.git"
+
+    expected_parsed_url = ParsedGitUrl(
+        "https",
+        f"{username}:{secret}@github.example.com",
+        "owner",
+        "project",
+    )
+
+    parse_git_url.cache_clear()
+    with patch("semantic_release.helpers.log") as mock_log:
+        actual_parsed_url = parse_git_url(url)
+
+        assert expected_parsed_url == actual_parsed_url
+        assert mock_log.debug.called
+
+        for debug_call in mock_log.debug.call_args_list:
+            args = debug_call[0]
+            formatted_msg = args[0] % args[1:] if len(args) > 1 else str(args[0])
+            assert secret not in formatted_msg
+            assert username not in formatted_msg
+            assert "<credentials>@github.example.com" in formatted_msg
 
 
 @pytest.mark.parametrize(
