@@ -433,7 +433,12 @@ mode = "update"
 template_dir = "config/release-templates"
 
 [tool.semantic_release.branches.main]
-match = "(main|master)"
+match = "^(main|master)$"
+prerelease = false
+prerelease_token = "rc"
+
+[tool.semantic_release.branches.maintenance]
+match = "^releases/v9"
 prerelease = false
 prerelease_token = "rc"
 

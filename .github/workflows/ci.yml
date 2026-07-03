@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: # Target branches
       - master
+      - releases/v*
 
 # default token permissions = none
 permissions: {}
