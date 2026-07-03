@@ -158,7 +158,7 @@ look like this:
         lock_file_artifact: uv.lock
       steps:
         - name: Setup | Checkout Repository at workflow sha
-          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+          uses: actions/checkout@COMMIT_HASH  # vX.X.X
           with:
             ref: ${{ github.sha }}
 
@@ -166,7 +166,7 @@ look like this:
           run: git checkout -B ${{ github.ref_name }}
 
         - name: Setup | Install uv
-          uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302  # v4.0.2
+          uses: asdf-vm/actions/install@COMMIT_HASH  # v4.X.X
 
         - name: Setup | Install Python & Project dependencies
           run: uv sync --extra build
@@ -179,7 +179,7 @@ look like this:
 
         - name: Upload | Distribution Artifacts
           if: ${{ steps.version.outputs.released == 'true' }}
-          uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+          uses: actions/upload-artifact@COMMIT_HASH  # v4.X.X
           with:
             name: ${{ env.dist_artifacts_name }}
             path: ${{ format('{0}/**', env.dist_artifacts_dir) }}
@@ -188,7 +188,7 @@ look like this:
 
         - name: Upload | Lock File Artifact
           if: ${{ steps.version.outputs.released == 'true' }}
-          uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+          uses: actions/upload-artifact@COMMIT_HASH  # v4.X.X
           with:
             name: ${{ env.lock_file_artifact }}
             path: ${{ env.lock_file_artifact }}
@@ -209,13 +209,13 @@ look like this:
       runs-on: ubuntu-latest
       steps:
         - name: Setup | Checkout Repository
-          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+          uses: actions/checkout@COMMIT_HASH  # vX.X.X
           with:
             ref: ${{ github.sha }}
             fetch-depth: 1
 
         - name: Setup | Download Distribution Artifacts
-          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+          uses: actions/download-artifact@COMMIT_HASH  # v4.X.X
           if: ${{ needs.build.outputs.new-release-detected == 'true' }}
           id: artifact-download
           with:
@@ -223,7 +223,7 @@ look like this:
             path: ./dist
 
         - name: Setup | Install uv
-          uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302  # v4.0.2
+          uses: asdf-vm/actions/install@COMMIT_HASH  # v4.X.X
 
         - name: Setup | Install Python & Project dependencies
           run: uv sync --extra test
@@ -255,7 +255,7 @@ look like this:
 
       steps:
         - name: Setup | Checkout Repository on Release Branch
-          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+          uses: actions/checkout@COMMIT_HASH  # vX.X.X
           with:
             ref: ${{ github.ref_name }}
 
@@ -263,20 +263,20 @@ look like this:
           run: git reset --hard ${{ github.sha }}
 
         - name: Setup | Install uv
-          uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302  # v4.0.2
+          uses: asdf-vm/actions/install@COMMIT_HASH  # v4.X.X
 
         - name: Setup | Install Python & Project dependencies
           run: uv sync --extra build
 
         - name: Setup | Download Build Artifacts
-          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+          uses: actions/download-artifact@COMMIT_HASH  # v4.X.X
           id: artifact-download
           with:
             name: ${{ needs.build.outputs.distribution-artifacts }}
             path: dist
 
         - name: Setup | Download Lock File Artifact
-          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+          uses: actions/download-artifact@COMMIT_HASH  # v4.X.X
           with:
             name: ${{ needs.build.outputs.lock-file-artifact }}
 
@@ -315,14 +315,14 @@ look like this:
 
       steps:
         - name: Setup | Download Build Artifacts
-          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+          uses: actions/download-artifact@COMMIT_HASH  # v4.X.X
           id: artifact-download
           with:
             name: ${{ needs.build.outputs.distribution-artifacts }}
             path: dist
 
         - name: Publish package distributions to PyPI
-          uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc  # v1.12.4
+          uses: pypa/gh-action-pypi-publish@COMMIT_HASH  # v1.X.X
           with:
             packages-dir: dist
             print-hash: true

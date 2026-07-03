@@ -425,8 +425,8 @@ build_command = """
 major_on_zero = true
 version_variables = [
   "src/gh_action/requirements.txt:python-semantic-release:nf",
-  "docs/configuration/automatic-releases/github-actions.rst:python-semantic-release/python-semantic-release:tf",
-  "docs/configuration/automatic-releases/github-actions.rst:python-semantic-release/publish-action:tf",
+  "docs/configuration/automatic-releases/github-actions.rst:python-semantic-release/python-semantic-release@COMMIT_HASH  #:tf",
+  "docs/configuration/automatic-releases/github-actions.rst:python-semantic-release/publish-action@COMMIT_HASH  #:tf",
 ]
 version_toml = ["pyproject.toml:project.version"]
 
