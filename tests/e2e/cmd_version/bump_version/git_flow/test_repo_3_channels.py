@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import tomlkit
-from flatdict import FlatDict
+from flatdict2 import FlatDict
 from freezegun import freeze_time
 
 from semantic_release.cli.commands.main import main

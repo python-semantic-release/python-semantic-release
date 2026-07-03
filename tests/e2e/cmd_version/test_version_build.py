@@ -10,7 +10,7 @@ from unittest import mock
 import pytest
 import shellingham
 import tomlkit
-from flatdict import FlatDict
+from flatdict2 import FlatDict
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.cli.commands.main import main
