@@ -1326,7 +1326,7 @@ colon-separated definition with either 2 or 3 parts. The 2-part definition inclu
 the file path and the variable name. Newly with v9.20.0, it also accepts
 an optional 3rd part to allow configuration of the format type.
 
-As of ${NEW_RELEASE_TAG}, the ``version_variables`` option also supports entire file
+As of v1.0.0, the ``version_variables`` option also supports entire file
 replacement by using an asterisk (``*``) as the pattern/variable name. This is useful
 for files that contain only a version number, such as ``VERSION`` files.
 
