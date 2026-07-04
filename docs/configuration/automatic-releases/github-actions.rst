@@ -882,7 +882,7 @@ to the GitHub Release Assets as well.
           # while the workflow was running, which prevents accidentally releasing un-evaluated
           # changes.
           - name: Setup | Checkout Repository on Release Branch
-            uses: actions/checkout@v4
+            uses: actions/checkout@COMMIT_HASH  # v6
             with:
               ref: ${{ github.ref_name }}
 
@@ -893,21 +893,21 @@ to the GitHub Release Assets as well.
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release/python-semantic-release@v10.5.3
+            uses: python-semantic-release/python-semantic-release@COMMIT_HASH  # v10.5.3
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
               git_committer_email: "actions@users.noreply.github.com"
 
           - name: Publish | Upload to GitHub Release Assets
-            uses: python-semantic-release/publish-action@v10.5.3
+            uses: python-semantic-release/publish-action@COMMIT_HASH  # v10.5.3
             if: steps.release.outputs.released == 'true'
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               tag: ${{ steps.release.outputs.tag }}
 
           - name: Upload | Distribution Artifacts
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@COMMIT_HASH  # v4.X.X
             with:
               name: distribution-artifacts
               path: dist
@@ -931,7 +931,7 @@ to the GitHub Release Assets as well.
 
         steps:
           - name: Setup | Download Build Artifacts
-            uses: actions/download-artifact@v4
+            uses: actions/download-artifact@COMMIT_HASH  # v4.X.X
             id: artifact-download
             with:
               name: distribution-artifacts
@@ -947,7 +947,7 @@ to the GitHub Release Assets as well.
 
           # see https://docs.pypi.org/trusted-publishers/
           - name: Publish package distributions to PyPI
-            uses: pypa/gh-action-pypi-publish@@SHA1_HASH  # vX.X.X
+            uses: pypa/gh-action-pypi-publish@COMMIT_HASH  # vX.X.X
             with:
               packages-dir: dist
               print-hash: true
@@ -971,7 +971,7 @@ to the GitHub Release Assets as well.
 .. note::
   As of v10.5.0, Python Semantic Release automatically detects and converts
   shallow clones to full clones when needed. While you can still use ``fetch-depth: 0``
-  with ``actions/checkout@v4`` to fetch the full history upfront, it is no longer
+  with ``actions/checkout`` to fetch the full history upfront, it is no longer
   required. If you use the default shallow clone, Python Semantic Release will
   automatically fetch the full history before evaluating commits. If you are using
   an older version of PSR, you will need to unshallow the repository prior to use.
@@ -1107,13 +1107,13 @@ Publish Action.
         # ------------------------------------------------------------------- #
 
         - name: Publish | Upload package 1 to PyPI
-          uses: pypa/gh-action-pypi-publish@SHA1_HASH  # vX.X.X
+          uses: pypa/gh-action-pypi-publish@COMMIT_HASH  # vX.X.X
           if: steps.release-submod-1.outputs.released == 'true'
           with:
             packages-dir: ${{ format('{}/dist', env.SUBMODULE_1_DIR) }}
 
         - name: Publish | Upload package 2 to PyPI
-          uses: pypa/gh-action-pypi-publish@SHA1_HASH  # vX.X.X
+          uses: pypa/gh-action-pypi-publish@COMMIT_HASH  # vX.X.X
           if: steps.release-submod-2.outputs.released == 'true'
           with:
             packages-dir: ${{ format('{}/dist', env.SUBMODULE_2_DIR) }}

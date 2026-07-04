@@ -50,13 +50,13 @@ This workflow is written to use Python Semantic Release v7.33.5:
        concurrency: release
 
        steps:
-       - uses: actions/checkout@v3
+       - uses: actions/checkout@COMMIT_HASH  # v3.0.0
          with:
            fetch-depth: 0
 
        # This action uses Python Semantic Release v7
        - name: Python Semantic Release
-         uses: python-semantic-release/python-semantic-release@v7.33.5
+         uses: python-semantic-release/python-semantic-release@323ebf700ac0878aedfa899bcb0492f6d579986c  # v7.33.5
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
            repository_username: __token__
@@ -84,25 +84,25 @@ GitHub Action:
          id-token: write
 
        steps:
-       - uses: actions/checkout@v3
+       - uses: actions/checkout@COMMIT_HASH  # v3.0.0
          with:
            fetch-depth: 0
 
        # This action uses Python Semantic Release v8
        - name: Python Semantic Release
          id: release
-         uses: python-semantic-release/python-semantic-release@v8.7.0
+         uses: python-semantic-release/python-semantic-release@COMMIT_HASH  # v8.0.0
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
 
        - name: Publish package distributions to PyPI
-         uses: pypa/gh-action-pypi-publish@v1
+         uses: pypa/gh-action-pypi-publish@COMMIT_HASH  # v1.0.0
          # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
          # See https://github.com/actions/runner/issues/1173
          if: steps.release.outputs.released == 'true'
 
        - name: Publish package distributions to GitHub Releases
-         uses: python-semantic-release/upload-to-gh-release@v8.7.0
+         uses: python-semantic-release/upload-to-gh-release@COMMIT_HASH  # v8.0.0
          if: steps.release.outputs.released == 'true'
          with:
            github_token: ${{ secrets.GITHUB_TOKEN }}
