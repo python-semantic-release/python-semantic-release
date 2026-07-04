@@ -9,7 +9,7 @@ from functools import lru_cache, reduce, wraps
 from pathlib import Path, PurePosixPath
 from re import IGNORECASE, compile as regexp
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Sequence, TypeVar
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from semantic_release.globals import logger
 
@@ -215,6 +215,16 @@ class ParsedGitUrl(NamedTuple):
     repo_name: str
 
 
+def _hide_credentials_in_url(url: str) -> str:
+    url_parts = urlsplit(url)
+
+    if not url_parts.scheme or "@" not in url_parts.netloc:
+        return url
+
+    _, _, host = url_parts.netloc.rpartition("@")
+    return urlunsplit(url_parts._replace(netloc=f"<credentials>@{host}"))
+
+
 @lru_cache(maxsize=512)
 def parse_git_url(url: str) -> ParsedGitUrl:
     """
@@ -242,7 +252,7 @@ def parse_git_url(url: str) -> ParsedGitUrl:
 
     Raises ValueError if the url can't be parsed.
     """
-    logger.debug("Parsing git url %r", url)
+    logger.debug("Parsing git url %r", _hide_credentials_in_url(url))
 
     # Normalizers are a list of tuples of (pattern, replacement)
     normalizers = [
