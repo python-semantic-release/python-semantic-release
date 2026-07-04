@@ -778,6 +778,39 @@ v10.0.0 (2025-05-25)
 .. _PR#1245: https://github.com/python-semantic-release/python-semantic-release/pull/1245
 
 
+.. _changelog-v9.21.2:
+
+v9.21.2 (2026-07-04)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **hvcs**: Mask credentials in git URL debug logs, closes `#1426`_ (`PR#1450`_, `da0cb2b`_)
+
+📖 Documentation
+----------------
+
+* **github-actions**: Fix recommended upstream detection script's upstream name parsing (`911f62a`_)
+
+⚙️ Build System
+----------------
+
+* Mark for Python 3.14 compatibility (`86c0439`_)
+
+* **deps**: Bump ``tomlkit`` dependency from ``~=0.11.0`` to ``~=0.13.0`` (`5395d06`_)
+
+* **deps**: Prevent update to ``click@8.2.0`` (`128f06a`_)
+
+.. _#1426: https://github.com/python-semantic-release/python-semantic-release/issues/1426
+.. _128f06a: https://github.com/python-semantic-release/python-semantic-release/commit/128f06a512ff782b773df2989d3445f894672ace
+.. _5395d06: https://github.com/python-semantic-release/python-semantic-release/commit/5395d065fc890813b1ef0df1c024a714668cb102
+.. _86c0439: https://github.com/python-semantic-release/python-semantic-release/commit/86c04399fc66fa9584c6c875698a43e91104186b
+.. _911f62a: https://github.com/python-semantic-release/python-semantic-release/commit/911f62aa6ab0a169a4126bea44fbc8dfb4f967b6
+.. _da0cb2b: https://github.com/python-semantic-release/python-semantic-release/commit/da0cb2bb40ffdd898117b72e3309e2281fdf682c
+.. _PR#1450: https://github.com/python-semantic-release/python-semantic-release/pull/1450
+
+
 .. _changelog-v9.21.1:
 
 v9.21.1 (2025-05-05)
