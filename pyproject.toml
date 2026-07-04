@@ -1,12 +1,10 @@
-# Ref: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
-# and https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [build-system]
 requires = ["setuptools >= 75.3.0, < 81.0.0", "wheel ~= 0.42"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "python-semantic-release"
-version = "9.21.1"
+version = "9.21.2"
 description = "Automatic Semantic Versioning for Python projects"
 requires-python = ">=3.8"
 license = { text = "MIT" }
@@ -91,6 +89,7 @@ mypy = [
   "types-requests ~= 2.32.0",
   "types-pyyaml ~= 6.0",
 ]
+
 
 
 [tool.setuptools]
