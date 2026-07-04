@@ -67,7 +67,7 @@ class CliContextObj:
             )
         )
 
-        # TODO: Evaluate Exeception catches
+        # TODO: Evaluate Exception catches
         try:
             if was_conf_file_user_provided and not conf_file_exists:
                 raise FileNotFoundError(  # noqa: TRY301
