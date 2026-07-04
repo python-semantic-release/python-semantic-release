@@ -30,8 +30,8 @@ LOG_LEVELS = [
 ]
 
 
-class Cli(click.MultiCommand):
-    """Root MultiCommand for the semantic-release CLI"""
+class Cli(click.Group):
+    """Root Group for the semantic-release CLI"""
 
     class SubCmds(Enum):
         """Subcommand import definitions"""
@@ -42,12 +42,12 @@ class Cli(click.MultiCommand):
         VERSION = f"{__package__}.version"
         PUBLISH = f"{__package__}.publish"
 
-    def list_commands(self, _ctx: click.Context) -> list[str]:
+    def list_commands(self, ctx: click.Context) -> list[str]:  # noqa: ARG002
         # Used for shell-completion
         return [subcmd.lower().replace("_", "-") for subcmd in Cli.SubCmds.__members__]
 
-    def get_command(self, _ctx: click.Context, name: str) -> click.Command | None:
-        subcmd_name = name.lower().replace("-", "_")
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:  # noqa: ARG002
+        subcmd_name = cmd_name.lower().replace("-", "_")
         try:
             subcmd_def: Cli.SubCmds = Cli.SubCmds.__dict__[subcmd_name.upper()]
             module_path = subcmd_def.value
