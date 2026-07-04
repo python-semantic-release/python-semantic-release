@@ -8,7 +8,7 @@ import sys
 from functools import lru_cache, reduce, wraps
 from pathlib import Path, PurePosixPath
 from re import IGNORECASE, compile as regexp
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Sequence, TypeVar
+from typing import TYPE_CHECKING, Callable, NamedTuple, TypeVar
 from urllib.parse import urlsplit
 
 from semantic_release.globals import logger
@@ -16,7 +16,7 @@ from semantic_release.globals import logger
 if TYPE_CHECKING:  # pragma: no cover
     from logging import Logger
     from re import Pattern
-    from typing import Iterable
+    from typing import Any, Iterable, Sequence
 
 
 number_pattern = regexp(r"(?P<prefix>\S*?)(?P<number>\d[\d,]*)\b")
@@ -94,7 +94,7 @@ def text_reducer(text: str, filter_pair: tuple[Pattern[str], str]) -> str:
 
 
 def validate_types_in_sequence(
-    sequence: Sequence, types: type | tuple[type, ...]
+    sequence: Sequence[Any], types: type | tuple[type, ...]
 ) -> bool:
     """Validate that all elements in a sequence are of a specific type"""
     return all(isinstance(item, types) for item in sequence)
