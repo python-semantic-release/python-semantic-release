@@ -4,6 +4,67 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.6.0:
+
+v10.6.0 (2026-07-04)
+====================
+
+✨ Features
+-----------
+
+* **cmd-version**: Add file replacement variant for ``version_variables``, closes `#1375`_
+  (`PR#1391`_, `95ce7ec`_)
+
+* **parser-emoji**: Adds more non-release triggering emojis to the default emoji parser (`PR#1410`_,
+  `2833aa9`_)
+
+🪲 Bug Fixes
+------------
+
+* **cmd-config-generate**: Fix config output for Microsoft Windows UTF-8 encoding, closes `#702`_
+  (`PR#1400`_, `0343194`_)
+
+* **cmd-publish**: Fix handling of asset uploading errors on publish, closes `#1395`_ (`PR#1397`_,
+  `81a0f98`_)
+
+* **github**: Fix bubble up errors of asset uploads for GitHub (`PR#1397`_, `81a0f98`_)
+
+* **hvcs**: Mask git credential URL in very verbose debug logs, closes `#1426`_ (`PR#1445`_,
+  `811afb0`_)
+
+📖 Documentation
+----------------
+
+* **cmd-config-generate**: Add Windows PowerShell specific ``generate-config`` usage example
+  (`PR#1400`_, `0343194`_)
+
+* **configuration**: Modify ``version_variables`` definition to include new file replacement
+  (`PR#1391`_, `95ce7ec`_)
+
+* **examples**: Update references to github actions for hash references (`PR#1449`_, `873da58`_)
+
+* **package**: Change package changelog link to doc website (`PR#1434`_, `05f897f`_)
+
+.. _#1375: https://github.com/python-semantic-release/python-semantic-release/issues/1375
+.. _#1395: https://github.com/python-semantic-release/python-semantic-release/issues/1395
+.. _#1426: https://github.com/python-semantic-release/python-semantic-release/issues/1426
+.. _#702: https://github.com/python-semantic-release/python-semantic-release/issues/702
+.. _0343194: https://github.com/python-semantic-release/python-semantic-release/commit/03431947833b4e3f3fc79b09fc626e0f30508a2b
+.. _05f897f: https://github.com/python-semantic-release/python-semantic-release/commit/05f897f4d5c6d91495c1bf55cc704815be887d69
+.. _2833aa9: https://github.com/python-semantic-release/python-semantic-release/commit/2833aa943a6a016b8208146a89f7b4ec0efa6cd0
+.. _811afb0: https://github.com/python-semantic-release/python-semantic-release/commit/811afb00de382ff425b766b97c83d2246f9cfb16
+.. _81a0f98: https://github.com/python-semantic-release/python-semantic-release/commit/81a0f98b0f36b65df5039ab335760295322bfd9c
+.. _873da58: https://github.com/python-semantic-release/python-semantic-release/commit/873da5894a2b03283e93019801e3012c045f361a
+.. _95ce7ec: https://github.com/python-semantic-release/python-semantic-release/commit/95ce7ecdbab0fc0986d1fcf442cd8cf99a4b6e4f
+.. _PR#1391: https://github.com/python-semantic-release/python-semantic-release/pull/1391
+.. _PR#1397: https://github.com/python-semantic-release/python-semantic-release/pull/1397
+.. _PR#1400: https://github.com/python-semantic-release/python-semantic-release/pull/1400
+.. _PR#1410: https://github.com/python-semantic-release/python-semantic-release/pull/1410
+.. _PR#1434: https://github.com/python-semantic-release/python-semantic-release/pull/1434
+.. _PR#1445: https://github.com/python-semantic-release/python-semantic-release/pull/1445
+.. _PR#1449: https://github.com/python-semantic-release/python-semantic-release/pull/1449
+
+
 .. _changelog-v10.5.3:
 
 v10.5.3 (2025-12-14)
