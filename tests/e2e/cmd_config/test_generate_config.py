@@ -51,11 +51,11 @@ def test_generate_config_toml(
 
     # Evaluate: Check that the command ran successfully and that the output matches the expected configuration
     assert_successful_exit_code(result, cli_cmd)
-    assert expected_config_as_str == result.output.strip()
+    assert expected_config_as_str == result.stdout.strip()
 
     # Setup: Write the generated configuration to a file
     config_file = "releaserc.toml"
-    example_project_dir.joinpath(config_file).write_text(result.output)
+    example_project_dir.joinpath(config_file).write_text(result.stdout)
 
     # Act: Validate that the generated config is a valid configuration for PSR
     cli_cmd = [
@@ -93,11 +93,11 @@ def test_generate_config_json(
 
     # Evaluate: Check that the command ran successfully and that the output matches the expected configuration
     assert_successful_exit_code(result, cli_cmd)
-    assert expected_config_as_str == result.output.strip()
+    assert expected_config_as_str == result.stdout.strip()
 
     # Setup: Write the generated configuration to a file
     config_file = "releaserc.json"
-    example_project_dir.joinpath(config_file).write_text(result.output)
+    example_project_dir.joinpath(config_file).write_text(result.stdout)
 
     # Act: Validate that the generated config is a valid configuration for PSR
     cli_cmd = [
@@ -144,7 +144,7 @@ def test_generate_config_pyproject_toml(
 
     # Evaluate: Check that the command ran successfully and that the output matches the expected configuration
     assert_successful_exit_code(result, cli_cmd)
-    assert expected_config_as_str == result.output.strip()
+    assert expected_config_as_str == result.stdout.strip()
 
     # Setup: Write the generated configuration to a file
     example_pyproject_toml.write_text(
@@ -152,7 +152,7 @@ def test_generate_config_pyproject_toml(
             "\n\n",
             [
                 example_pyproject_toml.read_text(encoding="utf-8").strip(),
-                result.output,
+                result.stdout,
             ],
         )
     )
