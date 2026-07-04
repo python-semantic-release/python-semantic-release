@@ -125,9 +125,9 @@ def pytest_configure(config: pytest.Config):
 
     See `pytest_collection_modifyitems` for more information on test selection modifications.
     """
-    user_desired_comprehensive_evaluation = config.getoption("--comprehensive")
-    user_provided_filter = str(config.getoption("-k"))
-    user_provided_markers = str(config.getoption("-m"))
+    user_desired_comprehensive_evaluation = bool(config.getoption("--comprehensive"))
+    user_provided_filter = str(config.getoption("-k")).strip()
+    user_provided_markers = str(config.getoption("-m")).strip()
 
     root_test_dir = Path(__file__).parent.relative_to(config.rootpath)
     user_provided_test_path = bool(config.args != [str(root_test_dir)])
@@ -183,7 +183,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     comprehensive_test_skip_marker = pytest.mark.skip(
         reason="comprehensive tests are disabled by default"
     )
-    user_provided_filter = str(config.getoption("-k"))
+    user_provided_filter = str(config.getoption("-k")).strip()
 
     if any((disable_comprehensive_tests,)):
         for item in items:
