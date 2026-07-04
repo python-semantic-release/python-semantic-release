@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, cast
+from typing import TYPE_CHECKING
 
 import tomlkit
 from deprecated.sphinx import deprecated
@@ -12,6 +12,9 @@ from semantic_release.globals import logger
 from semantic_release.version.declarations.enum import VersionStampType
 from semantic_release.version.declarations.i_version_replacer import IVersionReplacer
 from semantic_release.version.version import Version
+
+if TYPE_CHECKING:
+    from tomlkit.toml_document import TOMLDocument
 
 
 class TomlVersionDeclaration(IVersionReplacer):
@@ -47,8 +50,8 @@ class TomlVersionDeclaration(IVersionReplacer):
     def parse(self) -> set[Version]:  # pragma: no cover
         """Look for the version in the source content"""
         content = self._load()
-        maybe_version: str = content.get(self._search_text)  # type: ignore[return-value]
-        if maybe_version is not None:
+        maybe_version = content.get(self._search_text)
+        if isinstance(maybe_version, str) and (maybe_version := maybe_version.strip()):
             logger.debug(
                 "Found a key %r that looks like a version (%r)",
                 self._search_text,
@@ -65,23 +68,34 @@ class TomlVersionDeclaration(IVersionReplacer):
         updated content.
         """
         content = self._load()
-        if self._search_text in content:
-            logger.info(
-                "found %r in source file contents, replacing with %s",
-                self._search_text,
-                new_version,
-            )
-            content[self._search_text] = (
-                new_version.as_tag()
-                if self._stamp_format == VersionStampType.TAG_FORMAT
-                else str(new_version)
-            )
+        if self._search_text not in Dotty(content):
+            # TODO: v11
+            # raise KeyError(
+            #     f"key {self._search_text!r} not found in source file {self._path!r}"
+            # )
+            return tomlkit.dumps(content)
 
-        return tomlkit.dumps(cast(Dict[str, Any], content))
+        logger.info(
+            "found %r in source file contents, replacing with %s",
+            self._search_text,
+            new_version,
+        )
 
-    def _load(self) -> Dotty:
-        """Load the content of the source file into a Dotty for easier searching"""
-        return Dotty(tomlkit.loads(self.content))
+        sub_content = content
+        parts = self._search_text.split(".")
+        for part in parts[:-1]:
+            sub_content = sub_content.get(part, {})
+
+        sub_content[parts[-1]] = (
+            new_version.as_tag()
+            if self._stamp_format == VersionStampType.TAG_FORMAT
+            else str(new_version)
+        )
+
+        return tomlkit.dumps(content)
+
+    def _load(self) -> TOMLDocument:
+        return tomlkit.loads(self.content)
 
     def update_file_w_version(
         self, new_version: Version, noop: bool = False
@@ -93,7 +107,7 @@ class TomlVersionDeclaration(IVersionReplacer):
                 )
                 return None
 
-            if self._search_text not in self._load():
+            if self._search_text not in Dotty(self._load()):
                 noop_report(
                     f"VERSION PATTERN NOT FOUND: no version to stamp in file {self._path!r}",
                 )
