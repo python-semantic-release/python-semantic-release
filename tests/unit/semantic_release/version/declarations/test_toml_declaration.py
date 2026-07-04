@@ -13,6 +13,7 @@ from semantic_release.version.declarations.i_version_replacer import IVersionRep
 from semantic_release.version.declarations.toml import TomlVersionDeclaration
 from semantic_release.version.version import Version
 
+from tests.fixtures.example_project import change_to_ex_proj_dir
 from tests.fixtures.git_repo import default_tag_format_str
 
 if TYPE_CHECKING:
@@ -115,6 +116,7 @@ def test_toml_declaration_is_version_replacer():
         ]
     ],
 )
+@pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)
 def test_toml_declaration_from_definition(
     replacement_def: str,
     tag_format: str,
@@ -122,7 +124,6 @@ def test_toml_declaration_from_definition(
     resulting_contents: str,
     next_version: str,
     test_file: str,
-    change_to_ex_proj_dir: None,
 ):
     """
     Given a file with a formatted version string,
@@ -152,9 +153,8 @@ def test_toml_declaration_from_definition(
     assert expected_filepath == actual_file_modified
 
 
-def test_toml_declaration_no_file_change(
-    change_to_ex_proj_dir: None,
-):
+@pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)
+def test_toml_declaration_no_file_change():
     """
     Given a configured stamp file is already up-to-date,
     When update_file_w_version() is called with the same version,
@@ -202,9 +202,8 @@ def test_toml_declaration_error_on_missing_file():
         )
 
 
-def test_toml_declaration_no_version_in_file(
-    change_to_ex_proj_dir: None,
-):
+@pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)
+def test_toml_declaration_no_version_in_file():
     test_file = "test_file"
     expected_filepath = Path(test_file).resolve()
     starting_contents = dedent(
@@ -233,9 +232,8 @@ def test_toml_declaration_no_version_in_file(
     assert starting_contents == actual_contents
 
 
-def test_toml_declaration_noop_is_noop(
-    change_to_ex_proj_dir: None,
-):
+@pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)
+def test_toml_declaration_noop_is_noop():
     test_file = "test_file"
     expected_filepath = Path(test_file).resolve()
     starting_contents = dedent(
@@ -285,9 +283,9 @@ def test_toml_declaration_noop_warning_on_missing_file(
     )
 
 
+@pytest.mark.usefixtures(change_to_ex_proj_dir.__name__)
 def test_toml_declaration_noop_warning_on_no_version_in_file(
     capsys: pytest.CaptureFixture[str],
-    change_to_ex_proj_dir: None,
 ):
     test_file = "test_file"
     starting_contents = dedent(
