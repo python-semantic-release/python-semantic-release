@@ -26,27 +26,29 @@ if TYPE_CHECKING:
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix only")
 @pytest.mark.parametrize(
     "shell",
-    filter(
-        None,
-        [
-            # because we will actually run the build command in this shell, we must ensure it exists
-            "bash"
-            if list(
-                filter(
-                    lambda sh_exe: Path(sh_exe).exists(),
-                    ("/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"),
+    list(
+        filter(
+            None,
+            [
+                # because we will actually run the build command in this shell, we must ensure it exists
+                "bash"
+                if list(
+                    filter(
+                        lambda sh_exe: Path(sh_exe).exists(),
+                        ("/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"),
+                    )
                 )
-            )
-            else "",
-            "zsh"
-            if list(
-                filter(
-                    lambda sh_exe: Path(sh_exe).exists(),
-                    ("/bin/zsh", "/usr/bin/zsh", "/usr/local/bin/zsh"),
+                else "",
+                "zsh"
+                if list(
+                    filter(
+                        lambda sh_exe: Path(sh_exe).exists(),
+                        ("/bin/zsh", "/usr/bin/zsh", "/usr/local/bin/zsh"),
+                    )
                 )
-            )
-            else "",
-        ],
+                else "",
+            ],
+        )
     )
     or ["sh"],
 )

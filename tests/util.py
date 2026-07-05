@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     GitCommandWrapperType: TypeAlias = Git
 
 
-def get_func_qual_name(func: Callable) -> str:
+def get_func_qual_name(func: Callable[[Any], Any]) -> str:
     return str.join(".", filter(None, [func.__module__, func.__qualname__]))
 
 
@@ -79,7 +79,7 @@ def assert_successful_exit_code(result: ClickInvokeResult, cli_cmd: list[str]) -
     return assert_exit_code(SUCCESS_EXIT_CODE, result, cli_cmd)
 
 
-def get_full_qualname(callable_obj: Callable) -> str:
+def get_full_qualname(callable_obj: Callable[[Any], Any]) -> str:
     parts = filter(
         None,
         [
