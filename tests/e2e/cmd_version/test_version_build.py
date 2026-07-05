@@ -128,9 +128,8 @@ def test_version_runs_build_command(
         )
 
         assert built_wheel_file.exists()
-        assert (
-            mocked_git_fetch.call_count == 1
-        )  # fetch called to check for remote changes
+        # fetch called to check for remote changes
+        assert mocked_git_fetch.call_count == 1
         assert mocked_git_push.call_count == 2
         assert post_mocker.call_count == 1
 
@@ -230,9 +229,8 @@ def test_version_runs_build_command_windows(
 
         dist_file_exists = built_wheel_file.exists()
         assert dist_file_exists, f"\n  Expected wheel file to be created at {built_wheel_file}, but it does not exist."
-        assert (
-            mocked_git_fetch.call_count == 1
-        )  # fetch called to check for remote changes
+        # fetch called to check for remote changes
+        assert mocked_git_fetch.call_count == 1
         assert mocked_git_push.call_count == 2
         assert post_mocker.call_count == 1
 

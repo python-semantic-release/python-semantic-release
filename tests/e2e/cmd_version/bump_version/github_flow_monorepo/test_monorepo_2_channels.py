@@ -248,8 +248,7 @@ def test_githubflow_monorepo_rebuild_2_channels(
             assert curr_release_str in [tag.name for tag in mirror_git_repo.tags]
 
         # Make sure publishing actions occurred
-        assert (
-            mocked_git_fetch.call_count == 1
-        )  # fetch called to check for remote changes
+        # fetch called to check for remote changes
+        assert mocked_git_fetch.call_count == 1
         assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
         assert post_mocker.call_count == 1  # vcs release creation occurred

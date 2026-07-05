@@ -164,8 +164,7 @@ def test_gitflow_repo_rebuild_3_channels(
         assert expected_release_commit_text == actual_release_commit_text
         # Make sure tag is created
         assert curr_release_tag in [tag.name for tag in mirror_git_repo.tags]
-        assert (
-            mocked_git_fetch.call_count == 1
-        )  # fetch called to check for remote changes
+        # fetch called to check for remote changes
+        assert mocked_git_fetch.call_count == 1
         assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
         assert post_mocker.call_count == 1  # vcs release creation occurred
