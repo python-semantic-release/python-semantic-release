@@ -451,10 +451,10 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
-      - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
+      - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
-          python-version: ${{ env.COMMON_PYTHON_VERSION }}
+          python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Setup | Install dependencies
