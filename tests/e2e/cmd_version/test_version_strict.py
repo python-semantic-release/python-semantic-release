@@ -44,7 +44,9 @@ def test_version_already_released_when_strict(
     latest_release_version = get_versions_from_repo_build_def(
         repo_result["definition"]
     )[-1]
-    expected_error_msg = f"[bold orange1]No release will be made, {latest_release_version} has already been released!"
+    expected_error_msg = (
+        f"No release will be made, {latest_release_version} has already been released!"
+    )
 
     # Setup: take measurement before running the version command
     repo_status_before = repo.git.status(short=True)
