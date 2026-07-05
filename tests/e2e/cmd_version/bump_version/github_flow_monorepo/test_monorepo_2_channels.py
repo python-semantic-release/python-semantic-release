@@ -12,7 +12,7 @@ from tests.const import RepoActionStep
 from tests.fixtures.monorepos.github_flow import (
     monorepo_w_github_flow_w_feature_release_channel_conventional_commits,
 )
-from tests.util import temporary_working_directory
+from tests.util import assert_str_not_in_output, temporary_working_directory
 
 if TYPE_CHECKING:
     from typing import Literal, Sequence
@@ -71,6 +71,7 @@ def test_githubflow_monorepo_rebuild_2_channels(
     monorepo_pkg2_changelog_md_file: Path,
     monorepo_pkg1_changelog_rst_file: Path,
     monorepo_pkg2_changelog_rst_file: Path,
+    caplog: pytest.LogCaptureFixture,
 ):
     # build target repo into a temporary directory
     target_repo_dir = example_project_dir / repo_fixture_name
@@ -224,6 +225,10 @@ def test_githubflow_monorepo_rebuild_2_channels(
 
         # Evaluate (normal release actions should have occurred as expected)
         # ------------------------------------------------------------------
+        # The warning should not be present in the logs since we have configured repo_dir
+        # to be the parent directory from where PSR is being run, so although it is in the
+        # parent directory, it is known to the user and should not be a warning
+        assert_str_not_in_output("Found .git/ in higher parent directory", caplog.text)
         # Make sure version file is updated
         assert (
             expected_pkg1_pyproject_toml_content == actual_pkg1_pyproject_toml_content

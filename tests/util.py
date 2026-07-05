@@ -79,6 +79,29 @@ def assert_successful_exit_code(result: ClickInvokeResult, cli_cmd: list[str]) -
     return assert_exit_code(SUCCESS_EXIT_CODE, result, cli_cmd)
 
 
+def assert_str_not_in_output(substring: str, output: str) -> bool:
+    found_lines: list[str] = list(
+        filter(
+            lambda line, substr=substring: substr in line,  # type: ignore[arg-type]
+            output.splitlines(),
+        )
+    )
+    num_found_lines = len(found_lines)
+
+    if num_found_lines == 0:
+        return True
+
+    raise AssertionError(
+        str.join(
+            os.linesep,
+            [
+                f"Found {num_found_lines} lines in output containing {substring!r}:",
+                indent(str.join(os.linesep, found_lines), " " * 2),
+            ],
+        )
+    )
+
+
 def get_full_qualname(callable_obj: Callable[[Any], Any]) -> str:
     parts = filter(
         None,
