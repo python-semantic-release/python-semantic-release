@@ -1208,6 +1208,25 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 
 ----
 
+.. _config-repo_dir:
+
+``repo_dir``
+""""""""""""
+
+**Type:** ``str``
+
+Specify the directory of the Git repository. This is used to determine the location of
+the repository for various operations, such as creating tags and commits. PSR will attempt
+to automatically determine the location of the repository in parent directories of the
+current working directory but will emit a warning if it is higher than this defined value.
+
+If a git repository is not found from this location or any parent directories, PSR will
+raise an error and exit.
+
+**Default:** ``"."``
+
+----
+
 .. _config-tag_format:
 
 ``tag_format``
