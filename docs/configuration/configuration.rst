@@ -120,6 +120,52 @@ sure to use the correct root key depending on the configuration format you are u
 
 ----
 
+.. _config-add_partial_tags:
+
+``add_partial_tags``
+""""""""""""""""""""
+
+**Type:** ``bool``
+
+Specify if partial version tags should be handled when creating a new version. If set to
+``true``, a ``major`` and a ``major.minor`` tag will be created or updated, using the format
+specified in :ref:`tag_format`. If version has build metadata, a ``major.minor.patch`` tag
+will also be created or updated.
+
+Partial version tags are **disabled** for pre-release versions.
+
+**Example**
+
+.. code-block:: toml
+
+    [semantic_release]
+    tag_format = "v{version}"
+    add_partial_tags = true
+
+This configuration with the next version of ``1.2.3`` will result in:
+
+.. code-block:: bash
+
+    git log --decorate --oneline --graph --all
+    # * 4d4cb0a (tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3
+    # * 3a2b1c0 fix: some bug
+    # * 2b1c0a9 (tag: v1.2.2) 1.2.2
+    # ...
+
+If build-metadata is used, the next version of ``1.2.3+20251109`` will result in:
+
+.. code-block:: bash
+
+    git log --decorate --oneline --graph --all
+    # * 4d4cb0a (tag: v1.2.3+20251109, tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3+20251109
+    # * 3a2b1c0 chore: add partial tags to PSR configuration
+    # * 2b1c0a9 (tag: v1.2.3+20251031) 1.2.3+20251031
+    # ...
+
+**Default:** ``false``
+
+----
+
 .. _config-allow_zero_version:
 
 ``allow_zero_version``
@@ -1159,52 +1205,6 @@ This setting will override the upstream location url that would normally be deri
 from the :ref:`remote.name <config-remote-name>` location of your git repository.
 
 **Default:** ``None``
-
-----
-
-.. _config-add_partial_tags:
-
-``add_partial_tags``
-""""""""""""""""""""
-
-**Type:** ``bool``
-
-Specify if partial version tags should be handled when creating a new version. If set to
-``true``, a ``major`` and a ``major.minor`` tag will be created or updated, using the format
-specified in :ref:`tag_format`. If version has build metadata, a ``major.minor.patch`` tag
-will also be created or updated.
-
-Partial version tags are **disabled** for pre-release versions.
-
-**Example**
-
-.. code-block:: toml
-
-    [semantic_release]
-    tag_format = "v{version}"
-    add_partial_tags = true
-
-This configuration with the next version of ``1.2.3`` will result in:
-
-.. code-block:: bash
-
-    git log --decorate --oneline --graph --all
-    # * 4d4cb0a (tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3
-    # * 3a2b1c0 fix: some bug
-    # * 2b1c0a9 (tag: v1.2.2) 1.2.2
-    # ...
-
-If build-metadata is used, the next version of ``1.2.3+20251109`` will result in:
-
-.. code-block:: bash
-
-    git log --decorate --oneline --graph --all
-    # * 4d4cb0a (tag: v1.2.3+20251109, tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3+20251109
-    # * 3a2b1c0 chore: add partial tags to PSR configuration
-    # * 2b1c0a9 (tag: v1.2.3+20251031) 1.2.3+20251031
-    # ...
-
-**Default:** ``false``
 
 ----
 
