@@ -13,11 +13,14 @@ from tests.const import (
     MAIN_PROG_NAME,
     VERSION_SUBCMD,
 )
+from tests.fixtures.monorepos import (
+    monorepo_w_trunk_only_releases_conventional_commits,
+)
 from tests.fixtures.repos import (
     repo_w_no_tags_conventional_commits,
     repo_w_trunk_only_conventional_commits,
 )
-from tests.util import assert_successful_exit_code
+from tests.util import assert_successful_exit_code, temporary_working_directory
 
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
@@ -291,3 +294,40 @@ def test_version_only_tag_push(
     assert head_before == head_after
     assert mocked_git_push.call_count == 1  # 0 for commit, 1 for tag
     assert post_mocker.call_count == 1
+
+
+@pytest.mark.usefixtures(monorepo_w_trunk_only_releases_conventional_commits.__name__)
+def test_version_warning_on_not_configured_repo_dir(
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    monorepo_pkg1_pyproject_toml_file: Path,
+    monorepo_pkg1_dir: Path,
+):
+    """
+    Given a repo with a subdirectory that is not configured in the pyproject.toml,
+    When running the version command from that subdirectory,
+    Then a warning should be printed to stderr indicating that the .git directory
+    was found in a higher parent directory.
+
+    Note: we are using a monorepo for testing since it will automatically set up a
+    subdirectory with a pyproject.toml file and the .git/ directory in a parent
+    directory by default, making it easy to test. The successful measure of no
+    warning is tested throughout the e2e tests for cmd-version.
+    """
+    # Setup: set the repo_dir to None in the pyproject.toml of a subdirectory of the repo
+    update_pyproject_toml(
+        "tool.semantic_release.repo_dir",
+        None,
+        monorepo_pkg1_pyproject_toml_file,
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print"]
+
+    # Act: Run release on a subdirectory of the repo that is not configured in the pyproject.toml
+    with temporary_working_directory(monorepo_pkg1_dir):
+        result = run_cli(cli_cmd[1:], env={Github.DEFAULT_ENV_TOKEN_NAME: "1234"})
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+    assert "Found .git/ in higher parent directory" in result.stderr
