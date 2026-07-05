@@ -7,13 +7,13 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 from hashlib import md5
+from importlib.metadata import version as get_package_version
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
-from click import __version__ as click_version
 from click.testing import CliRunner
 from filelock import FileLock
 from git import Commit, Repo
@@ -197,7 +197,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 def get_cli_runner() -> CliRunner:
     return (
         CliRunner()
-        if tuple(map(int, click_version.split("."))) >= (8, 2, 0)
+        if tuple(map(int, get_package_version("click").split("."))) >= (8, 2, 0)
         else CliRunner(mix_stderr=False)  # type: ignore[call-arg]
     )
 

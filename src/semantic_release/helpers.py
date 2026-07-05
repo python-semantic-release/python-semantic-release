@@ -94,7 +94,7 @@ def text_reducer(text: str, filter_pair: tuple[Pattern[str], str]) -> str:
 
 
 def validate_types_in_sequence(
-    sequence: Sequence, types: type | tuple[type, ...]
+    sequence: Sequence[Any], types: type | tuple[type, ...]
 ) -> bool:
     """Validate that all elements in a sequence are of a specific type"""
     return all(isinstance(item, types) for item in sequence)

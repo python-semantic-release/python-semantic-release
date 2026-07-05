@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from importlib.metadata import version as get_package_version
 from pathlib import Path
 from shutil import rmtree
 from textwrap import dedent
@@ -9,7 +10,6 @@ from typing import TYPE_CHECKING
 
 import git
 import pytest
-from click import __version__ as click_version
 from click.testing import CliRunner
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
@@ -67,7 +67,7 @@ def test_main_no_args_passes_w_help_text():
     cli_cmd = [MAIN_PROG_NAME]
     result = CliRunner().invoke(main, prog_name=cli_cmd[0])
 
-    if tuple(map(int, click_version.split("."))) >= (8, 2, 0):
+    if tuple(map(int, get_package_version("click").split("."))) >= (8, 2, 0):
         assert_exit_code(2, result, cli_cmd)
     else:
         assert_successful_exit_code(result, cli_cmd)
