@@ -11,7 +11,7 @@ from tests.fixtures.repos.git_flow import (
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_emoji_commits,
     repo_w_git_flow_w_rc_n_alpha_prereleases_n_scipy_commits,
 )
-from tests.util import temporary_working_directory
+from tests.util import assert_str_not_in_output, temporary_working_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -68,6 +68,7 @@ def test_gitflow_repo_rebuild_3_channels(
     pyproject_toml_file: Path,
     changelog_md_file: Path,
     changelog_rst_file: Path,
+    caplog: pytest.LogCaptureFixture,
 ):
     # build target repo into a temporary directory
     target_repo_dir = example_project_dir / repo_fixture_name
@@ -154,6 +155,8 @@ def test_gitflow_repo_rebuild_3_channels(
 
         # Evaluate (normal release actions should have occurred as expected)
         # ------------------------------------------------------------------
+        # The warning should not be present in the logs since we are running in the same directory as the .git repo
+        assert_str_not_in_output("Found .git/ in higher parent directory", caplog.text)
         # Make sure version file is updated
         assert expected_pyproject_toml_content == actual_pyproject_toml_content
         assert expected_version_file_content == actual_version_file_content

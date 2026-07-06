@@ -1574,7 +1574,9 @@ def build_repo_from_definition(  # noqa: C901, its required and its just test co
 
                     # Helpful Transform to find the project root repo without needing to pass it around (ie '/' => repo_dir)
                     new_cwd = (
-                        repo_dir if str(new_cwd) == str(repo_dir.root) else new_cwd
+                        repo_dir
+                        if str(new_cwd) == str(Path(repo_dir.root).resolve())
+                        else new_cwd
                     )
 
                     if not new_cwd.is_dir():

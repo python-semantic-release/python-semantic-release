@@ -180,6 +180,34 @@ def cached_example_monorepo(
                 ],
                 cached_project_path / monorepo_pkg2_pyproject_toml_file,
             ),
+            (
+                "tool.semantic_release.repo_dir",
+                str(
+                    Path(
+                        *(
+                            ".."
+                            for _ in range(
+                                len(monorepo_pkg1_pyproject_toml_file.parent.parts)
+                            )
+                        )
+                    )
+                ),
+                cached_project_path / monorepo_pkg1_pyproject_toml_file,
+            ),
+            (
+                "tool.semantic_release.repo_dir",
+                str(
+                    Path(
+                        *(
+                            ".."
+                            for _ in range(
+                                len(monorepo_pkg2_pyproject_toml_file.parent.parts)
+                            )
+                        )
+                    )
+                ),
+                cached_project_path / monorepo_pkg2_pyproject_toml_file,
+            ),
         ]
 
         for setting, value, toml_file in config_updates:
