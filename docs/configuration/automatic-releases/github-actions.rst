@@ -893,14 +893,14 @@ to the GitHub Release Assets as well.
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release/python-semantic-release@COMMIT_HASH  # v10.6.0
+            uses: python-semantic-release/python-semantic-release@COMMIT_HASH  # v10.6.1
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
               git_committer_email: "actions@users.noreply.github.com"
 
           - name: Publish | Upload to GitHub Release Assets
-            uses: python-semantic-release/publish-action@COMMIT_HASH  # v10.6.0
+            uses: python-semantic-release/publish-action@COMMIT_HASH  # v10.6.1
             if: steps.release.outputs.released == 'true'
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}

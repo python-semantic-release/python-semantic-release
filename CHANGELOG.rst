@@ -4,6 +4,55 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.6.1:
+
+v10.6.1 (2026-07-06)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **changelog**: Fix handling of whitespace commit bodies in changelog template filter (`PR#1457`_,
+  `d95e46e`_)
+
+* **cmd-version**: Fix non-styled error msg when strict & no new version, closes `#1423`_
+  (`PR#1437`_, `5e8f94c`_)
+
+* **config**: Eliminate ``.git/`` in parent dir warnings for monorepos configured with ``..``,
+  closes `#1418`_ (`PR#1444`_, `7a1f822`_)
+
+📖 Documentation
+----------------
+
+* **CHANGELOG**: Add ``v9.21.2`` changelog details for website (`a4115cf`_)
+
+* **configuration**: Document ``repo_dir`` config option (`PR#1444`_, `7a1f822`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Expand ``python-gitlab`` dependency range to include ``v8.0.0+`` (`PR#1451`_,
+  `a4b9a43`_)
+
+* **deps**: Expand ``tomlkit`` dependency range to include ``v0.14.0+`` & ``v0.15.0+`` (`028d539`_)
+
+* **deps**: Extend ``click`` dependency range to include ``v8.2+`` (`01707ea`_)
+
+.. _#1418: https://github.com/python-semantic-release/python-semantic-release/issues/1418
+.. _#1423: https://github.com/python-semantic-release/python-semantic-release/issues/1423
+.. _01707ea: https://github.com/python-semantic-release/python-semantic-release/commit/01707ead53e093fe217a82c9ff9898c5e4daf9dc
+.. _028d539: https://github.com/python-semantic-release/python-semantic-release/commit/028d53909276270ce969d246ed739afd7808eacd
+.. _5e8f94c: https://github.com/python-semantic-release/python-semantic-release/commit/5e8f94c3d81ccf17598af8a77659dd31df2ea403
+.. _7a1f822: https://github.com/python-semantic-release/python-semantic-release/commit/7a1f822c06f5258f8b82ea9563b56979d3bc1cd9
+.. _a4115cf: https://github.com/python-semantic-release/python-semantic-release/commit/a4115cfe98b98598adc1b44e04565ec0254b604d
+.. _a4b9a43: https://github.com/python-semantic-release/python-semantic-release/commit/a4b9a438846c9f795b8bbaf2b145077fb6c3f7a5
+.. _d95e46e: https://github.com/python-semantic-release/python-semantic-release/commit/d95e46e7603b559c6de6160092c0b9af9a428f02
+.. _PR#1437: https://github.com/python-semantic-release/python-semantic-release/pull/1437
+.. _PR#1444: https://github.com/python-semantic-release/python-semantic-release/pull/1444
+.. _PR#1451: https://github.com/python-semantic-release/python-semantic-release/pull/1451
+.. _PR#1457: https://github.com/python-semantic-release/python-semantic-release/pull/1457
+
+
 .. _changelog-v10.6.0:
 
 v10.6.0 (2026-07-04)
