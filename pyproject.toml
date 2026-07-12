@@ -91,7 +91,7 @@ dev = [
 mypy = [
   "mypy >= 1.14.1, < 2.0.0",
   "types-Deprecated ~= 1.2",
-  "types-requests ~= 2.32.0",
+  "types-requests >= 2.32.0, < 3.0.0",
   "types-pyyaml ~= 6.0",
 ]
 
