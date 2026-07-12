@@ -60,7 +60,7 @@ build = [
   "tomlkit ~= 0.13.0",
 ]
 docs = [
-  "Sphinx ~= 7.4",
+  "Sphinx ~= 9.1",
   "sphinxcontrib-apidoc == 0.6.0",
   "sphinx-autobuild == 2024.2.4",
   "furo ~= 2025.9",
