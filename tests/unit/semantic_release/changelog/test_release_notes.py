@@ -8,8 +8,11 @@ from unittest import mock
 
 import pytest
 
-# NOTE: use backport with newer API to support 3.7
-from importlib_resources import files
+try:
+    from importlib.resources import files  # type: ignore[attr-defined]
+except ImportError:
+    # NOTE: for 3.8, use backport with newer API than stdlib
+    from importlib_resources import files
 
 import semantic_release
 from semantic_release.cli.changelog_writer import generate_release_notes

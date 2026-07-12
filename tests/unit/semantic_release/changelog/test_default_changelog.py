@@ -5,8 +5,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-# NOTE: use backport with newer API
-from importlib_resources import files
+try:
+    from importlib.resources import files  # type: ignore[attr-defined]
+except ImportError:
+    # NOTE: for 3.8, use backport with newer API than stdlib
+    from importlib_resources import files
 
 import semantic_release
 from semantic_release.changelog.context import ChangelogMode, make_changelog_context
