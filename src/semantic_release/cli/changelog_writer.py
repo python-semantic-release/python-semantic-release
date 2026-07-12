@@ -5,8 +5,11 @@ from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-# NOTE: use backport with newer API than stdlib
-from importlib_resources import files
+try:
+    from importlib.resources import files  # type: ignore[attr-defined]
+except ImportError:
+    # NOTE: for 3.8, use backport with newer API than stdlib
+    from importlib_resources import files
 
 import semantic_release
 from semantic_release.changelog.context import (
