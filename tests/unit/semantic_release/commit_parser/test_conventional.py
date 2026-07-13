@@ -1116,8 +1116,9 @@ def test_parser_return_release_notices_from_commit_message(
 ##############################
 # test custom parser options #
 ##############################
-def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
-    options = ConventionalCommitParserOptions(default_bump_level=LevelBump.MINOR)
+def test_parser_other_allowed_tags_no_bump(make_commit_obj: MakeCommitObjFn):
+    """Test that commits with other_allowed_tags get NO_RELEASE bump level."""
+    options = ConventionalCommitParserOptions()
     parsed_results = ConventionalCommitParser(options).parse(
         make_commit_obj("test(parser): add a test for conventional parser")
     )
@@ -1126,7 +1127,7 @@ def test_parser_custom_default_level(make_commit_obj: MakeCommitObjFn):
 
     result = next(iter(parsed_results))
     assert isinstance(result, ParsedCommit)
-    assert result.bump is LevelBump.MINOR
+    assert result.bump is LevelBump.NO_RELEASE
 
 
 def test_parser_custom_allowed_types(
