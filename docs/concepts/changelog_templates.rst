@@ -1035,6 +1035,101 @@ the remote VCS for each commit. Both of these are injected into the template env
 by PSR.
 
 
+.. _changelog-templates-remote:
+
+Remote Template Directories
+---------------------------
+
+*Introduced in v10.6.0*
+
+As of v10.6.0, PSR supports loading changelog templates from remote filesystems such as
+GitHub repositories, S3 buckets, HTTP servers, and other locations supported by `fsspec`_.
+This enables you to centralize your changelog templates in a shared location and reuse
+them across multiple projects.
+
+.. _fsspec: https://filesystem-spec.readthedocs.io/
+
+To use a remote template directory, set the :ref:`template_dir <config-changelog-template_dir>`
+setting to a URL supported by fsspec.
+
+Most remote protocols require additional packages. Install the appropriate
+fsspec extra for your protocol (e.g., ``fsspec[s3]`` for S3).
+Refer to the `fsspec extras documentation`_ for the full list of available protocols.
+
+.. _fsspec extras documentation: https://filesystem-spec.readthedocs.io/en/latest/#installation
+
+
+GitHub Repository (Public)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For a public GitHub repository, use the ``github://`` protocol:
+
+.. code-block:: toml
+
+    [tool.semantic_release.changelog]
+    template_dir = "github://myorg:shared-templates@main/changelog-templates"
+
+The URL format is ``github://org:repo@ref/path`` where:
+
+* ``org`` is the GitHub organization or username
+* ``repo`` is the repository name
+* ``ref`` is the branch name, tag, or commit SHA
+* ``path`` is the path to the template directory within the repository
+
+
+GitHub Repository (Private)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For private repositories, you need to provide authentication via the
+:ref:`storage_options <config-changelog-storage_options>` setting:
+
+.. code-block:: toml
+
+    [tool.semantic_release.changelog]
+    template_dir = "github://myorg:private-templates@main/changelog-templates"
+
+    [tool.semantic_release.changelog.storage_options]
+    username = { env = "GITHUB_TOKEN" }
+    token = { env = "GITHUB_TOKEN" }
+
+Refer to the `fsspec GithubFileSystem documentation`_ for details on supported
+authentication methods.
+
+.. _fsspec GithubFileSystem documentation: https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.implementations.github.GithubFileSystem
+
+
+Other Supported Protocols
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Through fsspec, PSR supports many other remote filesystems including:
+
+* **HTTP/HTTPS**: ``https://example.com/templates``
+* **S3**: ``s3://bucket-name/templates``
+* **Google Cloud Storage**: ``gcs://bucket-name/templates``
+* **Azure Blob Storage**: ``az://container-name/templates``
+
+Refer to the `fsspec documentation`_ for the full list of supported filesystems and
+their respective configuration options.
+
+.. _fsspec documentation: https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations
+
+
+Security Considerations
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+   Chained protocols (e.g., ``simplecache::s3://bucket/path``) are not supported for
+   security reasons.
+
+When using remote templates, be aware that:
+
+* Templates are fetched from the remote location each time the changelog is generated
+* Local path traversal protections do not apply to remote URLs (remote templates are
+  by definition external to your repository)
+* Ensure your remote template source is trusted, as templates have access to your
+  project's release history and are rendered using Jinja2
+
+
 .. _changelog-templates-custom_release_notes:
 
 Custom Release Notes
