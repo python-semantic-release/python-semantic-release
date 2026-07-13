@@ -51,6 +51,14 @@ inputs:
     required: false
     description: The ssh private key used to sign commits
 
+  gpg_private_signing_key:
+    required: false
+    description: The GPG private key used to sign commits and tags
+
+  gpg_passphrase:
+    required: false
+    description: The passphrase for the GPG private key (if encrypted)
+
   strict:
     default: "false"
     required: false
