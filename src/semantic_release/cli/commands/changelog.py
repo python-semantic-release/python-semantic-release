@@ -161,6 +161,7 @@ def changelog(cli_ctx: CliContextObj, release_tag: str | None) -> None:
             tag_name=release_tag,
             project_root=runtime.repo_dir,
         ),
+        template_environment=runtime.template_environment,
     )
 
     try:
