@@ -22,9 +22,13 @@ from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.hvcs.util import suppress_not_found
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import Any, Callable
+    from typing import Any, Callable, TypedDict
 
     from gitlab.v4.objects import Project as GitLabProject
+
+    class TokenArgs(TypedDict):
+        private_token: str | None
+        job_token: str | None
 
 
 class Gitlab(RemoteHvcsBase):
@@ -47,9 +51,9 @@ class Gitlab(RemoteHvcsBase):
         **_kwargs: Any,
     ) -> None:
         super().__init__(remote_url)
-        self.token = token
         self.project_namespace = f"{self.owner}/{self.repo_name}"
         self._project: GitLabProject | None = None
+        self.is_ci = bool(str(os.getenv("CI", "")).lower() == str(True).lower())
 
         domain_url = self._normalize_url(
             hvcs_domain
@@ -68,7 +72,7 @@ class Gitlab(RemoteHvcsBase):
             ).url.rstrip("/")
         )
 
-        self._client = gitlab.Gitlab(self.hvcs_domain.url, private_token=self.token)
+        self._client = self._create_client(token)
         self._api_url = parse_url(self._client.api_url)
 
     @property
@@ -76,6 +80,52 @@ class Gitlab(RemoteHvcsBase):
         if self._project is None:
             self._project = self._client.projects.get(self.project_namespace)
         return self._project
+
+    @property
+    def token(self) -> str:
+        return [
+            *filter(
+                None,
+                [
+                    self._client.private_token,
+                    self._client.oauth_token,
+                    self._client.job_token,
+                ],
+            ),
+            "",  # default to empty string if no token is found
+        ].pop(0)
+
+    @staticmethod
+    def get_gitlab_server_version() -> tuple[int, ...]:
+        main_ver_str = os.getenv("CI_SERVER_VERSION", "0.0.0").split("-", maxsplit=1)[0]
+        try:
+            return tuple(map(int, main_ver_str.split(".")))
+        except ValueError:
+            return 0, 0, 0
+
+    def _create_client(self, configured_token: str | None = None) -> gitlab.Gitlab:
+        """
+        Creates a Gitlab client
+
+        A configured private token is prioritized over CI_JOB_TOKEN, if both are available
+        """
+        token_args: TokenArgs = {
+            "private_token": configured_token,  # assumed to be a personal access token
+            "job_token": None,
+        }
+
+        # GitLab Server version 17.2 enabled CI_JOB_TOKEN to write to repository
+        if self.get_gitlab_server_version()[:2] >= (17, 2):
+            job_token = os.getenv("CI_JOB_TOKEN", "")
+
+            if job_token and job_token == configured_token:
+                # Swap to only use job token if the configured_token is actually the CI_JOB_TOKEN
+                token_args = {
+                    "private_token": None,
+                    "job_token": job_token,
+                }
+
+        return gitlab.Gitlab(url=self.hvcs_domain.url, **token_args)
 
     @lru_cache(maxsize=1)
     def _get_repository_owner_and_name(self) -> tuple[str, str]:
