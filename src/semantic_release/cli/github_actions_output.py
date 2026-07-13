@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from enum import Enum
 from re import compile as regexp
@@ -31,6 +32,9 @@ class VersionGitHubActionsOutput:
         commit_sha: str | None = None,
         release_notes: str | None = None,
         prev_version: Version | None = None,
+        release_id: int | None = None,
+        upload_url: str | None = None,
+        assets: list[dict[str, Any]] | None = None,
     ) -> None:
         self._gh_client = gh_client
         self._mode = mode
@@ -39,6 +43,9 @@ class VersionGitHubActionsOutput:
         self._commit_sha = commit_sha
         self._release_notes = release_notes
         self._prev_version = prev_version
+        self._release_id = release_id
+        self._upload_url = upload_url
+        self._assets = assets or []
 
     @property
     def released(self) -> bool | None:
@@ -112,6 +119,59 @@ class VersionGitHubActionsOutput:
             raise ValueError("GitHub client not set, cannot create links")
         return self._gh_client
 
+    @property
+    def release_id(self) -> int | None:
+        return self._release_id if self._release_id else None
+
+    @release_id.setter
+    def release_id(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("output 'release_id' should be an integer")
+        self._release_id = value
+
+    @property
+    def upload_url(self) -> str | None:
+        return self._upload_url if self._upload_url else None
+
+    @upload_url.setter
+    def upload_url(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("output 'upload_url' should be a string")
+        self._upload_url = value
+
+    @property
+    def assets(self) -> list[dict[str, Any]]:
+        return self._assets
+
+    @assets.setter
+    def assets(self, value: list[dict[str, Any]]) -> None:
+        if not isinstance(value, list):
+            raise TypeError("output 'assets' should be a list")
+        self._assets = value
+
+    @property
+    def assets_dist(self) -> dict[str, dict[str, Any]]:
+        """
+        Returns a dictionary of dist assets organized by type (wheel, sdist, etc.)
+
+        Identifies Python distribution files by extension:
+        - .whl files are categorized as 'wheel'
+        - .tar.gz files are categorized as 'sdist'
+        - Other files retain their extension as the key
+        """
+        dist_assets: dict[str, dict[str, Any]] = {}
+        for asset in self._assets:
+            name = asset.get("name", "")
+            if name.endswith(".whl"):
+                dist_assets["wheel"] = asset
+            elif name.endswith(".tar.gz"):
+                dist_assets["sdist"] = asset
+            else:
+                # Use file extension as key for other files
+                ext = name.split(".")[-1] if "." in name else "unknown"
+                dist_assets[ext] = asset
+        return dist_assets
+
     def to_output_text(self) -> str:
         missing: set[str] = set()
         if self.version is None:
@@ -137,6 +197,10 @@ class VersionGitHubActionsOutput:
             "link": self.gh_client.create_release_url(self.tag) if self.tag else "",
             "previous_version": str(self.prev_version) if self.prev_version else "",
             "commit_sha": self.commit_sha if self.commit_sha else "",
+            "id": str(self.release_id) if self.release_id else "",
+            "upload_url": self.upload_url if self.upload_url else "",
+            "assets": json.dumps(self.assets) if self.assets else "[]",
+            "assets_dist": json.dumps(self.assets_dist) if self.assets_dist else "{}",
         }
 
         multiline_output_values: dict[str, str] = {
@@ -146,9 +210,11 @@ class VersionGitHubActionsOutput:
         output_lines = [
             *[f"{key}={value!s}{os.linesep}" for key, value in output_values.items()],
             *[
-                f"{key}<<EOF{os.linesep}{value}EOF{os.linesep}"
-                if value
-                else f"{key}={os.linesep}"
+                (
+                    f"{key}<<EOF{os.linesep}{value}EOF{os.linesep}"
+                    if value
+                    else f"{key}={os.linesep}"
+                )
                 for key, value in multiline_output_values.items()
             ],
         ]

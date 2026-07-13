@@ -19,6 +19,8 @@ from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Callable
 
+    from semantic_release.hvcs.github import ReleaseInfo
+
 
 class Bitbucket(RemoteHvcsBase):
     """
@@ -241,7 +243,7 @@ class Bitbucket(RemoteHvcsBase):
 
     def create_or_update_release(
         self, tag: str, release_notes: str, prerelease: bool = False
-    ) -> int | str:
+    ) -> int | str | ReleaseInfo:
         return super().create_or_update_release(tag, release_notes, prerelease)
 
     def create_release(
@@ -251,7 +253,7 @@ class Bitbucket(RemoteHvcsBase):
         prerelease: bool = False,
         assets: list[str] | None = None,
         noop: bool = False,
-    ) -> int | str:
+    ) -> int | str | ReleaseInfo:
         return super().create_release(tag, release_notes, prerelease, assets, noop)
 
 
