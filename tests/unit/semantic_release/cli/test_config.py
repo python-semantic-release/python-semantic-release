@@ -31,7 +31,7 @@ from semantic_release.commit_parser.scipy import ScipyParserOptions
 from semantic_release.commit_parser.tag import TagParserOptions
 from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
-from semantic_release.errors import ParserLoadError
+from semantic_release.errors import InvalidConfiguration, ParserLoadError
 
 from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import (
@@ -463,3 +463,179 @@ def test_git_remote_url_w_insteadof_alias(
 
     # Evaluate: the remote URL should be the full URL
     assert expected_url.url == actual_url
+
+
+def test_output_dir_default_resolves_to_repo_root(
+    repo_w_initial_commit: BuiltRepoResult,
+    example_pyproject_toml: Path,
+):
+    repo = repo_w_initial_commit["repo"]
+    repo_dir = Path(repo.working_dir).resolve()
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        project_config = tomlkit.loads(
+            example_pyproject_toml.read_text(encoding="utf-8")
+        ).unwrap()
+
+        runtime = RuntimeContext.from_raw_config(
+            raw=RawConfig.model_validate(
+                project_config.get("tool", {}).get("semantic_release", {}),
+            ),
+            global_cli_options=GlobalCommandLineOptions(),
+        )
+
+    assert runtime.output_dir == repo_dir
+
+
+def test_output_dir_inside_repo_accepted(
+    repo_w_initial_commit: BuiltRepoResult,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    repo = repo_w_initial_commit["repo"]
+    repo_dir = Path(repo.working_dir).resolve()
+
+    update_pyproject_toml("tool.semantic_release.changelog.output_dir", "docs")
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        project_config = tomlkit.loads(
+            example_pyproject_toml.read_text(encoding="utf-8")
+        ).unwrap()
+
+        runtime = RuntimeContext.from_raw_config(
+            raw=RawConfig.model_validate(
+                project_config.get("tool", {}).get("semantic_release", {}),
+            ),
+            global_cli_options=GlobalCommandLineOptions(),
+        )
+
+    expected_output_dir = repo_dir / "docs"
+    assert runtime.output_dir == expected_output_dir
+    assert expected_output_dir.is_dir()  # should be auto-created
+
+
+def test_output_dir_outside_repo_rejected(
+    repo_w_initial_commit: BuiltRepoResult,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    # Set output_dir to a path outside the repo
+    update_pyproject_toml("tool.semantic_release.changelog.output_dir", "/tmp/outside")  # noqa: S108
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        project_config = tomlkit.loads(
+            example_pyproject_toml.read_text(encoding="utf-8")
+        ).unwrap()
+
+        with pytest.raises(
+            InvalidConfiguration, match="Output directory must be inside"
+        ):
+            RuntimeContext.from_raw_config(
+                raw=RawConfig.model_validate(
+                    project_config.get("tool", {}).get("semantic_release", {}),
+                ),
+                global_cli_options=GlobalCommandLineOptions(),
+            )
+
+
+def test_output_dir_with_parent_traversal_rejected(
+    repo_w_initial_commit: BuiltRepoResult,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    # Set output_dir to a path that tries to escape the repo
+    update_pyproject_toml("tool.semantic_release.changelog.output_dir", "../outside")
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        project_config = tomlkit.loads(
+            example_pyproject_toml.read_text(encoding="utf-8")
+        ).unwrap()
+
+        with pytest.raises(
+            InvalidConfiguration, match="Output directory must be inside"
+        ):
+            RuntimeContext.from_raw_config(
+                raw=RawConfig.model_validate(
+                    project_config.get("tool", {}).get("semantic_release", {}),
+                ),
+                global_cli_options=GlobalCommandLineOptions(),
+            )
+
+
+def test_output_dir_and_changelog_file_with_dir_rejected(
+    repo_w_initial_commit: BuiltRepoResult,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    # Set both output_dir and changelog_file with a directory component
+    update_pyproject_toml("tool.semantic_release.changelog.output_dir", "build")
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        "docs/CHANGELOG.md",
+    )
+
+    with mock.patch.dict(os.environ, {}, clear=True):
+        project_config = tomlkit.loads(
+            example_pyproject_toml.read_text(encoding="utf-8")
+        ).unwrap()
+
+        with pytest.raises(InvalidConfiguration, match="Cannot specify both"):
+            RuntimeContext.from_raw_config(
+                raw=RawConfig.model_validate(
+                    project_config.get("tool", {}).get("semantic_release", {}),
+                ),
+                global_cli_options=GlobalCommandLineOptions(),
+            )
+
+
+def test_output_dir_with_bare_changelog_filename_from_subdirectory_accepted(
+    repo_w_initial_commit: BuiltRepoResult,
+    example_pyproject_toml: Path,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+):
+    # This simulates a monorepo scenario where the user runs PSR from packages/pkg1/
+    # with output_dir pointing to ../../docs/source/pkg1 and changelog_file being just
+    # a filename like 'changelog.md'.
+
+    repo = repo_w_initial_commit["repo"]
+    repo_dir = Path(repo.working_dir).resolve()
+
+    # Create a subdirectory to simulate monorepo package structure
+    subdir = repo_dir / "packages" / "pkg1"
+    subdir.mkdir(parents=True, exist_ok=True)
+
+    # Create output directory
+    output_target = repo_dir / "docs" / "source" / "pkg1"
+    output_target.mkdir(parents=True, exist_ok=True)
+
+    # Configure output_dir with relative path from subdirectory and bare filename
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.output_dir", "../../docs/source/pkg1"
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        "changelog.md",  # Bare filename, no directory component
+    )
+
+    # Change to the subdirectory to simulate running PSR from there
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(subdir)
+
+        with mock.patch.dict(os.environ, {}, clear=True):
+            project_config = tomlkit.loads(
+                example_pyproject_toml.read_text(encoding="utf-8")
+            ).unwrap()
+
+            # This should NOT raise an error - bare filename with output_dir is valid
+            runtime = RuntimeContext.from_raw_config(
+                raw=RawConfig.model_validate(
+                    project_config.get("tool", {}).get("semantic_release", {}),
+                ),
+                global_cli_options=GlobalCommandLineOptions(),
+            )
+
+        # Verify the output_dir resolved correctly
+        assert runtime.output_dir == output_target
+    finally:
+        os.chdir(original_cwd)
