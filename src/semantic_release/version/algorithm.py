@@ -61,6 +61,34 @@ def tags_and_versions(
     return sorted(ts_and_vs, reverse=True, key=lambda v: v[1])
 
 
+def tags_and_versions_in_history(
+    repo: Repo, translator: VersionTranslator
+) -> list[tuple[Tag, Version]]:
+    """Return parsed versions whose tags are reachable from the active branch."""
+    parsed_tags_and_versions = tags_and_versions(repo.tags, translator)
+
+    # A noop version command reports that it would unshallow the repository but
+    # deliberately leaves the history incomplete. Preserve the existing forced-bump
+    # behavior until the full graph is available.
+    if repo.git.rev_parse("--is-shallow-repository") == "true":
+        return parsed_tags_and_versions
+
+    commit_hash_set = {
+        commit.hexsha
+        for commit in _traverse_graph_for_commits(head_commit=repo.active_branch.commit)
+    }
+
+    historic_tags_and_versions: list[tuple[Tag, Version]] = []
+    for tag, version in parsed_tags_and_versions:
+        # Tags pointing to tags are resolved automatically, but tags pointing to
+        # blobs or trees cannot be part of a branch's commit history.
+        with suppress(ValueError):
+            if tag.commit.hexsha in commit_hash_set:
+                historic_tags_and_versions.append((tag, version))
+
+    return historic_tags_and_versions
+
+
 def _traverse_graph_for_commits(
     head_commit: Commit,
     latest_release_tag_str: str = "",
@@ -266,24 +294,10 @@ def next_version(
             "Translator was unable to parse the embedded default version"
         )
 
-    # Step 1. All tags, sorted descending by semver ordering rules
-    all_git_tags_as_versions = tags_and_versions(repo.tags, translator)
-
-    # Retrieve all commit hashes (regardless of merges) in the current branch's history from repo origin
-    commit_hash_set = {
-        commit.hexsha
-        for commit in _traverse_graph_for_commits(head_commit=repo.active_branch.commit)
-    }
-
-    # Filter all releases that are not found in the current branch's history
-    historic_versions: list[Version] = []
-    for tag, version in all_git_tags_as_versions:
-        # TODO: move this to tags_and_versions() function?
-        # Ignore the error that is raised when tag points to a Blob or Tree object rather
-        # than a commit object (tags that point to tags that then point to commits are resolved automatically)
-        with suppress(ValueError):
-            if tag.commit.hexsha in commit_hash_set:
-                historic_versions.append(version)
+    # Step 1. All versions in the current branch's history, sorted descending by semver
+    historic_versions = [
+        version for _, version in tags_and_versions_in_history(repo, translator)
+    ]
 
     # Step 2. Get the latest final release version in the history of the current branch
     #  or fallback to the default 0.0.0 starting version value if none are found
