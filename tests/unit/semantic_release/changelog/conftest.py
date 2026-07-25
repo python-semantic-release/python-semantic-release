@@ -366,6 +366,68 @@ def release_history_w_notice_n_brk_change(
 
 
 @pytest.fixture
+def release_history_w_nonleading_brk_n_notice(
+    release_history_w_notice_n_brk_change: ReleaseHistory,
+) -> ReleaseHistory:
+    """Create a release where breaking changes and notices are not first in a category."""
+    latest_version = next(iter(release_history_w_notice_n_brk_change.released.keys()))
+    latest_release = release_history_w_notice_n_brk_change.released[latest_version]
+
+    normal_fix = ParsedCommit(
+        bump=LevelBump.PATCH,
+        type="fix",
+        scope="",
+        descriptions=["a newer non-breaking fix"],
+        breaking_descriptions=[],
+        commit=Commit(
+            Repo("."),
+            Object.NULL_BIN_SHA,
+            message="fix: a newer non-breaking fix",
+        ),
+    )
+    normal_refactor = ParsedCommit(
+        bump=LevelBump.NO_RELEASE,
+        type="refactor",
+        scope="",
+        descriptions=["a newer refactor without a notice"],
+        breaking_descriptions=[],
+        commit=Commit(
+            Repo("."),
+            Object.NULL_BIN_SHA,
+            message="refactor: a newer refactor without a notice",
+        ),
+    )
+
+    return ReleaseHistory(
+        unreleased={},
+        released={
+            latest_version: Release(
+                tagger=latest_release["tagger"],
+                committer=latest_release["committer"],
+                tagged_date=latest_release["tagged_date"],
+                elements={
+                    **latest_release["elements"],
+                    "Bug Fixes": [
+                        normal_fix,
+                        *latest_release["elements"]["Bug Fixes"],
+                    ],
+                    "Refactoring": [
+                        normal_refactor,
+                        *latest_release["elements"]["Refactoring"],
+                    ],
+                },
+                version=latest_version,
+            ),
+            **{
+                version: release
+                for version, release in release_history_w_notice_n_brk_change.released.items()
+                if version != latest_version
+            },
+        },
+    )
+
+
+@pytest.fixture
 def release_history_w_multiple_notices(
     release_history_w_a_notice: ReleaseHistory,
     stable_now_date: GetStableDateNowFn,

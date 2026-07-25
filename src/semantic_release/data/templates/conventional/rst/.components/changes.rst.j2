@@ -95,7 +95,7 @@ Additional Release Information
       #  1. Re-map the list to only the list of commits under the breaking category from the list of tuples
       #  2. Peel off the outer list to get a list of ParsedCommit objects
       #  3. Filter the list of ParsedCommits to only those with a breaking description
-#}{%  set breaking_commits = commit_objects | map(attribute="1.0")
+#}{%  set breaking_commits = commit_objects | map(attribute="1") | sum(start=[])
 %}{%  set breaking_commits = breaking_commits | rejectattr("error", "defined") | selectattr("breaking_descriptions.0") | list
 %}{#
 #}{%  if breaking_commits | length > 0
@@ -129,7 +129,7 @@ Additional Release Information
       #  1. Re-map the list to only the list of commits from the list of tuples
       #  2. Peel off the outer list to get a list of ParsedCommit objects
       #  3. Filter the list of ParsedCommits to only those with a release notice
-#}{%  set notice_commits = commit_objects | map(attribute="1.0")
+#}{%  set notice_commits = commit_objects | map(attribute="1") | sum(start=[])
 %}{%  set notice_commits = notice_commits | rejectattr("error", "defined") | selectattr("release_notices.0") | list
 %}{#
 #}{%  if notice_commits | length > 0
