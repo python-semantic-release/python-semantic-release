@@ -13,7 +13,7 @@ import requests_mock
 from requests import HTTPError, Response, Session
 from requests.auth import _basic_auth_str
 
-from semantic_release.errors import AssetUploadError
+from semantic_release.errors import AssetUploadError, IncompleteReleaseError
 from semantic_release.hvcs.github import Github
 from semantic_release.hvcs.token_auth import TokenAuth
 
@@ -479,6 +479,88 @@ def test_create_release_succeeds(
         assert expected_http_method == m.last_request.method
         assert expected_request_url == m.last_request.url
         assert expected_request_body == m.last_request.json()
+
+
+@pytest.mark.parametrize("prerelease", (True, False))
+def test_create_release_with_assets_creates_draft_then_publishes(
+    default_gh_client: Github,
+    prerelease: bool,
+):
+    """When assets are provided, the release is created as a draft, the assets are
+    uploaded while it is still mutable, and only then is it published. This is the
+    sequence GitHub's immutable releases feature requires.
+    """
+    tag = "v1.0.0"
+    release_id = 5
+    assets = ["dist/pkg-1.0.0.tar.gz", "dist/pkg-1.0.0-py3-none-any.whl"]
+    releases_url = "{api_url}/repos/{owner}/{repo_name}/releases".format(
+        api_url=default_gh_client.api_url,
+        owner=default_gh_client.owner,
+        repo_name=default_gh_client.repo_name,
+    )
+    publish_url = f"{releases_url}/{release_id}"
+    expected_num_requests = 2  # create draft + publish
+
+    with requests_mock.Mocker(session=default_gh_client.session) as m, mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        return_value=True,
+    ) as mock_upload_release_asset:
+        m.register_uri(
+            "POST", github_api_matcher, json={"id": release_id}, status_code=201
+        )
+
+        actual_rtn_val = default_gh_client.create_release(
+            tag, RELEASE_NOTES, prerelease, assets=assets
+        )
+
+        assert release_id == actual_rtn_val
+        assert expected_num_requests == len(m.request_history)
+
+        create_request, publish_request = m.request_history
+
+        # The release is created as a draft
+        assert releases_url == create_request.url
+        assert create_request.json()["draft"] is True
+
+        # Every asset is uploaded
+        assert len(assets) == mock_upload_release_asset.call_count
+
+        # The final request publishes the draft
+        assert publish_url == publish_request.url
+        assert {"draft": False} == publish_request.json()
+
+
+def test_create_release_leaves_draft_when_asset_upload_fails(
+    default_gh_client: Github,
+):
+    """When an asset upload fails, the release is left as a draft (never published)
+    and IncompleteReleaseError is raised, so nothing is half-published.
+    """
+    tag = "v1.0.0"
+    release_id = 7
+    assets = ["dist/pkg-1.0.0.tar.gz"]
+    expected_num_requests = 1  # only the draft-create; no publish
+
+    http_error = HTTPError("500 Server Error")
+    http_error.response = Response()
+    http_error.response.status_code = 500
+
+    with requests_mock.Mocker(session=default_gh_client.session) as m, mock.patch.object(
+        default_gh_client,
+        default_gh_client.upload_release_asset.__name__,
+        side_effect=http_error,
+    ):
+        m.register_uri(
+            "POST", github_api_matcher, json={"id": release_id}, status_code=201
+        )
+
+        with pytest.raises(IncompleteReleaseError):
+            default_gh_client.create_release(tag, RELEASE_NOTES, assets=assets)
+
+        # Only the draft-create request was made; the draft was never published
+        assert expected_num_requests == len(m.request_history)
+        assert m.last_request.json()["draft"] is True
 
 
 @pytest.mark.parametrize("status_code", (400, 404, 429, 500, 503))

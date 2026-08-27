@@ -250,6 +250,14 @@ class Github(RemoteHvcsBase):
             return -1
 
         logger.info("Creating release for tag %s", tag)
+
+        # GitHub's immutable releases feature freezes a release's assets the moment
+        # the release is published, so assets cannot be attached afterwards. When we
+        # have assets to upload, create the release as a draft, upload the assets
+        # while it is still mutable, and only then publish it. Releases without
+        # assets are published directly, leaving that common path unchanged.
+        create_as_draft = bool(assets)
+
         releases_endpoint = self.create_api_url(
             endpoint=f"/repos/{self.owner}/{self.repo_name}/releases",
         )
@@ -259,7 +267,7 @@ class Github(RemoteHvcsBase):
                 "tag_name": tag,
                 "name": tag,
                 "body": release_notes,
-                "draft": False,
+                "draft": create_as_draft,
                 "prerelease": prerelease,
             },
         )
@@ -287,15 +295,21 @@ class Github(RemoteHvcsBase):
                     )
                 )
 
-        if len(errors) < 1:
-            return release_id
+        if errors:
+            for error in errors:
+                logger.exception(error)
 
-        for error in errors:
-            logger.exception(error)
+            # Leave the release as a draft so the user can inspect, retry, or
+            # remove it; nothing is left half-published.
+            raise IncompleteReleaseError(
+                f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"
+            )
 
-        raise IncompleteReleaseError(
-            f"Failed to upload asset{'s' if len(errors) > 1 else ''} to release!"
-        )
+        if create_as_draft:
+            # All assets are attached; publish the draft.
+            self.publish_release(release_id)
+
+        return release_id
 
     @logged_function(logger)
     @suppress_not_found
@@ -342,6 +356,29 @@ class Github(RemoteHvcsBase):
         )
 
         # Raise an error if the update was unsuccessful
+        response.raise_for_status()
+
+        return release_id
+
+    @logged_function(logger)
+    def publish_release(self, release_id: int) -> int:
+        """
+        Publish a draft release
+        https://docs.github.com/rest/releases/releases#update-a-release
+        :param release_id: ID of the draft release to publish
+        :return: The ID of the release that was published
+        """
+        logger.info("Publishing release %s", release_id)
+        release_endpoint = self.create_api_url(
+            endpoint=f"/repos/{self.owner}/{self.repo_name}/releases/{release_id}",
+        )
+
+        response = self.session.post(
+            release_endpoint,
+            json={"draft": False},
+        )
+
+        # Raise an error if publishing was unsuccessful
         response.raise_for_status()
 
         return release_id
