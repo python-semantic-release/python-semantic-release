@@ -36,7 +36,12 @@ def get_license_name_for_release(tag_name: str, project_root: Path) -> str:
             toml_contents = git_repo.git.show(
                 f"{tag_name}:{proj_toml.relative_to(project_root)}"
             )
-            config_toml = tomlkit.parse(toml_contents)
+            # Normalize line endings: `git show` returns the blob verbatim, which
+            # may contain CRLF (or bare CR) when committed from Windows.
+            # tomlkit >= 0.15 rejects bare carriage returns as invalid characters.
+            config_toml = tomlkit.parse(
+                toml_contents.replace("\r\n", "\n").replace("\r", "")
+            )
             project_metadata = config_toml.unwrap().get("project", project_metadata)
             break
 
