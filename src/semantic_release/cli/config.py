@@ -36,6 +36,7 @@ from pydantic import (
     Field,
     RootModel,
     ValidationError,
+    field_serializer,
     field_validator,
     model_validator,
 )
@@ -364,8 +365,12 @@ class RawConfig(BaseModel):
     build_command: Optional[str] = None
     build_command_env: List[str] = []
     changelog: ChangelogConfig = ChangelogConfig()
-    commit_author: MaybeFromEnv = EnvConfigVar(
-        env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR
+    commit_author: Actor = Field(
+        default=cast(
+            "Actor",
+            EnvConfigVar(env="GIT_COMMIT_AUTHOR", default=DEFAULT_COMMIT_AUTHOR),
+        ),
+        validate_default=True,
     )
     commit_message: str = COMMIT_MESSAGE
     commit_parser: NonEmptyString = "conventional"
@@ -389,6 +394,72 @@ class RawConfig(BaseModel):
         if not isinstance(value, (str, Path)):
             raise TypeError(f"Invalid type: {type(value)}, expected str or Path.")
         return Path(value)
+
+    # Note: mode="plain" must be declared before mode="before" here, as pydantic
+    # composes same-field validators in declaration order and a later "before"
+    # validator wraps (runs prior to) an earlier "plain" validator.
+    @field_validator("commit_author", mode="plain")
+    @classmethod
+    def validate_commit_author(cls, val: Any) -> Actor:
+        if isinstance(val, Actor):
+            return val
+
+        if isinstance(val, dict):
+            if "name" not in val or "email" not in val:
+                msg = "commit_author dict must contain 'name' and 'email' keys."
+                raise ValueError(msg)
+            if not isinstance(val["name"], str) or not isinstance(val["email"], str):
+                msg = "commit_author 'name' and 'email' must be strings."
+                raise ValueError(msg)  # noqa: TRY004
+            if not val["name"].strip() or not val["email"].strip():
+                msg = "commit_author 'name' and 'email' cannot be empty."
+                raise ValueError(msg)
+            # TODO: add email format validation (breaking change)
+            return Actor(**val)
+
+        if isinstance(val, str):
+            if not val.strip():
+                msg = "commit_author string cannot be empty."
+                raise ValueError(msg)
+
+            name_email_pattern = regexp(
+                r"^(?P<name>[^<]{1,255}) ?<(?P<email>[^>]{1,320})>$"
+            )
+            value = val.strip().splitlines()[0]
+
+            if not (m := name_email_pattern.search(value)):
+                msg = "commit_author string must be in the format 'Name <email>'."
+                raise ValueError(msg)
+
+            # TODO: add email format validation (breaking change)
+            email = m.group("email").strip()
+
+            return Actor(name=m.group("name").strip(), email=email)
+
+        msg = f"Invalid type for commit_author: {type(val)}, expected Actor, dict, or str."
+        raise TypeError(msg)
+
+    # TODO: apply to more fields that can be set via environment variables
+    @field_validator("commit_author", mode="before")
+    @classmethod
+    def resolve_env_vars(cls, val: Any) -> Any | str | None:
+        if isinstance(val, EnvConfigVar):
+            return val.getvalue()
+
+        if not isinstance(val, dict):
+            return val
+
+        try:
+            return EnvConfigVar.model_validate(val).getvalue()
+        except ValidationError:
+            if "env" in val:
+                raise
+            return val
+
+    @field_serializer("commit_author", mode="plain")
+    @classmethod
+    def serialize_commit_author(cls, val: Actor) -> str:
+        return f"{val.name} <{val.email}>"
 
     @field_validator("repo_dir", mode="after")
     @classmethod
@@ -741,16 +812,6 @@ class RuntimeContext:
             *(regexp(pattern) for pattern in raw.changelog.exclude_commit_patterns),
         )
 
-        _commit_author_str = cls.resolve_from_env(raw.commit_author) or ""
-        _commit_author_valid = Actor.name_email_regex.match(_commit_author_str)
-        if not _commit_author_valid:
-            raise ValueError(
-                f"Invalid git author: {_commit_author_str} "
-                f"should match {Actor.name_email_regex}"
-            )
-
-        commit_author = Actor(*_commit_author_valid.groups())
-
         version_declarations: list[IVersionReplacer] = []
 
         try:
@@ -909,7 +970,7 @@ class RuntimeContext:
             changelog_mask_initial_release=raw.changelog.default_templates.mask_initial_release,
             changelog_insertion_flag=raw.changelog.insertion_flag,
             assets=raw.assets,
-            commit_author=commit_author,
+            commit_author=raw.commit_author,
             commit_message=raw.commit_message,
             changelog_excluded_commit_patterns=changelog_excluded_commit_patterns,
             # TODO: change when we have other styles per parser
