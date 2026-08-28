@@ -100,7 +100,7 @@ jobs:
           git checkout -B ${{ github.ref_name }}
 
       - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
           cache: 'pip'
@@ -167,7 +167,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
@@ -223,7 +223,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ matrix.python-version }}
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -312,7 +312,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ matrix.python-version }}
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -474,7 +474,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
