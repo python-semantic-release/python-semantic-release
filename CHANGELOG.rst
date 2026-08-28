@@ -4,6 +4,38 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.6.2:
+
+v10.6.2 (2026-08-28)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-changelog**: Fix reading of TOML when file was created on Windows (`9a56ace`_)
+
+* **config**: Validate commit author in config internally, closes `#1476`_ (`PR#1477`_, `10afa8e`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Adjust ``importlib`` use to maintain 3.8 support (`59fea4f`_)
+
+* **deps**: Bump ``rich`` requirement from ``v14.0+`` to ``v15.0+`` (`PR#1464`_, `abd942d`_)
+
+* **deps**: Bump ``tomlkit`` requirement to ``~=0.15.0`` (`PR#1463`_, `429588d`_)
+
+.. _#1476: https://github.com/python-semantic-release/python-semantic-release/issues/1476
+.. _10afa8e: https://github.com/python-semantic-release/python-semantic-release/commit/10afa8ec4be54216258b275b5e1be0facf8ea8d7
+.. _429588d: https://github.com/python-semantic-release/python-semantic-release/commit/429588da71dfc7bd88ff27618cec2fe843dedd7c
+.. _59fea4f: https://github.com/python-semantic-release/python-semantic-release/commit/59fea4f231bd84c5af58785d9fd487cbcf8d3407
+.. _9a56ace: https://github.com/python-semantic-release/python-semantic-release/commit/9a56ace313a1f3710cc0e0683285cde133704f01
+.. _abd942d: https://github.com/python-semantic-release/python-semantic-release/commit/abd942d71c077e012eb49c43e094c9bf4a352a44
+.. _PR#1463: https://github.com/python-semantic-release/python-semantic-release/pull/1463
+.. _PR#1464: https://github.com/python-semantic-release/python-semantic-release/pull/1464
+.. _PR#1477: https://github.com/python-semantic-release/python-semantic-release/pull/1477
+
+
 .. _changelog-v10.6.1:
 
 v10.6.1 (2026-07-06)
