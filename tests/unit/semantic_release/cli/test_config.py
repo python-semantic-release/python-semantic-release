@@ -10,6 +10,7 @@ from unittest import mock
 
 import pytest
 import tomlkit
+from git import Actor
 from pydantic import RootModel, ValidationError
 from urllib3.util.url import parse_url
 
@@ -33,7 +34,6 @@ from semantic_release.const import DEFAULT_COMMIT_AUTHOR
 from semantic_release.enums import LevelBump
 from semantic_release.errors import ParserLoadError
 
-from tests.fixtures.repos import repo_w_no_tags_conventional_commits
 from tests.util import (
     CustomParserOpts,
     CustomParserWithNoOpts,
@@ -185,25 +185,176 @@ def test_default_toml_config_valid(example_project_dir: ExProjectDir):
         ({"GIT_COMMIT_AUTHOR": "foo <foo>"}, "foo <foo>"),
     ],
 )
-@pytest.mark.usefixtures(repo_w_no_tags_conventional_commits.__name__)
 def test_commit_author_configurable(
-    example_pyproject_toml: Path,
     mock_env: dict[str, str],
     expected_author: str,
-    change_to_ex_proj_dir: None,
 ):
-    content = tomlkit.loads(example_pyproject_toml.read_text(encoding="utf-8")).unwrap()
-
     with mock.patch.dict(os.environ, mock_env):
-        raw = RawConfig.model_validate(content)
-        runtime = RuntimeContext.from_raw_config(
-            raw=raw,
-            global_cli_options=GlobalCommandLineOptions(),
-        )
-        resulting_author = (
-            f"{runtime.commit_author.name} <{runtime.commit_author.email}>"
-        )
+        raw = RawConfig.model_validate({})
+        resulting_author = f"{raw.commit_author.name} <{raw.commit_author.email}>"
         assert expected_author == resulting_author
+
+
+def test_commit_author_accepts_actor_instance():
+    author = Actor(name="Foo Bar", email="foo@bar.com")
+    raw = RawConfig(commit_author=author)
+    assert author.name == raw.commit_author.name
+    assert author.email == raw.commit_author.email
+
+
+def test_commit_author_valid_dict_input():
+    expected_name = "Foo Bar"
+    expected_email = "foo@bar.com"
+    raw = RawConfig.model_validate(
+        {"commit_author": {"name": expected_name, "email": expected_email}}
+    )
+    assert expected_name == raw.commit_author.name
+    assert expected_email == raw.commit_author.email
+
+
+@pytest.mark.parametrize(
+    "commit_author_str, expected_name, expected_email",
+    [
+        ("Foo Bar <foo@bar.com>", "Foo Bar", "foo@bar.com"),
+        ("FooBar<foo@bar.com>", "FooBar", "foo@bar.com"),
+        # only the first line of a multiline value is parsed
+        ("Foo Bar <foo@bar.com>\nnot-part-of-the-author", "Foo Bar", "foo@bar.com"),
+    ],
+)
+def test_commit_author_valid_string_formats(
+    commit_author_str: str, expected_name: str, expected_email: str
+):
+    raw = RawConfig.model_validate({"commit_author": commit_author_str})
+    assert expected_name == raw.commit_author.name
+    assert expected_email == raw.commit_author.email
+
+
+@pytest.mark.parametrize(
+    "commit_author_dict, mock_env, expected_author",
+    [
+        (
+            {"env": "PSR_TEST_COMMIT_AUTHOR_ENV"},
+            {"PSR_TEST_COMMIT_AUTHOR_ENV": "Env Name <env@example.com>"},
+            "Env Name <env@example.com>",
+        ),
+        (
+            {
+                "env": "PSR_TEST_COMMIT_AUTHOR_ENV",
+                "default": "Default Name <default@example.com>",
+            },
+            {},
+            "Default Name <default@example.com>",
+        ),
+        (
+            {
+                "env": "PSR_TEST_COMMIT_AUTHOR_ENV",
+                "default_env": "PSR_TEST_COMMIT_AUTHOR_FALLBACK_ENV",
+            },
+            {
+                "PSR_TEST_COMMIT_AUTHOR_FALLBACK_ENV": (
+                    "Fallback Name <fallback@example.com>"
+                )
+            },
+            "Fallback Name <fallback@example.com>",
+        ),
+    ],
+)
+def test_commit_author_resolves_env_config_var(
+    commit_author_dict: dict[str, str],
+    mock_env: dict[str, str],
+    expected_author: str,
+):
+    with mock.patch.dict(os.environ, mock_env, clear=True):
+        raw = RawConfig.model_validate({"commit_author": commit_author_dict})
+
+    resulting_author = f"{raw.commit_author.name} <{raw.commit_author.email}>"
+    assert expected_author == resulting_author
+
+
+def test_commit_author_env_config_var_resolves_to_none_raises_type_error():
+    # nested "with" kept separate for py38 compatibility (no parenthesized context managers)
+    with mock.patch.dict(os.environ, {}, clear=True):  # noqa: SIM117
+        with pytest.raises(TypeError, match="Invalid type for commit_author"):
+            RawConfig.model_validate(
+                {"commit_author": {"env": "PSR_TEST_COMMIT_AUTHOR_UNSET_ENV"}}
+            )
+
+
+@pytest.mark.parametrize("commit_author_dict", [{"env": 123}])
+def test_commit_author_invalid_env_config_var(commit_author_dict: dict[str, int]):
+    with pytest.raises(ValidationError, match="commit_author.env"):
+        RawConfig.model_validate({"commit_author": commit_author_dict})
+
+
+@pytest.mark.parametrize(
+    "commit_author_dict, expected_err_msg",
+    [
+        (
+            {"name": "Foo Bar"},
+            "commit_author dict must contain 'name' and 'email' keys.",
+        ),
+        (
+            {"email": "foo@bar.com"},
+            "commit_author dict must contain 'name' and 'email' keys.",
+        ),
+        (
+            {"name": 123, "email": "foo@bar.com"},
+            "commit_author 'name' and 'email' must be strings.",
+        ),
+        (
+            {"name": "  ", "email": "foo@bar.com"},
+            "commit_author 'name' and 'email' cannot be empty.",
+        ),
+    ],
+)
+def test_commit_author_invalid_dict_input(
+    commit_author_dict: dict[str, Any], expected_err_msg: str
+):
+    with pytest.raises(ValidationError, match=expected_err_msg):
+        RawConfig.model_validate({"commit_author": commit_author_dict})
+
+
+@pytest.mark.parametrize(
+    "commit_author_str, expected_err_msg",
+    [
+        ("", "commit_author string cannot be empty."),
+        ("   ", "commit_author string cannot be empty."),
+        (
+            "NoAngleBracketsHere",
+            "commit_author string must be in the format 'Name <email>'.",
+        ),
+        (
+            "<foo@bar.com>",
+            "commit_author string must be in the format 'Name <email>'.",
+        ),
+        (
+            "Foo Bar <>",
+            "commit_author string must be in the format 'Name <email>'.",
+        ),
+    ],
+)
+def test_commit_author_invalid_string_input(
+    commit_author_str: str, expected_err_msg: str
+):
+    with pytest.raises(ValidationError, match=expected_err_msg):
+        RawConfig.model_validate({"commit_author": commit_author_str})
+
+
+@pytest.mark.parametrize(
+    "commit_author_val", [123, 12.3, ["Foo Bar", "foo@bar.com"], None]
+)
+def test_commit_author_invalid_type_input(commit_author_val: Any):
+    # TypeError is not a pydantic-recognized validation exception, so it is not
+    # wrapped into a ValidationError like the other invalid input cases above
+    with pytest.raises(TypeError, match="Invalid type for commit_author"):
+        RawConfig.model_validate({"commit_author": commit_author_val})
+
+
+def test_commit_author_serialization():
+    name_email_str = "Foo Bar <foo@bar.com>"
+    raw = RawConfig.model_validate({"commit_author": name_email_str})
+    serialized_author = raw.model_dump(mode="json").get("commit_author")
+    assert name_email_str == serialized_author
 
 
 def test_load_valid_runtime_config(
