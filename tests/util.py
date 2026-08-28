@@ -8,8 +8,9 @@ import stat
 import string
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from re import compile as regexp
+from re import compile as regexp, sub as regexp_sub
 from textwrap import indent
+from traceback import format_exception
 from typing import TYPE_CHECKING, Tuple
 
 from git import Git, Repo
@@ -51,6 +52,21 @@ if TYPE_CHECKING:
     GitCommandWrapperType: TypeAlias = Git
 
 
+_ANSI_ESCAPE_RE = regexp(r"\x1b\[[0-9;]*[A-Za-z]")
+_CONTROL_CHARS_RE = regexp(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def sanitize_output(text: str) -> str:
+    r"""
+    Strip ANSI escape sequences and non-printable control characters from text.
+
+    Preserves tab (``\t``), newline (``\n``), and carriage return (``\r``).
+    This prevents control characters from corrupting assertion messages and JUnit
+    XML reports.
+    """
+    return regexp_sub(_CONTROL_CHARS_RE, "", regexp_sub(_ANSI_ESCAPE_RE, "", text))
+
+
 def get_func_qual_name(func: Callable[[Any], Any]) -> str:
     return str.join(".", filter(None, [func.__module__, func.__qualname__]))
 
@@ -61,15 +77,31 @@ def assert_exit_code(
     if result.exit_code == exit_code:
         return True
 
+    stdout = sanitize_output(result.output or "")
+    stderr = sanitize_output(getattr(result, "stderr", "") or "")
+    exc_info = result.exc_info
+    exc_lines = (
+        format_exception(exc_info[0], exc_info[1], exc_info[2]) if exc_info else []
+    )
+    exc_text = sanitize_output(str.join("", exc_lines))
+
     raise AssertionError(
         str.join(
             os.linesep,
             [
                 f"{result.exit_code} != {exit_code} (actual != expected)",
                 "",
-                # Explain what command failed
                 "Unexpected exit code from command:",
                 indent(f"'{str.join(' ', cli_cmd)}'", " " * 2),
+                "",
+                "Captured stdout:",
+                indent(stdout or "(empty)", " " * 2),
+                "",
+                "Captured stderr:",
+                indent(stderr or "(empty)", " " * 2),
+                "",
+                "Exception:",
+                indent(exc_text or "(none)", " " * 2),
             ],
         )
     )
