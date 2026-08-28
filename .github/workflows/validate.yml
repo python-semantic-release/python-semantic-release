@@ -341,6 +341,28 @@ jobs:
           python -c 'import pathlib, semantic_release; print(f"PKG_INSTALLED_DIR={pathlib.Path(semantic_release.__file__).resolve().parent}")' | Tee-Object -Variable cmdOutput
           echo $cmdOutput >> $env:GITHUB_OUTPUT
 
+      - name: Setup | Harden Windows runner for git-heavy tests
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # 1. Exclude workspace & temp dirs from Defender real-time scanning
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}"
+          Add-MpPreference -ExclusionPath "$env:TEMP"
+          Add-MpPreference -ExclusionProcess "git.exe"
+          Add-MpPreference -ExclusionProcess "python.exe"
+
+          # 2. Move temp (pytest tmp_path factory) to the faster D: drive
+          New-Item -ItemType Directory -Force -Path "D:\tmp" | Out-Null
+          "TEMP=D:\tmp" >> $env:GITHUB_ENV
+          "TMP=D:\tmp"  >> $env:GITHUB_ENV
+
+          # 3. Disable git background features that race with rapid repo churn
+          git config --global core.fsmonitor false
+          git config --global core.untrackedCache false
+          git config --global gc.auto 0
+          git config --global maintenance.auto false
+          git config --global core.longpaths true
+
       - name: Test | Run pytest -m e2e
         id: tests
         shell: pwsh
@@ -349,13 +371,13 @@ jobs:
           # Required for GitPython to work on Windows because of getpass.getuser()
           # USERNAME: "runneradmin"
           # COLUMNS: 150
-          # Because GHA is currently broken on Windows to pass these varables, we do it manually
+          # Because GHA is currently broken on Windows to pass these variables, we do it manually
         run: |
           $env:USERNAME = "runneradmin"
           $env:COLUMNS = 150
           pytest                                                    `
             -vv                                                     `
-            -nauto                                                  `
+            -n 2                                                    `
             -m e2e                                                  `
             `--cov=${{ steps.install.outputs.PKG_INSTALLED_DIR }}   `
             `--cov-context=test                                     `
@@ -377,7 +399,7 @@ jobs:
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
-          path: ~/AppData/Local/Temp/pytest-of-runneradmin/pytest-current/*
+          path: D:\tmp\pytest-of-runneradmin\pytest-current\*
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
