@@ -337,6 +337,10 @@ how PSR's core features:
   :ref:`changelog.exclude_commit_patterns <config-changelog-exclude_commit_patterns>`
   to ignore those commit styles.
 
+  Set ``commit_parser_options.render_emoji`` to ``true`` to render the default shortcode
+  tags as descriptive Unicode headings, such as ``🐛 Bug Fixes``, and remove the leading
+  tag from each commit description.
+
 - **Pull/Merge Request Identifier Detection**: This parser implements PSR's
   :ref:`commit_parser-builtin-linked_merge_request_detection` to identify and extract
   pull/merge request numbers. The parser will return a string value if a pull/merge
