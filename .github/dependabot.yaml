@@ -45,6 +45,7 @@ updates:
     rebase-strategy: auto
     cooldown:
       exclude:
+        - python-semantic-release/python-semantic-release
         - python-semantic-release/publish-action
     groups:
       github-actions:
