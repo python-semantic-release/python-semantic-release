@@ -1377,7 +1377,8 @@ version numbers.
     ]
 
 First, the ``__version__`` variable in ``src/semantic_release/__init__.py`` will be updated
-with the next version using the `SemVer`_ number format.
+with the next version using the `SemVer`_ number format. As of $NEW_RELEASE_TAG, this works
+both with and without a Python type annotation on the variable:
 
 .. code-block:: diff
 
@@ -1385,6 +1386,10 @@ with the next version using the `SemVer`_ number format.
 
     - __version__ = "0.1.0"
     + __version__ = "0.2.0"
+
+    # or with a type annotation ($NEW_RELEASE_TAG or greater):
+    - __version__: str = "0.1.0"
+    + __version__: str = "0.2.0"
 
 Then, the ``version`` variable in ``docs/conf.py`` will be updated with the next version
 with the next version using the `SemVer`_ number format because of the explicit ``nf``.
@@ -1450,6 +1455,9 @@ The regular expression generated from the ``version_variables`` definition will:
    the symbol. As of v10.0.0, a double-equals (``==``) operator is also supported
    as a valid operand symbol. As of v10.5.0, PSR can omit all operands as long
    as there is at least one whitespace character between the variable name and the version.
+   As of $NEW_RELEASE_TAG, an optional Python-style type annotation (e.g. ``: str``,
+   ``: typing.Final[str]``) between the variable name and the assignment operator is
+   also supported.
 
 3. The value of the variable must match a `SemVer`_ regular expression and can be
    enclosed by single (``'``) or double (``"``) quotation marks but they must match. However,

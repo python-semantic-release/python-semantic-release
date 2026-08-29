@@ -268,6 +268,58 @@ def test_pattern_declaration_is_version_replacer():
                     """
                 ),
             ),
+            (
+                "Python annotated variable with str type hint (number format)",
+                f"{test_file}:__version__:{VersionStampType.NUMBER_FORMAT.value}",
+                # irrelevant for this case
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses equals separator with single quotes and str type annotation
+                """__version__: str = '1.0.0'""",
+                f"""__version__: str = '{next_version}'""",
+            ),
+            (
+                "Python annotated variable with str type hint (tag format)",
+                f"{test_file}:__version__:{VersionStampType.TAG_FORMAT.value}",
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses equals separator with single quotes and str type annotation
+                """__version__: str = 'v1.0.0'""",
+                f"""__version__: str = 'v{next_version}'""",
+            ),
+            (
+                "Python annotated variable with quoted str type hint (number format)",
+                f"{test_file}:__version__:{VersionStampType.NUMBER_FORMAT.value}",
+                # irrelevant for this case
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses equals separator with single quotes and str type annotation
+                """__version__: "str" = '1.0.0'""",
+                f"""__version__: "str" = '{next_version}'""",
+            ),
+            (
+                "Python annotated variable with quoted str type hint (tag format)",
+                f"{test_file}:__version__:{VersionStampType.TAG_FORMAT.value}",
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses equals separator with single quotes and str type annotation
+                """__version__: "str" = 'v1.0.0'""",
+                f"""__version__: "str" = 'v{next_version}'""",
+            ),
+            (
+                "Python annotated variable with complex type hint",
+                f"{test_file}:__version__:{VersionStampType.NUMBER_FORMAT.value}",
+                # irrelevant for this case
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses equals separator with double quotes and complex type annotation
+                '''__version__: typing.Final[str] = "1.0.0"''',
+                f'''__version__: typing.Final[str] = "{next_version}"''',
+            ),
+            (
+                "Python annotated variable with complex type hint (tag format)",
+                f"{test_file}:__version__:{VersionStampType.TAG_FORMAT.value}",
+                # irrelevant for this case
+                lazy_fixture(default_tag_format_str.__name__),
+                # Uses equals separator with double quotes and complex type annotation
+                '''__version__: typing.Final[str] = "v1.0.0"''',
+                f'''__version__: typing.Final[str] = "v{next_version}"''',
+            ),
         ]
     ],
 )

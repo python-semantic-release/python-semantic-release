@@ -227,9 +227,11 @@ class PatternVersionDeclaration(IVersionReplacer):
                 # Supports optional matching quotations around variable name
                 # Negative lookbehind to ensure we don't match part of a variable name
                 f"""(?x)(?P<quote1>['"])?(?<![\\w.-]){regex_escape(variable)}(?P=quote1)?""",
+                # Supports optional Python type annotation (e.g., `: str`, `: Optional[str]`) where type annotation can be up to 100 characters
+                r"(?:\s{0,8}:\s{0,8}[^\s=:][^=:=]{0,100})?",
                 # Supports walrus, equals sign, double-equals, colon, or @ as assignment operator
                 # ignoring whitespace separation. Also allows a space as the separator for c-macro style definitions.
-                r"\s*(:=|==|[:=@ ])\s*",
+                r"\s{0,8}(:=|==|[:=@ ])\s{0,8}",
                 # Supports optional matching quotations around a version pattern (tag or raw format)
                 f"""(?P<quote2>['"])?{value_replace_pattern_str}(?P=quote2)?""",
             ],
