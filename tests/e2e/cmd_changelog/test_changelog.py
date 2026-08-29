@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from textwrap import dedent
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -68,6 +69,7 @@ from tests.util import (
     assert_successful_exit_code,
     get_func_qual_name,
     get_release_history_from_context,
+    temporary_working_directory,
 )
 
 if TYPE_CHECKING:
@@ -1254,3 +1256,214 @@ def test_changelog_prevent_external_path_traversal_dir(
         "Template directory must be inside of the repository directory."
         in result.stderr
     )
+
+
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
+def test_changelog_generated_in_output_dir(
+    example_project_dir: ExProjectDir,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    run_cli: RunCliFn,
+):
+    # Setup: Configure output_dir to a subdirectory
+    output_subdir = "docs"
+    update_pyproject_toml("tool.semantic_release.changelog.output_dir", output_subdir)
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.INIT.value
+    )
+
+    # Remove the default changelog if it exists
+    default_changelog = example_project_dir / "CHANGELOG.md"
+    if default_changelog.exists():
+        default_changelog.unlink()
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = run_cli(cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Changelog should be in output_dir, not project root
+    expected_changelog = example_project_dir / output_subdir / "CHANGELOG.md"
+    assert expected_changelog.exists(), f"Expected changelog at {expected_changelog}"
+    assert not default_changelog.exists(), "Changelog should not be in project root"
+
+
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
+def test_changelog_file_with_directory_component_backward_compatibility(
+    example_project_dir: ExProjectDir,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    run_cli: RunCliFn,
+):
+    # Test backward compatibility: changelog_file with directory works when output_dir is default.
+    # This ensures we don't break existing configurations where users specify:
+    #     changelog_file = "docs/CHANGELOG.md"
+    # without setting output_dir (which defaults to ".").
+
+    # Setup: Configure changelog_file with a directory component, no output_dir
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.default_templates.changelog_file",
+        "docs/CHANGELOG.md",
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.INIT.value
+    )
+
+    # Create the docs directory
+    docs_dir = example_project_dir / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+
+    # Remove the default changelog if it exists
+    default_changelog = example_project_dir / "CHANGELOG.md"
+    if default_changelog.exists():
+        default_changelog.unlink()
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = run_cli(cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Changelog should be in docs/ subdirectory as specified
+    expected_changelog = example_project_dir / "docs" / "CHANGELOG.md"
+    assert expected_changelog.exists(), f"Expected changelog at {expected_changelog}"
+    assert not default_changelog.exists(), "Changelog should not be in project root"
+
+
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
+def test_changelog_update_mode_reads_from_output_dir(
+    example_project_dir: ExProjectDir,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    run_cli: RunCliFn,
+):
+    # Setup: Configure output_dir to a subdirectory with update mode
+    output_subdir = "docs"
+    update_pyproject_toml("tool.semantic_release.changelog.output_dir", output_subdir)
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode", ChangelogMode.UPDATE.value
+    )
+
+    # Create output directory and place an existing changelog there
+    output_dir = example_project_dir / output_subdir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create a changelog with a marker we can verify is preserved
+    existing_content = """\
+# CHANGELOG
+
+<!-- version list -->
+
+## v0.1.0 (1999-01-01)
+
+### Fix
+
+- Existing entry that should be preserved
+"""
+    changelog_in_output = output_dir / "CHANGELOG.md"
+    changelog_in_output.write_text(existing_content, encoding="utf-8")
+
+    # Remove any changelog in project root to ensure we're reading from output_dir
+    default_changelog = example_project_dir / "CHANGELOG.md"
+    if default_changelog.exists():
+        default_changelog.unlink()
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    result = run_cli(cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Changelog should still be in output_dir
+    assert changelog_in_output.exists(), f"Expected changelog at {changelog_in_output}"
+    assert not default_changelog.exists(), "Changelog should not be in project root"
+
+    # Verify the existing content was preserved (update mode should keep old entries)
+    updated_content = changelog_in_output.read_text(encoding="utf-8")
+    assert "Existing entry that should be preserved" in updated_content
+
+
+@pytest.mark.usefixtures(repo_w_trunk_only_conventional_commits.__name__)
+def test_changelog_from_subdirectory_with_custom_template_and_output_dir(
+    example_project_dir: ExProjectDir,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    example_project_template_dir: Path,
+    default_changelog_md_template: Path,
+    run_cli: RunCliFn,
+):
+    # Test that running changelog from a subdirectory with both custom template_dir
+    # and output_dir correctly writes the changelog to output_dir (not repo root).
+
+    # Setup: Create a monorepo-like structure
+    # packages/pkg1/ - subdirectory to run from
+    # docs/pkg1/     - where changelog should be written (output_dir)
+    # templates/     - custom templates directory (at repo root)
+
+    pkg_subdir = example_project_dir / "packages" / "pkg1"
+    pkg_subdir.mkdir(parents=True)
+
+    output_dir = example_project_dir / "docs" / "pkg1"
+    output_dir.mkdir(parents=True)
+
+    # Copy the pyproject.toml to the package subdirectory
+    pkg_pyproject = pkg_subdir / "pyproject.toml"
+    shutil.copy(example_project_dir / "pyproject.toml", pkg_pyproject)
+
+    # Copy default templates to project template_dir
+    shutil.copytree(
+        src=default_changelog_md_template.parent,
+        dst=example_project_template_dir,
+        dirs_exist_ok=True,
+    )
+
+    # Configure template_dir relative to repo root and output_dir relative to pkg subdir
+    # When running from packages/pkg1/, these paths should work correctly:
+    # - template_dir: "templates" (at repo root, relative from CWD: "../../templates")
+    # - output_dir: "../../docs/pkg1" (relative from CWD)
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.template_dir",
+        str(example_project_template_dir.relative_to(example_project_dir)),
+        toml_file=pkg_pyproject,
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.output_dir",
+        "../../docs/pkg1",
+        toml_file=pkg_pyproject,
+    )
+    update_pyproject_toml(
+        "tool.semantic_release.changelog.mode",
+        ChangelogMode.INIT.value,
+        toml_file=pkg_pyproject,
+    )
+
+    # Remove any existing changelog files
+    default_changelog = example_project_dir / "CHANGELOG.md"
+    if default_changelog.exists():
+        default_changelog.unlink()
+
+    pkg_changelog = pkg_subdir / "CHANGELOG.md"
+    if pkg_changelog.exists():
+        pkg_changelog.unlink()
+
+    # Act: Run changelog command from the package subdirectory
+    cli_cmd = [MAIN_PROG_NAME, CHANGELOG_SUBCMD]
+    with temporary_working_directory(pkg_subdir):
+        result = run_cli(cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+
+    # Changelog should be in output_dir (docs/pkg1/), NOT in:
+    # - repo root (example_project_dir/CHANGELOG.md)
+    # - package subdirectory (packages/pkg1/CHANGELOG.md)
+    expected_changelog = output_dir / "CHANGELOG.md"
+    assert expected_changelog.exists(), (
+        f"Expected changelog at {expected_changelog}, but it doesn't exist. "
+        f"Repo root changelog exists: {default_changelog.exists()}, "
+        f"Package subdir changelog exists: {pkg_changelog.exists()}"
+    )
+    assert (
+        not default_changelog.exists()
+    ), "Changelog should NOT be written to repo root when output_dir is configured"
+    assert not pkg_changelog.exists(), "Changelog should NOT be written to package subdirectory when output_dir is configured"
