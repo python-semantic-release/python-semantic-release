@@ -29,7 +29,7 @@ authors = [
 dependencies = [
   "click ~= 8.1.0; python_version == '3.8'",
   "click ~= 8.1.0; python_version == '3.9'",
-  "click ~= 8.1.0, < 8.5.0; python_version >= '3.10'",
+  "click >= 8.1.0, < 8.5.0; python_version >= '3.10'",
   "click-option-group ~= 0.5.0",
   "gitpython ~= 3.0",
   "requests ~= 2.25",
