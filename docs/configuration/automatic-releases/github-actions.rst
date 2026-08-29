@@ -623,6 +623,107 @@ Example: ``v1.2.3``
 
 ----
 
+.. _gh_actions-psr-outputs-id:
+
+``id``
+""""""
+
+**Type:** ``string``
+
+The release ID from the GitHub API if a release was made, otherwise an empty string.
+This can be used in subsequent workflow steps to interact with the release via the
+GitHub API.
+
+Example upon release: ``123456789``
+Example when no release was made: ``""``
+
+----
+
+.. _gh_actions-psr-outputs-upload_url:
+
+``upload_url``
+""""""""""""""
+
+**Type:** ``string``
+
+The upload URL for the release from the GitHub API if a release was made, otherwise
+an empty string. This URL can be used to upload additional assets to the release.
+
+Example upon release: ``https://uploads.github.com/repos/user/repo/releases/123456789/assets{?name,label}``
+Example when no release was made: ``""``
+
+----
+
+.. _gh_actions-psr-outputs-assets:
+
+``assets``
+""""""""""
+
+**Type:** ``string`` (JSON array)
+
+A JSON array of asset metadata objects that were uploaded to the release. Each object
+contains information about an uploaded asset including its name, browser_download_url,
+and other GitHub API metadata. If no release was made or no assets were uploaded, this
+will be an empty JSON array ``[]``.
+
+Example upon release with assets:
+
+.. code-block:: json
+
+  [
+    {
+      "name": "package-1.2.3-py3-none-any.whl",
+      "browser_download_url": "https://github.com/user/repo/releases/download/v1.2.3/package-1.2.3-py3-none-any.whl",
+      "size": 123456,
+      ...
+    },
+    {
+      "name": "package-1.2.3.tar.gz",
+      "browser_download_url": "https://github.com/user/repo/releases/download/v1.2.3/package-1.2.3.tar.gz",
+      "size": 234567,
+      ...
+    }
+  ]
+
+Example when no release was made: ``[]``
+
+----
+
+.. _gh_actions-psr-outputs-assets_dist:
+
+``assets_dist``
+"""""""""""""""
+
+**Type:** ``string`` (JSON object)
+
+A JSON object containing Python distribution assets organized by type (``wheel`` and ``sdist``).
+This is a convenience output that categorizes the assets from the ``assets`` output into
+their distribution types. If no distribution assets were uploaded, this will be an empty
+JSON object ``{}``.
+
+Example upon release with distribution assets:
+
+.. code-block:: json
+
+  {
+    "wheel": {
+      "name": "package-1.2.3-py3-none-any.whl",
+      "browser_download_url": "https://github.com/user/repo/releases/download/v1.2.3/package-1.2.3-py3-none-any.whl",
+      "size": 123456,
+      ...
+    },
+    "sdist": {
+      "name": "package-1.2.3.tar.gz",
+      "browser_download_url": "https://github.com/user/repo/releases/download/v1.2.3/package-1.2.3.tar.gz",
+      "size": 234567,
+      ...
+    }
+  }
+
+Example when no release was made: ``{}``
+
+----
+
 .. _gh_actions-publish:
 
 Python Semantic Release Publish Action
@@ -1020,6 +1121,60 @@ The equivalent GitHub Action configuration would be:
     manually provide input that triggers the desired version bump.
 
 .. _Publish Action Manual Release Workflow: https://github.com/python-semantic-release/publish-action/blob/main/.github/workflows/release.yml
+
+Using Release Assets Outputs
+-----------------------------
+
+The Python Semantic Release Action provides outputs for release assets that can be used
+in subsequent workflow steps. This example demonstrates how to access asset information
+and download specific distribution files for further processing.
+
+.. code:: yaml
+
+  # snippet
+
+  - name: Action | Semantic Version Release
+    id: release
+    uses: python-semantic-release/python-semantic-release@v10.5.3
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  - name: Publish | Upload to GitHub Release Assets
+    uses: python-semantic-release/publish-action@v10.5.3
+    if: steps.release.outputs.released == 'true'
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      tag: ${{ steps.release.outputs.tag }}
+
+  # Example: Download wheel from the release assets
+  - name: Process | Download wheel asset
+    if: steps.release.outputs.released == 'true'
+    run: |
+      # Parse assets_dist JSON output to get wheel download URL
+      WHEEL_URL=$(echo '${{ steps.release.outputs.assets_dist }}' | jq -r '.wheel.browser_download_url')
+      if [ -n "$WHEEL_URL" ]; then
+        echo "Downloading wheel from: $WHEEL_URL"
+        curl -L -o wheel.whl "$WHEEL_URL"
+      fi
+
+  # Example: List all uploaded assets
+  - name: Display | Show all release assets
+    if: steps.release.outputs.released == 'true'
+    run: |
+      echo "Release ID: ${{ steps.release.outputs.id }}"
+      echo "Upload URL: ${{ steps.release.outputs.upload_url }}"
+      echo "All assets:"
+      echo '${{ steps.release.outputs.assets }}' | jq -r '.[] | "  - \(.name) (\(.size) bytes)"'
+
+  # Example: Use release ID to add a comment via GitHub API
+  - name: Comment | Add release comment
+    if: steps.release.outputs.released == 'true'
+    run: |
+      curl -X POST \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        -H "Accept: application/vnd.github.v3+json" \
+        https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.release.outputs.id }}/assets \
+        -d '{"body": "Release artifacts are now available!"}'
 
 .. _gh_actions-monorepo:
 

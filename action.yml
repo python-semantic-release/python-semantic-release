@@ -126,6 +126,11 @@ outputs:
     description: |
       The commit SHA of the release if a release was made, otherwise an empty string
 
+  id:
+    description: |
+      The release ID from the remote VCS, if a release was made. If no release was made,
+      this will be an empty string.
+
   is_prerelease:
     description: |
       "true" if the version is a prerelease, "false" otherwise
@@ -152,6 +157,25 @@ outputs:
   tag:
     description: |
       The Git tag corresponding to the version output
+
+  upload_url:
+    description: |
+      The URL for uploading additional assets to the release, if a release was made.
+      If no release was made, this will be an empty string. This can be used with
+      actions like actions/upload-release-asset to add more files to the release.
+
+  assets:
+    description: |
+      A JSON array containing information about each uploaded asset. Each asset object
+      includes metadata such as name, size, content_type, browser_download_url, etc.
+      If no release was made, this will be an empty JSON array ([]).
+
+  assets_dist:
+    description: |
+      A JSON object containing information about Python distribution assets (wheel and sdist),
+      organized by type. Keys are 'wheel' for .whl files and 'sdist' for .tar.gz files.
+      Each value is an asset object with metadata. If no release was made or no dist assets
+      were uploaded, this will be an empty JSON object ({}).
 
   version:
     description: |
