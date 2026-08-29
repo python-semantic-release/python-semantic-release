@@ -13,7 +13,7 @@ from semantic_release.commit_parser.conventional import (
 from semantic_release.commit_parser.token import ParsedCommit, ParseError
 from semantic_release.enums import LevelBump
 
-from tests.const import SUPPORTED_ISSUE_CLOSURE_PREFIXES
+from tests.const import SUPPORTED_ISSUE_PREFIXES
 
 if TYPE_CHECKING:
     from tests.conftest import MakeCommitObjFn
@@ -753,7 +753,7 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 f"feat(parser): add magic parser\n\n{footer}",
                 linked_issues,
             )
-            for footer_prefix in SUPPORTED_ISSUE_CLOSURE_PREFIXES
+            for footer_prefix in SUPPORTED_ISSUE_PREFIXES
             for footer, linked_issues in [
                 # Single issue
                 (
@@ -855,13 +855,6 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 (f"{footer_prefix} #666, {footer_prefix} #777", []),
                 # Invalid 'and' separation
                 (f"{footer_prefix}: #666and#777", ["#666and#777"]),
-                # Invalid prefix
-                ("ref: #666", []),
-                # body mentions an issue and has a different git footer
-                (
-                    "In #666, the devils in the details...\n\nSigned-off-by: johndoe <johndoe@mail.com>",
-                    [],
-                ),
             ]
         ],
         *[
@@ -870,7 +863,7 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 f"feat(parser): add magic parser\n\n{footer}",
                 linked_issues,
             )
-            for footer_prefix in SUPPORTED_ISSUE_CLOSURE_PREFIXES
+            for footer_prefix in SUPPORTED_ISSUE_PREFIXES
             for footer, linked_issues in [
                 # Single issue
                 (
@@ -984,13 +977,6 @@ def test_parser_return_linked_merge_request_from_commit_message(
                 (f"{footer_prefix} ABC-666, {footer_prefix} ABC-777", []),
                 # Invalid 'and' separation
                 (f"{footer_prefix}: ABC-666andABC-777", ["ABC-666andABC-777"]),
-                # Invalid prefix
-                ("ref: ABC-666", []),
-                # body mentions an issue and has a different git footer
-                (
-                    "In ABC-666, the devils in the details...\n\nSigned-off-by: johndoe <johndoe@mail.com>",
-                    [],
-                ),
             ]
         ],
         *[
