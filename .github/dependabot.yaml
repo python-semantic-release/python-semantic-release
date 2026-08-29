@@ -31,18 +31,21 @@ updates:
       prefix: "build"
       include: "scope" # (deps)
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: weekly
+      day: monday
       time: "18:00"
     commit-message:
-      prefix: "ci"
+      prefix: ci
     labels:
       - dependencies
       - dependabot
     rebase-strategy: auto
+    cooldown:
+      exclude:
+        - python-semantic-release/publish-action
     groups:
       github-actions:
         patterns:
