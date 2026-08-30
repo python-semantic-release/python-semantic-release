@@ -584,6 +584,11 @@ def cached_example_git_project(
                 config.set_value("commit", "gpgsign", False)
                 config.set_value("tag", "gpgsign", False)
 
+                # Disable automatic garbage collection and background maintenance to prevent race conditions
+                config.set_value("gc", "auto", 0)
+                config.set_value("gc", "autoDetach", "false")
+                config.set_value("maintenance", "auto", "false")
+
                 # set up a remote tracking branch for the default branch
                 config.set_value(f'branch "{DEFAULT_BRANCH_NAME}"', "remote", "origin")
                 config.set_value(

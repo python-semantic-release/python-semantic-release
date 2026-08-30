@@ -157,6 +157,14 @@ def copy_dir_tree(src_dir: Path | str, dst_dir: Path | str) -> None:
         src=str(src_dir),
         dst=str(dst_dir),
         dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns(
+            # Ignore temporary and lock files from git
+            "tmp_pack_*",
+            "tmp_obj_*",
+            "tmp_idx_*",
+            "*.lock",
+            "gc.pid",
+        ),
     )
 
 
