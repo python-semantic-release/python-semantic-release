@@ -157,6 +157,39 @@ def test_version_print_next_version(
 
 
 @pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)],
+)
+def test_version_print_forced_bump_ignores_tags_outside_branch_history(
+    repo_result: BuiltRepoResult,
+    file_in_repo: str,
+    run_cli: RunCliFn,
+):
+    """
+    Given a higher version tag exists on a divergent branch,
+    When forcing a patch bump on the release branch,
+    Then the next version is based on the latest tag in the release branch history.
+    """
+    repo = repo_result["repo"]
+    release_branch = repo.active_branch
+
+    divergent_branch = repo.create_head("divergent-release").checkout()
+    add_text_to_file(repo, file_in_repo)
+    repo.git.commit(m="feat: divergent release", a=True)
+    repo.create_tag("v1.0.0")
+    release_branch.checkout()
+
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--print", "--patch"]
+    result = run_cli(cli_cmd[1:])
+
+    assert_successful_exit_code(result, cli_cmd)
+    assert result.stdout == "0.1.2\n"
+    assert divergent_branch.commit.hexsha not in {
+        commit.hexsha for commit in repo.iter_commits(release_branch)
+    }
+
+
+@pytest.mark.parametrize(
     "repo_result, commits, force_args, next_release_version",
     [
         *[

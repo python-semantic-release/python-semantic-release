@@ -43,6 +43,7 @@ from semantic_release.hvcs.remote_hvcs_base import RemoteHvcsBase
 from semantic_release.version.algorithm import (
     next_version,
     tags_and_versions,
+    tags_and_versions_in_history,
 )
 from semantic_release.version.translator import VersionTranslator
 
@@ -96,7 +97,7 @@ def version_from_forced_level(
     repo_dir: Path, forced_level_bump: LevelBump, translator: VersionTranslator
 ) -> Version:
     with Repo(str(repo_dir)) as git_repo:
-        ts_and_vs = tags_and_versions(git_repo.tags, translator)
+        ts_and_vs = tags_and_versions_in_history(git_repo, translator)
 
     # If we have no tags, return the default version
     if not ts_and_vs:
