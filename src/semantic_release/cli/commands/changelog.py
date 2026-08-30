@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import click
-import tomlkit
 from git import GitCommandError, Repo
+from tomlkit import parse as toml_parse
 
 from semantic_release.changelog.release_history import ReleaseHistory
 from semantic_release.cli.changelog_writer import (
@@ -33,16 +33,14 @@ def get_license_name_for_release(tag_name: str, project_root: Path) -> str:
     for allowed_dir in allowed_directories:
         proj_toml = allowed_dir.joinpath("pyproject.toml")
         with Repo(project_root) as git_repo, suppress(GitCommandError):
+            # git.show arbitrarily removes the last linux line ending, leaving a bare carriage
+            # return at the end of a DOS/Windows file, which causes parsing issues as
+            # tomlkit >= 0.15 rejects bare carriage returns as invalid characters.
             toml_contents = git_repo.git.show(
                 f"{tag_name}:{proj_toml.relative_to(project_root)}"
-            )
-            # Normalize line endings: `git show` returns the blob verbatim, which
-            # may contain CRLF (or bare CR) when committed from Windows.
-            # tomlkit >= 0.15 rejects bare carriage returns as invalid characters.
-            config_toml = tomlkit.parse(
-                toml_contents.replace("\r\n", "\n").replace("\r", "")
-            )
-            project_metadata = config_toml.unwrap().get("project", project_metadata)
+            ).rstrip()
+            config_toml = toml_parse(toml_contents).unwrap()
+            project_metadata = config_toml.get("project", project_metadata)
             break
 
     license_cfg = project_metadata.get(
