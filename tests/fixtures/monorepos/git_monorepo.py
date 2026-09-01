@@ -84,7 +84,8 @@ def cached_example_git_monorepo(
 
     def _build_repo(cached_repo_path: Path) -> Sequence[RepoActions]:
         if not cached_example_monorepo.exists():
-            raise RuntimeError("Unable to find cached monorepo files")
+            msg = "Unable to find cached monorepo files"
+            raise RuntimeError(msg)
 
         # make a copy of the example monorepo as a base
         copy_dir_tree(cached_example_monorepo, cached_repo_path)
@@ -108,6 +109,11 @@ def cached_example_git_monorepo(
                 config.set_value("user", "email", commit_author.email)
                 config.set_value("commit", "gpgsign", False)
                 config.set_value("tag", "gpgsign", False)
+
+                # Disable automatic garbage collection and background maintenance to prevent race conditions
+                config.set_value("gc", "auto", 0)
+                config.set_value("gc", "autoDetach", "false")
+                config.set_value("maintenance", "auto", "false")
 
                 # set up a remote tracking branch for the default branch
                 config.set_value(f'branch "{DEFAULT_BRANCH_NAME}"', "remote", "origin")
