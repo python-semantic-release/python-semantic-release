@@ -75,7 +75,7 @@ docs = [
 test = [
   "coverage[toml] ~= 7.0",
   "filelock ~= 3.15",
-  "flatdict ~= 4.0",
+  "cj365-flatdict ~= 5.0",
   "freezegun ~= 1.5",
   "pyyaml ~= 6.0",
   "pytest >= 8.3, < 10.0",
@@ -207,10 +207,6 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
-
-[[tool.mypy.overrides]]
-module = "flatdict"
-ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "shellingham"
