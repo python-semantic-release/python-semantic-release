@@ -210,6 +210,7 @@ class Github(RemoteHvcsBase):
         prerelease: bool = False,
         assets: list[str] | None = None,
         noop: bool = False,
+        draft: bool = False,
     ) -> int:
         """
         Create a new release
@@ -223,6 +224,8 @@ class Github(RemoteHvcsBase):
         :param prerelease: Whether or not this release should be created as a prerelease
 
         :param assets: a list of artifacts to upload to the release
+
+        :param draft: Whether or not this release should be created as a draft
 
         :return: the ID of the release
         """
@@ -259,7 +262,7 @@ class Github(RemoteHvcsBase):
                 "tag_name": tag,
                 "name": tag,
                 "body": release_notes,
-                "draft": False,
+                "draft": draft,
                 "prerelease": prerelease,
             },
         )
@@ -348,18 +351,19 @@ class Github(RemoteHvcsBase):
 
     @logged_function(logger)
     def create_or_update_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False, draft: bool = False
     ) -> int:
         """
         Post release changelog
         :param tag: The version number
         :param release_notes: The release notes for this version
         :param prerelease: Whether or not this release should be created as a prerelease
+        :param draft: Whether or not this release should be created as a draft
         :return: The status of the request
         """
         logger.info("Creating release for %s", tag)
         try:
-            return self.create_release(tag, release_notes, prerelease)
+            return self.create_release(tag, release_notes, prerelease, draft=draft)
         except HTTPError as err:
             logger.debug("error creating release: %s", err)
             logger.debug("looking for an existing release to update")
