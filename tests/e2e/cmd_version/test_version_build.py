@@ -10,7 +10,7 @@ from unittest import mock
 import pytest
 import shellingham
 import tomlkit
-from flatdict import FlatDict
+from cj365.flatdict import FlatDict
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from tests.const import MAIN_PROG_NAME, VERSION_SUBCMD
