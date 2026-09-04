@@ -18,6 +18,8 @@ RUN \
         git git-lfs \
         # install ssh client for git signing
         openssh-client \
+        # install gnupg for GPG signing support
+        gnupg \
         # install python cmodule / binary module build utilities
         python3-dev gcc make cmake cargo \
     # Configure global pip
