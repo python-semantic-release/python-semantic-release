@@ -97,6 +97,7 @@ class Gitlab(RemoteHvcsBase):
         prerelease: bool = False,  # noqa: ARG002
         assets: list[str] | None = None,  # noqa: ARG002
         noop: bool = False,
+        draft: bool = False,  # noqa: ARG002 (no effect in GitLab)
     ) -> str:
         """
         Create a release in a remote VCS, adding any release notes and assets to it
@@ -178,7 +179,7 @@ class Gitlab(RemoteHvcsBase):
 
     @logged_function(logger)
     def create_or_update_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False, draft: bool = False
     ) -> str:
         """
         Create or update a release for the given tag in a remote VCS.
@@ -186,6 +187,7 @@ class Gitlab(RemoteHvcsBase):
         :param tag: The tag to create or update the release for
         :param release_notes: The changelog description for this version only
         :param prerelease: This parameter has no effect in GitLab
+        :param draft: This parameter has no effect in GitLab
 
         :return: The release id
 
