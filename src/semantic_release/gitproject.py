@@ -174,6 +174,7 @@ class GitProject:
         date: int | None = None,
         commit_all: bool = False,
         no_verify: bool = False,
+        signoff: bool = False,
         noop: bool = False,
     ) -> None:
         git_args = dict(
@@ -184,6 +185,7 @@ class GitProject:
                     "m": message,
                     "date": date,
                     "no_verify": no_verify,
+                    "signoff": signoff,
                 }.items(),
             )
         )
@@ -209,6 +211,7 @@ class GitProject:
             command += f"git commit -m '{indented_commit_message}'"
             command += "--all" if commit_all else ""
             command += "--no-verify" if no_verify else ""
+            command += "--signoff" if signoff else ""
 
             noop_report(
                 indented(
