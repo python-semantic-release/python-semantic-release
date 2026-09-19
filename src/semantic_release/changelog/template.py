@@ -1,25 +1,59 @@
 from __future__ import annotations
 
-import os
-import shutil
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
-from jinja2 import FileSystemLoader
+from jinja2 import BaseLoader, TemplateNotFound
 from jinja2.sandbox import SandboxedEnvironment
+from upath import UPath
 
 from semantic_release.globals import logger
 from semantic_release.helpers import dynamic_import
 
 if TYPE_CHECKING:  # pragma: no cover
+    import os
     from typing import Callable, Iterable, Literal
 
     from jinja2 import Environment
 
 
+class UPathLoader(BaseLoader):
+    """
+    Jinja2 loader using UPath for universal filesystem abstraction.
+
+    This loader enables loading templates from any filesystem supported by fsspec/UPath,
+    including local files, git repositories, HTTP URLs, S3 buckets, etc.
+    """
+
+    def __init__(
+        self,
+        searchpath: UPath,
+        encoding: str = "utf-8",
+    ) -> None:
+        self.searchpath = searchpath
+        self.encoding = encoding
+
+    def get_source(
+        self, _environment: Environment, template: str
+    ) -> tuple[str, str, Callable[[], bool]]:
+        path = self.searchpath / template
+        if not path.exists():
+            raise TemplateNotFound(template)
+        source = path.read_text(encoding=self.encoding)
+        return source, str(path), lambda: True
+
+    def list_templates(self) -> list[str]:
+        templates: list[str] = []
+        for f in self.searchpath.rglob("*"):
+            if f.is_file():
+                rel_path = PurePosixPath(f.path).relative_to(self.searchpath.path)
+                templates.append(str(rel_path))
+        return templates
+
+
 # pylint: disable=too-many-arguments,too-many-locals
 def environment(
-    template_dir: Path | str = ".",
+    template_dir: Path | UPath | str = ".",
     block_start_string: str = "{%",
     block_end_string: str = "%}",
     variable_start_string: str = "{{",
@@ -36,10 +70,10 @@ def environment(
     autoescape: bool | str = True,
 ) -> SandboxedEnvironment:
     """
-    Create a jinja2.sandbox.SandboxedEnvironment with certain parameter resrictions.
+    Create a jinja2.sandbox.SandboxedEnvironment with certain parameter restrictions.
 
-    For example the Loader is fixed to FileSystemLoader, although the searchpath
-    is configurable.
+    Uses UPathLoader which supports both local and remote template directories
+    (git repositories, HTTP URLs, S3 buckets, etc.) via fsspec/UPath.
 
     ``autoescape`` can be a string in which case it should follow the convention
     ``module:attr``, in this instance it will be dynamically imported.
@@ -51,6 +85,11 @@ def environment(
         autoescape_value = dynamic_import(autoescape)
     else:
         autoescape_value = autoescape
+
+    if not isinstance(template_dir, UPath):
+        template_dir = UPath(template_dir)
+
+    loader = UPathLoader(template_dir, encoding="utf-8")
 
     return ComplexDirectorySandboxedEnvironment(
         block_start_string=block_start_string,
@@ -67,7 +106,7 @@ def environment(
         keep_trailing_newline=keep_trailing_newline,
         extensions=extensions,
         autoescape=autoescape_value,
-        loader=FileSystemLoader(template_dir, encoding="utf-8"),
+        loader=loader,
     )
 
 
@@ -89,50 +128,51 @@ class ComplexDirectorySandboxedEnvironment(SandboxedEnvironment):
 
 
 def recursive_render(
-    template_dir: Path,
+    template_dir: Path | UPath | str,
     environment: Environment,
     _root_dir: str | os.PathLike[str] = ".",
 ) -> list[str]:
     rendered_paths: list[str] = []
-    for root, file in (
-        (Path(root), file)
-        for root, _, files in os.walk(template_dir)
-        for file in files
-        if not any(
-            elem.startswith(".") for elem in Path(root).relative_to(template_dir).parts
-        )
-        and not file.startswith(".")
-    ):
-        output_path = (_root_dir / root.relative_to(template_dir)).resolve()
-        logger.info("Rendering templates from %s to %s", root, output_path)
+    root_dir = Path(_root_dir)
+
+    if not isinstance(template_dir, UPath):
+        template_dir = UPath(template_dir)
+
+    for src_file in template_dir.rglob("*"):
+        if not src_file.is_file():
+            continue
+
+        # Convert to PurePosixPath for local path operations.
+        # PurePosixPath is correct because remote filesystems always use forward slashes
+        rel_path = PurePosixPath(src_file.path).relative_to(template_dir.path)
+
+        if any(part.startswith(".") for part in rel_path.parts):
+            continue
+
+        output_path = (root_dir / rel_path.parent).resolve()
+        logger.info("Rendering templates from %s to %s", src_file.parent, output_path)
         output_path.mkdir(parents=True, exist_ok=True)
-        if file.endswith(".j2"):
-            # We know the file ends with .j2 by the filter in the for-loop
-            output_filename = file[:-3]
-            # Strip off the template directory from the front of the root path -
-            # that's the output location relative to the repo root
-            src_file_path = str((root / file).relative_to(template_dir))
-            output_file_path = str((output_path / output_filename).resolve())
+
+        if rel_path.suffix == ".j2":
+            src_file_rel = str(rel_path)
+            output_file_path = output_path / rel_path.stem
 
             # Although, file stream rendering is possible and preferred in most
             # situations, here it is not desired as you cannot read the previous
             # contents of a file during the rendering of the template. This mechanism
             # is used for inserting into a current changelog. When using stream rendering
             # of the same file, it always came back empty
-            logger.debug("rendering %s to %s", src_file_path, output_file_path)
-            rendered_file = environment.get_template(src_file_path).render().rstrip()
-            with open(output_file_path, "w", encoding="utf-8") as output_file:
-                output_file.write(f"{rendered_file}\n")
+            logger.debug("rendering %s to %s", src_file_rel, output_file_path)
+            rendered_file = environment.get_template(src_file_rel).render().rstrip()
+            output_file_path.write_text(f"{rendered_file}\n", encoding="utf-8")
 
-            rendered_paths.append(output_file_path)
+            rendered_paths.append(str(output_file_path))
 
         else:
-            src_file = str((root / file).resolve())
-            target_file = str((output_path / file).resolve())
-            logger.debug(
-                "source file %s is not a template, copying to %s", src_file, target_file
-            )
-            shutil.copyfile(src_file, target_file)
-            rendered_paths.append(target_file)
+            # Copy non-template file
+            target_file = output_path / rel_path.name
+            logger.debug("copying %s to %s", src_file, target_file)
+            target_file.write_bytes(src_file.read_bytes())
+            rendered_paths.append(str(target_file))
 
     return rendered_paths
