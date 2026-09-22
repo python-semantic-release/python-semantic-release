@@ -1227,6 +1227,26 @@ raise an error and exit.
 
 ----
 
+.. _config-signoff_commit:
+
+``signoff_commit``
+"""""""""""""""""""
+
+**Type:** ``bool``
+
+When true, Python Semantic Release will add a ``Signed-off-by`` trailer to the version
+commit it creates during :ref:`cmd-version`, using the configured :ref:`config-commit_author`
+name and email. This is equivalent to running ``git commit --signoff`` and is commonly used
+to comply with a `Developer Certificate of Origin`_ (DCO) requirement.
+
+.. _Developer Certificate of Origin: https://developercertificate.org/
+
+This option has no effect when the ``--no-commit`` option is passed.
+
+**Default:** ``false``
+
+----
+
 .. _config-tag_format:
 
 ``tag_format``
