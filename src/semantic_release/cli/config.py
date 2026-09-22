@@ -382,6 +382,7 @@ class RawConfig(BaseModel):
     repo_dir: Path = Field(default=cast("Path", "."), validate_default=True)
     remote: RemoteConfig = RemoteConfig()
     no_git_verify: bool = False
+    signoff_commit: bool = False
     tag_format: str = "v{version}"
     add_partial_tags: bool = False
     publish: PublishConfig = PublishConfig()
@@ -635,6 +636,7 @@ class RuntimeContext:
     allow_zero_version: bool
     prerelease: bool
     no_git_verify: bool
+    signoff_commit: bool
     assets: List[str]
     commit_author: Actor
     commit_message: str
@@ -986,6 +988,7 @@ class RuntimeContext:
             global_cli_options=global_cli_options,
             masker=masker,
             no_git_verify=raw.no_git_verify,
+            signoff_commit=raw.signoff_commit,
         )
         # credential masker
         self.apply_log_masking(self.masker)

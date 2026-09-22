@@ -156,6 +156,115 @@ def test_version_no_git_verify(
 
 
 @pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)],
+)
+def test_version_signoff_commit(
+    repo_result: BuiltRepoResult,
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
+    mocked_git_push: MagicMock,
+    post_mocker: Mocker,
+):
+    """
+    Given signoff_commit is enabled, when a version commit is made, then the commit
+    message includes a Signed-off-by trailer matching the configured commit author.
+    """
+    repo = repo_result["repo"]
+
+    # setup: set configuration setting
+    update_pyproject_toml("tool.semantic_release.signoff_commit", True)
+    repo.git.commit(
+        m="chore: adjust project configuration for signoff release commits", a=True
+    )
+    # Fake an automated push to remote by updating the remote tracking branch
+    repo.git.update_ref(
+        f"refs/remotes/origin/{repo.active_branch.name}",
+        repo.head.commit.hexsha,
+    )
+
+    # Take measurement beforehand
+    head_sha_before = repo.head.commit.hexsha
+    tags_before = {tag.name for tag in repo.tags}
+
+    # Execute
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch"]
+    result = run_cli(cli_cmd[1:])
+
+    # Take measurement after the command
+    head_after = repo.head.commit
+    tags_after = {tag.name for tag in repo.tags}
+    tags_set_difference = set.difference(tags_after, tags_before)
+    commit_author = head_after.author
+    expected_signed_off_footer = (
+        f"Signed-off-by: {commit_author.name} <{commit_author.email}>"
+    )
+
+    # Evaluate (normal release actions should have occurred when forced patch bump)
+    assert_successful_exit_code(result, cli_cmd)
+    assert [head_sha_before] == [head.hexsha for head in head_after.parents]
+    assert len(tags_set_difference) == 1  # A tag has been created
+    assert expected_signed_off_footer in str(head_after.message)
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
+    assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
+    assert post_mocker.call_count == 1  # vcs release creation occurred
+
+
+@pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)],
+)
+def test_version_signoff_commit_disabled(
+    repo_result: BuiltRepoResult,
+    run_cli: RunCliFn,
+    update_pyproject_toml: UpdatePyprojectTomlFn,
+    mocked_git_fetch: MagicMock,
+    mocked_git_push: MagicMock,
+    post_mocker: Mocker,
+):
+    """
+    Given signoff_commit is disabled (the default), when a version commit is made,
+    then the commit message does not include a Signed-off-by trailer.
+    """
+    repo = repo_result["repo"]
+
+    # setup: explicitly set configuration setting to False
+    update_pyproject_toml("tool.semantic_release.signoff_commit", False)
+    repo.git.commit(
+        m="chore: adjust project configuration for non-signoff release commits",
+        a=True,
+    )
+    # Fake an automated push to remote by updating the remote tracking branch
+    repo.git.update_ref(
+        f"refs/remotes/origin/{repo.active_branch.name}",
+        repo.head.commit.hexsha,
+    )
+
+    # Take measurement beforehand
+    head_sha_before = repo.head.commit.hexsha
+    tags_before = {tag.name for tag in repo.tags}
+
+    # Execute
+    cli_cmd = [MAIN_PROG_NAME, VERSION_SUBCMD, "--patch"]
+    result = run_cli(cli_cmd[1:])
+
+    # Take measurement after the command
+    head_after = repo.head.commit
+    tags_after = {tag.name for tag in repo.tags}
+    tags_set_difference = set.difference(tags_after, tags_before)
+
+    # Evaluate (normal release actions should have occurred when forced patch bump)
+    assert_successful_exit_code(result, cli_cmd)
+    assert [head_sha_before] == [head.hexsha for head in head_after.parents]
+    assert len(tags_set_difference) == 1  # A tag has been created
+    assert "Signed-off-by:" not in str(head_after.message)
+    assert mocked_git_fetch.call_count == 1  # fetch called to check for remote changes
+    assert mocked_git_push.call_count == 2  # 1 for commit, 1 for tag
+    assert post_mocker.call_count == 1  # vcs release creation occurred
+
+
+@pytest.mark.parametrize(
     "repo_result", [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)]
 )
 def test_version_on_nonrelease_branch(

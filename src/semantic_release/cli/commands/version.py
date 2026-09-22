@@ -481,6 +481,7 @@ def version(  # noqa: C901
     commit_message = runtime.commit_message
     major_on_zero = runtime.major_on_zero
     no_verify = runtime.no_git_verify
+    signoff_commit = runtime.signoff_commit
     opts = runtime.global_cli_options
     add_partial_tags = config.add_partial_tags
     gha_output = VersionGitHubActionsOutput(
@@ -713,6 +714,7 @@ def version(  # noqa: C901
                 message=commit_message.format(version=new_version),
                 date=int(commit_date.timestamp()),
                 no_verify=no_verify,
+                signoff=signoff_commit,
                 noop=opts.noop,
             )
         except GitCommitEmptyIndexError:
