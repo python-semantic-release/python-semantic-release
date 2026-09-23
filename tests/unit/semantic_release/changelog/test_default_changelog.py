@@ -121,6 +121,48 @@ def test_default_changelog_template(
     assert expected_changelog == actual_changelog
 
 
+@pytest.mark.parametrize(
+    "output_format, breaking_header, notice_header",
+    [
+        (
+            ChangelogOutputFormat.MARKDOWN,
+            "### Breaking Changes",
+            "### Additional Release Information",
+        ),
+        (
+            ChangelogOutputFormat.RESTRUCTURED_TEXT,
+            "Breaking Changes\n----------------",
+            "Additional Release Information\n------------------------------",
+        ),
+    ],
+)
+def test_default_changelog_includes_nonleading_breaking_changes_and_notices(
+    output_format: ChangelogOutputFormat,
+    breaking_header: str,
+    notice_header: str,
+    example_git_https_url: str,
+    release_history_w_nonleading_brk_n_notice: ReleaseHistory,
+    changelog_md_file: Path,
+):
+    changelog = render_default_changelog_file(
+        output_format=output_format,
+        changelog_context=make_changelog_context(
+            hvcs_client=Github(example_git_https_url),
+            release_history=release_history_w_nonleading_brk_n_notice,
+            mode=ChangelogMode.INIT,
+            prev_changelog_file=changelog_md_file,
+            insertion_flag="",
+            mask_initial_release=True,
+        ),
+        changelog_style="conventional",
+    )
+
+    assert breaking_header in changelog
+    assert "This is a breaking change" in changelog
+    assert notice_header in changelog
+    assert "This is a multline release notice" in changelog
+
+
 @pytest.mark.parametrize("hvcs_client", [Github, Gitlab, Gitea, Bitbucket])
 def test_default_changelog_template_w_a_brk_change(
     hvcs_client: type[Bitbucket | Gitea | Github | Gitlab],
