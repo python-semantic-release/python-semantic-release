@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import re
 from datetime import datetime
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -8,6 +10,7 @@ from git import Actor
 from pytest_lazy_fixtures.lazy_fixture import lf as lazy_fixture
 
 from semantic_release.changelog.release_history import ReleaseHistory
+from semantic_release.globals import logger
 from semantic_release.version.translator import VersionTranslator
 from semantic_release.version.version import Version
 
@@ -302,3 +305,41 @@ def test_all_matching_repo_tags_are_released(
 
     for tag in repo.tags:
         assert translator.from_tag(tag.name) in release_history.released
+
+
+@pytest.mark.order("last")
+def test_release_history_commit_details_are_debug_logs(
+    repo_w_no_tags_conventional_commits: BuiltRepoResult,
+    default_conventional_parser: ConventionalCommitParser,
+    caplog: pytest.LogCaptureFixture,
+):
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        ReleaseHistory.from_git_history(
+            repo=repo_w_no_tags_conventional_commits["repo"],
+            translator=VersionTranslator(),
+            commit_parser=default_conventional_parser,  # type: ignore[arg-type]
+            exclude_commit_patterns=(re.compile(r"^Initial commit"),),
+        )
+
+    commit_detail_records = [
+        record
+        for record in caplog.records
+        if any(
+            message in record.getMessage()
+            for message in ("parsing commit", "Excluding", "adding commit")
+        )
+    ]
+
+    assert commit_detail_records
+    assert any(
+        "parsing commit" in record.getMessage() for record in commit_detail_records
+    )
+    assert any("Excluding" in record.getMessage() for record in commit_detail_records)
+    assert any(
+        "adding commit" in record.getMessage() for record in commit_detail_records
+    )
+    assert all(record.levelno == logging.DEBUG for record in commit_detail_records)
+    assert any(
+        record.levelno == logging.INFO and "previous tags" in record.getMessage()
+        for record in caplog.records
+    )

@@ -108,7 +108,7 @@ class ReleaseHistory:
 
                 released.setdefault(the_version, release)
 
-            logger.info(
+            logger.debug(
                 "parsing commit [%s] %s",
                 commit.hexsha[:8],
                 str(commit.message).replace("\n", " ")[:54],
@@ -164,7 +164,7 @@ class ReleaseHistory:
                 )
 
                 if ignore_merge_commits and parsed_result.is_merge_commit():
-                    logger.info("Excluding merge commit[%s]", parsed_result.short_hash)
+                    logger.debug("Excluding merge commit[%s]", parsed_result.short_hash)
                     continue
 
                 # Skip excluded commits except for any commit causing a version bump
@@ -172,7 +172,7 @@ class ReleaseHistory:
                 # are included, then the changelog will be empty. Even if ther was other
                 # commits included, the true reason for a version bump would be missing.
                 if has_exclusion_match and commit_level_bump == LevelBump.NO_RELEASE:
-                    logger.info(
+                    logger.debug(
                         "Excluding %s commit[%s] %s",
                         "piece of squashed" if is_squash_commit else "",
                         parsed_result.short_hash,
@@ -184,7 +184,7 @@ class ReleaseHistory:
                     isinstance(parsed_result, ParsedCommit)
                     and not parsed_result.include_in_changelog
                 ):
-                    logger.info(
+                    logger.debug(
                         str.join(
                             " ",
                             [
@@ -197,7 +197,7 @@ class ReleaseHistory:
                     continue
 
                 if the_version is None:
-                    logger.info(
+                    logger.debug(
                         "[Unreleased] adding commit[%s] to unreleased '%s'",
                         parsed_result.short_hash,
                         commit_type,
@@ -205,7 +205,7 @@ class ReleaseHistory:
                     unreleased[commit_type].append(parsed_result)
                     continue
 
-                logger.info(
+                logger.debug(
                     "[%s] adding commit[%s] to release '%s'",
                     the_version,
                     parsed_result.short_hash,
