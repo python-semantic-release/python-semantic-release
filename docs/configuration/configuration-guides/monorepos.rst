@@ -181,6 +181,20 @@ Considerations
     ├── .gitignore
     └── README.md
 
+.. tip::
+   If you want changelogs written to a different directory (such as a package-specific
+   documentation folder), use the :ref:`output_dir <config-changelog-output_dir>` setting
+
+   .. code-block:: toml
+
+       # FILE: pkg1/pyproject.toml
+       [tool.semantic_release.changelog]
+       output_dir = "docs"
+
+   This writes the changelog to ``pkg1/docs/CHANGELOG.md`` using the default template,
+   without needing custom templates. See the :ref:`Advanced Example <monorepos-config-example_advanced>`
+   for consolidated documentation across packages.
+
 .. seealso::
 
     - For situations with more complex documentation needs, see our :ref:`Advanced Example <monorepos-config-example_advanced>`.
@@ -211,10 +225,9 @@ Considerations
 Example: Advanced
 """""""""""""""""
 
-
-If you want to consolidate documentation into a single top-level directory, the setup becomes more complex. In this example, there is a common documentation folder at the top level, and each package has its own subfolder within the documentation folder.
-
-Due to naming conventions, PSR cannot automatically accomplish this with its default changelog templates. For this scenario, you must copy the internal PSR templates into a custom directory (even if you do not modify them) and add custom scripting to prepare for each release.
+If you want to consolidate documentation into a single top-level directory, use the
+:ref:`output_dir <config-changelog-output_dir>` setting to write changelogs directly
+to package-specific documentation folders.
 
 The directory structure looks like:
 
@@ -223,29 +236,14 @@ The directory structure looks like:
     project/
     ├── .git/
     ├── docs/
-    │   ├── source/
-    │   │   ├── pkg1/
-    │   │   │   ├── changelog.md
-    │   │   │   └── README.md
-    │   │   ├── pkg2/
-    │   │   │   ├── changelog.md
-    │   │   │   └── README.md
-    │   │   └── index.rst
-    │   │
-    │   └── templates/
-    │       ├── .base_changelog_template/
-    │       │   ├── components/
-    │       │   │   ├── changelog_header.md.j2
-    │       │   │   ├── changelog_init.md.j2
-    │       │   │   ├── changelog_update.md.j2
-    │       │   │   ├── changes.md.j2
-    │       │   │   ├── first_release.md.j2
-    │       │   │   ├── macros.md.j2
-    │       │   │   ├── unreleased_changes.md.j2
-    │       │   │   └── versioned_changes.md.j2
-    │       │   └── changelog.md.j2
-    │       ├── .gitignore
-    │       └── .release_notes.md.j2
+    │   └── source/
+    │       ├── pkg1/
+    │       │   ├── changelog.md
+    │       │   └── README.md
+    │       ├── pkg2/
+    │       │   ├── changelog.md
+    │       │   └── README.md
+    │       └── index.rst
     │
     ├── packages/
     │   ├── pkg1/
@@ -262,18 +260,14 @@ The directory structure looks like:
     │       │       └── __main__.py
     │       └── pyproject.toml
     │
-    └── scripts/
-        ├── release-pkg1.sh
-        └── release-pkg2.sh
+    └── README.md
 
 
-Each package should point to the ``docs/templates/`` directory to use a common release notes template. PSR ignores hidden files and directories when searching for template files to create, allowing you to hide shared templates in the directory for use in your release setup script.
-
-Here is our configuration file for package 1 (package 2 is similarly defined):
+Here is the configuration file for package 1:
 
 .. code-block:: toml
 
-    # FILE: pkg1/pyproject.toml
+    # FILE: packages/pkg1/pyproject.toml
     [project]
     name = "pkg1"
     version = "1.0.0"
@@ -291,12 +285,12 @@ Here is our configuration file for package 1 (package 2 is similarly defined):
     [tool.semantic_release.commit_parser_options]
     path_filters = [
         ".",
-        "../../../docs/source/pkg1/**",
+        "../../docs/source/pkg1/**",
     ]
     scope_prefix = "pkg1-"
 
     [tool.semantic_release.changelog]
-    template_dir = "../../../docs/templates"
+    output_dir = "../../docs/source/pkg1"
     mode = "update"
     exclude_commit_patterns = [
         '''^chore(?:\([^)]*?\))?: .+''',
@@ -308,51 +302,28 @@ Here is our configuration file for package 1 (package 2 is similarly defined):
     ]
 
     [tool.semantic_release.changelog.default_templates]
-    # To enable update mode: this value must set here because the default is not the
-    # same as the default in the other package & must be the final destination filename
-    # for the changelog relative to this file
-    changelog_file = "../../../docs/source/pkg1/changelog.md"
+    changelog_file = "changelog.md"
 
 
-Note: In this configuration, we added path filters for additional documentation files related to the package so that the changelog will include documentation changes as well.
+Package 2 follows the same pattern with its own paths and scope prefix.
 
+Note: We added path filters for documentation files related to the package so that
+documentation changes are included in the changelog.
 
-Next, define a release script to set up the common changelog templates in the correct directory format so PSR will create the desired files at the proper locations. Following the :ref:`changelog-templates-template-rendering` reference, you must define the folder structure from the root of the project within the templates directory so PSR will properly lay down the files across the repository. The script cleans up any previous templates, dynamically creates the necessary directories, and copies over the shared templates into a package-named directory. Now you are prepared to run PSR for a release of ``pkg1``.
+To release a package, simply run:
 
 .. code-block:: bash
 
-    #!/bin/bash
-    # FILE: scripts/release-pkg1.sh
+    cd packages/pkg1
+    semantic-release version
 
-    set -euo pipefail
+The changelog will be written directly to ``docs/source/pkg1/changelog.md``.
 
-    PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
-    VIRTUAL_ENV="$PROJECT_ROOT/.venv"
-
-    PACKAGE_NAME="pkg1"
-
-    cd "$PROJECT_ROOT" || exit 1
-
-    # Setup documentation template
-    pushd "docs/templates" >/dev/null || exit 1
-
-    rm -rf docs/
-    mkdir -p "docs/source/"
-    cp -r .base_changelog_template/ "docs/source/$PACKAGE_NAME"
-
-    popd >/dev/null || exit 1
-
-    # Release the package
-    pushd "packages/$PACKAGE_NAME" >/dev/null || exit 1
-
-    printf '%s\n' "Releasing $PACKAGE_NAME..."
-    "$VIRTUAL_ENV/bin/semantic-release" -v version --no-push
-
-    popd >/dev/null || exit 1
-
-
-That's it! This example demonstrates how to set up a monorepo with shared changelog templates and a consolidated documentation folder for multiple packages.
+.. tip::
+   For custom changelog formatting beyond the defaults, you can still use a custom
+   ``template_dir``. The ``output_dir`` setting controls where all templates (default
+   or custom) are rendered. See :ref:`changelog-templates` for template customization.
 
 .. seealso::
 
-    - Advanced Example Monorepo: `codejedi365/psr-monorepo-poweralpha <https://github.com/codejedi365/psr-monorepo-poweralpha>`_
+    - Example Monorepo: `codejedi365/psr-monorepo-poweralpha <https://github.com/codejedi365/psr-monorepo-poweralpha>`_

@@ -408,6 +408,22 @@ Importantly, note the following:
   file ``ch-templates/static/config.cfg`` is *copied, not rendered* to the new top-level
   ``static`` folder.
 
+.. tip::
+   By default, templates are rendered relative to the project root. To render templates
+   to a different directory (e.g., ``docs/``), use the :ref:`output_dir <config-changelog-output_dir>`
+   setting:
+
+   .. code-block:: toml
+
+       [tool.semantic_release.changelog]
+       template_dir = "ch-templates"
+       output_dir = "docs"
+
+   This will render all templates to the ``docs/`` directory instead of the project root.
+
+   This is particularly useful in :ref:`monorepo setups <monorepos>` where you want to
+   consolidate changelogs into a shared documentation directory for multiple packages.
+
 You may wish to leverage this behavior to modularize your changelog template, to
 define macros in a separate file, or to reference static data which you would like
 to avoid duplicating between your template environment and the remainder of your
