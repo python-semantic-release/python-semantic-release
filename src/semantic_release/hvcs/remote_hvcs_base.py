@@ -63,18 +63,21 @@ class RemoteHvcsBase(HvcsBase, metaclass=ABCMeta):
         prerelease: bool = False,
         assets: list[str] | None = None,
         noop: bool = False,
+        draft: bool = False,
     ) -> int | str:
         """
         Create a release in a remote VCS, if supported
 
         Which includes uploading any assets as part of the release
+
+        :param draft: Whether or not the release should be created as a draft (GitHub)
         """
         self._not_supported(self.create_release.__name__)
         return -1
 
     @abstractmethod
     def create_or_update_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False, draft: bool = False
     ) -> int | str:
         """
         Create or update a release for the given tag in a remote VCS, attaching the
