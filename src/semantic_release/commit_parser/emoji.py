@@ -81,9 +81,6 @@ class EmojiParserOptions(ParserOptions):
     )
     """All commit-type prefixes that are allowed."""
 
-    default_bump_level: LevelBump = LevelBump.NO_RELEASE
-    """The minimum bump level to apply to valid commit message."""
-
     parse_linked_issues: bool = False
     """
     Whether to parse linked issues from the commit message.
@@ -116,7 +113,7 @@ class EmojiParserOptions(ParserOptions):
                 # for our expected output. Due to the empty second array, we know the first is always longest
                 # and that means no values in the first entry of the tuples will ever be a LevelBump. We
                 # apply a str() to make mypy happy although it will never happen.
-                *zip_longest(self.allowed_tags, (), fillvalue=self.default_bump_level),
+                *zip_longest(self.allowed_tags, (), fillvalue=LevelBump.NO_RELEASE),
                 *zip_longest(self.patch_tags, (), fillvalue=LevelBump.PATCH),
                 *zip_longest(self.minor_tags, (), fillvalue=LevelBump.MINOR),
                 *zip_longest(self.major_tags, (), fillvalue=LevelBump.MAJOR),
@@ -285,9 +282,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         primary_emoji = match.group("type") if match else "Other"
         parsed_scope = (match.group("scope") if match else None) or ""
 
-        level_bump = self.options.tag_to_level.get(
-            primary_emoji, self.options.default_bump_level
-        )
+        level_bump = self.options.tag_to_level.get(primary_emoji, LevelBump.NO_RELEASE)
 
         # All emojis will remain part of the returned description
         body_components: dict[str, list[str]] = reduce(

@@ -257,9 +257,7 @@ class ConventionalCommitParser(
         level_bump = (
             LevelBump.MAJOR
             if body_components["breaking_descriptions"] or parsed_break
-            else self.options.tag_to_level.get(
-                parsed_type, self.options.default_bump_level
-            )
+            else self.options.tag_to_level.get(parsed_type, LevelBump.NO_RELEASE)
         )
 
         return ParsedMessageResult(
