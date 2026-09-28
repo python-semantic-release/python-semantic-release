@@ -142,6 +142,13 @@ fi
 # and https://github.com/actions/runner-images/issues/6775#issuecomment-1410270956
 git config --system --add safe.directory "*"
 
+# Check for conflicting signing key configurations
+if [[ -n "$INPUT_SSH_PUBLIC_SIGNING_KEY" || -n "$INPUT_SSH_PRIVATE_SIGNING_KEY" ]] && [[ -n "$INPUT_GPG_PRIVATE_SIGNING_KEY" ]]; then
+	echo >&2 "Error: Both SSH and GPG signing keys are provided. Please use only one signing method."
+	exit 1
+fi
+
+# SSH Signing Configuration
 if [[ -n "$INPUT_SSH_PUBLIC_SIGNING_KEY" && -n "$INPUT_SSH_PRIVATE_SIGNING_KEY" ]]; then
 	echo "SSH Key pair found, configuring signing..."
 
@@ -173,6 +180,85 @@ if [[ -n "$INPUT_SSH_PUBLIC_SIGNING_KEY" && -n "$INPUT_SSH_PRIVATE_SIGNING_KEY" 
 	git config --global user.signingKey ~/.ssh/signing_key
 	git config --global commit.gpgsign true
 	git config --global tag.gpgsign true
+fi
+
+# GPG Signing Configuration
+if [[ -n "$INPUT_GPG_PRIVATE_SIGNING_KEY" ]]; then
+	echo "GPG private key found, configuring signing..."
+
+	# Create GPG home directory
+	mkdir -p ~/.gnupg
+	chmod 700 ~/.gnupg
+
+	# Import the GPG key
+	# Use --batch mode to prevent interactive prompts
+	if [[ -n "$INPUT_GPG_PASSPHRASE" ]]; then
+		# If passphrase is provided, import with passphrase
+		echo -e "$INPUT_GPG_PRIVATE_SIGNING_KEY" | gpg --batch --yes --passphrase "$INPUT_GPG_PASSPHRASE" --import 2>&1
+	else
+		# Import without passphrase
+		echo -e "$INPUT_GPG_PRIVATE_SIGNING_KEY" | gpg --batch --yes --import 2>&1
+	fi
+
+	# Get the key ID from the imported key using machine-readable format
+	GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec:/ {print $5; exit}')
+	
+	if [ -z "$GPG_KEY_ID" ]; then
+		echo >&2 "Error: Failed to import GPG key or extract key ID"
+		gpg --list-secret-keys 2>&1 || true
+		exit 1
+	fi
+	
+	# Validate that the key ID looks correct (should be 16 hex characters for long format)
+	if ! printf '%s' "$GPG_KEY_ID" | grep -qE '^[0-9A-Fa-f]{16}$'; then
+		echo >&2 "Warning: Extracted GPG Key ID may not be in expected format: $GPG_KEY_ID"
+	fi
+
+	echo "GPG Key ID: $GPG_KEY_ID"
+
+	# Configure git to use GPG signing
+	git config --global user.signingKey "$GPG_KEY_ID"
+	git config --global commit.gpgsign true
+	git config --global tag.gpgsign true
+	git config --global gpg.format openpgp
+	git config --global gpg.program gpg
+	
+	# If passphrase is provided, configure gpg-agent for non-interactive use
+	if [[ -n "$INPUT_GPG_PASSPHRASE" ]]; then
+		# Configure gpg-agent to allow preset passphrases and use pinentry-loopback
+		cat > ~/.gnupg/gpg-agent.conf <<-EOF
+			allow-preset-passphrase
+			allow-loopback-pinentry
+			default-cache-ttl 21600
+			max-cache-ttl 21600
+		EOF
+		
+		# Configure GPG to use loopback pinentry for passphrase
+		cat > ~/.gnupg/gpg.conf <<-EOF
+			batch
+			yes
+			pinentry-mode loopback
+		EOF
+		
+		# Reload gpg-agent
+		gpg-connect-agent reloadagent /bye 2>&1 || true
+		
+		# Preset the passphrase using gpg-preset-passphrase if available
+		# Get the keygrip for the main signing key using machine-readable format
+		KEYGRIP=$(gpg --with-keygrip --with-colons --list-secret-keys "$GPG_KEY_ID" | awk -F: '/^grp:/ {print $10; exit}')
+		
+		if [[ -z "$KEYGRIP" ]]; then
+			echo "Warning: Could not extract keygrip for passphrase preset, will rely on loopback pinentry"
+		elif [[ -x /usr/lib/gnupg/gpg-preset-passphrase ]]; then
+			echo "$INPUT_GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset "$KEYGRIP" 2>&1 || true
+		else
+			echo "Warning: gpg-preset-passphrase not found, will rely on loopback pinentry"
+		fi
+		
+		# Set GPG_TTY for compatibility with some GPG configurations
+		# While loopback pinentry should work without this, some systems may still need it
+		export GPG_TTY=$(tty 2>/dev/null || echo "/dev/null")
+	fi
 fi
 
 # Copy inputs into correctly-named environment variables
