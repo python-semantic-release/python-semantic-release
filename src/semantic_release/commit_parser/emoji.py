@@ -29,6 +29,34 @@ from semantic_release.errors import InvalidParserOptions
 from semantic_release.globals import logger
 from semantic_release.helpers import sort_numerically, text_reducer
 
+DEFAULT_EMOJI_CHANGELOG_SECTIONS = {
+    ":boom:": "💥 Breaking Changes",
+    ":sparkles:": "✨ Features",
+    ":children_crossing:": "🚸 User Experience",
+    ":lipstick:": "💄 UI and Style",
+    ":iphone:": "📱 Responsive Design",
+    ":egg:": "🥚 Easter Eggs",
+    ":chart_with_upwards_trend:": "📈 Analytics",
+    ":ambulance:": "🚑 Critical Hotfixes",
+    ":lock:": "🔒 Security",
+    ":bug:": "🐛 Bug Fixes",
+    ":zap:": "⚡ Performance",
+    ":goal_net:": "🥅 Error Handling",
+    ":alien:": "👽 External API Changes",
+    ":wheelchair:": "♿ Accessibility",
+    ":speech_balloon:": "💬 Text and Literals",
+    ":mag:": "🔍 SEO",
+    ":apple:": "🍎 macOS",
+    ":penguin:": "🐧 Linux",
+    ":checkered_flag:": "🏁 Windows",
+    ":robot:": "🤖 Android",
+    ":green_apple:": "🍏 iOS",
+    ":checkmark:": "✅ Tests",
+    ":construction_worker:": "👷 Continuous Integration",
+    ":memo:": "📝 Documentation",
+    ":recycle:": "♻️ Refactoring",
+}
+
 
 @dataclass
 class EmojiParserOptions(ParserOptions):
@@ -103,6 +131,12 @@ class EmojiParserOptions(ParserOptions):
     ignore_merge_commits: bool = True
     """Toggle flag for whether or not to ignore merge commits"""
 
+    render_emoji: bool = False
+    """
+    Render default emoji tags as descriptive Unicode changelog section headings
+    and remove the leading tag from commit descriptions.
+    """
+
     @property
     def tag_to_level(self) -> dict[str, LevelBump]:
         """A mapping of commit tags to the level bump they should result in."""
@@ -134,8 +168,9 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
     If the message does not contain any known emojis, then the level to bump
     will be 0 and the type of change "Other". This parser never raises
     UnknownCommitMessageStyleError.
-    Emojis are not removed from the description, and will appear alongside
-    the commit subject in the changelog.
+    By default, emojis are not removed from the description and will appear
+    alongside the commit subject in the changelog. Set ``render_emoji`` to
+    render descriptive Unicode headings and omit the leading tag.
     """
 
     # TODO: Deprecate in lieu of get_default_options()
@@ -289,7 +324,17 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
             primary_emoji, self.options.default_bump_level
         )
 
-        # All emojis will remain part of the returned description
+        category = primary_emoji
+        if (
+            self.options.render_emoji
+            and match
+            and (
+                rendered_category := DEFAULT_EMOJI_CHANGELOG_SECTIONS.get(primary_emoji)
+            )
+        ):
+            category = rendered_category
+            subject = subject[match.end() :].lstrip()
+
         body_components: dict[str, list[str]] = reduce(
             self.commit_body_components_separator,
             [
@@ -308,7 +353,7 @@ class EmojiCommitParser(CommitParser[ParseResult, EmojiParserOptions]):
         return ParsedMessageResult(
             bump=level_bump,
             type=primary_emoji,
-            category=primary_emoji,
+            category=category,
             scope=parsed_scope,
             descriptions=(
                 descriptions[:1] if level_bump is LevelBump.MAJOR else descriptions

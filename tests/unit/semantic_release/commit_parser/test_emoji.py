@@ -98,6 +98,33 @@ def test_default_emoji_parser(
 
 
 @pytest.mark.parametrize(
+    "message, category, scope, description",
+    [
+        (":bug: correct some text", "🐛 Bug Fixes", "", "correct some text"),
+        (
+            ":sparkles:(cli): add a new option",
+            "✨ Features",
+            "cli",
+            "add a new option",
+        ),
+    ],
+)
+def test_emoji_parser_render_emoji_for_changelog(
+    message: str,
+    category: str,
+    scope: str,
+    description: str,
+):
+    parser = EmojiCommitParser(EmojiParserOptions(render_emoji=True))
+
+    result = parser.parse_message(message)
+
+    assert category == result.category
+    assert scope == result.scope
+    assert (description,) == result.descriptions
+
+
+@pytest.mark.parametrize(
     "message, subject, merge_request_number",
     [
         # GitHub, Gitea style
