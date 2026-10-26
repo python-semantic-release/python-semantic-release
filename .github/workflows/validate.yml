@@ -100,7 +100,7 @@ jobs:
           git checkout -B ${{ github.ref_name }}
 
       - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: ${{ env.COMMON_PYTHON_VERSION }}
           cache: 'pip'
@@ -139,7 +139,7 @@ jobs:
           printf '%s\n' "artifacts_name=dist" >> $GITHUB_OUTPUT
 
       - name: Upload | Distribution Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: ${{ steps.build.outputs.artifacts_name }}
           path: ${{ steps.build.outputs.dist_dir }}
@@ -167,7 +167,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
@@ -195,7 +195,7 @@ jobs:
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d  # v6.5.0
+        uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d  # v6.6.1
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -223,13 +223,13 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ matrix.python-version }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Setup | Download Distribution Artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: ${{ needs.build.outputs.distribution-artifacts }}
           path: ./dist
@@ -265,7 +265,7 @@ jobs:
             --junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Cached Repos on Failure
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('cached-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -275,7 +275,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Tested Repos on Failure
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -285,7 +285,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d  # v6.5.0
+        uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d  # v6.6.1
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -312,13 +312,13 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ matrix.python-version }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Setup | Download Distribution Artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: ${{ needs.build.outputs.distribution-artifacts }}
           path: dist
@@ -385,7 +385,7 @@ jobs:
             `--junit-xml=tests/reports/pytest-results.xml
 
       - name: Report | Upload Cached Repos on Failure
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('cached-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -395,7 +395,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Tested Repos on Failure
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         with:
           name: ${{ format('tested-repos-{0}-{1}', matrix.os, matrix.python-version) }}
@@ -405,7 +405,7 @@ jobs:
           retention-days: 1
 
       - name: Report | Upload Test Results
-        uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d  # v6.5.0
+        uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d  # v6.6.1
         if: ${{ always() && steps.tests.outcome != 'skipped' }}
         with:
           report_paths: ./tests/reports/*.xml
@@ -432,7 +432,7 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Setup | Download Distribution Artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: ${{ needs.build.outputs.distribution-artifacts }}
           path: ${{ env.ACTION_SRC_DIR }}
@@ -474,7 +474,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
