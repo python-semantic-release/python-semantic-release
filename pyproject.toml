@@ -37,7 +37,7 @@ dependencies = [
   "python-gitlab ~= 4.0; python_version == '3.8'",
   "python-gitlab >= 4.0.0, < 7.0.0; python_version == '3.9'",
   "python-gitlab >= 4.0.0, < 9.0.0; python_version >= '3.10'",
-  "tomlkit ~= 0.13.0; python_version == '3.8'",
+  "tomlkit ~= 0.15.2; python_version == '3.8'",
   "tomlkit ~= 0.15.0; python_version >= '3.9'",
   "dotty-dict ~= 1.3",
   "importlib-resources ~= 6.0; python_version == '3.8'",  # add backport for Python 3.8
@@ -63,7 +63,7 @@ repository = "http://github.com/python-semantic-release/python-semantic-release.
 [project.optional-dependencies]
 build = [
   "build ~= 1.2",
-  "tomlkit ~= 0.13.0; python_version == '3.8'",
+  "tomlkit ~= 0.15.2; python_version == '3.8'",
   "tomlkit ~= 0.15.0; python_version >= '3.9'",
 ]
 docs = [
