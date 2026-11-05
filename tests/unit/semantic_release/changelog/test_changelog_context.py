@@ -9,7 +9,11 @@ from unittest import mock
 import pytest
 from git import Commit, Object, Repo
 
-from semantic_release.changelog.context import ChangelogMode, make_changelog_context
+from semantic_release.changelog.context import (
+    ChangelogMode,
+    make_changelog_context,
+    read_file,
+)
 from semantic_release.changelog.release_history import Release, ReleaseHistory
 from semantic_release.changelog.template import environment
 from semantic_release.commit_parser import ParsedCommit
@@ -418,6 +422,21 @@ def test_changelog_context_read_file(
 
     # Evaluate
     assert expected_changelog.encode() == actual_changelog.encode()
+
+
+def test_read_file_reads_utf8_whatever_the_locale_encoding(tmp_path: Path):
+    """
+    Given a UTF-8 changelog with non-ASCII text, when read_file reads it,
+    then the text is unchanged.
+    """
+    changelog_file = tmp_path / "CHANGELOG.md"
+    # The cp1252 and cp949 code pages cannot decode the UTF-8 bytes of this text
+    content = (
+        "## v1.0.0 (2026-11-06)\n\n### ✨ Features\n\n- Add a greeting (by Łukasz)\n"
+    )
+    changelog_file.write_bytes(content.encode("utf-8"))
+
+    assert content == read_file(str(changelog_file))
 
 
 @pytest.mark.parametrize("file_path", ["", "nonexistent.md"])
