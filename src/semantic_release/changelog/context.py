@@ -115,7 +115,8 @@ def read_file(filepath: str) -> str:
         if not filepath:
             raise FileNotFoundError("No file path provided")  # noqa: TRY301
 
-        with Path(filepath).open(newline=os.linesep) as rfd:
+        # The changelog writer saves the changelog as UTF-8, so read it back the same way
+        with Path(filepath).open(newline=os.linesep, encoding="utf-8") as rfd:
             return rfd.read()
 
     except FileNotFoundError as err:
