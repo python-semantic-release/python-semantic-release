@@ -240,9 +240,9 @@ class Bitbucket(RemoteHvcsBase):
         return super().upload_dists(tag, dist_glob)
 
     def create_or_update_release(
-        self, tag: str, release_notes: str, prerelease: bool = False
+        self, tag: str, release_notes: str, prerelease: bool = False, draft: bool = False
     ) -> int | str:
-        return super().create_or_update_release(tag, release_notes, prerelease)
+        return super().create_or_update_release(tag, release_notes, prerelease, draft)
 
     def create_release(
         self,
@@ -251,8 +251,9 @@ class Bitbucket(RemoteHvcsBase):
         prerelease: bool = False,
         assets: list[str] | None = None,
         noop: bool = False,
+        draft: bool = False,
     ) -> int | str:
-        return super().create_release(tag, release_notes, prerelease, assets, noop)
+        return super().create_release(tag, release_notes, prerelease, assets, noop, draft)
 
 
 RemoteHvcsBase.register(Bitbucket)

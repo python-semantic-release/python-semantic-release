@@ -803,7 +803,7 @@ def test_create_or_update_release_when_create_succeeds(
 
         # Evaluate (expected -> actual)
         assert mock_release_id == result
-        mock_create_release.assert_called_once_with(tag, RELEASE_NOTES, prerelease)
+        mock_create_release.assert_called_once_with(tag, RELEASE_NOTES, prerelease, draft=False)
         mock_get_release_id_by_tag.assert_not_called()
         mock_edit_release_notes.assert_not_called()
 
