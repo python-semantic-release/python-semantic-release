@@ -13,6 +13,7 @@ from semantic_release.enums import LevelBump, SemanticReleaseLogLevels
 from semantic_release.errors import InternalError, InvalidVersion
 from semantic_release.globals import logger
 from semantic_release.helpers import validate_types_in_sequence
+from semantic_release.version._reverts import filter_reverted_commits
 
 if TYPE_CHECKING:  # pragma: no cover
     from typing import Sequence
@@ -344,7 +345,9 @@ def next_version(
     )
 
     # Step 5. apply the parser to each commit in the history (could return multiple results per commit)
-    parsed_results = list(map(commit_parser.parse, commits_since_last_release))
+    parsed_results = list(
+        map(commit_parser.parse, filter_reverted_commits(commits_since_last_release))
+    )
 
     # Step 5A. Accumulate all parsed results into a single list accounting for possible multiple results per commit
     consolidated_results: list[ParseResult] = reduce(

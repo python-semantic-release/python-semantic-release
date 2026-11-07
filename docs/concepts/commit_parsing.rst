@@ -41,6 +41,35 @@ to handle your specific commit message style.
 
 ----
 
+.. _commit_parser-reverted_commits:
+
+Reverted Commits
+----------------
+
+When determining the next version, PSR ignores an unreleased commit and its
+revert when both are in the commits being evaluated for that release. For example,
+a breaking change followed by its revert does not require a major release.
+Other unreleased changes still determine the version normally.
+
+The revert must use Git's ``Revert "..."`` or ``Reapply "..."`` subject, or a
+Conventional Commits ``revert:`` subject (with an optional scope), and include
+``This reverts commit <full commit hash>.`` on its own line. Abbreviated commit
+hashes and references to commits outside the release's history window are not
+paired. If several reverts reference the same commit, their connected revert
+history is retained rather than choosing an arbitrary pair. Reverting a revert
+restores the original commit's version impact.
+
+This filtering applies before commit parsing, including parsing squashed commit
+messages. It does not change forced version bumps or remove historical entries
+from the changelog. Reverting an already released change continues to use the
+configured commit parser's bump rules.
+
+Git's ``git revert -m`` format for reverting a merge is not paired: a merge's
+version impact can include commits from its merged parent history, rather than
+only its own message.
+
+----
+
 .. _commit_parser-builtin:
 
 Built-in Commit Parsers
