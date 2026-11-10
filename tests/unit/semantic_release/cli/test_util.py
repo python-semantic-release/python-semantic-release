@@ -54,6 +54,11 @@ def test_parse_toml(toml_text: str, expected: dict[str, Any]):
     assert parse_toml(toml_text) == expected
 
 
+def test_parse_toml_rejects_non_table_tool():
+    with pytest.raises(InvalidConfiguration):
+        parse_toml("tool = 5" + "\n")
+
+
 def test_parse_toml_raises_invalid_configuration_with_invalid_toml():
     invalid_toml = dedent(
         r"""
@@ -158,6 +163,27 @@ def invalid_json_config_file(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
+def non_object_json_config_file(tmp_path: Path) -> Path:
+    # Valid JSON but not an object, so ["semantic_release"] cannot apply
+    path = tmp_path / "releaserc.json"
+
+    path.write_text("[1, 2, 3]" + "\n")
+
+    return path
+
+
+@pytest.fixture
+def scalar_tool_toml_config_file(tmp_path: Path) -> Path:
+    # Valid TOML but [tool] is not a table, so .get("semantic_release")
+    # cannot apply
+    path = tmp_path / "config.toml"
+
+    path.write_text("tool = 5" + "\n")
+
+    return path
+
+
+@pytest.fixture
 def invalid_other_config_file(tmp_path: Path) -> Path:
     # e.g. XML
     path = tmp_path / "config.xml"
@@ -207,6 +233,8 @@ def test_load_raw_config_file_loads_config(
         lazy_fixture(invalid_toml_config_file.__name__),
         lazy_fixture(invalid_json_config_file.__name__),
         lazy_fixture(invalid_other_config_file.__name__),
+        lazy_fixture(non_object_json_config_file.__name__),
+        lazy_fixture(scalar_tool_toml_config_file.__name__),
     ],
 )
 def test_load_raw_invalid_config_file_raises_error(raw_config_file: Path):

@@ -54,7 +54,10 @@ def parse_toml(raw_text: str) -> dict[Any, Any]:
         raise InvalidConfiguration(str(exc)) from exc
 
     # Look for [tool.semantic_release]
-    cfg_text = toml_text.get("tool", {}).get("semantic_release")
+    tool_section = toml_text.get("tool", {})
+    if not isinstance(tool_section, dict):
+        raise InvalidConfiguration("Invalid configuration: 'tool' must be a table")
+    cfg_text = tool_section.get("semantic_release")
     if cfg_text is not None:
         return cfg_text
     # Look for [semantic_release] or return {} if not found
@@ -84,7 +87,8 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
         logger.debug("trying to parse %s as JSON", config_file)
         try:
             # could be a "parse_json" function but it's a one-liner here
-            return json.loads(raw_text)["semantic_release"]
+            parsed_json = json.loads(raw_text)
+            return parsed_json["semantic_release"]
         except KeyError:
             # valid configuration, but no "semantic_release" or "tool.semantic_release"
             # top level key
@@ -93,6 +97,13 @@ def load_raw_config_file(config_file: Path | str) -> dict[Any, Any]:
                 "top-level key"
             )
             return {}
+        except TypeError as te:
+            # Valid JSON but not an object (e.g. an array): indexing it
+            # with a string key crashes instead of reporting the problem
+            raise InvalidConfiguration(
+                f"Configuration file {config_file} does not contain "
+                "a JSON object at the top level"
+            ) from te
         except json.JSONDecodeError as jde:
             raise InvalidConfiguration(
                 dedent(
