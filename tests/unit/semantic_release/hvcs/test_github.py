@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import fnmatch
 import glob
+import logging
 import os
 import re
 from typing import TYPE_CHECKING
@@ -1025,6 +1026,113 @@ def test_upload_release_asset_fails(
             )
 
 
+@pytest.mark.usefixtures(init_example_project.__name__)
+def test_upload_release_asset_skips_when_already_exists(
+    default_gh_client: Github,
+    example_changelog_md: Path,
+    caplog: pytest.LogCaptureFixture,
+):
+    """
+    Given a release asset already exists on GitHub,
+    when upload_release_asset receives HTTP 422 with errors[*].code == 'already_exists',
+    then it logs a warning and returns False without raising HTTPError.
+    """
+    mock_release_id = 42
+    upload_url = (
+        f"{github_upload_url}/repos/{default_gh_client.owner}/"
+        f"{default_gh_client.repo_name}/releases/{mock_release_id}/assets"
+    )
+    json_get_up_url = {
+        "status": "ok",
+        "upload_url": f"{upload_url}{{?name,label}}",
+    }
+
+    with requests_mock.Mocker(session=default_gh_client.session) as m, caplog.at_level(
+        logging.WARNING
+    ):
+        m.register_uri("GET", github_api_matcher, json=json_get_up_url, status_code=200)
+        m.register_uri(
+            "POST",
+            github_upload_matcher,
+            json={
+                "message": "Validation Failed",
+                "errors": [
+                    {
+                        "resource": "ReleaseAsset",
+                        "code": "already_exists",
+                        "field": "name",
+                    }
+                ],
+            },
+            status_code=422,
+        )
+
+        result = default_gh_client.upload_release_asset(
+            release_id=mock_release_id,
+            file=str(example_changelog_md.resolve()),
+        )
+
+    assert result is False
+    assert len(m.request_history) == 2
+    assert (
+        f"Asset '{example_changelog_md.name}' already exists on release {mock_release_id}, skipping upload"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "response_kwargs",
+    [
+        {"json": {"message": "Cannot upload assets to an immutable release"}},
+        {
+            "json": {
+                "message": "Validation Failed",
+                "errors": [
+                    {"resource": "ReleaseAsset", "code": "custom", "field": "name"}
+                ],
+            }
+        },
+        {"json": ["unexpected", "payload"]},
+        {"text": "Unprocessable Entity"},
+    ],
+)
+@pytest.mark.usefixtures(init_example_project.__name__)
+def test_upload_release_asset_fails_on_other_422_errors(
+    default_gh_client: Github,
+    example_changelog_md: Path,
+    response_kwargs: dict[str, object],
+):
+    """
+    Given a GitHub asset upload returns HTTP 422 without an 'already_exists' error code,
+    when upload_release_asset executes,
+    then HTTPError is raised.
+    """
+    mock_release_id = 42
+    upload_url = (
+        f"{github_upload_url}/repos/{default_gh_client.owner}/"
+        f"{default_gh_client.repo_name}/releases/{mock_release_id}/assets"
+    )
+    json_get_up_url = {
+        "status": "ok",
+        "upload_url": f"{upload_url}{{?name,label}}",
+    }
+
+    with requests_mock.Mocker(session=default_gh_client.session) as m:
+        m.register_uri("GET", github_api_matcher, json=json_get_up_url, status_code=200)
+        m.register_uri(
+            "POST",
+            github_upload_matcher,
+            status_code=422,
+            **response_kwargs,
+        )
+
+        with pytest.raises(HTTPError):
+            default_gh_client.upload_release_asset(
+                release_id=mock_release_id,
+                file=str(example_changelog_md.resolve()),
+            )
+
+
 # Note - mocking as the logic for uploading an asset
 # is covered by testing above, no point re-testing.
 def test_upload_dists_when_release_id_not_found(default_gh_client: Github):
@@ -1054,6 +1162,8 @@ def test_upload_dists_when_release_id_not_found(default_gh_client: Github):
     [
         (["foo.zip", "bar.whl"], "*.zip", [True], 1),
         (["foo.whl", "foo.egg", "foo.tar.gz"], "foo.*", [True, True, True], 3),
+        (["foo.whl", "foo.tar.gz"], "foo.*", [False, True], 1),
+        (["foo.whl", "foo.tar.gz"], "foo.*", [False, False], 0),
         # What if not built?
         ([], "*", [], 0),
         # What if wrong directory/other stuff in output dir/subfolder?
