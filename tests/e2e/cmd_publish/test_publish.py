@@ -168,3 +168,150 @@ def test_publish_fails_on_github_upload_dists(
     assert expected_num_upload_attempts == uploader_mock.call_count
     for file in files:
         assert f"Failed to upload asset '{file}'" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)],
+)
+def test_publish_succeeds_when_github_asset_already_exists(
+    repo_result: BuiltRepoResult,
+    get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
+    get_cfg_value_from_def: GetCfgValueFromDefFn,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
+    run_cli: RunCliFn,
+    requests_mock: Mocker,
+):
+    """
+    Given a repo with an existing release tag and distribution artifacts,
+    when publishing to GitHub and an asset already exists on the release (HTTP 422
+    with errors[*].code == 'already_exists'),
+    then the existing asset is skipped with a warning, remaining assets are uploaded,
+    and the command exits with code 0.
+
+    Reference: python-semantic-release/python-semantic-release#729
+    """
+    repo_def = repo_result["definition"]
+    tag_format_str = cast("str", get_cfg_value_from_def(repo_def, "tag_format_str"))
+    all_versions = get_versions_from_repo_build_def(repo_def)
+    latest_release_version = all_versions[-1]
+    release_tag = tag_format_str.format(version=latest_release_version)
+    hvcs_client = get_hvcs_client_from_repo_def(repo_def)
+    if not isinstance(hvcs_client, Github):
+        pytest.fail("Test setup error: HvcsClient is not a Github instance")
+
+    release_id = 12
+    files = [
+        Path(f"dist/package-{latest_release_version}.whl"),
+        Path(f"dist/package-{latest_release_version}.tar.gz"),
+    ]
+    tag_endpoint = hvcs_client.create_api_url(
+        endpoint=f"/repos/{hvcs_client.owner}/{hvcs_client.repo_name}/releases/tags/{release_tag}",
+    )
+    release_endpoint = hvcs_client.create_api_url(
+        endpoint=f"/repos/{hvcs_client.owner}/{hvcs_client.repo_name}/releases/{release_id}"
+    )
+    upload_url = release_endpoint + "/assets"
+
+    for file in files:
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.touch()
+
+    requests_mock.register_uri("GET", tag_endpoint, json={"id": release_id})
+    requests_mock.register_uri(
+        "GET", release_endpoint, json={"upload_url": f"{upload_url}{{?name,label}}"}
+    )
+    uploader_mock = requests_mock.register_uri(
+        "POST",
+        upload_url,
+        [
+            {
+                "status_code": 422,
+                "json": {
+                    "message": "Validation Failed",
+                    "errors": [
+                        {
+                            "resource": "ReleaseAsset",
+                            "code": "already_exists",
+                            "field": "name",
+                        }
+                    ],
+                },
+            },
+            {
+                "status_code": 201,
+                "json": {"id": 1, "state": "uploaded"},
+            },
+        ],
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", "latest"]
+    result = run_cli(cli_cmd[1:])
+
+    # Evaluate
+    assert_successful_exit_code(result, cli_cmd)
+    assert len(files) == uploader_mock.call_count
+    assert "already exists" in result.stderr
+    assert "on release 12, skipping upload" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "repo_result",
+    [lazy_fixture(repo_w_trunk_only_conventional_commits.__name__)],
+)
+def test_publish_fails_on_github_non_duplicate_422(
+    repo_result: BuiltRepoResult,
+    get_hvcs_client_from_repo_def: GetHvcsClientFromRepoDefFn,
+    get_cfg_value_from_def: GetCfgValueFromDefFn,
+    get_versions_from_repo_build_def: GetVersionsFromRepoBuildDefFn,
+    run_cli: RunCliFn,
+    requests_mock: Mocker,
+):
+    """
+    Given a repo with an existing release tag and distribution artifacts,
+    when publishing to GitHub fails with HTTP 422 without an 'already_exists' error code
+    (for example, an immutable release),
+    then the command fails with exit code 1.
+    """
+    repo_def = repo_result["definition"]
+    tag_format_str = cast("str", get_cfg_value_from_def(repo_def, "tag_format_str"))
+    all_versions = get_versions_from_repo_build_def(repo_def)
+    latest_release_version = all_versions[-1]
+    release_tag = tag_format_str.format(version=latest_release_version)
+    hvcs_client = get_hvcs_client_from_repo_def(repo_def)
+    if not isinstance(hvcs_client, Github):
+        pytest.fail("Test setup error: HvcsClient is not a Github instance")
+
+    release_id = 12
+    file = Path(f"dist/package-{latest_release_version}.whl")
+    file.parent.mkdir(parents=True, exist_ok=True)
+    file.touch()
+
+    tag_endpoint = hvcs_client.create_api_url(
+        endpoint=f"/repos/{hvcs_client.owner}/{hvcs_client.repo_name}/releases/tags/{release_tag}",
+    )
+    release_endpoint = hvcs_client.create_api_url(
+        endpoint=f"/repos/{hvcs_client.owner}/{hvcs_client.repo_name}/releases/{release_id}"
+    )
+    upload_url = release_endpoint + "/assets"
+
+    requests_mock.register_uri("GET", tag_endpoint, json={"id": release_id})
+    requests_mock.register_uri(
+        "GET", release_endpoint, json={"upload_url": f"{upload_url}{{?name,label}}"}
+    )
+    uploader_mock = requests_mock.register_uri(
+        "POST",
+        upload_url,
+        status_code=422,
+        json={"message": "Cannot upload assets to an immutable release"},
+    )
+
+    # Act
+    cli_cmd = [MAIN_PROG_NAME, PUBLISH_SUBCMD, "--tag", "latest"]
+    result = run_cli(cli_cmd[1:])
+
+    # Evaluate
+    assert_exit_code(1, result, cli_cmd)
+    assert uploader_mock.call_count == 1
+    assert f"Failed to upload asset '{file}' to release (HTTP 422)" in result.stderr

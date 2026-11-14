@@ -6,6 +6,7 @@ import glob
 import mimetypes
 import os
 from functools import lru_cache
+from http import HTTPStatus
 from pathlib import PurePosixPath
 from re import compile as regexp
 from typing import TYPE_CHECKING
@@ -45,6 +46,28 @@ if mimetypes.guess_type("test.whl")[0] != "application/octet-stream":
 
 if mimetypes.guess_type("test.md")[0] != "text/markdown":
     mimetypes.add_type("text/markdown", ".md")
+
+
+def _is_asset_already_exists_error(err: HTTPError) -> bool:
+    if (
+        err.response is None
+        or err.response.status_code != HTTPStatus.UNPROCESSABLE_ENTITY
+    ):
+        return False
+
+    try:
+        payload = err.response.json()
+    except JSONDecodeError:
+        return False
+
+    if not isinstance(payload, dict):
+        return False
+
+    errors = payload.get("errors")
+    return isinstance(errors, list) and any(
+        isinstance(item, dict) and item.get("code") == "already_exists"
+        for item in errors
+    )
 
 
 class Github(RemoteHvcsBase):
@@ -411,7 +434,7 @@ class Github(RemoteHvcsBase):
         :param release_id: ID of the release to upload to
         :param file: Path of the file to upload
         :param label: Optional custom label for this file
-        :return: The status of the request
+        :return: True if the asset was uploaded, False if it already existed and was skipped
         """
         url = self.asset_upload_url(release_id)
         if url is None:
@@ -424,19 +447,30 @@ class Github(RemoteHvcsBase):
         content_type = (
             mimetypes.guess_type(file, strict=False)[0] or "application/octet-stream"
         )
+        asset_name = os.path.basename(file)
 
         with open(file, "rb") as data:
-            response = self.session.post(
-                url,
-                params={"name": os.path.basename(file), "label": label},
-                headers={
-                    "Content-Type": content_type,
-                },
-                data=data.read(),
-            )
+            try:
+                response = self.session.post(
+                    url,
+                    params={"name": asset_name, "label": label},
+                    headers={
+                        "Content-Type": content_type,
+                    },
+                    data=data.read(),
+                )
 
-            # Raise an error if the upload was unsuccessful
-            response.raise_for_status()
+                # Raise an error if the upload was unsuccessful
+                response.raise_for_status()
+            except HTTPError as err:
+                if _is_asset_already_exists_error(err):
+                    logger.warning(
+                        "Asset '%s' already exists on release %s, skipping upload",
+                        asset_name,
+                        release_id,
+                    )
+                    return False
+                raise
 
         logger.debug(
             "Successfully uploaded %s to Github, url: %s, status code: %s",
@@ -468,8 +502,8 @@ class Github(RemoteHvcsBase):
             f for f in glob.glob(dist_glob, recursive=True) if os.path.isfile(f)
         ):
             try:
-                self.upload_release_asset(release_id, file_path)
-                n_succeeded += 1
+                if self.upload_release_asset(release_id, file_path):
+                    n_succeeded += 1
             except HTTPError as err:  # noqa: PERF203
                 logger.exception("error uploading asset %s", file_path)
                 status_code = (
