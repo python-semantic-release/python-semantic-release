@@ -61,6 +61,7 @@ def mock_repo(tmp_path: Path) -> RepoMock:
 
     # Mock remotes
     remote_obj = MagicMock()
+    remote_obj.name = "origin"
     remote_obj.fetch = MagicMock()
     remote_obj.url = "https://github.com/owner/repo.git"  # Set a non-test URL
 
@@ -111,8 +112,11 @@ def test_verify_upstream_unchanged_success(
     # Should not raise an exception
     mock_gitproject.verify_upstream_unchanged(local_ref="HEAD", noop=False)
 
-    # Verify fetch was called
-    mock_repo.remotes["origin"].fetch.assert_called_once()
+    # Verify fetch was called through the remote configuration with tag
+    # pruning disabled so that the release tag created earlier in this run
+    # cannot be removed by a user's `fetch.pruneTags=true` git configuration
+    mock_repo.git.fetch.assert_called_once_with("--no-prune-tags", "origin")
+    mock_repo.remotes["origin"].fetch.assert_not_called()
     # Verify rev_parse was called for HEAD
     mock_repo.git.rev_parse.assert_called_once_with("HEAD")
 
@@ -201,9 +205,7 @@ def test_verify_upstream_unchanged_fetch_fails(
 ):
     """Test that verify_upstream_unchanged raises GitFetchError when fetch fails."""
     # Mock fetch to raise an error
-    mock_repo.remotes["origin"].fetch = MagicMock(
-        side_effect=GitCommandError("fetch", "error")
-    )
+    mock_repo.git.fetch = MagicMock(side_effect=GitCommandError("fetch", "error"))
 
     with pytest.raises(GitFetchError, match="Failed to fetch from remote"):
         mock_gitproject.verify_upstream_unchanged(local_ref="HEAD", noop=False)
@@ -261,9 +263,12 @@ def test_verify_upstream_unchanged_with_remote_url(
         local_ref="HEAD", remote_url=remote_url, noop=False
     )
 
-    # Verify git.fetch was called with the remote_url and proper refspec instead of remote_ref_obj.fetch()
+    # Verify git.fetch was called with tag pruning disabled, the remote_url
+    # and proper refspec instead of remote_ref_obj.fetch()
     mock_repo.git.fetch.assert_called_once_with(
-        remote_url, "refs/heads/main:refs/remotes/origin/main"
+        "--no-prune-tags",
+        remote_url,
+        "refs/heads/main:refs/remotes/origin/main",
     )
     # Verify that remote_ref_obj.fetch() was NOT called
     mock_repo.remotes["origin"].fetch.assert_not_called()
