@@ -449,14 +449,21 @@ class GitProject:
                 if use_authenticated_fetch:
                     # Use authenticated remote URL for fetch
                     # Fetch the remote branch and update the local tracking ref
+                    # "--no-prune-tags" prevents a user's `fetch.pruneTags=true` git
+                    # configuration from pruning tags created by this release run
+                    # (like the new release tag) that are not on the remote yet
                     repo.git.fetch(
+                        "--no-prune-tags",
                         remote_url,
                         f"refs/heads/{remote_branch_name}:refs/remotes/{upstream_full_ref_name}",
                     )
                 else:
                     # Use the default remote configuration for local paths,
                     # file:// URLs, test URLs, or when no authentication is needed
-                    remote_ref_obj.fetch()
+                    repo.git.fetch(
+                        "--no-prune-tags",
+                        remote_ref_obj.name,
+                    )
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 err_msg = f"Failed to fetch from remote '{remote_name}'"
