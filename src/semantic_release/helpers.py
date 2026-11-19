@@ -85,7 +85,7 @@ def sort_numerically(
 
 
 def text_reducer(text: str, filter_pair: tuple[Pattern[str], str]) -> str:
-    """Reduce function to apply mulitple filters to a string"""
+    """Reduce function to apply multiple filters to a string"""
     if not text:  # abort if the paragraph is empty
         return text
 

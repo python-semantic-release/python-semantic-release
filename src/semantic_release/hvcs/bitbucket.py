@@ -61,7 +61,7 @@ class Bitbucket(RemoteHvcsBase):
     ) -> None:
         super().__init__(remote_url)
         self.token = token
-        # NOTE: Uncomment in the future when we actually have functionalty to
+        # NOTE: Uncomment in the future when we actually have functionality to
         #       use the api, but currently there is none.
         # auth = None if not self.token else TokenAuth(self.token)
         # self.session = build_requests_session(auth=auth)
