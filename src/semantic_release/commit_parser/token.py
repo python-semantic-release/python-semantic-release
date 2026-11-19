@@ -114,7 +114,7 @@ class ParsedCommit(NamedTuple):
         """
         A string representation of the commit message.
 
-        This is a pass through property for convience to access the ``message``
+        This is a pass through property for convenience to access the ``message``
         attribute of the ``commit`` object.
 
         If the message is of type ``bytes`` then it will be decoded to a ``UTF-8`` string.
@@ -126,7 +126,7 @@ class ParsedCommit(NamedTuple):
         """
         A hex representation of the hash value of the commit.
 
-        This is a pass through property for convience to access the ``hexsha`` attribute of the ``commit``.
+        This is a pass through property for convenience to access the ``hexsha`` attribute of the ``commit``.
         """
         return self.commit.hexsha
 
@@ -147,7 +147,7 @@ class ParsedCommit(NamedTuple):
     def from_parsed_message_result(
         commit: Commit, parsed_message_result: ParsedMessageResult
     ) -> ParsedCommit:
-        """A convience method to create a ParsedCommit object from a ParsedMessageResult object and a Commit object."""
+        """A convenience method to create a ParsedCommit object from a ParsedMessageResult object and a Commit object."""
         return ParsedCommit(
             bump=parsed_message_result.bump,
             # TODO: breaking v11, swap back to type rather than category
@@ -177,7 +177,7 @@ class ParseError(NamedTuple):
         """
         A string representation of the commit message.
 
-        This is a pass through property for convience to access the ``message``
+        This is a pass through property for convenience to access the ``message``
         attribute of the ``commit`` object.
 
         If the message is of type ``bytes`` then it will be decoded to a ``UTF-8`` string.
@@ -189,7 +189,7 @@ class ParseError(NamedTuple):
         """
         A hex representation of the hash value of the commit.
 
-        This is a pass through property for convience to access the ``hexsha`` attribute of the ``commit``.
+        This is a pass through property for convenience to access the ``hexsha`` attribute of the ``commit``.
         """
         return self.commit.hexsha
 
@@ -202,7 +202,7 @@ class ParseError(NamedTuple):
         return bool(len(self.commit.parents) > 1)
 
     def raise_error(self) -> NoReturn:
-        """A convience method to raise a CommitParseError with the error message."""
+        """A convenience method to raise a CommitParseError with the error message."""
         raise CommitParseError(self.error)
 
 
