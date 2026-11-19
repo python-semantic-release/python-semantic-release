@@ -80,7 +80,7 @@ def render_default_changelog_file(
         )
     )
 
-    # Using the proper enviroment with the changelog context, render the template
+    # Using the proper environment with the changelog context, render the template
     template = template_env.get_template(str(changelog_tpl_file))
     changelog_content = template.render().rstrip()
 
