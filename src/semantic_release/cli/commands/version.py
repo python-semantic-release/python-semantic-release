@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 from collections import defaultdict
+from contextlib import suppress
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -92,11 +93,28 @@ def last_released(
     return ts_and_vs[0] if ts_and_vs else None
 
 
+def _tag_points_into(tag: Tag, commit_hexshas: set[str]) -> bool:
+    """Return True if the tag resolves to a commit in ``commit_hexshas``."""
+    # Tags pointing at a blob or tree (no commit) raise ValueError; those are not in history
+    with suppress(ValueError):
+        return tag.commit.hexsha in commit_hexshas
+    return False
+
+
 def version_from_forced_level(
     repo_dir: Path, forced_level_bump: LevelBump, translator: VersionTranslator
 ) -> Version:
     with Repo(str(repo_dir)) as git_repo:
-        ts_and_vs = tags_and_versions(git_repo.tags, translator)
+        # Only consider tags reachable from the current branch's history (HEAD),
+        # so a forced bump is based on the same history as an unforced one
+        head_history_hexshas = {
+            commit.hexsha for commit in git_repo.iter_commits("HEAD")
+        }
+        ts_and_vs = [
+            (tag, version)
+            for tag, version in tags_and_versions(git_repo.tags, translator)
+            if _tag_points_into(tag, head_history_hexshas)
+        ]
 
     # If we have no tags, return the default version
     if not ts_and_vs:
