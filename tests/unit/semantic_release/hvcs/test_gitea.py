@@ -13,6 +13,7 @@ import requests_mock
 from requests import HTTPError, Response, Session
 from requests.auth import _basic_auth_str
 
+from semantic_release.errors import AssetUploadError
 from semantic_release.hvcs.gitea import Gitea
 from semantic_release.hvcs.token_auth import TokenAuth
 
@@ -846,3 +847,116 @@ def test_upload_dists_when_release_id_found(
         assert expected_num_uploads == num_uploads
         mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
         assert expected_files_uploaded == mock_upload_release_asset.call_args_list
+
+
+@pytest.mark.parametrize(
+    "status_code, error_message",
+    [
+        (400, "Bad Request"),
+        (401, "Unauthorized"),
+        (403, "Forbidden"),
+        (404, "Not Found"),
+        (429, "Too Many Requests"),
+        (500, "Internal Server Error"),
+        (503, "Service Unavailable"),
+    ],
+)
+def test_upload_dists_fails_with_http_error(
+    default_gitea_client: Gitea,
+    status_code: int,
+    error_message: str,
+):
+    """Given a release exists, when upload_release_asset raises HTTPError, then AssetUploadError is raised."""
+    # Setup
+    release_id = 123
+    tag = "v1.0.0"
+    files = ["dist/package-1.0.0.whl", "dist/package-1.0.0.tar.gz"]
+    glob_pattern = "dist/*"
+    expected_num_upload_attempts = len(files)
+
+    # Create mock HTTPError with proper response
+    http_error = HTTPError(error_message)
+    http_error.response = Response()
+    http_error.response.status_code = status_code
+    http_error.response._content = error_message.encode()
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gitea_client,
+        default_gitea_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ) as mock_get_release_id_by_tag, mock.patch.object(
+        default_gitea_client,
+        default_gitea_client.upload_release_asset.__name__,
+        side_effect=http_error,
+    ) as mock_upload_release_asset:
+        # Execute method under test expecting an exception to be raised
+        with pytest.raises(AssetUploadError) as exc_info:
+            default_gitea_client.upload_dists(tag, glob_pattern)
+
+        # Evaluate (expected -> actual)
+        mock_get_release_id_by_tag.assert_called_once_with(tag=tag)
+
+        # Should have attempted to upload all files even though they fail
+        assert expected_num_upload_attempts == mock_upload_release_asset.call_count
+
+        # Verify the error message contains useful information about failed uploads
+        error_msg = str(exc_info.value)
+
+        # Each file should be mentioned in the error message with status code
+        for file in files:
+            assert f"Failed to upload asset '{file}'" in error_msg
+            assert f"(HTTP {status_code})" in error_msg
+
+
+def test_upload_dists_partial_failure(default_gitea_client: Gitea):
+    """Given multiple files to upload, when some succeed and some fail, then AssetUploadError is raised."""
+    # Setup
+    release_id = 999
+    tag = "v4.0.0"
+    files = [
+        "dist/package-4.0.0.whl",
+        "dist/package-4.0.0.tar.gz",
+        "dist/package-4.0.0-py3-none-any.whl",
+    ]
+    glob_pattern = "dist/*"
+    expected_num_upload_attempts = len(files)
+
+    # Create mock HTTPError for the second and third file
+    http_error = HTTPError("500 Server Error: Internal Server Error")
+    http_error.response = Response()
+    http_error.response.status_code = 500
+
+    # Skip filesystem checks
+    mocked_isfile = mock.patch.object(os.path, "isfile", return_value=True)
+    mocked_globber = mock.patch.object(glob, "glob", return_value=files)
+
+    # Set up mock environment - first upload succeeds, second and third fail
+    upload_results = [True, http_error, http_error]
+
+    with mocked_globber, mocked_isfile, mock.patch.object(
+        default_gitea_client,
+        default_gitea_client.get_release_id_by_tag.__name__,
+        return_value=release_id,
+    ), mock.patch.object(
+        default_gitea_client,
+        default_gitea_client.upload_release_asset.__name__,
+        side_effect=upload_results,
+    ) as mock_upload_release_asset:
+        # Execute method under test expecting an exception to be raised
+        with pytest.raises(AssetUploadError) as exc_info:
+            default_gitea_client.upload_dists(tag, glob_pattern)
+
+        # Verify all uploads were attempted
+        assert expected_num_upload_attempts == mock_upload_release_asset.call_count
+
+        # Verify the error message only mentions the failed files with the status code
+        error_msg = str(exc_info.value)
+        assert f"Failed to upload asset '{files[1]}'" in error_msg
+        assert f"Failed to upload asset '{files[2]}'" in error_msg
+        assert f"Failed to upload asset '{files[0]}'" not in error_msg
+        assert "(HTTP 500)" in error_msg
